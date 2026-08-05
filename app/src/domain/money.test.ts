@@ -19,6 +19,16 @@ describe('formatMoney', () => {
   it('rounds HUF to a whole number', () => {
     expect(formatMoney(45000.4, 'HUF')).toBe('45 000 Ft');
   });
+
+  it('omits the thousands separator for 4-digit HUF amounts (hu-HU Intl convention, not a bug)', () => {
+    // A hu-HU Intl.NumberFormat csak 5+ jegynél tesz ezres elválasztót --
+    // ez a magyar tipográfiai konvenció, nem hiba. Lásd
+    // PlanEditorPage.test.tsx "shows a discount indicator..." tesztjét,
+    // ahol ez elsőre meglepetésként bukkant fel.
+    expect(formatMoney(5000, 'HUF')).toBe('5000 Ft');
+    expect(formatMoney(9999, 'HUF')).toBe('9999 Ft');
+    expect(formatMoney(10000, 'HUF')).toBe('10 000 Ft');
+  });
 });
 
 describe('formatPrice', () => {

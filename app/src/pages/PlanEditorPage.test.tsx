@@ -72,6 +72,27 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(screen.getByText('sávos')).toBeInTheDocument();
   });
 
+  it('shows a discount indicator when the actual price is lowered below the list price (editor-only, D9)', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    const result = await screen.findByText('Fogeltávolítás');
+    await user.click(result);
+
+    const actualPriceInput = screen.getByDisplayValue('25000');
+    await user.clear(actualPriceInput);
+    await user.type(actualPriceInput, '20000');
+
+    // A pontos jel egy speciális mínuszkarakter (U+2212), ezért a
+    // mennyiséget és a %-ot nézzük, nem a karaktert magát.
+    expect(await screen.findByText(/20%$/)).toBeInTheDocument();
+    // hu-HU Intl-formázás: 4-jegyű összegeknél (itt 5000) nincs ezres
+    // elválasztó, csak 5+ jegynél -- lásd domain/money.test.ts.
+    expect(await screen.findByText(/Kedvezmény: 5000 Ft/)).toBeInTheDocument();
+  });
+
   it('shows the non-blocking tooth-count mismatch warning without preventing entry', async () => {
     const user = userEvent.setup();
     renderEditor();
