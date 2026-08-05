@@ -1,0 +1,2349 @@
+{
+  "schemaVersion": 1,
+  "arlistaVerzio": "2026-07-01",
+  "modositva": "2026-08-05",
+  "kategoriak": [
+    {
+      "id": "k01",
+      "nev": {
+        "hu": "Besorolatlan",
+        "de": null
+      },
+      "sorrend": 1
+    },
+    {
+      "id": "k02",
+      "nev": {
+        "hu": "Tömések",
+        "de": null
+      },
+      "sorrend": 2
+    },
+    {
+      "id": "k03",
+      "nev": {
+        "hu": "Gyökérkezelés",
+        "de": null
+      },
+      "sorrend": 3
+    },
+    {
+      "id": "k04",
+      "nev": {
+        "hu": "Fogkőeltávolítás",
+        "de": null
+      },
+      "sorrend": 4
+    },
+    {
+      "id": "k05",
+      "nev": {
+        "hu": "Fogfehérítés",
+        "de": null
+      },
+      "sorrend": 5
+    },
+    {
+      "id": "k06",
+      "nev": {
+        "hu": "Gyermekfogászat",
+        "de": null
+      },
+      "sorrend": 6
+    },
+    {
+      "id": "k07",
+      "nev": {
+        "hu": "All-on-X csomagok",
+        "de": null
+      },
+      "sorrend": 7
+    },
+    {
+      "id": "k08",
+      "nev": {
+        "hu": "Szájsebészet",
+        "de": null
+      },
+      "sorrend": 8
+    },
+    {
+      "id": "k09",
+      "nev": {
+        "hu": "Parodontológia",
+        "de": null
+      },
+      "sorrend": 9
+    },
+    {
+      "id": "k10",
+      "nev": {
+        "hu": "Korona és hídpótlások",
+        "de": null
+      },
+      "sorrend": 10
+    },
+    {
+      "id": "k11",
+      "nev": {
+        "hu": "Kivehető fogsorok",
+        "de": null
+      },
+      "sorrend": 11
+    },
+    {
+      "id": "k12",
+      "nev": {
+        "hu": "Egyéb kezelések",
+        "de": null
+      },
+      "sorrend": 12
+    }
+  ],
+  "tetelek": [
+    {
+      "id": "t001",
+      "kategoriaId": "k01",
+      "sorrend": 1,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Konzultáció/fél óránként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 10000
+        },
+        "EUR": null
+      },
+      "forrasSor": 2
+    },
+    {
+      "id": "t002",
+      "kategoriaId": "k01",
+      "sorrend": 2,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Panoráma-, TeleRtg, Arcüregfelvétel",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 9000
+        },
+        "EUR": null
+      },
+      "forrasSor": 3
+    },
+    {
+      "id": "t003",
+      "kategoriaId": "k01",
+      "sorrend": 3,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "CBCT",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 24000
+        },
+        "EUR": null
+      },
+      "forrasSor": 4
+    },
+    {
+      "id": "t004",
+      "kategoriaId": "k02",
+      "sorrend": 4,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fognyaki tömés",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 25000
+        },
+        "EUR": null
+      },
+      "forrasSor": 7
+    },
+    {
+      "id": "t005",
+      "kategoriaId": "k02",
+      "sorrend": 5,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Élpótlás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 35000
+        },
+        "EUR": null
+      },
+      "forrasSor": 8
+    },
+    {
+      "id": "t006",
+      "kategoriaId": "k02",
+      "sorrend": 6,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Esztétikus tömés 1 felszín",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 34000
+        },
+        "EUR": null
+      },
+      "forrasSor": 9
+    },
+    {
+      "id": "t007",
+      "kategoriaId": "k02",
+      "sorrend": 7,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Esztétikus tömés 2felszin",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 40000
+        },
+        "EUR": null
+      },
+      "forrasSor": 10
+    },
+    {
+      "id": "t008",
+      "kategoriaId": "k02",
+      "sorrend": 8,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Esztétikus tömés 3 felszín",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 45000
+        },
+        "EUR": null
+      },
+      "forrasSor": 11
+    },
+    {
+      "id": "t009",
+      "kategoriaId": "k02",
+      "sorrend": 9,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Esztétikus tömés 4 felszín (betét indikáció)",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 50000
+        },
+        "EUR": null
+      },
+      "forrasSor": 12
+    },
+    {
+      "id": "t010",
+      "kategoriaId": "k02",
+      "sorrend": 10,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Everix felépítés",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 45000
+        },
+        "EUR": null
+      },
+      "forrasSor": 13
+    },
+    {
+      "id": "t011",
+      "kategoriaId": "k02",
+      "sorrend": 11,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Ideiglenes tömés",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 20000
+        },
+        "EUR": null
+      },
+      "forrasSor": 14
+    },
+    {
+      "id": "t012",
+      "kategoriaId": "k02",
+      "sorrend": 12,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "alábélelés",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 4000
+        },
+        "EUR": null
+      },
+      "forrasSor": 15
+    },
+    {
+      "id": "t013",
+      "kategoriaId": "k02",
+      "sorrend": 13,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "csonkfelépítés",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 20000
+        },
+        "EUR": null
+      },
+      "forrasSor": 16
+    },
+    {
+      "id": "t014",
+      "kategoriaId": "k03",
+      "sorrend": 14,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fogbél megnyitás + gyógyszeres zárás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "SAVOS",
+          "min": 35000,
+          "max": 55000
+        },
+        "EUR": null
+      },
+      "forrasSor": 19
+    },
+    {
+      "id": "t015",
+      "kategoriaId": "k03",
+      "sorrend": 15,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Gyökértömés eltávolítása /csatorna",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 20000
+        },
+        "EUR": null
+      },
+      "forrasSor": 20
+    },
+    {
+      "id": "t016",
+      "kategoriaId": "k03",
+      "sorrend": 16,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Gyökértömés csatornaszámtól függően",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "SAVOS",
+          "min": 38000,
+          "max": 65000
+        },
+        "EUR": null
+      },
+      "forrasSor": 21
+    },
+    {
+      "id": "t017",
+      "kategoriaId": "k04",
+      "sorrend": 17,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Komplett kezelés: ultrahang, sófúvás, kézi műszeres kez., polírozás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 24000
+        },
+        "EUR": null
+      },
+      "forrasSor": 24
+    },
+    {
+      "id": "t018",
+      "kategoriaId": "k04",
+      "sorrend": 18,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Ismételt kezelés 3-6 havonta",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 24000
+        },
+        "EUR": null
+      },
+      "forrasSor": 25
+    },
+    {
+      "id": "t019",
+      "kategoriaId": "k05",
+      "sorrend": 19,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Komplett fogsor",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 80000
+        },
+        "EUR": null
+      },
+      "forrasSor": 28
+    },
+    {
+      "id": "t020",
+      "kategoriaId": "k05",
+      "sorrend": 20,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "1 db fog (belső és külső)",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 20000
+        },
+        "EUR": null
+      },
+      "forrasSor": 29
+    },
+    {
+      "id": "t021",
+      "kategoriaId": "k06",
+      "sorrend": 21,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fogbél megnyitás, eltávolítás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 25000
+        },
+        "EUR": null
+      },
+      "forrasSor": 32
+    },
+    {
+      "id": "t022",
+      "kategoriaId": "k06",
+      "sorrend": 22,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Tejfog eltávolítás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 25000
+        },
+        "EUR": null
+      },
+      "forrasSor": 33
+    },
+    {
+      "id": "t023",
+      "kategoriaId": "k06",
+      "sorrend": 23,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Tejfog tömés",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 30000
+        },
+        "EUR": null
+      },
+      "forrasSor": 34
+    },
+    {
+      "id": "t024",
+      "kategoriaId": "k06",
+      "sorrend": 24,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Barázda zárás foganként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 25000
+        },
+        "EUR": null
+      },
+      "forrasSor": 35
+    },
+    {
+      "id": "t025",
+      "kategoriaId": "k06",
+      "sorrend": 25,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Ecsetelés/fog",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 5000
+        },
+        "EUR": null
+      },
+      "forrasSor": 36
+    },
+    {
+      "id": "t026",
+      "kategoriaId": "k07",
+      "sorrend": 26,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "All-on-x Anax fogpótlás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 800000
+        },
+        "EUR": null
+      },
+      "forrasSor": 39
+    },
+    {
+      "id": "t027",
+      "kategoriaId": "k07",
+      "sorrend": 27,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "All-on-4 Anax csomag",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 1950000
+        },
+        "EUR": null
+      },
+      "forrasSor": 40
+    },
+    {
+      "id": "t028",
+      "kategoriaId": "k07",
+      "sorrend": 28,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Neodetn implantátum csomagban",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 150000
+        },
+        "EUR": null
+      },
+      "forrasSor": 41
+    },
+    {
+      "id": "t029",
+      "kategoriaId": "k07",
+      "sorrend": 29,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Neodent felépítmány csomagban",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 50000
+        },
+        "EUR": null
+      },
+      "forrasSor": 42
+    },
+    {
+      "id": "t030",
+      "kategoriaId": "k07",
+      "sorrend": 30,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Ideigenes 10 tag PMMA",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 350000
+        },
+        "EUR": null
+      },
+      "forrasSor": 43
+    },
+    {
+      "id": "t031",
+      "kategoriaId": "k08",
+      "sorrend": 31,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Arcüregemelés zárt",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 80000
+        },
+        "EUR": null
+      },
+      "forrasSor": 50
+    },
+    {
+      "id": "t032",
+      "kategoriaId": "k08",
+      "sorrend": 32,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Arcüregemelés (csontpotló anyag és membrán ára külön fizetendő )",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 195000
+        },
+        "EUR": null
+      },
+      "forrasSor": 51
+    },
+    {
+      "id": "t033",
+      "kategoriaId": "k08",
+      "sorrend": 33,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Arcüregzárás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 45000
+        },
+        "EUR": null
+      },
+      "forrasSor": 52
+    },
+    {
+      "id": "t034",
+      "kategoriaId": "k08",
+      "sorrend": 34,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Bölcsességfog mütéti eljárással (seb.gond.,varrat szedés)",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 65000
+        },
+        "EUR": null
+      },
+      "forrasSor": 53
+    },
+    {
+      "id": "t035",
+      "kategoriaId": "k08",
+      "sorrend": 35,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Csontblokk (anyag ár)",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 60000
+        },
+        "EUR": null
+      },
+      "forrasSor": 54
+    },
+    {
+      "id": "t036",
+      "kategoriaId": "k08",
+      "sorrend": 36,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Csontblokk rögzítő csavar",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 10000
+        },
+        "EUR": null
+      },
+      "forrasSor": 55
+    },
+    {
+      "id": "t037",
+      "kategoriaId": "k08",
+      "sorrend": 37,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Csontkaparó",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 45000
+        },
+        "EUR": null
+      },
+      "forrasSor": 56
+    },
+    {
+      "id": "t038",
+      "kategoriaId": "k08",
+      "sorrend": 38,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Csontpótlás (csontpótló anyag és membrán ára külön fizetendő)",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 210000
+        },
+        "EUR": null
+      },
+      "forrasSor": 57
+    },
+    {
+      "id": "t039",
+      "kategoriaId": "k08",
+      "sorrend": 39,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Csontpótló anyag 0,5g",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 30000
+        },
+        "EUR": null
+      },
+      "forrasSor": 58
+    },
+    {
+      "id": "t040",
+      "kategoriaId": "k08",
+      "sorrend": 40,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Csontpótló anyag 1g",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 60000
+        },
+        "EUR": null
+      },
+      "forrasSor": 59
+    },
+    {
+      "id": "t041",
+      "kategoriaId": "k08",
+      "sorrend": 41,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fogeltávolítás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 25000
+        },
+        "EUR": null
+      },
+      "forrasSor": 61
+    },
+    {
+      "id": "t042",
+      "kategoriaId": "k08",
+      "sorrend": 42,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fogeltávolítás emelővel",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 30000
+        },
+        "EUR": null
+      },
+      "forrasSor": 62
+    },
+    {
+      "id": "t043",
+      "kategoriaId": "k08",
+      "sorrend": 43,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fogeltávolítás sebészi feltárással",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 35000
+        },
+        "EUR": null
+      },
+      "forrasSor": 63
+    },
+    {
+      "id": "t044",
+      "kategoriaId": "k08",
+      "sorrend": 44,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Frenulectomia",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 25000
+        },
+        "EUR": null
+      },
+      "forrasSor": 64
+    },
+    {
+      "id": "t045",
+      "kategoriaId": "k08",
+      "sorrend": 45,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Gyökercsúcsresectio",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 55000
+        },
+        "EUR": null
+      },
+      "forrasSor": 65
+    },
+    {
+      "id": "t046",
+      "kategoriaId": "k08",
+      "sorrend": 46,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Jason membrán",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 44000
+        },
+        "EUR": null
+      },
+      "forrasSor": 66
+    },
+    {
+      "id": "t047",
+      "kategoriaId": "k08",
+      "sorrend": 47,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Nem felszívódó teflon membrán",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 90000
+        },
+        "EUR": null
+      },
+      "forrasSor": 67
+    },
+    {
+      "id": "t048",
+      "kategoriaId": "k08",
+      "sorrend": 48,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Lyoplant membrán 4×5-1/4",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 25000
+        },
+        "EUR": null
+      },
+      "forrasSor": 68
+    },
+    {
+      "id": "t049",
+      "kategoriaId": "k08",
+      "sorrend": 49,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Lyoplant membrán 4×5-1/2",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 50000
+        },
+        "EUR": null
+      },
+      "forrasSor": 69
+    },
+    {
+      "id": "t050",
+      "kategoriaId": "k08",
+      "sorrend": 50,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Humán csont gran 0,5 gr",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 70000
+        },
+        "EUR": null
+      },
+      "forrasSor": 71
+    },
+    {
+      "id": "t051",
+      "kategoriaId": "k08",
+      "sorrend": 51,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "PRF",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 35000
+        },
+        "EUR": null
+      },
+      "forrasSor": 72
+    },
+    {
+      "id": "t052",
+      "kategoriaId": "k08",
+      "sorrend": 52,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Titán szegecs",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 6000
+        },
+        "EUR": null
+      },
+      "forrasSor": 73
+    },
+    {
+      "id": "t053",
+      "kategoriaId": "k08",
+      "sorrend": 53,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Azonnali implantálás műtéti díj",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 25000
+        },
+        "EUR": null
+      },
+      "forrasSor": 76
+    },
+    {
+      "id": "t054",
+      "kategoriaId": "k08",
+      "sorrend": 54,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Implantátum BLX",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 235000
+        },
+        "EUR": null
+      },
+      "forrasSor": 77
+    },
+    {
+      "id": "t055",
+      "kategoriaId": "k08",
+      "sorrend": 55,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Implantatum Straumann implantátum",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 220000
+        },
+        "EUR": null
+      },
+      "forrasSor": 78
+    },
+    {
+      "id": "t056",
+      "kategoriaId": "k08",
+      "sorrend": 56,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Implantátum Straumann Roxolid implantátum",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 230000
+        },
+        "EUR": null
+      },
+      "forrasSor": 79
+    },
+    {
+      "id": "t057",
+      "kategoriaId": "k08",
+      "sorrend": 57,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Neodent implantatum",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 170000
+        },
+        "EUR": null
+      },
+      "forrasSor": 80
+    },
+    {
+      "id": "t058",
+      "kategoriaId": "k08",
+      "sorrend": 58,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Neodent implantatum azonnali terheléssel",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 180000
+        },
+        "EUR": null
+      },
+      "forrasSor": 81
+    },
+    {
+      "id": "t059",
+      "kategoriaId": "k08",
+      "sorrend": 59,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Implantátum felszabadítása",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 15000
+        },
+        "EUR": null
+      },
+      "forrasSor": 82
+    },
+    {
+      "id": "t060",
+      "kategoriaId": "k08",
+      "sorrend": 60,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Impl. Ideiglenes felépítmény",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 30000
+        },
+        "EUR": null
+      },
+      "forrasSor": 83
+    },
+    {
+      "id": "t061",
+      "kategoriaId": "k08",
+      "sorrend": 61,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Impl.ideiglenes korona",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 45000
+        },
+        "EUR": null
+      },
+      "forrasSor": 84
+    },
+    {
+      "id": "t062",
+      "kategoriaId": "k08",
+      "sorrend": 62,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Ínyformázó",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 15000
+        },
+        "EUR": null
+      },
+      "forrasSor": 85
+    },
+    {
+      "id": "t063",
+      "kategoriaId": "k08",
+      "sorrend": 63,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Implantátum eltávolítása",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 60000
+        },
+        "EUR": null
+      },
+      "forrasSor": 86
+    },
+    {
+      "id": "t064",
+      "kategoriaId": "k09",
+      "sorrend": 64,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Zárt küret foganként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 10000
+        },
+        "EUR": null
+      },
+      "forrasSor": 90
+    },
+    {
+      "id": "t065",
+      "kategoriaId": "k09",
+      "sorrend": 65,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Zárt küret quadránsonként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 60000
+        },
+        "EUR": null
+      },
+      "forrasSor": 91
+    },
+    {
+      "id": "t066",
+      "kategoriaId": "k09",
+      "sorrend": 66,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Nyitott küret foganként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 10000
+        },
+        "EUR": null
+      },
+      "forrasSor": 92
+    },
+    {
+      "id": "t067",
+      "kategoriaId": "k09",
+      "sorrend": 67,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Nyitott küret quadránsonként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 85000
+        },
+        "EUR": null
+      },
+      "forrasSor": 93
+    },
+    {
+      "id": "t068",
+      "kategoriaId": "k09",
+      "sorrend": 68,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Lágyrész pótlás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 120000
+        },
+        "EUR": null
+      },
+      "forrasSor": 94
+    },
+    {
+      "id": "t069",
+      "kategoriaId": "k09",
+      "sorrend": 69,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Implantátum tisztítás implantátumonként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 45000
+        },
+        "EUR": null
+      },
+      "forrasSor": 95
+    },
+    {
+      "id": "t070",
+      "kategoriaId": "k09",
+      "sorrend": 70,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Implantátum tisztítás állcsontonként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 130000
+        },
+        "EUR": null
+      },
+      "forrasSor": 96
+    },
+    {
+      "id": "t071",
+      "kategoriaId": "k10",
+      "sorrend": 71,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fémkerámia",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 95000
+        },
+        "EUR": null
+      },
+      "forrasSor": 100
+    },
+    {
+      "id": "t072",
+      "kategoriaId": "k10",
+      "sorrend": 72,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fémkerámia implantátumra (több fog esetén)",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 95000
+        },
+        "EUR": null
+      },
+      "forrasSor": 101
+    },
+    {
+      "id": "t073",
+      "kategoriaId": "k10",
+      "sorrend": 73,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fémkerámia implantátumra",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 95000
+        },
+        "EUR": null
+      },
+      "forrasSor": 102
+    },
+    {
+      "id": "t074",
+      "kategoriaId": "k10",
+      "sorrend": 74,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Zirkonkerámia fogra",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 135000
+        },
+        "EUR": null
+      },
+      "forrasSor": 103
+    },
+    {
+      "id": "t075",
+      "kategoriaId": "k10",
+      "sorrend": 75,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Zirkonkerámia implantátumra csavarozható",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 135000
+        },
+        "EUR": null
+      },
+      "forrasSor": 104
+    },
+    {
+      "id": "t076",
+      "kategoriaId": "k10",
+      "sorrend": 76,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Kerámia héj préskerámia",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 150000
+        },
+        "EUR": null
+      },
+      "forrasSor": 105
+    },
+    {
+      "id": "t077",
+      "kategoriaId": "k10",
+      "sorrend": 77,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Teleszkóp korona (primer-szekunder)",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 70000
+        },
+        "EUR": null
+      },
+      "forrasSor": 106
+    },
+    {
+      "id": "t078",
+      "kategoriaId": "k10",
+      "sorrend": 78,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Sín",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 21000
+        },
+        "EUR": null
+      },
+      "forrasSor": 107
+    },
+    {
+      "id": "t079",
+      "kategoriaId": "k10",
+      "sorrend": 79,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Diagnosztikus PMMA",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 12000
+        },
+        "EUR": null
+      },
+      "forrasSor": 108
+    },
+    {
+      "id": "t080",
+      "kategoriaId": "k10",
+      "sorrend": 80,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Monolitikus cirkon fogakra vagy implantátumokra",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 135000
+        },
+        "EUR": null
+      },
+      "forrasSor": 109
+    },
+    {
+      "id": "t081",
+      "kategoriaId": "k10",
+      "sorrend": 81,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Straumann implantátumfej",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 80000
+        },
+        "EUR": null
+      },
+      "forrasSor": 111
+    },
+    {
+      "id": "t082",
+      "kategoriaId": "k10",
+      "sorrend": 82,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Neodent implantatumfej",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 70000
+        },
+        "EUR": null
+      },
+      "forrasSor": 112
+    },
+    {
+      "id": "t083",
+      "kategoriaId": "k10",
+      "sorrend": 83,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Lokátor felépítmény",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 130000
+        },
+        "EUR": null
+      },
+      "forrasSor": 113
+    },
+    {
+      "id": "t084",
+      "kategoriaId": "k10",
+      "sorrend": 84,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Hosszútávú ideiglenes korona fém merevítéssel",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 35000
+        },
+        "EUR": null
+      },
+      "forrasSor": 114
+    },
+    {
+      "id": "t085",
+      "kategoriaId": "k10",
+      "sorrend": 85,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Gradia inlay",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 80000
+        },
+        "EUR": null
+      },
+      "forrasSor": 115
+    },
+    {
+      "id": "t086",
+      "kategoriaId": "k10",
+      "sorrend": 86,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Porcelán Inlay,Onlay",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 90000
+        },
+        "EUR": null
+      },
+      "forrasSor": 116
+    },
+    {
+      "id": "t087",
+      "kategoriaId": "k10",
+      "sorrend": 87,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Csapos műcsont",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 35000
+        },
+        "EUR": null
+      },
+      "forrasSor": 117
+    },
+    {
+      "id": "t088",
+      "kategoriaId": "k10",
+      "sorrend": 88,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Csapos műcsonktöbb gyökér esetén",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 45000
+        },
+        "EUR": null
+      },
+      "forrasSor": 118
+    },
+    {
+      "id": "t089",
+      "kategoriaId": "k10",
+      "sorrend": 89,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Ideiglenes korona technikusi PMMA",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 23000
+        },
+        "EUR": null
+      },
+      "forrasSor": 119
+    },
+    {
+      "id": "t090",
+      "kategoriaId": "k10",
+      "sorrend": 90,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Ideiglenes korona rendelői",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 10000
+        },
+        "EUR": null
+      },
+      "forrasSor": 120
+    },
+    {
+      "id": "t091",
+      "kategoriaId": "k10",
+      "sorrend": 91,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Korona felvágás eltávolítás /db",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 10000
+        },
+        "EUR": null
+      },
+      "forrasSor": 121
+    },
+    {
+      "id": "t092",
+      "kategoriaId": "k11",
+      "sorrend": 92,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Lokátoros fogsor",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 240000
+        },
+        "EUR": null
+      },
+      "forrasSor": 124
+    },
+    {
+      "id": "t093",
+      "kategoriaId": "k11",
+      "sorrend": 93,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Lokátor felépítmény",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 130000
+        },
+        "EUR": null
+      },
+      "forrasSor": 125
+    },
+    {
+      "id": "t094",
+      "kategoriaId": "k11",
+      "sorrend": 94,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Teleszkópos fogsor",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 350000
+        },
+        "EUR": null
+      },
+      "forrasSor": 126
+    },
+    {
+      "id": "t095",
+      "kategoriaId": "k11",
+      "sorrend": 95,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Kivehető fogpótlás teljes",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 180000
+        },
+        "EUR": null
+      },
+      "forrasSor": 127
+    },
+    {
+      "id": "t096",
+      "kategoriaId": "k11",
+      "sorrend": 96,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Kapcsos elhorgonyzás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 240000
+        },
+        "EUR": null
+      },
+      "forrasSor": 128
+    },
+    {
+      "id": "t097",
+      "kategoriaId": "k11",
+      "sorrend": 97,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Kombinált fogsor kivehető része",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 490000
+        },
+        "EUR": null
+      },
+      "forrasSor": 129
+    },
+    {
+      "id": "t098",
+      "kategoriaId": "k11",
+      "sorrend": 98,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Stéges fogsor",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 690000
+        },
+        "EUR": null
+      },
+      "forrasSor": 130
+    },
+    {
+      "id": "t099",
+      "kategoriaId": "k11",
+      "sorrend": 99,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Kivehető ideiglenes",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 110000
+        },
+        "EUR": null
+      },
+      "forrasSor": 131
+    },
+    {
+      "id": "t100",
+      "kategoriaId": "k11",
+      "sorrend": 100,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Klipsz 1-2 fog",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 52000
+        },
+        "EUR": null
+      },
+      "forrasSor": 132
+    },
+    {
+      "id": "t101",
+      "kategoriaId": "k11",
+      "sorrend": 101,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Klipsz 3 fog",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 62000
+        },
+        "EUR": null
+      },
+      "forrasSor": 133
+    },
+    {
+      "id": "t102",
+      "kategoriaId": "k11",
+      "sorrend": 102,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Klipsz 4-7 fog",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 73000
+        },
+        "EUR": null
+      },
+      "forrasSor": 134
+    },
+    {
+      "id": "t103",
+      "kategoriaId": "k11",
+      "sorrend": 103,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Klipsz 8 fogtól",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 80000
+        },
+        "EUR": null
+      },
+      "forrasSor": 135
+    },
+    {
+      "id": "t104",
+      "kategoriaId": "k11",
+      "sorrend": 104,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fog rápótlás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 15000
+        },
+        "EUR": null
+      },
+      "forrasSor": 136
+    },
+    {
+      "id": "t105",
+      "kategoriaId": "k12",
+      "sorrend": 105,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Fogékszer (kristály, arany, fehérarany",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 18000
+        },
+        "EUR": null
+      },
+      "forrasSor": 140
+    },
+    {
+      "id": "t106",
+      "kategoriaId": "k12",
+      "sorrend": 106,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Horkolás gátló",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 48000
+        },
+        "EUR": null
+      },
+      "forrasSor": 141
+    },
+    {
+      "id": "t107",
+      "kategoriaId": "k12",
+      "sorrend": 107,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Ínyformázás Hyaluronsavval",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 8000
+        },
+        "EUR": null
+      },
+      "forrasSor": 142
+    },
+    {
+      "id": "t108",
+      "kategoriaId": "k12",
+      "sorrend": 108,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Dévitalisation",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 12000
+        },
+        "EUR": null
+      },
+      "forrasSor": 147
+    },
+    {
+      "id": "t109",
+      "kategoriaId": "k12",
+      "sorrend": 109,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Pivot",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 15000
+        },
+        "EUR": null
+      },
+      "forrasSor": 148
+    },
+    {
+      "id": "t110",
+      "kategoriaId": "k12",
+      "sorrend": 110,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Couronne provisoire",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 12000
+        },
+        "EUR": null
+      },
+      "forrasSor": 149
+    },
+    {
+      "id": "t111",
+      "kategoriaId": "k12",
+      "sorrend": 111,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Opération de gencive",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 25000
+        },
+        "EUR": null
+      },
+      "forrasSor": 150
+    },
+    {
+      "id": "t112",
+      "kategoriaId": "k12",
+      "sorrend": 112,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Couronne zircon",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 72000
+        },
+        "EUR": null
+      },
+      "forrasSor": 151
+    },
+    {
+      "id": "t113",
+      "kategoriaId": "k12",
+      "sorrend": 113,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Hyrax készülék",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 60000
+        },
+        "EUR": null
+      },
+      "forrasSor": 152
+    },
+    {
+      "id": "t114",
+      "kategoriaId": "k12",
+      "sorrend": 114,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Önligírozó multiband készülék felső",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 260000
+        },
+        "EUR": null
+      },
+      "forrasSor": 153
+    },
+    {
+      "id": "t115",
+      "kategoriaId": "k12",
+      "sorrend": 115,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Önligírozó multiband készülék alsó",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 260000
+        },
+        "EUR": null
+      },
+      "forrasSor": 154
+    },
+    {
+      "id": "t116",
+      "kategoriaId": "k12",
+      "sorrend": 116,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Rögzitett fogszabályzó eltávolítás polirozás",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 20000
+        },
+        "EUR": null
+      },
+      "forrasSor": 155
+    },
+    {
+      "id": "t117",
+      "kategoriaId": "k12",
+      "sorrend": 117,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Retencios készülék állcsontonként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 20000
+        },
+        "EUR": null
+      },
+      "forrasSor": 156
+    },
+    {
+      "id": "t118",
+      "kategoriaId": "k12",
+      "sorrend": 118,
+      "aktiv": true,
+      "gyakori": false,
+      "nev": {
+        "hu": "Rögzitett készülék aktíválása alkalmanként",
+        "de": null
+      },
+      "ar": {
+        "HUF": {
+          "tipus": "FIX",
+          "ertek": 10000
+        },
+        "EUR": null
+      },
+      "forrasSor": 157
+    }
+  ]
+}
