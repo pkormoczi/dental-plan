@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { t } from '../design/tokens';
 import { card } from '../design/ui';
+import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
 export default function Home() {
   const { resetDemoData } = useStorage();
+  const { resetPlanDraft } = useAppState();
+  const navigate = useNavigate();
   const [justReset, setJustReset] = useState(false);
 
   function handleReset() {
@@ -15,6 +18,11 @@ export default function Home() {
     resetDemoData();
     setJustReset(true);
     setTimeout(() => setJustReset(false), 2500);
+  }
+
+  function startNewPlan() {
+    resetPlanDraft();
+    navigate('/paciens');
   }
 
   return (
@@ -33,9 +41,9 @@ export default function Home() {
           mappába ír majd — itt egyelőre a böngésző tárolja az adatot.
         </p>
         <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-          <Link to="/terv" style={{ textDecoration: 'none' }}>
-            <button style={btnPrimary}>Új terv indítása</button>
-          </Link>
+          <button style={btnPrimary} onClick={startNewPlan}>
+            Új terv indítása
+          </button>
           <Link to="/tervek" style={{ textDecoration: 'none' }}>
             <button style={btnSecondary}>Korábbi tervek</button>
           </Link>

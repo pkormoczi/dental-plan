@@ -4,9 +4,11 @@ import DemoBanner from './components/DemoBanner';
 import NavBar from './components/NavBar';
 import { t } from './design/tokens';
 import Home from './pages/Home';
-import Placeholder from './pages/Placeholder';
+import PatientPage from './pages/PatientPage';
 import PlanEditorPage from './pages/PlanEditorPage';
+import PlanHistoryPage from './pages/PlanHistoryPage';
 import PriceListAdminPage from './pages/PriceListAdminPage';
+import SettingsPage from './pages/SettingsPage';
 import { AppStateProvider } from './state/AppState';
 import { StorageProvider } from './storage/StorageContext';
 
@@ -25,7 +27,7 @@ export default function App() {
             <main style={{ padding: 24, fontFamily: t.font, color: t.text }}>
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/paciens" element={<Placeholder title="Páciens adatlap" />} />
+                <Route path="/paciens" element={<PatientPage />} />
                 <Route path="/terv" element={<PlanEditorPage />} />
                 <Route
                   path="/elonezet"
@@ -35,9 +37,9 @@ export default function App() {
                     </Suspense>
                   }
                 />
-                <Route path="/tervek" element={<Placeholder title="Korábbi tervek" />} />
+                <Route path="/tervek" element={<PlanHistoryPage />} />
                 <Route path="/arlista" element={<PriceListAdminPage />} />
-                <Route path="/beallitasok" element={<Placeholder title="Beállítások" />} />
+                <Route path="/beallitasok" element={<SettingsPage />} />
               </Routes>
             </main>
           </div>
