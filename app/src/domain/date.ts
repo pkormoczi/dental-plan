@@ -8,7 +8,7 @@ export function addDaysIso(isoDate: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** "2026. augusztus 5." formátum a nyomtatványhoz és az aláírás-blokkhoz. */
+/** "2026. augusztus 5." formátum a nyomtatvány érvényességi mondatához és az aláírás-blokkhoz. */
 export function formatHuDate(isoDate: string): string {
   return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('hu-HU', {
     year: 'numeric',
@@ -16,4 +16,9 @@ export function formatHuDate(isoDate: string): string {
     day: 'numeric',
     timeZone: 'UTC',
   });
+}
+
+/** "2026.08.05." rövid formátum a fejléc/lábléc metaadatához (docs/04-nyomtatvany-spec.md). */
+export function formatHuDateShort(isoDate: string): string {
+  return `${isoDate.replace(/-/g, '.')}.`;
 }

@@ -223,6 +223,28 @@ export class DemoStorage implements PlanStorage {
     return fileName;
   }
 
+  /**
+   * A legfrissebb elérhető verziót adja vissza egy alapnévhez (pl.
+   * "fizetesi-feltetelek-hu"). A `terv.json` csak a nyilatkozat verzióját
+   * pinneli (`sablonVerzio`) -- lásd docs/02-domain-modell.md -- a
+   * fizetési feltételek mindig az aktuális szöveggel jelenik meg.
+   */
+  async loadLatestTemplateByBase(base: string): Promise<string> {
+    const re = new RegExp(`^${escapeRegExp(base)}-v(\\d+)\\.md$`);
+    let maxV = 0;
+    let latestKey: string | null = null;
+    this.eachKey((key) => {
+      if (!key.startsWith(TEMPLATES_PREFIX)) return;
+      const m = re.exec(key.slice(TEMPLATES_PREFIX.length));
+      if (m && Number(m[1]) > maxV) {
+        maxV = Number(m[1]);
+        latestKey = key;
+      }
+    });
+    if (!latestKey) throw new Error(`Nincs "${base}" kezdetű sablon.`);
+    return localStorage.getItem(latestKey)!;
+  }
+
   private nextTemplateVersion(base: string): number {
     const re = new RegExp(`^${escapeRegExp(base)}-v(\\d+)\\.md$`);
     let maxV = 0;

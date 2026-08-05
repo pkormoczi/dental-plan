@@ -14,6 +14,7 @@ export interface StorageContextValue {
   storage: PlanStorage;
   resetDemoData: () => void;
   loadPlanPdf: (ref: { patientDir: string; versionDir: string }) => Promise<Uint8Array | null>;
+  loadLatestTemplateByBase: (base: string) => Promise<string>;
 }
 
 const StorageContext = createContext<StorageContextValue | null>(null);
@@ -26,6 +27,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       storage: demo,
       resetDemoData: () => demo.resetDemoData(),
       loadPlanPdf: (ref) => demo.loadPlanPdf(ref),
+      loadLatestTemplateByBase: (base) => demo.loadLatestTemplateByBase(base),
     };
   }, []);
 
