@@ -5,6 +5,7 @@ import { t } from './design/tokens';
 import Home from './pages/Home';
 import Placeholder from './pages/Placeholder';
 import PlanEditorPage from './pages/PlanEditorPage';
+import PriceListAdminPage from './pages/PriceListAdminPage';
 import { AppStateProvider } from './state/AppState';
 import { StorageProvider } from './storage/StorageContext';
 
@@ -23,7 +24,7 @@ export default function App() {
                 <Route path="/terv" element={<PlanEditorPage />} />
                 <Route path="/elonezet" element={<Placeholder title="Előnézet" />} />
                 <Route path="/tervek" element={<Placeholder title="Korábbi tervek" />} />
-                <Route path="/arlista" element={<Placeholder title="Árlista" />} />
+                <Route path="/arlista" element={<PriceListAdminPage />} />
                 <Route path="/beallitasok" element={<Placeholder title="Beállítások" />} />
               </Routes>
             </main>
