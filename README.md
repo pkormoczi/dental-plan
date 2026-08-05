@@ -3,6 +3,14 @@
 Fogorvosi kezelési terv és árajánlat készítő alkalmazás, ami kiváltja a
 Mándoki Dental jelenlegi Excel + form control alapú megoldását.
 
+## 🔗 Élő demó
+
+**[pkormoczi.github.io/dental-plan](https://pkormoczi.github.io/dental-plan/)**
+
+Ez a mockup (1. fázis) — demó adatokkal, a böngészőben tárolva. Ne írj
+be valódi páciensadatot. A cél, hogy a doki végigkattintsa és
+visszajelezzen, mielőtt a fájlrendszeres verzió elkészül.
+
 A tervezési fázis (ez a dokumentumcsomag) lezárult, az implementáció az
 `app/` mappában folyik, két lépésben:
 
