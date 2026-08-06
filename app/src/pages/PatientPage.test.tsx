@@ -28,14 +28,25 @@ function renderPatient() {
 /**
  * Pre-seedeli a localStorage-ot `nemetEngedelyezve: true` beállítással,
  * MIELŐTT a StorageProvider/DemoStorage renderelne -- enélkül a
- * DemoStorage.init() az árlista hiányában resetDemoData()-t futtatna, ami
- * felülírná ezt a beállítást az alapértelmezett (false) seeddel.
+ * DemoStorage.init() az árlista hiányában resetDemoData()-t futtatná, ami
+ * felülírná ezt a beállítást az alapértelmezett (true) seeddel. Explicit
+ * seedelés így is hasznos marad: a tesztet nem a seed alapértékétől teszi
+ * függővé.
  */
 function seedWithGermanEnabled() {
   localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
   localStorage.setItem(
     'dp:beallitasok.json',
     JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
+  );
+}
+
+/** A kártya elrejtve-állapotát teszteli -- explicit `nemetEngedelyezve: false`, mert a seed alapértéke már `true`. */
+function seedWithGermanDisabled() {
+  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+  localStorage.setItem(
+    'dp:beallitasok.json',
+    JSON.stringify({ ...seedSettings, nemetEngedelyezve: false }),
   );
 }
 
@@ -73,14 +84,14 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     window.location.hash = '';
   });
 
-  it('hides the language/currency card when nemetEngedelyezve is false (seed default)', async () => {
+  it('hides the language/currency card when nemetEngedelyezve is false', async () => {
+    seedWithGermanDisabled();
     renderPatient();
     await screen.findByPlaceholderText('Kovács János');
     expect(screen.queryByText('Az ajánlat nyelve és pénzneme')).toBeNull();
   });
 
-  it('shows the card once nemetEngedelyezve is true', async () => {
-    seedWithGermanEnabled();
+  it('shows the card once nemetEngedelyezve is true (seed default)', async () => {
     renderPatient();
     expect(await screen.findByText('Az ajánlat nyelve és pénzneme')).toBeInTheDocument();
   });
@@ -115,16 +126,12 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // A németet a Beállításokban, valódi felhasználói úton kapcsoljuk be --
-    // nem localStorage-backdoor-ral, hogy a demó páciensek (Kovács János
-    // stb., amiket a resetDemoData() a render előtt már beírt) érintetlenek
-    // maradjanak.
+    // A német a seed alapértelmezés szerint már engedélyezve van, nincs
+    // szükség a Beállítások oldalon való bekapcsolásra -- csak átnavigálunk
+    // rajta, hogy a Kezdőlap "Korábbi tervek" parancsikonja (ami a navbar
+    // linkjével azonos nevű) ne okozzon kétértelmű találatot.
     await user.click(await screen.findByRole('link', { name: 'Beállítások' }));
-    await user.click(
-      await screen.findByRole('checkbox', { name: 'Német nyelvű ajánlat engedélyezése' }),
-    );
-
-    await user.click(screen.getByRole('link', { name: 'Korábbi tervek' }));
+    await user.click(await screen.findByRole('link', { name: 'Korábbi tervek' }));
     const patientNameEl = await screen.findByText('Kovács János');
     const patientCard = patientNameEl.parentElement as HTMLElement;
     await user.click(

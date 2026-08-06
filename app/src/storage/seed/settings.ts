@@ -17,5 +17,5 @@ export const seedSettings: Settings = {
   logoFajl: 'logo.png',
   ervenyessegNap: 90,
   alapertelmezettNyelv: 'hu',
-  nemetEngedelyezve: false,
+  nemetEngedelyezve: true,
 };
