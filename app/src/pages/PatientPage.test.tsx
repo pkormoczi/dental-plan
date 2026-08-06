@@ -25,22 +25,6 @@ function renderPatient() {
   );
 }
 
-/**
- * Pre-seedeli a localStorage-ot `nemetEngedelyezve: true` beállítással,
- * MIELŐTT a StorageProvider/DemoStorage renderelne -- enélkül a
- * DemoStorage.init() az árlista hiányában resetDemoData()-t futtatná, ami
- * felülírná ezt a beállítást az alapértelmezett (true) seeddel. Explicit
- * seedelés így is hasznos marad: a tesztet nem a seed alapértékétől teszi
- * függővé.
- */
-function seedWithGermanEnabled() {
-  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
-  localStorage.setItem(
-    'dp:beallitasok.json',
-    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
-  );
-}
-
 /** A kártya elrejtve-állapotát teszteli -- explicit `nemetEngedelyezve: false`, mert a seed alapértéke már `true`. */
 function seedWithGermanDisabled() {
   localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
