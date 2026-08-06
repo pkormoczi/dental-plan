@@ -119,10 +119,18 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await user.type(search, 'fogeltavolitas');
     const result = await screen.findByText('Fogeltávolítás');
     await user.click(result);
+    // A tétel felvétele után a kereső egy requestAnimationFrame-ben kapja
+    // vissza a fókuszt (lásd ItemPicker.commit) -- ezt itt be kell várni,
+    // különben a lenti mezőre kattintás UTÁN futhat le, ellopva a fókuszt,
+    // ami blurt (és a blur-re commitáló NumberField miatt egy "revert"-et)
+    // váltana ki a még be sem fejezett gépelés közepén.
+    await waitFor(() => expect(search).toHaveValue(''));
 
     const actualPriceInput = screen.getByDisplayValue('25000');
     await user.clear(actualPriceInput);
     await user.type(actualPriceInput, '20000');
+    // A mező blur-re (nem minden leütésre) commitál a törzsadatba -- P0-4/P1-4.
+    await user.tab();
 
     // A pontos jel egy speciális mínuszkarakter (U+2212), ezért a
     // mennyiséget és a %-ot nézzük, nem a karaktert magát.

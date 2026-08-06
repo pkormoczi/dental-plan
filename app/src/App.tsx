@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { HashRouter, Route, Routes } from 'react-router-dom';
 import DemoBanner from './components/DemoBanner';
+import ErrorBoundary from './components/ErrorBoundary';
 import NavBar from './components/NavBar';
 import { t } from './design/tokens';
 import Home from './pages/Home';
@@ -18,34 +19,42 @@ const PreviewPage = lazy(() => import('./pages/PreviewPage'));
 
 export default function App() {
   return (
-    <StorageProvider>
-      <AppStateProvider>
-        <HashRouter>
-          <div style={{ minHeight: '100vh', background: t.page }}>
-            <DemoBanner />
-            <NavBar />
-            <main style={{ padding: 24, fontFamily: t.font, color: t.text }}>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/paciens" element={<PatientPage />} />
-                <Route path="/terv" element={<PlanEditorPage />} />
-                <Route
-                  path="/elonezet"
-                  element={
-                    <Suspense fallback={<PreviewLoading />}>
-                      <PreviewPage />
-                    </Suspense>
-                  }
-                />
-                <Route path="/tervek" element={<PlanHistoryPage />} />
-                <Route path="/arlista" element={<PriceListAdminPage />} />
-                <Route path="/beallitasok" element={<SettingsPage />} />
-              </Routes>
-            </main>
-          </div>
-        </HashRouter>
-      </AppStateProvider>
-    </StorageProvider>
+    // Legkívül -- ez a StorageProvider/AppStateProvider betöltési hibáit is
+    // elkapja (P1-1), nem csak a lapok render-idejű kivételeit.
+    <ErrorBoundary>
+      <StorageProvider>
+        <AppStateProvider>
+          <HashRouter>
+            <div style={{ minHeight: '100vh', background: t.page }}>
+              <DemoBanner />
+              <NavBar />
+              <main style={{ padding: 24, fontFamily: t.font, color: t.text }}>
+                {/* Külön boundary a Routes körül: egy oldal hibája ne vigye
+                    el a NavBart is -- a doki így el tud navigálni máshova. */}
+                <ErrorBoundary title="Hiba történt ezen az oldalon">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/paciens" element={<PatientPage />} />
+                    <Route path="/terv" element={<PlanEditorPage />} />
+                    <Route
+                      path="/elonezet"
+                      element={
+                        <Suspense fallback={<PreviewLoading />}>
+                          <PreviewPage />
+                        </Suspense>
+                      }
+                    />
+                    <Route path="/tervek" element={<PlanHistoryPage />} />
+                    <Route path="/arlista" element={<PriceListAdminPage />} />
+                    <Route path="/beallitasok" element={<SettingsPage />} />
+                  </Routes>
+                </ErrorBoundary>
+              </main>
+            </div>
+          </HashRouter>
+        </AppStateProvider>
+      </StorageProvider>
+    </ErrorBoundary>
   );
 }
 

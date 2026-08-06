@@ -30,3 +30,20 @@ export function computeOsszesitok(fazisok: Fazis[]): Osszesitok {
     fizetendo,
   };
 }
+
+/**
+ * P1-3: az `osszesitok` a fájlból számít igaznak (CLAUDE.md), de eltérés
+ * esetén figyelmeztetni kell -- ez a modul csak írásnál (véglegesítéskor)
+ * hívta eddig a computeOsszesitok-ot, betöltéskor senki nem hasonlította
+ * össze. `null`, ha a mentett és az élőben újraszámolt érték egyezik;
+ * egyébként az újraszámolt érték, hogy a hívó megjeleníthesse a diffet.
+ * SOHA nem írja felül a mentett `osszesitok`-ot (D7: a snapshot az igazság).
+ */
+export function osszesitokElter(mentett: Osszesitok, fazisok: Fazis[]): Osszesitok | null {
+  const ujraszamolt = computeOsszesitok(fazisok);
+  const egyezik =
+    ujraszamolt.kezelesekOsszesen === mentett.kezelesekOsszesen &&
+    ujraszamolt.kedvezmeny === mentett.kedvezmeny &&
+    ujraszamolt.fizetendo === mentett.fizetendo;
+  return egyezik ? null : ujraszamolt;
+}

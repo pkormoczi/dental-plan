@@ -2,9 +2,9 @@
 // fázisban a DemoStorage -> FileSystemStorage csere egyetlen sort érintsen
 // itt, semmit a képernyőkön (lásd CLAUDE.md "Két fázisú build").
 //
-// A `resetDemoData`/`loadPlanPdf` NEM a PlanStorage interface része -- ezek
-// csak a mockup kényelmi funkciói, ezért külön mezőként vannak kitéve,
-// nem az interfészen keresztül.
+// A `resetDemoData`/`clearAll`/`loadPlanPdf` NEM a PlanStorage interface
+// része -- ezek csak a mockup kényelmi funkciói, ezért külön mezőként vannak
+// kitéve, nem az interfészen keresztül.
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { DemoStorage } from './DemoStorage';
@@ -12,7 +12,17 @@ import type { PlanStorage } from './PlanStorage';
 
 export interface StorageContextValue {
   storage: PlanStorage;
+  /**
+   * A `DemoStorage.init()` promise-a. P1-1: korábban `void demo.init()`
+   * volt -- egy kvótahiba vagy Safari privát mód alatti íráshiba itt
+   * csendben elveszett volna. Az AppStateProvider ezt várja meg a
+   * betöltés előtt, hogy a hiba a felhasználóig eljusson.
+   */
+  ready: Promise<void>;
   resetDemoData: () => void;
+  /** P1-9: valódi kiút, ha a doki véletlenül valódi páciensadatot vitt be -- a
+   *  "Demó adat visszaállítása" csak újraseedel, ez ténylegesen kiürít. */
+  clearAll: () => void;
   loadPlanPdf: (ref: { patientDir: string; versionDir: string }) => Promise<Uint8Array | null>;
   loadLatestTemplateByBase: (base: string) => Promise<string>;
 }
@@ -22,10 +32,12 @@ const StorageContext = createContext<StorageContextValue | null>(null);
 export function StorageProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StorageContextValue>(() => {
     const demo = new DemoStorage();
-    void demo.init();
+    const ready = demo.init();
     return {
       storage: demo,
+      ready,
       resetDemoData: () => demo.resetDemoData(),
+      clearAll: () => demo.clearAll(),
       loadPlanPdf: (ref) => demo.loadPlanPdf(ref),
       loadLatestTemplateByBase: (base) => demo.loadLatestTemplateByBase(base),
     };

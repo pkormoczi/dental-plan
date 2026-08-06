@@ -68,13 +68,43 @@ describe('PriceListAdminPage', () => {
     const nameCell = await screen.findByText('CBCT');
     await user.click(nameCell);
 
-    const eurInput = screen.getByPlaceholderText('—');
+    // Nincs még EUR ára -- előbb hozzá kell adni (a mező euróban kér
+    // bevitelt, a tárolás centben történik -- P0-5).
+    await user.click(screen.getByRole('button', { name: '+ EUR ár hozzáadása' }));
+
+    const eurInput = screen.getByLabelText('EUR ár (€)');
+    await user.clear(eurInput);
     await user.type(eurInput, '5000');
+    // A mező blur-re (nem minden leütésre) commitál -- P1-4/P0-7.
+    await user.tab();
 
     expect(await screen.findByText(/117 tételnél hiányzik az EUR ár/)).toBeInTheDocument();
 
     const cbct = findItem(readPriceList(), 'CBCT');
-    expect(cbct.ar.EUR).toEqual({ tipus: 'FIX', ertek: 5000 });
+    // "5000" a mezőben 5000 EURÓ, a tárolt érték centben: 500000.
+    expect(cbct.ar.EUR).toEqual({ tipus: 'FIX', ertek: 500000 });
+  });
+
+  it('the EUR price field never lets a keystroke persist a truncated cent value under the "Nincs EUR ár" filter (P0-7)', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await screen.findByText(/118 \/ 118 tétel látszik/);
+    await user.click(screen.getByRole('button', { name: 'Nincs EUR ár' }));
+    const nameCell = await screen.findByText('CBCT');
+    await user.click(nameCell);
+    await user.click(screen.getByRole('button', { name: '+ EUR ár hozzáadása' }));
+
+    const eurInput = screen.getByLabelText('EUR ár (€)');
+    await user.clear(eurInput);
+    await user.type(eurInput, '82');
+    // A sor (és a szerkesztő) NEM tűnhet el gépelés közben, holott a
+    // "Nincs EUR ár" szűrő alatt már van (0-ás) EUR ára a tételnek.
+    expect(screen.getByLabelText('EUR ár (€)')).toBeInTheDocument();
+    await user.tab();
+
+    const cbct = findItem(readPriceList(), 'CBCT');
+    expect(cbct.ar.EUR).toEqual({ tipus: 'FIX', ertek: 8200 });
   });
 
   it('inactivating a row persists aktiv:false without touching its id (D17: never delete/reuse)', async () => {
@@ -121,6 +151,30 @@ describe('PriceListAdminPage', () => {
     await user.click(screen.getByRole('button', { name: 'Nincs EUR ár' }));
 
     expect(await screen.findByText(/118 \/ 118 tétel látszik/)).toBeInTheDocument();
+  });
+
+  it('the "Fix → sávos" toggle converts BOTH the HUF and EUR price together (P0-2/D15)', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    await user.click(nameCell);
+    await user.click(screen.getByRole('button', { name: '+ EUR ár hozzáadása' }));
+
+    const eurInput = screen.getByLabelText('EUR ár (€)');
+    await user.clear(eurInput);
+    await user.type(eurInput, '66');
+    await user.tab();
+
+    await user.click(screen.getByRole('button', { name: 'Fix → sávos' }));
+
+    const cbct = findItem(readPriceList(), 'CBCT');
+    // A HUF listaár (24000 Ft a seedben) ÉS a most beírt EUR ár (66 € =
+    // 6600 cent) is min=max-ra vált -- korábban csak a HUF váltott, az EUR
+    // szerkezetileg csak FIX maradhatott (elveszítve a D15 `*`
+    // lábjegyzet-védelmet egy német ajánlaton).
+    expect(cbct.ar.HUF).toEqual({ tipus: 'SAVOS', min: 24000, max: 24000 });
+    expect(cbct.ar.EUR).toEqual({ tipus: 'SAVOS', min: 6600, max: 6600 });
   });
 
   it('"+ Új tétel" creates a fresh FIX item with a never-before-used id and opens it for editing', async () => {

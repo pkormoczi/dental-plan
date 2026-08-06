@@ -18,23 +18,38 @@ export default function SettingsPage() {
   const eurArazott = lefedettseg(priceList, 'EUR').arazott;
   const [orvosokText, setOrvosokText] = useState(settings.orvosok.join('\n'));
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  function patch(fields: Partial<typeof settings>) {
-    void saveSettings({ ...settings, ...fields });
+  // P0-8: korábban `void saveSettings(...)` volt -- a hívó nem várta meg és
+  // nem ellenőrizte az eredményét, tehát egy sikertelen mentés (pl. kvóta)
+  // némán elveszett, a "Mentve ✓" pedig a tényleges eredménytől függetlenül
+  // jelent meg. `patch` most a siker/hiba tényét adja vissza, hogy a hívó
+  // (pl. `handleSave`) el tudja dönteni, mutassa-e a visszajelzést.
+  async function patch(fields: Partial<typeof settings>): Promise<boolean> {
+    try {
+      await saveSettings({ ...settings, ...fields });
+      setSaveError(null);
+      return true;
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
+      return false;
+    }
   }
 
-  function commitOrvosok() {
+  async function commitOrvosok(): Promise<boolean> {
     const list = orvosokText
       .split('\n')
       .map((line) => line.trim())
       .filter(Boolean);
-    patch({ orvosok: list });
+    return patch({ orvosok: list });
   }
 
-  function handleSave() {
-    commitOrvosok();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  async function handleSave() {
+    const ok = await commitOrvosok();
+    if (ok) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    }
   }
 
   return (
@@ -185,6 +200,21 @@ export default function SettingsPage() {
           mockupban ez fix.
         </div>
       </div>
+
+      {saveError && (
+        <div
+          style={{
+            background: t.dangerBg,
+            color: t.danger,
+            fontSize: 12.5,
+            padding: '8px 14px',
+            borderRadius: t.radiusLg,
+            marginBottom: 10,
+          }}
+        >
+          A mentés nem sikerült: {saveError}
+        </div>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button style={btn(true)} onClick={handleSave}>

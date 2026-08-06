@@ -9,6 +9,7 @@
 // terv.json PDF-be ágyazása (pdf-lib) is a 2. fázisra marad.
 
 import { assertKnownSchemaVersion } from '../domain/schema';
+import { assertPlanShape, assertPriceListShape, assertSettingsShape } from '../domain/validate';
 import type {
   PatientFolder,
   Plan,
@@ -83,7 +84,35 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/**
+ * P1-6: eddig a `JSON.parse` sosem volt `try/catch`-ben -- egy kézzel
+ * piszkált vagy megszakadt írás miatt sérült JSON esetén a `SyntaxError`
+ * kiszivárgott a hívóhoz formázatlanul (vagy egy `useEffect`-ben elnyelve
+ * sosem jutott el a felhasználóig, lásd PreviewPage `loadOrFallback`).
+ */
+function parseJson<T>(raw: string, fileKind: string): T {
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    throw new Error(
+      `A(z) ${fileKind} fájl nem érvényes JSON, valószínűleg sérült. Próbáld a ` +
+        `"Demó adat visszaállítása" gombot a Kezdőlapon.`,
+    );
+  }
+}
+
 export class DemoStorage implements PlanStorage {
+  /**
+   * P0-1/P1-5: `savePlan` privát futási sorba fűzve -- két egymást gyorsan
+   * követő hívás (pl. dupla kattintás a "Véglegesítés és mentés" gombon)
+   * enélkül ugyanazt a verziószámot számolná ki egymástól függetlenül
+   * (`nextVersionNumber` mindkettőnél a még-nem-írt állapotot olvasná), és a
+   * második némán felülírná az első verziómappáját (D4 sérülne). A lánc
+   * mindig `undefined`-re fut ki, sikeres vagy hibás hívás után is, hogy egy
+   * korábbi hiba ne akassza meg a rákövetkező mentéseket.
+   */
+  private savingChain: Promise<unknown> = Promise.resolve();
+
   async init(): Promise<void> {
     if (localStorage.getItem(PRICE_LIST_KEY) == null) {
       this.resetDemoData();
@@ -172,8 +201,9 @@ export class DemoStorage implements PlanStorage {
     if (raw == null) {
       throw new Error(`Nincs terv itt: ${ref.patientDir}/${ref.versionDir}`);
     }
-    const plan = JSON.parse(raw) as Plan;
+    const plan = parseJson<Plan>(raw, 'terv.json');
     assertKnownSchemaVersion(plan, 'terv.json');
+    assertPlanShape(plan, 'terv.json');
     return plan;
   }
 
@@ -182,8 +212,24 @@ export class DemoStorage implements PlanStorage {
    * létező páciensmappához tartozik, oda kerül az új verzió; egyébként új
    * páciensmappa jön létre. A verziószámot a storage számolja ki -- a
    * hívó nem adhat meg tetszőlegeset (ez a D4 kikényszerítése).
+   *
+   * P0-1/P1-5: soros végrehajtás (`savingChain`) + a két `setItem` egy
+   * try/catch-ben -- ha bármelyik írás elhasal (pl. kvótahiba), egyik kulcs
+   * sem marad félkész állapotban (D4: verziómappát soha nem hagyunk
+   * csonkán), és két gyors egymás utáni hívás nem számolhatja ki ugyanazt a
+   * verziószámot.
    */
   async savePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef> {
+    const run = () => this.doSavePlan(plan, pdf);
+    const result = this.savingChain.then(run, run);
+    this.savingChain = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+
+  private async doSavePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef> {
     const patients = await this.listPatients();
     let tervId = plan.tervId;
     let patientDir = patients.find((p) => p.patientId === tervId)?.dirName;
@@ -200,8 +246,23 @@ export class DemoStorage implements PlanStorage {
     assertVersionDirAvailable(existingDirNames, versionDir);
 
     const finalPlan: Plan = { ...plan, schemaVersion: 1, tervId, verzio };
-    localStorage.setItem(planKey(patientDir, versionDir), JSON.stringify(finalPlan));
-    localStorage.setItem(pdfKey(patientDir, versionDir), uint8ToBase64(pdf));
+    const planKeyStr = planKey(patientDir, versionDir);
+    const pdfKeyStr = pdfKey(patientDir, versionDir);
+
+    try {
+      localStorage.setItem(planKeyStr, JSON.stringify(finalPlan));
+      localStorage.setItem(pdfKeyStr, uint8ToBase64(pdf));
+    } catch {
+      // Mindkét kulcs frissen létrehozott ebben a hívásban
+      // (assertVersionDirAvailable fentebb ezt garantálja) -- a rollback
+      // biztonságos, nem törölhet egy korábbi verziót.
+      localStorage.removeItem(planKeyStr);
+      localStorage.removeItem(pdfKeyStr);
+      throw new Error(
+        'A tervet nem sikerült elmenteni -- valószínűleg megtelt a böngésző tárhelye. ' +
+          'Semmi nem íródott félkészen, próbáld törölni pár korábbi tervet.',
+      );
+    }
 
     return { patientDir, versionDir };
   }
@@ -214,8 +275,9 @@ export class DemoStorage implements PlanStorage {
   async loadPriceList(): Promise<PriceList> {
     const raw = localStorage.getItem(PRICE_LIST_KEY);
     if (raw == null) throw new Error('Az árlista még nincs inicializálva.');
-    const priceList = JSON.parse(raw) as PriceList;
+    const priceList = parseJson<PriceList>(raw, 'arlista.json');
     assertKnownSchemaVersion(priceList, 'arlista.json');
+    assertPriceListShape(priceList, 'arlista.json');
     return priceList;
   }
 
@@ -226,8 +288,9 @@ export class DemoStorage implements PlanStorage {
   async loadSettings(): Promise<Settings> {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw == null) throw new Error('A beállítások még nincsenek inicializálva.');
-    const settings = JSON.parse(raw) as Settings;
+    const settings = parseJson<Settings>(raw, 'beallitasok.json');
     assertKnownSchemaVersion(settings, 'beallitasok.json');
+    assertSettingsShape(settings, 'beallitasok.json');
     return settings;
   }
 

@@ -10,6 +10,7 @@
 // prototípusban sem -- csak a meglévők közötti mozgatás.
 
 import { useMemo, useState } from 'react';
+import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
 import { formatPrice } from '../domain/money';
 import { nextTetelId } from '../domain/priceListIds';
@@ -62,9 +63,16 @@ export default function PriceListAdminPage() {
   }
 
   const keep = (x: Tetel): boolean => {
+    // P0-7: a nyitott sort MINDIG megtartjuk, akkor is, ha egy időközbeni
+    // szerkesztés (pl. az első EUR-számjegy begépelése a "Nincs EUR ár"
+    // szűrő alatt) kiejtené a szűrőből -- enélkül a sor (és vele az
+    // ItemEditor) eltűnt a doki keze alól, mielőtt végigírta volna a
+    // számot. A blur-re commitáló NumberField (lásd lent) már önmagában is
+    // sokat segít, de ez a védelem a commit UTÁNI állapotra is vonatkozik.
+    if (x.id === open) return true;
     if (q && !norm(x.nev.hu).includes(norm(q))) return false;
     if (filter === 'noeur') return !x.ar.EUR;
-    if (filter === 'range') return x.ar.HUF?.tipus === 'SAVOS';
+    if (filter === 'range') return x.ar.HUF?.tipus === 'SAVOS' || x.ar.EUR?.tipus === 'SAVOS';
     if (filter === 'off') return !x.aktiv;
     if (filter === 'fav') return x.gyakori;
     return true;
@@ -80,7 +88,7 @@ export default function PriceListAdminPage() {
       }))
       .filter((g) => g.items.length > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priceList, q, filter]);
+  }, [priceList, q, filter, open]);
 
   const missingEur = priceList.tetelek.filter((x) => !x.ar.EUR).length;
   const shown = grouped.reduce((s, g) => s + g.items.length, 0);
@@ -261,14 +269,39 @@ function ItemEditor({
   onPatch: (patch: Partial<Tetel>) => void;
 }) {
   const hufAr = item.ar.HUF ?? null;
+  const eurAr = item.ar.EUR ?? null;
   const savos = hufAr?.tipus === 'SAVOS';
 
+  /**
+   * P0-2 (D15): eddig csak a HUF-ot váltotta -- az EUR ár szerkezetileg
+   * mindig FIX maradt, tehát egy sávos tétel német (EUR) ajánlatán a doki
+   * tudta nélkül eltűnt a `*` jelölés és a sávos lábjegyzet. Mostantól a
+   * két pénznem együtt vált, hogy a szerkezetük soha ne csússzon szét. Ha a
+   * tételnek nincs EUR ára (`eurAr == null`), az marad -- a váltás nem hoz
+   * létre új EUR árat a semmiből.
+   */
   function toggleType() {
-    const next: Ar =
-      savos && hufAr?.tipus === 'SAVOS'
-        ? { tipus: 'FIX', ertek: hufAr.min }
-        : { tipus: 'SAVOS', min: hufAr?.tipus === 'FIX' ? hufAr.ertek : 0, max: hufAr?.tipus === 'FIX' ? hufAr.ertek : 0 };
-    onPatch({ ar: { ...item.ar, HUF: next } });
+    const toSavos = !savos;
+    const nextHuf: Ar = toSavos
+      ? {
+          tipus: 'SAVOS',
+          min: hufAr?.tipus === 'FIX' ? hufAr.ertek : 0,
+          max: hufAr?.tipus === 'FIX' ? hufAr.ertek : 0,
+        }
+      : { tipus: 'FIX', ertek: hufAr?.tipus === 'SAVOS' ? hufAr.min : 0 };
+
+    const nextEur: Ar | null =
+      eurAr == null
+        ? null
+        : toSavos
+          ? {
+              tipus: 'SAVOS',
+              min: eurAr.tipus === 'FIX' ? eurAr.ertek : eurAr.min,
+              max: eurAr.tipus === 'FIX' ? eurAr.ertek : eurAr.max,
+            }
+          : { tipus: 'FIX', ertek: eurAr.tipus === 'SAVOS' ? eurAr.min : eurAr.ertek };
+
+    onPatch({ ar: { ...item.ar, HUF: nextHuf, EUR: nextEur } });
   }
 
   function setFixPrice(ertek: number) {
@@ -280,8 +313,17 @@ function ItemEditor({
     onPatch({ ar: { ...item.ar, HUF: { ...base, ...patch } } });
   }
 
-  function setEur(ertek: number | null) {
-    onPatch({ ar: { ...item.ar, EUR: ertek == null ? null : { tipus: 'FIX', ertek } } });
+  function setEurFix(ertek: number) {
+    onPatch({ ar: { ...item.ar, EUR: { tipus: 'FIX', ertek } } });
+  }
+
+  function setEurSavos(patch: Partial<{ min: number; max: number }>) {
+    const base = eurAr?.tipus === 'SAVOS' ? eurAr : { tipus: 'SAVOS' as const, min: 0, max: 0 };
+    onPatch({ ar: { ...item.ar, EUR: { ...base, ...patch } } });
+  }
+
+  function clearEur() {
+    onPatch({ ar: { ...item.ar, EUR: null } });
   }
 
   return (
@@ -306,7 +348,7 @@ function ItemEditor({
         </Field>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <Field label="Kategória">
           <select
             value={item.kategoriaId}
@@ -321,52 +363,94 @@ function ItemEditor({
           </select>
         </Field>
 
-        <Field label="Ártípus">
+        {/* FieldGroup (plain div), NEM Field/<label> -- egy <label> ami egy
+            <button>-t fog körbe, a gomb SAJÁT szövege helyett a label
+            szövegét adná az accessible name-nek (ugyanaz a csapda, amit a
+            SettingsPage ChipGroup-kommentje is jelez a nyelvválasztónál). */}
+        <FieldGroup label="Ártípus (mindkét pénznemre hat)">
           <button onClick={toggleType} style={{ ...btn(), width: '100%' }}>
             {savos ? 'Sávos → fix' : 'Fix → sávos'}
           </button>
-        </Field>
-
-        <Field label="EUR ár (cent)">
-          <input
-            type="number"
-            value={item.ar.EUR?.tipus === 'FIX' ? item.ar.EUR.ertek : ''}
-            placeholder="—"
-            style={input}
-            onChange={(e) => setEur(e.target.value === '' ? null : Number(e.target.value))}
-          />
-        </Field>
+        </FieldGroup>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
         {savos && hufAr?.tipus === 'SAVOS' ? (
           <>
             <Field label="HUF ár — tól">
-              <input
-                type="number"
+              <NumberField
                 value={hufAr.min}
-                style={input}
-                onChange={(e) => setSavosPrice({ min: Number(e.target.value) })}
+                min={0}
+                onCommit={(v) => setSavosPrice({ min: v })}
               />
             </Field>
             <Field label="HUF ár — ig">
-              <input
-                type="number"
+              <NumberField
                 value={hufAr.max}
-                style={input}
-                onChange={(e) => setSavosPrice({ max: Number(e.target.value) })}
+                min={0}
+                onCommit={(v) => setSavosPrice({ max: v })}
               />
             </Field>
           </>
         ) : (
           <Field label="HUF ár">
-            <input
-              type="number"
-              value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
-              style={input}
-              onChange={(e) => setFixPrice(Number(e.target.value))}
-            />
+            <NumberField value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0} min={0} onCommit={setFixPrice} />
           </Field>
+        )}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+        {eurAr == null ? (
+          <FieldGroup label="EUR ár">
+            <button type="button" style={{ ...btn(), width: '100%' }} onClick={() => setEurFix(0)}>
+              + EUR ár hozzáadása
+            </button>
+          </FieldGroup>
+        ) : savos && eurAr.tipus === 'SAVOS' ? (
+          <>
+            <Field label="EUR ár — tól (€)">
+              <NumberField
+                value={eurAr.min}
+                unit="EUR"
+                min={0}
+                onCommit={(v) => setEurSavos({ min: v })}
+              />
+            </Field>
+            <Field label="EUR ár — ig (€)">
+              <NumberField
+                value={eurAr.max}
+                unit="EUR"
+                min={0}
+                onCommit={(v) => setEurSavos({ max: v })}
+              />
+            </Field>
+          </>
+        ) : (
+          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
+            {/* A törlés gombot SZÁNDÉKOSAN a Field/<label>-en KÍVÜL tesszük --
+                egy <label> ami két "labelable" elemet (NumberField + button)
+                is befog, kétértelmű accessible name-et adna (ugyanaz a
+                probléma, mint amit a SettingsPage ChipGroup-kommentje már
+                jelez a nyelvválasztónál). */}
+            <div style={{ flex: 1 }}>
+              <Field label="EUR ár (€)">
+                <NumberField
+                  value={eurAr.tipus === 'FIX' ? eurAr.ertek : 0}
+                  unit="EUR"
+                  min={0}
+                  onCommit={setEurFix}
+                />
+              </Field>
+            </div>
+            <button
+              type="button"
+              aria-label="EUR ár törlése"
+              onClick={clearEur}
+              style={{ ...iconBtn, height: 30 }}
+            >
+              ×
+            </button>
+          </div>
         )}
       </div>
 
@@ -383,6 +467,23 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 3 }}>{label}</div>
       {children}
     </label>
+  );
+}
+
+/**
+ * `Field` <label>-alternatívája gombokhoz -- egy <label> ami egy <button>-t
+ * fog körbe implicit módon "asszociálná" a gombbal, és az accessible name
+ * számításnál a LABEL szövege nyerne a gomb saját szövege felett (ezt egy
+ * teszt buktatta le: `getByRole('button', {name: '...'})` a label szövegét
+ * találta, nem a gomb feliratát). Vizuálisan azonos a `Field`-del, csak
+ * `<div>`-et használ `<label>` helyett.
+ */
+function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 3 }}>{label}</div>
+      {children}
+    </div>
   );
 }
 

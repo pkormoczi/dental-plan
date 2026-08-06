@@ -2,7 +2,7 @@
 // @react-pdf/renderer kimenetre kötve (nem HTML előnézet). Lásd
 // docs/03-funkcionalis-spec.md "4. Előnézet és véglegesítés".
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
 import { t } from '../design/tokens';
@@ -23,8 +23,14 @@ export default function PreviewPage() {
   const [nyilatkozatMd, setNyilatkozatMd] = useState('');
   const [fizetesiFeltetelekMd, setFizetesiFeltetelekMd] = useState('');
   const [sablonFallback, setSablonFallback] = useState(false);
+  const [templateError, setTemplateError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [savedRef, setSavedRef] = useState<PlanRef | null>(null);
+  // P0-1: dupla kattintás elleni in-flight védelem -- a `saving` state
+  // önmagában nem elég, mert egy második kattintás a state frissülése
+  // (render) ELŐTT is megtörténhet.
+  const savingRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,26 +42,41 @@ export default function PreviewPage() {
     async function loadOrFallback(load: () => Promise<string>, fallback: () => Promise<string>) {
       try {
         return { text: await load(), fellback: false };
-      } catch {
-        return { text: await fallback(), fellback: true };
+      } catch (err) {
+        // P1-8 (05-hibakezeles #9): csak a VÁRT "nincs ilyen sablon" hibát
+        // nyeljük el -- minden mást (pl. egy jövőbeli sérült bejegyzés)
+        // továbbdobunk, hogy ne tűnjön el némán.
+        if (err instanceof Error && err.message.startsWith('Nincs ')) {
+          return { text: await fallback(), fellback: true };
+        }
+        throw err;
       }
     }
 
     (async () => {
-      const [nyil, fiz] = await Promise.all([
-        loadOrFallback(
-          () => storage.loadTemplate(`${plan.sablonVerzio}.md`),
-          () => storage.loadTemplate('nyilatkozat-hu-v1.md'),
-        ),
-        loadOrFallback(
-          () => loadLatestTemplateByBase(`fizetesi-feltetelek-${plan.nyelv}`),
-          () => loadLatestTemplateByBase('fizetesi-feltetelek-hu'),
-        ),
-      ]);
-      if (!cancelled) {
-        setNyilatkozatMd(nyil.text);
-        setFizetesiFeltetelekMd(fiz.text);
-        setSablonFallback(nyil.fellback || fiz.fellback);
+      try {
+        const [nyil, fiz] = await Promise.all([
+          loadOrFallback(
+            () => storage.loadTemplate(`${plan.sablonVerzio}.md`),
+            () => storage.loadTemplate('nyilatkozat-hu-v1.md'),
+          ),
+          loadOrFallback(
+            () => loadLatestTemplateByBase(`fizetesi-feltetelek-${plan.nyelv}`),
+            () => loadLatestTemplateByBase('fizetesi-feltetelek-hu'),
+          ),
+        ]);
+        if (!cancelled) {
+          setNyilatkozatMd(nyil.text);
+          setFizetesiFeltetelekMd(fiz.text);
+          setSablonFallback(nyil.fellback || fiz.fellback);
+          setTemplateError(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setTemplateError(
+            err instanceof Error ? err.message : 'A sablonok betöltése váratlanul meghiúsult.',
+          );
+        }
       }
     })();
     return () => {
@@ -95,6 +116,8 @@ export default function PreviewPage() {
     !plan.paciens.taj;
 
   async function finalize() {
+    if (savingRef.current) return;
+
     // Csak a név kötelező (a mappanévhez), a többi hiánya csak figyelmeztet,
     // nem blokkol -- docs/03-funkcionalis-spec.md "2. Páciens adatlap".
     if (nameMissing) {
@@ -124,7 +147,9 @@ export default function PreviewPage() {
     }
     if (!pdfInstance.blob) return;
 
+    savingRef.current = true;
     setSaving(true);
+    setSaveError(null);
     try {
       const finalPlan = {
         ...plan,
@@ -136,7 +161,18 @@ export default function PreviewPage() {
       const persisted = await storage.loadPlan(ref); // tervId/verzio a storage tölti ki (D4)
       setPlan(persisted);
       setSavedRef(ref);
+    } catch (err) {
+      // P0-1: korábban nem volt catch itt -- egy kvótahiba vagy a
+      // localStorage szinkron dobása némán elveszett, a doki egy inaktív
+      // gombot látott, a terv pedig nem mentődött (D4-et sértő, csonka
+      // állapot nélkül, de a doki tudta nélkül).
+      setSaveError(
+        err instanceof Error
+          ? err.message
+          : 'A mentés váratlanul meghiúsult, próbáld meg újra.',
+      );
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
@@ -165,10 +201,20 @@ export default function PreviewPage() {
     );
   }
 
-  const busy = saving || pdfInstance.loading;
+  // P0-3: a PDF frissítés alatt (offerOnly váltás, sablonbetöltés stb.) a
+  // "Letöltés" korábban a MÉG a régi, teljes (nyilatkozat+aláírás oldalas)
+  // PDF-et adta, ugyanazzal a fájlnévvel -- utólag megkülönböztethetetlenül.
+  const pdfStale = pdfInstance.loading;
+  // P1-8: a `usePDF().error`-t korábban senki nem olvasta -- render-hiba
+  // esetén a gomb élőnek látszott, kattintásra némán nem történt semmi.
+  const pdfError = pdfInstance.error;
+  const busy = saving || pdfStale;
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      {templateError && (
+        <ErrorBar>A sablonok betöltése meghiúsult: {templateError}</ErrorBar>
+      )}
       {sablonFallback && (
         <div
           style={{
@@ -185,6 +231,13 @@ export default function PreviewPage() {
           Kezdőlapon a „Demó adat visszaállítása” gombot, vagy nyiss új tervet.
         </div>
       )}
+      {pdfError && (
+        <ErrorBar>
+          A PDF előállítása hibába futott: {pdfError || 'ismeretlen hiba'}. A véglegesítés emiatt
+          le van tiltva.
+        </ErrorBar>
+      )}
+      {saveError && <ErrorBar>A mentés nem sikerült: {saveError}</ErrorBar>}
       <div
         style={{
           display: 'flex',
@@ -204,19 +257,24 @@ export default function PreviewPage() {
           Csak ajánlat — a nyilatkozat és aláírás oldal nélkül
         </label>
         <div style={{ display: 'flex', gap: 8 }}>
-          {pdfInstance.url && (
-            <a
-              href={pdfInstance.url}
-              download={`kezelesi-terv-${plan.tervId || 'uj'}.pdf`}
-              style={{ textDecoration: 'none' }}
-            >
-              <button style={btn()}>Letöltés</button>
-            </a>
-          )}
+          {pdfInstance.url &&
+            (pdfStale ? (
+              <button style={{ ...btn(), opacity: 0.6 }} disabled>
+                PDF frissítése…
+              </button>
+            ) : (
+              <a
+                href={pdfInstance.url}
+                download={`kezelesi-terv-${plan.tervId || 'uj'}${offerOnly ? '-ajanlat' : ''}.pdf`}
+                style={{ textDecoration: 'none' }}
+              >
+                <button style={btn()}>Letöltés</button>
+              </a>
+            ))}
           <button
-            style={{ ...btn(true), opacity: busy ? 0.6 : 1 }}
+            style={{ ...btn(true), opacity: busy || !!pdfError ? 0.6 : 1 }}
             onClick={finalize}
-            disabled={busy}
+            disabled={busy || !!pdfError}
           >
             {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
           </button>
@@ -232,6 +290,7 @@ export default function PreviewPage() {
             height: '80vh',
             border: `1px solid ${t.line}`,
             borderRadius: t.radiusLg,
+            opacity: pdfStale ? 0.5 : 1,
           }}
         />
       ) : (
@@ -239,6 +298,23 @@ export default function PreviewPage() {
           PDF előállítása…
         </div>
       )}
+    </div>
+  );
+}
+
+function ErrorBar({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        background: t.dangerBg,
+        color: t.danger,
+        fontSize: 12.5,
+        padding: '8px 14px',
+        borderRadius: t.radiusLg,
+        marginBottom: 10,
+      }}
+    >
+      {children}
     </div>
   );
 }

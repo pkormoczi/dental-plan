@@ -15,8 +15,9 @@ export default function DemoBanner() {
         borderBottom: `1px solid ${t.dangerBorder}`,
       }}
     >
-      <strong>DEMÓ</strong> — az adatok csak ebben a böngészőben tárolódnak. Ne
-      írj be valódi páciensadatot.
+      <strong>DEMÓ</strong> — az adatok csak ebben a böngészőben, titkosítatlanul
+      tárolódnak. Ne írj be valódi páciensadatot; ha véletlenül mégis, a
+      Kezdőlapon a „Minden adat törlése” gombbal tudod kiüríteni a tárolót.
     </div>
   );
 }

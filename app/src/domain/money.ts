@@ -8,7 +8,7 @@
 import type { Ar, Penznem } from './types';
 
 export function formatMoney(value: number | null | undefined, currency: Penznem): string {
-  if (value == null) return '—';
+  if (value == null || !Number.isFinite(value)) return '—';
   if (currency === 'EUR') {
     return (
       (value / 100).toLocaleString('de-DE', {
@@ -32,4 +32,26 @@ export function formatPrice(ar: Ar | null | undefined, currency: Penznem): strin
 export function basePrice(ar: Ar | null | undefined): number {
   if (!ar) return 0;
   return ar.tipus === 'SAVOS' ? ar.min : ar.ertek;
+}
+
+/**
+ * Az EUR ár admin-mezőit euróban (nem centben) jelenítjük meg -- a
+ * P0-5 találat pont az volt, hogy a doki centet gépel euró helyett.
+ * `parseEuroInput`/`formatCentForInput` a `NumberField` `unit="EUR"`
+ * módjának a fordítópárja: a tárolás VÁLTOZATLANUL cent marad
+ * (docs/02-domain-modell.md), csak a beviteli mező mértékegysége más.
+ */
+export function parseEuroInput(text: string): number | null {
+  const normalized = text.trim().replace(',', '.');
+  if (normalized === '') return null;
+  const euro = Number(normalized);
+  if (!Number.isFinite(euro)) return null;
+  return Math.round(euro * 100);
+}
+
+export function formatCentForInput(cent: number): string {
+  return (cent / 100).toLocaleString('de-DE', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }

@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
+import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
 import { btn, chip, input } from '../design/ui';
 import { formatMoney, formatPrice } from '../domain/money';
@@ -17,10 +18,16 @@ import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
 
 export default function PlanEditorPage() {
-  const { plan, setPlan, priceList } = useAppState();
+  const { plan, setPlan, priceList, loadedOsszesitokDiff } = useAppState();
   const navigate = useNavigate();
   const currency = plan.penznem;
   const nyelv = plan.nyelv;
+  // P1-7: index-kulcs helyett -- fázistörléskor a maradék PhaseCard-ok
+  // pozíciója (pi) eltolódik, és egy sima `key={pi}` React-remount nélkül
+  // ugyanazt a DOM-csomópontot (és benne az ItemPicker lokális kereső-
+  // állapotát: a gépelt szöveget) tartaná meg egy MÁSIK fázison. A token
+  // növelése törléskor mindent remountol, a keresőmező sosem "vándorol" át.
+  const [fazisResetToken, setFazisResetToken] = useState(0);
 
   const catName = (id: string): string => {
     const kat = priceList.kategoriak.find((k) => k.id === id);
@@ -83,9 +90,27 @@ export default function PlanEditorPage() {
         onPreview={() => navigate('/elonezet')}
       />
 
+      {loadedOsszesitokDiff && (
+        <div
+          style={{
+            background: t.warnBg,
+            color: t.warn,
+            fontSize: 12.5,
+            padding: '8px 14px',
+            borderRadius: t.radiusLg,
+            marginBottom: 14,
+          }}
+        >
+          A betöltött terv mentett összesítője nem egyezik az itt újraszámolt értékkel —
+          mentett fizetendő: <b>{formatMoney(plan.osszesitok.fizetendo, currency)}</b>, újraszámolva:{' '}
+          <b>{formatMoney(loadedOsszesitokDiff.fizetendo, currency)}</b>. A fájlban lévő (mentett)
+          érték az igazság — az aláírt papírral kell egyeznie —, ezt nem írjuk felül automatikusan.
+        </div>
+      )}
+
       {plan.fazisok.map((p, pi) => (
         <PhaseCard
-          key={pi}
+          key={`${fazisResetToken}-${pi}`}
           phase={p}
           currency={currency}
           nyelv={nyelv}
@@ -112,11 +137,12 @@ export default function PlanEditorPage() {
               draft.fazisok[pi].megjegyzes = v;
             })
           }
-          onDelete={() =>
+          onDelete={() => {
             updatePlan((draft) => {
               draft.fazisok.splice(pi, 1);
-            })
-          }
+            });
+            setFazisResetToken((n) => n + 1);
+          }}
         />
       ))}
 
@@ -320,7 +346,12 @@ function LineRow({
 }) {
   const teeth = parseTeeth(line.fogak);
   const mismatch = teeth.valid && teeth.teeth.length !== line.mennyiseg;
+  // P2-4: `listaEgysegar === 0` (vagy egy jövőbeli NaN/Infinity) esetén ez a
+  // képlet korábban "−Infinity%"-ot adott -- most ha az osztó nem egy
+  // pozitív véges szám, nincs kedvezmény-jelvény.
   const discount =
+    Number.isFinite(line.listaEgysegar) &&
+    line.listaEgysegar > 0 &&
     line.tenylegesEgysegar < line.listaEgysegar
       ? Math.round((1 - line.tenylegesEgysegar / line.listaEgysegar) * 100)
       : 0;
@@ -355,27 +386,23 @@ function LineRow({
           style={{ ...input, textAlign: 'center' }}
         />
 
-        <input
-          type="number"
-          min={1}
+        <NumberField
           value={line.mennyiseg}
-          onChange={(e) => onPatch({ mennyiseg: Math.max(1, Number(e.target.value) || 1) })}
-          style={{ ...input, textAlign: 'center' }}
+          min={1}
+          onCommit={(v) => onPatch({ mennyiseg: v })}
+          textAlign="center"
         />
 
         <div style={{ fontSize: 12, color: t.textFaint, textAlign: 'right', paddingTop: 8 }}>
           {formatMoney(line.listaEgysegar, currency)}
         </div>
 
-        <input
-          type="number"
+        <NumberField
           value={line.tenylegesEgysegar}
-          onChange={(e) => onPatch({ tenylegesEgysegar: Number(e.target.value) || 0 })}
-          style={{
-            ...input,
-            textAlign: 'right',
-            borderColor: discount || line.savos ? t.brand : t.line,
-          }}
+          min={0}
+          onCommit={(v) => onPatch({ tenylegesEgysegar: v })}
+          textAlign="right"
+          style={{ borderColor: discount || line.savos ? t.brand : t.line }}
         />
 
         <div
