@@ -53,8 +53,8 @@ function ToothRow({
             width={boxW}
             height={boxH}
             rx={3}
-            fill={active ? t.sky : '#EDEFF3'}
-            stroke={active ? t.navy : undefined}
+            fill={active ? t.accent : t.toothInactive}
+            stroke={active ? t.brand : undefined}
             strokeWidth={active ? 0.6 : 0}
           />
         );

@@ -2,6 +2,10 @@
 //
 // A márkaszínek a klinika logójából származnak (CorelDRAW PDF-ből mintavételezve).
 // A világoskék SOHA nem lehet szövegszín: #7EC7EF fehéren, kis méretben olvashatatlan.
+//
+// FIGYELEM: ez a paletta elavult (a logó 2025-ös navy/világoskék verziója).
+// 2026-08-06 óta az igazság forrása app/src/design/tokens.ts, ami a klinika
+// honlapját (drmandoki.hu) követi — ide ne másold vissza a navy értékeket.
 
 export const t = {
   // Márka

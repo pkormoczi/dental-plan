@@ -39,10 +39,10 @@ export default function SettingsPage() {
 
   return (
     <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 18, color: t.navy, marginBottom: 16 }}>Beállítások</h1>
+      <h1 style={{ fontSize: 18, color: t.brand, marginBottom: 16 }}>Beállítások</h1>
 
       <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.navy, marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: t.brand, marginBottom: 10 }}>
           Rendelő adatai
         </div>
         <Field label="Név">
@@ -98,7 +98,7 @@ export default function SettingsPage() {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.navy, marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: t.brand, marginBottom: 10 }}>
           Orvosok
         </div>
         <Field label="Egy név soronként">
@@ -113,7 +113,7 @@ export default function SettingsPage() {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.navy, marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: t.brand, marginBottom: 10 }}>
           Ajánlat és nyelv
         </div>
         <Field label="Ajánlat érvényessége (nap)">
@@ -166,7 +166,7 @@ export default function SettingsPage() {
               Nyilatkozat: <span style={{ fontFamily: t.mono }}>nyilatkozat-de-v1.md</span> —
               placeholder, jogi lektorálás szükséges
               <br />
-              <Link to="/arlista" style={{ color: t.navy }}>
+              <Link to="/arlista" style={{ color: t.brand }}>
                 Árlista megnyitása
               </Link>{' '}
               — a „Nincs EUR ár” szűrő a munkalista.
@@ -176,7 +176,7 @@ export default function SettingsPage() {
       </div>
 
       <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.navy, marginBottom: 10 }}>Logó</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: t.brand, marginBottom: 10 }}>Logó</div>
         <div style={{ fontSize: 12, color: t.textMuted }}>
           Fájlnév: <span style={{ fontFamily: t.mono }}>{settings.logoFajl}</span>
         </div>

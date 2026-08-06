@@ -27,7 +27,7 @@ export default function Home() {
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 20, color: t.navy, marginBottom: 4 }}>
+      <h1 style={{ fontSize: 20, color: t.brand, marginBottom: 4 }}>
         Kezelési terv és árajánlat
       </h1>
       <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 20 }}>
@@ -63,9 +63,9 @@ const btnPrimary = {
   borderRadius: t.radius,
   cursor: 'pointer',
   fontFamily: 'inherit',
-  border: `1px solid ${t.navy}`,
-  background: t.navy,
-  color: '#fff',
+  border: `1px solid ${t.ink}`,
+  background: t.ink,
+  color: t.onBrand,
 } as const;
 
 const btnSecondary = {

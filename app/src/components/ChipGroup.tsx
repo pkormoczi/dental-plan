@@ -1,5 +1,5 @@
 // Kétállású (vagy több) szegmentált kapcsoló -- a PriceListAdminPage
-// szűrő-chipjeinek mintája (chip stílus + t.skyWash/t.navy a kiválasztotton).
+// szűrő-chipjeinek mintája (chip stílus + t.accentWash/t.brand a kiválasztotton).
 // Közös komponens, mert a Páciens adatlap (nyelv/pénznem) és a Beállítások
 // (alapértelmezett nyelv) is ugyanezt a mintát használja.
 
@@ -24,9 +24,9 @@ export default function ChipGroup<T extends string>({
           onClick={() => onChange(v)}
           style={{
             ...chip,
-            background: value === v ? t.skyWash : t.surface,
-            borderColor: value === v ? t.navy : t.line,
-            color: value === v ? t.navy : t.textMuted,
+            background: value === v ? t.accentWash : t.surface,
+            borderColor: value === v ? t.brand : t.line,
+            color: value === v ? t.brand : t.textMuted,
             fontWeight: value === v ? 600 : 400,
           }}
         >

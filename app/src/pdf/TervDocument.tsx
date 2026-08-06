@@ -40,7 +40,7 @@ const s = {
     alignItems: 'flex-start' as const,
     paddingBottom: 12,
     borderBottomWidth: 1.5,
-    borderBottomColor: t.navy,
+    borderBottomColor: t.brand,
     marginBottom: 16,
   },
   // flexShrink/flexGrow/flexBasis: a bal blokk (logó + rendelő adatai)
@@ -56,13 +56,13 @@ const s = {
     flexBasis: 0,
   },
   logoMain: { width: 96, height: 24, objectFit: 'contain' as const },
-  headerDivider: { width: 2, height: 26, backgroundColor: t.sky, marginHorizontal: 12 },
+  headerDivider: { width: 2, height: 26, backgroundColor: t.accent, marginHorizontal: 12 },
   headerClinicBlock: { flexShrink: 1, flexGrow: 1, flexBasis: 0 },
   headerClinicText: { fontSize: 9, color: t.textMuted, lineHeight: 1.5 },
   // Fix szélesség (nem intrinsic), hogy a hosszabb német cím két sorba
   // törjön a bal blokkra csúszás helyett.
   headerTitleBlock: { alignItems: 'flex-end' as const, flexShrink: 0, width: 220 },
-  headerTitle: { fontSize: 12.5, fontWeight: 600, color: t.navy, textAlign: 'right' as const },
+  headerTitle: { fontSize: 12.5, fontWeight: 600, color: t.brand, textAlign: 'right' as const },
   headerMeta: { fontSize: 9, color: t.textMuted, marginTop: 2 },
 
   miniHeader: {
@@ -86,7 +86,7 @@ const s = {
   kvRow: { flexDirection: 'row' as const, fontSize: 9.5 },
 
   phaseBlock: { marginBottom: 14 },
-  phaseTitle: { fontSize: 11.5, fontWeight: 600, color: t.navy, marginBottom: 5 },
+  phaseTitle: { fontSize: 11.5, fontWeight: 600, color: t.brand, marginBottom: 5 },
   tableHeaderRow: {
     flexDirection: 'row' as const,
     borderBottomWidth: 1,
@@ -127,12 +127,12 @@ const s = {
   summaryBlockFull: { width: '100%' },
   summaryLine: { flexDirection: 'row' as const, justifyContent: 'space-between' as const },
   summaryLabelMuted: { fontSize: 9, color: t.textMuted },
-  summaryDivider: { height: 1.5, backgroundColor: t.navy, marginVertical: 5 },
-  summaryTotalLabel: { fontSize: 11, fontWeight: 600, color: t.navy },
-  summaryTotalValue: { fontSize: 11, fontWeight: 600, color: t.navy },
+  summaryDivider: { height: 1.5, backgroundColor: t.brand, marginVertical: 5 },
+  summaryTotalLabel: { fontSize: 11, fontWeight: 600, color: t.brand },
+  summaryTotalValue: { fontSize: 11, fontWeight: 600, color: t.brand },
   validityNote: { fontSize: 8, color: t.textMuted, marginTop: 6, lineHeight: 1.5 },
 
-  h2: { fontSize: 12.5, fontWeight: 600, color: t.navy, marginBottom: 10 },
+  h2: { fontSize: 12.5, fontWeight: 600, color: t.brand, marginBottom: 10 },
   bulletRow: { flexDirection: 'row' as const, marginBottom: 5 },
   bulletDot: { width: 12, fontSize: 9.5 },
   bulletText: { flex: 1, fontSize: 9.5, lineHeight: 1.5 },

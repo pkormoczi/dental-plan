@@ -8,6 +8,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { createBlankPlan } from '../domain/blankPlan';
 import type { Plan, PriceList, Settings } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
+import { t } from '../design/tokens';
 
 interface AppStateValue {
   settings: Settings;
@@ -49,7 +50,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   if (!settings || !priceList || !plan) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: '#8A93A3', fontSize: 13 }}>
+      <div style={{ padding: 40, textAlign: 'center', color: t.textFaint, fontSize: 13 }}>
         Betöltés…
       </div>
     );

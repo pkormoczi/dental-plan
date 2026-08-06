@@ -35,7 +35,7 @@ A tervezési fázis (ez a dokumentumcsomag) lezárult, az implementáció az
 | `ui/PlanEditor.jsx` | Kezelési terv szerkesztő — a legfontosabb képernyő |
 | `ui/PriceListAdmin.jsx` | Árlista admin, kinyitható sorokkal |
 | `ui/PrintPreview.jsx` | A nyomtatvány három oldala |
-| `assets/mandoki-dental-logo.png` | Márkalogó, átlátszó háttér |
+| `assets/mandoki-dental-logo.png` | Márkalogó, átlátszó háttér (navy eredeti — az app egy, a honlap arculatához átszínezett másolatot használ, `app/src/assets/logo.png`) |
 | `app/` | A tényleges implementáció — lásd `CLAUDE.md` |
 
 ## A `ui/*.jsx` fájlok státusza

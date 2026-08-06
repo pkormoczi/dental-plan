@@ -160,7 +160,7 @@ function Header({
       }}
     >
       <div>
-        <div style={{ fontSize: 18, fontWeight: 600, color: t.navy }}>Kezelési terv</div>
+        <div style={{ fontSize: 18, fontWeight: 600, color: t.brand }}>Kezelési terv</div>
         <div style={{ fontSize: 13, color: t.textMuted }}>
           {patientName || 'Új páciens'} · {statusz === 'VEGLEGES' ? 'véglegesítve' : 'piszkozat'}
         </div>
@@ -232,7 +232,7 @@ function PhaseCard({
             font: 'inherit',
             fontSize: 15,
             fontWeight: 600,
-            color: t.navy,
+            color: t.brand,
             background: 'transparent',
             width: 320,
           }}
@@ -338,7 +338,7 @@ function LineRow({
                 fontSize: 11,
                 marginLeft: 6,
                 color: t.ok,
-                background: '#EAF6F0',
+                background: t.okBg,
                 padding: '1px 5px',
                 borderRadius: 4,
               }}
@@ -374,7 +374,7 @@ function LineRow({
           style={{
             ...input,
             textAlign: 'right',
-            borderColor: discount || line.savos ? t.navy : t.line,
+            borderColor: discount || line.savos ? t.brand : t.line,
           }}
         />
 
@@ -482,7 +482,7 @@ function ItemPicker({
             padding: 4,
             maxHeight: 280,
             overflowY: 'auto',
-            boxShadow: '0 8px 24px rgba(35,60,121,0.12)',
+            boxShadow: t.shadowLg,
           }}
         >
           {results.map((r, i) => {
@@ -510,7 +510,8 @@ function ItemPicker({
                     fontSize: 13,
                     cursor: 'pointer',
                     borderRadius: t.radius,
-                    background: i === hi ? t.skyWash : 'transparent',
+                    background: i === hi ? t.accentWash : 'transparent',
+                    boxShadow: i === hi ? `inset 3px 0 0 ${t.accent}` : 'none',
                   }}
                 >
                   <span>
@@ -598,7 +599,7 @@ function Summary({
           style={{
             fontSize: 24,
             fontWeight: 600,
-            color: t.navy,
+            color: t.brand,
             fontVariantNumeric: 'tabular-nums',
           }}
         >

@@ -95,7 +95,7 @@ export default function PriceListAdminPage() {
           marginBottom: 14,
         }}
       >
-        <div style={{ fontSize: 18, fontWeight: 600, color: t.navy }}>Árlista</div>
+        <div style={{ fontSize: 18, fontWeight: 600, color: t.brand }}>Árlista</div>
         <div style={{ fontSize: 12, color: t.textMuted, fontFamily: t.mono }}>
           verzió {priceList.arlistaVerzio}
         </div>
@@ -115,9 +115,9 @@ export default function PriceListAdminPage() {
             onClick={() => setFilter(k)}
             style={{
               ...chip,
-              background: filter === k ? t.skyWash : t.surface,
-              borderColor: filter === k ? t.navy : t.line,
-              color: filter === k ? t.navy : t.textMuted,
+              background: filter === k ? t.accentWash : t.surface,
+              borderColor: filter === k ? t.brand : t.line,
+              color: filter === k ? t.brand : t.textMuted,
             }}
           >
             {label}
@@ -135,7 +135,7 @@ export default function PriceListAdminPage() {
               padding: '16px 0 4px',
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: 600, color: t.navy }}>{cat.nev.hu}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: t.brand }}>{cat.nev.hu}</span>
             <span style={{ fontSize: 11, color: t.textFaint }}>{items.length} tétel</span>
           </div>
 
@@ -434,8 +434,8 @@ function btn(primary?: boolean): React.CSSProperties {
     borderRadius: t.radius,
     cursor: 'pointer',
     fontFamily: 'inherit',
-    border: `1px solid ${primary ? t.navy : t.lineStrong}`,
-    background: primary ? t.navy : t.surface,
-    color: primary ? '#fff' : t.text,
+    border: `1px solid ${primary ? t.ink : t.lineStrong}`,
+    background: primary ? t.ink : t.surface,
+    color: primary ? t.onBrand : t.text,
   };
 }

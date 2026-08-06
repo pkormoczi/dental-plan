@@ -85,7 +85,7 @@ export default function PlanHistoryPage() {
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 18, color: t.navy, marginBottom: 16 }}>Korábbi tervek</h1>
+      <h1 style={{ fontSize: 18, color: t.brand, marginBottom: 16 }}>Korábbi tervek</h1>
 
       <input
         value={q}
@@ -101,7 +101,7 @@ export default function PlanHistoryPage() {
 
       {filtered.map((p) => (
         <div key={p.dirName} style={card}>
-          <div style={{ fontWeight: 600, color: t.navy, marginBottom: 6, fontSize: 14 }}>
+          <div style={{ fontWeight: 600, color: t.brand, marginBottom: 6, fontSize: 14 }}>
             {namesByPatient[p.dirName] ?? p.dirName}
           </div>
           {(versionsByPatient[p.dirName] ?? [])

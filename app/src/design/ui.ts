@@ -45,9 +45,9 @@ export function btn(primary?: boolean): CSSProperties {
     borderRadius: t.radius,
     cursor: 'pointer',
     fontFamily: 'inherit',
-    border: `1px solid ${primary ? t.navy : t.lineStrong}`,
-    background: primary ? t.navy : t.surface,
-    color: primary ? '#fff' : t.text,
+    border: `1px solid ${primary ? t.ink : t.lineStrong}`,
+    background: primary ? t.ink : t.surface,
+    color: primary ? t.onBrand : t.text,
   };
 }
 

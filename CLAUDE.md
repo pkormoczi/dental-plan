@@ -8,12 +8,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 docs/     6 tervdokumentum (01–06, lásd térkép alul)
 data/     arlista.seed.json (118 tétel), az eredeti .xls
 ui/       PlanEditor.jsx, PriceListAdmin.jsx, PrintPreview.jsx, tokens.js — REFERENCIA, nem buildelődik
-assets/   márkalogó (PNG + eredeti PDF-ek)
+assets/   márkalogó, navy eredeti (PNG + eredeti PDF-ek) — az app egy átszínezett másolatot használ
 app/      a tényleges Vite + React + TypeScript alkalmazás — IDE dolgozz
 ```
 
 Az `app/`-on kívüli minden más csak referencia és dokumentáció. Build/lint/teszt
 parancsok az `app/README.md`-ben (vagy `app/package.json` scripts).
+
+A márka a klinika nyilvános honlapját (drmandoki.hu) követi (`#976445` /
+`#f77409`), forrása `app/src/design/tokens.ts` — lásd
+`docs/04-nyomtatvany-spec.md` "Márka".
 
 ## A `ui/*.jsx` fájlok státusza
 
@@ -75,7 +79,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | Páciensmappa-névben az **ékezetek maradnak**, nincs transzliteráció; csak a tiltott karaktereket (`/ \ : * ? " < > \|`) kell cserélni; nevek rövidek (Windows 260 karakteres útvonalkorlát) | A doki a Fájlkezelőben keres rájuk névre |
 | IndexedDB nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez |
 | `@react-pdf/renderer` esetén **Unicode fontot kell regisztrálni** (pl. Inter, Source Sans, Noto Sans) | A beépített Helvetica nem tartalmazza az `ő`/`ű` karaktereket — ez csak a végleges PDF-en látszik, a HTML előnézeten nem |
-| `#7EC7EF` (a márka világoskékje) **soha nem lehet szövegszín** | Fehéren, kis méretben olvashatatlan; csak díszítővonalra és a fogtérkép kiemelésére való |
+| `#f77409` (a márka narancsa) **soha nem lehet szövegszín** | Fehéren 2,82:1, kis méretben olvashatatlan; csak díszítővonalra és a fogtérkép kiemelésére való |
 
 ## Meglévő segédfüggvények — használd, ne írd újra
 

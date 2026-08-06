@@ -93,11 +93,11 @@ export default function PatientPage() {
 
   return (
     <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 18, color: t.navy, marginBottom: 16 }}>Páciens adatlap</h1>
+      <h1 style={{ fontSize: 18, color: t.brand, marginBottom: 16 }}>Páciens adatlap</h1>
 
       {showLangCard && (
         <div style={card}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: t.navy, marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: t.brand, marginBottom: 10 }}>
             Az ajánlat nyelve és pénzneme
           </div>
 

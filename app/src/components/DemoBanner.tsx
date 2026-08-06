@@ -7,12 +7,12 @@ export default function DemoBanner() {
   return (
     <div
       style={{
-        background: t.warnBg,
-        color: t.warn,
+        background: t.dangerBg,
+        color: t.danger,
         fontSize: 12.5,
         padding: '7px 14px',
         textAlign: 'center',
-        borderBottom: `1px solid ${t.line}`,
+        borderBottom: `1px solid ${t.dangerBorder}`,
       }}
     >
       <strong>DEMÓ</strong> — az adatok csak ebben a böngészőben tárolódnak. Ne

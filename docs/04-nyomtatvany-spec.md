@@ -10,26 +10,40 @@ oldalt elhagyja — így a hazavitt példány nem egy aláírandó szerződés.
 
 ## Márka
 
+A márka 2026-08-06 óta a klinika nyilvános honlapját (drmandoki.hu)
+követi, nem a logó korábbi (2025-ös, navy/világoskék) színeit — a logó
+PNG-jét is ehhez a palettához színeztük át (lásd „Logó" lent).
+
 | Szerep | Érték |
 |---|---|
-| Elsődleges (címsorok, vonalak) | `#233C79` |
-| Másodlagos (hajszálvonal-akcentus) | `#7EC7EF` |
+| Elsődleges (címsorok, vonalak) | `#976445` |
+| Másodlagos (hajszálvonal-akcentus) | `#f77409` |
 | Törzsszöveg | `#1A1A1A` |
-| Halvány szöveg | `#5A6579` |
-| Vonal | `#C9D2E2` |
+| Halvány szöveg | `#5C5651` |
+| Vonal | `#D3CBC3` |
 
-**A világoskék soha nem lehet szövegszín.** `#7EC7EF` fehéren, 11 px-en
-olvashatatlan. Csak vékony díszítővonalra és a fogtérkép kiemelésére.
+**A narancs soha nem lehet szövegszín.** `#f77409` fehéren 2,82:1 —
+kis méretben olvashatatlan. Csak vékony díszítővonalra és a fogtérkép
+kiemelésére. Az elsődleges `#976445` fehéren 4,97:1 — épphogy a WCAG AA
+küszöb (4,5) fölött —, színes háttéren (pl. kiemelt sor) újra kell
+számolni a kontrasztot.
 
 ## Logó
 
-Fekvő lockup, átlátszó hátterű PNG, **600 dpi-n raszterizálva**. 25 mm
-fejlécszélességnél ez kb. 590 px. A CorelDRAW PDF megnyitásakor a
-Photoshop 72 dpi-t ajánl fel — az nyomtatásban homályos.
+Fekvő lockup, átlátszó hátterű PNG. A fájl `pHYs` chunkja szerint
+**300 dpi**-n van tárolva, 2662×666 px-en — ez jóval a nyomtatáshoz
+szükséges felbontás fölött van, egy 96 pt-os fejléc-dobozban éles marad.
+(Korábban itt „600 dpi" és „kb. 590 px" szerepelt — ez tévedés volt, a
+tényleges fájlt megmérve javítva.)
+
+Az `app/src/assets/logo.png` a 2025-ös lockup **átszínezett** másolata:
+pontos RGB-csere `#1a3e79 → #976445` és `#70c2ed → #f77409`, az
+alfa-csatorna (élsimítás) érintetlenül — a navy eredeti a repó gyökér
+`assets/`-jében marad referenciaként.
 
 A `@react-pdf/renderer` nem tud PDF-et és SVG-t képként beágyazni, csak
 PNG-t és JPEG-et. (Ha valaha vektoros logó kell, a `pdf-lib`
-`embedPdf()`-je tudja — de egy 1500 px-es PNG nyomatban
+`embedPdf()`-je tudja — de egy 2662 px-es PNG nyomatban
 megkülönböztethetetlen.)
 
 ## Fejléc
@@ -45,7 +59,7 @@ A logó fekvő, ezért **oldalra igazított** elrendezés:
 A logó tartalmazza a wordmarkot, ezért a klinika nevét **nem ismételjük**
 a fejlécben. A cégnév a lábléc jogi blokkjába kerül.
 
-A `│` egy 2 px-es `#7EC7EF` függőleges vonal — ez az egyetlen díszítő
+A `│` egy 2 px-es `#f77409` függőleges vonal — ez az egyetlen díszítő
 elem a dokumentumon.
 
 A 2–3. oldal egysoros minifejlécet kap (kis logó + „Kezelési terv ·
@@ -100,7 +114,7 @@ Ez jogi védelem: sávos árat fix számként nyomtatni annyi, mint kötelező
 ### Fogtérkép
 
 32 maradó fog két sorban, kvadránsonként elválasztva, **számozás nélkül**.
-Az érintett fogak `#7EC7EF` kitöltést kapnak, a többi halványszürkét.
+Az érintett fogak `#f77409` kitöltést kapnak, a többi meleg-szürkét.
 Tejfog csak akkor jelenjen meg, ha a tervben van tejfog-szám.
 
 Ha egyetlen fogszám sincs a tervben, a fogtérkép **kimarad** és az
@@ -110,7 +124,7 @@ Ha egyetlen fogszám sincs a tervben, a fogtérkép **kimarad** és az
 
 ```
 Kezelések összesen                820 000 Ft
-──────────────────────────────────────────── (1.5px, #233C79)
+──────────────────────────────────────────── (1.5px, #976445)
 Fizetendő                         780 000 Ft
 ```
 
