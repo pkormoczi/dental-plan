@@ -18,10 +18,11 @@ export function createBlankPlan(settings: Settings, priceList: PriceList): Plan 
   // után induló új tervek mindig magyarok, hogy a nyelv soha ne maradjon
   // "de"-n úgy, hogy a doki sehol nem lát hozzá kapcsolót.
   //
-  // A pénznem alapértéke MINDIG HUF, nem a nyelvtől függ: 0/118 tételnek
-  // van ma EUR ára (docs/06-arlista-import.md), egy EUR alapértelmezés
-  // garantáltan üres keresőt adó piszkozatot hozna létre. A doki egy
-  // kattintással vált a Páciens adatlapon, ha mégis EUR kell.
+  // A pénznem alapértéke MINDIG HUF, nem a nyelvtől függ: a rendelő
+  // elsődleges pénzneme forint, az EUR árak pedig ma még lektorálatlan,
+  // árfolyamból becsült kiindulóértékek (docs/06-arlista-import.md) -- a
+  // HUF alapértelmezés a biztonságosabb kiindulás. A doki egy kattintással
+  // vált a Páciens adatlapon, ha mégis EUR kell.
   const nyelv: Nyelv = settings.nemetEngedelyezve ? settings.alapertelmezettNyelv : 'hu';
 
   return {

@@ -104,17 +104,22 @@ Ezek a tételek kapják a `*` jelölést a nyomtatványon (D15).
 Ezek mind egy-egy admin-szerkesztés. A doki dolga eldönteni, mi a hiba és
 mi a szándék.
 
-## Amit még nem tartalmaz a seed
+## Amit a seed 2026-08-06 óta tartalmaz, és mit még nem
 
-- **`de` nevek**: mind `null`. 118 fordítás, ez a német funkció valódi
-  hosszú pole-ja. Ez **nem blokkolja** a német mód használatát (D21): a
-  hiányzó nevű tétel a keresőben és a felvett soron is magyar névvel,
-  jól látható `HU` jelöléssel jelenik meg, a véglegesítés pedig
+- **`de` nevek**: mind ki van töltve. 118 tétel gépi/AI-fordítása, szakmai
+  pontosságra törekedve, de **orvos által nem lektorálva** — a hibák
+  elfogadhatók, az adminban javítandók. Ez már a D21 előtt is
+  **nem blokkolta** a német mód használatát: ha egy tételnek mégsem
+  lenne `de` neve, a keresőben és a felvett soron is magyar névvel,
+  jól látható `HU` jelöléssel jelenne meg, a véglegesítés pedig
   megerősítést kér, mielőtt egy részben magyar nyelvű dokumentum a
   páciens elé kerülne.
-- **`EUR` árak**: mind `null`. Független érték, nincs árfolyam-átváltás
-  (D11). Emiatt egy EUR pénznemű terv keresője üres — a Páciens adatlap
-  ezt előre jelzi, mielőtt a doki a szerkesztőbe lépne.
+- **`EUR` árak**: mind ki van töltve — a HUF árból számolt becslés, a
+  fordítás napján (2026-08-06) érvényes középárfolyamon (~363,3 HUF/EUR),
+  egész euróra kerekítve. **Nem árfolyam-automatizmus** (D11 továbbra is
+  érvényes: a `terv.json`-ban mentett `tenylegesEgysegar` egy pillanatkép,
+  soha nem számolódik újra) — ez egy egyszeri, kézzel indított
+  kiindulóérték-feltöltés, a doki az adminban soronként felülbírálhatja.
 - **`gyakori` jelölés**: mind `false`. A dokinak kell 8–12 tételt
   megjelölnie, ezek lesznek a szerkesztő gyorsgombjai.
 - **`forrasSor`**: az eredeti Excel sorszáma, hogy az első átnézésnél

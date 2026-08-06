@@ -5,6 +5,8 @@ import { MemoryRouter } from 'react-router-dom';
 import PriceListAdminPage from './PriceListAdminPage';
 import { AppStateProvider } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
+import { seedPriceList } from '../storage/seed/priceList';
+import { seedSettings } from '../storage/seed/settings';
 import type { PriceList, Tetel } from '../domain/types';
 
 function renderAdmin() {
@@ -31,9 +33,25 @@ function findItem(pl: PriceList, hu: string): Tetel {
   return item;
 }
 
+/**
+ * A tesztek az EUR-ár-kiegészítés munkafolyamatát vizsgálják, ezért egy
+ * olyan árlistát seedelünk, amiben egyetlen tételnek sincs EUR ára --
+ * függetlenül attól, hogy az élő seed (data/arlista.seed.json) mennyire
+ * kész EUR-ban.
+ */
+function seedPriceListWithNoEurPrices() {
+  const custom = {
+    ...seedPriceList,
+    tetelek: seedPriceList.tetelek.map((x) => ({ ...x, ar: { ...x.ar, EUR: null } })),
+  };
+  localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+  localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+}
+
 describe('PriceListAdminPage', () => {
   beforeEach(() => {
     localStorage.clear();
+    seedPriceListWithNoEurPrices();
   });
 
   it('reflects that all 118 seed items are missing an EUR price (docs/06-arlista-import.md)', async () => {

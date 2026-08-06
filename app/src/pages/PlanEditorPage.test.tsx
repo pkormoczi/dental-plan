@@ -36,7 +36,9 @@ function seedGermanPlanWithOneTranslatedItem() {
   const custom = {
     ...seedPriceList,
     tetelek: seedPriceList.tetelek.map((x) =>
-      x.nev.hu === 'Fogeltávolítás' ? { ...x, nev: { ...x.nev, de: 'Zahnextraktion' } } : x,
+      x.nev.hu === 'Fogeltávolítás'
+        ? { ...x, nev: { ...x.nev, de: 'Zahnextraktion' } }
+        : { ...x, nev: { ...x.nev, de: null } },
     ),
   };
   localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
@@ -46,9 +48,13 @@ function seedGermanPlanWithOneTranslatedItem() {
   );
 }
 
-/** Csak a `nemetEngedelyezve` kapcsoló, a árlista változatlan (0/118 EUR ár). */
-function seedWithGermanEnabled() {
-  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+/** A `nemetEngedelyezve` kapcsoló + egy árlista, amiben egyetlen tételnek sincs EUR ára. */
+function seedWithGermanEnabledAndNoEurPrices() {
+  const custom = {
+    ...seedPriceList,
+    tetelek: seedPriceList.tetelek.map((x) => ({ ...x, ar: { ...x.ar, EUR: null } })),
+  };
+  localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
   localStorage.setItem(
     'dp:beallitasok.json',
     JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
@@ -187,7 +193,7 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
 
   it('shows the empty-currency message in the search when the plan currency has zero priced items', async () => {
     const user = userEvent.setup();
-    seedWithGermanEnabled();
+    seedWithGermanEnabledAndNoEurPrices();
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));

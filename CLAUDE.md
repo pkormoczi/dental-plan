@@ -122,16 +122,20 @@ magyar, magyarul gépel akkor is, ha német ajánlatot állít össze (D21).
 
 `data/arlista.seed.json` = 118 tétel, 12 kategória, az eredeti Excel `Arlista` lapjából
 importálva; első indításkor `arlista.json` néven másolódik a gyökérmappába, ha még
-nincs ott. Ismerten hiányzik: minden `de` (német) név `null`, minden `EUR` ár `null`,
-minden `gyakori` jelölés `false`. A `k01 Besorolatlan` kategória és az „Egyéb
-kezelések" 11 árva tétele (fogszabályozási és francia nyelvű maradvány tételnevek)
-**szándékosan takarítatlan** (D16) — ez adminban, kategória-átmozgatással orvosolandó,
-ne az importlogikában javítsd.
+nincs ott. 2026-08-06 óta mind a 118 tételnek van `de` neve és `EUR` ára: a nevek
+gépi/AI-fordítások (szakmailag törekedve a pontosságra, de nem orvos által
+lektorálva), az EUR árak a HUF árból a fordítás napi középárfolyamán (~363,3 HUF/EUR)
+számolt, egész euróra kerekített becslések — egyik sem éles, a doki az adminban
+soronként felülbírálhatja/javíthatja. `gyakori` jelölés továbbra is mind `false` — ezt
+a dokinak kell megjelölnie (8–12 tétel), ez adja a szerkesztő gyorsgombjait. A
+`k01 Besorolatlan` kategória és az „Egyéb kezelések" 11 árva tétele (fogszabályozási
+és francia nyelvű maradvány tételnevek) **szándékosan takarítatlan** (D16) — ez
+adminban, kategória-átmozgatással orvosolandó, ne az importlogikában javítsd.
 
-Ez a hiány (D21 óta) **nem blokkolja** a német nyelv kipróbálását: a hiányzó nevű
-tétel magyar névvel, `HU` jelöléssel jelenik meg, a hiányzó EUR ár miatt üres
-keresőt a Páciens adatlap előre jelzi, a Beállítások pedig számszerűsíti a
-készültséget (`lefedettseg()`).
+A hiányzó/lektorálatlan tartalom (D21 óta) **nem blokkolja** a német nyelv
+kipróbálását: ha egy tételnek mégsem lenne `de` neve, magyar névvel, `HU`
+jelöléssel jelenik meg; ha egy pénznemben egy tételnek sincs ára, ezt a Páciens
+adatlap előre jelzi. A Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 ## Dokumentáció-térkép
 

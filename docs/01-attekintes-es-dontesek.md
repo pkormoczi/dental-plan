@@ -55,7 +55,7 @@ logóval). Az alkalmazás valódi indokai ezek:
 | D18 | Minden JSON fájl `schemaVersion` mezővel indul | Ezek a fájlok évekig élnek a Drive-on; a 3. verziónak is olvasnia kell a mait |
 | D19 | Search-only tételkereső, nincs kategória böngésző | A doki fejből tudja a tételeket; a keresés ékezetfüggetlen |
 | D20 | „Gyakori" tételek kézzel jelölve | Nem használati statisztikából — kiszámítható, nem ugrál a UI |
-| D21 | A terv nyelve és pénzneme egymástól **függetlenül** választható | A német páciens Magyarországon forintban is fizethet. Az 1:1 kötés (`de` → EUR) használhatatlanná tenné a német módot, amíg 0/118 tételnek van EUR ára — a nyelv a nyomtatvány szövegét vezérli (tételnevek, feliratok, dátumformátum, sablon), a pénznem az ajánlható tételkört és a pénzformátumot |
+| D21 | A terv nyelve és pénzneme egymástól **függetlenül** választható | A német páciens Magyarországon forintban is fizethet. Az 1:1 kötés (`de` → EUR) rossz tervezés lenne még kész fordítás/árazás mellett is — a nyelv a nyomtatvány szövegét vezérli (tételnevek, feliratok, dátumformátum, sablon), a pénznem az ajánlható tételkört és a pénzformátumot. Emellett a döntés idején (és amíg a doki nem lektorálta a 118 gépi fordítást és becsült EUR árat, lásd `docs/06-arlista-import.md`) a kötés használhatatlanná is tenné a német módot |
 
 ## Adatvédelmi keret
 

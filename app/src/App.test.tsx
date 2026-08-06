@@ -132,7 +132,7 @@ describe('Végpontok közötti folyamat', () => {
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
     await user.type(search, 'fogeltavolitas');
-    await screen.findByText('Fogeltávolítás');
+    await screen.findByText('Zahnextraktion');
     await user.keyboard('{Enter}');
     await waitFor(() => expect(search).toHaveValue(''));
 

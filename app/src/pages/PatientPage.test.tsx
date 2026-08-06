@@ -39,6 +39,32 @@ function seedWithGermanEnabled() {
   );
 }
 
+/** A német kártya + egy árlista, amiben egyetlen tételnek sincs EUR ára. */
+function seedWithGermanEnabledAndNoEurPrices() {
+  const custom = {
+    ...seedPriceList,
+    tetelek: seedPriceList.tetelek.map((x) => ({ ...x, ar: { ...x.ar, EUR: null } })),
+  };
+  localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+  localStorage.setItem(
+    'dp:beallitasok.json',
+    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
+  );
+}
+
+/** A német kártya + egy árlista, amiben egyetlen tételnek sincs német neve. */
+function seedWithGermanEnabledAndNoGermanNames() {
+  const custom = {
+    ...seedPriceList,
+    tetelek: seedPriceList.tetelek.map((x) => ({ ...x, nev: { ...x.nev, de: null } })),
+  };
+  localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+  localStorage.setItem(
+    'dp:beallitasok.json',
+    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
+  );
+}
+
 describe('PatientPage -- nyelv/pénznem kártya', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -61,7 +87,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
 
   it('warns when the selected pénznem has zero priced items', async () => {
     const user = userEvent.setup();
-    seedWithGermanEnabled();
+    seedWithGermanEnabledAndNoEurPrices();
     renderPatient();
     await screen.findByText('Az ajánlat nyelve és pénzneme');
 
@@ -74,7 +100,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
 
   it('warns about missing German item names once Deutsch is selected', async () => {
     const user = userEvent.setup();
-    seedWithGermanEnabled();
+    seedWithGermanEnabledAndNoGermanNames();
     renderPatient();
     await screen.findByText('Az ajánlat nyelve és pénzneme');
 

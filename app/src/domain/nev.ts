@@ -1,9 +1,10 @@
 // A tétel nevének nyelvfüggő feloldása. D21: a `plan.nyelv` a nyomtatvány
-// szövegét vezérli -- de 0/118 tételnek van ma német neve (lásd
-// docs/06-arlista-import.md), ezért a feloldás magyarra esik vissza, ha a
-// kért nyelven nincs név. A visszaesés SOHA nem néma: lásd a `fallback`
-// jelzőt és a `fallbackSorok` diagnosztikát, amit a PlanEditorPage (kereső,
-// felvett sor) és a PreviewPage (véglegesítés-őr) is felhasznál.
+// szövegét vezérli -- a 118 tétel német neve gépi/AI-fordítás, orvos által
+// nem lektorálva (lásd docs/06-arlista-import.md), ezért egy-egy tételnél
+// előfordulhat hiányzó/pontatlan `de` név; a feloldás ilyenkor magyarra esik
+// vissza. A visszaesés SOHA nem néma: lásd a `fallback` jelzőt és a
+// `fallbackSorok` diagnosztikát, amit a PlanEditorPage (kereső, felvett sor)
+// és a PreviewPage (véglegesítés-őr) is felhasznál.
 
 import type { LokalizaltSzoveg, Nyelv, Plan, PriceList } from './types';
 

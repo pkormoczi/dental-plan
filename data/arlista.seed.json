@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "arlistaVerzio": "2026-07-01",
-  "modositva": "2026-08-05",
+  "modositva": "2026-08-06",
   "kategoriak": [
     {
       "id": "k01",
       "nev": {
         "hu": "Besorolatlan",
-        "de": null
+        "de": "Nicht kategorisiert"
       },
       "sorrend": 1
     },
@@ -15,7 +15,7 @@
       "id": "k02",
       "nev": {
         "hu": "Tömések",
-        "de": null
+        "de": "Füllungen"
       },
       "sorrend": 2
     },
@@ -23,7 +23,7 @@
       "id": "k03",
       "nev": {
         "hu": "Gyökérkezelés",
-        "de": null
+        "de": "Wurzelbehandlung"
       },
       "sorrend": 3
     },
@@ -31,7 +31,7 @@
       "id": "k04",
       "nev": {
         "hu": "Fogkőeltávolítás",
-        "de": null
+        "de": "Zahnsteinentfernung"
       },
       "sorrend": 4
     },
@@ -39,7 +39,7 @@
       "id": "k05",
       "nev": {
         "hu": "Fogfehérítés",
-        "de": null
+        "de": "Zahnaufhellung"
       },
       "sorrend": 5
     },
@@ -47,7 +47,7 @@
       "id": "k06",
       "nev": {
         "hu": "Gyermekfogászat",
-        "de": null
+        "de": "Kinderzahnheilkunde"
       },
       "sorrend": 6
     },
@@ -55,7 +55,7 @@
       "id": "k07",
       "nev": {
         "hu": "All-on-X csomagok",
-        "de": null
+        "de": "All-on-X-Pakete"
       },
       "sorrend": 7
     },
@@ -63,7 +63,7 @@
       "id": "k08",
       "nev": {
         "hu": "Szájsebészet",
-        "de": null
+        "de": "Mundchirurgie"
       },
       "sorrend": 8
     },
@@ -71,7 +71,7 @@
       "id": "k09",
       "nev": {
         "hu": "Parodontológia",
-        "de": null
+        "de": "Parodontologie"
       },
       "sorrend": 9
     },
@@ -79,7 +79,7 @@
       "id": "k10",
       "nev": {
         "hu": "Korona és hídpótlások",
-        "de": null
+        "de": "Kronen- und Brückenversorgungen"
       },
       "sorrend": 10
     },
@@ -87,7 +87,7 @@
       "id": "k11",
       "nev": {
         "hu": "Kivehető fogsorok",
-        "de": null
+        "de": "Herausnehmbarer Zahnersatz"
       },
       "sorrend": 11
     },
@@ -95,7 +95,7 @@
       "id": "k12",
       "nev": {
         "hu": "Egyéb kezelések",
-        "de": null
+        "de": "Sonstige Behandlungen"
       },
       "sorrend": 12
     }
@@ -109,14 +109,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Konzultáció/fél óránként",
-        "de": null
+        "de": "Beratung/pro halbe Stunde"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 10000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 2800
+        }
       },
       "forrasSor": 2
     },
@@ -128,14 +131,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Panoráma-, TeleRtg, Arcüregfelvétel",
-        "de": null
+        "de": "Panorama-, Fernröntgen-, Kieferhöhlenaufnahme"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 9000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 2500
+        }
       },
       "forrasSor": 3
     },
@@ -147,14 +153,17 @@
       "gyakori": false,
       "nev": {
         "hu": "CBCT",
-        "de": null
+        "de": "DVT (CBCT)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 24000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6600
+        }
       },
       "forrasSor": 4
     },
@@ -166,14 +175,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fognyaki tömés",
-        "de": null
+        "de": "Zahnhalsfüllung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 25000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6900
+        }
       },
       "forrasSor": 7
     },
@@ -185,14 +197,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Élpótlás",
-        "de": null
+        "de": "Schneidekantenaufbau"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 35000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 9600
+        }
       },
       "forrasSor": 8
     },
@@ -204,14 +219,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Esztétikus tömés 1 felszín",
-        "de": null
+        "de": "Ästhetische Füllung, 1 Fläche"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 34000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 9400
+        }
       },
       "forrasSor": 9
     },
@@ -223,14 +241,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Esztétikus tömés 2felszin",
-        "de": null
+        "de": "Ästhetische Füllung, 2 Flächen"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 40000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 11000
+        }
       },
       "forrasSor": 10
     },
@@ -242,14 +263,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Esztétikus tömés 3 felszín",
-        "de": null
+        "de": "Ästhetische Füllung, 3 Flächen"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 45000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 12400
+        }
       },
       "forrasSor": 11
     },
@@ -261,14 +285,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Esztétikus tömés 4 felszín (betét indikáció)",
-        "de": null
+        "de": "Ästhetische Füllung, 4 Flächen (Inlay-Indikation)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 50000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 13800
+        }
       },
       "forrasSor": 12
     },
@@ -280,14 +307,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Everix felépítés",
-        "de": null
+        "de": "Everix-Aufbau"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 45000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 12400
+        }
       },
       "forrasSor": 13
     },
@@ -299,14 +329,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Ideiglenes tömés",
-        "de": null
+        "de": "Provisorische Füllung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 20000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 5500
+        }
       },
       "forrasSor": 14
     },
@@ -318,14 +351,17 @@
       "gyakori": false,
       "nev": {
         "hu": "alábélelés",
-        "de": null
+        "de": "Unterfüllung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 4000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 1100
+        }
       },
       "forrasSor": 15
     },
@@ -337,14 +373,17 @@
       "gyakori": false,
       "nev": {
         "hu": "csonkfelépítés",
-        "de": null
+        "de": "Stumpfaufbau"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 20000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 5500
+        }
       },
       "forrasSor": 16
     },
@@ -356,7 +395,7 @@
       "gyakori": false,
       "nev": {
         "hu": "Fogbél megnyitás + gyógyszeres zárás",
-        "de": null
+        "de": "Pulpaeröffnung + medikamentöse Einlage"
       },
       "ar": {
         "HUF": {
@@ -364,7 +403,11 @@
           "min": 35000,
           "max": 55000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "SAVOS",
+          "min": 9600,
+          "max": 15100
+        }
       },
       "forrasSor": 19
     },
@@ -376,14 +419,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Gyökértömés eltávolítása /csatorna",
-        "de": null
+        "de": "Wurzelfüllungsentfernung/Kanal"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 20000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 5500
+        }
       },
       "forrasSor": 20
     },
@@ -395,7 +441,7 @@
       "gyakori": false,
       "nev": {
         "hu": "Gyökértömés csatornaszámtól függően",
-        "de": null
+        "de": "Wurzelfüllung, je nach Kanalanzahl"
       },
       "ar": {
         "HUF": {
@@ -403,7 +449,11 @@
           "min": 38000,
           "max": 65000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "SAVOS",
+          "min": 10500,
+          "max": 17900
+        }
       },
       "forrasSor": 21
     },
@@ -415,14 +465,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Komplett kezelés: ultrahang, sófúvás, kézi műszeres kez., polírozás",
-        "de": null
+        "de": "Komplettbehandlung: Ultraschall, Pulverstrahl, manuelle Instrumentierung, Politur"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 24000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6600
+        }
       },
       "forrasSor": 24
     },
@@ -434,14 +487,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Ismételt kezelés 3-6 havonta",
-        "de": null
+        "de": "Wiederholungsbehandlung alle 3–6 Monate"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 24000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6600
+        }
       },
       "forrasSor": 25
     },
@@ -453,14 +509,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Komplett fogsor",
-        "de": null
+        "de": "Aufhellung, kompletter Zahnbogen"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 80000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 22000
+        }
       },
       "forrasSor": 28
     },
@@ -472,14 +531,17 @@
       "gyakori": false,
       "nev": {
         "hu": "1 db fog (belső és külső)",
-        "de": null
+        "de": "Aufhellung, 1 Zahn (innen und außen)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 20000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 5500
+        }
       },
       "forrasSor": 29
     },
@@ -491,14 +553,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fogbél megnyitás, eltávolítás",
-        "de": null
+        "de": "Pulpaeröffnung, Entfernung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 25000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6900
+        }
       },
       "forrasSor": 32
     },
@@ -510,14 +575,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Tejfog eltávolítás",
-        "de": null
+        "de": "Milchzahnextraktion"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 25000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6900
+        }
       },
       "forrasSor": 33
     },
@@ -529,14 +597,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Tejfog tömés",
-        "de": null
+        "de": "Milchzahnfüllung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 30000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 8300
+        }
       },
       "forrasSor": 34
     },
@@ -548,14 +619,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Barázda zárás foganként",
-        "de": null
+        "de": "Fissurenversiegelung pro Zahn"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 25000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6900
+        }
       },
       "forrasSor": 35
     },
@@ -567,14 +641,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Ecsetelés/fog",
-        "de": null
+        "de": "Fluoridierung (Lack)/Zahn"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 5000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 1400
+        }
       },
       "forrasSor": 36
     },
@@ -586,14 +663,17 @@
       "gyakori": false,
       "nev": {
         "hu": "All-on-x Anax fogpótlás",
-        "de": null
+        "de": "All-on-X Anax-Zahnersatz"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 800000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 220200
+        }
       },
       "forrasSor": 39
     },
@@ -605,14 +685,17 @@
       "gyakori": false,
       "nev": {
         "hu": "All-on-4 Anax csomag",
-        "de": null
+        "de": "All-on-4 Anax-Paket"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 1950000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 536700
+        }
       },
       "forrasSor": 40
     },
@@ -624,14 +707,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Neodetn implantátum csomagban",
-        "de": null
+        "de": "Neodent-Implantat im Paket"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 150000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 41300
+        }
       },
       "forrasSor": 41
     },
@@ -643,14 +729,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Neodent felépítmány csomagban",
-        "de": null
+        "de": "Neodent-Aufbau im Paket"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 50000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 13800
+        }
       },
       "forrasSor": 42
     },
@@ -662,14 +751,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Ideigenes 10 tag PMMA",
-        "de": null
+        "de": "Provisorium, 10-gliedrig, PMMA"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 350000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 96300
+        }
       },
       "forrasSor": 43
     },
@@ -681,14 +773,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Arcüregemelés zárt",
-        "de": null
+        "de": "Geschlossener Sinuslift"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 80000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 22000
+        }
       },
       "forrasSor": 50
     },
@@ -700,14 +795,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Arcüregemelés (csontpotló anyag és membrán ára külön fizetendő )",
-        "de": null
+        "de": "Sinuslift (Knochenersatzmaterial und Membran gesondert zu bezahlen)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 195000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 53700
+        }
       },
       "forrasSor": 51
     },
@@ -719,14 +817,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Arcüregzárás",
-        "de": null
+        "de": "Kieferhöhlenverschluss"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 45000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 12400
+        }
       },
       "forrasSor": 52
     },
@@ -738,14 +839,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Bölcsességfog mütéti eljárással (seb.gond.,varrat szedés)",
-        "de": null
+        "de": "Weisheitszahnentfernung, chirurgisch (Wundversorgung, Fadenentfernung)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 65000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 17900
+        }
       },
       "forrasSor": 53
     },
@@ -757,14 +861,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Csontblokk (anyag ár)",
-        "de": null
+        "de": "Knochenblock (Materialkosten)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 60000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 16500
+        }
       },
       "forrasSor": 54
     },
@@ -776,14 +883,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Csontblokk rögzítő csavar",
-        "de": null
+        "de": "Fixierschraube für Knochenblock"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 10000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 2800
+        }
       },
       "forrasSor": 55
     },
@@ -795,14 +905,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Csontkaparó",
-        "de": null
+        "de": "Knochenschaber"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 45000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 12400
+        }
       },
       "forrasSor": 56
     },
@@ -814,14 +927,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Csontpótlás (csontpótló anyag és membrán ára külön fizetendő)",
-        "de": null
+        "de": "Knochenaufbau (Knochenersatzmaterial und Membran gesondert zu bezahlen)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 210000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 57800
+        }
       },
       "forrasSor": 57
     },
@@ -833,14 +949,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Csontpótló anyag 0,5g",
-        "de": null
+        "de": "Knochenersatzmaterial 0,5 g"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 30000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 8300
+        }
       },
       "forrasSor": 58
     },
@@ -852,14 +971,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Csontpótló anyag 1g",
-        "de": null
+        "de": "Knochenersatzmaterial 1 g"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 60000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 16500
+        }
       },
       "forrasSor": 59
     },
@@ -871,14 +993,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fogeltávolítás",
-        "de": null
+        "de": "Zahnextraktion"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 25000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6900
+        }
       },
       "forrasSor": 61
     },
@@ -890,14 +1015,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fogeltávolítás emelővel",
-        "de": null
+        "de": "Zahnextraktion mit Hebel"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 30000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 8300
+        }
       },
       "forrasSor": 62
     },
@@ -909,14 +1037,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fogeltávolítás sebészi feltárással",
-        "de": null
+        "de": "Chirurgische Zahnextraktion"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 35000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 9600
+        }
       },
       "forrasSor": 63
     },
@@ -928,14 +1059,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Frenulectomia",
-        "de": null
+        "de": "Frenulektomie"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 25000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6900
+        }
       },
       "forrasSor": 64
     },
@@ -947,14 +1081,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Gyökercsúcsresectio",
-        "de": null
+        "de": "Wurzelspitzenresektion"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 55000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 15100
+        }
       },
       "forrasSor": 65
     },
@@ -966,14 +1103,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Jason membrán",
-        "de": null
+        "de": "Jason-Membran"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 44000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 12100
+        }
       },
       "forrasSor": 66
     },
@@ -985,14 +1125,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Nem felszívódó teflon membrán",
-        "de": null
+        "de": "Nicht resorbierbare Teflonmembran"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 90000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 24800
+        }
       },
       "forrasSor": 67
     },
@@ -1004,14 +1147,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Lyoplant membrán 4×5-1/4",
-        "de": null
+        "de": "Lyoplant-Membran 4×5 (1/4)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 25000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6900
+        }
       },
       "forrasSor": 68
     },
@@ -1023,14 +1169,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Lyoplant membrán 4×5-1/2",
-        "de": null
+        "de": "Lyoplant-Membran 4×5 (1/2)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 50000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 13800
+        }
       },
       "forrasSor": 69
     },
@@ -1042,14 +1191,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Humán csont gran 0,5 gr",
-        "de": null
+        "de": "Humanes Knochengranulat 0,5 g"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 70000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 19300
+        }
       },
       "forrasSor": 71
     },
@@ -1061,14 +1213,17 @@
       "gyakori": false,
       "nev": {
         "hu": "PRF",
-        "de": null
+        "de": "PRF (Platelet-Rich Fibrin)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 35000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 9600
+        }
       },
       "forrasSor": 72
     },
@@ -1080,14 +1235,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Titán szegecs",
-        "de": null
+        "de": "Titan-Fixierungsstift"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 6000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 1700
+        }
       },
       "forrasSor": 73
     },
@@ -1099,14 +1257,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Azonnali implantálás műtéti díj",
-        "de": null
+        "de": "Operationsgebühr für Sofortimplantation"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 25000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6900
+        }
       },
       "forrasSor": 76
     },
@@ -1118,14 +1279,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Implantátum BLX",
-        "de": null
+        "de": "Implantat BLX"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 235000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 64700
+        }
       },
       "forrasSor": 77
     },
@@ -1137,14 +1301,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Implantatum Straumann implantátum",
-        "de": null
+        "de": "Straumann-Implantat"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 220000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 60600
+        }
       },
       "forrasSor": 78
     },
@@ -1156,14 +1323,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Implantátum Straumann Roxolid implantátum",
-        "de": null
+        "de": "Straumann Roxolid-Implantat"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 230000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 63300
+        }
       },
       "forrasSor": 79
     },
@@ -1175,14 +1345,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Neodent implantatum",
-        "de": null
+        "de": "Neodent-Implantat"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 170000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 46800
+        }
       },
       "forrasSor": 80
     },
@@ -1194,14 +1367,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Neodent implantatum azonnali terheléssel",
-        "de": null
+        "de": "Neodent-Implantat mit Sofortbelastung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 180000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 49500
+        }
       },
       "forrasSor": 81
     },
@@ -1213,14 +1389,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Implantátum felszabadítása",
-        "de": null
+        "de": "Freilegung des Implantats"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 15000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 4100
+        }
       },
       "forrasSor": 82
     },
@@ -1232,14 +1411,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Impl. Ideiglenes felépítmény",
-        "de": null
+        "de": "Implantat, provisorischer Aufbau"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 30000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 8300
+        }
       },
       "forrasSor": 83
     },
@@ -1251,14 +1433,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Impl.ideiglenes korona",
-        "de": null
+        "de": "Implantat, provisorische Krone"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 45000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 12400
+        }
       },
       "forrasSor": 84
     },
@@ -1270,14 +1455,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Ínyformázó",
-        "de": null
+        "de": "Gingivaformer"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 15000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 4100
+        }
       },
       "forrasSor": 85
     },
@@ -1289,14 +1477,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Implantátum eltávolítása",
-        "de": null
+        "de": "Entfernung des Implantats"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 60000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 16500
+        }
       },
       "forrasSor": 86
     },
@@ -1308,14 +1499,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Zárt küret foganként",
-        "de": null
+        "de": "Geschlossene Kürettage pro Zahn"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 10000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 2800
+        }
       },
       "forrasSor": 90
     },
@@ -1327,14 +1521,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Zárt küret quadránsonként",
-        "de": null
+        "de": "Geschlossene Kürettage pro Quadrant"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 60000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 16500
+        }
       },
       "forrasSor": 91
     },
@@ -1346,14 +1543,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Nyitott küret foganként",
-        "de": null
+        "de": "Offene Kürettage pro Zahn"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 10000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 2800
+        }
       },
       "forrasSor": 92
     },
@@ -1365,14 +1565,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Nyitott küret quadránsonként",
-        "de": null
+        "de": "Offene Kürettage pro Quadrant"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 85000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 23400
+        }
       },
       "forrasSor": 93
     },
@@ -1384,14 +1587,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Lágyrész pótlás",
-        "de": null
+        "de": "Weichgewebsaugmentation"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 120000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 33000
+        }
       },
       "forrasSor": 94
     },
@@ -1403,14 +1609,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Implantátum tisztítás implantátumonként",
-        "de": null
+        "de": "Implantatreinigung pro Implantat"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 45000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 12400
+        }
       },
       "forrasSor": 95
     },
@@ -1422,14 +1631,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Implantátum tisztítás állcsontonként",
-        "de": null
+        "de": "Implantatreinigung pro Kiefer"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 130000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 35800
+        }
       },
       "forrasSor": 96
     },
@@ -1441,14 +1653,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fémkerámia",
-        "de": null
+        "de": "Metallkeramik"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 95000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 26100
+        }
       },
       "forrasSor": 100
     },
@@ -1460,14 +1675,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fémkerámia implantátumra (több fog esetén)",
-        "de": null
+        "de": "Metallkeramik auf Implantat (bei mehreren Zähnen)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 95000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 26100
+        }
       },
       "forrasSor": 101
     },
@@ -1479,14 +1697,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fémkerámia implantátumra",
-        "de": null
+        "de": "Metallkeramik auf Implantat"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 95000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 26100
+        }
       },
       "forrasSor": 102
     },
@@ -1498,14 +1719,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Zirkonkerámia fogra",
-        "de": null
+        "de": "Zirkonkeramik auf Zahn"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 135000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 37200
+        }
       },
       "forrasSor": 103
     },
@@ -1517,14 +1741,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Zirkonkerámia implantátumra csavarozható",
-        "de": null
+        "de": "Zirkonkeramik auf Implantat, verschraubbar"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 135000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 37200
+        }
       },
       "forrasSor": 104
     },
@@ -1536,14 +1763,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Kerámia héj préskerámia",
-        "de": null
+        "de": "Keramikveneer, Presskeramik"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 150000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 41300
+        }
       },
       "forrasSor": 105
     },
@@ -1555,14 +1785,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Teleszkóp korona (primer-szekunder)",
-        "de": null
+        "de": "Teleskopkrone (Primär-/Sekundärteil)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 70000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 19300
+        }
       },
       "forrasSor": 106
     },
@@ -1574,14 +1807,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Sín",
-        "de": null
+        "de": "Schiene"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 21000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 5800
+        }
       },
       "forrasSor": 107
     },
@@ -1593,14 +1829,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Diagnosztikus PMMA",
-        "de": null
+        "de": "Diagnostisches PMMA"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 12000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 3300
+        }
       },
       "forrasSor": 108
     },
@@ -1612,14 +1851,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Monolitikus cirkon fogakra vagy implantátumokra",
-        "de": null
+        "de": "Monolithisches Zirkon auf Zähnen oder Implantaten"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 135000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 37200
+        }
       },
       "forrasSor": 109
     },
@@ -1631,14 +1873,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Straumann implantátumfej",
-        "de": null
+        "de": "Straumann-Implantataufbau (Abutment)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 80000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 22000
+        }
       },
       "forrasSor": 111
     },
@@ -1650,14 +1895,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Neodent implantatumfej",
-        "de": null
+        "de": "Neodent-Implantataufbau (Abutment)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 70000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 19300
+        }
       },
       "forrasSor": 112
     },
@@ -1669,14 +1917,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Lokátor felépítmény",
-        "de": null
+        "de": "Locator-Aufbau"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 130000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 35800
+        }
       },
       "forrasSor": 113
     },
@@ -1688,14 +1939,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Hosszútávú ideiglenes korona fém merevítéssel",
-        "de": null
+        "de": "Langzeitprovisorium mit Metallverstärkung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 35000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 9600
+        }
       },
       "forrasSor": 114
     },
@@ -1707,14 +1961,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Gradia inlay",
-        "de": null
+        "de": "Gradia-Inlay"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 80000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 22000
+        }
       },
       "forrasSor": 115
     },
@@ -1726,14 +1983,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Porcelán Inlay,Onlay",
-        "de": null
+        "de": "Porzellan-Inlay/Onlay"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 90000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 24800
+        }
       },
       "forrasSor": 116
     },
@@ -1745,14 +2005,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Csapos műcsont",
-        "de": null
+        "de": "Stiftaufbau"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 35000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 9600
+        }
       },
       "forrasSor": 117
     },
@@ -1764,14 +2027,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Csapos műcsonktöbb gyökér esetén",
-        "de": null
+        "de": "Stiftaufbau bei mehreren Wurzeln"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 45000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 12400
+        }
       },
       "forrasSor": 118
     },
@@ -1783,14 +2049,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Ideiglenes korona technikusi PMMA",
-        "de": null
+        "de": "Provisorische Krone, laborgefertigtes PMMA"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 23000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6300
+        }
       },
       "forrasSor": 119
     },
@@ -1802,14 +2071,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Ideiglenes korona rendelői",
-        "de": null
+        "de": "Provisorische Krone, Praxis-Anfertigung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 10000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 2800
+        }
       },
       "forrasSor": 120
     },
@@ -1821,14 +2093,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Korona felvágás eltávolítás /db",
-        "de": null
+        "de": "Kronenentfernung (Aufschneiden)/Stück"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 10000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 2800
+        }
       },
       "forrasSor": 121
     },
@@ -1840,14 +2115,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Lokátoros fogsor",
-        "de": null
+        "de": "Locator-Prothese"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 240000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 66100
+        }
       },
       "forrasSor": 124
     },
@@ -1859,14 +2137,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Lokátor felépítmény",
-        "de": null
+        "de": "Locator-Aufbau"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 130000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 35800
+        }
       },
       "forrasSor": 125
     },
@@ -1878,14 +2159,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Teleszkópos fogsor",
-        "de": null
+        "de": "Teleskopprothese"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 350000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 96300
+        }
       },
       "forrasSor": 126
     },
@@ -1897,14 +2181,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Kivehető fogpótlás teljes",
-        "de": null
+        "de": "Vollständiger herausnehmbarer Zahnersatz"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 180000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 49500
+        }
       },
       "forrasSor": 127
     },
@@ -1916,14 +2203,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Kapcsos elhorgonyzás",
-        "de": null
+        "de": "Klammerverankerung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 240000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 66100
+        }
       },
       "forrasSor": 128
     },
@@ -1935,14 +2225,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Kombinált fogsor kivehető része",
-        "de": null
+        "de": "Herausnehmbarer Teil der kombinierten Prothese"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 490000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 134900
+        }
       },
       "forrasSor": 129
     },
@@ -1954,14 +2247,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Stéges fogsor",
-        "de": null
+        "de": "Stegprothese"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 690000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 189900
+        }
       },
       "forrasSor": 130
     },
@@ -1973,14 +2269,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Kivehető ideiglenes",
-        "de": null
+        "de": "Herausnehmbares Provisorium"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 110000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 30300
+        }
       },
       "forrasSor": 131
     },
@@ -1992,14 +2291,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Klipsz 1-2 fog",
-        "de": null
+        "de": "Clip, 1–2 Zähne"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 52000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 14300
+        }
       },
       "forrasSor": 132
     },
@@ -2011,14 +2313,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Klipsz 3 fog",
-        "de": null
+        "de": "Clip, 3 Zähne"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 62000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 17100
+        }
       },
       "forrasSor": 133
     },
@@ -2030,14 +2335,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Klipsz 4-7 fog",
-        "de": null
+        "de": "Clip, 4–7 Zähne"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 73000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 20100
+        }
       },
       "forrasSor": 134
     },
@@ -2049,14 +2357,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Klipsz 8 fogtól",
-        "de": null
+        "de": "Clip, ab 8 Zähnen"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 80000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 22000
+        }
       },
       "forrasSor": 135
     },
@@ -2068,14 +2379,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fog rápótlás",
-        "de": null
+        "de": "Zahn nachträglich ergänzen"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 15000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 4100
+        }
       },
       "forrasSor": 136
     },
@@ -2087,14 +2401,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Fogékszer (kristály, arany, fehérarany",
-        "de": null
+        "de": "Zahnschmuck (Kristall, Gold, Weißgold)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 18000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 5000
+        }
       },
       "forrasSor": 140
     },
@@ -2106,14 +2423,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Horkolás gátló",
-        "de": null
+        "de": "Schnarchschiene"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 48000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 13200
+        }
       },
       "forrasSor": 141
     },
@@ -2125,14 +2445,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Ínyformázás Hyaluronsavval",
-        "de": null
+        "de": "Zahnfleischkonturierung mit Hyaluronsäure"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 8000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 2200
+        }
       },
       "forrasSor": 142
     },
@@ -2144,14 +2467,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Dévitalisation",
-        "de": null
+        "de": "Devitalisierung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 12000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 3300
+        }
       },
       "forrasSor": 147
     },
@@ -2163,14 +2489,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Pivot",
-        "de": null
+        "de": "Stiftzahn (Pivot)"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 15000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 4100
+        }
       },
       "forrasSor": 148
     },
@@ -2182,14 +2511,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Couronne provisoire",
-        "de": null
+        "de": "Provisorische Krone"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 12000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 3300
+        }
       },
       "forrasSor": 149
     },
@@ -2201,14 +2533,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Opération de gencive",
-        "de": null
+        "de": "Zahnfleischoperation"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 25000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 6900
+        }
       },
       "forrasSor": 150
     },
@@ -2220,14 +2555,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Couronne zircon",
-        "de": null
+        "de": "Zirkonkrone"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 72000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 19800
+        }
       },
       "forrasSor": 151
     },
@@ -2239,14 +2577,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Hyrax készülék",
-        "de": null
+        "de": "Hyrax-Gerät"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 60000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 16500
+        }
       },
       "forrasSor": 152
     },
@@ -2258,14 +2599,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Önligírozó multiband készülék felső",
-        "de": null
+        "de": "Selbstligierende Multiband-Apparatur, Oberkiefer"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 260000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 71600
+        }
       },
       "forrasSor": 153
     },
@@ -2277,14 +2621,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Önligírozó multiband készülék alsó",
-        "de": null
+        "de": "Selbstligierende Multiband-Apparatur, Unterkiefer"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 260000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 71600
+        }
       },
       "forrasSor": 154
     },
@@ -2296,14 +2643,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Rögzitett fogszabályzó eltávolítás polirozás",
-        "de": null
+        "de": "Entfernung der festsitzenden Zahnspange, Politur"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 20000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 5500
+        }
       },
       "forrasSor": 155
     },
@@ -2315,14 +2665,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Retencios készülék állcsontonként",
-        "de": null
+        "de": "Retentionsgerät pro Kiefer"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 20000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 5500
+        }
       },
       "forrasSor": 156
     },
@@ -2334,14 +2687,17 @@
       "gyakori": false,
       "nev": {
         "hu": "Rögzitett készülék aktíválása alkalmanként",
-        "de": null
+        "de": "Aktivierung der festsitzenden Apparatur, je Sitzung"
       },
       "ar": {
         "HUF": {
           "tipus": "FIX",
           "ertek": 10000
         },
-        "EUR": null
+        "EUR": {
+          "tipus": "FIX",
+          "ertek": 2800
+        }
       },
       "forrasSor": 157
     }
