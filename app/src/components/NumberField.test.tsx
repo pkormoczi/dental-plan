@@ -103,4 +103,59 @@ describe('NumberField', () => {
     const input = screen.getByPlaceholderText('—') as HTMLInputElement;
     expect(input.value).toBe('');
   });
+
+  it('ArrowUp/ArrowDown step the value and commit immediately, without needing blur', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<NumberField value={5} onCommit={onCommit} min={1} />);
+
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    input.focus();
+    await user.keyboard('{ArrowUp}');
+    expect(input.value).toBe('6');
+    expect(onCommit).toHaveBeenLastCalledWith(6);
+
+    await user.keyboard('{ArrowDown}{ArrowDown}');
+    expect(input.value).toBe('4');
+    expect(onCommit).toHaveBeenLastCalledWith(4);
+  });
+
+  it('ArrowDown does not step below `min`', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<NumberField value={1} onCommit={onCommit} min={1} />);
+
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    input.focus();
+    await user.keyboard('{ArrowDown}');
+
+    expect(input.value).toBe('1');
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  it('the up/down stepper buttons step without stealing focus from the input', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<NumberField value={5} onCommit={onCommit} />);
+
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    input.focus();
+    await user.click(screen.getByRole('button', { name: 'Növelés' }));
+
+    expect(input.value).toBe('6');
+    expect(onCommit).toHaveBeenCalledWith(6);
+    expect(input).toHaveFocus();
+  });
+
+  it('reports the not-yet-committed draft via onDraftChange on every keystroke', async () => {
+    const user = userEvent.setup();
+    const onDraftChange = vi.fn();
+    render(<NumberField value={1} onCommit={vi.fn()} onDraftChange={onDraftChange} />);
+
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.type(input, '3');
+
+    expect(onDraftChange).toHaveBeenLastCalledWith(3);
+  });
 });

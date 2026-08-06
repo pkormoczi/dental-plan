@@ -156,6 +156,33 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
       await screen.findByText(/2 fog van felsorolva, a darabszám 1\. Szándékos\?/),
     ).toBeInTheDocument();
   });
+
+  it('updates the mismatch warning live while the quantity is typed, before the blur-commit fires', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    const result = await screen.findByText('Fogeltávolítás');
+    await user.click(result);
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    await user.type(teethInput, '16, 17, 26');
+    await screen.findByText(/3 fog van felsorolva, a darabszám 1\. Szándékos\?/);
+
+    // A darabszám NumberField csak blur/Enterre committál a törzsadatba
+    // (P1-4), de ennek a pusztán UI-visszajelzésnek élőben kell követnie a
+    // gépelést, nem várhat a blurre.
+    const quantityInput = screen.getByDisplayValue('1');
+    await user.clear(quantityInput);
+    await user.type(quantityInput, '3');
+
+    await waitFor(() =>
+      expect(screen.queryByText(/fog van felsorolva/)).not.toBeInTheDocument(),
+    );
+    expect(quantityInput).toHaveValue('3');
+  });
 });
 
 describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {

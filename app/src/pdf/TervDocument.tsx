@@ -13,7 +13,7 @@ import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
 import { t } from '../design/tokens';
 import { formatLongDate, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
-import { parseTeeth } from '../domain/teeth';
+import { formatTeethForPrint, parseTeeth } from '../domain/teeth';
 import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
 import type { Fazis, Plan, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
@@ -232,7 +232,7 @@ function PhaseTable({
             {sor.nevSnapshot}
             {sor.savos ? ' *' : ''}
           </Text>
-          <Text style={[s.td, s.colFog]}>{sor.fogak}</Text>
+          <Text style={[s.td, s.colFog]}>{formatTeethForPrint(sor.fogak)}</Text>
           <Text style={[s.td, s.colDb]}>{sor.mennyiseg}</Text>
           <Text style={[s.td, s.colEgysegar]}>{formatMoney(sor.tenylegesEgysegar, currency)}</Text>
           <Text style={[s.td, s.colOsszeg]}>

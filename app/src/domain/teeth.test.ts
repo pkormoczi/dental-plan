@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseTeeth } from './teeth';
+import { formatTeethForPrint, parseTeeth } from './teeth';
 
 describe('parseTeeth', () => {
   it('parses valid FDI tokens separated by comma+space', () => {
@@ -26,5 +26,23 @@ describe('parseTeeth', () => {
   it('returns invalid for empty input', () => {
     expect(parseTeeth('')).toEqual({ valid: false, teeth: [] });
     expect(parseTeeth(null)).toEqual({ valid: false, teeth: [] });
+  });
+});
+
+describe('formatTeethForPrint', () => {
+  it('inserts a space after a comma when missing -- numeral,numeral is otherwise an unbreakable "1,000"-like token', () => {
+    expect(formatTeethForPrint('11,12,13,14,15,16,17,18')).toBe('11, 12, 13, 14, 15, 16, 17, 18');
+  });
+
+  it('leaves already-spaced lists untouched', () => {
+    expect(formatTeethForPrint('16, 17, 26')).toBe('16, 17, 26');
+  });
+
+  it('normalizes semicolon separators the same way', () => {
+    expect(formatTeethForPrint('16;17;26')).toBe('16; 17; 26');
+  });
+
+  it('leaves empty input untouched', () => {
+    expect(formatTeethForPrint('')).toBe('');
   });
 });

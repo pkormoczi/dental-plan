@@ -345,7 +345,12 @@ function LineRow({
   onRemove: () => void;
 }) {
   const teeth = parseTeeth(line.fogak);
-  const mismatch = teeth.valid && teeth.teeth.length !== line.mennyiseg;
+  // A darabszám mezőbe gépelt, még nem committált érték -- a NumberField
+  // csak blur/Enterre írja a törzsadatot (P1-4), de ez a figyelmeztetés
+  // gépelés közben is éljen, ne csak commit után.
+  const [mennyisegDraft, setMennyisegDraft] = useState(line.mennyiseg);
+  useEffect(() => setMennyisegDraft(line.mennyiseg), [line.mennyiseg]);
+  const mismatch = teeth.valid && teeth.teeth.length !== mennyisegDraft;
   // P2-4: `listaEgysegar === 0` (vagy egy jövőbeli NaN/Infinity) esetén ez a
   // képlet korábban "−Infinity%"-ot adott -- most ha az osztó nem egy
   // pozitív véges szám, nincs kedvezmény-jelvény.
@@ -390,6 +395,7 @@ function LineRow({
           value={line.mennyiseg}
           min={1}
           onCommit={(v) => onPatch({ mennyiseg: v })}
+          onDraftChange={(v) => setMennyisegDraft(v ?? line.mennyiseg)}
           textAlign="center"
         />
 
@@ -423,7 +429,7 @@ function LineRow({
 
       {mismatch && (
         <div style={{ fontSize: 11, color: t.warn, paddingLeft: 2, paddingTop: 2 }}>
-          {teeth.teeth.length} fog van felsorolva, a darabszám {line.mennyiseg}. Szándékos?
+          {teeth.teeth.length} fog van felsorolva, a darabszám {mennyisegDraft}. Szándékos?
         </div>
       )}
     </div>

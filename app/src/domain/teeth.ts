@@ -15,3 +15,15 @@ export function parseTeeth(input: string | null | undefined): ParsedTeeth {
   const ok = tokens.every((x) => FDI.test(x));
   return { valid: ok, teeth: ok ? tokens : [] };
 }
+
+/**
+ * Nyomtatáshoz: vessző/pontosvessző után szóközt szúr, ha még nincs ott.
+ * A react-pdf szövegtördelője az Unicode sortörés-szabályok szerint két
+ * szám közötti vesszőnél nem tör sort (mintha egy nagy szám lenne, mint
+ * "1,000"), ezért a szóköz nélkül gépelt fogszám-lista ("11,12,13,...")
+ * kifolyik a fix szélességű oszlopból a szomszédosba, ahelyett hogy több
+ * sorba törne.
+ */
+export function formatTeethForPrint(fogak: string): string {
+  return fogak.replace(/([,;])(?=\S)/g, '$1 ');
+}

@@ -13,6 +13,7 @@
 // Lásd review/99-osszesites.md és a jóváhagyott terv "0. Közös alap" pontja.
 
 import { useEffect, useState, type CSSProperties } from 'react';
+import { t } from '../design/tokens';
 import { input as inputStyle } from '../design/ui';
 import { formatCentForInput, parseEuroInput } from '../domain/money';
 
@@ -24,6 +25,13 @@ export interface NumberFieldProps {
   unit?: 'HUF' | 'EUR';
   /** Ez alatti (parseolt) érték nem commitálódik -- visszaáll az utolsó ismert értékre. */
   min?: number;
+  /**
+   * Minden leütésre hívódik a még nem committált, parseolt piszkozattal
+   * (érvénytelen/üres esetén `null`) -- KIZÁRÓLAG live UI-visszajelzéshez
+   * (pl. "a fogak száma nem egyezik a darabszámmal" figyelmeztetés), sosem
+   * a törzsadat írásához, azt továbbra is `onCommit` végzi blur/Enter-re.
+   */
+  onDraftChange?: (parsed: number | null) => void;
   placeholder?: string;
   textAlign?: CSSProperties['textAlign'];
   style?: CSSProperties;
@@ -48,6 +56,7 @@ export default function NumberField({
   onCommit,
   unit = 'HUF',
   min,
+  onDraftChange,
   placeholder,
   textAlign,
   style,
@@ -69,32 +78,108 @@ export default function NumberField({
       // Üres/érvénytelen/min alatti érték -- SOHA nem esik 0-ra, az utolsó
       // ismert értékre áll vissza (P0-4).
       setDraft(formatForDisplay(value, unit));
+      onDraftChange?.(value);
       return;
     }
     const rounded = Math.round(parsed);
     setDraft(formatForDisplay(rounded, unit));
+    onDraftChange?.(rounded);
     if (rounded !== value) onCommit(rounded);
   }
 
+  // A natív <input type="number"> nyilai (és a Fel/Le billentyű) az EUR-mező
+  // vessző-tizedes megjelenítése miatt bevezetett type="text"-tel nem
+  // működnek -- ez pótolja őket, a natív mezőhöz hasonlóan AZONNAL
+  // commitálva, blur nélkül.
+  function step(delta: number) {
+    const base = parseDraft(draft, unit) ?? value ?? 0;
+    const next = Math.round(base) + delta;
+    const clamped = min != null ? Math.max(min, next) : next;
+    setDraft(formatForDisplay(clamped, unit));
+    onDraftChange?.(clamped);
+    if (clamped !== value) onCommit(clamped);
+  }
+
   return (
-    <input
-      {...rest}
-      type="text"
-      inputMode="decimal"
-      value={draft}
-      placeholder={placeholder}
-      style={{ ...inputStyle, textAlign, ...style }}
-      onFocus={() => setFocused(true)}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={commit}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          commit();
-        } else if (e.key === 'Escape') {
-          setDraft(formatForDisplay(value, unit));
-        }
-      }}
-    />
+    <div style={{ position: 'relative', width: '100%' }}>
+      <input
+        {...rest}
+        type="text"
+        inputMode="decimal"
+        value={draft}
+        placeholder={placeholder}
+        style={{ ...inputStyle, textAlign, paddingRight: 16, ...style }}
+        onFocus={() => setFocused(true)}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          onDraftChange?.(parseDraft(e.target.value, unit));
+        }}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commit();
+          } else if (e.key === 'Escape') {
+            setDraft(formatForDisplay(value, unit));
+            onDraftChange?.(value);
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            step(1);
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            step(-1);
+          }
+        }}
+      />
+      <div style={stepperWrap}>
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label="Növelés"
+          style={stepperBtnTop}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => step(1)}
+        >
+          ▲
+        </button>
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label="Csökkentés"
+          style={stepperBtnBottom}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => step(-1)}
+        >
+          ▼
+        </button>
+      </div>
+    </div>
   );
 }
+
+const stepperWrap: CSSProperties = {
+  position: 'absolute',
+  right: 1,
+  top: 1,
+  bottom: 1,
+  width: 14,
+  display: 'flex',
+  flexDirection: 'column',
+};
+
+const stepperBtnBase: CSSProperties = {
+  flex: 1,
+  border: 'none',
+  background: 'transparent',
+  cursor: 'pointer',
+  fontSize: 7,
+  lineHeight: 1,
+  padding: 0,
+  color: t.textFaint,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const stepperBtnTop: CSSProperties = { ...stepperBtnBase, borderBottom: `1px solid ${t.line}` };
+const stepperBtnBottom: CSSProperties = { ...stepperBtnBase };
