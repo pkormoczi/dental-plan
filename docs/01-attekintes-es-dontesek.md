@@ -44,7 +44,7 @@ logóval). Az alkalmazás valódi indokai ezek:
 | D7 | Az ajánlat pillanatkép | A terv sorai snapshotolják a tételnevet és az árat; az árlista későbbi változása nem írja felül a múltat |
 | D8 | Kedvezmény = `listaEgysegar` és `tenylegesEgysegar` külön tárolva | A kedvezmény származtatott, tehát mérhető. Nem felülírás |
 | D9 | A kedvezmény **nem jelenik meg** a nyomtatványon | Nem volt rá igény; a doki szóban kommunikálja |
-| D10 | Kétnyelvű modell az első naptól, magyar tartalommal indul | A német nyelv egy kapcsoló, ami akkor kapcsol be, amikor a fordítások megvannak |
+| D10 | Kétnyelvű modell az első naptól, magyar tartalommal indul | A német nyelv egy kapcsoló, ami a fordítások elkészülte előtt is bekapcsolható — a hiány az appban számszerűen látszik (lásd D21) |
 | D11 | HUF és EUR ár egymástól függetlenül szerkeszthető | Nincs árfolyam-átváltás, nincs külső hívás |
 | D12 | Tetszőleges számú fázis és sor | Az Excel 3×7 limitje tisztán technikai artefaktum volt |
 | D13 | Egy `Fog` mező soronként, szabad felsorolás | Nem külön megjegyzés oszlop. Megjegyzés fázis szinten van |
@@ -55,6 +55,7 @@ logóval). Az alkalmazás valódi indokai ezek:
 | D18 | Minden JSON fájl `schemaVersion` mezővel indul | Ezek a fájlok évekig élnek a Drive-on; a 3. verziónak is olvasnia kell a mait |
 | D19 | Search-only tételkereső, nincs kategória böngésző | A doki fejből tudja a tételeket; a keresés ékezetfüggetlen |
 | D20 | „Gyakori" tételek kézzel jelölve | Nem használati statisztikából — kiszámítható, nem ugrál a UI |
+| D21 | A terv nyelve és pénzneme egymástól **függetlenül** választható | A német páciens Magyarországon forintban is fizethet. Az 1:1 kötés (`de` → EUR) használhatatlanná tenné a német módot, amíg 0/118 tételnek van EUR ára — a nyelv a nyomtatvány szövegét vezérli (tételnevek, feliratok, dátumformátum, sablon), a pénznem az ajánlható tételkört és a pénzformátumot |
 
 ## Adatvédelmi keret
 
@@ -80,7 +81,7 @@ róla):
 
 | Kockázat | Kezelés |
 |---|---|
-| A német tartalom (118 név + jogi szöveg) sosem készül el | Az MVP magyarul teljes értékű; a német kapcsoló addig rejtve marad |
+| A német tartalom (118 név + jogi szöveg) sosem készül el | Az MVP magyarul teljes értékű. A kapcsoló nincs elrejtve (D21): a doki bekapcsolhatja és kipróbálhatja a német módot, a hiányzó fordítások száma számszerűen látszik a Beállításokban és a Páciens adatlapon, a hiányzó nevű tételek magyarra esnek vissza jelöléssel, a véglegesítés pedig figyelmeztet, mielőtt a páciens aláírna egy részben magyar nyelvű dokumentumot |
 | A doki lassabbnak találja az Excelnél | A tételfelvitel billentyűzetes flow-ja az első, amit tesztelni kell — a PDF előtt |
 | A Drive „streamelés" módban lassú `paciensek/` fa olvasás | A Drive kliensben **Tükrözés** módot kell beállítani, nem Streamelést |
 | A `Fog` mező jegyzetmezővé válik | Elfogadott: szabadszöveget is elbír, csak az esetleges későbbi automatika nem indul el |

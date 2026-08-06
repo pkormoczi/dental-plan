@@ -116,8 +116,10 @@ Fizetendő                         780 000 Ft
 
 **Kedvezmény sor nincs** (D9). A `fizetendo` a tényleges árakból számol.
 
-Alatta: *„Az ajánlat 2026. november 5-ig érvényes."* — számított dátum,
-nem „3 hónapig érvényes" szöveg.
+Alatta: *„Az ajánlat 2026. november 5. napjáig érvényes."* — számított
+dátum, nem „3 hónapig érvényes" szöveg. (A korábbi *„…5-ig érvényes."*
+megfogalmazás a magyar hosszú dátum záró pontjával kétértelmű/hibás
+tipográfiát adott — lásd a „Nyelv" szakaszt lentebb.)
 
 ## 2. oldal — fizetési feltételek
 
@@ -156,12 +158,67 @@ Dr. Mándoki István
 `paciens.kiskoru === true`.** A jelenlegi Excel minden felnőttnek
 kinyomtatja, feleslegesen.
 
+## Nyelv (D21)
+
+A nyomtatvány fix feliratai, a dátumformátum és a sablon a **terv
+nyelvétől** (`plan.nyelv`) függenek, forrásuk `app/src/pdf/labels.ts`
+(`PDF_LABELS: Record<Nyelv, PdfLabels>`). Ez a fájl a német lektorálás
+review-artefaktuma — ide kerül minden fix mondat, mielőtt éles
+németnyelvű PDF-re kerülne.
+
+| Magyar | Német |
+|---|---|
+| Kezelési terv és árajánlat | Behandlungsplan und Kostenvoranschlag |
+| Kezelési terv · | Behandlungsplan · |
+| Beavatkozás / Fog / Db / Egységár / Összeg | Leistung / Zahn / Menge / Einzelpreis / Betrag |
+| Fázis összesen | Phase gesamt |
+| Név / Telefon / Született / E-mail / TAJ / Lakcím | Name / Telefon / Geburtsdatum / E-Mail / TAJ-Nr. / Adresse |
+| Adószám: / Cégjegyzékszám: | Steuernummer: / Handelsregisternummer: |
+| Érintett fogak | Betroffene Zähne |
+| Kezelések összesen / Fizetendő | Behandlungen gesamt / Zu zahlen |
+| Fizetési feltételek / Nyilatkozat | Zahlungsbedingungen / Erklärung |
+| Megbízott: / Megrendelő: | Auftragnehmer: / Auftraggeber: |
+
+Három mondat **ragozás miatt függvény**, nem sablon-behelyettesítés
+(`ervenyessegMondat`, `alairasSor` a `labels.ts`-ben):
+
+- „Az ajánlat {dátum} napjáig érvényes." → „Das Angebot ist gültig bis
+  zum {dátum}."
+- „{város}, {dátum}" → „{város}, den {dátum}" — a **város fix marad**
+  (`ALAIRAS_VAROS = 'Budapest'`), a rendelő nyelvtől függetlenül ott van.
+
+Dátumformátum nyelvenként (`app/src/domain/date.ts`):
+
+| | Magyar | Német |
+|---|---|---|
+| Hosszú (érvényesség, aláírás) | `2026. november 5.` | `5. November 2026` |
+| Rövid (fejléc/lábléc metaadat) | `2026.08.05.` | `05.08.2026` |
+
+A rövid formátum **kézzel** van összerakva, nem `Intl`-lel — a `de-DE`
+Intl-formázó vezető nulla nélküli napot adna (`5.11.2026`), ez viszont a
+lábléc jogi metaadata.
+
+**Fontos:** a fenti táblázat gépi/vázlat fordítás, nem lektorált. A
+`savosFootnote` (a D15 jogi védelme), az anyagköltség-mondat, a
+kiskorú-figyelmeztetés és az érvényességi mondat **jogi lektorálást
+igényel**, mielőtt valódi német páciensnek szóló PDF-re kerülnek — lásd
+`README.md` „Nyitott kérdések".
+
+A tételnevek (`nev.de`) és a nyilatkozat/fizetési feltételek sablonjai
+(`nyilatkozat-de-v1.md`, `fizetesi-feltetelek-de-v1.md`) **külön
+hiányzó tartalom** — ha egy tételnek nincs német neve, a nyomtatvány a
+magyar nevet használja, jelöléssel (lásd `03-funkcionalis-spec.md` „2.
+Páciens adatlap"). A sablonok ma placeholder szöveget tartalmaznak.
+
 ## Számformátum
 
 | Pénznem | Formátum | Példa |
 |---|---|---|
 | HUF | egész, ezres szóközzel, utána `Ft` | `1 234 567 Ft` |
 | EUR | két tizedes, ezres ponttal, tizedes vesszővel, `€` | `1.234,56 €` |
+
+A formátum a **pénznemtől** függ, nem a nyelvtől (D21) — egy német nyelvű,
+forintos terven is `1 234 567 Ft` jelenik meg, nem `1.234.567 Ft`.
 
 Ne `toLocaleString()` improvizációval — fix formázó függvény pénznemenként.
 Ez szerződéses dokumentum.

@@ -16,6 +16,10 @@ describe('formatMoney', () => {
     expect(formatMoney(undefined, 'EUR')).toBe('—');
   });
 
+  it('renders 0,00 € for an actual zero (0 is a real price, not "not offered")', () => {
+    expect(formatMoney(0, 'EUR')).toBe('0,00 €');
+  });
+
   it('rounds HUF to a whole number', () => {
     expect(formatMoney(45000.4, 'HUF')).toBe('45 000 Ft');
   });
@@ -39,6 +43,12 @@ describe('formatPrice', () => {
   it('formats a SAVOS price as a min-max range', () => {
     expect(formatPrice({ tipus: 'SAVOS', min: 35000, max: 55000 }, 'HUF')).toBe(
       '35 000 Ft–55 000 Ft',
+    );
+  });
+
+  it('formats a SAVOS price as a min-max range in EUR (cents)', () => {
+    expect(formatPrice({ tipus: 'SAVOS', min: 35000, max: 55000 }, 'EUR')).toBe(
+      '350,00 €–550,00 €',
     );
   });
 

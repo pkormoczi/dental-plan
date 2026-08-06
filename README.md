@@ -51,15 +51,21 @@ nem a kódszervezés. Részletek: `CLAUDE.md`.
 **Benne van:** magyar nyelvű terv készítés, árlista admin, PDF generálás
 és mentés a fájlrendszerre, korábbi tervek visszatöltése.
 
-**Nincs benne:** német nyelv (a modell felkészített rá, de a tartalom
-hiányzik), automatikus darabszám a fogszámokból, statisztikák,
+**Nincs benne:** a német nyelv *tartalma* (118 tételnév, EUR árak, a
+nyilatkozat és a fizetési feltételek jogi fordítása) — maga a kapcsoló
+kipróbálható (D21), a hiányt az app számszerűen mutatja. Szintén nincs
+benne: automatikus darabszám a fogszámokból, statisztikák,
 többfelhasználós működés, szerveroldali komponens.
 
 ## Nyitott kérdések, amik a dokira várnak
 
 1. A német tételnevek (118 db) és EUR árak.
-2. A nyilatkozat/szerződés szövegének német fordítása — ez **jogi munka**,
-   nem gépi fordítás, mert a páciens aláírja.
+2. A nyilatkozat/szerződés és a fizetési feltételek szövegének német
+   fordítása — ez **jogi munka**, nem gépi fordítás, mert a páciens
+   aláírja. (A PDF néhány további mondata — a sávos ár lábjegyzete, D15
+   jogi védelme, az anyagköltség- és a kiskorú-figyelmeztetés, az
+   érvényességi mondat — szintén jogi lektorálást igényel, lásd
+   `docs/04-nyomtatvany-spec.md` „Nyelv" szakasza.)
 3. A cégadatok a lábléchez: adószám, cégjegyzékszám, és ha van ilyen
    kötelezettség, működési engedély szám.
 4. Az árlista takarítása — lásd `docs/06-arlista-import.md`.

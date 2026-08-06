@@ -14,6 +14,8 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
+import { seedPriceList } from './storage/seed/priceList';
+import { seedSettings } from './storage/seed/settings';
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@react-pdf/renderer')>();
@@ -34,6 +36,10 @@ vi.mock('@react-pdf/renderer', async (importOriginal) => {
 describe('Végpontok közötti folyamat', () => {
   beforeEach(() => {
     localStorage.clear();
+    // A HashRouter a valódi window.location.hash-t használja, ami a jsdom
+    // window-on a fájlon belüli tesztek között NEM reset -- enélkül a
+    // második teszt ott folytatná a routingot, ahol az első abbahagyta.
+    window.location.hash = '';
     // jsdom nem implementálja a window.confirm/alert-et (mindig undefined-et
     // ad vissza) -- a teszt páciense szándékosan hiányos (csak a név van
     // kitöltve), ez a nem blokkoló figyelmeztetést váltja ki véglegesítéskor.
@@ -97,5 +103,58 @@ describe('Végpontok közötti folyamat', () => {
     const patientCard2 = patientNameEl2.parentElement as HTMLElement;
     expect(within(patientCard2).getByText(/^v2 ·/)).toBeInTheDocument();
     expect(within(patientCard2).getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- D4
+  }, 20000);
+
+  it('a nyelv és a pénznem egymástól függetlenül választható és marad meg mentés után (D21: német nyelv, HUF pénznem)', async () => {
+    // A DemoStorage.init() az árlista hiányában resetDemoData()-t futtatna,
+    // ami felülírná a nemetEngedelyezve:true beállítást -- ezért az
+    // árlistát is elő kell seedelni, nem csak a beállításokat.
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem(
+      'dp:beallitasok.json',
+      JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
+    );
+
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.type(nameInput, 'Németh Éva');
+
+    // Nyelv: Deutsch. A pénznem NEM követi automatikusan -- D21 lényege,
+    // hogy egy német nyelvű ajánlat is maradhat forintos.
+    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await user.click(screen.getByRole('button', { name: 'Deutsch' }));
+    expect(screen.getByRole('button', { name: 'HUF — forint' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await screen.findByText('Fogeltávolítás');
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+    const finalizeBtn = await screen.findByRole(
+      'button',
+      { name: /Véglegesítés és mentés/ },
+      { timeout: 10000 },
+    );
+    await user.click(finalizeBtn);
+    await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+
+    // A mentett terv.json-t a "patientDir / versionDir" kijelzőből
+    // rekonstruált localStorage-kulccsal olvassuk vissza -- ez a
+    // rendszer-of-record, nem a memóriabeli state.
+    const refEl = screen.getByText(/_v1$/);
+    const [patientDir, versionDir] = (refEl.textContent ?? '').split(' / ');
+    const raw = localStorage.getItem(`dp:paciensek/${patientDir}/${versionDir}/terv.json`);
+    expect(raw).toBeTruthy();
+    const saved = JSON.parse(raw!);
+    expect(saved.nyelv).toBe('de');
+    expect(saved.penznem).toBe('HUF');
+    expect(saved.sablonVerzio).toBe('nyilatkozat-de-v1');
   }, 20000);
 });

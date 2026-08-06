@@ -2,8 +2,8 @@
 
 ## Képernyők
 
-1. Indítás / nyelvválasztás
-2. Páciens adatlap
+1. Indítás
+2. Páciens adatlap — itt dől el a terv nyelve és pénzneme (D21)
 3. **Terv szerkesztő** — a legfontosabb
 4. Előnézet és véglegesítés
 5. Korábbi tervek
@@ -18,15 +18,41 @@ Első futáskor a doki kijelöl egy gyökérmappát. Ez a `PlanStorage`
 inicializálása. A böngészős implementációnál a hozzájárulást
 munkamenetenként újra kell kérni — ez egy kattintás, de számolni kell vele.
 
-Nyelvválasztás csak akkor jelenik meg, ha
-`beallitasok.nemetEngedelyezve === true`. Az MVP-ben nem.
-
-A nyelv határozza meg a pénznemet, a tételkatalógust és a
-nyilatkozat-sablont. **Terv közben nem váltható** — új tervet kell nyitni.
+A nyelvválasztás nem itt, hanem a Páciens adatlapon van (2. képernyő) —
+lásd ott.
 
 ---
 
 ## 2. Páciens adatlap
+
+### Nyelv és pénznem (D21)
+
+A személyes adatok fölött egy kártya, ami **csak akkor jelenik meg, ha
+`beallitasok.nemetEngedelyezve === true`** — vagy ha a piszkozat már
+németül indult (hogy egy időközben kikapcsolt kapcsoló ne tegye
+szerkeszthetetlenül némává egy folyamatban lévő német tervet).
+
+Két, egymástól **független** kétállású kapcsoló:
+
+- **Nyelv** (`hu` / `de`) — a nyomtatvány szövege: a tételnevek (ha
+  van hozzájuk fordítás), a PDF fix feliratai, a dátumformátum, a
+  nyilatkozat-sablon.
+- **Pénznem** (`HUF` / `EUR`) — az ajánlható tételkör (csak azok a
+  tételek, amiknek van áruk ebben a pénznemben) és a pénzformátum.
+
+A német páciens a legvalószínűbb ok, amiért ez a kettő szétválik: sokan
+Magyarországon, forintban fizetnek. Alapértéke ezért mindig `HUF`, még
+német nyelvű ajánlatnál is.
+
+Mindkettő **az első mentés után fagy** (D4) — a kártya ilyenkor statikus
+szöveget mutat, chipek nélkül; új tervet kell nyitni a váltáshoz.
+
+Ha a kiválasztott nyelven/pénznemen hiányos a tartalom, a kártya alatt
+figyelmeztetés jelenik meg (hány aktív tételnek nincs neve az adott
+nyelven, illetve hogy a kiválasztott pénznemben van-e egyáltalán
+beárazott tétel) — ez a „ne a szerkesztőben legyen meglepetés" elve.
+
+### Személyes adatok
 
 Mezők: név, születési idő, lakcím, telefon, e-mail, TAJ, „kiskorú"
 jelölő. Ha kiskorú, megjelenik a törvényes képviselő neve és elérhetősége.
@@ -52,6 +78,11 @@ Ez dönti el, hogy az app gyorsabb-e az Excelnél. Prototípus:
   jobb szélén.
 - Csak `aktiv: true` tételek, és csak azok, amiknek az aktuális pénznemben
   van áruk.
+- A keresés **mindkét nyelven megy, mindig** — a doki magyar, magyarul
+  gépel akkor is, ha német ajánlatot állít össze. Csak a *megjelenített*
+  és a felvételkor *rögzített* név nyelvfüggő (lásd alább, „Hiányzó
+  fordítás"); ha a tétel német neve hiányzik, a magyar névre esik vissza,
+  jól látható `HU` jelöléssel a találati soron és a felvett soron is.
 - Billentyűzet: `↑ ↓` navigál, `Enter` hozzáad, `Esc` bezár.
 - **Hozzáadás után a kereső kiürül és visszakapja a fókuszt.** Ez a
   ciklus a lényeg: gépel → nyíl → Enter → gépel tovább, egérhasználat
@@ -113,6 +144,11 @@ A fájlrendszerre csak véglegesítéskor írunk.
 
 Meglévő terv szerkesztése **soha nem írja felül** a korábbi verziómappát
 (D4).
+
+**Német terv, hiányzó tételnevekkel:** ha a tervben olyan sor van, amihez
+nem tartozik német tétel név (lásd D21), a véglegesítés a hiányzó neveket
+felsorolva megerősítést kér — a páciens ezt a dokumentumot írja alá, ezért
+ez a figyelmeztetés soha nem néma.
 
 ---
 
@@ -178,3 +214,10 @@ Kategória hozzáadása, átnevezése, sorrendezése ugyanitt.
 - Sablonszövegek szerkesztése — a nyilatkozat és a fizetési feltételek.
   **Mentéskor új verziófájl keletkezik** (`nyilatkozat-hu-v2.md`), a régi
   marad, mert a korábbi tervek arra hivatkoznak.
+- **Német nyelvű ajánlat engedélyezése** (`nemetEngedelyezve`) — checkbox.
+  Bekapcsolva megjelenik az **alapértelmezett nyelv** kapcsolója (ez lesz
+  az új tervek nyelve), alatta a **német tartalom készültsége**:
+  hány aktív tételnek van már német neve, hány tételnek van EUR ára, és a
+  `nyilatkozat-de-v1.md`/`fizetesi-feltetelek-de-v1.md` státusza
+  (placeholder, amíg a jogi fordítás el nem készül) — link az Árlistára,
+  ahol a „Nincs EUR ár" szűrő a munkalista.

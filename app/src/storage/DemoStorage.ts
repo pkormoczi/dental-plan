@@ -30,7 +30,20 @@ import {
 import { seedPriceList } from './seed/priceList';
 import { seedSettings } from './seed/settings';
 import { seedPlans } from './seed/plans';
-import { FIZETESI_FELTETELEK_HU_V1, NYILATKOZAT_HU_V1 } from './seed/templates';
+import {
+  FIZETESI_FELTETELEK_DE_V1,
+  FIZETESI_FELTETELEK_HU_V1,
+  NYILATKOZAT_DE_V1,
+  NYILATKOZAT_HU_V1,
+} from './seed/templates';
+
+/** Alapértelmezett sablonfájlok -- lásd `ensureSeedTemplates`. */
+const DEFAULT_TEMPLATES: Array<[string, string]> = [
+  ['nyilatkozat-hu-v1.md', NYILATKOZAT_HU_V1],
+  ['fizetesi-feltetelek-hu-v1.md', FIZETESI_FELTETELEK_HU_V1],
+  ['nyilatkozat-de-v1.md', NYILATKOZAT_DE_V1],
+  ['fizetesi-feltetelek-de-v1.md', FIZETESI_FELTETELEK_DE_V1],
+];
 
 const PREFIX = 'dp:';
 const PRICE_LIST_KEY = `${PREFIX}arlista.json`;
@@ -74,7 +87,14 @@ export class DemoStorage implements PlanStorage {
   async init(): Promise<void> {
     if (localStorage.getItem(PRICE_LIST_KEY) == null) {
       this.resetDemoData();
+      return;
     }
+    // D21: aki a német sablonok bevezetése előtt már használta a demót,
+    // annak az árlistája megvan, tehát resetDemoData() itt nem futna le
+    // újra -- enélkül a nyilatkozat-de-v1.md sosem jönne létre neki, és a
+    // PreviewPage üres/hibás sablonnal futna németre váltva. Idempotens:
+    // csak a HIÁNYZÓ sablonkulcsokat pótolja, meglévőt nem ír felül.
+    this.ensureSeedTemplates();
   }
 
   /**
@@ -86,10 +106,17 @@ export class DemoStorage implements PlanStorage {
     this.clearAll();
     localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(seedPriceList));
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(seedSettings));
-    localStorage.setItem(templateKey('nyilatkozat-hu-v1.md'), NYILATKOZAT_HU_V1);
-    localStorage.setItem(templateKey('fizetesi-feltetelek-hu-v1.md'), FIZETESI_FELTETELEK_HU_V1);
+    this.ensureSeedTemplates();
     for (const { patientDir, versionDir, plan } of seedPlans) {
       localStorage.setItem(planKey(patientDir, versionDir), JSON.stringify(plan));
+    }
+  }
+
+  /** Csak a még hiányzó alapértelmezett sablonfájlokat írja be, meglévőt nem érint. */
+  private ensureSeedTemplates(): void {
+    for (const [name, body] of DEFAULT_TEMPLATES) {
+      const key = templateKey(name);
+      if (localStorage.getItem(key) == null) localStorage.setItem(key, body);
     }
   }
 

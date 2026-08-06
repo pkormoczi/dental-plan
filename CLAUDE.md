@@ -70,7 +70,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | `osszesitok` a fájlból számít igaznak, eltérés esetén figyelmeztetni kell | Az aláírt papírral kell egyeznie, nem az újraszámolt értékkel |
 | Kedvezmény csak a szerkesztőben látszik, a nyomtatványon **nem** | D9 |
 | `SAVOS` (sávos) ár a nyomtatványon `*` + lábjegyzet, soha nem csupasz fix szám | D15 — jogi védelem: fix számként kötelező érvényű ajánlattá válna |
-| `null` ár egy pénznemben ≠ `0` — a tétel azon a nyelven nem ajánlható, a keresőben sem jelenik meg | `02-domain-modell.md` |
+| `null` ár egy pénznemben ≠ `0` — a tétel abban a pénznemben nem ajánlható, a keresőben sem jelenik meg | `02-domain-modell.md` |
 | Minden JSON `schemaVersion`-nel indul; magasabb verzió észlelésekor **a betöltést meg kell tagadni**, érthető üzenettel | D18 — ezek a fájlok évekig élnek a Drive-on |
 | Páciensmappa-névben az **ékezetek maradnak**, nincs transzliteráció; csak a tiltott karaktereket (`/ \ : * ? " < > \|`) kell cserélni; nevek rövidek (Windows 260 karakteres útvonalkorlát) | A doki a Fájlkezelőben keres rájuk névre |
 | IndexedDB nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez |
@@ -89,6 +89,17 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 - `parseTeeth(input)` — FDI fogszám-validáció (`11–18`/`21–28`/`31–38`/`41–48`
   maradó, `51–55` stb. tejfog)
 
+D21 (nyelv/pénznem szétválasztás) hozott néhány újat, ezeket se írd újra:
+- `resolveNev(nev, nyelv)` / `fallbackSorok(plan, priceList)` (`app/src/domain/nev.ts`)
+  — a tétel nevének nyelvfüggő feloldása magyar visszaeséssel + a
+  véglegesítés-őr diagnosztikája
+- `lefedettseg(priceList, penznem)` (`app/src/domain/coverage.ts`) — a
+  német tartalom készültsége (Beállítások, Páciens adatlap)
+- `formatLongDate(iso, nyelv)` / `formatShortDate(iso, nyelv)` (`app/src/domain/date.ts`)
+- `pdfLabels(nyelv)` (`app/src/pdf/labels.ts`) — a PDF fix feliratai; **csak
+  a `pdf/` alatt importálható**, a kezelőfelület (NavBar, oldalak) végig
+  magyar marad
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
@@ -104,6 +115,8 @@ A tételfelvitel billentyűzetes ciklusa dönti el, hogy az app gyorsabb-e az Ex
 fókuszt → gépel tovább**, egérhasználat nélkül. Ezt kell elsőként tesztelni, a PDF
 generálás előtt. A kereső search-only, nincs kategória böngésző (D19); ékezetfüggetlen
 (`norm()`); csak `aktiv: true` és az aktuális pénznemben árazott tételeket listázza.
+Mindkét nyelven keres (`nev.hu` és `nev.de`) függetlenül a terv nyelvétől — a doki
+magyar, magyarul gépel akkor is, ha német ajánlatot állít össze (D21).
 
 ## Adat és ismert hiányok
 
@@ -115,11 +128,16 @@ kezelések" 11 árva tétele (fogszabályozási és francia nyelvű maradvány t
 **szándékosan takarítatlan** (D16) — ez adminban, kategória-átmozgatással orvosolandó,
 ne az importlogikában javítsd.
 
+Ez a hiány (D21 óta) **nem blokkolja** a német nyelv kipróbálását: a hiányzó nevű
+tétel magyar névvel, `HU` jelöléssel jelenik meg, a hiányzó EUR ár miatt üres
+keresőt a Páciens adatlap előre jelzi, a Beállítások pedig számszerűsíti a
+készültséget (`lefedettseg()`).
+
 ## Dokumentáció-térkép
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D20 döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D21 döntések és indoklásuk; adatvédelmi keret; kockázatok |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, árlista admin, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |

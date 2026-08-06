@@ -1,0 +1,117 @@
+// A nyelv/pénznem kártya láthatósága és figyelmeztetései (D21). Lásd
+// CLAUDE.md "A UX kritikus pontja" -- ez a szomszédos képernyő, ahol a
+// terv nyelve/pénzneme eldől, mielőtt a doki a szerkesztőbe lép.
+
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import App from '../App';
+import PatientPage from './PatientPage';
+import { AppStateProvider } from '../state/AppState';
+import { StorageProvider } from '../storage/StorageContext';
+import { seedPriceList } from '../storage/seed/priceList';
+import { seedSettings } from '../storage/seed/settings';
+
+function renderPatient() {
+  return render(
+    <MemoryRouter>
+      <StorageProvider>
+        <AppStateProvider>
+          <PatientPage />
+        </AppStateProvider>
+      </StorageProvider>
+    </MemoryRouter>,
+  );
+}
+
+/**
+ * Pre-seedeli a localStorage-ot `nemetEngedelyezve: true` beállítással,
+ * MIELŐTT a StorageProvider/DemoStorage renderelne -- enélkül a
+ * DemoStorage.init() az árlista hiányában resetDemoData()-t futtatna, ami
+ * felülírná ezt a beállítást az alapértelmezett (false) seeddel.
+ */
+function seedWithGermanEnabled() {
+  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+  localStorage.setItem(
+    'dp:beallitasok.json',
+    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
+  );
+}
+
+describe('PatientPage -- nyelv/pénznem kártya', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    // A "locks the card" teszt a teljes App-ot (HashRouter) rendereli --
+    // a window.location.hash a jsdom window-on nem reset a tesztek között.
+    window.location.hash = '';
+  });
+
+  it('hides the language/currency card when nemetEngedelyezve is false (seed default)', async () => {
+    renderPatient();
+    await screen.findByPlaceholderText('Kovács János');
+    expect(screen.queryByText('Az ajánlat nyelve és pénzneme')).toBeNull();
+  });
+
+  it('shows the card once nemetEngedelyezve is true', async () => {
+    seedWithGermanEnabled();
+    renderPatient();
+    expect(await screen.findByText('Az ajánlat nyelve és pénzneme')).toBeInTheDocument();
+  });
+
+  it('warns when the selected pénznem has zero priced items', async () => {
+    const user = userEvent.setup();
+    seedWithGermanEnabled();
+    renderPatient();
+    await screen.findByText('Az ajánlat nyelve és pénzneme');
+
+    await user.click(screen.getByRole('button', { name: 'EUR — euró' }));
+
+    expect(
+      await screen.findByText(/egyetlen tétel sincs beárazva/),
+    ).toBeInTheDocument();
+  });
+
+  it('warns about missing German item names once Deutsch is selected', async () => {
+    const user = userEvent.setup();
+    seedWithGermanEnabled();
+    renderPatient();
+    await screen.findByText('Az ajánlat nyelve és pénzneme');
+
+    await user.click(screen.getByRole('button', { name: 'Deutsch' }));
+
+    expect(
+      await screen.findByText(/118 \/ 118 aktív tételnek nincs német neve/),
+    ).toBeInTheDocument();
+  });
+
+  it('locks the card (no chips, static text) once a plan has a tervId (D4)', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    // A németet a Beállításokban, valódi felhasználói úton kapcsoljuk be --
+    // nem localStorage-backdoor-ral, hogy a demó páciensek (Kovács János
+    // stb., amiket a resetDemoData() a render előtt már beírt) érintetlenek
+    // maradjanak.
+    await user.click(await screen.findByRole('link', { name: 'Beállítások' }));
+    await user.click(
+      await screen.findByRole('checkbox', { name: 'Német nyelvű ajánlat engedélyezése' }),
+    );
+
+    await user.click(screen.getByRole('link', { name: 'Korábbi tervek' }));
+    const patientNameEl = await screen.findByText('Kovács János');
+    const patientCard = patientNameEl.parentElement as HTMLElement;
+    await user.click(
+      within(patientCard).getByRole('button', { name: 'Megnyitás szerkesztésre' }),
+    );
+    // Kovács János demó tervének két fázisa van, mindkettőnek saját
+    // keresője -- findAllBy, nem findBy (ami az egyértelműséget várná el).
+    await screen.findAllByPlaceholderText(/Tétel keresése/);
+
+    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+
+    expect(await screen.findByText('Az ajánlat nyelve és pénzneme')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Deutsch' })).toBeNull();
+    expect(screen.getByText(/nem módosítható/)).toBeInTheDocument();
+  });
+});

@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
 import { t } from '../design/tokens';
 import { btn } from '../design/ui';
+import { fallbackSorok } from '../domain/nev';
 import { computeOsszesitok } from '../domain/totals';
 import type { PlanRef } from '../domain/types';
 import { TervDocument } from '../pdf/TervDocument';
@@ -14,44 +15,76 @@ import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
 export default function PreviewPage() {
-  const { plan, setPlan, settings, resetPlanDraft } = useAppState();
+  const { plan, setPlan, settings, priceList, resetPlanDraft } = useAppState();
   const { storage, loadLatestTemplateByBase } = useStorage();
   const navigate = useNavigate();
 
   const [offerOnly, setOfferOnly] = useState(false);
   const [nyilatkozatMd, setNyilatkozatMd] = useState('');
   const [fizetesiFeltetelekMd, setFizetesiFeltetelekMd] = useState('');
+  const [sablonFallback, setSablonFallback] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedRef, setSavedRef] = useState<PlanRef | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+
+    // Ha a tervhez tartozó sablon (pl. régi localStorage-ban a német
+    // bevezetése előtt keletkezett) hiányzik, a magyar szövegre esünk
+    // vissza -- soha nem üres nyilatkozattal/hibával fut le a PDF. Ezt a
+    // `sablonFallback`-en keresztül jelezzük is (lásd a sárga sávot lent).
+    async function loadOrFallback(load: () => Promise<string>, fallback: () => Promise<string>) {
+      try {
+        return { text: await load(), fellback: false };
+      } catch {
+        return { text: await fallback(), fellback: true };
+      }
+    }
+
     (async () => {
       const [nyil, fiz] = await Promise.all([
-        storage.loadTemplate(`${plan.sablonVerzio}.md`),
-        loadLatestTemplateByBase('fizetesi-feltetelek-hu'),
+        loadOrFallback(
+          () => storage.loadTemplate(`${plan.sablonVerzio}.md`),
+          () => storage.loadTemplate('nyilatkozat-hu-v1.md'),
+        ),
+        loadOrFallback(
+          () => loadLatestTemplateByBase(`fizetesi-feltetelek-${plan.nyelv}`),
+          () => loadLatestTemplateByBase('fizetesi-feltetelek-hu'),
+        ),
       ]);
       if (!cancelled) {
-        setNyilatkozatMd(nyil);
-        setFizetesiFeltetelekMd(fiz);
+        setNyilatkozatMd(nyil.text);
+        setFizetesiFeltetelekMd(fiz.text);
+        setSablonFallback(nyil.fellback || fiz.fellback);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [plan.sablonVerzio, storage, loadLatestTemplateByBase]);
+  }, [plan.sablonVerzio, plan.nyelv, storage, loadLatestTemplateByBase]);
 
-  const [pdfInstance] = usePDF({
-    document: (
-      <TervDocument
-        plan={plan}
-        settings={settings}
-        offerOnly={offerOnly}
-        nyilatkozatMd={nyilatkozatMd}
-        fizetesiFeltetelekMd={fizetesiFeltetelekMd}
-      />
-    ),
-  });
+  const tervDocument = (
+    <TervDocument
+      plan={plan}
+      settings={settings}
+      offerOnly={offerOnly}
+      nyilatkozatMd={nyilatkozatMd}
+      fizetesiFeltetelekMd={fizetesiFeltetelekMd}
+    />
+  );
+  const [pdfInstance, updatePdf] = usePDF({ document: tervDocument });
+
+  // usePDF() saját belső effektje csak a MOUNT pillanatában lévő
+  // `document`-et rendereli (a @react-pdf/renderer forrásában [] a
+  // dependency array) -- utána a hívónak KELL az `update` függvénnyel
+  // újragenerálnia, különben a nyilatkozat/fizetési feltételek (amik a
+  // fenti useEffect-ben, a mount UTÁN töltődnek be) sosem kerülnek bele,
+  // és a "Csak ajánlat" kapcsoló sem hat a letöltött PDF-re. Ugyanez a
+  // minta, mint a könyvtár saját `PDFViewer` komponensében.
+  useEffect(() => {
+    updatePdf(tervDocument);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan, settings, offerOnly, nyilatkozatMd, fizetesiFeltetelekMd, updatePdf]);
 
   const nameMissing = !plan.paciens.nev.trim();
   const otherFieldsMissing =
@@ -71,6 +104,21 @@ export default function PreviewPage() {
     if (otherFieldsMissing) {
       const proceed = confirm(
         'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad). Folytatod a véglegesítést?',
+      );
+      if (!proceed) return;
+    }
+    // D21/1.1: a hiányzó német tételnevek soha nem eshetnek magyarra
+    // véglegesítéskor néma módon -- a doki itt látja, mely nevek érintettek,
+    // mielőtt a páciens aláírja a dokumentumot.
+    const hianyzoNevek = fallbackSorok(plan, priceList);
+    if (hianyzoNevek.length > 0) {
+      const lista = hianyzoNevek.slice(0, 8).join('\n');
+      const tobbi =
+        hianyzoNevek.length > 8 ? `\n… és további ${hianyzoNevek.length - 8}` : '';
+      const proceed = confirm(
+        `Ez egy német nyelvű ajánlat, de ${hianyzoNevek.length} tétel neve magyarul kerül a ` +
+          `nyomtatványra (nincs német fordításuk):\n\n${lista}${tobbi}\n\n` +
+          `A páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?`,
       );
       if (!proceed) return;
     }
@@ -121,6 +169,22 @@ export default function PreviewPage() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      {sablonFallback && (
+        <div
+          style={{
+            background: t.warnBg,
+            color: t.warn,
+            fontSize: 12.5,
+            padding: '8px 14px',
+            borderRadius: t.radiusLg,
+            marginBottom: 10,
+          }}
+        >
+          A tervhez tartozó sablon nem található a tárolóban — helyette a magyar
+          nyilatkozat/fizetési feltételek szövege jelenik meg a nyomtatványon. Próbáld a
+          Kezdőlapon a „Demó adat visszaállítása” gombot, vagy nyiss új tervet.
+        </div>
+      )}
       <div
         style={{
           display: 'flex',

@@ -13,6 +13,8 @@ nincs szerver.
   sablonok/
     nyilatkozat-hu-v1.md
     fizetesi-feltetelek-hu-v1.md
+    nyilatkozat-de-v1.md            ; placeholder -- jogi munka, lásd README "Nyitott kérdések"
+    fizetesi-feltetelek-de-v1.md    ; placeholder -- jogi munka, lásd README "Nyitott kérdések"
   paciensek/
     Kovacs-Janos_a3f9c1/
       2026-08-05_v1/
@@ -72,8 +74,10 @@ Kész seed: `data/arlista.seed.json` (118 tétel, 12 kategória).
 | `FIX` | `ertek` | Az egységár alapértéke |
 | `SAVOS` | `min`, `max` | Az egységár alapértéke `min`; a nyomtatványon `*` jelölést kap |
 
-`null` ár egy pénznemben **nem 0** — azt jelenti, hogy a tétel azon a
-nyelven nem ajánlható. A keresőben ilyenkor nem jelenik meg.
+`null` ár egy pénznemben **nem 0** — azt jelenti, hogy a tétel abban a
+**pénznemben** nem ajánlható. A keresőben ilyenkor nem jelenik meg (a
+szűrés a terv pénzneme szerint megy, nem a nyelve szerint — lásd D21 a
+`01-attekintes-es-dontesek.md`-ben).
 
 Az árak egész számként tárolandók a pénznem alapegységében: HUF-nál
 forint, EUR-nál **cent** (`23550` = 235,50 €). Így nincs lebegőpontos
@@ -87,8 +91,8 @@ kerekítési hiba az összegzésben.
   "tervId": "a3f9c1",
   "verzio": 1,
   "statusz": "VEGLEGES",           // PISZKOZAT | VEGLEGES
-  "nyelv": "hu",
-  "penznem": "HUF",
+  "nyelv": "hu",                   // a nyomtatvány szövege, dátumformátuma, sablonja
+  "penznem": "HUF",                // az ajánlható tételkör és a pénzformátum -- D21: független a nyelvtől
   "keltezes": "2026-08-05",
   "ervenyesIg": "2026-11-05",      // számított: keltezes + beallitasok.ervenyessegNap
   "arlistaVerzio": "2026-07-01",   // melyik árlistából készült
@@ -133,6 +137,17 @@ kerekítési hiba az összegzésben.
 }
 ```
 
+### Nyelv és pénznem — nincs sémaváltozás
+
+A `nyelv`/`penznem` mezők a tervben, a `nev.de`/`ar.EUR` kulcsok az
+árlistában és az `alapertelmezettNyelv`/`nemetEngedelyezve` a
+beállításokban **mind a `schemaVersion: 1` óta léteznek** — a német
+kapcsoló bevezetése (D21) egyetlen új JSON-kulcsot sem igényelt, csak azt,
+hogy a kód ténylegesen olvassa/vezérelje őket. A `nyelv` és a `penznem`
+tudatosan **két külön mező**, nem egy összevont: az egyik a szöveget
+(tételnevek, nyomtatvány feliratai, dátumformátum, sablon), a másik az
+ajánlható tételkört és a pénzformátumot vezérli.
+
 ### Miért van `nevSnapshot` és `listaEgysegar` a soron
 
 Mert **az ajánlat pillanatkép**. Ha az árlistában fél év múlva átnevezik
@@ -163,8 +178,8 @@ a fájlban lévő érték az igazság — és érdemes figyelmeztetni.
   "orvosok": ["Dr. Mándoki István"],
   "logoFajl": "logo.png",          // a gyökérmappában
   "ervenyessegNap": 90,
-  "alapertelmezettNyelv": "hu",
-  "nemetEngedelyezve": false       // az MVP-ben false
+  "alapertelmezettNyelv": "hu",    // ez lesz az új tervek nyelve, ha nemetEngedelyezve
+  "nemetEngedelyezve": false       // alapértéke false; a Beállításokban kapcsolható (D21)
 }
 ```
 

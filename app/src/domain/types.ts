@@ -17,7 +17,7 @@ export type Ar =
   | { tipus: 'FIX'; ertek: number }
   | { tipus: 'SAVOS'; min: number; max: number };
 
-/** `null` egy pénznemben ≠ 0 — azt jelenti, a tétel azon a nyelven nem ajánlható. */
+/** `null` egy pénznemben ≠ 0 — azt jelenti, a tétel abban a pénznemben nem ajánlható. */
 export type ArByPenznem = Partial<Record<Penznem, Ar | null>>;
 
 export interface Kategoria {

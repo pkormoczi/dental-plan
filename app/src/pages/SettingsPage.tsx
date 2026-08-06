@@ -3,12 +3,19 @@
 // FileSystemStorage-hoz kötött 2. fázis feladata, lásd CLAUDE.md).
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import ChipGroup from '../components/ChipGroup';
+import { lefedettseg } from '../domain/coverage';
 import { t } from '../design/tokens';
 import { btn, card, input } from '../design/ui';
 import { useAppState } from '../state/AppState';
 
 export default function SettingsPage() {
-  const { settings, saveSettings } = useAppState();
+  const { settings, saveSettings, priceList } = useAppState();
+  // aktivOsszes/deNevvel függetlenek a pénznemtől -- csak az `arazott`
+  // mezőhöz kell külön az EUR nézet (lásd domain/coverage.ts).
+  const cov = lefedettseg(priceList, 'HUF');
+  const eurArazott = lefedettseg(priceList, 'EUR').arazott;
   const [orvosokText, setOrvosokText] = useState(settings.orvosok.join('\n'));
   const [saved, setSaved] = useState(false);
 
@@ -109,24 +116,63 @@ export default function SettingsPage() {
         <div style={{ fontSize: 13, fontWeight: 600, color: t.navy, marginBottom: 10 }}>
           Ajánlat és nyelv
         </div>
-        <Row>
-          <Field label="Ajánlat érvényessége (nap)">
-            <input
-              type="number"
-              min={1}
-              value={settings.ervenyessegNap}
-              onChange={(e) => patch({ ervenyessegNap: Math.max(1, Number(e.target.value) || 1) })}
-              style={input}
-            />
-          </Field>
-          <Field label="Alapértelmezett nyelv">
-            <input value="magyar (hu)" disabled style={{ ...input, color: t.textFaint }} />
-          </Field>
-        </Row>
-        <div style={{ fontSize: 11, color: t.textFaint, marginTop: 4 }}>
-          A német nyelv kapcsolója (D10) egyelőre rejtve marad, amíg a fordítások el nem
-          készülnek -- lásd docs/01-attekintes-es-dontesek.md.
-        </div>
+        <Field label="Ajánlat érvényessége (nap)">
+          <input
+            type="number"
+            min={1}
+            value={settings.ervenyessegNap}
+            onChange={(e) => patch({ ervenyessegNap: Math.max(1, Number(e.target.value) || 1) })}
+            style={{ ...input, maxWidth: 160 }}
+          />
+        </Field>
+
+        <label
+          style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, marginTop: 12 }}
+        >
+          <input
+            type="checkbox"
+            checked={settings.nemetEngedelyezve}
+            onChange={(e) => patch({ nemetEngedelyezve: e.target.checked })}
+          />
+          Német nyelvű ajánlat engedélyezése
+        </label>
+
+        {settings.nemetEngedelyezve && (
+          <>
+            <div style={{ marginTop: 10 }}>
+              {/* div, nem Field/<label> -- egy <label> csak egyetlen "labelable"
+                  elemet jelölhetne implicit módon, a ChipGroup viszont két
+                  gombot renderel, ami kétértelmű accessible name-et adna. */}
+              <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 3 }}>
+                Alapértelmezett nyelv új tervnél
+              </div>
+              <ChipGroup
+                value={settings.alapertelmezettNyelv}
+                options={[
+                  ['hu', 'Magyar'],
+                  ['de', 'Deutsch'],
+                ]}
+                onChange={(nyelv) => patch({ alapertelmezettNyelv: nyelv })}
+              />
+            </div>
+
+            <div style={{ fontSize: 11, color: t.textMuted, marginTop: 8, lineHeight: 1.7 }}>
+              <b>A német tartalom készültsége</b>
+              <br />
+              Tételnevek: {cov.deNevvel} / {cov.aktivOsszes} lefordítva
+              <br />
+              EUR árak: {eurArazott} / {cov.aktivOsszes} kitöltve
+              <br />
+              Nyilatkozat: <span style={{ fontFamily: t.mono }}>nyilatkozat-de-v1.md</span> —
+              placeholder, jogi lektorálás szükséges
+              <br />
+              <Link to="/arlista" style={{ color: t.navy }}>
+                Árlista megnyitása
+              </Link>{' '}
+              — a „Nincs EUR ár” szűrő a munkalista.
+            </div>
+          </>
+        )}
       </div>
 
       <div style={card}>

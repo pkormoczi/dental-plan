@@ -107,9 +107,14 @@ mi a szándék.
 ## Amit még nem tartalmaz a seed
 
 - **`de` nevek**: mind `null`. 118 fordítás, ez a német funkció valódi
-  hosszú pole-ja.
+  hosszú pole-ja. Ez **nem blokkolja** a német mód használatát (D21): a
+  hiányzó nevű tétel a keresőben és a felvett soron is magyar névvel,
+  jól látható `HU` jelöléssel jelenik meg, a véglegesítés pedig
+  megerősítést kér, mielőtt egy részben magyar nyelvű dokumentum a
+  páciens elé kerülne.
 - **`EUR` árak**: mind `null`. Független érték, nincs árfolyam-átváltás
-  (D11).
+  (D11). Emiatt egy EUR pénznemű terv keresője üres — a Páciens adatlap
+  ezt előre jelzi, mielőtt a doki a szerkesztőbe lépne.
 - **`gyakori` jelölés**: mind `false`. A dokinak kell 8–12 tételt
   megjelölnie, ezek lesznek a szerkesztő gyorsgombjai.
 - **`forrasSor`**: az eredeti Excel sorszáma, hogy az első átnézésnél

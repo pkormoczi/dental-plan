@@ -3,24 +3,38 @@
 // első mentéskor (lásd storage/DemoStorage.ts).
 
 import { addDaysIso } from './date';
-import type { Penznem, Plan, PriceList, Settings } from './types';
+import type { Nyelv, Plan, PriceList, Settings } from './types';
+
+/** A nyilatkozat-sablon fájlneve (kiterjesztés nélkül) egy adott nyelvhez. */
+export function sablonVerzioFor(nyelv: Nyelv): string {
+  return `nyilatkozat-${nyelv}-v1`;
+}
 
 export function createBlankPlan(settings: Settings, priceList: PriceList): Plan {
   const today = new Date().toISOString().slice(0, 10);
-  // D10: a nyelv határozza meg a pénznemet is.
-  const penznem: Penznem = settings.alapertelmezettNyelv === 'de' ? 'EUR' : 'HUF';
+  // D21: a nyelv és a pénznem független -- a német páciens Magyarországon
+  // forintban is fizethet. Az `alapertelmezettNyelv` csak akkor számít,
+  // ha a német nyelv engedélyezve van; a `nemetEngedelyezve` kikapcsolása
+  // után induló új tervek mindig magyarok, hogy a nyelv soha ne maradjon
+  // "de"-n úgy, hogy a doki sehol nem lát hozzá kapcsolót.
+  //
+  // A pénznem alapértéke MINDIG HUF, nem a nyelvtől függ: 0/118 tételnek
+  // van ma EUR ára (docs/06-arlista-import.md), egy EUR alapértelmezés
+  // garantáltan üres keresőt adó piszkozatot hozna létre. A doki egy
+  // kattintással vált a Páciens adatlapon, ha mégis EUR kell.
+  const nyelv: Nyelv = settings.nemetEngedelyezve ? settings.alapertelmezettNyelv : 'hu';
 
   return {
     schemaVersion: 1,
     tervId: '',
     verzio: 0,
     statusz: 'PISZKOZAT',
-    nyelv: settings.alapertelmezettNyelv,
-    penznem,
+    nyelv,
+    penznem: 'HUF',
     keltezes: today,
     ervenyesIg: addDaysIso(today, settings.ervenyessegNap),
     arlistaVerzio: priceList.arlistaVerzio,
-    sablonVerzio: 'nyilatkozat-hu-v1',
+    sablonVerzio: sablonVerzioFor(nyelv),
     orvos: settings.orvosok[0] ?? '',
     paciens: {
       nev: '',

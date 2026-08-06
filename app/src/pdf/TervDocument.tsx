@@ -4,15 +4,20 @@
 // 1-2. oldal: terv és ár. 3. oldal: nyilatkozat és aláírás -- ez marad ki
 // "csak ajánlat" módban, hogy a hazavitt példány ne legyen aláírandó
 // szerződés.
+//
+// D21: a fix feliratok forrása a `pdf/labels.ts` (`plan.nyelv` szerint) --
+// ez az egyetlen hely, ahol a nyomtatvány nyelve eldől, a kezelőfelület
+// (NavBar, szerkesztő stb.) végig magyar marad.
 
 import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
 import { t } from '../design/tokens';
-import { formatHuDate, formatHuDateShort } from '../domain/date';
+import { formatLongDate, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
 import { parseTeeth } from '../domain/teeth';
 import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
 import type { Fazis, Plan, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
+import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
 import { extractBulletLines, stripMarkdownHeading } from './markdownLite';
 import { ToothChartPdf } from './ToothChartPdf';
 import logoUrl from '../assets/logo.png';
@@ -38,12 +43,26 @@ const s = {
     borderBottomColor: t.navy,
     marginBottom: 16,
   },
-  mainHeaderLeft: { flexDirection: 'row' as const, alignItems: 'center' as const },
+  // flexShrink/flexGrow/flexBasis: a bal blokk (logó + rendelő adatai)
+  // engedi magát összenyomni, hogy a jobb oldali cím (headerTitleBlock)
+  // ne csússzon rá -- a német cím ("Behandlungsplan und
+  // Kostenvoranschlag") jóval szélesebb a magyarnál, enélkül átfedte a
+  // rendelő adatait. Lásd a terv "Német layout-törés" kockázatát.
+  mainHeaderLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    flexShrink: 1,
+    flexGrow: 1,
+    flexBasis: 0,
+  },
   logoMain: { width: 96, height: 24, objectFit: 'contain' as const },
   headerDivider: { width: 2, height: 26, backgroundColor: t.sky, marginHorizontal: 12 },
+  headerClinicBlock: { flexShrink: 1, flexGrow: 1, flexBasis: 0 },
   headerClinicText: { fontSize: 9, color: t.textMuted, lineHeight: 1.5 },
-  headerTitleBlock: { alignItems: 'flex-end' as const },
-  headerTitle: { fontSize: 12.5, fontWeight: 600, color: t.navy },
+  // Fix szélesség (nem intrinsic), hogy a hosszabb német cím két sorba
+  // törjön a bal blokkra csúszás helyett.
+  headerTitleBlock: { alignItems: 'flex-end' as const, flexShrink: 0, width: 220 },
+  headerTitle: { fontSize: 12.5, fontWeight: 600, color: t.navy, textAlign: 'right' as const },
   headerMeta: { fontSize: 9, color: t.textMuted, marginTop: 2 },
 
   miniHeader: {
@@ -61,7 +80,9 @@ const s = {
   patientGrid: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, marginBottom: 16 },
   kvHalf: { width: '50%', marginBottom: 2 },
   kvFull: { width: '100%', marginTop: 2 },
-  kvKey: { color: t.textMuted, width: 60 },
+  // 72, nem 60: a német címkék ("Handelsregisternummer", "Geburtsdatum")
+  // hosszabbak, mint a magyarok -- lásd a terv "Német layout-törés" kockázatát.
+  kvKey: { color: t.textMuted, width: 72 },
   kvRow: { flexDirection: 'row' as const, fontSize: 9.5 },
 
   phaseBlock: { marginBottom: 14 },
@@ -151,13 +172,13 @@ function Kv({ k, v, full }: { k: string; v: string; full?: boolean }) {
   );
 }
 
-function MainHeader({ plan, settings }: { plan: Plan; settings: Settings }) {
+function MainHeader({ plan, settings, L }: { plan: Plan; settings: Settings; L: PdfLabels }) {
   return (
     <View style={s.mainHeader}>
       <View style={s.mainHeaderLeft}>
         <Image src={logoUrl} style={s.logoMain} />
         <View style={s.headerDivider} />
-        <View>
+        <View style={s.headerClinicBlock}>
           <Text style={s.headerClinicText}>{settings.rendelo.cim}</Text>
           <Text style={s.headerClinicText}>
             {settings.rendelo.telefon} · {settings.rendelo.email}
@@ -165,34 +186,45 @@ function MainHeader({ plan, settings }: { plan: Plan; settings: Settings }) {
         </View>
       </View>
       <View style={s.headerTitleBlock}>
-        <Text style={s.headerTitle}>Kezelési terv és árajánlat</Text>
+        <Text style={s.headerTitle}>{L.docTitle}</Text>
         <Text style={s.headerMeta}>
-          {plan.tervId} · v{plan.verzio} · {formatHuDateShort(plan.keltezes)}
+          {plan.tervId} · v{plan.verzio} · {formatShortDate(plan.keltezes, plan.nyelv)}
         </Text>
       </View>
     </View>
   );
 }
 
-function MiniHeader({ plan }: { plan: Plan }) {
+function MiniHeader({ plan, L }: { plan: Plan; L: PdfLabels }) {
   return (
     <View style={s.miniHeader}>
       <Image src={logoUrl} style={s.logoMini} />
-      <Text style={s.miniHeaderText}>Kezelési terv · {plan.paciens.nev}</Text>
+      <Text style={s.miniHeaderText}>
+        {L.miniHeaderPrefix}
+        {plan.paciens.nev}
+      </Text>
     </View>
   );
 }
 
-function PhaseTable({ fazis, currency }: { fazis: Fazis; currency: Plan['penznem'] }) {
+function PhaseTable({
+  fazis,
+  currency,
+  L,
+}: {
+  fazis: Fazis;
+  currency: Plan['penznem'];
+  L: PdfLabels;
+}) {
   return (
     <View style={s.phaseBlock}>
       <Text style={s.phaseTitle}>{fazis.megnevezes}</Text>
       <View style={s.tableHeaderRow}>
-        <Text style={[s.th, s.colBeavatkozas]}>Beavatkozás</Text>
-        <Text style={[s.th, s.colFog]}>Fog</Text>
-        <Text style={[s.th, s.colDb]}>Db</Text>
-        <Text style={[s.th, s.colEgysegar]}>Egységár</Text>
-        <Text style={[s.th, s.colOsszeg]}>Összeg</Text>
+        <Text style={[s.th, s.colBeavatkozas]}>{L.thBeavatkozas}</Text>
+        <Text style={[s.th, s.colFog]}>{L.thFog}</Text>
+        <Text style={[s.th, s.colDb]}>{L.thDb}</Text>
+        <Text style={[s.th, s.colEgysegar]}>{L.thEgysegar}</Text>
+        <Text style={[s.th, s.colOsszeg]}>{L.thOsszeg}</Text>
       </View>
       {fazis.sorok.map((sor, i) => (
         <View key={i} style={s.tableRow}>
@@ -209,10 +241,15 @@ function PhaseTable({ fazis, currency }: { fazis: Fazis; currency: Plan['penznem
         </View>
       ))}
       <View style={s.phaseTotalRow}>
-        <Text style={s.phaseTotalLabel}>Fázis összesen</Text>
+        <Text style={s.phaseTotalLabel}>{L.fazisOsszesen}</Text>
         <Text style={s.phaseTotalValue}>{formatMoney(fazisOsszeg(fazis), currency)}</Text>
       </View>
-      {fazis.megjegyzes ? <Text style={s.phaseNote}>Megjegyzés: {fazis.megjegyzes}</Text> : null}
+      {fazis.megjegyzes ? (
+        <Text style={s.phaseNote}>
+          {L.megjegyzesPrefix}
+          {fazis.megjegyzes}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -222,11 +259,13 @@ function Footer({
   settings,
   page,
   pages,
+  L,
 }: {
   plan: Plan;
   settings: Settings;
   page: number;
   pages: number;
+  L: PdfLabels;
 }) {
   return (
     <View style={s.footer} fixed>
@@ -236,7 +275,7 @@ function Footer({
             {settings.rendelo.nev} · {settings.rendelo.cim}
           </Text>
           <Text style={s.footerText}>
-            Adószám: {settings.rendelo.adoszam || '—'} · Cégjegyzékszám:{' '}
+            {L.adoszam} {settings.rendelo.adoszam || '—'} · {L.cegjegyzekszam}{' '}
             {settings.rendelo.cegjegyzekszam || '—'}
           </Text>
         </View>
@@ -245,7 +284,8 @@ function Footer({
             {plan.paciens.nev} · {plan.tervId}
           </Text>
           <Text style={s.footerTextRight}>
-            árlista {formatHuDateShort(plan.arlistaVerzio)} · {page} / {pages}
+            {L.arlistaPrefix}
+            {formatShortDate(plan.arlistaVerzio, plan.nyelv)} · {page} / {pages}
           </Text>
         </View>
       </View>
@@ -268,6 +308,7 @@ export function TervDocument({
   nyilatkozatMd,
   fizetesiFeltetelekMd,
 }: TervDocumentProps) {
+  const L = pdfLabels(plan.nyelv);
   const pages = offerOnly ? 2 : 3;
   const grand = plan.fazisok.reduce((sum, p) => sum + fazisOsszeg(p), 0);
   const listTotal = plan.fazisok.reduce((sum, p) => sum + fazisListaOsszeg(p), 0);
@@ -280,87 +321,85 @@ export function TervDocument({
     <Document>
       {/* ---------- 1. oldal ---------- */}
       <Page size="A4" style={s.page}>
-        <MainHeader plan={plan} settings={settings} />
+        <MainHeader plan={plan} settings={settings} L={L} />
 
         <View style={s.patientGrid}>
-          <Kv k="Név" v={plan.paciens.nev} />
-          <Kv k="Telefon" v={plan.paciens.telefon} />
-          <Kv k="Született" v={plan.paciens.szuletesiIdo} />
-          <Kv k="E-mail" v={plan.paciens.email} />
-          <Kv k="TAJ" v={plan.paciens.taj} />
+          <Kv k={L.kvNev} v={plan.paciens.nev} />
+          <Kv k={L.kvTelefon} v={plan.paciens.telefon} />
+          <Kv k={L.kvSzuletett} v={plan.paciens.szuletesiIdo} />
+          <Kv k={L.kvEmail} v={plan.paciens.email} />
+          <Kv k={L.kvTaj} v={plan.paciens.taj} />
           <View style={s.kvHalf} />
-          <Kv k="Lakcím" v={plan.paciens.lakcim} full />
+          <Kv k={L.kvLakcim} v={plan.paciens.lakcim} full />
         </View>
 
         {plan.fazisok.map((fazis, i) => (
-          <PhaseTable key={i} fazis={fazis} currency={plan.penznem} />
+          <PhaseTable key={i} fazis={fazis} currency={plan.penznem} L={L} />
         ))}
 
-        {hasRange && (
-          <Text style={s.savosFootnote}>
-            * A csillaggal jelölt tételek ára a kezelés során derül ki véglegesen, a megadott ár
-            becslés.
-          </Text>
-        )}
+        {hasRange && <Text style={s.savosFootnote}>{L.savosFootnote}</Text>}
 
         <View style={s.bottomRow}>
           {teeth.length > 0 && (
             <View style={s.toothChartBlock}>
-              <Text style={s.toothChartLabel}>Érintett fogak</Text>
+              <Text style={s.toothChartLabel}>{L.erintettFogak}</Text>
               <ToothChartPdf teeth={teeth} />
             </View>
           )}
           <View style={teeth.length > 0 ? s.summaryBlockNarrow : s.summaryBlockFull}>
             <View style={s.summaryLine}>
-              <Text style={s.summaryLabelMuted}>Kezelések összesen</Text>
+              <Text style={s.summaryLabelMuted}>{L.kezelesekOsszesen}</Text>
               <Text>{formatMoney(listTotal, plan.penznem)}</Text>
             </View>
             <View style={s.summaryDivider} />
             <View style={s.summaryLine}>
-              <Text style={s.summaryTotalLabel}>Fizetendő</Text>
+              <Text style={s.summaryTotalLabel}>{L.fizetendo}</Text>
               <Text style={s.summaryTotalValue}>{formatMoney(grand, plan.penznem)}</Text>
             </View>
             <Text style={s.validityNote}>
-              Az ajánlat {formatHuDate(plan.ervenyesIg)}-ig érvényes.{'\n'}
-              Az árak tartalmazzák az anyagköltséget.
+              {L.ervenyessegMondat(formatLongDate(plan.ervenyesIg, plan.nyelv))}
+              {'\n'}
+              {L.anyagkoltseg}
             </Text>
           </View>
         </View>
 
-        <Footer plan={plan} settings={settings} page={1} pages={pages} />
+        <Footer plan={plan} settings={settings} page={1} pages={pages} L={L} />
       </Page>
 
       {/* ---------- 2. oldal -- fizetési feltételek ---------- */}
       <Page size="A4" style={s.page}>
-        <MiniHeader plan={plan} />
-        <Text style={s.h2}>Fizetési feltételek</Text>
+        <MiniHeader plan={plan} L={L} />
+        <Text style={s.h2}>{L.fizetesiFeltetelekCim}</Text>
         {bulletLines.map((line, i) => (
           <View key={i} style={s.bulletRow}>
             <Text style={s.bulletDot}>•</Text>
             <Text style={s.bulletText}>{line}</Text>
           </View>
         ))}
-        <Footer plan={plan} settings={settings} page={2} pages={pages} />
+        <Footer plan={plan} settings={settings} page={2} pages={pages} L={L} />
       </Page>
 
       {/* ---------- 3. oldal -- nyilatkozat és aláírás ---------- */}
       {!offerOnly && (
         <Page size="A4" style={s.page}>
-          <MiniHeader plan={plan} />
-          <Text style={s.h2}>Nyilatkozat</Text>
+          <MiniHeader plan={plan} L={L} />
+          <Text style={s.h2}>{L.nyilatkozatCim}</Text>
           <Text style={s.legalText}>{nyilatkozatBody}</Text>
 
           <View style={s.signatureBlock}>
-            <Text style={s.signatureDate}>Budapest, {formatHuDate(plan.keltezes)}</Text>
+            <Text style={s.signatureDate}>
+              {L.alairasSor(ALAIRAS_VAROS, formatLongDate(plan.keltezes, plan.nyelv))}
+            </Text>
             <View style={s.signatureCols}>
               <View style={s.signatureCol}>
-                <Text style={s.signatureRoleLabel}>Megbízott:</Text>
+                <Text style={s.signatureRoleLabel}>{L.megbizott}</Text>
                 <View style={s.signatureLine}>
                   <Text style={s.signatureName}>{plan.orvos}</Text>
                 </View>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={s.signatureRoleLabel}>Megrendelő:</Text>
+                <Text style={s.signatureRoleLabel}>{L.megrendelo}</Text>
                 <View style={s.signatureLine}>
                   <Text style={s.signatureName}>{plan.paciens.nev}</Text>
                 </View>
@@ -369,14 +408,13 @@ export function TervDocument({
 
             {plan.paciens.kiskoru && (
               <Text style={s.guardianNote}>
-                Cselekvőképesség hiányában, vagy korlátozott cselekvőképesség esetén a beteg
-                helyett CSAK a törvényes képviselő írhatja alá.
+                {L.kiskoruNote}
                 {plan.paciens.torvenyesKepviselo ? ` (${plan.paciens.torvenyesKepviselo})` : ''}
               </Text>
             )}
           </View>
 
-          <Footer plan={plan} settings={settings} page={3} pages={pages} />
+          <Footer plan={plan} settings={settings} page={3} pages={pages} L={L} />
         </Page>
       )}
     </Document>

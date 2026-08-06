@@ -9,25 +9,37 @@ import { useNavigate } from 'react-router-dom';
 import { t } from '../design/tokens';
 import { btn, chip, input } from '../design/ui';
 import { formatMoney, formatPrice } from '../domain/money';
+import { resolveNev } from '../domain/nev';
 import { norm } from '../domain/search';
 import { parseTeeth } from '../domain/teeth';
 import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
-import type { Fazis, Penznem, Plan, Sor, Tetel } from '../domain/types';
+import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
 
 export default function PlanEditorPage() {
   const { plan, setPlan, priceList } = useAppState();
   const navigate = useNavigate();
   const currency = plan.penznem;
+  const nyelv = plan.nyelv;
 
-  const catName = (id: string): string =>
-    priceList.kategoriak.find((k) => k.id === id)?.nev.hu ?? 'Egyéb';
+  const catName = (id: string): string => {
+    const kat = priceList.kategoriak.find((k) => k.id === id);
+    return kat ? resolveNev(kat.nev, nyelv).szoveg : 'Egyéb';
+  };
 
   const available = useMemo(
     () => priceList.tetelek.filter((x) => x.aktiv && x.ar[currency]),
     [priceList, currency],
   );
   const frequent = useMemo(() => available.filter((x) => x.gyakori), [available]);
+
+  // D21/1.1: melyik tétel neve esne vissza magyarra ezen a nyelven -- a
+  // kereső HU jelölésének és a felvett soroknak a forrása. `hu` tervnél
+  // sosem eshet vissza (resolveNev mindig nev.hu-t ad), ezért üres halmaz.
+  const fallbackTetelIds = useMemo(() => {
+    if (nyelv === 'hu') return new Set<string>();
+    return new Set(priceList.tetelek.filter((x) => !x.nev.de).map((x) => x.id));
+  }, [priceList, nyelv]);
 
   function updatePlan(fn: (draft: Plan) => void) {
     setPlan((prev) => {
@@ -44,7 +56,7 @@ export default function PlanEditorPage() {
     updatePlan((draft) => {
       draft.fazisok[phaseIdx].sorok.push({
         tetelId: item.id,
-        nevSnapshot: item.nev.hu,
+        nevSnapshot: resolveNev(item.nev, nyelv).szoveg,
         savos: ar.tipus === 'SAVOS',
         fogak: '',
         mennyiseg: 1,
@@ -76,9 +88,11 @@ export default function PlanEditorPage() {
           key={pi}
           phase={p}
           currency={currency}
+          nyelv={nyelv}
           available={available}
           catName={catName}
           frequent={frequent}
+          fallbackTetelIds={fallbackTetelIds}
           canDelete={plan.fazisok.length > 1}
           total={fazisOsszeg(p)}
           onAdd={(item) => addLine(pi, item)}
@@ -161,9 +175,11 @@ function Header({
 function PhaseCard({
   phase,
   currency,
+  nyelv,
   available,
   catName,
   frequent,
+  fallbackTetelIds,
   total,
   canDelete,
   onAdd,
@@ -175,9 +191,11 @@ function PhaseCard({
 }: {
   phase: Fazis;
   currency: Penznem;
+  nyelv: Nyelv;
   available: Tetel[];
   catName: (id: string) => string;
   frequent: Tetel[];
+  fallbackTetelIds: Set<string>;
   total: number;
   canDelete: boolean;
   onAdd: (item: Tetel) => void;
@@ -241,18 +259,25 @@ function PhaseCard({
           key={li}
           line={l}
           currency={currency}
+          fallback={fallbackTetelIds.has(l.tetelId)}
           onPatch={(p) => onPatchLine(li, p)}
           onRemove={() => onRemoveLine(li)}
         />
       ))}
 
-      <ItemPicker available={available} catName={catName} currency={currency} onPick={onAdd} />
+      <ItemPicker
+        available={available}
+        catName={catName}
+        currency={currency}
+        nyelv={nyelv}
+        onPick={onAdd}
+      />
 
       {frequent.length > 0 && (
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
           {frequent.map((f) => (
             <button key={f.id} style={chip} onClick={() => onAdd(f)}>
-              + {f.nev.hu}
+              + {resolveNev(f.nev, nyelv).szoveg}
             </button>
           ))}
         </div>
@@ -283,11 +308,13 @@ function PhaseCard({
 function LineRow({
   line,
   currency,
+  fallback,
   onPatch,
   onRemove,
 }: {
   line: Sor;
   currency: Penznem;
+  fallback: boolean;
   onPatch: (patch: Partial<Sor>) => void;
   onRemove: () => void;
 }) {
@@ -304,6 +331,7 @@ function LineRow({
         <div style={{ fontSize: 13 }}>
           {line.nevSnapshot}
           {line.savos && <span style={{ color: t.warn, fontSize: 11, marginLeft: 6 }}>sávos</span>}
+          {fallback && <HuChip />}
           {discount > 0 && (
             <span
               style={{
@@ -380,21 +408,28 @@ function ItemPicker({
   available,
   catName,
   currency,
+  nyelv,
   onPick,
 }: {
   available: Tetel[];
   catName: (id: string) => string;
   currency: Penznem;
+  nyelv: Nyelv;
   onPick: (item: Tetel) => void;
 }) {
   const [q, setQ] = useState('');
   const [hi, setHi] = useState(0);
   const ref = useRef<HTMLInputElement>(null);
 
+  // A kereső mindkét nyelven keres, mindig -- a doki magyar, magyarul gépel
+  // akkor is, ha német ajánlatot állít össze. Csak a megjelenített és
+  // snapshotolt név nyelvfüggő (lásd domain/nev.ts).
   const results = useMemo(() => {
     if (!q.trim()) return [];
     const nq = norm(q);
-    return available.filter((x) => norm(x.nev.hu).includes(nq)).slice(0, 12);
+    return available
+      .filter((x) => norm(x.nev.hu).includes(nq) || norm(x.nev.de).includes(nq))
+      .slice(0, 12);
   }, [q, available]);
 
   useEffect(() => setHi(0), [q]);
@@ -453,6 +488,7 @@ function ItemPicker({
           {results.map((r, i) => {
             const category = catName(r.kategoriaId);
             const header = category !== lastCat ? ((lastCat = category), category) : null;
+            const rn = resolveNev(r.nev, nyelv);
             return (
               <div key={r.id}>
                 {header && (
@@ -477,7 +513,10 @@ function ItemPicker({
                     background: i === hi ? t.skyWash : 'transparent',
                   }}
                 >
-                  <span>{r.nev.hu}</span>
+                  <span>
+                    {rn.szoveg}
+                    {rn.fallback && <HuChip />}
+                  </span>
                   <span style={{ color: t.textFaint, whiteSpace: 'nowrap' }}>
                     {formatPrice(r.ar[currency], currency)}
                   </span>
@@ -487,7 +526,46 @@ function ItemPicker({
           })}
         </div>
       )}
+      {results.length === 0 && q.trim() && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 40,
+            zIndex: 30,
+            background: available.length === 0 ? t.warnBg : t.surface,
+            border: `1px solid ${available.length === 0 ? t.warn : t.lineStrong}`,
+            borderRadius: t.radiusLg,
+            padding: '10px 12px',
+            fontSize: 12.5,
+            color: available.length === 0 ? t.warn : t.textFaint,
+          }}
+        >
+          {available.length === 0
+            ? `Nincs találat. Ebben a pénznemben (${currency}) egyetlen aktív tétel sincs beárazva — az Árlistán tölthetők ki.`
+            : 'Nincs találat.'}
+        </div>
+      )}
     </div>
+  );
+}
+
+function HuChip() {
+  return (
+    <span
+      style={{
+        fontSize: 10,
+        fontWeight: 600,
+        color: t.warn,
+        background: t.warnBg,
+        padding: '1px 5px',
+        borderRadius: 4,
+        marginLeft: 6,
+      }}
+    >
+      HU
+    </span>
   );
 }
 

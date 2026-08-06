@@ -6,9 +6,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import App from '../App';
 import PlanEditorPage from './PlanEditorPage';
 import { AppStateProvider } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
+import { seedPriceList } from '../storage/seed/priceList';
+import { seedSettings } from '../storage/seed/settings';
 
 function renderEditor() {
   return render(
@@ -19,6 +22,36 @@ function renderEditor() {
         </AppStateProvider>
       </StorageProvider>
     </MemoryRouter>,
+  );
+}
+
+/**
+ * Egy német tervhez szükséges beállítás + egy árlista, amiben pontosan egy
+ * tételnek ("Fogeltávolítás") van német neve -- a többi 117-nek nincs. Ezt a
+ * localStorage-ot MIELŐTT a StorageProvider renderelne kell beírni, mert a
+ * DemoStorage.init() az árlista hiányában resetDemoData()-t futtatna, ami
+ * felülírná ezt az egyedi seedet.
+ */
+function seedGermanPlanWithOneTranslatedItem() {
+  const custom = {
+    ...seedPriceList,
+    tetelek: seedPriceList.tetelek.map((x) =>
+      x.nev.hu === 'Fogeltávolítás' ? { ...x, nev: { ...x.nev, de: 'Zahnextraktion' } } : x,
+    ),
+  };
+  localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+  localStorage.setItem(
+    'dp:beallitasok.json',
+    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true, alapertelmezettNyelv: 'de' }),
+  );
+}
+
+/** Csak a `nemetEngedelyezve` kapcsoló, a árlista változatlan (0/118 EUR ár). */
+function seedWithGermanEnabled() {
+  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+  localStorage.setItem(
+    'dp:beallitasok.json',
+    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
   );
 }
 
@@ -108,5 +141,63 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(
       await screen.findByText(/2 fog van felsorolva, a darabszám 1\. Szándékos\?/),
     ).toBeInTheDocument();
+  });
+});
+
+describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    // Az egyik teszt a teljes App-ot (HashRouter) rendereli -- a
+    // window.location.hash a jsdom window-on nem reset a tesztek között.
+    window.location.hash = '';
+  });
+
+  it('snapshots the German name for an item that has one', async () => {
+    const user = userEvent.setup();
+    seedGermanPlanWithOneTranslatedItem();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'zahnextraktion');
+    const result = await screen.findByText('Zahnextraktion');
+    await user.click(result);
+
+    await waitFor(() => expect(search).toHaveValue(''));
+    expect(screen.getByText('Zahnextraktion')).toBeInTheDocument();
+    expect(screen.queryByText('HU')).toBeNull();
+  });
+
+  it('falls back to the Hungarian name and flags it with a HU chip when no German name exists', async () => {
+    const user = userEvent.setup();
+    seedGermanPlanWithOneTranslatedItem();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    // "csatornaszam" -- egyedi rész a névben, hogy ne ütközzön a hasonló
+    // "Gyökértömés eltávolítása /csatorna" tétellel (mindkettő matchelne egy
+    // rövidebb "gyoker" vagy "csatorna" query esetén).
+    await user.type(search, 'csatornaszam');
+    const result = await screen.findByText('Gyökértömés csatornaszámtól függően');
+    await user.click(result);
+
+    await waitFor(() => expect(search).toHaveValue(''));
+    expect(screen.getByText('Gyökértömés csatornaszámtól függően')).toBeInTheDocument();
+    expect(screen.getByText('HU')).toBeInTheDocument();
+  });
+
+  it('shows the empty-currency message in the search when the plan currency has zero priced items', async () => {
+    const user = userEvent.setup();
+    seedWithGermanEnabled();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await user.click(screen.getByRole('button', { name: 'EUR — euró' }));
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+
+    expect(await screen.findByText(/egyetlen aktív tétel sincs beárazva/)).toBeInTheDocument();
   });
 });
