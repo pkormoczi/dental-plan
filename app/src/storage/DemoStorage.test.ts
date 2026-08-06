@@ -46,7 +46,7 @@ describe('DemoStorage', () => {
     expect(pl.tetelek).toHaveLength(118);
 
     const settings = await storage.loadSettings();
-    expect(settings.rendelo.nev).toBe('Mándoki Dental Kft.');
+    expect(settings.rendelo.nev).toBe('Dr. Mándoki István Fogászati és Szájsebészeti Rendelő');
 
     const patients = await storage.listPatients();
     expect(patients.length).toBeGreaterThanOrEqual(3);
