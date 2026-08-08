@@ -18,7 +18,7 @@ import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
 import type { Fazis, Plan, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
 import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
-import { extractBulletLines, stripMarkdownHeading } from './markdownLite';
+import { fillPlaceholders, parseBlocks, type MdBlock } from './markdownLite';
 import { ToothChartPdf } from './ToothChartPdf';
 import logoUrl from '../assets/logo.png';
 
@@ -133,10 +133,12 @@ const s = {
   validityNote: { fontSize: 8, color: t.textMuted, marginTop: 6, lineHeight: 1.5 },
 
   h2: { fontSize: 12.5, fontWeight: 600, color: t.brand, marginBottom: 10 },
+  paragraph: { fontSize: 9.5, lineHeight: 1.5, marginBottom: 8 },
+  legalParagraph: { fontSize: 8.5, lineHeight: 1.6, marginBottom: 8 },
   bulletRow: { flexDirection: 'row' as const, marginBottom: 5 },
   bulletDot: { width: 12, fontSize: 9.5 },
   bulletText: { flex: 1, fontSize: 9.5, lineHeight: 1.5 },
-  legalText: { fontSize: 8.5, lineHeight: 1.6 },
+  legalBulletText: { flex: 1, fontSize: 8.5, lineHeight: 1.6 },
 
   signatureBlock: { marginTop: 40 },
   signatureDate: { fontSize: 9.5, marginBottom: 30 },
@@ -159,6 +161,11 @@ const s = {
   footerRow: { flexDirection: 'row' as const, justifyContent: 'space-between' as const },
   footerText: { fontSize: 7.5, color: t.textFaint, lineHeight: 1.5 },
   footerTextRight: { fontSize: 7.5, color: t.textFaint, lineHeight: 1.5, textAlign: 'right' as const },
+  // KÜLÖN stílus, `lineHeight` NÉLKÜL: a @react-pdf/renderer 4.5.1-ben egy
+  // `render` propos <Text> `lineHeight`-tal egy `fixed` ősön belül NÉMÁN
+  // eltünteti az egész fixed alfát minden oldalon (a lábléc többi sora is
+  // eltűnik vele) -- ez egyetlen soros szövegnél amúgy sem számítana.
+  footerTextRightDynamic: { fontSize: 7.5, color: t.textFaint, textAlign: 'right' as const },
 };
 
 function Kv({ k, v, full }: { k: string; v: string; full?: boolean }) {
@@ -254,19 +261,7 @@ function PhaseTable({
   );
 }
 
-function Footer({
-  plan,
-  settings,
-  page,
-  pages,
-  L,
-}: {
-  plan: Plan;
-  settings: Settings;
-  page: number;
-  pages: number;
-  L: PdfLabels;
-}) {
+function Footer({ plan, settings, L }: { plan: Plan; settings: Settings; L: PdfLabels }) {
   return (
     <View style={s.footer} fixed>
       <View style={s.footerRow}>
@@ -283,13 +278,44 @@ function Footer({
           <Text style={s.footerTextRight}>
             {plan.paciens.nev} · {plan.tervId}
           </Text>
-          <Text style={s.footerTextRight}>
-            {L.arlistaPrefix}
-            {formatShortDate(plan.arlistaVerzio, plan.nyelv)} · {page} / {pages}
-          </Text>
+          {/* Az oldalszám a tényleges renderelt oldalszámból jön (nem a
+              szerkesztő komponens `pages`-becsléséből) -- egy hosszú,
+              szerkeszthető nyilatkozat átfolyhat a 3. oldalon túlra is,
+              ilyenkor a fix "3/3" hazudna. */}
+          <Text
+            style={s.footerTextRightDynamic}
+            render={({ pageNumber, totalPages }) =>
+              `${L.arlistaPrefix}${formatShortDate(plan.arlistaVerzio, plan.nyelv)} · ${pageNumber} / ${totalPages}`
+            }
+          />
         </View>
       </View>
     </View>
+  );
+}
+
+function MdBlocks({ blocks, legal }: { blocks: MdBlock[]; legal?: boolean }) {
+  const paragraphStyle = legal ? s.legalParagraph : s.paragraph;
+  const bulletTextStyle = legal ? s.legalBulletText : s.bulletText;
+  return (
+    <>
+      {blocks.map((block, i) =>
+        block.kind === 'ul' ? (
+          <View key={i}>
+            {block.items.map((item, j) => (
+              <View key={j} style={s.bulletRow}>
+                <Text style={s.bulletDot}>•</Text>
+                <Text style={bulletTextStyle}>{item}</Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text key={i} style={paragraphStyle}>
+            {block.text}
+          </Text>
+        ),
+      )}
+    </>
   );
 }
 
@@ -309,13 +335,17 @@ export function TervDocument({
   fizetesiFeltetelekMd,
 }: TervDocumentProps) {
   const L = pdfLabels(plan.nyelv);
-  const pages = offerOnly ? 2 : 3;
   const grand = plan.fazisok.reduce((sum, p) => sum + fazisOsszeg(p), 0);
   const listTotal = plan.fazisok.reduce((sum, p) => sum + fazisListaOsszeg(p), 0);
   const hasRange = plan.fazisok.some((p) => p.sorok.some((l) => l.savos));
   const teeth = plan.fazisok.flatMap((p) => p.sorok.flatMap((l) => parseTeeth(l.fogak).teeth));
-  const bulletLines = extractBulletLines(fizetesiFeltetelekMd);
-  const nyilatkozatBody = stripMarkdownHeading(nyilatkozatMd);
+  // A sablonszövegben álló {{orvos}}/{{paciens}} helyőrzőket a tényleges
+  // terv-adatok váltják fel, mielőtt bekezdésekre/felsorolásra bontanánk.
+  const placeholderValues = { orvos: plan.orvos, paciens: plan.paciens.nev };
+  const fizetesiFeltetelekBlocks = parseBlocks(
+    fillPlaceholders(fizetesiFeltetelekMd, placeholderValues),
+  );
+  const nyilatkozatBlocks = parseBlocks(fillPlaceholders(nyilatkozatMd, placeholderValues));
 
   return (
     <Document>
@@ -364,20 +394,15 @@ export function TervDocument({
           </View>
         </View>
 
-        <Footer plan={plan} settings={settings} page={1} pages={pages} L={L} />
+        <Footer plan={plan} settings={settings} L={L} />
       </Page>
 
       {/* ---------- 2. oldal -- fizetési feltételek ---------- */}
       <Page size="A4" style={s.page}>
         <MiniHeader plan={plan} L={L} />
         <Text style={s.h2}>{L.fizetesiFeltetelekCim}</Text>
-        {bulletLines.map((line, i) => (
-          <View key={i} style={s.bulletRow}>
-            <Text style={s.bulletDot}>•</Text>
-            <Text style={s.bulletText}>{line}</Text>
-          </View>
-        ))}
-        <Footer plan={plan} settings={settings} page={2} pages={pages} L={L} />
+        <MdBlocks blocks={fizetesiFeltetelekBlocks} />
+        <Footer plan={plan} settings={settings} L={L} />
       </Page>
 
       {/* ---------- 3. oldal -- nyilatkozat és aláírás ---------- */}
@@ -385,9 +410,9 @@ export function TervDocument({
         <Page size="A4" style={s.page}>
           <MiniHeader plan={plan} L={L} />
           <Text style={s.h2}>{L.nyilatkozatCim}</Text>
-          <Text style={s.legalText}>{nyilatkozatBody}</Text>
+          <MdBlocks blocks={nyilatkozatBlocks} legal />
 
-          <View style={s.signatureBlock}>
+          <View style={s.signatureBlock} wrap={false}>
             <Text style={s.signatureDate}>
               {L.alairasSor(ALAIRAS_VAROS, formatLongDate(plan.keltezes, plan.nyelv))}
             </Text>
@@ -414,7 +439,7 @@ export function TervDocument({
             )}
           </View>
 
-          <Footer plan={plan} settings={settings} page={3} pages={pages} L={L} />
+          <Footer plan={plan} settings={settings} L={L} />
         </Page>
       )}
     </Document>

@@ -23,6 +23,12 @@ export default function PreviewPage() {
 
   const [offerOnly, setOfferOnly] = useState(false);
   const [nyilatkozatMd, setNyilatkozatMd] = useState('');
+  // A ténylegesen megjelenített nyilatkozat-verzió fájlneve (kiterjesztés
+  // nélkül) -- ez pinnelődik a `finalPlan.sablonVerzio`-jába véglegesítéskor
+  // (lásd doFinalize), hogy a doki mindig a most LÁTOTT szöveget írassa alá,
+  // ne egy korábban rögzített, esetleg már felülírt verziót. Alapértéknek a
+  // terv jelenlegi pinnelt verziója -- ha a betöltés hibázna, ez marad.
+  const [nyilatkozatVerzio, setNyilatkozatVerzio] = useState(plan.sablonVerzio);
   const [fizetesiFeltetelekMd, setFizetesiFeltetelekMd] = useState('');
   const [sablonFallback, setSablonFallback] = useState(false);
   const [templateError, setTemplateError] = useState<string | null>(null);
@@ -42,19 +48,26 @@ export default function PreviewPage() {
   useEffect(() => {
     let cancelled = false;
 
-    // Ha a tervhez tartozó sablon (pl. régi localStorage-ban a német
-    // bevezetése előtt keletkezett) hiányzik, a magyar szövegre esünk
-    // vissza -- soha nem üres nyilatkozattal/hibával fut le a PDF. Ezt a
+    // Mindkét sablon a LEGFRISSEBB verzióban jelenik meg -- a nyilatkozat
+    // verzióját csak véglegesítéskor pinneljük (lásd doFinalize), hogy a
+    // doki a Beállításokban időközben mentett pontosítás után is a most
+    // látott szöveget írassa alá, ne egy korábbi állapotot. Ha a tervhez
+    // tartozó nyelven nincs sablon (pl. régi localStorage-ban a német
+    // bevezetése előtt keletkezett), a magyar szövegre esünk vissza --
+    // soha nem üres nyilatkozattal/hibával fut le a PDF. Ezt a
     // `sablonFallback`-en keresztül jelezzük is (lásd a sárga sávot lent).
-    async function loadOrFallback(load: () => Promise<string>, fallback: () => Promise<string>) {
+    async function loadOrFallback(
+      load: () => Promise<{ name: string; body: string }>,
+      fallback: () => Promise<{ name: string; body: string }>,
+    ) {
       try {
-        return { text: await load(), fellback: false };
+        return { ...(await load()), fellback: false };
       } catch (err) {
         // P1-8 (05-hibakezeles #9): csak a VÁRT "nincs ilyen sablon" hibát
         // nyeljük el -- minden mást (pl. egy jövőbeli sérült bejegyzés)
         // továbbdobunk, hogy ne tűnjön el némán.
         if (err instanceof Error && err.message.startsWith('Nincs ')) {
-          return { text: await fallback(), fellback: true };
+          return { ...(await fallback()), fellback: true };
         }
         throw err;
       }
@@ -64,8 +77,8 @@ export default function PreviewPage() {
       try {
         const [nyil, fiz] = await Promise.all([
           loadOrFallback(
-            () => storage.loadTemplate(`${plan.sablonVerzio}.md`),
-            () => storage.loadTemplate('nyilatkozat-hu-v1.md'),
+            () => loadLatestTemplateByBase(`nyilatkozat-${plan.nyelv}`),
+            () => loadLatestTemplateByBase('nyilatkozat-hu'),
           ),
           loadOrFallback(
             () => loadLatestTemplateByBase(`fizetesi-feltetelek-${plan.nyelv}`),
@@ -73,8 +86,9 @@ export default function PreviewPage() {
           ),
         ]);
         if (!cancelled) {
-          setNyilatkozatMd(nyil.text);
-          setFizetesiFeltetelekMd(fiz.text);
+          setNyilatkozatMd(nyil.body);
+          setNyilatkozatVerzio(nyil.name.replace(/\.md$/, ''));
+          setFizetesiFeltetelekMd(fiz.body);
           setSablonFallback(nyil.fellback || fiz.fellback);
           setTemplateError(null);
         }
@@ -89,7 +103,7 @@ export default function PreviewPage() {
     return () => {
       cancelled = true;
     };
-  }, [plan.sablonVerzio, plan.nyelv, storage, loadLatestTemplateByBase]);
+  }, [plan.nyelv, loadLatestTemplateByBase]);
 
   const tervDocument = (
     <TervDocument
@@ -136,6 +150,9 @@ export default function PreviewPage() {
       const finalPlan = {
         ...plan,
         statusz: 'VEGLEGES' as const,
+        // A most az előnézetben LÁTOTT (legfrissebb) nyilatkozat-verzió
+        // pinnelődik -- lásd a fenti useEffect kommentjét.
+        sablonVerzio: nyilatkozatVerzio,
         osszesitok: computeOsszesitok(plan.fazisok),
       };
       const bytes = new Uint8Array(await pdfInstance.blob.arrayBuffer());

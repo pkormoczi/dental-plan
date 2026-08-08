@@ -118,10 +118,40 @@ describe('DemoStorage', () => {
     expect(v1Name).toBe('nyilatkozat-hu-v2.md'); // a seed már ír egy v1-et resetDemoData-ban
 
     const v1Content = await storage.loadTemplate('nyilatkozat-hu-v1.md');
-    expect(v1Content).toContain('PLACEHOLDER');
+    expect(v1Content).toContain('Megrendelő megrendeli a KEZELÉSI TERV szerinti');
 
     const v2Content = await storage.loadTemplate(v1Name);
     expect(v2Content).toBe('v1 szöveg');
+  });
+
+  it('loadLatestTemplateByBase returns the highest version and its filename', async () => {
+    const first = await storage.loadLatestTemplateByBase('nyilatkozat-hu');
+    expect(first.name).toBe('nyilatkozat-hu-v1.md');
+
+    await storage.saveTemplate('nyilatkozat-hu', 'v2 szöveg');
+    const second = await storage.loadLatestTemplateByBase('nyilatkozat-hu');
+    expect(second.name).toBe('nyilatkozat-hu-v2.md');
+    expect(second.body).toBe('v2 szöveg');
+  });
+
+  it('ensureSeedTemplates (a second init) upgrades a still-placeholder -v1 to the real seed text', async () => {
+    // Egy a placeholder bevezetése előtti demó-állapotot szimulálunk: a
+    // -v1 fájl törzse még a régi jelölőt tartalmazza.
+    localStorage.setItem('dp:sablonok/nyilatkozat-de-v1.md', '# Erklärung\n\n[PLATZHALTER -- régi]\n');
+
+    await storage.init(); // idempotens -- csak a hiányzó/placeholder sablonokat pótolja
+
+    const upgraded = await storage.loadTemplate('nyilatkozat-de-v1.md');
+    expect(upgraded).not.toContain('[PLATZHALTER -- régi]');
+  });
+
+  it('ensureSeedTemplates never touches a -v1 that the doctor already edited (no longer a placeholder)', async () => {
+    localStorage.setItem('dp:sablonok/nyilatkozat-hu-v1.md', '# Nyilatkozat\n\nA doki saját szövege.\n');
+
+    await storage.init();
+
+    const untouched = await storage.loadTemplate('nyilatkozat-hu-v1.md');
+    expect(untouched).toBe('# Nyilatkozat\n\nA doki saját szövege.\n');
   });
 
   it('rejects loading a plan with a newer-than-known schemaVersion (D18)', async () => {

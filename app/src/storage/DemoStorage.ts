@@ -46,6 +46,11 @@ const DEFAULT_TEMPLATES: Array<[string, string]> = [
   ['fizetesi-feltetelek-de-v1.md', FIZETESI_FELTETELEK_DE_V1],
 ];
 
+/** Igaz, ha a sablon törzse még a jogi-munka helykitöltőt tartalmazza. */
+function isPlaceholderTemplate(body: string): boolean {
+  return body.includes('[PLACEHOLDER') || body.includes('[PLATZHALTER');
+}
+
 const PREFIX = 'dp:';
 const PRICE_LIST_KEY = `${PREFIX}arlista.json`;
 const SETTINGS_KEY = `${PREFIX}beallitasok.json`;
@@ -141,11 +146,22 @@ export class DemoStorage implements PlanStorage {
     }
   }
 
-  /** Csak a még hiányzó alapértelmezett sablonfájlokat írja be, meglévőt nem érint. */
+  /**
+   * A hiányzó alapértelmezett sablonfájlokat pótolja. Kivétel: ha egy
+   * meglévő -v1 sablon törzse még a régi "[PLACEHOLDER"/"[PLATZHALTER"
+   * jelölőt tartalmazza, felülírjuk a friss (immár valódi, az eredeti
+   * Excelből átvett) seed-szöveggel -- ez a frissítési út azoknak, akik a
+   * placeholder bevezetése előtt már használták a demót. Idempotens (a
+   * friss magyar szövegben nincs jelölő), és a doki által ténylegesen
+   * szerkesztett -- tehát már nem placeholder -- törzshöz nem nyúl.
+   */
   private ensureSeedTemplates(): void {
     for (const [name, body] of DEFAULT_TEMPLATES) {
       const key = templateKey(name);
-      if (localStorage.getItem(key) == null) localStorage.setItem(key, body);
+      const existing = localStorage.getItem(key);
+      if (existing == null || isPlaceholderTemplate(existing)) {
+        localStorage.setItem(key, body);
+      }
     }
   }
 
@@ -315,24 +331,29 @@ export class DemoStorage implements PlanStorage {
 
   /**
    * A legfrissebb elérhető verziót adja vissza egy alapnévhez (pl.
-   * "fizetesi-feltetelek-hu"). A `terv.json` csak a nyilatkozat verzióját
-   * pinneli (`sablonVerzio`) -- lásd docs/02-domain-modell.md -- a
-   * fizetési feltételek mindig az aktuális szöveggel jelenik meg.
+   * "fizetesi-feltetelek-hu"), a fájlnevével együtt. A `terv.json`
+   * véglegesítéskor a MEGJELENÍTETT nyilatkozat verzióját pinneli
+   * (`sablonVerzio`) -- lásd docs/02-domain-modell.md és
+   * `PreviewPage.tsx` --, ezért a hívónak a fájlnévre is szüksége van, nem
+   * csak a szövegre.
    */
-  async loadLatestTemplateByBase(base: string): Promise<string> {
+  async loadLatestTemplateByBase(base: string): Promise<{ name: string; body: string }> {
     const re = new RegExp(`^${escapeRegExp(base)}-v(\\d+)\\.md$`);
     let maxV = 0;
     let latestKey: string | null = null;
+    let latestName: string | null = null;
     this.eachKey((key) => {
       if (!key.startsWith(TEMPLATES_PREFIX)) return;
-      const m = re.exec(key.slice(TEMPLATES_PREFIX.length));
+      const fileName = key.slice(TEMPLATES_PREFIX.length);
+      const m = re.exec(fileName);
       if (m && Number(m[1]) > maxV) {
         maxV = Number(m[1]);
         latestKey = key;
+        latestName = fileName;
       }
     });
-    if (!latestKey) throw new Error(`Nincs "${base}" kezdetű sablon.`);
-    return localStorage.getItem(latestKey)!;
+    if (!latestKey || !latestName) throw new Error(`Nincs "${base}" kezdetű sablon.`);
+    return { name: latestName, body: localStorage.getItem(latestKey)! };
   }
 
   private nextTemplateVersion(base: string): number {

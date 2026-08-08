@@ -5,7 +5,13 @@
 import { addDaysIso } from './date';
 import type { Nyelv, Plan, PriceList, Settings } from './types';
 
-/** A nyilatkozat-sablon fájlneve (kiterjesztés nélkül) egy adott nyelvhez. */
+/**
+ * A nyilatkozat-sablon ideiglenes kiinduló fájlneve (kiterjesztés nélkül) egy
+ * adott nyelvhez, amíg a terv el nem indul. `PreviewPage` a tényleges
+ * előnézetkor/véglegesítéskor mindig a legfrissebb elérhető verziót tölti be
+ * és pinneli -- ez itt csak egy ártalmatlan alapérték a friss `Plan`-en,
+ * amíg a doki el nem jut a nyomtatvány-előnézetig.
+ */
 export function sablonVerzioFor(nyelv: Nyelv): string {
   return `nyilatkozat-${nyelv}-v1`;
 }

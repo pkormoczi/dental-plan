@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SettingsPage from './SettingsPage';
@@ -49,5 +49,83 @@ describe('SettingsPage', () => {
     expect(await screen.findByText(/A mentés nem sikerült/)).toBeInTheDocument();
 
     vi.restoreAllMocks();
+  });
+
+  describe('Nyomtatvány szövegei', () => {
+    it('shows the real seed text (without the "# " heading) in both boxes', async () => {
+      renderSettings();
+
+      const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      expect(nyilatkozat.value.startsWith('#')).toBe(false);
+      expect(nyilatkozat.value).toContain('Megrendelő megrendeli a KEZELÉSI TERV szerinti');
+
+      const fizetesiFeltetelek = screen.getByLabelText('Fizetési feltételek') as HTMLTextAreaElement;
+      expect(fizetesiFeltetelek.value.startsWith('#')).toBe(false);
+      expect(fizetesiFeltetelek.value).toContain('Megrendelő a kezelési tervben szereplő');
+
+      expect(screen.getByText('nyilatkozat-hu-v1.md')).toBeInTheDocument();
+    });
+
+    // A seed nemetEngedelyezve:true (mockup-alapérték), tehát a kártya saját
+    // nyelvváltója is megjelenik -- a Deutsch chip váltás a placeholder DE
+    // szöveget mutatja, a nem mentett HU piszkozat pedig visszaváltáskor megmarad.
+    it('switching the card language to Deutsch shows the DE placeholder, HU draft survives switching back', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+
+      const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
+      await user.type(nyilatkozat, ' HU piszkozat.');
+
+      const card = screen.getByText('Nyomtatvány szövegei').closest('.rt-Card') as HTMLElement;
+      await user.click(within(card).getByRole('radio', { name: 'Deutsch' }));
+
+      const deNyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      expect(deNyilatkozat.value).toContain('PLATZHALTER');
+
+      await user.click(within(card).getByRole('radio', { name: 'Magyar' }));
+      const huAgain = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      expect(huAgain.value).toContain('HU piszkozat.');
+    });
+
+    it('saving an edited template creates a new -v2 file and updates the shown filename', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+
+      const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
+      await user.type(nyilatkozat, ' Kiegészítés.');
+
+      expect(screen.getByText('Nem mentett módosítás')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Szöveg mentése' }));
+
+      expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
+      expect(screen.getByText('nyilatkozat-hu-v2.md')).toBeInTheDocument();
+
+      const stored = localStorage.getItem('dp:sablonok/nyilatkozat-hu-v2.md');
+      expect(stored).toContain('Kiegészítés.');
+      // A v1 változatlan marad (D4 -- korábbi tervek erre hivatkozhatnak).
+      const v1 = localStorage.getItem('dp:sablonok/nyilatkozat-hu-v1.md');
+      expect(v1).not.toContain('Kiegészítés.');
+    });
+
+    it('does NOT show "Mentve ✓" when saving a template fails, and shows the error instead', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+
+      const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
+      await user.type(nyilatkozat, ' Kiegészítés.');
+
+      const originalSetItem = localStorage.setItem.bind(localStorage);
+      vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+        if (key === 'dp:sablonok/nyilatkozat-hu-v2.md') throw new DOMException('QuotaExceededError');
+        originalSetItem(key, value);
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Szöveg mentése' }));
+
+      expect(screen.queryByRole('button', { name: 'Mentve ✓' })).not.toBeInTheDocument();
+      expect(await screen.findByText(/A szöveg mentése nem sikerült/)).toBeInTheDocument();
+
+      vi.restoreAllMocks();
+    });
   });
 });

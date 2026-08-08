@@ -211,9 +211,13 @@ Kategória hozzáadása, átnevezése, sorrendezése ugyanitt.
 - Orvosok listája
 - Logó fájl
 - Ajánlat érvényessége napokban (alapérték 90)
-- Sablonszövegek szerkesztése — a nyilatkozat és a fizetési feltételek.
+- Sablonszövegek szerkesztése — a nyilatkozat és a fizetési feltételek,
+  saját nyelvváltóval (Magyar/Deutsch, ha a német engedélyezve van).
   **Mentéskor új verziófájl keletkezik** (`nyilatkozat-hu-v2.md`), a régi
-  marad, mert a korábbi tervek arra hivatkoznak.
+  marad, mert a korábbi tervek arra hivatkoznak — a mentés a
+  véglegesítéskor épp aktuális (legfrissebb) verziót pinneli a tervre. A
+  nyilatkozat szövegében a `{{orvos}}` helyőrző a kezelőorvos nevére
+  cserélődik a nyomtatványon.
 - **Német nyelvű ajánlat engedélyezése** (`nemetEngedelyezve`) — checkbox.
   Bekapcsolva megjelenik az **alapértelmezett nyelv** kapcsolója (ez lesz
   az új tervek nyelve), alatta a **német tartalom készültsége**:

@@ -24,7 +24,7 @@ export interface StorageContextValue {
    *  "Demó adat visszaállítása" csak újraseedel, ez ténylegesen kiürít. */
   clearAll: () => void;
   loadPlanPdf: (ref: { patientDir: string; versionDir: string }) => Promise<Uint8Array | null>;
-  loadLatestTemplateByBase: (base: string) => Promise<string>;
+  loadLatestTemplateByBase: (base: string) => Promise<{ name: string; body: string }>;
 }
 
 const StorageContext = createContext<StorageContextValue | null>(null);

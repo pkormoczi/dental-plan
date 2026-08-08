@@ -139,6 +139,10 @@ tipográfiát adott — lásd a „Nyelv" szakaszt lentebb.)
 
 A jelenlegi Excelben ez a jogi szövegfal közepén van elrejtve, pedig ez
 az, ami a pácienst valóban érdekli. Külön címmel, olvasható tördelésben:
+egy bevezető bekezdés, utána a felsorolás. A szöveg forrása
+`sablonok/fizetesi-feltetelek-hu-vN.md` -- szó szerint az eredeti
+`data/MINTA_MINTA_Kezelesi_Terv_frissített.xls` `Kezelesi_Terv` lapjáról
+átvéve, a Beállítások képernyőn szerkeszthető (lásd lent).
 
 - Fogtechnikai munkát nem tartalmazó kezelésnél az ellenérték
   alkalmanként, azonnal fizetendő.
@@ -151,11 +155,20 @@ az, ami a pácienst valóban érdekli. Külön címmel, olvasható tördelésben
 Ha itt még van hely, a fázisok folytatódhatnak róla — a fizetési
 feltételek a tartalom után jönnek.
 
+A sablon-markdown egyszerű: üres sorokkal elválasztott bekezdések, és
+"- " kezdetű listaelemek (lásd `app/src/pdf/markdownLite.ts`
+`parseBlocks`). Bekezdésben és listaelemben is használható a
+`{{orvos}}` helyőrző, amit a PDF generáláskor a terv kezelőorvosának
+neve vált fel.
+
 ## 3. oldal — nyilatkozat és aláírás
 
-A jogi szövegfal (`sablonok/nyilatkozat-hu-v1.md`) kisebb betűvel,
-1.5-es sorközzel. A tervben tárolt `sablonVerzio` mondja meg, melyik
-szövegváltozat volt érvényes.
+A jogi szövegfal (`sablonok/nyilatkozat-hu-vN.md`) kisebb betűvel,
+1.5-es sorközzel, bekezdésekre tördelve. A szöveg szó szerint az
+eredeti Excel `Kezelesi_Terv` lapjának "Nyilatkozat" blokkjából jön,
+záró mondata a `{{orvos}}` helyőrzővel. A tervben tárolt
+`sablonVerzio` (véglegesítéskor pinnelt, akkor épp legfrissebb verzió)
+mondja meg, melyik szövegváltozat volt érvényes.
 
 Alatta:
 
