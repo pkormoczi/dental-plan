@@ -1,7 +1,10 @@
-## Design rules
+# 7. Felület-rendszer
 
-Ez a rész a felület és a nyomtatvány kinézetére vonatkozik. Kötelező,
+Ez a fejezet a felület és a nyomtatvány kinézetére vonatkozik. Kötelező,
 nem javaslat. Ha valami ütközik vele, kérdezz, ne rögtönözz.
+
+(Korábban `Design.md` a repo gyökerén — ha kódkommentben `Design.md`
+hivatkozást látsz, ez a fájl az utódja.)
 
 ### Mi ez a termék
 
@@ -12,10 +15,11 @@ nincsenek dísz-illusztrációk.
 
 ### A két felület külön szabályrendszer
 
-**1. Nyomtatvány (PrintPreview, PDF) — ezt a PÁCIENS látja.**
+**1. Nyomtatvány (`app/src/pdf/TervDocument.tsx`, prototípus:
+`ui/PrintPreview.jsx`) — ezt a PÁCIENS látja.**
 Kövesse a klinika weboldalának (drmandoki.hu) arculatát: ugyanaz a logó,
 paletta és betűtípus. A páciens a weboldal után kapja kézhez ezt a papírt,
-a kettő egy márkaélmény.
+a kettő egy márkaélmény. Részletes specifikáció: `docs/04-nyomtatvany-spec.md`.
 
 **2. App felület — ezt CSAK az orvos látja, naponta több órán át.**
 Munkaeszköz. Semleges, hideg szürke skála (slate). A márka színe kizárólag
@@ -23,26 +27,41 @@ akcentusként jelenik meg: elsődleges gomb, kijelölt sor, fókusz gyűrű,
 aktív fül. A felület háttere SOHA nem meleg krém, bézs vagy agyagbarna —
 az fárasztó egy órákig nézett adattáblán.
 
-### Márkatokenek (forrás: drmandoki.hu Elementor globals)
+### Márkatokenek (forrás: drmandoki.hu, lásd `app/src/design/tokens.ts`)
 
-- primary:   #6EC1E4
-- secondary: #54595F
-- text:      #7A7A7A
-- accent:    #61CE70
-- betűtípus: Roboto
-- Logó: az "átszínezett" (weboldalas) változat, NEM az eredeti navy.
-  Nyomtatványra átlátszó hátterű PNG, 600 dpi-n raszterizálva.
+A márka 2026-08-06 óta a klinika nyilvános honlapját követi (arculatváltás,
+lásd `docs/04-nyomtatvany-spec.md` „Márka"). Az alábbi táblázat a
+`tokens.ts` tényleges exportjait tükrözi — ha eltérést látsz, a kód az
+igazság, ezt a táblázatot kell utána igazítani.
+
+| Token | Érték | Szerep |
+|---|---|---|
+| `brand` | `#976445` | Címsorok, vonalak. Fehéren 4,97:1 — épphogy WCAG AA fölött, színes háttéren újraszámolandó |
+| `accent` | `#f77409` | **Soha nem szövegszín** — fehéren 2,82:1, kis méretben olvashatatlan. Csak díszítővonal és a fogtérkép kiemelése |
+| `ink` | `#2D2D2D` | Elsődleges gomb háttere (a honlap gombszíne), 13,77:1 |
+| `text` | `#1A1A1A` | Törzsszöveg, mindkét felület használja |
+| `uiTextMuted` / `uiTextFaint` | `#475569` / `#64748B` | App-oldali halvány szöveg (slate-600/500) |
+| `uiLine` / `uiLineStrong` | `#E2E8F0` / `#CBD5E1` | App-oldali díszítő hajszálvonal — **csak** sorelválasztóra, nem interaktív keretre |
+| `controlBorder` | `#8896AB` | Minden interaktív kontroll (input, gomb, chip, dropdown) kerete — 3,00:1, WCAG 1.4.11. Nem az `uiLine`, az ahhoz túl halvány |
+| betűtípus | Roboto | `@fontsource/roboto` |
+| Logó | átszínezett (weboldalas) lockup | Az eredeti navy **nem** ez — lásd `docs/04-nyomtatvany-spec.md` „Logó", 300 dpi, 2662×666 px |
+
+A PDF-oldal (`pdf/*.tsx`) és az app-felület (`components/`, `pages/`)
+tudatosan **külön tokenkészletet** használ ugyanarra a szerepre (pl.
+`textMuted` a PDF-en, `uiTextMuted` az appban) — ne keverd össze őket, a
+`tokens.ts` fejléckommentje ezt részletesen indokolja.
 
 Ezeket ne módosítsd, ne "hangold", ne generálj hozzájuk kiegészítő
 palettát. Ha egy szín hiányzik valamihez, kérdezz.
 
 ### Komponensek
 
-- Minden UI elem @radix-ui/themes komponensből jön. Ne írj kézzel gombot,
+- Minden UI elem `@radix-ui/themes` komponensből jön. Ne írj kézzel gombot,
   inputot, selectet, dialógust, táblázatot. Ha hiányzik valami, kérdezz.
-- Theme beállítás: radius="small", scaling="95%", grayColor="slate".
+- Theme beállítás (`app/src/App.tsx`): `accentColor="brown" grayColor="slate"
+  radius="small" scaling="95%"`.
 - Kivételek, amik kézzel írtak maradnak: a fogtérkép (funkcionális SVG
-  adatvizualizáció) és a PrintPreview (A4 nyomtatvány).
+  adatvizualizáció) és a nyomtatvány (`pdf/TervDocument.tsx`, A4 layout).
 
 ### Szín, forma, sűrűség
 
@@ -62,9 +81,9 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   (terv azonosító, tétel id).
 - Minden pénzérték és mennyiség jobbra igazítva, tabular-nums.
 - Pénzösszeg soha nem tördelhető sortörésnél.
-- HUF: egész szám, ezres szóközzel, "1 234 567 Ft".
-- EUR: két tizedes, ezres pont, tizedes vessző, "1.234,56 €".
-- Formázás fix függvényből pénznemenként, ne toLocaleString-gel ad hoc.
+- A HUF/EUR számformátum pontos szabálya és a `toLocaleString()` tiltása:
+  lásd `docs/04-nyomtatvany-spec.md` „Számformátum" — egy szerződéses
+  formátumszabálynak egy forrása van, ne duplikáld itt.
 
 ### Kötelező állapotok
 
@@ -101,8 +120,8 @@ Minden nézetnek van loading, empty és error állapota.
 
 ### Amihez ne nyúlj kérdés nélkül
 
-- A PrintPreview elrendezése (külön specifikáció szabályozza).
-- A terv.json és arlista.json sémák, mezőnevek, schemaVersion.
+- A nyomtatvány elrendezése (`docs/04-nyomtatvany-spec.md` szabályozza).
+- A `terv.json` és `arlista.json` sémák, mezőnevek, `schemaVersion`.
 - Az útvonalak és a fájlrendszer mappastruktúrája.
 - A tétel-azonosítók (soha nem használhatók újra).
 
@@ -114,4 +133,4 @@ Minden nézetnek van loading, empty és error állapota.
 - Ne tegyél animációt oda, ahol nincs visszajelzési funkciója.
 - Ne generálj kép- vagy illusztrációs tartalmat.
 - Ne vezess be második UI könyvtárat a Radix mellé.
-- Ne írj kézzel SVG ikont. Ikon a @radix-ui/react-icons-ból jön.
+- Ne írj kézzel SVG ikont. Ikon a `@radix-ui/react-icons`-ból jön.

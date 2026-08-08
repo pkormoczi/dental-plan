@@ -41,7 +41,8 @@ export default function PlanHistoryPage() {
   const [listError, setListError] = useState<string | null>(null);
   // P1-2: a megnyitás/letöltés hibája korábban `alert()`-tel jelent meg --
   // egy adott verzió-sorhoz kötött hiba, ezért annak a sornak a szövegeként
-  // jelenik meg (Design.md: "Nem toast, ha a hiba egy mezőhöz tartozik").
+  // jelenik meg (docs/07-felulet-rendszer.md: "Nem toast, ha a hiba egy
+  // mezőhöz tartozik").
   const [actionError, setActionError] = useState<ActionError | null>(null);
 
   useEffect(() => {
@@ -249,7 +250,7 @@ export default function PlanHistoryPage() {
   );
 }
 
-/** Design.md: skeleton a végleges elrendezés alakjában, ne pörgő spinner. */
+/** docs/07-felulet-rendszer.md: skeleton a végleges elrendezés alakjában, ne pörgő spinner. */
 function HistorySkeleton() {
   return (
     <>

@@ -5,19 +5,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repo elrendezés
 
 ```
-docs/     6 tervdokumentum (01–06, lásd térkép alul)
+docs/     8 tervdokumentum (01–08, lásd térkép alul)
 data/     arlista.seed.json (118 tétel), az eredeti .xls
 ui/       PlanEditor.jsx, PriceListAdmin.jsx, PrintPreview.jsx, tokens.js — REFERENCIA, nem buildelődik
 assets/   márkalogó, navy eredeti (PNG + eredeti PDF-ek) — az app egy átszínezett másolatot használ
 app/      a tényleges Vite + React + TypeScript alkalmazás — IDE dolgozz
 ```
 
-Az `app/`-on kívüli minden más csak referencia és dokumentáció. Build/lint/teszt
-parancsok az `app/README.md`-ben (vagy `app/package.json` scripts).
+Az `app/`-on kívüli minden más csak referencia és dokumentáció.
+
+Parancsok (`app/package.json` scripts, mindig `cd app` után):
+`npm run dev` (Vite dev szerver), `npm run build` (`tsc -b && vite build`),
+`npm run lint` (`oxlint`), `npm test` (`vitest run`).
 
 A márka a klinika nyilvános honlapját (drmandoki.hu) követi (`#976445` /
 `#f77409`), forrása `app/src/design/tokens.ts` — lásd
-`docs/04-nyomtatvany-spec.md` "Márka".
+`docs/04-nyomtatvany-spec.md` "Márka" és `docs/07-felulet-rendszer.md` a
+teljes felület-szabályrendszerért (kötelező, nem javaslat).
 
 ## A `ui/*.jsx` fájlok státusza
 
@@ -46,20 +50,14 @@ Statikus React SPA a doki gépén. **Nincs backend, nincs adatbázis, nincs
 szerveroldali páciensadat** (D2) — a kezelési terv GDPR 9. cikk szerinti különleges
 adatot tartalmaz, ezért ez nem implementációs részlet, hanem tervezési korlát.
 
-- A doki egyszer kijelöl egy **gyökérmappát** — ez a teljes rendszerállapot, nincs
-  máshol állapot (D3). Google Drive-val szinkronizálva (kliens: Tükrözés mód, nem
-  Streamelés).
-- Fájlrendszer-hozzáférés a `PlanStorage` interface mögött (`docs/05-technologia.md:24-36`):
-  kezdésnek File System Access API (`showDirectoryPicker()`, csak Chrome/Edge),
-  cserélhető Tauri-ra natív hozzáférésért — ez implementációcsere, nem újraírás, ha az
-  interface tiszta marad.
-- IndexedDB **csak piszkozat-autosave**, soha nem system of record. Fájlrendszerre csak
-  véglegesítéskor írunk.
-- PDF generálás kliensoldalon (a páciensadat nem mehet szerverre): `@react-pdf/renderer`
-  a layouthoz + `pdf-lib` a `terv.json` beágyazásához mellékletként. Betöltéskor
-  elsődlegesen a különálló `terv.json`, fallback a PDF-be ágyazott példányból.
-- Mappastruktúra:
-  `paciensek/<Vezeteknev-Keresztnev_id6>/<ISO dátum>_v<n>/{kezelesi-terv.pdf, terv.json}`.
+- A doki egyszer kijelöl egy **gyökérmappát** — ez a teljes rendszerállapot,
+  nincs máshol állapot (D3), Google Drive-val szinkronizálva.
+- Fájlrendszer-hozzáférés a `PlanStorage` interface mögött.
+- IndexedDB **csak piszkozat-autosave**, soha nem system of record.
+- PDF generálás kliensoldalon, a páciensadat nem mehet szerverre.
+
+Részletek (stack, `PlanStorage` interface, PDF generálás, mappastruktúra,
+sémaverziózás, hosztolás): `docs/05-technologia.md`.
 
 ## Sérthetetlen szabályok
 
@@ -80,6 +78,11 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | IndexedDB nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez |
 | `@react-pdf/renderer` esetén **Unicode fontot kell regisztrálni** (pl. Inter, Source Sans, Noto Sans) | A beépített Helvetica nem tartalmazza az `ő`/`ű` karaktereket — ez csak a végleges PDF-en látszik, a HTML előnézeten nem |
 | `#f77409` (a márka narancsa) **soha nem lehet szövegszín** | Fehéren 2,82:1, kis méretben olvashatatlan; csak díszítővonalra és a fogtérkép kiemelésére való |
+
+A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
+kinézetére és viselkedésére (színek, komponensek, billentyűzet,
+akadálymentesség) vonatkozó, ugyanígy kötelező szabályok külön fájlban:
+`docs/07-felulet-rendszer.md`.
 
 ## Meglévő segédfüggvények — használd, ne írd újra
 
@@ -124,22 +127,16 @@ magyar, magyarul gépel akkor is, ha német ajánlatot állít össze (D21).
 
 ## Adat és ismert hiányok
 
-`data/arlista.seed.json` = 118 tétel, 12 kategória, az eredeti Excel `Arlista` lapjából
-importálva; első indításkor `arlista.json` néven másolódik a gyökérmappába, ha még
-nincs ott. 2026-08-06 óta mind a 118 tételnek van `de` neve és `EUR` ára: a nevek
-gépi/AI-fordítások (szakmailag törekedve a pontosságra, de nem orvos által
-lektorálva), az EUR árak a HUF árból a fordítás napi középárfolyamán (~363,3 HUF/EUR)
-számolt, egész euróra kerekített becslések — egyik sem éles, a doki az adminban
-soronként felülbírálhatja/javíthatja. `gyakori` jelölés továbbra is mind `false` — ezt
-a dokinak kell megjelölnie (8–12 tétel), ez adja a szerkesztő gyorsgombjait. A
-`k01 Besorolatlan` kategória és az „Egyéb kezelések" 11 árva tétele (fogszabályozási
-és francia nyelvű maradvány tételnevek) **szándékosan takarítatlan** (D16) — ez
-adminban, kategória-átmozgatással orvosolandó, ne az importlogikában javítsd.
+`data/arlista.seed.json` = 118 tétel, 12 kategória, az eredeti Excel `Arlista`
+lapjából importálva. A tényleges, folyamatosan változó állapot (mi van
+lektorálva, mi van bekategorizálva, hány tétel kapott `gyakori` jelölést)
+**a `docs/06-arlista-import.md`-ben él, ne itt** — ez a fájl gyorsan
+elavulna, mert a doki az adminban éppen ezt takarítja.
 
-A hiányzó/lektorálatlan tartalom (D21 óta) **nem blokkolja** a német nyelv
-kipróbálását: ha egy tételnek mégsem lenne `de` neve, magyar névvel, `HU`
-jelöléssel jelenik meg; ha egy pénznemben egy tételnek sincs ára, ezt a Páciens
-adatlap előre jelzi. A Beállítások számszerűsíti a készültséget (`lefedettseg()`).
+A hiányzó/lektorálatlan tartalom **nem blokkolja** a német nyelv
+kipróbálását (D21): hiányzó `de` név esetén magyar névre esik vissza `HU`
+jelöléssel, hiányzó ár esetén a Páciens adatlap előre jelez. A
+Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 ## Dokumentáció-térkép
 
@@ -151,3 +148,5 @@ adatlap előre jelzi. A Beállítások számszerűsíti a készültséget (`lefe
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |
 | `docs/05-technologia.md` | Stack, `PlanStorage` interface, PDF generálás, sémaverziózás, hosztolás |
 | `docs/06-arlista-import.md` | Az Excel-import szabályai, ismert szennyeződések, mit ne javíts az importban |
+| `docs/07-felulet-rendszer.md` | Felület- és nyomtatvány-kinézeti szabályok: márkatokenek, komponensek, billentyűzet, akadálymentesség — kötelező, nem javaslat |
+| `docs/08-backlog.md` | Még fejlesztendő tételek (priorizálva), technikai adósság, és honnan jönnek az igények |

@@ -48,7 +48,7 @@ describe('PriceListAdminPage', () => {
     seedPriceListWithNoEurPrices();
   });
 
-  it('reflects that all 118 seed items are missing an EUR price (docs/06-arlista-import.md)', async () => {
+  it('reflects that all 118 seed items are missing an EUR price (per the fixture set up above)', async () => {
     renderAdmin();
     expect(
       await screen.findByText(/118 \/ 118 tétel látszik · 118 tételnél hiányzik az EUR ár/),

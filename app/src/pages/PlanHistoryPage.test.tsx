@@ -57,8 +57,8 @@ describe('PlanHistoryPage', () => {
     const openBtn = within(card).getByRole('button', { name: 'Megnyitás szerkesztésre' });
 
     // Korábban itt `alert()` jelent meg -- most a sérintett verzió-sora
-    // mellett, a szövegben (Design.md: "Nem toast, ha a hiba egy mezőhöz
-    // tartozik").
+    // mellett, a szövegben (docs/07-felulet-rendszer.md: "Nem toast, ha a
+    // hiba egy mezőhöz tartozik").
     await user.click(openBtn);
 
     expect(await within(card).findByText(/A terv megnyitása nem sikerült/)).toBeInTheDocument();

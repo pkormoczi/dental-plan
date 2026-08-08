@@ -3,15 +3,15 @@
 // nyers HTML-jeben -- ez a ket ertek stimmel). A logo PNG-t is ehhez a
 // palettahoz szineztuk at (lasd docs/04-nyomtatvany-spec.md "Logo").
 //
-// KETFELE FELULET, KETFELE SZABALY (Design.md "A ket felulet kulon
-// szabalyrendszer"):
-//  - A PDF/PrintPreview (pdf/*.tsx) a márkát koveti -- meleg, a
+// KETFELE FELULET, KETFELE SZABALY (docs/07-felulet-rendszer.md "A ket
+// felulet kulon szabalyrendszer"):
+//  - A PDF/nyomtatvany (pdf/*.tsx) a márkát koveti -- meleg, a
 //    drmandoki.hu-val egyezo paletta. Ezt a fajlt a PDF importalja, ide
 //    NE kerüljön semmi hideg/slate ertek a `brand`/`accent`/`ink`/`text`/
 //    `line`/`lineStrong`/`textMuted`/`textFaint`/`toothInactive` alol --
-//    ezeket a pdf/ hasznalja valtozatlanul, PrintPreview-hoz nem nyulunk.
+//    ezeket a pdf/ hasznalja valtozatlanul, a nyomtatvanyhoz nem nyulunk.
 //  - Az APP felulete (components/, pages/) viszont semleges, hideg slate
-//    (Design.md "App felulet"): ehhez valo a lenti `ui*`/`controlBorder`
+//    (docs/07-felulet-rendszer.md "App felulet"): ehhez valo a lenti `ui*`/`controlBorder`
 //    keszlet, ami KULON all a nyomtatvany fenti tokenjeitol, es csak az
 //    app kepernyoin hasznalando.
 //
@@ -72,7 +72,7 @@ export const t = {
   okBg: '#EAF6F0',
   shadowLg: '0 8px 24px rgba(45,45,45,0.14)',
 
-  // Meretek -- EGY radius rendszer (Design.md), csak app
+  // Meretek -- EGY radius rendszer (docs/07-felulet-rendszer.md), csak app
   radius: 6,
   radiusLg: 6,
   control: 32,

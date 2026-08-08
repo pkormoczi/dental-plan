@@ -19,8 +19,8 @@ import { formatCentForInput, parseEuroInput } from '../domain/money';
 // Radix TextField.Root méretéhez igazítva (a NumberField a szomszéd
 // mezőkkel, pl. a "fogak" TextField.Root-tal egy sorban áll) -- nincs
 // Radix megfelelője egy léptető nyilakkal bővített számmezőnek, ezért ez
-// marad kézzel írva (lásd Design.md kivétele: fogtérkép + PrintPreview
-// mellett ez a harmadik, be nem jelentett, de indokolt eset).
+// marad kézzel írva (lásd docs/07-felulet-rendszer.md kivétele: fogtérkép
+// + nyomtatvány mellett ez a harmadik, be nem jelentett, de indokolt eset).
 const inputStyle: CSSProperties = {
   width: '100%',
   height: 30,

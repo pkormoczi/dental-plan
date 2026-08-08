@@ -30,6 +30,8 @@ A tervezési fázis (ez a dokumentumcsomag) lezárult, az implementáció az
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek |
 | `docs/05-technologia.md` | Stack, `PlanStorage` interface, PDF generálás, deployment |
 | `docs/06-arlista-import.md` | Az Excel árlista importja, a benne lévő hibák, takarítási feladatok |
+| `docs/07-felulet-rendszer.md` | Felület- és nyomtatvány-kinézeti szabályok — kötelező, nem javaslat |
+| `docs/08-backlog.md` | Még fejlesztendő tételek, technikai adósság, honnan jönnek az igények |
 | `data/arlista.seed.json` | **Kész seed adat** — 118 tétel, 12 kategória, az eredeti Excelből generálva |
 | `ui/tokens.js` | Design tokenek (márkaszínek, tipográfia, spacing) |
 | `ui/PlanEditor.jsx` | Kezelési terv szerkesztő — a legfontosabb képernyő |
@@ -40,36 +42,35 @@ A tervezési fázis (ez a dokumentumcsomag) lezárult, az implementáció az
 
 ## A `ui/*.jsx` fájlok státusza
 
-**Működő prototípusok, nem végleges kód.** Kattinthatók, a state-shape
-megegyezik a `docs/02-domain-modell.md` sémáival, de nincs bennük
-perzisztencia, PDF generálás és hibakezelés. Az `app/` implementáció
-referenciaként veszi át őket — az elrendezés és az interakciók a lényeg,
-nem a kódszervezés. Részletek: `CLAUDE.md`.
+**Kattintható prototípusok, nem végleges kód** — az elrendezést és az
+interakciókat vették át belőlük, nem a kódszervezést. Részletek:
+`CLAUDE.md` "A `ui/*.jsx` fájlok státusza".
 
 ## Az MVP határa
 
 **Benne van:** magyar nyelvű terv készítés, árlista admin, PDF generálás
-és mentés a fájlrendszerre, korábbi tervek visszatöltése.
+és mentés a fájlrendszerre, korábbi tervek visszatöltése. A német nyelv
+*tartalma* (118 tételnév, EUR ár) 2026-08-06 óta kitöltött — a kapcsoló
+kipróbálható (D21), a hiányt az app számszerűen mutatja.
 
-**Nincs benne:** a német nyelv *tartalma* (118 tételnév, EUR árak, a
-nyilatkozat és a fizetési feltételek jogi fordítása) — maga a kapcsoló
-kipróbálható (D21), a hiányt az app számszerűen mutatja. Szintén nincs
-benne: automatikus darabszám a fogszámokból, statisztikák,
-többfelhasználós működés, szerveroldali komponens.
+**Nincs benne:** a német tételnevek **orvosi lektorálása** (ma gépi/AI
+fordítás), a nyilatkozat és a fizetési feltételek **jogi fordítása**
+németre, és az EUR árak **véglegesítése** (ma egyszeri árfolyam-becslés,
+lásd `docs/06-arlista-import.md`). Szintén nincs benne: automatikus
+darabszám a fogszámokból, statisztikák, többfelhasználós működés,
+szerveroldali komponens.
 
 ## Nyitott kérdések, amik a dokira várnak
 
-1. A német tételnevek (118 db) és EUR árak.
-2. A nyilatkozat/szerződés és a fizetési feltételek magyar szövege az
-   eredeti Excelből átvéve elkészült (Beállítások képernyőn
-   szerkeszthető); a **német fordítása** még hátravan — ez **jogi
-   munka**, nem gépi fordítás, mert a páciens aláírja. (A PDF néhány
-   további mondata — a sávos ár lábjegyzete, D15 jogi védelme, az
-   anyagköltség- és a kiskorú-figyelmeztetés, az érvényességi mondat —
-   szintén jogi lektorálást igényel, lásd `docs/04-nyomtatvany-spec.md`
-   „Nyelv" szakasza.)
-3. A cégadatok a lábléchez: adószám, cégjegyzékszám, és ha van ilyen
+1. A német tételnevek orvosi lektorálása és a nyilatkozat/fizetési
+   feltételek szövegének **jogi fordítása** — ez **jogi munka**, nem
+   gépi fordítás, mert a páciens aláírja. (A PDF néhány további mondata —
+   a sávos ár lábjegyzete, D15 jogi védelme, az anyagköltség- és a
+   kiskorú-figyelmeztetés, az érvényességi mondat — szintén jogi
+   lektorálást igényel, lásd `docs/04-nyomtatvany-spec.md` „Nyelv"
+   szakasza.)
+2. A cégadatok a lábléchez: adószám, cégjegyzékszám, és ha van ilyen
    kötelezettség, működési engedély szám.
-4. Az árlista takarítása — lásd `docs/06-arlista-import.md`.
-5. A fekvő logó átlátszó hátterű PNG-ben, **600 dpi-n raszterizálva**
-   (a Photoshop alapértelmezett 72 dpi-je nyomtatásban homályos lesz).
+3. Az árlista takarítása — lásd `docs/06-arlista-import.md`.
+
+A további, még fejlesztendő tételek listája: `docs/08-backlog.md`.

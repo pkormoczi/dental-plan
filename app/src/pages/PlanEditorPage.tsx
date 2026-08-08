@@ -479,8 +479,8 @@ function ItemPicker({
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     // Escape-nek akkor is ki kell ürítenie a keresőt, ha épp nincs találat
-    // (pl. a "Nincs találat" doboz látszik) -- Design.md "Escape zár
-    // dialógust és keresőt".
+    // (pl. a "Nincs találat" doboz látszik) -- docs/07-felulet-rendszer.md
+    // "Escape zár dialógust és keresőt".
     if (e.key === 'Escape') {
       setQ('');
       return;

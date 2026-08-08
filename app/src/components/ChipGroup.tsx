@@ -1,5 +1,6 @@
 // Kétállású (vagy több) szegmentált kapcsoló -- Radix SegmentedControl-ra
-// építve (Design.md "Minden UI elem @radix-ui/themes komponensből jön").
+// építve (docs/07-felulet-rendszer.md "Minden UI elem @radix-ui/themes
+// komponensből jön").
 // Közös komponens, mert a Páciens adatlap (nyelv/pénznem) és a Beállítások
 // (alapértelmezett nyelv) is ugyanezt a mintát használja.
 
