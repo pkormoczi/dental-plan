@@ -77,7 +77,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | Páciensmappa-névben az **ékezetek maradnak**, nincs transzliteráció; csak a tiltott karaktereket (`/ \ : * ? " < > \|`) kell cserélni; nevek rövidek (Windows 260 karakteres útvonalkorlát) | A doki a Fájlkezelőben keres rájuk névre |
 | IndexedDB nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez |
 | `@react-pdf/renderer` esetén **Unicode fontot kell regisztrálni** (pl. Inter, Source Sans, Noto Sans) | A beépített Helvetica nem tartalmazza az `ő`/`ű` karaktereket — ez csak a végleges PDF-en látszik, a HTML előnézeten nem |
-| `#f77409` (a márka narancsa) **soha nem lehet szövegszín** | Fehéren 2,82:1, kis méretben olvashatatlan; csak díszítővonalra és a fogtérkép kiemelésére való |
+| `#f77409` (a márka narancsa) **soha nem lehet szövegszín** | Fehéren 2,82:1, kis méretben olvashatatlan; csak díszítővonalra való. A fogtérkép saját, kezelés-kategóriánkénti palettát használ (`design/treatmentVisuals.ts`), nem ezt a színt |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -106,6 +106,27 @@ D21 (nyelv/pénznem szétválasztás) hozott néhány újat, ezeket se írd újr
 - `pdfLabels(nyelv)` (`app/src/pdf/labels.ts`) — a PDF fix feliratai; **csak
   a `pdf/` alatt importálható**, a kezelőfelület (NavBar, oldalak) végig
   magyar marad
+
+A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne írd újra
+őket:
+- `buildToothVisualStates(plan, priceList)` (`app/src/domain/toothVisual.ts`)
+  — a terv soraiból fogankénti vizuális állapotot épít (melyik fog milyen
+  kezelés-kategória színét kapja, több kezelés esetén melyiket); `parseTeeth`-re
+  épül, nem duplikálja a fogszám-parsolást
+- `resolveToothVisual(kezelesek)` (`app/src/domain/toothVisual.ts`) — egy
+  fogon több kezelés esetén a `KEZELES_VIZUAL_PRIORITAS` tábla szerint dönti
+  el a megjelenő színt; ez az EGYETLEN hely, ahol ez a precedencia eldől
+- `vizualKategoriaFor(kategoriaId)` / `KEZELES_VIZUALOK` / `KEZELES_VIZUAL_PRIORITAS`
+  (`app/src/design/treatmentVisuals.ts`) — az árlista `kategoriaId`-jának
+  megfeleltetése egy kezelés-vizuál kategóriának és annak színe/felirata; ez
+  az EGYETLEN színforrás, a szerkesztő (`components/DentalChart.tsx`,
+  `DentalChartLegend.tsx`) és a nyomtatvány (`pdf/ToothChartPdf.tsx`) is
+  innen olvas
+- `buildToothChartSvg(allapot, opts)` (`app/src/design/toothChartSvg.ts`) —
+  az `assets/dental-chart-fdi-32.svg` nyers markupjából épít egy már
+  színezett SVG-stringet; ugyanez a markup megy DOM-ba a szerkesztőben és
+  canvason át PNG-be a nyomtatványhoz (`pdf/toothChartImage.ts`
+  `renderToothChartPng`) — egy vizuális forrás, ne rajzold újra máshol
 
 ## Domain szókincs
 

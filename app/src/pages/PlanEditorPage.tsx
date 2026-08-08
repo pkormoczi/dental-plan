@@ -20,12 +20,15 @@ import {
   TextField,
 } from '@radix-ui/themes';
 import { Cross1Icon } from '@radix-ui/react-icons';
+import DentalChart from '../components/DentalChart';
+import DentalChartLegend from '../components/DentalChartLegend';
 import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
 import { formatMoney, formatPrice } from '../domain/money';
 import { resolveNev } from '../domain/nev';
 import { norm } from '../domain/search';
 import { parseTeeth } from '../domain/teeth';
+import { buildToothVisualStates } from '../domain/toothVisual';
 import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
 import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
@@ -94,6 +97,10 @@ export default function PlanEditorPage() {
 
   const grand = plan.fazisok.reduce((s, p) => s + fazisOsszeg(p), 0);
   const listTotal = plan.fazisok.reduce((s, p) => s + fazisListaOsszeg(p), 0);
+  // Csak olvasható áttekintés a terv szintjén -- a fogankénti szerkesztés
+  // változatlanul a soronkénti "Fog" mezőben történik (nincs onToothClick).
+  const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
+  const hasFogterkep = fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0;
 
   return (
     <Box style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -172,7 +179,28 @@ export default function PlanEditorPage() {
         + Új kezelési fázis
       </Button>
 
-      <Summary grand={grand} listTotal={listTotal} currency={currency} />
+      <Box mt="6">
+        <Separator size="4" />
+        <Flex gap="6" mt="4" wrap="wrap" align="start" justify="between">
+          {hasFogterkep && (
+            <Box style={{ flex: '1 1 260px', maxWidth: 320 }}>
+              <Text as="div" size="1" color="gray" mb="2">
+                Érintett fogak
+              </Text>
+              <DentalChart allapot={fogterkep} />
+              <DentalChartLegend kategoriak={fogterkep.jelmagyarazat} />
+              {fogterkep.tejfogak.length > 0 && (
+                <Text as="div" size="1" color="gray" mt="2">
+                  Tejfogak: {fogterkep.tejfogak.join(', ')}
+                </Text>
+              )}
+            </Box>
+          )}
+          <Box style={{ flex: '0 1 320px' }}>
+            <Summary grand={grand} listTotal={listTotal} currency={currency} />
+          </Box>
+        </Flex>
+      </Box>
     </Box>
   );
 }
@@ -618,29 +646,26 @@ function Summary({
 }) {
   const discount = listTotal - grand;
   return (
-    <Box mt="6">
-      <Separator size="4" />
-      <Flex justify="between" align="baseline" mt="3">
-        <Text size="3" color="gray">
-          Mindösszesen
+    <Flex justify="between" align="baseline" gap="4">
+      <Text size="3" color="gray">
+        Mindösszesen
+      </Text>
+      <Box style={{ textAlign: 'right' }}>
+        <Text
+          as="div"
+          size="6"
+          weight="bold"
+          style={{ color: t.brand, fontVariantNumeric: 'tabular-nums' }}
+        >
+          {formatMoney(grand, currency)}
         </Text>
-        <Box style={{ textAlign: 'right' }}>
-          <Text
-            as="div"
-            size="6"
-            weight="bold"
-            style={{ color: t.brand, fontVariantNumeric: 'tabular-nums' }}
-          >
-            {formatMoney(grand, currency)}
+        {discount > 0 && (
+          // Csak a szerkesztőben látszik. A nyomtatványon NEM (D9).
+          <Text as="div" size="2" style={{ color: t.ok }}>
+            Kedvezmény: {formatMoney(discount, currency)}
           </Text>
-          {discount > 0 && (
-            // Csak a szerkesztőben látszik. A nyomtatványon NEM (D9).
-            <Text as="div" size="2" style={{ color: t.ok }}>
-              Kedvezmény: {formatMoney(discount, currency)}
-            </Text>
-          )}
-        </Box>
-      </Flex>
-    </Box>
+        )}
+      </Box>
+    </Flex>
   );
 }

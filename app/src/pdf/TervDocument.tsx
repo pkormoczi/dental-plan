@@ -13,9 +13,10 @@ import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
 import { t } from '../design/tokens';
 import { formatLongDate, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
-import { formatTeethForPrint, parseTeeth } from '../domain/teeth';
+import { formatTeethForPrint } from '../domain/teeth';
+import { buildToothVisualStates } from '../domain/toothVisual';
 import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
-import type { Fazis, Plan, Settings } from '../domain/types';
+import type { Fazis, Plan, PriceList, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
 import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
 import { fillPlaceholders, parseBlocks, type MdBlock } from './markdownLite';
@@ -322,23 +323,34 @@ function MdBlocks({ blocks, legal }: { blocks: MdBlock[]; legal?: boolean }) {
 export interface TervDocumentProps {
   plan: Plan;
   settings: Settings;
+  priceList: PriceList;
   offerOnly: boolean;
   nyilatkozatMd: string;
   fizetesiFeltetelekMd: string;
+  /**
+   * A webbel megegyező markupból (design/toothChartSvg.ts) canvason
+   * előállított raszterkép (pdf/toothChartImage.ts) -- lásd PreviewPage.tsx.
+   * `null`, ha a renderelés meghiúsult vagy még nem készült el: ilyenkor a
+   * fogtérkép-blokk kimarad, akárcsak ha nincs egyetlen fogszám sem a tervben.
+   */
+  toothChartPng: string | null;
 }
 
 export function TervDocument({
   plan,
   settings,
+  priceList,
   offerOnly,
   nyilatkozatMd,
   fizetesiFeltetelekMd,
+  toothChartPng,
 }: TervDocumentProps) {
   const L = pdfLabels(plan.nyelv);
   const grand = plan.fazisok.reduce((sum, p) => sum + fazisOsszeg(p), 0);
   const listTotal = plan.fazisok.reduce((sum, p) => sum + fazisListaOsszeg(p), 0);
   const hasRange = plan.fazisok.some((p) => p.sorok.some((l) => l.savos));
-  const teeth = plan.fazisok.flatMap((p) => p.sorok.flatMap((l) => parseTeeth(l.fogak).teeth));
+  const fogterkep = buildToothVisualStates(plan, priceList);
+  const showToothChart = toothChartPng != null && (fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0);
   // A sablonszövegben álló {{orvos}}/{{paciens}} helyőrzőket a tényleges
   // terv-adatok váltják fel, mielőtt bekezdésekre/felsorolásra bontanánk.
   const placeholderValues = { orvos: plan.orvos, paciens: plan.paciens.nev };
@@ -370,13 +382,13 @@ export function TervDocument({
         {hasRange && <Text style={s.savosFootnote}>{L.savosFootnote}</Text>}
 
         <View style={s.bottomRow}>
-          {teeth.length > 0 && (
+          {showToothChart && (
             <View style={s.toothChartBlock}>
               <Text style={s.toothChartLabel}>{L.erintettFogak}</Text>
-              <ToothChartPdf teeth={teeth} />
+              <ToothChartPdf pngDataUrl={toothChartPng!} allapot={fogterkep} nyelv={plan.nyelv} L={L} />
             </View>
           )}
-          <View style={teeth.length > 0 ? s.summaryBlockNarrow : s.summaryBlockFull}>
+          <View style={showToothChart ? s.summaryBlockNarrow : s.summaryBlockFull}>
             <View style={s.summaryLine}>
               <Text style={s.summaryLabelMuted}>{L.kezelesekOsszesen}</Text>
               <Text>{formatMoney(listTotal, plan.penznem)}</Text>

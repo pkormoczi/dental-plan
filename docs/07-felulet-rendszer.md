@@ -37,7 +37,7 @@ igazság, ezt a táblázatot kell utána igazítani.
 | Token | Érték | Szerep |
 |---|---|---|
 | `brand` | `#976445` | Címsorok, vonalak. Fehéren 4,97:1 — épphogy WCAG AA fölött, színes háttéren újraszámolandó |
-| `accent` | `#f77409` | **Soha nem szövegszín** — fehéren 2,82:1, kis méretben olvashatatlan. Csak díszítővonal és a fogtérkép kiemelése |
+| `accent` | `#f77409` | **Soha nem szövegszín** — fehéren 2,82:1, kis méretben olvashatatlan. Csak díszítővonal |
 | `ink` | `#2D2D2D` | Elsődleges gomb háttere (a honlap gombszíne), 13,77:1 |
 | `text` | `#1A1A1A` | Törzsszöveg, mindkét felület használja |
 | `uiTextMuted` / `uiTextFaint` | `#475569` / `#64748B` | App-oldali halvány szöveg (slate-600/500) |
@@ -65,7 +65,12 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
 
 ### Szín, forma, sűrűség
 
-- EGY akcentus az egész appban. Nincs második kiemelőszín.
+- EGY akcentus az egész appban. Nincs második kiemelőszín. **Nevesített
+  kivétel: a fogtérkép kezelés-kategóriánkénti palettája**
+  (`app/src/design/treatmentVisuals.ts`) — ott a szín információt hordoz
+  (melyik fogat milyen kezelés érinti), nem díszítés. Ez a paletta EGYETLEN
+  helyen, ebben a fájlban él, a szerkesztő és a nyomtatvány is innen olvas
+  — ne vezess be hozzá második definíciót.
 - Státuszszín (piros, sárga, zöld) csak valódi állapotra: hiba,
   figyelmeztetés, sikeres mentés. Soha díszítésre.
 - EGY radius rendszer mindenhol.

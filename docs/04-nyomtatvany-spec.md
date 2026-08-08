@@ -23,10 +23,15 @@ PNG-jét is ehhez a palettához színeztük át (lásd „Logó" lent).
 | Vonal | `#D3CBC3` |
 
 **A narancs soha nem lehet szövegszín.** `#f77409` fehéren 2,82:1 —
-kis méretben olvashatatlan. Csak vékony díszítővonalra és a fogtérkép
-kiemelésére. Az elsődleges `#976445` fehéren 4,97:1 — épphogy a WCAG AA
-küszöb (4,5) fölött —, színes háttéren (pl. kiemelt sor) újra kell
-számolni a kontrasztot.
+kis méretben olvashatatlan. Csak vékony díszítővonalra. Az elsődleges
+`#976445` fehéren 4,97:1 — épphogy a WCAG AA küszöb (4,5) fölött —,
+színes háttéren (pl. kiemelt sor) újra kell számolni a kontrasztot.
+
+A fogtérkép kiemelése **külön, kezelés-kategóriánkénti palettát** használ
+(lásd lent) — nem a fenti márkaszíneket. Ez szándékos kivétel a "EGY
+akcentus az egész appban" szabály alól (`docs/07-felulet-rendszer.md`),
+mert itt a szín információt hordoz (melyik fogat milyen kezelés érinti),
+nem díszítés.
 
 ## Logó
 
@@ -113,12 +118,28 @@ Ez jogi védelem: sávos árat fix számként nyomtatni annyi, mint kötelező
 
 ### Fogtérkép
 
-32 maradó fog két sorban, kvadránsonként elválasztva, **számozás nélkül**.
-Az érintett fogak `#f77409` kitöltést kapnak, a többi meleg-szürkét.
-Tejfog csak akkor jelenjen meg, ha a tervben van tejfog-szám.
+Anatómiai rajz mind a 32 maradó fogról (`app/src/assets/dental-chart-fdi-32.svg`,
+FDI-számozás, **számozás nélkül** nyomtatva — a fejlesztői/debug
+`showToothNumbers` mód kikapcsolva marad éles nyomtatványon). Ugyanez az
+SVG a forrása a szerkesztőbeli fogtérképnek is (`components/DentalChart.tsx`)
+— a nyomtatvány egy erről canvason renderelt raszterképet ágyaz be
+(`pdf/toothChartImage.ts`), nincs két külön rajz.
 
-Ha egyetlen fogszám sincs a tervben, a fogtérkép **kimarad** és az
-összegzés teljes szélességet kap.
+Az érintett fogak a rájuk felvitt kezelés **kategóriánkénti színét** kapják
+(korona, gyökérkezelés, tömés stb. — lásd `app/src/design/treatmentVisuals.ts`,
+az EGYETLEN forrása ennek a palettának mindkét felületen), a kezeletlen fogak
+az eredeti rajz fehérjét. A fogtérkép alatt egy jelmagyarázat sorolja fel a
+tervben ténylegesen előforduló kategóriákat, egy-egy színes ponttal. Ha egy
+fogon több kezelés is van, egyetlen (a `KEZELES_VIZUAL_PRIORITAS` tábla
+szerinti legmagasabb prioritású) szín látszik rajta — az adott kezelés
+szövegesen a tételtáblázatban továbbra is szerepel.
+
+A rajz csak a 32 maradó fogat ábrázolja. Tejfog-szám (51–85) esetén a
+fogtérkép alatt egy külön sor sorolja fel szövegesen ("Tejfogak: 55, 65"),
+nem a rajzon.
+
+Ha egyetlen fogszám (maradó vagy tejfog) sincs a tervben, a fogtérkép
+**kimarad** és az összegzés teljes szélességet kap.
 
 ### Összegzés
 

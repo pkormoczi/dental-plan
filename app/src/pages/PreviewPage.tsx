@@ -7,10 +7,13 @@ import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
 import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
+import { buildToothChartSvg } from '../design/toothChartSvg';
 import { fallbackSorok } from '../domain/nev';
 import { computeOsszesitok } from '../domain/totals';
+import { buildToothVisualStates } from '../domain/toothVisual';
 import type { PlanRef } from '../domain/types';
 import { TervDocument } from '../pdf/TervDocument';
+import { renderToothChartPng } from '../pdf/toothChartImage';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
@@ -36,6 +39,11 @@ export default function PreviewPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedRef, setSavedRef] = useState<PlanRef | null>(null);
   const [nameMissingNotice, setNameMissingNotice] = useState(false);
+  // A webbel megegyező forrásból (design/toothChartSvg) canvason renderelt
+  // fogtérkép-PNG a nyomtatványhoz -- lásd pdf/toothChartImage.ts. `null`,
+  // amíg el nem készül, vagy ha a rajzolás meghiúsul (pl. jsdom teszt) --
+  // ilyenkor a TervDocument a fogtérkép-blokkot egyszerűen kihagyja.
+  const [toothChartPng, setToothChartPng] = useState<string | null>(null);
   // A confirm()-lánc (hiányzó adatok -> hiányzó német nevek) Radix
   // AlertDialogként: legfeljebb egy van nyitva egyszerre, a lépés neve
   // dönti el, melyik szöveg/cím jelenjen meg.
@@ -105,13 +113,31 @@ export default function PreviewPage() {
     };
   }, [plan.nyelv, loadLatestTemplateByBase]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const fogterkep = buildToothVisualStates(plan, priceList);
+    if (fogterkep.fogak.size === 0 && fogterkep.tejfogak.length === 0) {
+      setToothChartPng(null);
+      return;
+    }
+    const svg = buildToothChartSvg(fogterkep, { sizing: 'fixed' });
+    renderToothChartPng(svg).then((png) => {
+      if (!cancelled) setToothChartPng(png);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [plan, priceList]);
+
   const tervDocument = (
     <TervDocument
       plan={plan}
       settings={settings}
+      priceList={priceList}
       offerOnly={offerOnly}
       nyilatkozatMd={nyilatkozatMd}
       fizetesiFeltetelekMd={fizetesiFeltetelekMd}
+      toothChartPng={toothChartPng}
     />
   );
   const [pdfInstance, updatePdf] = usePDF({ document: tervDocument });
@@ -126,7 +152,7 @@ export default function PreviewPage() {
   useEffect(() => {
     updatePdf(tervDocument);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan, settings, offerOnly, nyilatkozatMd, fizetesiFeltetelekMd, updatePdf]);
+  }, [plan, settings, offerOnly, nyilatkozatMd, fizetesiFeltetelekMd, toothChartPng, updatePdf]);
 
   const nameMissing = !plan.paciens.nev.trim();
   const otherFieldsMissing =

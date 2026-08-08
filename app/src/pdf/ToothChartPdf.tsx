@@ -1,123 +1,66 @@
-// 32 maradó fog két sorban, kvadránsonként elválasztva, SZÁMOZÁS NÉLKÜL --
-// portolva ui/PrintPreview.jsx ToothChart-jából react-pdf Svg/Rect-re.
-// Az érintett fogak a márka világoskékjét kapják, a többi halványszürkét.
+// A nyomtatvány fogtérképe -- a webbel AZONOS forrásból (domain/toothVisual
+// `buildToothVisualStates` + design/toothChartSvg `buildToothChartSvg`)
+// számított raszterképet (pdf/toothChartImage.ts canvas-adaptere) ágyazza be
+// react-pdf <Image>-ként, plusz egy vektoros jelmagyarázatot ugyanabból a
+// kategória-konfigurációból (design/treatmentVisuals.ts) -- nincs második
+// "melyik kategória milyen szín" leképezés a nyomtatványon.
 //
-// Tejfog sor csak akkor jelenik meg, ha a tervben van tejfog-szám (FDI
-// 51-85) -- lásd docs/02-domain-modell.md "Fogszám kezelés". Ez egy
-// leegyszerűsített, nem anatómiailag pontosan illesztett séma: a
-// tejfogsor a maradó fogsor alatt kap egy önálló, kisebb sávot.
+// Ha a canvas-renderelés bármi miatt meghiúsul, TervDocument.tsx a teljes
+// blokkot kihagyja (lásd ott a `toothChartPng != null` feltételt) -- ez a
+// komponens mindig kap egy tényleges data URL-t.
 
-import { Rect, Svg, Text as PdfText } from '@react-pdf/renderer';
+import { Image, Text, View } from '@react-pdf/renderer';
 import { t } from '../design/tokens';
+import { KEZELES_VIZUALOK } from '../design/treatmentVisuals';
+import { resolveNev } from '../domain/nev';
+import type { FogterkepAllapot } from '../domain/toothVisual';
+import type { Nyelv } from '../domain/types';
+import type { PdfLabels } from './labels';
 
-const PERMANENT_ROWS = [
-  ['18', '17', '16', '15', '14', '13', '12', '11', '21', '22', '23', '24', '25', '26', '27', '28'],
-  ['48', '47', '46', '45', '44', '43', '42', '41', '31', '32', '33', '34', '35', '36', '37', '38'],
-];
+const s = {
+  // Az asset viewBox aránya (1576:768 ~ 2.05:1) -- 240 szélességnél 117
+  // magasság tartja meg az arányt torzítás nélkül.
+  image: { width: 240, height: 117, objectFit: 'contain' as const },
+  legend: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, marginTop: 6, gap: 8 },
+  legendItem: { flexDirection: 'row' as const, alignItems: 'center' as const },
+  legendDot: { width: 6, height: 6, borderRadius: 3, marginRight: 4 },
+  legendLabel: { fontSize: 7.5, color: t.textMuted },
+  tejfogSor: { fontSize: 7.5, color: t.textMuted, marginTop: 4 },
+};
 
-const DECIDUOUS_ROWS = [
-  ['55', '54', '53', '52', '51', '61', '62', '63', '64', '65'],
-  ['85', '84', '83', '82', '81', '71', '72', '73', '74', '75'],
-];
-
-const BOX_W = 14;
-const BOX_H = 20;
-const GAP = 2;
-const QUADRANT_GAP = 14;
-const PERMANENT_ROW_WIDTH = 16 * (BOX_W + GAP) - GAP + QUADRANT_GAP;
-
-function ToothRow({
-  codes,
-  activeCodes,
-  y,
-  boxW,
-  boxH,
-  offsetX = 0,
+export function ToothChartPdf({
+  pngDataUrl,
+  allapot,
+  nyelv,
+  L,
 }: {
-  codes: string[];
-  activeCodes: Set<string>;
-  y: number;
-  boxW: number;
-  boxH: number;
-  offsetX?: number;
+  pngDataUrl: string;
+  allapot: FogterkepAllapot;
+  nyelv: Nyelv;
+  L: PdfLabels;
 }) {
   return (
-    <>
-      {codes.map((code, i) => {
-        const active = activeCodes.has(code);
-        return (
-          <Rect
-            key={code}
-            x={offsetX + i * (boxW + GAP) + (i >= codes.length / 2 ? QUADRANT_GAP - GAP : 0)}
-            y={y}
-            width={boxW}
-            height={boxH}
-            rx={3}
-            fill={active ? t.accent : t.toothInactive}
-            stroke={active ? t.brand : undefined}
-            strokeWidth={active ? 0.6 : 0}
-          />
-        );
-      })}
-    </>
-  );
-}
-
-export function ToothChartPdf({ teeth }: { teeth: string[] }) {
-  const activeCodes = new Set(teeth);
-  const hasDeciduous = teeth.some((code) => Number(code[0]) >= 5);
-
-  const deciduousBoxW = 12;
-  const deciduousBoxH = 17;
-  const deciduousRowWidth = 10 * (deciduousBoxW + GAP) - GAP + QUADRANT_GAP;
-  const deciduousOffsetX = (PERMANENT_ROW_WIDTH - deciduousRowWidth) / 2;
-
-  const permanentHeight = 2 * BOX_H + GAP + 4;
-  const deciduousLabelHeight = hasDeciduous ? 10 : 0;
-  const deciduousHeight = hasDeciduous ? 2 * deciduousBoxH + GAP : 0;
-  const totalHeight = permanentHeight + deciduousLabelHeight + deciduousHeight;
-
-  return (
-    <Svg
-      width={PERMANENT_ROW_WIDTH}
-      height={totalHeight}
-      viewBox={`0 0 ${PERMANENT_ROW_WIDTH} ${totalHeight}`}
-    >
-      <ToothRow codes={PERMANENT_ROWS[0]} activeCodes={activeCodes} y={0} boxW={BOX_W} boxH={BOX_H} />
-      <ToothRow
-        codes={PERMANENT_ROWS[1]}
-        activeCodes={activeCodes}
-        y={BOX_H + GAP}
-        boxW={BOX_W}
-        boxH={BOX_H}
-      />
-      {hasDeciduous && (
-        <>
-          <PdfText
-            x={0}
-            y={permanentHeight + 6}
-            style={{ fontSize: 6, fontFamily: 'NotoSans', fill: t.textFaint }}
-          >
-            tejfog
-          </PdfText>
-          <ToothRow
-            codes={DECIDUOUS_ROWS[0]}
-            activeCodes={activeCodes}
-            y={permanentHeight + deciduousLabelHeight}
-            boxW={deciduousBoxW}
-            boxH={deciduousBoxH}
-            offsetX={deciduousOffsetX}
-          />
-          <ToothRow
-            codes={DECIDUOUS_ROWS[1]}
-            activeCodes={activeCodes}
-            y={permanentHeight + deciduousLabelHeight + deciduousBoxH + GAP}
-            boxW={deciduousBoxW}
-            boxH={deciduousBoxH}
-            offsetX={deciduousOffsetX}
-          />
-        </>
+    <View>
+      <Image src={pngDataUrl} style={s.image} />
+      {allapot.jelmagyarazat.length > 0 && (
+        <View style={s.legend}>
+          {allapot.jelmagyarazat.map((kategoria) => {
+            const { szin, cimke } = KEZELES_VIZUALOK[kategoria];
+            return (
+              <View key={kategoria} style={s.legendItem}>
+                <View style={[s.legendDot, { backgroundColor: szin }]} />
+                <Text style={s.legendLabel}>{resolveNev(cimke, nyelv).szoveg}</Text>
+              </View>
+            );
+          })}
+        </View>
       )}
-    </Svg>
+      {allapot.tejfogak.length > 0 && (
+        <Text style={s.tejfogSor}>
+          {L.tejfogakPrefix}
+          {allapot.tejfogak.join(', ')}
+        </Text>
+      )}
+    </View>
   );
 }

@@ -36,6 +36,8 @@ export interface PdfLabels {
   cegjegyzekszam: string;
   arlistaPrefix: string;
   erintettFogak: string;
+  /** A fogtérkép alatti tejfog-felsorolás előtagja -- a rajz csak a 32 maradó fogat ábrázolja. */
+  tejfogakPrefix: string;
   kezelesekOsszesen: string;
   fizetendo: string;
   /** JOGI SZÖVEG — lektorálandó, mielőtt éles németnyelvű PDF-re kerül. */
@@ -74,6 +76,7 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     cegjegyzekszam: 'Cégjegyzékszám:',
     arlistaPrefix: 'árlista ',
     erintettFogak: 'Érintett fogak',
+    tejfogakPrefix: 'Tejfogak: ',
     kezelesekOsszesen: 'Kezelések összesen',
     fizetendo: 'Fizetendő',
     anyagkoltseg: 'Az árak tartalmazzák az anyagköltséget.',
@@ -111,6 +114,7 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     cegjegyzekszam: 'Handelsregisternummer:',
     arlistaPrefix: 'Preisliste ',
     erintettFogak: 'Betroffene Zähne',
+    tejfogakPrefix: 'Milchzähne: ',
     kezelesekOsszesen: 'Behandlungen gesamt',
     fizetendo: 'Zu zahlen',
     anyagkoltseg: 'Die Preise beinhalten die Materialkosten.',
