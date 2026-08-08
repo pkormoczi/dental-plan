@@ -14,8 +14,25 @@
 
 import { useEffect, useState, type CSSProperties } from 'react';
 import { t } from '../design/tokens';
-import { input as inputStyle } from '../design/ui';
 import { formatCentForInput, parseEuroInput } from '../domain/money';
+
+// Radix TextField.Root méretéhez igazítva (a NumberField a szomszéd
+// mezőkkel, pl. a "fogak" TextField.Root-tal egy sorban áll) -- nincs
+// Radix megfelelője egy léptető nyilakkal bővített számmezőnek, ezért ez
+// marad kézzel írva (lásd Design.md kivétele: fogtérkép + PrintPreview
+// mellett ez a harmadik, be nem jelentett, de indokolt eset).
+const inputStyle: CSSProperties = {
+  width: '100%',
+  height: 30,
+  fontSize: 13,
+  padding: '0 7px',
+  boxSizing: 'border-box',
+  border: `1px solid ${t.controlBorder}`,
+  borderRadius: t.radius,
+  background: t.surface,
+  color: t.text,
+  fontFamily: 'inherit',
+};
 
 export interface NumberFieldProps {
   /** `null` = nincs érték (pl. egy tételnek nincs EUR ára) -- üresen jelenik meg, nem "0". */
@@ -108,7 +125,13 @@ export default function NumberField({
         inputMode="decimal"
         value={draft}
         placeholder={placeholder}
-        style={{ ...inputStyle, textAlign, paddingRight: 16, ...style }}
+        style={{
+          ...inputStyle,
+          textAlign,
+          paddingRight: 16,
+          fontVariantNumeric: 'tabular-nums',
+          ...style,
+        }}
         onFocus={() => setFocused(true)}
         onChange={(e) => {
           setDraft(e.target.value);
@@ -175,11 +198,11 @@ const stepperBtnBase: CSSProperties = {
   fontSize: 7,
   lineHeight: 1,
   padding: 0,
-  color: t.textFaint,
+  color: t.uiTextFaint,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
 };
 
-const stepperBtnTop: CSSProperties = { ...stepperBtnBase, borderBottom: `1px solid ${t.line}` };
+const stepperBtnTop: CSSProperties = { ...stepperBtnBase, borderBottom: `1px solid ${t.uiLine}` };
 const stepperBtnBottom: CSSProperties = { ...stepperBtnBase };

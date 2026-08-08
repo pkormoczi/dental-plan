@@ -1,23 +1,17 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
 import PriceListAdminPage from './PriceListAdminPage';
-import { AppStateProvider } from '../state/AppState';
-import { StorageProvider } from '../storage/StorageContext';
+import { TestProviders } from '../testUtils';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 import type { PriceList, Tetel } from '../domain/types';
 
 function renderAdmin() {
   return render(
-    <MemoryRouter>
-      <StorageProvider>
-        <AppStateProvider>
-          <PriceListAdminPage />
-        </AppStateProvider>
-      </StorageProvider>
-    </MemoryRouter>,
+    <TestProviders>
+      <PriceListAdminPage />
+    </TestProviders>,
   );
 }
 
@@ -90,7 +84,7 @@ describe('PriceListAdminPage', () => {
     renderAdmin();
 
     await screen.findByText(/118 \/ 118 tétel látszik/);
-    await user.click(screen.getByRole('button', { name: 'Nincs EUR ár' }));
+    await user.click(screen.getByRole('radio', { name: 'Nincs EUR ár' }));
     const nameCell = await screen.findByText('CBCT');
     await user.click(nameCell);
     await user.click(screen.getByRole('button', { name: '+ EUR ár hozzáadása' }));
@@ -129,17 +123,21 @@ describe('PriceListAdminPage', () => {
     const nameCell = await screen.findByText('CBCT');
     await user.click(nameCell);
 
-    const select = screen.getByLabelText('Kategória') as HTMLSelectElement;
-    const before = select.value;
-    const otherOption = within(select)
-      .getAllByRole('option')
-      .map((o) => o as HTMLOptionElement)
-      .find((o) => o.value !== before)!;
+    const before = findItem(readPriceList(), 'CBCT').kategoriaId;
+    const categories = readPriceList().kategoriak;
+    const beforeLabel = categories.find((k) => k.id === before)!.nev.hu;
 
-    await user.selectOptions(select, otherOption.value);
+    // Radix Select: combobox trigger -> portálban megjelenő option lista,
+    // nem natív <select> -- userEvent.selectOptions itt nem használható.
+    await user.click(screen.getByRole('combobox', { name: 'Kategória' }));
+    const options = await screen.findAllByRole('option');
+    const otherOption = options.find((o) => o.textContent !== beforeLabel)!;
+    const otherLabel = otherOption.textContent;
+    await user.click(otherOption);
 
     const cbct = findItem(readPriceList(), 'CBCT');
-    expect(cbct.kategoriaId).toBe(otherOption.value);
+    const otherCategory = categories.find((k) => k.nev.hu === otherLabel)!;
+    expect(cbct.kategoriaId).toBe(otherCategory.id);
     expect(cbct.kategoriaId).not.toBe(before);
   });
 
@@ -148,7 +146,7 @@ describe('PriceListAdminPage', () => {
     renderAdmin();
 
     await screen.findByText(/118 \/ 118 tétel látszik/);
-    await user.click(screen.getByRole('button', { name: 'Nincs EUR ár' }));
+    await user.click(screen.getByRole('radio', { name: 'Nincs EUR ár' }));
 
     expect(await screen.findByText(/118 \/ 118 tétel látszik/)).toBeInTheDocument();
   });

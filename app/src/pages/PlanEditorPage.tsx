@@ -4,11 +4,24 @@
 // fókuszt -> gépel tovább, egérhasználat nélkül. Lásd CLAUDE.md
 // "A UX kritikus pontja".
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Badge,
+  Box,
+  Button,
+  Callout,
+  Flex,
+  Heading,
+  IconButton,
+  Separator,
+  Table,
+  Text,
+  TextField,
+} from '@radix-ui/themes';
+import { Cross1Icon } from '@radix-ui/react-icons';
 import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
-import { btn, chip, input } from '../design/ui';
 import { formatMoney, formatPrice } from '../domain/money';
 import { resolveNev } from '../domain/nev';
 import { norm } from '../domain/search';
@@ -22,7 +35,7 @@ export default function PlanEditorPage() {
   const navigate = useNavigate();
   const currency = plan.penznem;
   const nyelv = plan.nyelv;
-  // P1-7: index-kulcs helyett -- fázistörléskor a maradék PhaseCard-ok
+  // P1-7: index-kulcs helyett -- fázistörléskor a maradék PhaseSection-ok
   // pozíciója (pi) eltolódik, és egy sima `key={pi}` React-remount nélkül
   // ugyanazt a DOM-csomópontot (és benne az ItemPicker lokális kereső-
   // állapotát: a gépelt szöveget) tartaná meg egy MÁSIK fázison. A token
@@ -83,7 +96,7 @@ export default function PlanEditorPage() {
   const listTotal = plan.fazisok.reduce((s, p) => s + fazisListaOsszeg(p), 0);
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <Box style={{ maxWidth: 900, margin: '0 auto' }}>
       <Header
         patientName={plan.paciens.nev}
         statusz={plan.statusz}
@@ -91,63 +104,60 @@ export default function PlanEditorPage() {
       />
 
       {loadedOsszesitokDiff && (
-        <div
-          style={{
-            background: t.warnBg,
-            color: t.warn,
-            fontSize: 12.5,
-            padding: '8px 14px',
-            borderRadius: t.radiusLg,
-            marginBottom: 14,
-          }}
-        >
-          A betöltött terv mentett összesítője nem egyezik az itt újraszámolt értékkel —
-          mentett fizetendő: <b>{formatMoney(plan.osszesitok.fizetendo, currency)}</b>, újraszámolva:{' '}
-          <b>{formatMoney(loadedOsszesitokDiff.fizetendo, currency)}</b>. A fájlban lévő (mentett)
-          érték az igazság — az aláírt papírral kell egyeznie —, ezt nem írjuk felül automatikusan.
-        </div>
+        <Callout.Root color="amber" mb="4">
+          <Callout.Text>
+            A betöltött terv mentett összesítője nem egyezik az itt újraszámolt értékkel —
+            mentett fizetendő: <Text weight="bold">{formatMoney(plan.osszesitok.fizetendo, currency)}</Text>,
+            újraszámolva: <Text weight="bold">{formatMoney(loadedOsszesitokDiff.fizetendo, currency)}</Text>.
+            A fájlban lévő (mentett) érték az igazság — az aláírt papírral kell egyeznie —, ezt nem
+            írjuk felül automatikusan.
+          </Callout.Text>
+        </Callout.Root>
       )}
 
       {plan.fazisok.map((p, pi) => (
-        <PhaseCard
-          key={`${fazisResetToken}-${pi}`}
-          phase={p}
-          currency={currency}
-          nyelv={nyelv}
-          available={available}
-          catName={catName}
-          frequent={frequent}
-          fallbackTetelIds={fallbackTetelIds}
-          canDelete={plan.fazisok.length > 1}
-          total={fazisOsszeg(p)}
-          onAdd={(item) => addLine(pi, item)}
-          onPatchLine={(li, patch) => patchLine(pi, li, patch)}
-          onRemoveLine={(li) =>
-            updatePlan((draft) => {
-              draft.fazisok[pi].sorok.splice(li, 1);
-            })
-          }
-          onRename={(v) =>
-            updatePlan((draft) => {
-              draft.fazisok[pi].megnevezes = v;
-            })
-          }
-          onNote={(v) =>
-            updatePlan((draft) => {
-              draft.fazisok[pi].megjegyzes = v;
-            })
-          }
-          onDelete={() => {
-            updatePlan((draft) => {
-              draft.fazisok.splice(pi, 1);
-            });
-            setFazisResetToken((n) => n + 1);
-          }}
-        />
+        <Box key={`${fazisResetToken}-${pi}`} mb="6">
+          {pi > 0 && <Separator size="4" mb="6" />}
+          <PhaseSection
+            phase={p}
+            currency={currency}
+            nyelv={nyelv}
+            available={available}
+            catName={catName}
+            frequent={frequent}
+            fallbackTetelIds={fallbackTetelIds}
+            canDelete={plan.fazisok.length > 1}
+            total={fazisOsszeg(p)}
+            onAdd={(item) => addLine(pi, item)}
+            onPatchLine={(li, patch) => patchLine(pi, li, patch)}
+            onRemoveLine={(li) =>
+              updatePlan((draft) => {
+                draft.fazisok[pi].sorok.splice(li, 1);
+              })
+            }
+            onRename={(v) =>
+              updatePlan((draft) => {
+                draft.fazisok[pi].megnevezes = v;
+              })
+            }
+            onNote={(v) =>
+              updatePlan((draft) => {
+                draft.fazisok[pi].megjegyzes = v;
+              })
+            }
+            onDelete={() => {
+              updatePlan((draft) => {
+                draft.fazisok.splice(pi, 1);
+              });
+              setFazisResetToken((n) => n + 1);
+            }}
+          />
+        </Box>
       ))}
 
-      <button
-        style={btn()}
+      <Button
+        variant="soft"
+        color="gray"
         onClick={() =>
           updatePlan((draft) => {
             draft.fazisok.push({
@@ -160,10 +170,10 @@ export default function PlanEditorPage() {
         }
       >
         + Új kezelési fázis
-      </button>
+      </Button>
 
       <Summary grand={grand} listTotal={listTotal} currency={currency} />
-    </div>
+    </Box>
   );
 }
 
@@ -177,28 +187,21 @@ function Header({
   onPreview: () => void;
 }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
-      }}
-    >
-      <div>
-        <div style={{ fontSize: 18, fontWeight: 600, color: t.brand }}>Kezelési terv</div>
-        <div style={{ fontSize: 13, color: t.textMuted }}>
+    <Flex justify="between" align="center" mb="4">
+      <Box>
+        <Heading size="5" style={{ color: t.brand }}>
+          Kezelési terv
+        </Heading>
+        <Text as="div" size="2" color="gray">
           {patientName || 'Új páciens'} · {statusz === 'VEGLEGES' ? 'véglegesítve' : 'piszkozat'}
-        </div>
-      </div>
-      <button style={btn(true)} onClick={onPreview}>
-        Előnézet
-      </button>
-    </div>
+        </Text>
+      </Box>
+      <Button onClick={onPreview}>Előnézet</Button>
+    </Flex>
   );
 }
 
-function PhaseCard({
+function PhaseSection({
   phase,
   currency,
   nyelv,
@@ -232,64 +235,55 @@ function PhaseCard({
   onDelete: () => void;
 }) {
   return (
-    <div
-      style={{
-        background: t.surface,
-        border: `1px solid ${t.line}`,
-        borderRadius: t.radiusLg,
-        padding: '14px 18px',
-        marginBottom: 12,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 8,
-        }}
-      >
-        <input
+    <Box>
+      <Flex justify="between" align="center" mb="3" gap="3">
+        <TextField.Root
           value={phase.megnevezes}
           onChange={(e) => onRename(e.target.value)}
-          style={{
-            border: 'none',
-            outline: 'none',
-            font: 'inherit',
-            fontSize: 15,
-            fontWeight: 600,
-            color: t.brand,
-            background: 'transparent',
-            width: 320,
-          }}
+          style={{ maxWidth: 360, fontWeight: 600, color: t.brand }}
         />
         {canDelete && (
-          <button style={btn()} onClick={onDelete}>
+          <Button variant="soft" color="gray" onClick={onDelete}>
             Fázis törlése
-          </button>
+          </Button>
         )}
-      </div>
+      </Flex>
 
-      <div style={{ ...gridRow, ...headStyle }}>
-        <div>Beavatkozás</div>
-        <div>Fog</div>
-        <div style={{ textAlign: 'center' }}>Db</div>
-        <div style={{ textAlign: 'right' }}>Listaár</div>
-        <div style={{ textAlign: 'right' }}>Tényleges</div>
-        <div style={{ textAlign: 'right' }}>Összeg</div>
-        <div />
-      </div>
-
-      {phase.sorok.map((l, li) => (
-        <LineRow
-          key={li}
-          line={l}
-          currency={currency}
-          fallback={fallbackTetelIds.has(l.tetelId)}
-          onPatch={(p) => onPatchLine(li, p)}
-          onRemove={() => onRemoveLine(li)}
-        />
-      ))}
+      {phase.sorok.length > 0 && (
+        <Table.Root size="1" mb="3">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeaderCell>Beavatkozás</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="92px">Fog</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="56px" justify="center">
+                Db
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="104px" justify="end">
+                Listaár
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="112px" justify="end">
+                Tényleges
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="112px" justify="end">
+                Összeg
+              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="32px" />
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {phase.sorok.map((l, li) => (
+              <LineRow
+                key={li}
+                line={l}
+                currency={currency}
+                fallback={fallbackTetelIds.has(l.tetelId)}
+                onPatch={(p) => onPatchLine(li, p)}
+                onRemove={() => onRemoveLine(li)}
+              />
+            ))}
+          </Table.Body>
+        </Table.Root>
+      )}
 
       <ItemPicker
         available={available}
@@ -300,34 +294,40 @@ function PhaseCard({
       />
 
       {frequent.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+        <Flex gap="2" wrap="wrap" mt="2">
           {frequent.map((f) => (
-            <button key={f.id} style={chip} onClick={() => onAdd(f)}>
+            <Button
+              key={f.id}
+              type="button"
+              size="1"
+              variant="soft"
+              color="gray"
+              onClick={() => onAdd(f)}
+            >
               + {resolveNev(f.nev, nyelv).szoveg}
-            </button>
+            </Button>
           ))}
-        </div>
+        </Flex>
       )}
 
-      <input
+      <TextField.Root
         value={phase.megjegyzes}
         onChange={(e) => onNote(e.target.value)}
         placeholder="Megjegyzés a fázishoz (megjelenik a nyomtatványon)"
-        style={{ ...input, marginTop: 10, fontSize: 13 }}
+        mt="3"
       />
 
-      <div
-        style={{
-          textAlign: 'right',
-          fontSize: 13,
-          marginTop: 10,
-          paddingTop: 8,
-          borderTop: `1px solid ${t.line}`,
-        }}
+      <Flex
+        justify="end"
+        mt="3"
+        pt="2"
+        style={{ borderTop: `1px solid ${t.uiLine}` }}
       >
-        Fázis összesen: <b>{formatMoney(total, currency)}</b>
-      </div>
-    </div>
+        <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          Fázis összesen: <Text weight="bold">{formatMoney(total, currency)}</Text>
+        </Text>
+      </Flex>
+    </Box>
   );
 }
 
@@ -362,77 +362,81 @@ function LineRow({
       : 0;
 
   return (
-    <div style={{ borderTop: `1px solid ${t.line}`, padding: '6px 0' }}>
-      <div style={gridRow}>
-        <div style={{ fontSize: 13 }}>
+    <Table.Row>
+      <Table.Cell>
+        <Text size="2">
           {line.nevSnapshot}
-          {line.savos && <span style={{ color: t.warn, fontSize: 11, marginLeft: 6 }}>sávos</span>}
+          {line.savos && (
+            <Text size="1" ml="2" style={{ color: t.warn }}>
+              sávos
+            </Text>
+          )}
           {fallback && <HuChip />}
           {discount > 0 && (
-            <span
-              style={{
-                fontSize: 11,
-                marginLeft: 6,
-                color: t.ok,
-                background: t.okBg,
-                padding: '1px 5px',
-                borderRadius: 4,
-              }}
-            >
+            <Badge color="green" variant="soft" ml="2" size="1">
               −{discount}%
-            </span>
+            </Badge>
           )}
-        </div>
+        </Text>
+      </Table.Cell>
 
-        <input
+      <Table.Cell>
+        <TextField.Root
           value={line.fogak}
           placeholder="16, 17, 26"
           onChange={(e) => onPatch({ fogak: e.target.value })}
-          style={{ ...input, textAlign: 'center' }}
+          style={{ textAlign: 'center' }}
         />
+        {mismatch && (
+          <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
+            {teeth.teeth.length} fog van felsorolva, a darabszám {mennyisegDraft}. Szándékos?
+          </Text>
+        )}
+      </Table.Cell>
 
+      <Table.Cell>
         <NumberField
           value={line.mennyiseg}
           min={1}
           onCommit={(v) => onPatch({ mennyiseg: v })}
           onDraftChange={(v) => setMennyisegDraft(v ?? line.mennyiseg)}
           textAlign="center"
+          aria-label="Darabszám"
         />
+      </Table.Cell>
 
-        <div style={{ fontSize: 12, color: t.textFaint, textAlign: 'right', paddingTop: 8 }}>
-          {formatMoney(line.listaEgysegar, currency)}
-        </div>
+      <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums', color: t.uiTextFaint }}>
+        {formatMoney(line.listaEgysegar, currency)}
+      </Table.Cell>
 
+      <Table.Cell justify="end">
         <NumberField
           value={line.tenylegesEgysegar}
           min={0}
           onCommit={(v) => onPatch({ tenylegesEgysegar: v })}
           textAlign="right"
-          style={{ borderColor: discount || line.savos ? t.brand : t.line }}
+          style={{ borderColor: discount || line.savos ? t.brand : t.controlBorder }}
+          aria-label="Tényleges egységár"
         />
+      </Table.Cell>
 
-        <div
-          style={{
-            fontSize: 13,
-            textAlign: 'right',
-            paddingTop: 8,
-            fontVariantNumeric: 'tabular-nums',
-          }}
+      <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>
+        {formatMoney(line.tenylegesEgysegar * line.mennyiseg, currency)}
+      </Table.Cell>
+
+      <Table.Cell>
+        <IconButton
+          type="button"
+          aria-label="Sor törlése"
+          variant="ghost"
+          color="gray"
+          size="1"
+          onClick={onRemove}
         >
-          {formatMoney(line.tenylegesEgysegar * line.mennyiseg, currency)}
-        </div>
-
-        <button onClick={onRemove} style={{ ...btn(), padding: '0 8px', height: 30 }}>
-          ×
-        </button>
-      </div>
-
-      {mismatch && (
-        <div style={{ fontSize: 11, color: t.warn, paddingLeft: 2, paddingTop: 2 }}>
-          {teeth.teeth.length} fog van felsorolva, a darabszám {mennyisegDraft}. Szándékos?
-        </div>
-      )}
-    </div>
+          <Cross1Icon />
+        </IconButton>
+      </Table.Cell>
+    </Table.Row>
   );
 }
 
@@ -474,6 +478,13 @@ function ItemPicker({
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // Escape-nek akkor is ki kell ürítenie a keresőt, ha épp nincs találat
+    // (pl. a "Nincs találat" doboz látszik) -- Design.md "Escape zár
+    // dialógust és keresőt".
+    if (e.key === 'Escape') {
+      setQ('');
+      return;
+    }
     if (!results.length) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -484,22 +495,19 @@ function ItemPicker({
     } else if (e.key === 'Enter') {
       e.preventDefault();
       commit(results[hi]);
-    } else if (e.key === 'Escape') {
-      setQ('');
     }
   }
 
   let lastCat: string | null = null;
 
   return (
-    <div style={{ position: 'relative', marginTop: 8 }}>
-      <input
+    <Box style={{ position: 'relative', marginTop: 8 }}>
+      <TextField.Root
         ref={ref}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder="Tétel keresése…  (ékezet nélkül is: eszt, koron, gyoker)"
-        style={{ ...input, height: 36, textAlign: 'left' }}
       />
       {results.length > 0 && (
         <div
@@ -510,7 +518,7 @@ function ItemPicker({
             top: 40,
             zIndex: 30,
             background: t.surface,
-            border: `1px solid ${t.lineStrong}`,
+            border: `1px solid ${t.controlBorder}`,
             borderRadius: t.radiusLg,
             padding: 4,
             maxHeight: 280,
@@ -525,7 +533,7 @@ function ItemPicker({
             return (
               <div key={r.id}>
                 {header && (
-                  <div style={{ fontSize: 11, color: t.textFaint, padding: '6px 10px 2px' }}>
+                  <div style={{ fontSize: 11, color: t.uiTextFaint, padding: '6px 10px 2px' }}>
                     {header}
                   </div>
                 )}
@@ -551,7 +559,13 @@ function ItemPicker({
                     {rn.szoveg}
                     {rn.fallback && <HuChip />}
                   </span>
-                  <span style={{ color: t.textFaint, whiteSpace: 'nowrap' }}>
+                  <span
+                    style={{
+                      color: t.uiTextFaint,
+                      whiteSpace: 'nowrap',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
                     {formatPrice(r.ar[currency], currency)}
                   </span>
                 </div>
@@ -569,11 +583,11 @@ function ItemPicker({
             top: 40,
             zIndex: 30,
             background: available.length === 0 ? t.warnBg : t.surface,
-            border: `1px solid ${available.length === 0 ? t.warn : t.lineStrong}`,
+            border: `1px solid ${available.length === 0 ? t.warn : t.controlBorder}`,
             borderRadius: t.radiusLg,
             padding: '10px 12px',
             fontSize: 12.5,
-            color: available.length === 0 ? t.warn : t.textFaint,
+            color: available.length === 0 ? t.warn : t.uiTextFaint,
           }}
         >
           {available.length === 0
@@ -581,25 +595,15 @@ function ItemPicker({
             : 'Nincs találat.'}
         </div>
       )}
-    </div>
+    </Box>
   );
 }
 
 function HuChip() {
   return (
-    <span
-      style={{
-        fontSize: 10,
-        fontWeight: 600,
-        color: t.warn,
-        background: t.warnBg,
-        padding: '1px 5px',
-        borderRadius: 4,
-        marginLeft: 6,
-      }}
-    >
+    <Badge color="amber" variant="soft" size="1" ml="2">
       HU
-    </span>
+    </Badge>
   );
 }
 
@@ -614,48 +618,29 @@ function Summary({
 }) {
   const discount = listTotal - grand;
   return (
-    <div
-      style={{
-        background: t.surface,
-        border: `1px solid ${t.line}`,
-        borderRadius: t.radiusLg,
-        padding: '14px 18px',
-        marginTop: 14,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
-      }}
-    >
-      <span style={{ fontSize: 14, color: t.textMuted }}>Mindösszesen</span>
-      <div style={{ textAlign: 'right' }}>
-        <div
-          style={{
-            fontSize: 24,
-            fontWeight: 600,
-            color: t.brand,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {formatMoney(grand, currency)}
-        </div>
-        {discount > 0 && (
-          // Csak a szerkesztőben látszik. A nyomtatványon NEM (D9).
-          <div style={{ fontSize: 12, color: t.ok }}>Kedvezmény: {formatMoney(discount, currency)}</div>
-        )}
-      </div>
-    </div>
+    <Box mt="6">
+      <Separator size="4" />
+      <Flex justify="between" align="baseline" mt="3">
+        <Text size="3" color="gray">
+          Mindösszesen
+        </Text>
+        <Box style={{ textAlign: 'right' }}>
+          <Text
+            as="div"
+            size="6"
+            weight="bold"
+            style={{ color: t.brand, fontVariantNumeric: 'tabular-nums' }}
+          >
+            {formatMoney(grand, currency)}
+          </Text>
+          {discount > 0 && (
+            // Csak a szerkesztőben látszik. A nyomtatványon NEM (D9).
+            <Text as="div" size="2" style={{ color: t.ok }}>
+              Kedvezmény: {formatMoney(discount, currency)}
+            </Text>
+          )}
+        </Box>
+      </Flex>
+    </Box>
   );
 }
-
-const gridRow: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 84px 52px 100px 108px 108px 32px',
-  gap: 8,
-  alignItems: 'start',
-};
-
-const headStyle: CSSProperties = {
-  fontSize: 11,
-  color: t.textFaint,
-  paddingBottom: 4,
-};

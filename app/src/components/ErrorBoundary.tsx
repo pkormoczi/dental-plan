@@ -49,14 +49,14 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div style={{ fontSize: 16, fontWeight: 600, color: t.danger, marginBottom: 8 }}>
           {this.props.title ?? 'Váratlan hiba történt'}
         </div>
-        <div style={{ fontSize: 13, color: t.textMuted, marginBottom: 4 }}>
+        <div style={{ fontSize: 13, color: t.uiTextMuted, marginBottom: 4 }}>
           Az alkalmazás egy része hibába futott. Az eddig be nem mentett adatok elveszhetnek, de a
           korábban mentett tervek nem sérültek.
         </div>
         <div
           style={{
             fontSize: 12,
-            color: t.textFaint,
+            color: t.uiTextFaint,
             fontFamily: t.mono,
             marginTop: 10,
             marginBottom: 18,
@@ -94,5 +94,5 @@ const btnSecondary = {
   ...btnPrimary,
   background: t.surface,
   color: t.text,
-  border: `1px solid ${t.lineStrong}`,
+  border: `1px solid ${t.controlBorder}`,
 } as const;

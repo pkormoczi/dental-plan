@@ -9,7 +9,30 @@
 // lásd docs/06-arlista-import.md). Kategória hozzáadás/átnevezés NINCS a
 // prototípusban sem -- csak a meglévők közötti mozgatás.
 
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
+import {
+  Box,
+  Button,
+  Callout,
+  Flex,
+  Grid,
+  Heading,
+  IconButton,
+  SegmentedControl,
+  Select,
+  Separator,
+  Table,
+  Text,
+  TextField,
+} from '@radix-ui/themes';
+import {
+  Cross2Icon,
+  EyeClosedIcon,
+  EyeOpenIcon,
+  InfoCircledIcon,
+  StarFilledIcon,
+  StarIcon,
+} from '@radix-ui/react-icons';
 import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
 import { formatPrice } from '../domain/money';
@@ -33,9 +56,16 @@ export default function PriceListAdminPage() {
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
   const [open, setOpen] = useState<string | null>(null);
+  // P0-8-hoz hasonlóan (SettingsPage) -- a `savePriceList` korábban `void`-olva
+  // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   function commit(next: PriceList) {
-    void savePriceList({ ...next, modositva: new Date().toISOString().slice(0, 10) });
+    savePriceList({ ...next, modositva: new Date().toISOString().slice(0, 10) })
+      .then(() => setSaveError(null))
+      .catch((err: unknown) => {
+        setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
+      });
   }
 
   function patchItem(id: string, patch: Partial<Tetel>) {
@@ -94,167 +124,181 @@ export default function PriceListAdminPage() {
   const shown = grouped.reduce((s, g) => s + g.items.length, 0);
 
   return (
-    <div style={{ maxWidth: 940, margin: '0 auto' }}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          marginBottom: 14,
-        }}
-      >
-        <div style={{ fontSize: 18, fontWeight: 600, color: t.brand }}>Árlista</div>
-        <div style={{ fontSize: 12, color: t.textMuted, fontFamily: t.mono }}>
+    <Box style={{ maxWidth: 940, margin: '0 auto' }}>
+      <Flex justify="between" align="baseline" mb="4">
+        <Heading size="5" style={{ color: t.brand }}>
+          Árlista
+        </Heading>
+        <Text size="2" color="gray" style={{ fontFamily: t.mono }}>
           verzió {priceList.arlistaVerzio}
-        </div>
-      </div>
+        </Text>
+      </Flex>
 
-      <input
+      <TextField.Root
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Keresés a tételek között…"
-        style={{ ...input, height: 36, marginBottom: 10 }}
+        mb="3"
       />
 
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
-        {FILTERS.map(([k, label]) => (
-          <button
-            key={k}
-            onClick={() => setFilter(k)}
-            style={{
-              ...chip,
-              background: filter === k ? t.accentWash : t.surface,
-              borderColor: filter === k ? t.brand : t.line,
-              color: filter === k ? t.brand : t.textMuted,
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {grouped.map(({ cat, items }) => (
-        <div key={cat.id}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'baseline',
-              padding: '16px 0 4px',
-            }}
-          >
-            <span style={{ fontSize: 13, fontWeight: 600, color: t.brand }}>{cat.nev.hu}</span>
-            <span style={{ fontSize: 11, color: t.textFaint }}>{items.length} tétel</span>
-          </div>
-
-          <div style={{ ...row, ...headStyle }}>
-            <div />
-            <div>Megnevezés</div>
-            <div style={{ textAlign: 'right' }}>Ár (HUF)</div>
-            <div style={{ textAlign: 'right' }}>Ár (EUR)</div>
-            <div />
-          </div>
-
-          {items.map((it) => (
-            <div
-              key={it.id}
-              style={{ borderTop: `1px solid ${t.line}`, opacity: it.aktiv ? 1 : 0.5 }}
-            >
-              <div
-                style={{ ...row, padding: '5px 0', cursor: 'pointer' }}
-                onClick={() => setOpen(open === it.id ? null : it.id)}
-              >
-                <button
-                  aria-label="Gyakori tétel"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    patchItem(it.id, { gyakori: !it.gyakori });
-                  }}
-                  style={{ ...iconBtn, color: it.gyakori ? t.warn : t.textFaint }}
-                >
-                  {it.gyakori ? '★' : '☆'}
-                </button>
-
-                <div
-                  style={{
-                    fontSize: 13,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {it.nev.hu}
-                  {it.ar.HUF?.tipus === 'SAVOS' && (
-                    <span style={{ fontSize: 11, color: t.warn, marginLeft: 6 }}>sávos</span>
-                  )}
-                  {!it.nev.de && (
-                    <span style={{ fontSize: 11, color: t.textFaint, marginLeft: 6 }}>
-                      nincs DE név
-                    </span>
-                  )}
-                </div>
-
-                <div
-                  style={{ fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
-                >
-                  {formatPrice(it.ar.HUF, 'HUF')}
-                </div>
-
-                <div
-                  style={{
-                    fontSize: 13,
-                    textAlign: 'right',
-                    fontVariantNumeric: 'tabular-nums',
-                    color: it.ar.EUR ? t.text : t.warn,
-                  }}
-                >
-                  {it.ar.EUR ? formatPrice(it.ar.EUR, 'EUR') : '—'}
-                </div>
-
-                <button
-                  aria-label="Aktív"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    patchItem(it.id, { aktiv: !it.aktiv });
-                  }}
-                  style={iconBtn}
-                >
-                  {it.aktiv ? '👁' : '🚫'}
-                </button>
-              </div>
-
-              {open === it.id && (
-                <ItemEditor
-                  item={it}
-                  categories={priceList.kategoriak}
-                  onPatch={(p) => patchItem(it.id, p)}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      ))}
-
-      <div
-        style={{
-          borderTop: `1px solid ${t.lineStrong}`,
-          marginTop: 16,
-          paddingTop: 12,
-          display: 'flex',
-          justifyContent: 'space-between',
-          fontSize: 12,
-          color: t.textMuted,
-        }}
+      <SegmentedControl.Root
+        value={filter}
+        onValueChange={(v) => setFilter(v as FilterKey)}
+        size="1"
+        mb="4"
       >
-        <span>
+        {FILTERS.map(([k, label]) => (
+          <SegmentedControl.Item key={k} value={k}>
+            {label}
+          </SegmentedControl.Item>
+        ))}
+      </SegmentedControl.Root>
+
+      {saveError && (
+        <Callout.Root color="red" mb="4">
+          <Callout.Text>A mentés nem sikerült: {saveError}</Callout.Text>
+        </Callout.Root>
+      )}
+
+      {grouped.length === 0 ? (
+        <Callout.Root color="gray" mb="4">
+          <Callout.Icon>
+            <InfoCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            {q.trim()
+              ? `Nincs találat erre: „${q}”. Próbálj más névre keresni, vagy válts szűrőt.`
+              : 'Ebben a szűrőben nincs tétel. Válts szűrőt, vagy add hozzá az elsőt a „+ Új tétel” gombbal.'}
+          </Callout.Text>
+        </Callout.Root>
+      ) : (
+        <Table.Root size="1" mb="4">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeaderCell width="32px" />
+              <Table.ColumnHeaderCell>Megnevezés</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell justify="end">Ár (HUF)</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell justify="end">Ár (EUR)</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="34px" />
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {grouped.map(({ cat, items }) => (
+              <Fragment key={cat.id}>
+                <Table.Row>
+                  <Table.Cell colSpan={5} pt="4">
+                    <Flex justify="between" align="baseline">
+                      <Text size="2" weight="bold" style={{ color: t.brand }}>
+                        {cat.nev.hu}
+                      </Text>
+                      <Text size="1" color="gray">
+                        {items.length} tétel
+                      </Text>
+                    </Flex>
+                  </Table.Cell>
+                </Table.Row>
+
+                {items.map((it) => (
+                  <Fragment key={it.id}>
+                    <Table.Row
+                      style={{ cursor: 'pointer', opacity: it.aktiv ? 1 : 0.5 }}
+                      onClick={() => setOpen(open === it.id ? null : it.id)}
+                    >
+                      <Table.Cell>
+                        <IconButton
+                          aria-label="Gyakori tétel"
+                          variant="ghost"
+                          color="gray"
+                          size="1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            patchItem(it.id, { gyakori: !it.gyakori });
+                          }}
+                          style={{ color: it.gyakori ? t.warn : t.uiTextFaint }}
+                        >
+                          {it.gyakori ? <StarFilledIcon /> : <StarIcon />}
+                        </IconButton>
+                      </Table.Cell>
+
+                      <Table.RowHeaderCell
+                        style={{
+                          maxWidth: 320,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {it.nev.hu}
+                        {it.ar.HUF?.tipus === 'SAVOS' && (
+                          <Text size="1" ml="2" style={{ color: t.warn }}>
+                            sávos
+                          </Text>
+                        )}
+                        {!it.nev.de && (
+                          <Text size="1" ml="2" color="gray">
+                            nincs DE név
+                          </Text>
+                        )}
+                      </Table.RowHeaderCell>
+
+                      <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {formatPrice(it.ar.HUF, 'HUF')}
+                      </Table.Cell>
+
+                      <Table.Cell
+                        justify="end"
+                        style={{
+                          fontVariantNumeric: 'tabular-nums',
+                          color: it.ar.EUR ? undefined : t.warn,
+                        }}
+                      >
+                        {it.ar.EUR ? formatPrice(it.ar.EUR, 'EUR') : '—'}
+                      </Table.Cell>
+
+                      <Table.Cell>
+                        <IconButton
+                          aria-label="Aktív"
+                          variant="ghost"
+                          color="gray"
+                          size="1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            patchItem(it.id, { aktiv: !it.aktiv });
+                          }}
+                        >
+                          {it.aktiv ? <EyeOpenIcon /> : <EyeClosedIcon />}
+                        </IconButton>
+                      </Table.Cell>
+                    </Table.Row>
+
+                    {open === it.id && (
+                      <Table.Row>
+                        <Table.Cell colSpan={5} style={{ background: t.surfaceAlt }}>
+                          <ItemEditor
+                            item={it}
+                            categories={priceList.kategoriak}
+                            onPatch={(p) => patchItem(it.id, p)}
+                          />
+                        </Table.Cell>
+                      </Table.Row>
+                    )}
+                  </Fragment>
+                ))}
+              </Fragment>
+            ))}
+          </Table.Body>
+        </Table.Root>
+      )}
+
+      <Separator size="4" />
+      <Flex justify="between" align="center" mt="3">
+        <Text size="2" color="gray">
           {shown} / {priceList.tetelek.length} tétel látszik · {missingEur} tételnél hiányzik az
           EUR ár
-        </span>
-        <button style={btn(true)} onClick={addNewItem}>
-          + Új tétel
-        </button>
-      </div>
-    </div>
+        </Text>
+        <Button onClick={addNewItem}>+ Új tétel</Button>
+      </Flex>
+    </Box>
   );
 }
 
@@ -327,40 +371,38 @@ function ItemEditor({
   }
 
   return (
-    <div
-      style={{ background: t.surfaceAlt, borderTop: `1px solid ${t.line}`, padding: '12px 14px 14px' }}
-    >
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+    <Box py="2">
+      <Grid columns="2" gap="3" mb="3">
         <Field label="Megnevezés (magyar)">
-          <input
+          <TextField.Root
             value={item.nev.hu}
-            style={input}
             onChange={(e) => onPatch({ nev: { ...item.nev, hu: e.target.value } })}
           />
         </Field>
         <Field label="Bezeichnung (német)">
-          <input
+          <TextField.Root
             value={item.nev.de || ''}
             placeholder="még nincs megadva"
-            style={input}
             onChange={(e) => onPatch({ nev: { ...item.nev, de: e.target.value || null } })}
           />
         </Field>
-      </div>
+      </Grid>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <Grid columns="2" gap="3">
         <Field label="Kategória">
-          <select
+          <Select.Root
             value={item.kategoriaId}
-            style={input}
-            onChange={(e) => onPatch({ kategoriaId: e.target.value })}
+            onValueChange={(v) => onPatch({ kategoriaId: v })}
           >
-            {categories.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.nev.hu}
-              </option>
-            ))}
-          </select>
+            <Select.Trigger style={{ width: '100%' }} />
+            <Select.Content>
+              {categories.map((k) => (
+                <Select.Item key={k.id} value={k.id}>
+                  {k.nev.hu}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
         </Field>
 
         {/* FieldGroup (plain div), NEM Field/<label> -- egy <label> ami egy
@@ -368,43 +410,45 @@ function ItemEditor({
             szövegét adná az accessible name-nek (ugyanaz a csapda, amit a
             SettingsPage ChipGroup-kommentje is jelez a nyelvválasztónál). */}
         <FieldGroup label="Ártípus (mindkét pénznemre hat)">
-          <button onClick={toggleType} style={{ ...btn(), width: '100%' }}>
+          <Button type="button" variant="soft" color="gray" style={{ width: '100%' }} onClick={toggleType}>
             {savos ? 'Sávos → fix' : 'Fix → sávos'}
-          </button>
+          </Button>
         </FieldGroup>
-      </div>
+      </Grid>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+      <Grid columns="2" gap="3" mt="3">
         {savos && hufAr?.tipus === 'SAVOS' ? (
           <>
             <Field label="HUF ár — tól">
-              <NumberField
-                value={hufAr.min}
-                min={0}
-                onCommit={(v) => setSavosPrice({ min: v })}
-              />
+              <NumberField value={hufAr.min} min={0} onCommit={(v) => setSavosPrice({ min: v })} />
             </Field>
             <Field label="HUF ár — ig">
-              <NumberField
-                value={hufAr.max}
-                min={0}
-                onCommit={(v) => setSavosPrice({ max: v })}
-              />
+              <NumberField value={hufAr.max} min={0} onCommit={(v) => setSavosPrice({ max: v })} />
             </Field>
           </>
         ) : (
           <Field label="HUF ár">
-            <NumberField value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0} min={0} onCommit={setFixPrice} />
+            <NumberField
+              value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
+              min={0}
+              onCommit={setFixPrice}
+            />
           </Field>
         )}
-      </div>
+      </Grid>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+      <Grid columns="2" gap="3" mt="3">
         {eurAr == null ? (
           <FieldGroup label="EUR ár">
-            <button type="button" style={{ ...btn(), width: '100%' }} onClick={() => setEurFix(0)}>
+            <Button
+              type="button"
+              variant="soft"
+              color="gray"
+              style={{ width: '100%' }}
+              onClick={() => setEurFix(0)}
+            >
               + EUR ár hozzáadása
-            </button>
+            </Button>
           </FieldGroup>
         ) : savos && eurAr.tipus === 'SAVOS' ? (
           <>
@@ -426,13 +470,13 @@ function ItemEditor({
             </Field>
           </>
         ) : (
-          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
+          <Flex gap="2" align="end">
             {/* A törlés gombot SZÁNDÉKOSAN a Field/<label>-en KÍVÜL tesszük --
                 egy <label> ami két "labelable" elemet (NumberField + button)
                 is befog, kétértelmű accessible name-et adna (ugyanaz a
                 probléma, mint amit a SettingsPage ChipGroup-kommentje már
                 jelez a nyelvválasztónál). */}
-            <div style={{ flex: 1 }}>
+            <Box style={{ flex: 1 }}>
               <Field label="EUR ár (€)">
                 <NumberField
                   value={eurAr.tipus === 'FIX' ? eurAr.ertek : 0}
@@ -441,30 +485,33 @@ function ItemEditor({
                   onCommit={setEurFix}
                 />
               </Field>
-            </div>
-            <button
+            </Box>
+            <IconButton
               type="button"
               aria-label="EUR ár törlése"
+              variant="ghost"
+              color="gray"
               onClick={clearEur}
-              style={{ ...iconBtn, height: 30 }}
             >
-              ×
-            </button>
-          </div>
+              <Cross2Icon />
+            </IconButton>
+          </Flex>
         )}
-      </div>
+      </Grid>
 
-      <div style={{ fontSize: 11, color: t.textFaint, marginTop: 10, fontFamily: t.mono }}>
+      <Text as="div" size="1" color="gray" mt="3" style={{ fontFamily: t.mono }}>
         id: {item.id} — soha nem használjuk újra, a régi tervek erre hivatkoznak
-      </div>
-    </div>
+      </Text>
+    </Box>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: 'block' }}>
-      <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 3 }}>{label}</div>
+      <Text as="div" size="1" color="gray" mb="1">
+        {label}
+      </Text>
       {children}
     </label>
   );
@@ -480,63 +527,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
  */
 function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 3 }}>{label}</div>
+    <Box>
+      <Text as="div" size="1" color="gray" mb="1">
+        {label}
+      </Text>
       {children}
-    </div>
+    </Box>
   );
-}
-
-const row: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '26px 1fr 120px 110px 34px',
-  gap: 10,
-  alignItems: 'center',
-};
-
-const headStyle: React.CSSProperties = { fontSize: 11, color: t.textFaint, paddingBottom: 3 };
-
-const input: React.CSSProperties = {
-  width: '100%',
-  height: 30,
-  fontSize: 13,
-  padding: '0 7px',
-  boxSizing: 'border-box',
-  border: `1px solid ${t.line}`,
-  borderRadius: t.radius,
-  background: t.surface,
-  color: t.text,
-  fontFamily: 'inherit',
-};
-
-const chip: React.CSSProperties = {
-  fontSize: 12,
-  padding: '4px 10px',
-  border: `1px solid ${t.line}`,
-  borderRadius: 99,
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-};
-
-const iconBtn: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  fontSize: 14,
-  padding: 0,
-  lineHeight: 1,
-};
-
-function btn(primary?: boolean): React.CSSProperties {
-  return {
-    height: 30,
-    fontSize: 12.5,
-    padding: '0 12px',
-    borderRadius: t.radius,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    border: `1px solid ${primary ? t.ink : t.lineStrong}`,
-    background: primary ? t.ink : t.surface,
-    color: primary ? t.onBrand : t.text,
-  };
 }

@@ -40,11 +40,6 @@ describe('Végpontok közötti folyamat', () => {
     // window-on a fájlon belüli tesztek között NEM reset -- enélkül a
     // második teszt ott folytatná a routingot, ahol az első abbahagyta.
     window.location.hash = '';
-    // jsdom nem implementálja a window.confirm/alert-et (mindig undefined-et
-    // ad vissza) -- a teszt páciense szándékosan hiányos (csak a név van
-    // kitöltve), ez a nem blokkoló figyelmeztetést váltja ki véglegesítéskor.
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   it('új terv létrehozása, véglegesítése, majd újranyitva egy második verzió mentése -- a v1 megmarad (D4)', async () => {
@@ -73,6 +68,9 @@ describe('Végpontok közötti folyamat', () => {
       { timeout: 10000 },
     );
     await user.click(finalizeBtn1);
+    // A páciens szándékosan hiányos (csak a név van kitöltve) -- ez a nem
+    // blokkoló "hiányzó adatok" AlertDialogot váltja ki véglegesítéskor.
+    await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
     expect(await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 })).toBeInTheDocument();
 
     // Korábbi tervek -- a demó seed miatt több páciens is szerepel, ezért a
@@ -96,6 +94,7 @@ describe('Végpontok közötti folyamat', () => {
       { timeout: 10000 },
     );
     await user.click(finalizeBtn2);
+    await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
     await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
@@ -125,8 +124,8 @@ describe('Végpontok közötti folyamat', () => {
     // Nyelv: Deutsch. A pénznem NEM követi automatikusan -- D21 lényege,
     // hogy egy német nyelvű ajánlat is maradhat forintos.
     await screen.findByText('Az ajánlat nyelve és pénzneme');
-    await user.click(screen.getByRole('button', { name: 'Deutsch' }));
-    expect(screen.getByRole('button', { name: 'HUF — forint' })).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
+    expect(screen.getByRole('radio', { name: 'HUF — forint' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
@@ -143,6 +142,7 @@ describe('Végpontok közötti folyamat', () => {
       { timeout: 10000 },
     );
     await user.click(finalizeBtn);
+    await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
     await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
     // A mentett terv.json-t a "patientDir / versionDir" kijelzőből

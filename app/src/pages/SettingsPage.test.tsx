@@ -1,20 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
 import SettingsPage from './SettingsPage';
-import { AppStateProvider } from '../state/AppState';
-import { StorageProvider } from '../storage/StorageContext';
+import { TestProviders } from '../testUtils';
 
 function renderSettings() {
   return render(
-    <MemoryRouter>
-      <StorageProvider>
-        <AppStateProvider>
-          <SettingsPage />
-        </AppStateProvider>
-      </StorageProvider>
-    </MemoryRouter>,
+    <TestProviders>
+      <SettingsPage />
+    </TestProviders>,
   );
 }
 

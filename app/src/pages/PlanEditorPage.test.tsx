@@ -5,23 +5,17 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 import PlanEditorPage from './PlanEditorPage';
-import { AppStateProvider } from '../state/AppState';
-import { StorageProvider } from '../storage/StorageContext';
+import { TestProviders } from '../testUtils';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 
 function renderEditor() {
   return render(
-    <MemoryRouter>
-      <StorageProvider>
-        <AppStateProvider>
-          <PlanEditorPage />
-        </AppStateProvider>
-      </StorageProvider>
-    </MemoryRouter>,
+    <TestProviders>
+      <PlanEditorPage />
+    </TestProviders>,
   );
 }
 
@@ -233,7 +227,7 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
     await screen.findByText('Az ajánlat nyelve és pénzneme');
-    await user.click(screen.getByRole('button', { name: 'EUR — euró' }));
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);

@@ -48,3 +48,34 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
   configurable: true,
 });
+
+// jsdom nem implementálja a ResizeObservert -- a Radix Select (ScrollArea)
+// erre épül a legördülő listája méretezéséhez. Minimál, semmit-nem-csináló
+// shim, ugyanúgy mint fent a localStorage-nál: egyszerűbb egy mindig
+// telepített csonkot adni, mint környezetenként detektálni, hogy kell-e.
+class ResizeObserverStub {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+Object.defineProperty(globalThis, 'ResizeObserver', {
+  value: ResizeObserverStub,
+  writable: true,
+  configurable: true,
+});
+
+// A Radix Select/Popper a mutató-elfogás (pointer capture) API-t hívja
+// pozicionáláskor -- jsdom ezt sem implementálja.
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = () => {};
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {};
+}
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}

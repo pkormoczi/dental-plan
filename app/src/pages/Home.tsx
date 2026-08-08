@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { AlertDialog, Box, Button, Callout, Card, Flex, Heading, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
-import { card } from '../design/ui';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
+
+type PendingAction = 'reset' | 'clearAll' | null;
 
 export default function Home() {
   const { resetDemoData, clearAll } = useStorage();
@@ -12,11 +14,10 @@ export default function Home() {
   const [justReset, setJustReset] = useState(false);
   const [justCleared, setJustCleared] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
 
-  async function handleReset() {
-    if (!confirm('Biztosan visszaállítod a demó adatot? Minden saját szerkesztésed elvész.')) {
-      return;
-    }
+  async function performReset() {
+    setPendingAction(null);
     setError(null);
     try {
       resetDemoData();
@@ -32,16 +33,8 @@ export default function Home() {
     }
   }
 
-  async function handleClearAll() {
-    if (
-      !confirm(
-        'Biztosan törlöd ÖSSZES adatot (árlista, beállítások, minden mentett terv)? Ez nem ' +
-          'demó-visszaállítás, hanem teljes törlés -- utána a Demó adat visszaállítása gombbal ' +
-          'tudsz újra a seedből kiindulni.',
-      )
-    ) {
-      return;
-    }
+  async function performClearAll() {
+    setPendingAction(null);
     setError(null);
     try {
       clearAll();
@@ -60,88 +53,84 @@ export default function Home() {
   }
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 20, color: t.brand, marginBottom: 4 }}>
+    <Box style={{ maxWidth: 640, margin: '0 auto' }}>
+      <Heading size="6" mb="1" style={{ color: t.brand }}>
         Kezelési terv és árajánlat
-      </h1>
-      <p style={{ fontSize: 13, color: t.textMuted, marginBottom: 20 }}>
+      </Heading>
+      <Text as="p" size="2" color="gray" mb="5">
         Mándoki Dental — demó verzió a UX validálásához.
-      </p>
+      </Text>
 
       {error && (
-        <div
-          style={{
-            background: t.dangerBg,
-            color: t.danger,
-            fontSize: 12.5,
-            padding: '8px 14px',
-            borderRadius: t.radiusLg,
-            marginBottom: 14,
-          }}
-        >
-          {error}
-        </div>
+        <Callout.Root color="red" mb="4">
+          <Callout.Text>{error}</Callout.Text>
+        </Callout.Root>
       )}
 
-      <div style={card}>
-        <p style={{ fontSize: 13, marginTop: 0 }}>
+      <Card size="2" mb="4">
+        <Text as="p" size="2" mt="0">
           Ez a mockup a végleges alkalmazás vázán fut, demó adatokkal. A
           véglegesben ugyanez az alkalmazás egy, a doki gépén kijelölt
           mappába ír majd — itt egyelőre a böngésző tárolja az adatot.
-        </p>
-        <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-          <button style={btnPrimary} onClick={startNewPlan}>
-            Új terv indítása
-          </button>
-          <Link to="/tervek" style={{ textDecoration: 'none' }}>
-            <button style={btnSecondary}>Korábbi tervek</button>
-          </Link>
-          <button style={btnSecondary} onClick={handleReset}>
+        </Text>
+        <Flex gap="3" mt="4" wrap="wrap">
+          <Button onClick={startNewPlan}>Új terv indítása</Button>
+          <Button variant="soft" color="gray" onClick={() => navigate('/tervek')}>
+            Korábbi tervek
+          </Button>
+          <Button variant="soft" color="gray" onClick={() => setPendingAction('reset')}>
             {justReset ? 'Visszaállítva ✓' : 'Demó adat visszaállítása'}
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Flex>
+      </Card>
 
-      <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.danger, marginBottom: 6 }}>
+      <Card size="2" mb="4">
+        <Text as="p" size="2" weight="bold" mb="2" style={{ color: t.danger }}>
           Adatvédelem
-        </div>
-        <p style={{ fontSize: 12.5, color: t.textMuted, marginTop: 0 }}>
-          Ez a demó a böngésző <span style={{ fontFamily: t.mono }}>localStorage</span>-ában,
+        </Text>
+        <Text as="p" size="2" color="gray" mt="0">
+          Ez a demó a böngésző <Text style={{ fontFamily: t.mono }}>localStorage</Text>-ában,
           titkosítatlanul tárol mindent, amit beírsz -- ide valódi páciensadat nem való (lásd a
           fenti DEMÓ sávot). Ha véletlenül mégis valódit vittél be, ez a gomb ténylegesen kiüríti a
           tárolót (nem csak visszaseedeli a demó adatot).
-        </p>
-        <button style={btnDanger} onClick={handleClearAll}>
+        </Text>
+        <Button color="red" variant="soft" onClick={() => setPendingAction('clearAll')}>
           {justCleared ? 'Törölve ✓' : 'Minden adat törlése'}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Card>
+
+      <AlertDialog.Root
+        open={pendingAction !== null}
+        onOpenChange={(open) => !open && setPendingAction(null)}
+      >
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>
+            {pendingAction === 'reset' ? 'Demó adat visszaállítása' : 'Minden adat törlése'}
+          </AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            {pendingAction === 'reset'
+              ? 'Biztosan visszaállítod a demó adatot? Minden saját szerkesztésed elvész.'
+              : 'Biztosan törlöd ÖSSZES adatot (árlista, beállítások, minden mentett terv)? Ez ' +
+                'nem demó-visszaállítás, hanem teljes törlés -- utána a Demó adat visszaállítása ' +
+                'gombbal tudsz újra a seedből kiindulni.'}
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                color="red"
+                onClick={pendingAction === 'reset' ? performReset : performClearAll}
+              >
+                {pendingAction === 'reset' ? 'Visszaállítás' : 'Törlés'}
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+    </Box>
   );
 }
-
-const btnPrimary = {
-  height: 34,
-  fontSize: 13,
-  padding: '0 14px',
-  borderRadius: t.radius,
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-  border: `1px solid ${t.ink}`,
-  background: t.ink,
-  color: t.onBrand,
-} as const;
-
-const btnSecondary = {
-  ...btnPrimary,
-  background: t.surface,
-  color: t.text,
-  border: `1px solid ${t.lineStrong}`,
-} as const;
-
-const btnDanger = {
-  ...btnPrimary,
-  background: t.surface,
-  color: t.danger,
-  border: `1px solid ${t.dangerBorder}`,
-} as const;

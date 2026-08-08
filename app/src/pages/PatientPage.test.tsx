@@ -5,23 +5,17 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 import PatientPage from './PatientPage';
-import { AppStateProvider } from '../state/AppState';
-import { StorageProvider } from '../storage/StorageContext';
+import { TestProviders } from '../testUtils';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 
 function renderPatient() {
   return render(
-    <MemoryRouter>
-      <StorageProvider>
-        <AppStateProvider>
-          <PatientPage />
-        </AppStateProvider>
-      </StorageProvider>
-    </MemoryRouter>,
+    <TestProviders>
+      <PatientPage />
+    </TestProviders>,
   );
 }
 
@@ -86,7 +80,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     renderPatient();
     await screen.findByText('Az ajánlat nyelve és pénzneme');
 
-    await user.click(screen.getByRole('button', { name: 'EUR — euró' }));
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
 
     expect(
       await screen.findByText(/egyetlen tétel sincs beárazva/),
@@ -99,7 +93,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     renderPatient();
     await screen.findByText('Az ajánlat nyelve és pénzneme');
 
-    await user.click(screen.getByRole('button', { name: 'Deutsch' }));
+    await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
 
     expect(
       await screen.findByText(/118 \/ 118 aktív tételnek nincs német neve/),

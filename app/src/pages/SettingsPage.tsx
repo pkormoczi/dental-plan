@@ -3,11 +3,24 @@
 // FileSystemStorage-hoz kötött 2. fázis feladata, lásd CLAUDE.md).
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Callout,
+  Card,
+  Checkbox,
+  Flex,
+  Grid,
+  Heading,
+  Link as RadixLink,
+  Text,
+  TextArea,
+  TextField,
+} from '@radix-ui/themes';
 import ChipGroup from '../components/ChipGroup';
 import { lefedettseg } from '../domain/coverage';
 import { t } from '../design/tokens';
-import { btn, card, input } from '../design/ui';
 import { useAppState } from '../state/AppState';
 
 export default function SettingsPage() {
@@ -53,114 +66,101 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 18, color: t.brand, marginBottom: 16 }}>Beállítások</h1>
+    <Box style={{ maxWidth: 560, margin: '0 auto' }}>
+      <Heading size="5" mb="4" style={{ color: t.brand }}>
+        Beállítások
+      </Heading>
 
-      <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.brand, marginBottom: 10 }}>
+      <Card size="2" mb="4">
+        <Text as="p" size="2" weight="bold" mb="3" style={{ color: t.brand }}>
           Rendelő adatai
-        </div>
+        </Text>
         <Field label="Név">
-          <input
+          <TextField.Root
             value={settings.rendelo.nev}
             onChange={(e) => patch({ rendelo: { ...settings.rendelo, nev: e.target.value } })}
-            style={input}
           />
         </Field>
         <Field label="Cím">
-          <input
+          <TextField.Root
             value={settings.rendelo.cim}
             onChange={(e) => patch({ rendelo: { ...settings.rendelo, cim: e.target.value } })}
-            style={input}
           />
         </Field>
-        <Row>
+        <Grid columns="2" gap="3">
           <Field label="Telefon">
-            <input
+            <TextField.Root
               value={settings.rendelo.telefon}
               onChange={(e) => patch({ rendelo: { ...settings.rendelo, telefon: e.target.value } })}
-              style={input}
             />
           </Field>
           <Field label="E-mail">
-            <input
+            <TextField.Root
               value={settings.rendelo.email}
               onChange={(e) => patch({ rendelo: { ...settings.rendelo, email: e.target.value } })}
-              style={input}
             />
           </Field>
-        </Row>
-        <Row>
+        </Grid>
+        <Grid columns="2" gap="3" mt="3">
           <Field label="Adószám">
-            <input
+            <TextField.Root
               value={settings.rendelo.adoszam}
               onChange={(e) => patch({ rendelo: { ...settings.rendelo, adoszam: e.target.value } })}
               placeholder="kitöltendő"
-              style={input}
             />
           </Field>
           <Field label="Cégjegyzékszám">
-            <input
+            <TextField.Root
               value={settings.rendelo.cegjegyzekszam}
               onChange={(e) =>
                 patch({ rendelo: { ...settings.rendelo, cegjegyzekszam: e.target.value } })
               }
               placeholder="kitöltendő"
-              style={input}
             />
           </Field>
-        </Row>
-      </div>
+        </Grid>
+      </Card>
 
-      <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.brand, marginBottom: 10 }}>
+      <Card size="2" mb="4">
+        <Text as="p" size="2" weight="bold" mb="3" style={{ color: t.brand }}>
           Orvosok
-        </div>
+        </Text>
         <Field label="Egy név soronként">
-          <textarea
-            value={orvosokText}
-            onChange={(e) => setOrvosokText(e.target.value)}
-            onBlur={commitOrvosok}
-            rows={3}
-            style={{ ...input, height: 'auto', padding: '6px 7px', resize: 'vertical' as const }}
-          />
+          <TextArea value={orvosokText} onChange={(e) => setOrvosokText(e.target.value)} onBlur={commitOrvosok} rows={3} />
         </Field>
-      </div>
+      </Card>
 
-      <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.brand, marginBottom: 10 }}>
+      <Card size="2" mb="4">
+        <Text as="p" size="2" weight="bold" mb="3" style={{ color: t.brand }}>
           Ajánlat és nyelv
-        </div>
+        </Text>
         <Field label="Ajánlat érvényessége (nap)">
-          <input
+          <TextField.Root
             type="number"
             min={1}
             value={settings.ervenyessegNap}
             onChange={(e) => patch({ ervenyessegNap: Math.max(1, Number(e.target.value) || 1) })}
-            style={{ ...input, maxWidth: 160 }}
+            style={{ maxWidth: 160 }}
           />
         </Field>
 
-        <label
-          style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, marginTop: 12 }}
-        >
-          <input
-            type="checkbox"
+        <Text as="label" size="2" mt="3" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Checkbox
             checked={settings.nemetEngedelyezve}
-            onChange={(e) => patch({ nemetEngedelyezve: e.target.checked })}
+            onCheckedChange={(checked) => patch({ nemetEngedelyezve: checked === true })}
           />
           Német nyelvű ajánlat engedélyezése
-        </label>
+        </Text>
 
         {settings.nemetEngedelyezve && (
           <>
-            <div style={{ marginTop: 10 }}>
-              {/* div, nem Field/<label> -- egy <label> csak egyetlen "labelable"
-                  elemet jelölhetne implicit módon, a ChipGroup viszont két
-                  gombot renderel, ami kétértelmű accessible name-et adna. */}
-              <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 3 }}>
+            <Box mt="3">
+              {/* div, nem <label> -- a ChipGroup (Radix SegmentedControl) belül
+                  gomb-csoportot renderel, egy <label> csak egyetlen "labelable"
+                  elemet jelölhetne implicit módon. */}
+              <Text as="div" size="1" color="gray" mb="1">
                 Alapértelmezett nyelv új tervnél
-              </div>
+              </Text>
               <ChipGroup
                 value={settings.alapertelmezettNyelv}
                 options={[
@@ -169,71 +169,60 @@ export default function SettingsPage() {
                 ]}
                 onChange={(nyelv) => patch({ alapertelmezettNyelv: nyelv })}
               />
-            </div>
+            </Box>
 
-            <div style={{ fontSize: 11, color: t.textMuted, marginTop: 8, lineHeight: 1.7 }}>
-              <b>A német tartalom készültsége</b>
+            <Text as="div" size="1" color="gray" mt="3" style={{ lineHeight: 1.7 }}>
+              <Text weight="bold">A német tartalom készültsége</Text>
               <br />
               Tételnevek: {cov.deNevvel} / {cov.aktivOsszes} lefordítva
               <br />
               EUR árak: {eurArazott} / {cov.aktivOsszes} kitöltve
               <br />
-              Nyilatkozat: <span style={{ fontFamily: t.mono }}>nyilatkozat-de-v1.md</span> —
+              Nyilatkozat: <Text style={{ fontFamily: t.mono }}>nyilatkozat-de-v1.md</Text> —
               placeholder, jogi lektorálás szükséges
               <br />
-              <Link to="/arlista" style={{ color: t.brand }}>
-                Árlista megnyitása
-              </Link>{' '}
+              <RadixLink asChild>
+                <RouterLink to="/arlista">Árlista megnyitása</RouterLink>
+              </RadixLink>{' '}
               — a „Nincs EUR ár” szűrő a munkalista.
-            </div>
+            </Text>
           </>
         )}
-      </div>
+      </Card>
 
-      <div style={card}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: t.brand, marginBottom: 10 }}>Logó</div>
-        <div style={{ fontSize: 12, color: t.textMuted }}>
-          Fájlnév: <span style={{ fontFamily: t.mono }}>{settings.logoFajl}</span>
-        </div>
-        <div style={{ fontSize: 11, color: t.textFaint, marginTop: 4 }}>
+      <Card size="2" mb="4">
+        <Text as="p" size="2" weight="bold" mb="3" style={{ color: t.brand }}>
+          Logó
+        </Text>
+        <Text as="div" size="2" color="gray">
+          Fájlnév: <Text style={{ fontFamily: t.mono }}>{settings.logoFajl}</Text>
+        </Text>
+        <Text as="div" size="1" color="gray" mt="1">
           A logócserét a végleges alkalmazásban a gyökérmappába helyezett fájl adja -- a
           mockupban ez fix.
-        </div>
-      </div>
+        </Text>
+      </Card>
 
       {saveError && (
-        <div
-          style={{
-            background: t.dangerBg,
-            color: t.danger,
-            fontSize: 12.5,
-            padding: '8px 14px',
-            borderRadius: t.radiusLg,
-            marginBottom: 10,
-          }}
-        >
-          A mentés nem sikerült: {saveError}
-        </div>
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>A mentés nem sikerült: {saveError}</Callout.Text>
+        </Callout.Root>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button style={btn(true)} onClick={handleSave}>
-          {saved ? 'Mentve ✓' : 'Mentés'}
-        </button>
-      </div>
-    </div>
+      <Flex justify="end">
+        <Button onClick={handleSave}>{saved ? 'Mentve ✓' : 'Mentés'}</Button>
+      </Flex>
+    </Box>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: 'block', marginBottom: 10 }}>
-      <div style={{ fontSize: 11, color: t.textMuted, marginBottom: 3 }}>{label}</div>
+      <Text as="div" size="1" color="gray" mb="1">
+        {label}
+      </Text>
       {children}
     </label>
   );
-}
-
-function Row({ children }: { children: React.ReactNode }) {
-  return <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>{children}</div>;
 }

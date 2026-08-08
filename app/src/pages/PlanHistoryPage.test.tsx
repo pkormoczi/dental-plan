@@ -1,22 +1,16 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it } from 'vitest';
 import PlanHistoryPage from './PlanHistoryPage';
-import { AppStateProvider } from '../state/AppState';
-import { StorageProvider } from '../storage/StorageContext';
+import { TestProviders } from '../testUtils';
 import { DemoStorage } from '../storage/DemoStorage';
 import { seedPlans } from '../storage/seed/plans';
 
 function renderHistory() {
   return render(
-    <MemoryRouter>
-      <StorageProvider>
-        <AppStateProvider>
-          <PlanHistoryPage />
-        </AppStateProvider>
-      </StorageProvider>
-    </MemoryRouter>,
+    <TestProviders>
+      <PlanHistoryPage />
+    </TestProviders>,
   );
 }
 
@@ -48,14 +42,12 @@ describe('PlanHistoryPage', () => {
     // ...a sérült páciens sora is látszik (mappanév-alapú fallback névvel),
     // csak jelölve -- nem tűnik el, és nem blokkolja a többit.
     expect(await screen.findByText(/⚠ néhány verziója nem olvasható/)).toBeInTheDocument();
-    expect(screen.queryByText('Betöltés…')).toBeNull();
   });
 
-  it('opening a corrupted version surfaces a visible error instead of doing nothing (P1-2)', async () => {
+  it('opening a corrupted version surfaces a visible inline error instead of doing nothing (P1-2)', async () => {
     const kovacs = seedPlans[0];
     const corruptKey = `dp:paciensek/${kovacs.patientDir}/${kovacs.versionDir}/terv.json`;
     localStorage.setItem(corruptKey, 'not valid json {{{');
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
     const user = userEvent.setup();
     renderHistory();
@@ -64,11 +56,11 @@ describe('PlanHistoryPage', () => {
     const card = marker.closest('div')!.parentElement as HTMLElement;
     const openBtn = within(card).getByRole('button', { name: 'Megnyitás szerkesztésre' });
 
-    // Korábban itt nem volt catch -- egy hibázó betöltésre a gomb némán nem
-    // csinált semmit, a doki nem tudta, mi történt.
+    // Korábban itt `alert()` jelent meg -- most a sérintett verzió-sora
+    // mellett, a szövegben (Design.md: "Nem toast, ha a hiba egy mezőhöz
+    // tartozik").
     await user.click(openBtn);
 
-    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
-    expect(alertSpy.mock.calls[0][0]).toMatch(/A terv megnyitása nem sikerült/);
+    expect(await within(card).findByText(/A terv megnyitása nem sikerült/)).toBeInTheDocument();
   });
 });

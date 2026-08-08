@@ -5,14 +5,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
+import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
-import { btn } from '../design/ui';
 import { fallbackSorok } from '../domain/nev';
 import { computeOsszesitok } from '../domain/totals';
 import type { PlanRef } from '../domain/types';
 import { TervDocument } from '../pdf/TervDocument';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
+
+type ConfirmStep = 'missing-fields' | 'de-fallback-names' | null;
 
 export default function PreviewPage() {
   const { plan, setPlan, settings, priceList, resetPlanDraft } = useAppState();
@@ -27,6 +29,11 @@ export default function PreviewPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedRef, setSavedRef] = useState<PlanRef | null>(null);
+  const [nameMissingNotice, setNameMissingNotice] = useState(false);
+  // A confirm()-lánc (hiányzó adatok -> hiányzó német nevek) Radix
+  // AlertDialogként: legfeljebb egy van nyitva egyszerre, a lépés neve
+  // dönti el, melyik szöveg/cím jelenjen meg.
+  const [confirmStep, setConfirmStep] = useState<ConfirmStep>(null);
   // P0-1: dupla kattintás elleni in-flight védelem -- a `saving` state
   // önmagában nem elég, mert egy második kattintás a state frissülése
   // (render) ELŐTT is megtörténhet.
@@ -114,37 +121,12 @@ export default function PreviewPage() {
     !plan.paciens.telefon ||
     !plan.paciens.email ||
     !plan.paciens.taj;
+  // D21/1.1: a hiányzó német tételnevek soha nem eshetnek magyarra
+  // véglegesítéskor néma módon -- a doki itt látja, mely nevek érintettek,
+  // mielőtt a páciens aláírja a dokumentumot.
+  const hianyzoNevek = fallbackSorok(plan, priceList);
 
-  async function finalize() {
-    if (savingRef.current) return;
-
-    // Csak a név kötelező (a mappanévhez), a többi hiánya csak figyelmeztet,
-    // nem blokkol -- docs/03-funkcionalis-spec.md "2. Páciens adatlap".
-    if (nameMissing) {
-      alert('A páciens neve kötelező a véglegesítéshez.');
-      return;
-    }
-    if (otherFieldsMissing) {
-      const proceed = confirm(
-        'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad). Folytatod a véglegesítést?',
-      );
-      if (!proceed) return;
-    }
-    // D21/1.1: a hiányzó német tételnevek soha nem eshetnek magyarra
-    // véglegesítéskor néma módon -- a doki itt látja, mely nevek érintettek,
-    // mielőtt a páciens aláírja a dokumentumot.
-    const hianyzoNevek = fallbackSorok(plan, priceList);
-    if (hianyzoNevek.length > 0) {
-      const lista = hianyzoNevek.slice(0, 8).join('\n');
-      const tobbi =
-        hianyzoNevek.length > 8 ? `\n… és további ${hianyzoNevek.length - 8}` : '';
-      const proceed = confirm(
-        `Ez egy német nyelvű ajánlat, de ${hianyzoNevek.length} tétel neve magyarul kerül a ` +
-          `nyomtatványra (nincs német fordításuk):\n\n${lista}${tobbi}\n\n` +
-          `A páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?`,
-      );
-      if (!proceed) return;
-    }
+  async function doFinalize() {
     if (!pdfInstance.blob) return;
 
     savingRef.current = true;
@@ -177,6 +159,38 @@ export default function PreviewPage() {
     }
   }
 
+  function attemptFinalize() {
+    if (savingRef.current) return;
+
+    // Csak a név kötelező (a mappanévhez), a többi hiánya csak figyelmeztet,
+    // nem blokkol -- docs/03-funkcionalis-spec.md "2. Páciens adatlap".
+    if (nameMissing) {
+      setNameMissingNotice(true);
+      return;
+    }
+    setNameMissingNotice(false);
+    if (otherFieldsMissing) {
+      setConfirmStep('missing-fields');
+      return;
+    }
+    if (hianyzoNevek.length > 0) {
+      setConfirmStep('de-fallback-names');
+      return;
+    }
+    void doFinalize();
+  }
+
+  function confirmStepContinue() {
+    // A hiányzó-mezők megerősítés után -- ha német nevek is hiányoznak --
+    // a láncban a KÖVETKEZŐ dialógus nyílik meg, nem a mentés fut le rögtön.
+    if (confirmStep === 'missing-fields' && hianyzoNevek.length > 0) {
+      setConfirmStep('de-fallback-names');
+      return;
+    }
+    setConfirmStep(null);
+    void doFinalize();
+  }
+
   function startNewPlan() {
     resetPlanDraft();
     navigate('/paciens');
@@ -184,20 +198,20 @@ export default function PreviewPage() {
 
   if (savedRef) {
     return (
-      <div style={{ maxWidth: 640, margin: '40px auto', textAlign: 'center' }}>
-        <div style={{ fontSize: 16, color: t.ok, marginBottom: 8 }}>A terv elmentve ✓</div>
-        <div style={{ fontSize: 13, color: t.textMuted, marginBottom: 20, fontFamily: t.mono }}>
+      <Box style={{ maxWidth: 640, margin: '40px auto', textAlign: 'center' }}>
+        <Text as="p" size="4" style={{ color: t.ok }} mb="2">
+          A terv elmentve ✓
+        </Text>
+        <Text as="p" size="2" color="gray" mb="5" style={{ fontFamily: t.mono }}>
           {savedRef.patientDir} / {savedRef.versionDir}
-        </div>
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-          <button style={btn(true)} onClick={startNewPlan}>
-            Új terv indítása
-          </button>
-          <button style={btn()} onClick={() => navigate('/tervek')}>
+        </Text>
+        <Flex gap="3" justify="center">
+          <Button onClick={startNewPlan}>Új terv indítása</Button>
+          <Button variant="soft" color="gray" onClick={() => navigate('/tervek')}>
             Korábbi tervek
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Flex>
+      </Box>
     );
   }
 
@@ -211,75 +225,66 @@ export default function PreviewPage() {
   const busy = saving || pdfStale;
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <Box style={{ maxWidth: 900, margin: '0 auto' }}>
       {templateError && (
-        <ErrorBar>A sablonok betöltése meghiúsult: {templateError}</ErrorBar>
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>A sablonok betöltése meghiúsult: {templateError}</Callout.Text>
+        </Callout.Root>
       )}
       {sablonFallback && (
-        <div
-          style={{
-            background: t.warnBg,
-            color: t.warn,
-            fontSize: 12.5,
-            padding: '8px 14px',
-            borderRadius: t.radiusLg,
-            marginBottom: 10,
-          }}
-        >
-          A tervhez tartozó sablon nem található a tárolóban — helyette a magyar
-          nyilatkozat/fizetési feltételek szövege jelenik meg a nyomtatványon. Próbáld a
-          Kezdőlapon a „Demó adat visszaállítása” gombot, vagy nyiss új tervet.
-        </div>
+        <Callout.Root color="amber" mb="3">
+          <Callout.Text>
+            A tervhez tartozó sablon nem található a tárolóban — helyette a magyar
+            nyilatkozat/fizetési feltételek szövege jelenik meg a nyomtatványon. Próbáld a
+            Kezdőlapon a „Demó adat visszaállítása” gombot, vagy nyiss új tervet.
+          </Callout.Text>
+        </Callout.Root>
       )}
       {pdfError && (
-        <ErrorBar>
-          A PDF előállítása hibába futott: {pdfError || 'ismeretlen hiba'}. A véglegesítés emiatt
-          le van tiltva.
-        </ErrorBar>
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>
+            A PDF előállítása hibába futott: {pdfError || 'ismeretlen hiba'}. A véglegesítés emiatt
+            le van tiltva.
+          </Callout.Text>
+        </Callout.Root>
       )}
-      {saveError && <ErrorBar>A mentés nem sikerült: {saveError}</ErrorBar>}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 14,
-          flexWrap: 'wrap',
-          gap: 10,
-        }}
-      >
-        <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}>
-          <input
-            type="checkbox"
-            checked={offerOnly}
-            onChange={(e) => setOfferOnly(e.target.checked)}
-          />
+      {saveError && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>A mentés nem sikerült: {saveError}</Callout.Text>
+        </Callout.Root>
+      )}
+      {nameMissingNotice && nameMissing && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>A páciens neve kötelező a véglegesítéshez.</Callout.Text>
+        </Callout.Root>
+      )}
+
+      <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
+        <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Checkbox checked={offerOnly} onCheckedChange={(checked) => setOfferOnly(checked === true)} />
           Csak ajánlat — a nyilatkozat és aláírás oldal nélkül
-        </label>
-        <div style={{ display: 'flex', gap: 8 }}>
+        </Text>
+        <Flex gap="3">
           {pdfInstance.url &&
             (pdfStale ? (
-              <button style={{ ...btn(), opacity: 0.6 }} disabled>
+              <Button variant="soft" color="gray" disabled>
                 PDF frissítése…
-              </button>
+              </Button>
             ) : (
-              <a
-                href={pdfInstance.url}
-                download={`kezelesi-terv-${plan.tervId || 'uj'}${offerOnly ? '-ajanlat' : ''}.pdf`}
-                style={{ textDecoration: 'none' }}
-              >
-                <button style={btn()}>Letöltés</button>
-              </a>
+              <Button asChild variant="soft" color="gray">
+                <a
+                  href={pdfInstance.url}
+                  download={`kezelesi-terv-${plan.tervId || 'uj'}${offerOnly ? '-ajanlat' : ''}.pdf`}
+                >
+                  Letöltés
+                </a>
+              </Button>
             ))}
-          <button
-            style={{ ...btn(true), opacity: busy || !!pdfError ? 0.6 : 1 }}
-            onClick={finalize}
-            disabled={busy || !!pdfError}
-          >
+          <Button onClick={attemptFinalize} disabled={busy || !!pdfError}>
             {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Flex>
+      </Flex>
 
       {pdfInstance.url ? (
         <iframe
@@ -288,33 +293,49 @@ export default function PreviewPage() {
           style={{
             width: '100%',
             height: '80vh',
-            border: `1px solid ${t.line}`,
+            border: `1px solid ${t.uiLine}`,
             borderRadius: t.radiusLg,
             opacity: pdfStale ? 0.5 : 1,
           }}
         />
       ) : (
-        <div style={{ padding: 40, textAlign: 'center', color: t.textMuted, fontSize: 13 }}>
-          PDF előállítása…
-        </div>
+        <Box style={{ padding: 40, textAlign: 'center' }}>
+          <Text size="2" color="gray">
+            PDF előállítása…
+          </Text>
+        </Box>
       )}
-    </div>
-  );
-}
 
-function ErrorBar({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        background: t.dangerBg,
-        color: t.danger,
-        fontSize: 12.5,
-        padding: '8px 14px',
-        borderRadius: t.radiusLg,
-        marginBottom: 10,
-      }}
-    >
-      {children}
-    </div>
+      <AlertDialog.Root
+        open={confirmStep !== null}
+        onOpenChange={(open) => !open && setConfirmStep(null)}
+      >
+        <AlertDialog.Content maxWidth="480px">
+          <AlertDialog.Title>
+            {confirmStep === 'missing-fields' ? 'Hiányzó páciensadatok' : 'Hiányzó német tételnevek'}
+          </AlertDialog.Title>
+          <AlertDialog.Description size="2" style={{ whiteSpace: 'pre-line' }}>
+            {confirmStep === 'missing-fields'
+              ? 'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad). Folytatod a véglegesítést?'
+              : `Ez egy német nyelvű ajánlat, de ${hianyzoNevek.length} tétel neve magyarul kerül a ` +
+                `nyomtatványra (nincs német fordításuk):\n\n${hianyzoNevek.slice(0, 8).join('\n')}` +
+                `${hianyzoNevek.length > 8 ? `\n… és további ${hianyzoNevek.length - 8}` : ''}\n\n` +
+                'A páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?'}
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button color="red" onClick={confirmStepContinue}>
+                Folytatás
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+    </Box>
   );
 }

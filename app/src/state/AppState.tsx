@@ -5,6 +5,7 @@
 // ami a mockup validációs céljának megfelelő.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Box, Button, Flex, Text } from '@radix-ui/themes';
 import { createBlankPlan } from '../domain/blankPlan';
 import { osszesitokElter } from '../domain/totals';
 import type { Osszesitok, Plan, PriceList, Settings } from '../domain/types';
@@ -124,23 +125,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   if (loadError) {
     return (
-      <div style={{ maxWidth: 480, margin: '60px auto', textAlign: 'center', padding: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: t.danger, marginBottom: 8 }}>
+      <Box style={{ maxWidth: 480, margin: '60px auto', textAlign: 'center', padding: 24 }}>
+        <Text as="p" size="3" weight="bold" mb="2" style={{ color: t.danger }}>
           Nem sikerült betölteni az adatokat
-        </div>
-        <div style={{ fontSize: 13, color: t.textMuted, marginBottom: 16 }}>{loadError.message}</div>
-        <button style={btnPrimary} onClick={() => setLoadToken((n) => n + 1)}>
-          Újrapróbálás
-        </button>
-      </div>
+        </Text>
+        <Text as="p" size="2" color="gray" mb="4">
+          {loadError.message}
+        </Text>
+        <Flex justify="center">
+          <Button onClick={() => setLoadToken((n) => n + 1)}>Újrapróbálás</Button>
+        </Flex>
+      </Box>
     );
   }
 
   if (!value) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: t.textFaint, fontSize: 13 }}>
-        Betöltés…
-      </div>
+      <Box style={{ padding: 40, textAlign: 'center' }}>
+        <Text size="2" color="gray">
+          Betöltés…
+        </Text>
+      </Box>
     );
   }
 
@@ -152,15 +157,3 @@ export function useAppState(): AppStateValue {
   if (!ctx) throw new Error('useAppState csak az AppStateProvider-en belül használható.');
   return ctx;
 }
-
-const btnPrimary = {
-  height: 34,
-  fontSize: 13,
-  padding: '0 14px',
-  borderRadius: t.radius,
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-  border: `1px solid ${t.ink}`,
-  background: t.ink,
-  color: t.onBrand,
-} as const;

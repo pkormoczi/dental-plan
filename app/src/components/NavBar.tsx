@@ -22,7 +22,7 @@ export default function NavBar() {
         flexWrap: 'wrap',
         padding: '8px 24px',
         background: t.surface,
-        borderBottom: `1px solid ${t.line}`,
+        borderBottom: `1px solid ${t.uiLine}`,
         fontFamily: t.font,
       }}
     >
@@ -49,7 +49,7 @@ export default function NavBar() {
             padding: '6px 10px',
             borderRadius: t.radius,
             textDecoration: 'none',
-            color: isActive ? t.brand : t.textMuted,
+            color: isActive ? t.brand : t.uiTextMuted,
             background: isActive ? t.accentWash : 'transparent',
             fontWeight: isActive ? 600 : 400,
           })}

@@ -7,6 +7,9 @@
 
 import type { Ar, Penznem } from './types';
 
+// A HUF-nál a toLocaleString('hu-HU') mar U+00A0-t (nem torheto szokoz)
+// hasznal ezres elvalasztokent, a ' Ft' es ' €' elotti szokoz is szandekosan
+// U+00A0 -- CLAUDE.md: a penzosszeg soha nem tordelheto sortoresnel.
 export function formatMoney(value: number | null | undefined, currency: Penznem): string {
   if (value == null || !Number.isFinite(value)) return '—';
   if (currency === 'EUR') {
@@ -14,10 +17,10 @@ export function formatMoney(value: number | null | undefined, currency: Penznem)
       (value / 100).toLocaleString('de-DE', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
-      }) + ' €'
+      }) + ' €'
     );
   }
-  return Math.round(value).toLocaleString('hu-HU').replace(/ /g, ' ') + ' Ft';
+  return Math.round(value).toLocaleString('hu-HU') + ' Ft';
 }
 
 export function formatPrice(ar: Ar | null | undefined, currency: Penznem): string | null {

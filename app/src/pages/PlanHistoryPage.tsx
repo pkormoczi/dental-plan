@@ -8,12 +8,19 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box, Button, Callout, Flex, Heading, Separator, Skeleton, Text, TextField } from '@radix-ui/themes';
+import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
-import { btn, card, input } from '../design/ui';
 import { norm } from '../domain/search';
 import type { PatientFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
+
+interface ActionError {
+  patientDir: string;
+  versionDir: string;
+  message: string;
+}
 
 export default function PlanHistoryPage() {
   const { storage, loadPlanPdf } = useStorage();
@@ -32,6 +39,10 @@ export default function PlanHistoryPage() {
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
+  // P1-2: a megnyitás/letöltés hibája korábban `alert()`-tel jelent meg --
+  // egy adott verzió-sorhoz kötött hiba, ezért annak a sornak a szövegeként
+  // jelenik meg (Design.md: "Nem toast, ha a hiba egy mezőhöz tartozik").
+  const [actionError, setActionError] = useState<ActionError | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,6 +113,7 @@ export default function PlanHistoryPage() {
     .sort((a, b) => (namesByPatient[a.dirName] ?? '').localeCompare(namesByPatient[b.dirName] ?? ''));
 
   async function openVersion(patientDir: string, versionDir: string) {
+    setActionError(null);
     try {
       const plan = await storage.loadPlan({ patientDir, versionDir });
       loadPlanIntoDraft(plan);
@@ -109,19 +121,23 @@ export default function PlanHistoryPage() {
     } catch (err) {
       // P1-2: korábban nem volt catch -- hibázó betöltésre a gomb némán
       // nem csinált semmit, a doki nem tudta, próbálkozzon-e újra.
-      alert(
-        err instanceof Error
-          ? `A terv megnyitása nem sikerült: ${err.message}`
-          : 'A terv megnyitása váratlanul meghiúsult.',
-      );
+      setActionError({
+        patientDir,
+        versionDir,
+        message:
+          err instanceof Error
+            ? `A terv megnyitása nem sikerült: ${err.message}`
+            : 'A terv megnyitása váratlanul meghiúsult.',
+      });
     }
   }
 
   async function downloadVersion(patientDir: string, versionDir: string, tervId: string) {
+    setActionError(null);
     try {
       const bytes = await loadPlanPdf({ patientDir, versionDir });
       if (!bytes) {
-        alert('Ehhez a verzióhoz nincs mentett PDF.');
+        setActionError({ patientDir, versionDir, message: 'Ehhez a verzióhoz nincs mentett PDF.' });
         return;
       }
       const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
@@ -132,84 +148,131 @@ export default function PlanHistoryPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert(
-        err instanceof Error
-          ? `A letöltés nem sikerült: ${err.message}`
-          : 'A letöltés váratlanul meghiúsult.',
-      );
+      setActionError({
+        patientDir,
+        versionDir,
+        message:
+          err instanceof Error
+            ? `A letöltés nem sikerült: ${err.message}`
+            : 'A letöltés váratlanul meghiúsult.',
+      });
     }
   }
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto' }}>
-      <h1 style={{ fontSize: 18, color: t.brand, marginBottom: 16 }}>Korábbi tervek</h1>
+    <Box style={{ maxWidth: 760, margin: '0 auto' }}>
+      <Heading size="5" mb="4" style={{ color: t.brand }}>
+        Korábbi tervek
+      </Heading>
 
-      <input
+      <TextField.Root
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Keresés páciensnévre…"
-        style={{ ...input, height: 36, marginBottom: 14 }}
+        mb="4"
       />
 
       {listError && (
-        <div
-          style={{
-            background: t.dangerBg,
-            color: t.danger,
-            fontSize: 12.5,
-            padding: '8px 14px',
-            borderRadius: t.radiusLg,
-            marginBottom: 14,
-          }}
-        >
-          A lista betöltése nem sikerült: {listError}
-        </div>
+        <Callout.Root color="red" mb="4">
+          <Callout.Icon>
+            <CrossCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>A lista betöltése nem sikerült: {listError}</Callout.Text>
+        </Callout.Root>
       )}
 
-      {loading && <div style={{ color: t.textMuted, fontSize: 13 }}>Betöltés…</div>}
-      {!loading && filtered.length === 0 && !listError && (
-        <div style={{ color: t.textMuted, fontSize: 13 }}>Nincs találat.</div>
+      {loading && <HistorySkeleton />}
+
+      {!loading && !listError && filtered.length === 0 && (
+        <Callout.Root color="gray" mb="4">
+          <Callout.Icon>
+            <InfoCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            {patients.length === 0
+              ? 'Még nincs mentett terv. Indíts egyet a Kezdőlapon — a véglegesítés után itt jelenik meg.'
+              : `Nincs találat erre: „${q}”. Próbálj más névre keresni.`}
+          </Callout.Text>
+        </Callout.Root>
       )}
 
-      {filtered.map((p) => (
-        <div key={p.dirName} style={card}>
-          <div style={{ fontWeight: 600, color: t.brand, marginBottom: 6, fontSize: 14 }}>
+      {filtered.map((p, pi) => (
+        <Box key={p.dirName} mb="5">
+          <Text as="div" size="3" weight="bold" mb="2" style={{ color: t.brand }}>
             {namesByPatient[p.dirName] ?? p.dirName}
             {unreadable.has(p.dirName) && (
-              <span style={{ fontSize: 11, fontWeight: 400, color: t.warn, marginLeft: 8 }}>
+              <Text size="1" weight="regular" ml="2" style={{ color: t.warn }}>
                 ⚠ néhány verziója nem olvasható
-              </span>
+              </Text>
             )}
-          </div>
+          </Text>
+
           {(versionsByPatient[p.dirName] ?? [])
             .slice()
             .reverse()
-            .map((v) => (
-              <div
-                key={v.dirName}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '6px 0',
-                  borderTop: `1px solid ${t.line}`,
-                }}
-              >
-                <span style={{ fontSize: 13 }}>
-                  v{v.verzio} · {v.isoDate}
-                </span>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button style={btn()} onClick={() => downloadVersion(p.dirName, v.dirName, p.patientId)}>
-                    Letöltés
-                  </button>
-                  <button style={btn(true)} onClick={() => openVersion(p.dirName, v.dirName)}>
-                    Megnyitás szerkesztésre
-                  </button>
-                </div>
-              </div>
+            .map((v, vi) => (
+              <Box key={v.dirName}>
+                {vi > 0 && <Separator size="4" />}
+                <Flex justify="between" align="center" py="2">
+                  <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                    v{v.verzio} · {v.isoDate}
+                  </Text>
+                  <Flex gap="2">
+                    <Button
+                      size="1"
+                      variant="soft"
+                      color="gray"
+                      onClick={() => downloadVersion(p.dirName, v.dirName, p.patientId)}
+                    >
+                      Letöltés
+                    </Button>
+                    <Button size="1" onClick={() => openVersion(p.dirName, v.dirName)}>
+                      Megnyitás szerkesztésre
+                    </Button>
+                  </Flex>
+                </Flex>
+                {actionError?.patientDir === p.dirName && actionError.versionDir === v.dirName && (
+                  <Callout.Root color="red" size="1" mb="2">
+                    <Callout.Icon>
+                      <CrossCircledIcon />
+                    </Callout.Icon>
+                    <Callout.Text>{actionError.message}</Callout.Text>
+                  </Callout.Root>
+                )}
+              </Box>
             ))}
-        </div>
+
+          {pi < filtered.length - 1 && <Separator size="4" mt="3" color="gray" />}
+        </Box>
       ))}
-    </div>
+    </Box>
+  );
+}
+
+/** Design.md: skeleton a végleges elrendezés alakjában, ne pörgő spinner. */
+function HistorySkeleton() {
+  return (
+    <>
+      {[0, 1].map((i) => (
+        <Box key={i} mb="5">
+          <Skeleton>
+            <Box height="20px" width="160px" />
+          </Skeleton>
+          <Flex justify="between" align="center" py="2" mt="2">
+            <Skeleton>
+              <Box height="16px" width="120px" />
+            </Skeleton>
+            <Flex gap="2">
+              <Skeleton>
+                <Box height="28px" width="72px" />
+              </Skeleton>
+              <Skeleton>
+                <Box height="28px" width="160px" />
+              </Skeleton>
+            </Flex>
+          </Flex>
+        </Box>
+      ))}
+    </>
   );
 }

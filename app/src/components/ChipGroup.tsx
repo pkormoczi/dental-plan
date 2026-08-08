@@ -1,10 +1,9 @@
-// Kétállású (vagy több) szegmentált kapcsoló -- a PriceListAdminPage
-// szűrő-chipjeinek mintája (chip stílus + t.accentWash/t.brand a kiválasztotton).
+// Kétállású (vagy több) szegmentált kapcsoló -- Radix SegmentedControl-ra
+// építve (Design.md "Minden UI elem @radix-ui/themes komponensből jön").
 // Közös komponens, mert a Páciens adatlap (nyelv/pénznem) és a Beállítások
 // (alapértelmezett nyelv) is ugyanezt a mintát használja.
 
-import { t } from '../design/tokens';
-import { chip } from '../design/ui';
+import { SegmentedControl } from '@radix-ui/themes';
 
 export default function ChipGroup<T extends string>({
   value,
@@ -16,23 +15,12 @@ export default function ChipGroup<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+    <SegmentedControl.Root value={value} onValueChange={(v) => onChange(v as T)} size="1">
       {options.map(([v, label]) => (
-        <button
-          key={v}
-          type="button"
-          onClick={() => onChange(v)}
-          style={{
-            ...chip,
-            background: value === v ? t.accentWash : t.surface,
-            borderColor: value === v ? t.brand : t.line,
-            color: value === v ? t.brand : t.textMuted,
-            fontWeight: value === v ? 600 : 400,
-          }}
-        >
+        <SegmentedControl.Item key={v} value={v}>
           {label}
-        </button>
+        </SegmentedControl.Item>
       ))}
-    </div>
+    </SegmentedControl.Root>
   );
 }
