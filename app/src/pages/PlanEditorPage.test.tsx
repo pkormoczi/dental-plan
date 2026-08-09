@@ -177,6 +177,62 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     );
     expect(quantityInput).toHaveValue('3');
   });
+
+  it('a Fog mezőbe írt szabadszöveges jegyzetet (pl. "jobb felső") nem jelöli hibásnak -- docs/02-domain-modell.md', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    await user.type(teethInput, 'jobb felső');
+
+    expect(screen.queryByText(/Nem érvényes FDI fogszám/)).not.toBeInTheDocument();
+    expect(teethInput).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('egy számnak kinéző, de érvénytelen FDI kódra (pl. "99") figyelmeztetést ad', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    await user.type(teethInput, '99');
+
+    expect(await screen.findByText(/Nem érvényes FDI fogszám: 99/)).toBeInTheDocument();
+    expect(teethInput).toHaveAttribute('aria-invalid', 'true');
+
+    // Érvényesre javítva a figyelmeztetés eltűnik.
+    await user.clear(teethInput);
+    await user.type(teethInput, '16');
+    await waitFor(() =>
+      expect(screen.queryByText(/Nem érvényes FDI fogszám/)).not.toBeInTheDocument(),
+    );
+  });
+
+  it('vegyes bemenetnél (érvényes FDI + szabadszöveg) nem jelez hibát, csak a valódi számhibánál', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    await user.type(teethInput, '16, jobb felső');
+    expect(screen.queryByText(/Nem érvényes FDI fogszám/)).not.toBeInTheDocument();
+
+    await user.type(teethInput, ', 99');
+    expect(await screen.findByText(/Nem érvényes FDI fogszám: 99/)).toBeInTheDocument();
+  });
 });
 
 describe('PlanEditorPage -- kattintható fogtérkép', () => {

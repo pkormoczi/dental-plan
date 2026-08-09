@@ -27,7 +27,7 @@ import ToothPickerPopover from '../components/ToothPickerPopover';
 import { t } from '../design/tokens';
 import { basePrice, formatMoney } from '../domain/money';
 import { resolveNev } from '../domain/nev';
-import { parseTeeth } from '../domain/teeth';
+import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
 import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
 import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
 import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
@@ -483,11 +483,12 @@ function LineRow({
 }) {
   const uj = line.tetelId === ''; // fogtérkép-kattintással létrehozott, még tétel nélküli sor
   const teeth = parseTeeth(line.fogak);
-  // Nem blokkoló: a mező szándékosan szabad szöveges marad (pl. „jobb
-  // felső" jegyzet -- docs/03-funkcionalis-spec.md "Soronkénti
-  // fogválasztó"), csak vizuálisan jelezzük, ha a tartalom nem érvényes
-  // FDI-lista (kvadráns 1-4/tejfog 5-8 + fog 1-8/1-5, lásd domain/teeth.ts).
-  const invalidFormat = line.fogak.trim() !== '' && !teeth.valid;
+  // Nem blokkoló, és a szabadszöveges jegyzet (pl. „jobb felső") nem hiba --
+  // docs/02-domain-modell.md "Fogszám kezelés" szerint ez érvényes tartalom.
+  // Csak azt a tokent jelezzük, ami SZÁMNAK néz ki, de nem érvényes FDI kód
+  // (pl. elgépelt "99") -- lásd domain/teeth.ts `invalidFdiTokens`.
+  const rosszTokenek = invalidFdiTokens(line.fogak);
+  const invalidFormat = rosszTokenek.length > 0;
   // A darabszám mezőbe gépelt, még nem committált érték -- a NumberField
   // csak blur/Enterre írja a törzsadatot (P1-4), de ez a figyelmeztetés
   // gépelés közben is éljen, ne csak commit után.
@@ -560,7 +561,8 @@ function LineRow({
         </Flex>
         {invalidFormat && (
           <Text as="div" size="1" mt="1" style={{ color: t.danger }}>
-            Nem érvényes FDI fogszám (pl. 16, 17, 26) -- a kvadráns 1-4, a fog a kvadránsban 1-8 lehet.
+            Nem érvényes FDI fogszám: {rosszTokenek.join(', ')} -- a kvadráns 1-4 (tejfog 5-8), a fog a
+            kvadránson belül 1-8 (tejfog 1-5) lehet.
           </Text>
         )}
         {mismatch && (

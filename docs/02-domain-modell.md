@@ -186,18 +186,39 @@ a fájlban lévő érték az igazság — és érdemes figyelmeztetni.
 ## Fogszám kezelés
 
 A `fogak` mező **szabad szöveg**. Az MVP nem számol belőle darabszámot
-(D14), de a parsert érdemes megírni, mert egy figyelmeztetéshez kell:
+(D14), de a parsert érdemes megírni, mert két különálló figyelmeztetéshez
+kell:
 
 - Érvényes FDI tokenek: maradó `11–18, 21–28, 31–38, 41–48`,
   tejfog `51–55, 61–65, 71–75, 81–85`.
 - Regex: `/^(?:[1-4][1-8]|[5-8][1-5])$/`
 - Elválasztók: vessző, pontosvessző, szóköz.
 - Ha **minden** token érvényes és a darabszám ettől eltér → halvány
-  figyelmeztetés a szerkesztőben. Nem blokkolás, és a nyomtatványon nem
-  jelenik meg.
-- Ha bármelyik token nem FDI szám (`jobb felső`), akkor szabadszöveg —
-  nincs figyelmeztetés.
+  figyelmeztetés a szerkesztőben (`X fog van felsorolva, a darabszám Y`).
+  Nem blokkolás, és a nyomtatványon nem jelenik meg. (`parseTeeth()`.)
+- **FDI-formátum figyelmeztetés** (D-döntés, 2026-08-09): a mező
+  validálja a beírt *számokat*, de a folyószöveges jegyzetet
+  továbbra is engedi — a kettő megkülönböztetése azon múlik, hogy egy
+  token számjegyekből áll-e:
+  - Ha egy token **csupa számjegy, de nem érvényes FDI kód** (pl. elgépelt
+    `99`, ahol nincs 9. kvadráns) → piros keret + „Nem érvényes FDI
+    fogszám: 99 — …" hibaszöveg a mező alatt. Ez tényleges elgépelés
+    jelzése, nem blokkol.
+  - Ha egy token **nem csupa számjegy** (pl. `jobb`, `felső`) → szándékos
+    szabadszöveges jegyzet, nincs semmilyen figyelmeztetés rá. Ez
+    érvényes, dokumentált tartalom (pl. „jobb felső").
+  - A két eset függetlenül él egymás mellett ugyanabban a mezőben: a
+    „16, 99, jobb felső" bemenetnél csak a `99` kap hibajelzést, a `16`
+    és a „jobb felső" nem. Lásd `app/src/domain/teeth.ts`
+    `invalidFdiTokens()` — ez az EGYETLEN hely, ami ezt a
+    megkülönböztetést eldönti, ne írd újra máshol.
+  - Ez a figyelmeztetés is csak a szerkesztőben látszik, a nyomtatványon
+    nem jelenik meg, és nem blokkolja a véglegesítést.
 - Hídnál a pótolt (hiányzó) fogat is fel kell sorolni, mert az is egy tag.
 
 A fogtérkép a nyomtatványon ugyanebből a mezőből rajzolódik, **számok
-nélkül**, csak kiemeléssel.
+nélkül**, csak kiemeléssel. A fogtérkép-vizualizáció (`buildToothVisualStates`)
+és a soronkénti fogválasztó (`ToothPickerPopover`) továbbra is a
+`parseTeeth()` mindent-vagy-semmit logikáját használják — a fenti
+FDI-formátum figyelmeztetés ettől független, csak a szerkesztő mezője
+alatti szöveges visszajelzésre vonatkozik.

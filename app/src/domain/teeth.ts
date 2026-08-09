@@ -17,6 +17,20 @@ export function parseTeeth(input: string | null | undefined): ParsedTeeth {
 }
 
 /**
+ * A szerkesztő inline hibaüzenetéhez: melyik token NÉZ KI számnak, de nem
+ * érvényes FDI kód -- ez tényleges elgépelés (pl. "99", a kvadráns max 4/8).
+ * Egy tisztán betűs token (pl. "jobb", "felső") szándékos szabadszöveges
+ * jegyzet, nem hibás fogszám-kísérlet -- docs/02-domain-modell.md ":198"
+ * szerint ez érvényes tartalom, `parseTeeth` mindent-vagy-semmit logikája
+ * (fenti) emiatt nem használható közvetlenül erre a megkülönböztetésre,
+ * mert a teljes mezőt érvénytelennek jelölné egyetlen "jobb felső"-től is.
+ */
+export function invalidFdiTokens(input: string | null | undefined): string[] {
+  const tokens = (input || '').split(/[\s,;]+/).filter(Boolean);
+  return tokens.filter((x) => /^\d+$/.test(x) && !FDI.test(x));
+}
+
+/**
  * Be/ki kapcsol egy FDI kódot a `fogak` felsorolásban -- a fogtérkép
  * soronkénti választójának (ToothPickerPopover) az egyetlen írási útja,
  * hogy ne legyen tokenkezelés a hívóban. Csak érvényes (`parseTeeth(...).valid`)

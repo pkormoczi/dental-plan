@@ -129,7 +129,7 @@ megjelennek a kereső alatt. Egy kattintás = hozzáadás.
 | Mező | Viselkedés |
 |---|---|
 | Beavatkozás | Csak megjelenítés, snapshot a hozzáadás pillanatából |
-| Fog | Szabad szöveg, felsorolás. Nem kötelező |
+| Fog | Szabad szöveg, felsorolás. Nem kötelező. A beírt *számokat* validáljuk (lásd lent), a folyószöveges jegyzet (pl. „jobb felső") változatlanul megengedett |
 | Db | Kézi, alapérték 1, minimum 1 |
 | Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve |
 | Tényleges ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`) |
@@ -143,8 +143,21 @@ van emelve — jelzi, hogy itt dönteni kell.
 
 ### Figyelmeztetés (nem blokkoló)
 
-Ha a `Fog` mező N érvényes FDI számot tartalmaz és `mennyiseg !== N`,
-halvány jelzés a sor alatt. Ennyi — nincs automatikus javítás (D14).
+Két, egymástól független figyelmeztetés él a `Fog` mező alatt, egyik sem
+blokkol, egyik sem jelenik meg a nyomtatványon:
+
+- **Darabszám-eltérés**: ha a mező N érvényes FDI számot tartalmaz és
+  `mennyiseg !== N`, halvány jelzés a sor alatt (`docs/02-domain-modell.md`
+  `parseTeeth()`). Nincs automatikus javítás (D14).
+- **FDI-formátum**: ha a mező tartalmaz egy olyan tokent, ami *számjegyekből
+  áll, de nem érvényes FDI kód* (pl. elgépelt `99`), piros keret a mezőn +
+  „Nem érvényes FDI fogszám: 99 — …" hibaszöveg alatta
+  (`app/src/domain/teeth.ts` `invalidFdiTokens()`). Ez a betűs, nem
+  számjegyekből álló tokeneket (pl. „jobb", „felső") **nem** érinti — a
+  folyószöveges jegyzet (pl. „jobb felső") ettől függetlenül érvényes
+  tartalom marad, nincs rá figyelmeztetés. A kettő ugyanabban a mezőben
+  egymástól függetlenül jelentkezhet: „16, 99, jobb felső" mezőn csak a
+  `99` kap hibajelzést.
 
 ### Fázisok
 

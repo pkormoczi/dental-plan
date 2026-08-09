@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatTeethForPrint, parseTeeth, toggleFog } from './teeth';
+import { formatTeethForPrint, invalidFdiTokens, parseTeeth, toggleFog } from './teeth';
 
 describe('parseTeeth', () => {
   it('parses valid FDI tokens separated by comma+space', () => {
@@ -26,6 +26,43 @@ describe('parseTeeth', () => {
   it('returns invalid for empty input', () => {
     expect(parseTeeth('')).toEqual({ valid: false, teeth: [] });
     expect(parseTeeth(null)).toEqual({ valid: false, teeth: [] });
+  });
+});
+
+describe('invalidFdiTokens', () => {
+  it('egy érvényes FDI-listánál üres tömböt ad', () => {
+    expect(invalidFdiTokens('16, 17, 26')).toEqual([]);
+  });
+
+  it('tisztán betűs szabadszöveget (pl. "jobb felső") NEM jelöl hibásnak', () => {
+    expect(invalidFdiTokens('jobb felső')).toEqual([]);
+  });
+
+  it('egy számnak kinéző, de nem létező FDI kódot hibásnak jelöl', () => {
+    // '99' -- nincs 9. kvadráns, se 9. fog
+    expect(invalidFdiTokens('99')).toEqual(['99']);
+  });
+
+  it('a kvadránson belüli, tartományon kívüli fogat hibásnak jelöl', () => {
+    // '19' -- 1. kvadráns, de a fog max 8 lehet
+    expect(invalidFdiTokens('19')).toEqual(['19']);
+  });
+
+  it('vegyes bemenetnél csak a hibás numerikus tokent adja vissza, az érvényes FDI-t és a szabadszöveget nem', () => {
+    expect(invalidFdiTokens('16, 99, jobb felső')).toEqual(['99']);
+  });
+
+  it('érvényes FDI és szabadszöveg keverékét (numerikus hiba nélkül) NEM jelöl hibásnak', () => {
+    expect(invalidFdiTokens('16, jobb felső')).toEqual([]);
+  });
+
+  it('több hibás numerikus tokent is mind visszaad', () => {
+    expect(invalidFdiTokens('99, 0, 16')).toEqual(['99', '0']);
+  });
+
+  it('üres vagy hiányzó bemenetre üres tömböt ad', () => {
+    expect(invalidFdiTokens('')).toEqual([]);
+    expect(invalidFdiTokens(null)).toEqual([]);
   });
 });
 
