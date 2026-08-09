@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertDialog, Box, Button, Callout, Card, Flex, Heading, Text } from '@radix-ui/themes';
 import ChangelogCard from '../components/ChangelogCard';
+import FeatureOverviewCard from '../components/FeatureOverviewCard';
 import { t } from '../design/tokens';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
@@ -212,6 +213,8 @@ export default function Home() {
           {justCleared ? 'Törölve ✓' : 'Minden adat törlése'}
         </Button>
       </Card>
+
+      <FeatureOverviewCard />
 
       <ChangelogCard />
 
