@@ -5,10 +5,6 @@
 // Tab-sorrendből, ahogy docs/07-felulet-rendszer.md "Billentyűzet" szakasza
 // megköveteli egy nem-elérhető vezérlőtől. Nincs nyitás/csukás-animáció --
 // docs/07: "Ne tegyél animációt oda, ahol nincs visszajelzési funkciója."
-//
-// A darabszám a gomb feliratában (`Érintett fogak (n)`) a maradó fogak
-// (`allapot.fogak`) és a tejfogak (`allapot.tejfogak`) összege -- a kettő
-// diszjunkt halmaz, lásd domain/toothVisual.ts `buildToothVisualStates`.
 
 import { useState } from 'react';
 import { Button, Flex, Select, Text } from '@radix-ui/themes';
@@ -41,15 +37,14 @@ export default function ToothChartPanel({
       <Flex align="center" justify="between" gap="3" wrap="wrap">
         <Button
           type="button"
-          variant="ghost"
+          variant="soft"
           color="gray"
           aria-expanded={open}
           aria-controls="fogterkep-panel"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
-          <span aria-hidden="true">🦷</span>
-          Érintett fogak{hasFogterkep ? ` (${erintettSzam})` : ''}
+          Érintett fogak
         </Button>
         {open && fazisok.length > 1 && (
           <Flex align="center" gap="2">

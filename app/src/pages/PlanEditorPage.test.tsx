@@ -249,8 +249,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     const user = userEvent.setup();
     renderEditor();
 
-    // Csukva a fogtérkép -- billentyűzetes toolbarként -- nem elérhető, a
-    // gomb feliratában nincs darabszám (üres terv).
+    // Csukva a fogtérkép -- billentyűzetes toolbarként -- nem elérhető.
     expect(await screen.findByRole('button', { name: 'Érintett fogak' })).toBeInTheDocument();
     expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
 
@@ -357,21 +356,6 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     await user.click(tooth24);
 
     expect(screen.getByDisplayValue('24')).toBeInTheDocument();
-  });
-
-  it('a csukott gomb felirata mutatja az érintett fogak számát', async () => {
-    const user = userEvent.setup();
-    renderEditor();
-
-    const search = await screen.findByPlaceholderText(/Tétel keresése/);
-    await user.type(search, 'fogeltavolitas');
-    await user.click(await screen.findByText('Fogeltávolítás'));
-    await waitFor(() => expect(search).toHaveValue(''));
-
-    const fogInput = screen.getByPlaceholderText('16, 17, 26');
-    await user.type(fogInput, '16, 17');
-
-    expect(await screen.findByRole('button', { name: 'Érintett fogak (2)' })).toBeInTheDocument();
   });
 });
 

@@ -163,11 +163,7 @@ Minden nézetnek van loading, empty és error állapota.
 - Ne tegyél animációt oda, ahol nincs visszajelzési funkciója.
 - Ne generálj kép- vagy illusztrációs tartalmat.
 - Ne vezess be második UI könyvtárat a Radix mellé.
-- Ne írj kézzel SVG ikont. Ikon a `@radix-ui/react-icons`-ból jön. **Egyetlen
-  nevesített kivétel:** a soronkénti fogválasztó gombja (`Fog` mező mellett,
-  `components/ToothPickerPopover.tsx`) és az „Érintett fogak" panel triggere
-  (`components/ToothChartPanel.tsx`) 🦷 emojit használ — a
-  `@radix-ui/react-icons`-ban nincs fog ikon, a korábbi `GridIcon` (rács)
-  félrevezető volt. Az emoji `aria-hidden`, a gomb akadálymentes neve mindig
-  szöveges (`aria-label` vagy a gomb felirata). Ne terjeszd ki más ikonra —
-  minden más helyen `@radix-ui/react-icons` marad kötelező.
+- Ne írj kézzel SVG ikont. Ikon a `@radix-ui/react-icons`-ból jön. A
+  soronkénti fogválasztó gombja (`Fog` mező mellett,
+  `components/ToothPickerPopover.tsx`) a `Crosshair2Icon`-t használja —
+  nincs kivétel, a `@radix-ui/react-icons` marad kötelező mindenhol.
