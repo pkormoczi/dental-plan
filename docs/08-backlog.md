@@ -27,9 +27,18 @@ szintén 2026-08-09-én készült el — kutatással kiderült, hogy a benne
 leírt sablonszerkesztő rész már korábban, a `119ab74` commit óta kész
 volt, a ténylegesen hátralévő munka a placeholder-őr volt.)
 
+**A MOST lista minden tételének van tervdokumentuma.** A kész tételeknél
+(1–6, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a még nyitott
+tételeknél (7–14) a tétel végén álló **Terv:** sor. Ezek `grill-me`
+munkamenetek döntési összefoglalói — a nyitott tételek tehát **meg vannak
+tervezve, de nincsenek implementálva**: a tervek nem tartalmaznak kódot,
+az implementáció módja a megvalósító feladata. Ahol a tervezés
+felülírta a tétel eredeti méretbecslését vagy hatókörét, azt a **Terv:**
+sor jelzi.
+
 ---
 
-## MOST (kb. 6–7 fejlesztői nap + fél nap közös munka a dokival)
+## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 7 kész tétel után kb. 4–4,5 nap van hátra, a 8. tétel megnőtt becslésével együtt)
 
 Mindegyik kicsi, és egy konkrét, a `06-doktor-harom-nap` munkanapjain
 ténylegesen felmerült fájdalmat szüntet meg (lásd a Függelékben). Egyik
@@ -227,6 +236,11 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   képest — elgépelés-tűrő keresés (Levenshtein-távolság) külön eszköz
   lenne, nem javasolt, mert az adattisztítás (8. tétel) olcsóbban old meg
   ugyanannyi problémát.
+- **Terv:** `docs/backlog-7-kereso-terv.md` (4 döntés). A két rész
+  egymástól független; az egyetlen kapcsolat egy közös kétnyelvű
+  név-egyezés helper, ami a mai `domain/search.ts`-be kerül ki (ma az
+  `ItemPicker.tsx:92` és a `PriceListAdminPage.tsx:103` külön-külön
+  szűrnek, az admin csak `nev.hu`-ra). Méret változatlan.
 
 ### 8. Árlista-nap: kategóriakezelés kódban + adattisztítás a dokival
 
@@ -246,6 +260,13 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   kód nélkül, de a `k01 Besorolatlan` és a francia maradványtételek
   rendbetétele blokkolva marad kategória-CRUD nélkül (lásd `docs/06`). Mivel
   a kód-rész is csak fél nap, a teljes verzió javasolt.
+- **Terv:** `docs/backlog-8-kategoriakezeles-terv.md` — **csak a kódrészre**
+  (a doki adattisztítása emberi munka, nem tervezhető ide). **Méretkorrekció:
+  a kódrész 1.5–2 fejlesztői nap, nem fél nap** — a munkamenet feltárta, hogy
+  a kategóriák létrehozása egy ma rejtett architekturális réteget is érint
+  (a fogtérkép kategóriánkénti színei, `design/treatmentVisuals.ts`), amit az
+  eredeti becslés nem tartalmazott. A tétel másik fele (fél nap közös munka
+  a dokival) változatlan.
 
 ### 9. Előleg-sor a nyomtatványon
 
@@ -258,6 +279,12 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
 - **20%-os verzió:** ez már maga a 20%-os verzió — egy teljes fizetési
   ütemterv (részletekre bontás, dátumokkal) sokkal nagyobb munka lenne, és
   nem is merült fel igényként.
+- **Terv:** `docs/backlog-9-eloleg-sor-terv.md` (9 döntés). Egyetlen új
+  opcionális mező (`Plan.elolegSzazalek: number | null`, `null` = kikapcsolva),
+  `schemaVersion` marad 1; az összeg a `Fizetendő`-ből számol, nem a
+  `Kezelések összesen`-ből; az 1. oldal összegzése két új sort kap (Előleg /
+  Fennmaradó), a 2. oldal sablonszövegébe viszont csak a százalék kerül,
+  forintösszeg nem. Méret változatlan.
 
 ### 10. Tétel-leírás a csomagtételekhez
 
@@ -270,6 +297,14 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   listája" struktúrához képest, amit direkt nem javasolt (lásd KÉSŐBB) — a
   szabad szöveges leírás ugyanazt a problémát olcsóbban oldja meg,
   séma-törés nélkül.
+- **Terv:** `docs/backlog-10-tetel-leiras-terv.md` (17 döntés — a MOST lista
+  legrészletesebben tervezett nyitott tétele). Kétnyelvű `Tetel.leiras` az
+  árlistán + sor-szintű pillanatkép a `nevSnapshot` mintájára; hiányzó német
+  leírás némán elmarad, **nem** esik vissza magyarra (ellentétben a névvel).
+  A D13-határ védelme a UI címkézésén múlik („Leírás (mi van benne?)"), ezért
+  az nem szabadon átfogalmazható. Két további mező is bekerült a hatókörbe:
+  `Plan.leirasokMutatasa` (nyomtatáskori be/ki) és egy szűken értelmezett
+  `Tetel.csomag: boolean`. `schemaVersion` marad 1, méret változatlan.
 
 ### 11. Verziónkénti végösszeg a Korábbi tervek listában
 
@@ -282,6 +317,12 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
 - **20%-os verzió:** ez már maga a 20%-os verzió egy teljes
   verzió-diffhez (mi változott sorszinten) képest, amit a KÉSŐBB listára
   tettünk.
+- **Terv:** `docs/backlog-11-verzio-vegosszeg-terv.md` (5 döntés). A
+  megjelenő szám a mentett `osszesitok.fizetendo` — nincs újraszámolás,
+  ellenőrzés sem (a sérthetetlen szabály szerint a fájl az igazság, de a
+  lista nem az a hely, ahol egy eltérésre figyelmeztetni kellene); a
+  betöltés a meglévő kezdeti `useEffect` `Promise.allSettled`-jébe épül be,
+  olvashatatlan verziónál „—" áll az összeg helyén. Méret változatlan.
 
 ### 12. Döntés: kettős összegsor (Kezelések összesen / Fizetendő) marad-e
 
@@ -289,11 +330,21 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
 - **Kereteket sért?** A jelenlegi állapot feszíti a D9 szándékát (kedvezmény
   ne látsszon a nyomtatványon) — kedvezmény nélkül két azonos szám áll
   egymás alatt, ami inkább zavaró, mint informatív.
-- **Valódi haszon:** ez nem funkció, hanem egy döntés, amit a dokinak kell
-  meghoznia: eladási eszköznek szánja-e a két sort (mutatja, hogy van
-  listaár, amiből dolgozik), vagy inkább zavarná a duplikáció.
+- **Valódi haszon:** ez eredetileg nem funkció volt, hanem egy döntés, amit
+  a dokinak kellett meghoznia: eladási eszköznek szánja-e a két sort
+  (mutatja, hogy van listaár, amiből dolgozik), vagy inkább zavarná a
+  duplikáció. A döntés a tervezéskor megszületett, lásd alább.
 - **20%-os verzió:** nincs — ez egy bináris döntés, a kód mindkét irányban
   egyformán olcsó.
+- **Terv:** `docs/backlog-12-osszegsor-terv.md` (5 döntés). **A döntés
+  megszületett:** a doki a duplikációt zavarónak ítélte, nem eladási
+  eszköznek — a nyomtatvány ezután feltételesen mutat egy vagy két sort
+  (két sor csak tényleges eltérésnél, az elválasztóval együtt), a szerkesztő
+  már bevált `discount > 0` mintáját általánosítva mindkét eltérés-irányra
+  (a felár ugyanúgy nyit két sort, mint a kedvezmény). Egysoros állapotban
+  nincs új felirat és nincs séma-/label-bővítés. A `docs/04-nyomtatvany-spec.md`
+  is frissül. Marad a kódolatlan rész — ez a tétel innentől nem döntés,
+  hanem fél óra munka.
 
 ### 13. Garancia szakasz a nyomtatványon
 
@@ -303,6 +354,15 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
 - **Valódi haszon:** pácienskommunikáció — ez volt a Függelék C) napi „mit
   kérdezne, amire ma nem tud jól válaszolni" egyik konkrét pontja.
 - **20%-os verzió:** ez már maga a 20%-os verzió.
+- **Terv:** `docs/backlog-13-garancia-terv.md` (9 döntés). Statikus,
+  terv-független szöveg egy új `garancia` sablon-alapnéven — a betöltő/mentő
+  logika sehol nincs két sablonra hardkódolva, ezért ez tényleg csak
+  adatbővítés (`DEFAULT_TEMPLATES` két új sorral); önálló oldalként jelenik
+  meg a PDF-ben, és „Csak ajánlat" módban is látszik. Nincs
+  `Plan`-mező és nincs verzió-pinnelés (a fizetési feltételek, nem a
+  nyilatkozat mintája). A magyar szöveg a dokitól/jogásztól kell, a német
+  egyelőre placeholder — vagyis a 6. tétel placeholder-őrébe fut bele.
+  Méret változatlan.
 
 ### 14. Demó tervek hibás `tetelId`-jainak javítása
 
@@ -311,8 +371,20 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   `nevSnapshot` miatt a UI-n nem látszik), de mivel a `tetelId`-hivatkozás
   integritása (D6/D7 lényege) a projekt egyik alapköve, a demónak magának
   is hitelesnek kell lennie.
-- **Valódi haszon:** nem pácienst érintő, hanem fejlesztői minőségi tétel.
+- **Valódi haszon:** nem pácienst érintő, hanem fejlesztői minőségi tétel —
+  **ezt a tervezés részben cáfolta**, lásd alább.
 - **20%-os verzió:** nincs kisebb.
+- **Terv:** `docs/backlog-14-demo-tetelid-terv.md`. **Hatókör-korrekció:
+  ez nem csak belső demóadat-hiba.** A 10 demó sorból 8-ban a `tetelId` egy
+  létező, de rossz árlistai tételre mutat (6 különböző hibás id), és mivel
+  a fogtérkép színezése (`domain/toothVisual.ts`) a `tetelId`-t a JELENLEGI
+  árlistában oldja fel, a `hianyzoTetel` jelző nem ugrik be — a publikus
+  GitHub Pages demó **ma is csendben rossz kategória-színt mutat 3 fogon**.
+  A gyökérok: a seed a (`aab43f8`-ban azóta törölt) `ui/` prototípusok
+  `SAMPLE` konstansai ellen lett ellenőrizve, nem a `data/arlista.seed.json`
+  ellen. A javítás minden párnál egyértelmű (a `nevSnapshot` ÉS a
+  `listaEgysegar` kétszeresen igazolja), plusz egy új `plans.test.ts`
+  integritás-teszt köti meg. Méret változatlan.
 
 ### 15. Nyelváltás megőrzi a kézzel szerkesztett tételneveket — KÉSZ (2026-08-09)
 
