@@ -77,7 +77,6 @@ export const t = {
   radiusLg: 6,
   control: 32,
 
-  // Tipografia
   font: '"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif',
   mono: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace',
   lineHeight: 1.65,
