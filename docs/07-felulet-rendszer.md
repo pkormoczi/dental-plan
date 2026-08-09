@@ -60,8 +60,10 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   inputot, selectet, dialógust, táblázatot. Ha hiányzik valami, kérdezz.
 - Theme beállítás (`app/src/App.tsx`): `accentColor="brown" grayColor="slate"
   radius="small" scaling="95%"`.
-- Kivételek, amik kézzel írtak maradnak: a fogtérkép (funkcionális SVG
-  adatvizualizáció) és a nyomtatvány (`pdf/TervDocument.tsx`, A4 layout).
+- Kivételek, amik kézzel írtak maradnak: a fogtérkép (funkcionális,
+  kattintható/billentyűzetes SVG adatvizualizáció ÉS beviteli eszköz —
+  lásd `components/DentalChart.tsx`, `design/toothChartSvg.ts`) és a
+  nyomtatvány (`pdf/TervDocument.tsx`, A4 layout).
 
 ### Szín, forma, sűrűség
 
@@ -71,6 +73,12 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   (melyik fogat milyen kezelés érinti), nem díszítés. Ez a paletta EGYETLEN
   helyen, ebben a fájlban él, a szerkesztő és a nyomtatvány is innen olvas
   — ne vezess be hozzá második definíciót.
+  Ugyanígy nevesített kivétel a fogtérkép kattintható módjának
+  kurzor-/kijelölés-gyűrűje (`.is-active`/`.is-picked`,
+  `design/toothChartSvg.ts`): `ink` (semleges, billentyűzetes kurzor) és
+  `accent` (kijelölés a soronkénti választóban) `stroke`-ként, SOSEM
+  szövegszínként — ez a `accent` egyetlen engedélyezett felhasználási
+  módja a díszítővonalon kívül.
 - Státuszszín (piros, sárga, zöld) csak valódi állapotra: hiba,
   figyelmeztetés, sikeres mentés. Soha díszítésre.
 - EGY radius rendszer mindenhol.
@@ -106,6 +114,10 @@ Minden nézetnek van loading, empty és error állapota.
   a fókuszt. Ez a ciklus nem törhet el.
 - Minden interaktív elemen látható fókusz gyűrű. Ne tüntesd el outline: none-nal.
 - Escape zár dialógust és keresőt.
+- A fogtérkép (kattintható módban) EGY Tab-megállóként érhető el, nem
+  32-ként — a fogak közti mozgás nyilakkal (roving kurzor,
+  `aria-activedescendant`), `Enter`/`Szóköz` aktivál. 32 külön Tab-megálló
+  szétverné a Tab-sorrendet egy már amúgy is sűrű oldalon.
 
 ### Akadálymentesség (nem opcionális)
 

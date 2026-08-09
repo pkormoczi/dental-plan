@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatTeethForPrint, parseTeeth } from './teeth';
+import { formatTeethForPrint, parseTeeth, toggleFog } from './teeth';
 
 describe('parseTeeth', () => {
   it('parses valid FDI tokens separated by comma+space', () => {
@@ -26,6 +26,32 @@ describe('parseTeeth', () => {
   it('returns invalid for empty input', () => {
     expect(parseTeeth('')).toEqual({ valid: false, teeth: [] });
     expect(parseTeeth(null)).toEqual({ valid: false, teeth: [] });
+  });
+});
+
+describe('toggleFog', () => {
+  it('üres mezőre kapcsolva az egyetlen tokent adja', () => {
+    expect(toggleFog('', '16')).toBe('16');
+  });
+
+  it('bekapcsoláskor a meglévő sorrend végére fűz', () => {
+    expect(toggleFog('16, 17', '26')).toBe('16, 17, 26');
+  });
+
+  it('kikapcsoláskor eltávolítja a tokent, a többi sorrendje megmarad', () => {
+    expect(toggleFog('16, 17, 26', '17')).toBe('16, 26');
+  });
+
+  it('kikapcsoláskor MINDEN előfordulást eltávolít (nincs dedup a mezőn)', () => {
+    expect(toggleFog('16, 17, 16', '16')).toBe('17');
+  });
+
+  it('a kimenet elválasztója mindig ", " a bemeneti formátumtól függetlenül', () => {
+    expect(toggleFog('16;17', '26')).toBe('16, 17, 26');
+  });
+
+  it('tejfog tokent (51-85) érintetlenül hagy, ha másik fogat kapcsolunk', () => {
+    expect(toggleFog('55', '16')).toBe('55, 16');
   });
 });
 

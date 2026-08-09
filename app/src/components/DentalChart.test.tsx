@@ -54,4 +54,89 @@ describe('DentalChart', () => {
 
     expect(onToothClick).toHaveBeenCalledWith('11');
   });
+
+  describe('billentyűzet (docs/07-felulet-rendszer.md ":104" -- egérhasználat nélkül is felvihető)', () => {
+    it('onToothClick esetén role="toolbar", EGY tabIndex, aria-activedescendant az első fogon (18) indul', () => {
+      render(<DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} />);
+      const root = screen.getByRole('toolbar');
+      expect(root).toHaveAttribute('tabindex', '0');
+      expect(root).toHaveAttribute('aria-activedescendant', 'tooth-18');
+    });
+
+    it('ArrowRight a felső állcsonton belül lép, ArrowLeft a szélen NEM ugrik körbe (18/28 nem szomszédos fog)', async () => {
+      const user = userEvent.setup();
+      render(<DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} />);
+      const root = screen.getByRole('toolbar');
+      root.focus();
+
+      await user.keyboard('{ArrowRight}');
+      expect(root).toHaveAttribute('aria-activedescendant', 'tooth-17');
+
+      await user.keyboard('{ArrowLeft}{ArrowLeft}');
+      expect(root).toHaveAttribute('aria-activedescendant', 'tooth-18'); // a szélen marad, nem 28-ra ugrik
+    });
+
+    it('End a felső állcsont utolsó fogára (28) viszi, ArrowDown ugyanabba az oszlopba az alsó állcsonton (anatómiai szemközti fog: 48)', async () => {
+      const user = userEvent.setup();
+      render(<DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} />);
+      const root = screen.getByRole('toolbar');
+      root.focus();
+
+      await user.keyboard('{End}');
+      expect(root).toHaveAttribute('aria-activedescendant', 'tooth-28');
+
+      await user.keyboard('{Home}');
+      expect(root).toHaveAttribute('aria-activedescendant', 'tooth-18');
+
+      await user.keyboard('{ArrowDown}');
+      expect(root).toHaveAttribute('aria-activedescendant', 'tooth-48');
+    });
+
+    it('Enter és szóköz is a jelenleg aktív fogra hívja az onToothClick-et, kattintás nélkül', async () => {
+      const user = userEvent.setup();
+      const onToothClick = vi.fn();
+      render(<DentalChart allapot={makeAllapot({})} onToothClick={onToothClick} />);
+      const root = screen.getByRole('toolbar');
+      root.focus();
+
+      await user.keyboard('{ArrowRight}{Enter}');
+      expect(onToothClick).toHaveBeenLastCalledWith('17');
+
+      await user.keyboard(' ');
+      expect(onToothClick).toHaveBeenLastCalledWith('17');
+    });
+
+    it('kattintás egy fogra a billentyűzetes kurzort is odaviszi (aria-activedescendant frissül)', async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} />,
+      );
+      const root = screen.getByRole('toolbar');
+      const tooth = container.querySelector('[data-tooth="36"]') as Element;
+
+      await user.click(tooth);
+
+      expect(root).toHaveAttribute('aria-activedescendant', 'tooth-36');
+    });
+  });
+
+  describe('selectedTeeth (soron belüli választó -- role="listbox")', () => {
+    it('selectedTeeth megadásakor role="listbox", aria-multiselectable="true", a kijelölt fog aria-selected="true"', () => {
+      render(
+        <DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} selectedTeeth={['16']} />,
+      );
+      const root = screen.getByRole('listbox');
+      expect(root).toHaveAttribute('aria-multiselectable', 'true');
+      const tooth = root.querySelector('[data-tooth="16"]') as Element;
+      expect(tooth).toHaveAttribute('aria-selected', 'true');
+      expect(tooth).toHaveAttribute('role', 'option');
+    });
+
+    it('a billentyűzetes kurzor a kijelölt fogak közül az elsőn indul, ha van kijelölés', () => {
+      render(
+        <DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} selectedTeeth={['24']} />,
+      );
+      expect(screen.getByRole('listbox')).toHaveAttribute('aria-activedescendant', 'tooth-24');
+    });
+  });
 });

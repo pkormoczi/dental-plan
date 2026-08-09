@@ -115,6 +115,33 @@ van emelve — jelzi, hogy itt dönteni kell.
 Ha a `Fog` mező N érvényes FDI számot tartalmaz és `mennyiseg !== N`,
 halvány jelzés a sor alatt. Ennyi — nincs automatikus javítás (D14).
 
+### Fogtérkép (kattintható)
+
+A fogtérkép a szerkesztő alján **mindig látszik**, üresen is — nemcsak
+áttekintés, beviteli eszköz is. Kezelés-kategóriánként színezve (lásd
+`app/src/design/treatmentVisuals.ts`).
+
+- **Kattintás egy már érintett fogra** a hozzá tartozó sorra ugrik
+  (fókusz + görgetés a „Fog" mezőre). Ha több sor is érinti (pl.
+  gyökérkezelés és korona ugyanazon a fogon), az ismételt kattintás a
+  következő érintett sorra lép, körbe.
+- **Kattintás egy kezeletlen fogra** új, tétel nélküli sort vesz fel a
+  kiválasztott fázisban, a fogszámmal már kitöltve, és a sor
+  „Beavatkozás" cellájában megjelenő keresőre fókuszál — ugyanazzal a
+  gépel → nyíl → Enter ciklussal, mint a fázis alatti keresőnél. A
+  választás a sort **a helyén tölti ki**, nem fűz újat.
+- **Fázisválasztó** csak akkor jelenik meg a fogtérkép mellett, ha egynél
+  több fázis van — eldönti, melyik fázisba kerüljön az új sor.
+- **Soronkénti fogválasztó**: a „Fog" mező melletti ikongomb egy felugró
+  fogtérképet nyit, ahol kattintással jelölhetők ki a sor fogai (a mező
+  szabadszöveges marad — ha nem FDI-formátumú tartalmat talál, pl. „jobb
+  felső", megerősítést kér felülírás előtt, nem ír felül némán).
+- **Billentyűzet**: a fogtérkép egyetlen Tab-megállóként érhető el,
+  nyilakkal lépked a fogak közt (`←`/`→` az állcsonton belül, `↑`/`↓`
+  állcsontot vált ugyanabban a pozícióban), `Enter`/`Szóköz` aktivál.
+- A darabszám (`Db`) továbbra is **kézi** — a fogtérkép nem állítja be
+  automatikusan (D14 nem nyílik meg).
+
 ### Fázisok
 
 - Tetszőleges számú fázis, átnevezhető, sorrendezhető, törölhető.
@@ -149,6 +176,13 @@ Meglévő terv szerkesztése **soha nem írja felül** a korábbi verziómappát
 nem tartozik német tétel név (lásd D21), a véglegesítés a hiányzó neveket
 felsorolva megerősítést kér — a páciens ezt a dokumentumot írja alá, ezért
 ez a figyelmeztetés soha nem néma.
+
+**Kitöltetlen sor (kemény blokk):** ha a fogtérképről kattintással felvett
+sor tétel nélkül maradt, a véglegesítés **nem** kérhető meg és nem
+folytatható — ez nem figyelmeztetés, hanem blokk, hogy névtelen, 0 Ft-os
+sor sose kerülhessen az aláírandó dokumentumra. A hibaüzenet megnevezi a
+fázist és a fogszámot; „Vissza a szerkesztőbe" gomb visz a hiányzó sorhoz.
+Az Előnézet maga nem blokkolódik, csak a véglegesítés.
 
 ---
 

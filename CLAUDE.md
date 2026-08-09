@@ -126,7 +126,20 @@ A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne ír
   az `assets/dental-chart-fdi-32.svg` nyers markupjából épít egy már
   színezett SVG-stringet; ugyanez a markup megy DOM-ba a szerkesztőben és
   canvason át PNG-be a nyomtatványhoz (`pdf/toothChartImage.ts`
-  `renderToothChartPng`) — egy vizuális forrás, ne rajzold újra máshol
+  `renderToothChartPng`) — egy vizuális forrás, ne rajzold újra máshol.
+  Az `opts.interactive` (+ `szerep`/`focusedTooth`/`selectedTeeth`) az
+  EGYETLEN kapcsoló, ami a fogankénti `role`/`aria-label`/kurzor- és
+  kijelölés-gyűrűt bekapcsolja — alapból kikapcsolva, hogy a PDF-útvonal
+  bájtra változatlan maradjon; sose add át `interactive: true`-t a
+  `pdf/toothChartImage.ts` felé menő hívásban
+- `toggleFog(fogak, fdi)` (`app/src/domain/teeth.ts`) — egy FDI kódot
+  be-/kikapcsol a szabadszöveges `fogak` felsorolásban, sorrendtartóan;
+  ez az EGYETLEN írási útja a `ToothPickerPopover`-nek (soronkénti
+  fogválasztó), ne kezeld a tokeneket a hívóban
+- `kitoltetlenSorok(plan)` (`app/src/domain/kitoltetlen.ts`) — a tétel
+  nélküli (fogtérkép-kattintással létrehozott, de be nem azonosított)
+  sorokat sorolja fel; a `PreviewPage` véglegesítés-őre KEMÉNY blokként
+  hívja, ne írj hozzá második ellenőrzést máshol
 
 ## Domain szókincs
 

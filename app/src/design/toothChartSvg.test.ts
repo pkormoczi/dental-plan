@@ -49,4 +49,57 @@ describe('buildToothChartSvg', () => {
     const texts = svg.match(/<text /g) ?? [];
     expect(texts).toHaveLength(32);
   });
+
+  describe('interactive (PDF-regressziós védőháló + kattintható mód)', () => {
+    it('interactive nélkül (alap, a PDF-útvonal ezt kapja) NINCS role/aria-label a fog-csoportokon, a gyökér marad aria-hidden a magyar címmel', () => {
+      const svg = buildToothChartSvg(makeAllapot({ '11': 'KORONA' }));
+      expect(svg).not.toContain('role="button"');
+      expect(svg).not.toContain('role="option"');
+      expect(svg).not.toContain('aria-label="11');
+      expect(svg).not.toContain('aria-selected');
+      expect(svg).not.toContain('is-active');
+      expect(svg).not.toContain('is-picked');
+      const rootTag = svg.match(/<svg[^>]*>/)![0];
+      expect(rootTag).toContain('aria-hidden="true"');
+      expect(svg).toContain('<title id="title">Fogászati kezelési terv');
+    });
+
+    it('interactive: true, szerep "button" -- mind a 32 fog role="button"-t kap, a gyökér nem aria-hidden, cím üres', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), { interactive: true });
+      const buttons = svg.match(/role="button"/g) ?? [];
+      expect(buttons).toHaveLength(32);
+      const rootTag = svg.match(/<svg[^>]*>/)![0];
+      expect(rootTag).not.toContain('aria-hidden');
+      expect(svg).toContain('<title id="title"></title>');
+    });
+
+    it('kezelt fog beszédes aria-label-t kap a kategórianévvel, kezeletlen fog "nincs kezelés"-t', () => {
+      const svg = buildToothChartSvg(makeAllapot({ '11': 'KORONA' }), { interactive: true });
+      expect(svg).toContain('aria-label="11. fog – Korona és híd"');
+      expect(svg).toContain('aria-label="12. fog – nincs kezelés"');
+    });
+
+    it('focusedTooth az adott fogra (és csakis arra) is-active classt tesz', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), { interactive: true, focusedTooth: '24' });
+      expect(svg).toContain('<g id="tooth-24" data-tooth="24" class="tooth is-active"');
+      expect(svg).not.toContain('<g id="tooth-25" data-tooth="25" class="tooth is-active"');
+    });
+
+    it('szerep "option": selectedTeeth aria-selected="true"-t és is-picked classt ad, a többi aria-selected="false"', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), {
+        interactive: true,
+        szerep: 'option',
+        selectedTeeth: ['16'],
+      });
+      expect(svg).toContain('<g id="tooth-16" data-tooth="16" class="tooth is-picked" role="option" aria-label="16. fog – nincs kezelés" aria-selected="true"');
+      expect(svg).toContain('aria-selected="false"');
+      const trueCount = (svg.match(/aria-selected="true"/g) ?? []).length;
+      expect(trueCount).toBe(1);
+    });
+
+    it('szerep "button" (alap) esetén nincs aria-selected attribútum', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), { interactive: true, selectedTeeth: ['16'] });
+      expect(svg).not.toContain('aria-selected');
+    });
+  });
 });

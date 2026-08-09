@@ -17,6 +17,26 @@ export function parseTeeth(input: string | null | undefined): ParsedTeeth {
 }
 
 /**
+ * Be/ki kapcsol egy FDI kódot a `fogak` felsorolásban -- a fogtérkép
+ * soronkénti választójának (ToothPickerPopover) az egyetlen írási útja,
+ * hogy ne legyen tokenkezelés a hívóban. Csak érvényes (`parseTeeth(...).valid`)
+ * mezőn hívható, a hívó felelőssége ezt ellenőrizni -- szabadszöveges mezőt
+ * (pl. "jobb felső") ez a függvény nem tud biztonságosan szerkeszteni.
+ *
+ * Bekapcsoláskor a végére fűz, kikapcsoláskor MINDEN előfordulást töröl (a
+ * `parseTeeth` nem dedupol -- docs/08-backlog.md "parseTeeth nem dedupol"),
+ * a megmaradó tokenek sorrendjét megtartja. A kimeneti elválasztó mindig
+ * ", " -- ez a `placeholder`/seed adatban is használt alak (lásd
+ * PlanEditorPage.tsx "16, 17, 26" placeholder).
+ */
+export function toggleFog(fogak: string, fdi: string): string {
+  const tokens = (fogak || '').split(/[\s,;]+/).filter(Boolean);
+  const van = tokens.includes(fdi);
+  const next = van ? tokens.filter((x) => x !== fdi) : [...tokens, fdi];
+  return next.join(', ');
+}
+
+/**
  * Nyomtatáshoz: vessző/pontosvessző után szóközt szúr, ha még nincs ott.
  * A react-pdf szövegtördelője az Unicode sortörés-szabályok szerint két
  * szám közötti vesszőnél nem tör sort (mintha egy nagy szám lenne, mint

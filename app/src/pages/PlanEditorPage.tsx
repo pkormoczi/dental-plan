@@ -14,6 +14,7 @@ import {
   Flex,
   Heading,
   IconButton,
+  Select,
   Separator,
   Table,
   Text,
@@ -22,16 +23,51 @@ import {
 import { Cross1Icon } from '@radix-ui/react-icons';
 import DentalChart from '../components/DentalChart';
 import DentalChartLegend from '../components/DentalChartLegend';
+import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
+import ToothPickerPopover from '../components/ToothPickerPopover';
 import { t } from '../design/tokens';
-import { formatMoney, formatPrice } from '../domain/money';
+import { basePrice, formatMoney } from '../domain/money';
 import { resolveNev } from '../domain/nev';
-import { norm } from '../domain/search';
 import { parseTeeth } from '../domain/teeth';
-import { buildToothVisualStates } from '../domain/toothVisual';
+import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
 import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
 import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
+import ItemPicker from './planEditor/ItemPicker';
+
+/** `matchMedia` jsdom alatt nincs implementálva (vitest) -- óvatos lekérdezés. */
+function csokkentettMozgas(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
+}
+
+/**
+ * Egy árlista-tétel felvételéhez/kitöltéséhez tartozó soradatok -- közös az
+ * új sor felvitelénél (`addLine`) és egy a fogtérképről létrehozott, tétel
+ * nélküli sor utólagos kitöltésénél (`LineRow` beágyazott `ItemPicker`-je),
+ * hogy az árazási logika (SAVOS -> min) egy helyen éljen
+ * (docs/08-backlog.md "basePrice() újraírva" tétel zárása).
+ */
+function sorMezokTetelbol(
+  item: Tetel,
+  currency: Penznem,
+  nyelv: Nyelv,
+): Pick<Sor, 'tetelId' | 'nevSnapshot' | 'savos' | 'listaEgysegar' | 'tenylegesEgysegar'> | null {
+  const ar = item.ar[currency];
+  if (!ar) return null; // a hívó (available/ItemPicker) már kiszűrte, de a típusnak ez kell
+  const base = basePrice(ar);
+  return {
+    tetelId: item.id,
+    nevSnapshot: resolveNev(item.nev, nyelv).szoveg,
+    savos: ar.tipus === 'SAVOS',
+    listaEgysegar: base,
+    tenylegesEgysegar: base,
+  };
+}
 
 export default function PlanEditorPage() {
   const { plan, setPlan, priceList, loadedOsszesitokDiff } = useAppState();
@@ -44,6 +80,34 @@ export default function PlanEditorPage() {
   // állapotát: a gépelt szöveget) tartaná meg egy MÁSIK fázison. A token
   // növelése törléskor mindent remountol, a keresőmező sosem "vándorol" át.
   const [fazisResetToken, setFazisResetToken] = useState(0);
+  // Melyik fázisba kerüljön az új sor, ha a doki kezeletlen fogra kattint a
+  // fogtérképen -- csak akkor látszik a választó, ha >1 fázis van (lásd
+  // lent). Renderléskor mindig `Math.min`-nel szorítva a fázisok
+  // számához, hogy egy törölt fázis ne hagyjon lógó indexet.
+  const [celFazisIndex, setCelFazisIndex] = useState(0);
+  const celFazisIndexClamped = Math.min(celFazisIndex, plan.fazisok.length - 1);
+  // A fogtérkép-kattintás után hova kell fókuszálni/görgetni -- egy
+  // useEffect dolgozza fel renderelés UTÁN (lásd lent), mert egy most
+  // felvett sor DOM-eleme csak a következő renderben létezik.
+  const [fokuszCel, setFokuszCel] = useState<{
+    pi: number;
+    li: number;
+    mit: 'fogak' | 'kereso';
+  } | null>(null);
+  // Ismételt kattintás ugyanarra a (már kezelt) fogra a következő érintett
+  // sorra lép, körbeérve -- ref, mert a körbejárás nem igényel újrarenderelést
+  // önmagában, csak a fókuszváltás (lásd fokuszCel).
+  const ciklusRef = useRef<{ fdi: string; index: number } | null>(null);
+
+  useEffect(() => {
+    if (!fokuszCel) return;
+    const id =
+      fokuszCel.mit === 'fogak' ? `fog-${fokuszCel.pi}-${fokuszCel.li}` : `kereso-${fokuszCel.pi}-${fokuszCel.li}`;
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ block: 'nearest', behavior: csokkentettMozgas() ? 'auto' : 'smooth' });
+    (el as HTMLInputElement | null)?.focus();
+    setFokuszCel(null);
+  }, [fokuszCel]);
 
   const catName = (id: string): string => {
     const kat = priceList.kategoriak.find((k) => k.id === id);
@@ -73,19 +137,10 @@ export default function PlanEditorPage() {
   }
 
   function addLine(phaseIdx: number, item: Tetel) {
-    const ar = item.ar[currency];
-    if (!ar) return; // available már kiszűrte, de a típusnak ez kell
-    const base = ar.tipus === 'SAVOS' ? ar.min : ar.ertek;
+    const mezok = sorMezokTetelbol(item, currency, nyelv);
+    if (!mezok) return; // available már kiszűrte, de a típusnak ez kell
     updatePlan((draft) => {
-      draft.fazisok[phaseIdx].sorok.push({
-        tetelId: item.id,
-        nevSnapshot: resolveNev(item.nev, nyelv).szoveg,
-        savos: ar.tipus === 'SAVOS',
-        fogak: '',
-        mennyiseg: 1,
-        listaEgysegar: base,
-        tenylegesEgysegar: base,
-      });
+      draft.fazisok[phaseIdx].sorok.push({ ...mezok, fogak: '', mennyiseg: 1 });
     });
   }
 
@@ -97,10 +152,45 @@ export default function PlanEditorPage() {
 
   const grand = plan.fazisok.reduce((s, p) => s + fazisOsszeg(p), 0);
   const listTotal = plan.fazisok.reduce((s, p) => s + fazisListaOsszeg(p), 0);
-  // Csak olvasható áttekintés a terv szintjén -- a fogankénti szerkesztés
-  // változatlanul a soronkénti "Fog" mezőben történik (nincs onToothClick).
   const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
   const hasFogterkep = fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0;
+
+  /**
+   * A fogtérkép beviteli logikája: ha a fog már érintett, ugrás a sorára
+   * (ismételt kattintásra a következő érintettre, körbe); ha nem, tétel
+   * nélküli új sor a kiválasztott fázisban, a fog már beírva, fókusz a
+   * soron belüli keresőn.
+   */
+  function onToothClick(fdi: string) {
+    const cimek = fogterkep.fogak.get(fdi)?.kezelesek ?? [];
+    if (cimek.length === 0) {
+      const pi = celFazisIndexClamped;
+      const ujIndex = plan.fazisok[pi].sorok.length;
+      updatePlan((draft) => {
+        draft.fazisok[pi].sorok.push({
+          tetelId: '',
+          nevSnapshot: '',
+          savos: false,
+          fogak: fdi,
+          mennyiseg: 1,
+          listaEgysegar: 0,
+          tenylegesEgysegar: 0,
+        });
+      });
+      ciklusRef.current = null;
+      setFokuszCel({ pi, li: ujIndex, mit: 'kereso' });
+      return;
+    }
+    const elozo = ciklusRef.current;
+    const idx = elozo && elozo.fdi === fdi ? (elozo.index + 1) % cimek.length : 0;
+    ciklusRef.current = { fdi, index: idx };
+    const cel = cimek[idx];
+    setFokuszCel({
+      pi: cel.fazisIndex,
+      li: cel.sorIndex,
+      mit: cel.sor.tetelId ? 'fogak' : 'kereso',
+    });
+  }
 
   return (
     <Box style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -126,6 +216,7 @@ export default function PlanEditorPage() {
         <Box key={`${fazisResetToken}-${pi}`} mb="6">
           {pi > 0 && <Separator size="4" mb="6" />}
           <PhaseSection
+            pi={pi}
             phase={p}
             currency={currency}
             nyelv={nyelv}
@@ -133,6 +224,7 @@ export default function PlanEditorPage() {
             catName={catName}
             frequent={frequent}
             fallbackTetelIds={fallbackTetelIds}
+            fogterkep={fogterkep}
             canDelete={plan.fazisok.length > 1}
             total={fazisOsszeg(p)}
             onAdd={(item) => addLine(pi, item)}
@@ -182,20 +274,48 @@ export default function PlanEditorPage() {
       <Box mt="6">
         <Separator size="4" />
         <Flex gap="6" mt="4" wrap="wrap" align="start" justify="between">
-          {hasFogterkep && (
-            <Box style={{ flex: '1 1 260px', maxWidth: 320 }}>
-              <Text as="div" size="1" color="gray" mb="2">
+          {/* Mindig látszik, üresen is -- beviteli eszköz, nem csak áttekintés
+              (korábban `hasFogterkep` mögött rejtve volt). */}
+          <Box style={{ flex: '1 1 260px', maxWidth: 480 }}>
+            <Flex justify="between" align="center" mb="2" gap="3" wrap="wrap">
+              <Text as="div" size="1" color="gray">
                 Érintett fogak
               </Text>
-              <DentalChart allapot={fogterkep} />
-              <DentalChartLegend kategoriak={fogterkep.jelmagyarazat} />
-              {fogterkep.tejfogak.length > 0 && (
-                <Text as="div" size="1" color="gray" mt="2">
-                  Tejfogak: {fogterkep.tejfogak.join(', ')}
-                </Text>
+              {plan.fazisok.length > 1 && (
+                <Flex align="center" gap="2">
+                  <Text as="div" size="1" color="gray">
+                    Új sor ide:
+                  </Text>
+                  <Select.Root
+                    value={String(celFazisIndexClamped)}
+                    onValueChange={(v) => setCelFazisIndex(Number(v))}
+                  >
+                    <Select.Trigger aria-label="Új sor ide melyik fázisba kerüljön" />
+                    <Select.Content>
+                      {plan.fazisok.map((f, i) => (
+                        <Select.Item key={i} value={String(i)}>
+                          {f.megnevezes}
+                        </Select.Item>
+                      ))}
+                    </Select.Content>
+                  </Select.Root>
+                </Flex>
               )}
-            </Box>
-          )}
+            </Flex>
+            <DentalChart allapot={fogterkep} onToothClick={onToothClick} />
+            <DentalChartLegend kategoriak={fogterkep.jelmagyarazat} />
+            {fogterkep.tejfogak.length > 0 && (
+              <Text as="div" size="1" color="gray" mt="2">
+                Tejfogak: {fogterkep.tejfogak.join(', ')}
+              </Text>
+            )}
+            {!hasFogterkep && (
+              <Text as="div" size="1" color="gray" mt="2">
+                Kattints egy fogra, és felveszünk rá egy sort — vagy írd be a fogszámokat a sor
+                „Fog” mezőjébe.
+              </Text>
+            )}
+          </Box>
           <Box style={{ flex: '0 1 320px' }}>
             <Summary grand={grand} listTotal={listTotal} currency={currency} />
           </Box>
@@ -230,6 +350,7 @@ function Header({
 }
 
 function PhaseSection({
+  pi,
   phase,
   currency,
   nyelv,
@@ -237,6 +358,7 @@ function PhaseSection({
   catName,
   frequent,
   fallbackTetelIds,
+  fogterkep,
   total,
   canDelete,
   onAdd,
@@ -246,6 +368,7 @@ function PhaseSection({
   onNote,
   onDelete,
 }: {
+  pi: number;
   phase: Fazis;
   currency: Penznem;
   nyelv: Nyelv;
@@ -253,6 +376,7 @@ function PhaseSection({
   catName: (id: string) => string;
   frequent: Tetel[];
   fallbackTetelIds: Set<string>;
+  fogterkep: FogterkepAllapot;
   total: number;
   canDelete: boolean;
   onAdd: (item: Tetel) => void;
@@ -282,7 +406,7 @@ function PhaseSection({
           <Table.Header>
             <Table.Row>
               <Table.ColumnHeaderCell>Beavatkozás</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="92px">Fog</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="132px">Fog</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="56px" justify="center">
                 Db
               </Table.ColumnHeaderCell>
@@ -302,8 +426,14 @@ function PhaseSection({
             {phase.sorok.map((l, li) => (
               <LineRow
                 key={li}
+                pi={pi}
+                li={li}
                 line={l}
                 currency={currency}
+                nyelv={nyelv}
+                available={available}
+                catName={catName}
+                fogterkep={fogterkep}
                 fallback={fallbackTetelIds.has(l.tetelId)}
                 onPatch={(p) => onPatchLine(li, p)}
                 onRemove={() => onRemoveLine(li)}
@@ -360,18 +490,31 @@ function PhaseSection({
 }
 
 function LineRow({
+  pi,
+  li,
   line,
   currency,
+  nyelv,
+  available,
+  catName,
+  fogterkep,
   fallback,
   onPatch,
   onRemove,
 }: {
+  pi: number;
+  li: number;
   line: Sor;
   currency: Penznem;
+  nyelv: Nyelv;
+  available: Tetel[];
+  catName: (id: string) => string;
+  fogterkep: FogterkepAllapot;
   fallback: boolean;
   onPatch: (patch: Partial<Sor>) => void;
   onRemove: () => void;
 }) {
+  const uj = line.tetelId === ''; // fogtérkép-kattintással létrehozott, még tétel nélküli sor
   const teeth = parseTeeth(line.fogak);
   // A darabszám mezőbe gépelt, még nem committált érték -- a NumberField
   // csak blur/Enterre írja a törzsadatot (P1-4), de ez a figyelmeztetés
@@ -392,29 +535,56 @@ function LineRow({
   return (
     <Table.Row>
       <Table.Cell>
-        <Text size="2">
-          {line.nevSnapshot}
-          {line.savos && (
-            <Text size="1" ml="2" style={{ color: t.warn }}>
-              sávos
-            </Text>
-          )}
-          {fallback && <HuChip />}
-          {discount > 0 && (
-            <Badge color="green" variant="soft" ml="2" size="1">
-              −{discount}%
-            </Badge>
-          )}
-        </Text>
+        {uj ? (
+          <ItemPicker
+            available={available}
+            catName={catName}
+            currency={currency}
+            nyelv={nyelv}
+            floating="portal"
+            autoFocus
+            clearOnPick={false}
+            id={`kereso-${pi}-${li}`}
+            onPick={(item) => {
+              const mezok = sorMezokTetelbol(item, currency, nyelv);
+              if (mezok) onPatch(mezok);
+            }}
+          />
+        ) : (
+          <Text size="2">
+            {line.nevSnapshot}
+            {line.savos && (
+              <Text size="1" ml="2" style={{ color: t.warn }}>
+                sávos
+              </Text>
+            )}
+            {fallback && <HuChip />}
+            {discount > 0 && (
+              <Badge color="green" variant="soft" ml="2" size="1">
+                −{discount}%
+              </Badge>
+            )}
+          </Text>
+        )}
       </Table.Cell>
 
       <Table.Cell>
-        <TextField.Root
-          value={line.fogak}
-          placeholder="16, 17, 26"
-          onChange={(e) => onPatch({ fogak: e.target.value })}
-          style={{ textAlign: 'center' }}
-        />
+        <Flex align="center" gap="1">
+          <Box flexGrow="1">
+            <TextField.Root
+              id={`fog-${pi}-${li}`}
+              value={line.fogak}
+              placeholder="16, 17, 26"
+              onChange={(e) => onPatch({ fogak: e.target.value })}
+              style={{ textAlign: 'center' }}
+            />
+          </Box>
+          <ToothPickerPopover
+            fogak={line.fogak}
+            allapot={fogterkep}
+            onChange={(fogak) => onPatch({ fogak })}
+          />
+        </Flex>
         {mismatch && (
           <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
             {teeth.teeth.length} fog van felsorolva, a darabszám {mennyisegDraft}. Szándékos?
@@ -465,173 +635,6 @@ function LineRow({
         </IconButton>
       </Table.Cell>
     </Table.Row>
-  );
-}
-
-/** Csak keresés, nincs kategória böngésző (D19). Ékezetfüggetlen. */
-function ItemPicker({
-  available,
-  catName,
-  currency,
-  nyelv,
-  onPick,
-}: {
-  available: Tetel[];
-  catName: (id: string) => string;
-  currency: Penznem;
-  nyelv: Nyelv;
-  onPick: (item: Tetel) => void;
-}) {
-  const [q, setQ] = useState('');
-  const [hi, setHi] = useState(0);
-  const ref = useRef<HTMLInputElement>(null);
-
-  // A kereső mindkét nyelven keres, mindig -- a doki magyar, magyarul gépel
-  // akkor is, ha német ajánlatot állít össze. Csak a megjelenített és
-  // snapshotolt név nyelvfüggő (lásd domain/nev.ts).
-  const results = useMemo(() => {
-    if (!q.trim()) return [];
-    const nq = norm(q);
-    return available
-      .filter((x) => norm(x.nev.hu).includes(nq) || norm(x.nev.de).includes(nq))
-      .slice(0, 12);
-  }, [q, available]);
-
-  useEffect(() => setHi(0), [q]);
-
-  function commit(item: Tetel) {
-    onPick(item);
-    setQ('');
-    requestAnimationFrame(() => ref.current?.focus());
-  }
-
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    // Escape-nek akkor is ki kell ürítenie a keresőt, ha épp nincs találat
-    // (pl. a "Nincs találat" doboz látszik) -- docs/07-felulet-rendszer.md
-    // "Escape zár dialógust és keresőt".
-    if (e.key === 'Escape') {
-      setQ('');
-      return;
-    }
-    if (!results.length) return;
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHi((h) => (h + 1) % results.length);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHi((h) => (h - 1 + results.length) % results.length);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      commit(results[hi]);
-    }
-  }
-
-  let lastCat: string | null = null;
-
-  return (
-    <Box style={{ position: 'relative', marginTop: 8 }}>
-      <TextField.Root
-        ref={ref}
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder="Tétel keresése…  (ékezet nélkül is: eszt, koron, gyoker)"
-      />
-      {results.length > 0 && (
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            top: 40,
-            zIndex: 30,
-            background: t.surface,
-            border: `1px solid ${t.controlBorder}`,
-            borderRadius: t.radiusLg,
-            padding: 4,
-            maxHeight: 280,
-            overflowY: 'auto',
-            boxShadow: t.shadowLg,
-          }}
-        >
-          {results.map((r, i) => {
-            const category = catName(r.kategoriaId);
-            const header = category !== lastCat ? ((lastCat = category), category) : null;
-            const rn = resolveNev(r.nev, nyelv);
-            return (
-              <div key={r.id}>
-                {header && (
-                  <div style={{ fontSize: 11, color: t.uiTextFaint, padding: '6px 10px 2px' }}>
-                    {header}
-                  </div>
-                )}
-                <div
-                  onMouseEnter={() => setHi(i)}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    commit(r);
-                  }}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    padding: '7px 10px',
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    borderRadius: t.radius,
-                    background: i === hi ? t.accentWash : 'transparent',
-                    boxShadow: i === hi ? `inset 3px 0 0 ${t.accent}` : 'none',
-                  }}
-                >
-                  <span>
-                    {rn.szoveg}
-                    {rn.fallback && <HuChip />}
-                  </span>
-                  <span
-                    style={{
-                      color: t.uiTextFaint,
-                      whiteSpace: 'nowrap',
-                      fontVariantNumeric: 'tabular-nums',
-                    }}
-                  >
-                    {formatPrice(r.ar[currency], currency)}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      {results.length === 0 && q.trim() && (
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            top: 40,
-            zIndex: 30,
-            background: available.length === 0 ? t.warnBg : t.surface,
-            border: `1px solid ${available.length === 0 ? t.warn : t.controlBorder}`,
-            borderRadius: t.radiusLg,
-            padding: '10px 12px',
-            fontSize: 12.5,
-            color: available.length === 0 ? t.warn : t.uiTextFaint,
-          }}
-        >
-          {available.length === 0
-            ? `Nincs találat. Ebben a pénznemben (${currency}) egyetlen aktív tétel sincs beárazva — az Árlistán tölthetők ki.`
-            : 'Nincs találat.'}
-        </div>
-      )}
-    </Box>
-  );
-}
-
-function HuChip() {
-  return (
-    <Badge color="amber" variant="soft" size="1" ml="2">
-      HU
-    </Badge>
   );
 }
 

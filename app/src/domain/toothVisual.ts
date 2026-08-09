@@ -42,6 +42,12 @@ export interface FogKezeles {
   fdi: string;
   sor: Sor;
   vizual: KezelesVizual;
+  /** A `Plan.fazisok`/`Fazis.sorok` beli pozíció -- a fogtérkép kattintás-
+   *  kezelője (PlanEditorPage) ebből talál vissza a konkrét sorra, mert a
+   *  `sor` maga a `structuredClone`-os `updatePlan` miatt renderelésenként
+   *  új objektum, nem stabil azonosító. */
+  fazisIndex: number;
+  sorIndex: number;
 }
 
 /** MINDEN kezelés megmarad egy fogon, akkor is, ha csak egy szín látszik. */
@@ -89,13 +95,13 @@ export function buildToothVisualStates(plan: Plan, priceList: PriceList): Fogter
   const ismeretlenSet = new Set<string>();
   let hianyzoTetel = false;
 
-  for (const fazis of plan.fazisok) {
-    for (const sor of fazis.sorok) {
+  plan.fazisok.forEach((fazis, fazisIndex) => {
+    fazis.sorok.forEach((sor, sorIndex) => {
       // Mindent-vagy-semmit, mint mindenhol máshol -- ha a sor `fogak`
       // mezője akár egyetlen nem-FDI tokent tartalmaz, a teljes sor
       // szabadszövegnek számít, egy fog sem térképeződik ki belőle.
       const parsed = parseTeeth(sor.fogak);
-      if (!parsed.valid) continue;
+      if (!parsed.valid) return;
 
       const tetel = tetelekById.get(sor.tetelId);
       if (sor.tetelId && !tetel) hianyzoTetel = true;
@@ -103,17 +109,18 @@ export function buildToothVisualStates(plan: Plan, priceList: PriceList): Fogter
 
       for (const fdi of parsed.teeth) {
         if (isMaradoFog(fdi)) {
+          const kezeles: FogKezeles = { fdi, sor, vizual, fazisIndex, sorIndex };
           const list = perFog.get(fdi);
-          if (list) list.push({ fdi, sor, vizual });
-          else perFog.set(fdi, [{ fdi, sor, vizual }]);
+          if (list) list.push(kezeles);
+          else perFog.set(fdi, [kezeles]);
         } else if (isTejfog(fdi)) {
           tejfogSet.add(fdi);
         } else {
           ismeretlenSet.add(fdi);
         }
       }
-    }
-  }
+    });
+  });
 
   const fogak = new Map<string, FogVizualisAllapot>();
   const jelmagyarazatSet = new Set<KezelesVizual>();

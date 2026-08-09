@@ -44,6 +44,10 @@ function sor(partial: Partial<Sor>): Sor {
 }
 
 function makePlan(sorok: Sor[]): Plan {
+  return makeMultiPhasePlan([sorok]);
+}
+
+function makeMultiPhasePlan(fazisok: Sor[][]): Plan {
   return {
     schemaVersion: 1,
     tervId: 't',
@@ -66,7 +70,12 @@ function makePlan(sorok: Sor[]): Plan {
       kiskoru: false,
       torvenyesKepviselo: null,
     },
-    fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok }],
+    fazisok: fazisok.map((sorok, i) => ({
+      sorszam: i + 1,
+      megnevezes: `${i + 1}. kezelés`,
+      megjegyzes: '',
+      sorok,
+    })),
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
   };
 }
@@ -115,8 +124,8 @@ describe('resolveToothVisual', () => {
 
   it('a prioritási tábla szerinti legmagasabb kategóriát választja', () => {
     const v = resolveToothVisual([
-      { fdi: '16', sor: sor({}), vizual: 'GYOKERKEZELES' },
-      { fdi: '16', sor: sor({}), vizual: 'KORONA' },
+      { fdi: '16', sor: sor({}), vizual: 'GYOKERKEZELES', fazisIndex: 0, sorIndex: 0 },
+      { fdi: '16', sor: sor({}), vizual: 'KORONA', fazisIndex: 0, sorIndex: 1 },
     ]);
     // KORONA a GYOKERKEZELES előtt áll a KEZELES_VIZUAL_PRIORITAS táblában.
     expect(v).toBe('KORONA');
@@ -192,6 +201,20 @@ describe('buildToothVisualStates', () => {
     const allapot = buildToothVisualStates(plan, pl);
     // KORONA megelőzi a TOMES-t a prioritási táblában.
     expect(allapot.jelmagyarazat).toEqual(['KORONA', 'TOMES']);
+  });
+
+  it('a FogKezeles helyes fazisIndex/sorIndex-et hordoz, több fázison és soron át', () => {
+    const plan = makeMultiPhasePlan([
+      [sor({ tetelId: 't-tomes', fogak: '16' }), sor({ tetelId: 't-gyoker', fogak: '16' })],
+      [sor({ tetelId: 't-korona', fogak: '16' })],
+    ]);
+    const allapot = buildToothVisualStates(plan, pl);
+    const kezelesek = allapot.fogak.get('16')?.kezelesek ?? [];
+    expect(kezelesek).toEqual([
+      expect.objectContaining({ fazisIndex: 0, sorIndex: 0, vizual: 'TOMES' }),
+      expect.objectContaining({ fazisIndex: 0, sorIndex: 1, vizual: 'GYOKERKEZELES' }),
+      expect.objectContaining({ fazisIndex: 1, sorIndex: 0, vizual: 'KORONA' }),
+    ]);
   });
 
   it('üres terv üres állapotot ad, hiba nélkül', () => {

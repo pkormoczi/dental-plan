@@ -8,6 +8,7 @@ import { usePDF } from '@react-pdf/renderer';
 import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
+import { kitoltetlenSorok } from '../domain/kitoltetlen';
 import { fallbackSorok } from '../domain/nev';
 import { computeOsszesitok } from '../domain/totals';
 import { buildToothVisualStates } from '../domain/toothVisual';
@@ -39,6 +40,7 @@ export default function PreviewPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedRef, setSavedRef] = useState<PlanRef | null>(null);
   const [nameMissingNotice, setNameMissingNotice] = useState(false);
+  const [uresSorokNotice, setUresSorokNotice] = useState(false);
   // A webbel megegyező forrásból (design/toothChartSvg) canvason renderelt
   // fogtérkép-PNG a nyomtatványhoz -- lásd pdf/toothChartImage.ts. `null`,
   // amíg el nem készül, vagy ha a rajzolás meghiúsul (pl. jsdom teszt) --
@@ -165,6 +167,10 @@ export default function PreviewPage() {
   // véglegesítéskor néma módon -- a doki itt látja, mely nevek érintettek,
   // mielőtt a páciens aláírja a dokumentumot.
   const hianyzoNevek = fallbackSorok(plan, priceList);
+  // A fogtérkép-kattintással felvett, de be nem azonosított sorok -- lásd
+  // attemptFinalize: ez KEMÉNY blokk, nem a confirmStep-lánc egy tagja,
+  // mert egy névtelen, 0 Ft-os sor sosem kerülhet az aláírandó PDF-re.
+  const uresSorok = kitoltetlenSorok(plan);
 
   async function doFinalize() {
     if (!pdfInstance.blob) return;
@@ -212,6 +218,11 @@ export default function PreviewPage() {
       return;
     }
     setNameMissingNotice(false);
+    if (uresSorok.length > 0) {
+      setUresSorokNotice(true);
+      return;
+    }
+    setUresSorokNotice(false);
     if (otherFieldsMissing) {
       setConfirmStep('missing-fields');
       return;
@@ -299,6 +310,23 @@ export default function PreviewPage() {
       {nameMissingNotice && nameMissing && (
         <Callout.Root color="red" mb="3">
           <Callout.Text>A páciens neve kötelező a véglegesítéshez.</Callout.Text>
+        </Callout.Root>
+      )}
+      {uresSorokNotice && uresSorok.length > 0 && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>
+            A terv {uresSorok.length} kitöltetlen sort tartalmaz (nincs kiválasztva
+            beavatkozás):{' '}
+            {uresSorok
+              .map((s) => `${s.fazisNev} — ${s.fogak.trim() || 'nincs fogszám megadva'}`)
+              .join('; ')}
+            . Válaszd ki a beavatkozást a szerkesztőben, vagy töröld a sort.
+          </Callout.Text>
+          <Flex mt="2">
+            <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>
+              Vissza a szerkesztőbe
+            </Button>
+          </Flex>
         </Callout.Root>
       )}
 

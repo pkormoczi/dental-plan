@@ -33,6 +33,25 @@ const WIDTH_HEIGHT_ATTR_RE = /\s(?:width|height)="[^"]*"/g;
 // forrás a wrapper marad.
 const ROLE_ARIA_ATTR_RE = /\s(?:role|aria-labelledby)="[^"]*"/g;
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+// Csak a fog-<g>-ket találja el (id/data-tooth/class fix sorrendben, lásd az
+// asset fejléce) -- a bölcsességfog-vonalrajz klip-csoportjait NEM, azoknak
+// nincs data-tooth-juk.
+const TOOTH_GROUP_OPEN_RE = /<g id="tooth-(\d\d)" data-tooth="\d\d" class="tooth"([^>]*)>/g;
+// A kattintható mód aktív/kijelölt gyűrűje -- két KÜLÖN, class-vezérelt
+// csatorna: a `.tooth-fill` `fill`-je (currentColor) a kezelés kategóriáját
+// mutatja, ez a `stroke` pedig azt, hogy a fog épp a billentyűzetes kurzoron
+// van (`is-active`) / a soron belüli választóban ki van jelölve
+// (`is-picked`). `paint-order:stroke` a kitöltés ALÁ teszi a vonalat, hogy
+// külső gyűrűként olvasódjon, ne takarja a színt. NEM `:focus-visible`
+// pszeudo-osztály -- a fogcsoportok sosem kapnak DOM-fókuszt, a fókusz a
+// components/DentalChart.tsx wrapperén marad, `aria-activedescendant`-tal
+// mutatva az aktív fogra (lásd ott). `#f77409` itt szabályos: tokens.ts
+// "CSAK díszítés" + a fogtérkép kiemelése néven nevezett kivétel
+// (docs/07-felulet-rendszer.md), szövegszínként viszont soha nem használható.
+const INTERACTIVE_STYLE =
+  '.tooth{cursor:pointer}' +
+  '.tooth.is-active .tooth-fill{stroke:#2D2D2D;stroke-width:3;stroke-dasharray:4 3;paint-order:stroke}' +
+  '.tooth.is-picked .tooth-fill{stroke:#f77409;stroke-width:8;paint-order:stroke}';
 
 export interface ToothChartSvgOptions {
   /** 'responsive' (alap): width/height nélkül, CSS width:100% -- webes nézet. 'fixed': explicit pixelméret -- a canvas-adapterhez kell. */
@@ -41,13 +60,37 @@ export interface ToothChartSvgOptions {
   scale?: number;
   /** Fejlesztői/debug mód: fogszám minden fog közepén. Alapból kikapcsolva. */
   showToothNumbers?: boolean;
+  /**
+   * Kattintható mód: minden fog-`<g>` kap `role`-t és beszédes
+   * `aria-label`-t (`szerep: 'option'` esetén `aria-selected`-et is), a
+   * gyökér `<svg>` elveszti a saját címét (nincs kettős a11y-csomópont a
+   * components/DentalChart.tsx wrapperének `aria-activedescendant`-os
+   * navigációja mellett). Alapból KIKAPCSOLVA, hogy a PDF-be rasterizált
+   * markup (pdf/toothChartImage.ts) bájtra ugyanaz maradjon -- arra sosem
+   * szabad `interactive: true`-t adni.
+   */
+  interactive?: boolean;
+  /** Csak `interactive: true` esetén számít. `'button'` (alap): a fogtérkép sorugrás/új sor kattintása. `'option'`: a soron belüli választó, ahol több fog is kijelölhető (`aria-selected`). */
+  szerep?: 'button' | 'option';
+  /** Csak `interactive: true` esetén számít: ez a fog kapja az `is-active` kurzor-gyűrűt (billentyűzetes navigáció, lásd DentalChart.tsx `aria-activedescendant`). */
+  focusedTooth?: string;
+  /** Csak `interactive: true` esetén számít: ezek a fogak kapnak `is-picked` kijelölés-gyűrűt (a soron belüli választóban már szereplő fogak) -- `szerep: 'option'` esetén ez adja az `aria-selected` értékét is. */
+  selectedTeeth?: readonly string[];
 }
 
 export function buildToothChartSvg(
   allapot: FogterkepAllapot,
   opts: ToothChartSvgOptions = {},
 ): string {
-  const { sizing = 'responsive', scale = 1, showToothNumbers = false } = opts;
+  const {
+    sizing = 'responsive',
+    scale = 1,
+    showToothNumbers = false,
+    interactive = false,
+    szerep = 'button',
+    focusedTooth,
+    selectedTeeth,
+  } = opts;
 
   let svg = chartSvgRaw.replace(XML_DECL_RE, '');
 
@@ -59,7 +102,7 @@ export function buildToothChartSvg(
     const cleaned = openTag
       .replace(WIDTH_HEIGHT_ATTR_RE, '')
       .replace(ROLE_ARIA_ATTR_RE, '')
-      .replace('<svg', '<svg aria-hidden="true"');
+      .replace('<svg', interactive ? '<svg' : '<svg aria-hidden="true"');
     if (sizing === 'fixed') {
       return cleaned.replace('<svg', `<svg width="${vbW * scale}" height="${vbH * scale}"`);
     }
@@ -67,11 +110,15 @@ export function buildToothChartSvg(
   });
 
   // Magyar cím/leírás -- az eredeti angol <title>/<desc> fejlesztői
-  // dokumentáció volt az assetben, a felhasználó felé a magyar aria-label
-  // (lásd DentalChart.tsx) és ez a title számít.
+  // dokumentáció volt az assetben. Olvasható módban a felhasználó felé a
+  // magyar aria-label (lásd DentalChart.tsx) és ez a title számít.
+  // Kattintható módban a gyökér <svg>-nek NINCS saját neve -- a wrapper
+  // role="toolbar"/"listbox" aria-label-je az egyetlen a11y-csomópont, a
+  // fogankénti role/aria-label pedig a wrapperen belüli navigáció, nem egy
+  // második, versengő "kép" leírás (lásd DentalChart.tsx).
   svg = svg.replace(
     /<title id="title">[^<]*<\/title>/,
-    `<title id="title">${CHART_ARIA_LABEL}</title>`,
+    `<title id="title">${interactive ? '' : CHART_ARIA_LABEL}</title>`,
   );
   svg = svg.replace(/<desc id="desc">[^<]*<\/desc>/, '<desc id="desc"></desc>');
 
@@ -86,11 +133,45 @@ export function buildToothChartSvg(
     svg = svg.replace('</style>', `${colorRules.join('')}</style>`);
   }
 
+  if (interactive) {
+    svg = svg.replace('</style>', `${INTERACTIVE_STYLE}</style>`);
+    svg = makeInteractive(svg, allapot, szerep, focusedTooth, selectedTeeth);
+  }
+
   if (showToothNumbers) {
     svg = injectToothNumbers(svg);
   }
 
   return svg;
+}
+
+/**
+ * Fogankénti `role`/`aria-label`(/`aria-selected`) + `is-active`/`is-picked`
+ * class injektálás -- lásd `ToothChartSvgOptions.interactive` fejléckommentjét
+ * a biztonsági indoklásért (zárt halmazok: FDI-kódok a `TOOTH_GROUP_OPEN_RE`
+ * saját capture-jéből, kategórianevek a statikus `KEZELES_VIZUALOK`-ból).
+ */
+function makeInteractive(
+  svg: string,
+  allapot: FogterkepAllapot,
+  szerep: 'button' | 'option',
+  focusedTooth: string | undefined,
+  selectedTeeth: readonly string[] | undefined,
+): string {
+  const selected = new Set(selectedTeeth ?? []);
+  return svg.replace(TOOTH_GROUP_OPEN_RE, (_match, fdi: string, rest: string) => {
+    const kezeles = allapot.fogak.get(fdi);
+    const cimke = kezeles ? KEZELES_VIZUALOK[kezeles.vizual].cimke.hu : 'nincs kezelés';
+    const isPicked = selected.has(fdi);
+    const classes = ['tooth', fdi === focusedTooth && 'is-active', isPicked && 'is-picked']
+      .filter(Boolean)
+      .join(' ');
+    const ariaSelected = szerep === 'option' ? ` aria-selected="${isPicked}"` : '';
+    return (
+      `<g id="tooth-${fdi}" data-tooth="${fdi}" class="${classes}" role="${szerep}" ` +
+      `aria-label="${fdi}. fog – ${cimke}"${ariaSelected}${rest}>`
+    );
+  });
 }
 
 /**
