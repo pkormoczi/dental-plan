@@ -55,7 +55,7 @@ export default function PlanHistoryPage() {
   const { storage, loadPlanPdf } = useStorage();
   const { loadPlanIntoDraft, vanMentetlenPiszkozat } = useAppState();
   const navigate = useNavigate();
-  // docs/backlog-1-piszkozat-terv.md 5. döntés: ugyanaz a felülírás-kockázat,
+  // docs/archive/backlog/backlog-1-piszkozat-terv.md 5. döntés: ugyanaz a felülírás-kockázat,
   // mint a Home "Új terv indítása" gombjánál -- a `loadPlanIntoDraft` szó
   // nélkül felülírná a folyamatban lévő, mentetlen piszkozatot.
   const [pendingOpen, setPendingOpen] = useState<VersionRef | null>(null);

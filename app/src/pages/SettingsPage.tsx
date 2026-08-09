@@ -51,7 +51,7 @@ function templateBase(key: TemplateSlotKey, nyelv: Nyelv): string {
 }
 
 // Ad hoc localStorage-cache a sablonszerkesztő piszkozatához --
-// docs/backlog-6-sablon-placeholder-terv.md 4. döntés: NEM a `DraftStorage`
+// docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 4. döntés: NEM a `DraftStorage`
 // bővítése (az kizárólag `Plan`-ra típusozott, és egy már lezárt
 // backlog-tétel kódja), hanem egy önálló, base-kulcsolt JSON objektum. A
 // `dp:` prefix (`DemoStorage.ts` `PREFIX`-je) miatt a "Minden adat

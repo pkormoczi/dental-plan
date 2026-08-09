@@ -65,7 +65,7 @@ export default function PatientPage() {
       // A RÉGI nyelvvel hasonlítjuk össze -- csak azok a sorok frissülnek
       // az új nyelvre, amik még az árlistai automatikus nevet viselték; egy
       // kézzel pontosított (backlog-3) név nem íródik felül -- lásd
-      // docs/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 6. döntés.
+      // docs/archive/backlog/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 6. döntés.
       const regiNyelv = prev.nyelv;
       next.nyelv = nyelv;
       next.sablonVerzio = sablonVerzioFor(nyelv);
