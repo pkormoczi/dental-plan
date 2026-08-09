@@ -94,6 +94,11 @@ Ezek (eredetileg a törölt `ui/tokens.js` prototípusból portolva) már megvan
   `1.234,56 €`). **Ne improvizálj `toLocaleString()`-gel**, ez szerződéses dokumentum.
 - `basePrice(ar)` — `SAVOS` típusnál a `min` értéket adja vissza
 - `norm(s)` — ékezetfüggetlen kereséshez (`NFD` normalizálás)
+- `nevEgyezik(nev, nq)` (`app/src/domain/search.ts`) — egy `LokalizaltSzoveg`
+  illeszkedik-e a MÁR normalizált keresőszövegre, MINDKÉT nyelven; ez az
+  EGYETLEN hely, ahol a kétnyelvű keresés szabálya él (a szerkesztő
+  `ItemPicker`-e és az Árlista admin szűrője is ezt hívja) — a hívó a ciklus
+  előtt egyszer normalizál, ne tételenként
 - `parseTeeth(input)` — FDI fogszám-validáció (`11–18`/`21–28`/`31–38`/`41–48`
   maradó, `51–55` stb. tejfog)
 

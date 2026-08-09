@@ -189,4 +189,21 @@ describe('PriceListAdminPage', () => {
     expect(created.id).toBe('t119');
     expect(created.ar.HUF).toEqual({ tipus: 'FIX', ertek: 0 });
   });
+
+  // backlog-7: az admin szűrője eddig CSAK a magyar néven illesztett, a
+  // szerkesztő tétel-keresője viszont mindkét nyelven -- egy csak németül
+  // megtalálható tétel itt egyáltalán nem jött elő.
+  it('a keresés a német néven is talál (a sor továbbra is a magyar nevet mutatja)', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await screen.findByText(/118 \/ 118 tétel látszik/);
+    const search = screen.getByPlaceholderText('Keresés a tételek között…');
+    // A "Zahnhals" kizárólag a nev.de-ben szerepel ("Zahnhalsfüllung"), a
+    // magyar név "Fognyaki tömés".
+    await user.type(search, 'zahnhals');
+
+    expect(await screen.findByText('Fognyaki tömés')).toBeInTheDocument();
+    expect(screen.queryByText('Zahnhalsfüllung')).not.toBeInTheDocument();
+  });
 });

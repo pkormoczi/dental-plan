@@ -145,4 +145,47 @@ describe('ItemPicker', () => {
     expect(onPickEgyedi).toHaveBeenCalledWith('gyoker');
     expect(onPick).not.toHaveBeenCalled();
   });
+
+  // backlog-7: a 12-es limit fölötti csonkítás eddig NÉMA volt.
+  describe('találat-csonkítás jelzése', () => {
+    // 15 egyező tétel -> 12 látszik, 3 marad le.
+    const sok: Tetel[] = Array.from({ length: 15 }, (_, i) => tetel(`s${i}`, `Tömés ${i + 1} felszín`));
+
+    it('12-nél több találatnál megjelenik a "+N további találat" sor a pontos N-nel', async () => {
+      const user = userEvent.setup();
+      renderPicker({ available: sok });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'tomes');
+
+      expect(await screen.findByText(/\+3 további találat/)).toBeInTheDocument();
+    });
+
+    it('pontosan 12 (vagy kevesebb) találatnál nincs jelzés -- a lista teljes', async () => {
+      const user = userEvent.setup();
+      renderPicker({ available: sok.slice(0, 12) });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'tomes');
+
+      await screen.findByText('Tömés 1 felszín');
+      expect(screen.queryByText(/további találat/)).not.toBeInTheDocument();
+    });
+
+    it('a jelző sor nem választható: a billentyűzet-ciklus a 12. találatnál fordul vissza', async () => {
+      const user = userEvent.setup();
+      const { onPick } = renderPicker({ available: sok });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'tomes');
+      await screen.findByText(/\+3 további találat/);
+
+      // 12 lefelé lépés a 0. indexről a 12. opcióra vinne -- de csak 12 opció
+      // van (0..11), tehát a ciklus körbeér a legelsőre. Ha a jelző sor
+      // opcióként számítana, itt semmi nem commitálódna Enterre.
+      await user.keyboard('{ArrowDown>12/}{Enter}');
+
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 's0' }));
+    });
+  });
 });

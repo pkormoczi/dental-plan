@@ -114,7 +114,12 @@ kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`
   és a felvételkor *rögzített* név nyelvfüggő (lásd alább, „Hiányzó
   fordítás"); ha a tétel német neve hiányzik, a magyar névre esik vissza,
   jól látható `HU` jelöléssel a találati soron és a felvett soron is.
-- Billentyűzet: `↑ ↓` navigál, `Enter` hozzáad, `Esc` bezár.
+- A lista **legfeljebb 12 találatot** mutat. Ha ennél több egyezik, a
+  lista alján egy nem választható, tájékoztató sor jelzi: „+N további
+  találat — pontosíts a kereséssel". Pontosan 12 (vagy kevesebb) találatnál
+  nincs jelzés — a lista ilyenkor teljes.
+- Billentyűzet: `↑ ↓` navigál, `Enter` hozzáad, `Esc` bezár. A csonkítás-
+  jelző sor **nem** része a ciklusnak.
 - **Hozzáadás után a kereső kiürül és visszakapja a fókuszt.** Ez a
   ciklus a lényeg: gépel → nyíl → Enter → gépel tovább, egérhasználat
   nélkül.
@@ -290,7 +295,13 @@ megnevezés, HUF ár, EUR ár, aktív jelölő (szem ikon).
 **Egy tábla, két ár oszlop** — nem külön magyar és német nézet. Így egy
 pillantás megmutatja, hol hiányzik az EUR ár.
 
-### Szűrők
+### Keresés és szűrők
+
+A keresőmező **mindkét nyelven illeszt** (`nev.hu` és `nev.de`), ugyanazzal
+a szabállyal, mint a tervszerkesztő tétel-keresője — egy csak németül
+elnevezett vagy csak a német nevében elgépelt tétel is megtalálható. A
+találati sor változatlanul a magyar nevet mutatja; nincs külön jelzés
+arra, hogy a találat a német névből jött.
 
 `Mind` · `Nincs EUR ár` · `Sávos ár` · `Inaktív` · `Gyakori`
 

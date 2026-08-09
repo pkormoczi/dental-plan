@@ -29,8 +29,11 @@ import HuChip from '../../components/HuChip';
 import { t } from '../../design/tokens';
 import { formatPrice } from '../../domain/money';
 import { resolveNev } from '../../domain/nev';
-import { norm } from '../../domain/search';
+import { nevEgyezik, norm } from '../../domain/search';
 import type { Nyelv, Penznem, Tetel } from '../../domain/types';
+
+/** A találati listában egyszerre megjelenített tételek maximuma. */
+const LATHATO_TALALAT = 12;
 
 export interface ItemPickerProps {
   available: Tetel[];
@@ -85,12 +88,17 @@ export default function ItemPicker({
   // A kereső mindkét nyelven keres, mindig -- a doki magyar, magyarul gépel
   // akkor is, ha német ajánlatot állít össze. Csak a megjelenített és
   // snapshotolt név nyelvfüggő (lásd domain/nev.ts).
-  const results = useMemo(() => {
-    if (!q.trim()) return [];
+  // A lista legfeljebb LATHATO_TALALAT tételt mutat. A levágott találatok
+  // száma is kell: eddig a csonkítás NÉMA volt, a doki nem tudta, hogy
+  // pontosítania kellene (backlog-7). A limit maga változatlan.
+  const { results, tobbiTalalat } = useMemo(() => {
+    if (!q.trim()) return { results: [] as Tetel[], tobbiTalalat: 0 };
     const nq = norm(q);
-    return available
-      .filter((x) => norm(x.nev.hu).includes(nq) || norm(x.nev.de).includes(nq))
-      .slice(0, 12);
+    const osszes = available.filter((x) => nevEgyezik(x.nev, nq));
+    return {
+      results: osszes.slice(0, LATHATO_TALALAT),
+      tobbiTalalat: Math.max(0, osszes.length - LATHATO_TALALAT),
+    };
   }, [q, available]);
 
   useEffect(() => setHi(0), [q]);
@@ -230,6 +238,21 @@ export default function ItemPicker({
           {available.length === 0
             ? `Nincs találat. Ebben a pénznemben (${currency}) egyetlen aktív tétel sincs beárazva — az Árlistán tölthetők ki.`
             : 'Nincs találat.'}
+        </div>
+      )}
+      {tobbiTalalat > 0 && (
+        // Statikus, NEM választható sor -- nincs `hi` indexe, nem számít
+        // bele az `opcioSzam`-ba, tehát a gépel -> nyíl -> Enter ciklus
+        // változatlan (ugyanúgy tájékoztató, mint a "Nincs találat.").
+        <div
+          style={{
+            padding: '8px 10px',
+            fontSize: 12.5,
+            color: t.uiTextFaint,
+            borderTop: `1px solid ${t.controlBorder}`,
+          }}
+        >
+          +{tobbiTalalat} további találat — pontosíts a kereséssel
         </div>
       )}
       {egyediElerheto && (

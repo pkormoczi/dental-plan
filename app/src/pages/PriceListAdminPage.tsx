@@ -37,7 +37,7 @@ import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
 import { formatPrice } from '../domain/money';
 import { nextTetelId } from '../domain/priceListIds';
-import { norm } from '../domain/search';
+import { nevEgyezik, norm } from '../domain/search';
 import type { Ar, Kategoria, PriceList, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
 
@@ -100,7 +100,10 @@ export default function PriceListAdminPage() {
     // számot. A blur-re commitáló NumberField (lásd lent) már önmagában is
     // sokat segít, de ez a védelem a commit UTÁNI állapotra is vonatkozik.
     if (x.id === open) return true;
-    if (q && !norm(x.nev.hu).includes(norm(q))) return false;
+    // Mindkét nyelven keres, ugyanaz a szabály, mint a szerkesztő
+    // tétel-keresőjében (backlog-7): egy csak németül elgépelt/elnevezett
+    // tétel eddig itt egyáltalán nem volt megtalálható.
+    if (q && !nevEgyezik(x.nev, norm(q))) return false;
     if (filter === 'noeur') return !x.ar.EUR;
     if (filter === 'range') return x.ar.HUF?.tipus === 'SAVOS' || x.ar.EUR?.tipus === 'SAVOS';
     if (filter === 'off') return !x.aktiv;

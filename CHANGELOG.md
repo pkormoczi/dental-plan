@@ -55,6 +55,12 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   (A kedvezmény összege továbbra sem jelenik meg a nyomtatványon.) Ha egy sor tényleges ára a
   listaár fölé kerül, azt a szerkesztő "Felár" sorként jelzi a végösszeg alatt — eddig erről
   nem adott visszajelzést.
+- A tételkereső mostantól szól, ha több találat van, mint amennyit kilistáz: a lista alján
+  megjelenik, hány további tétel maradt le ("+3 további találat — pontosíts a kereséssel").
+  Eddig a 12. találat után némán levágta a többit.
+- Az Árlista keresője a német néven is talál — eddig csak a magyar nevet nézte, így egy csak
+  németül elgépelt vagy elnevezett tétel egyáltalán nem jött elő az adminban (a szerkesztő
+  keresője viszont már eddig is megtalálta).
 - A "Korábbi tervek" listában minden verzió mellett ott a végösszege is, így megnyitás nélkül
   látszik, mennyiért ment ki egy korábbi ajánlat. (Ha egy terv fájlja sérült, annál a
   sornál "—" áll az összeg helyén.)

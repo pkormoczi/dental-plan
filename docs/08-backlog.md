@@ -30,8 +30,8 @@ sorrenden kívül, a mérete miatt készült el — szintén 2026-08-09-én, mer
 15 perc volt, és a publikus demón látható hibát javított.)
 
 **A MOST lista minden tételének van tervdokumentuma.** A kész tételeknél
-(1–6, 11, 12, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a
-még nyitott tételeknél (7–10, 13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
+(1–7, 11, 12, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a
+még nyitott tételeknél (8–10, 13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
 munkamenetek döntési összefoglalói — a nyitott tételek tehát **meg vannak
 tervezve, de nincsenek implementálva**: a tervek nem tartalmaznak kódot,
 az implementáció módja a megvalósító feladata. Ahol a tervezés
@@ -40,7 +40,7 @@ sor jelzi.
 
 ---
 
-## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 10 kész tétel után kb. 4 nap van hátra, a 8. tétel megnőtt becslésével együtt)
+## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 11 kész tétel után kb. 4 nap van hátra, a 8. tétel megnőtt becslésével együtt)
 
 Mindegyik kicsi, és egy konkrét, a `06-doktor-harom-nap` munkanapjain
 ténylegesen felmerült fájdalmat szüntet meg (lásd a Függelékben). Egyik
@@ -226,7 +226,7 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   követve, mint a `PreviewPage.tsx` `savingRef`-je. Lásd git history a
   részletes commitért.
 
-### 7. Kereső: néma találat-csonkítás jelzése + admin kereső kiegészítése némettel
+### 7. Kereső: néma találat-csonkítás jelzése + admin kereső kiegészítése némettel — KÉSZ (2026-08-09)
 
 - **Méret:** ~1 óra összesen.
 - **Kereteket sért?** Nem.
@@ -243,6 +243,24 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   név-egyezés helper, ami a mai `domain/search.ts`-be kerül ki (ma az
   `ItemPicker.tsx:92` és a `PriceListAdminPage.tsx:103` külön-külön
   szűrnek, az admin csak `nev.hu`-ra). Méret változatlan.
+- **Megvalósítás:** új `nevEgyezik(nev, nq)` export (`domain/search.ts`) —
+  a kétnyelvű egyezés EGYETLEN helye, a már normalizált keresőszöveget
+  várja (a hívó a ciklus előtt egyszer normalizál); az `ItemPicker` és az
+  admin `keep()`-je is erre állt át, a CLAUDE.md segédfüggvény-listája
+  bővült vele. Az `ItemPicker` `results` `useMemo`-ja a teljes szűrt
+  tömböt és a levágott darabszámot is visszaadja (`LATHATO_TALALAT = 12`
+  konstans, a limit maga változatlan), a lista alján pedig — a találatok
+  és az „egyedi" opció között — megjelenik egy statikus, NEM választható
+  sor: „+N további találat — pontosíts a kereséssel". A sor nincs benne az
+  `opcioSzam`-ban, tehát a gépel → nyíl → Enter ciklus bájtra ugyanaz
+  maradt (külön teszt igazolja: 12 lefelé lépés után az Enter az ELSŐ
+  találatot adja hozzá, nem a jelző sort). Öt új teszt: `search.test.ts`
+  (HU-egyezés, DE-egyezés, nincs egyezés, hiányzó `nev.de`),
+  `ItemPicker.test.tsx` (13+ találatnál a pontos N, pontosan 12-nél nincs
+  jelzés, a ciklus érintetlen), `PriceListAdminPage.test.tsx` (a
+  „zahnhals" keresés megtalálja a „Fognyaki tömés"-t, a sor továbbra is a
+  magyar nevet mutatja). `docs/03-funkcionalis-spec.md` „Tételkereső" és
+  az admin „Keresés és szűrők" szakasza frissült.
 
 ### 8. Árlista-nap: kategóriakezelés kódban + adattisztítás a dokival
 
