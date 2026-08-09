@@ -32,7 +32,6 @@ import { resolveNev } from '../../domain/nev';
 import { nevEgyezik, norm } from '../../domain/search';
 import type { Nyelv, Penznem, Tetel } from '../../domain/types';
 
-/** A találati listában egyszerre megjelenített tételek maximuma. */
 const LATHATO_TALALAT = 12;
 
 export interface ItemPickerProps {
@@ -56,7 +55,6 @@ export interface ItemPickerProps {
    * ugyanaz, kizárólag a mezőn ül -- a lista csak megjelenítés.
    */
   floating?: 'inline' | 'portal';
-  /** A soron belüli példány rögtön fókuszt kap létrejöttekor. */
   autoFocus?: boolean;
   /**
    * `true` (alap): választás után a mező kiürül és visszakapja a fókuszt --
