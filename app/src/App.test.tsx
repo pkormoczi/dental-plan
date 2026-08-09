@@ -46,13 +46,11 @@ describe('Végpontok közötti folyamat', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // Kezdőlap -> Új terv indítása -> Páciens adatlap
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Aladár');
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
-    // Egy tétel felvétele a kritikus billentyűzetes ciklussal.
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
     await user.type(search, 'fogeltavolitas');
     await screen.findByText('Fogeltávolítás');
@@ -60,7 +58,6 @@ describe('Végpontok közötti folyamat', () => {
     await waitFor(() => expect(search).toHaveValue(''));
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
 
-    // Előnézet -> Véglegesítés és mentés.
     await user.click(screen.getByRole('button', { name: 'Előnézet' }));
     const finalizeBtn1 = await screen.findByRole(
       'button',
