@@ -260,6 +260,33 @@ kipróbálását (D21): hiányzó `de` név esetén magyar névre esik vissza `H
 jelöléssel, hiányzó ár esetén a Páciens adatlap előre jelez. A
 Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
+## Komment-szabályzat
+
+- Ne írj magyarázó kommentet olyan kódrészhez, ami a saját nevéből/
+  szerkezetéből egyértelmű. A "mit csinál" típusú kommentet ne írd le
+  még akkor sem, ha "hasznosnak" tűnik írás közben.
+- Kommentet csak akkor írj, ha WHY-t vagy nem triviális döntést közöl:
+  miért ezt a megoldást választottuk (nem a nyilvánvalót), milyen
+  invariánst nem szabad megsérteni, milyen gotcha/workaround van
+  mögötte, vagy mit nem szabad módosítani X nélkül.
+- Meglévő kommentet ne módosíts egy nem kapcsolódó változtatás
+  mellékhatásaként. Csak akkor nyúlj hozzá, ha a komment által
+  állított tény ténylegesen hamissá vált a kódváltozás miatt.
+- Indoklás: minden komment karbantartási költség (a jövőbeli
+  session-öknek minden olvasásnál be kell tölteniük, és
+  szinkronban kell tartani a kóddal) — ha nem hordoz új
+  információt a kód szerkezetén felül, ne írd meg.
+
+Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
+(ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
+döntések (D1–D21) egy helyen, számozva élnek a
+`docs/01-attekintes-es-dontesek.md`-ben; egy-egy funkció tervezési
+háttere külön fájlban, `docs/backlog-<n>-<cim>-terv.md` néven (a már
+megvalósítottak a `docs/archive/backlog/` alá kerülnek). Amikor egy
+modul vagy komponens "miért így van megcsinálva" kérdés merül fel,
+először nézd meg a `docs/` könyvtárat, mielőtt találgatnál vagy
+rákérdeznél.
+
 ## Dokumentáció-térkép
 
 | Fájl | Mikor nyisd meg |
