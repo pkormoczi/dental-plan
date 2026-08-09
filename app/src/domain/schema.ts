@@ -1,4 +1,4 @@
-// Sémaverziózás -- lásd docs/05-technológia.md "Sémaverziózás" és D18.
+// Sémaverziózás -- lásd docs/05-technologia.md "Sémaverziózás" és D18.
 //
 // Minden JSON fájl schemaVersion mezővel indul, mert évekig élnek a Drive-on
 // (a mockupban: localStorage-ban). Betöltéskor:

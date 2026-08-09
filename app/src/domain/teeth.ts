@@ -20,7 +20,7 @@ export function parseTeeth(input: string | null | undefined): ParsedTeeth {
  * A szerkesztő inline hibaüzenetéhez: melyik token NÉZ KI számnak, de nem
  * érvényes FDI kód -- ez tényleges elgépelés (pl. "99", a kvadráns max 4/8).
  * Egy tisztán betűs token (pl. "jobb", "felső") szándékos szabadszöveges
- * jegyzet, nem hibás fogszám-kísérlet -- docs/02-domain-modell.md ":198"
+ * jegyzet, nem hibás fogszám-kísérlet -- docs/02-domain-modell.md "Fogszám kezelés"
  * szerint ez érvényes tartalom, `parseTeeth` mindent-vagy-semmit logikája
  * (fenti) emiatt nem használható közvetlenül erre a megkülönböztetésre,
  * mert a teljes mezőt érvénytelennek jelölné egyetlen "jobb felső"-től is.

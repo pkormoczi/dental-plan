@@ -1,7 +1,7 @@
 // Tételkereső -- a tervszerkesztő UX-kritikus pontja (CLAUDE.md "A UX
 // kritikus pontja"): gépel -> nyíl -> Enter -> a kereső kiürül és
 // visszakapja a fókuszt -> gépel tovább, egérhasználat nélkül. Ez a ciklus
-// "nem törhet el" (docs/07-felulet-rendszer.md ":105-106").
+// "nem törhet el" (docs/07-felulet-rendszer.md "Billentyűzet").
 //
 // Két helyről használt (innen a saját fájl -- korábban a PlanEditorPage.tsx
 // belsejében élt):

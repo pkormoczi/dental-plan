@@ -7,7 +7,7 @@
 // docs/07-felulet-rendszer.md kifejezett kivétele a Radix-only szabály alól:
 // "a fogtérkép (funkcionális SVG adatvizualizáció) és a nyomtatvány".
 //
-// Billentyűzet (docs/07-felulet-rendszer.md ":104" -- "A teljes terv
+// Billentyűzet (docs/07-felulet-rendszer.md "Billentyűzet" -- "A teljes terv
 // felvihető egérhasználat nélkül"): NEM a 32 fog kap egyenként fókuszt --
 // az 32 Tab-megállót jelentene, és a `dangerouslySetInnerHTML` minden
 // `allapot`-változáskor (pl. egy leütés a Fog mezőben) kicseréli a teljes

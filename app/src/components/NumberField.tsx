@@ -9,8 +9,6 @@
 //    pillanatnyi 0 azonnal perzisztálódott
 //  - P0-7 fele: gépelés közben a sor kieshetett egy aktív szűrő alól,
 //    mert a lista minden leütésre újraszámolt
-//
-// Lásd review/99-osszesites.md és a jóváhagyott terv "0. Közös alap" pontja.
 
 import { useEffect, useState, type CSSProperties } from 'react';
 import { t } from '../design/tokens';

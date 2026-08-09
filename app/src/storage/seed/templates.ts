@@ -1,7 +1,7 @@
 // Sablonszövegek seedje.
 //
 // A nyilatkozat és a fizetési feltételek szövege szó szerint az eredeti
-// `data/MINTA_MINTA_Kezelesi_Terv_frissített.xls` `Kezelesi_Terv` lapjáról
+// `data/MINTA_Kezelesi_Terv_frissített.xls` `Kezelesi_Terv` lapjáról
 // jön -- ez a rendelőnél ma is használatos, a páciens által aláírt szöveg,
 // nem gépi fordítás vagy demó szöveg. A `{{orvos}}` helyőrzőt a PDF
 // generáláskor a terv kezelőorvosának neve váltja fel (lásd
