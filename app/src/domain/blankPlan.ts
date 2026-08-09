@@ -2,7 +2,7 @@
 // szerkesztő. `tervId`/`verzio` üresen marad, a storage.savePlan() tölti ki
 // első mentéskor (lásd storage/DemoStorage.ts).
 
-import { addDaysIso } from './date';
+import { addDaysIso, todayIso } from './date';
 import type { Nyelv, Plan, PriceList, Settings } from './types';
 
 /**
@@ -25,7 +25,7 @@ export function sablonVerzioFor(nyelv: Nyelv): string {
 export const ELSO_FAZIS_NEV = '1. kezelés';
 
 export function createBlankPlan(settings: Settings, priceList: PriceList): Plan {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayIso();
   // D21: a nyelv és a pénznem független -- a német páciens Magyarországon
   // forintban is fizethet. Az `alapertelmezettNyelv` csak akkor számít,
   // ha a német nyelv engedélyezve van; a `nemetEngedelyezve` kikapcsolása

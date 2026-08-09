@@ -196,4 +196,33 @@ describe('Végpontok közötti folyamat', () => {
     await screen.findByPlaceholderText(/Tétel keresése/);
     expect(screen.getByText('Fogeltávolítás')).toBeInTheDocument();
   }, 20000);
+
+  // docs/08-backlog.md 2. tétel -- a Függelék A) napi Nagy Éva-jelenet: a
+  // demó seed szerinte v2-je 2026-07-22-i keltezésű, egy visszatérő páciens
+  // új verziója ma mégsem indulhat ezzel a (a mai naphoz képest lejárt)
+  // dátummal.
+  it('egy korábbi terv megnyitása friss dátummal indítja az új verziót, az árakat érintetlenül hagyva', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Korábbi tervek' }));
+    const nagyEva = await screen.findByText('Nagy Éva');
+    const card = nagyEva.parentElement as HTMLElement;
+    // A legfrissebb verzió (v2, 2026-07-22) van legfelül -- lásd
+    // PlanHistoryPage.tsx `.slice().reverse()`.
+    const openBtn = within(card).getAllByRole('button', { name: 'Megnyitás szerkesztésre' })[0];
+    await user.click(openBtn);
+
+    // A visszatérő páciensnek két fázisa is van (1. kezelés + 2. kezelés —
+    // korona), tehát két ItemPicker-keresőmező is renderel -- itt csak azt
+    // ellenőrizzük, hogy a szerkesztő betöltött.
+    await screen.findAllByPlaceholderText(/Tétel keresése/);
+    // A tájékoztató sáv megjelenik, a régi (2026-07-22-i) dátum sehol nem
+    // látszik többé a szerkesztőben.
+    expect(await screen.findByText(/Az új verzió mai dátummal indul/)).toBeInTheDocument();
+    expect(screen.getByText(/a korábbi tételek ára változatlan/)).toBeInTheDocument();
+    expect(screen.queryByText(/2026\. július 22\./)).not.toBeInTheDocument();
+    // A korábbi (pillanatkép) sorok érintetlenek -- D7.
+    expect(screen.getByText('Fémkerámia')).toBeInTheDocument();
+  }, 20000);
 });

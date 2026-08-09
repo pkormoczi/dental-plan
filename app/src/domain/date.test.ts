@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { addDaysIso, formatLongDate, formatShortDate } from './date';
+import { addDaysIso, formatLongDate, formatShortDate, todayIso } from './date';
+
+describe('todayIso', () => {
+  it('returns an ISO (YYYY-MM-DD) date', () => {
+    expect(todayIso()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
 
 describe('formatLongDate', () => {
   it('formats hu as "2026. november 5."', () => {

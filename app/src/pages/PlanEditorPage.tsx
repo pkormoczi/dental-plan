@@ -19,12 +19,13 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes';
-import { Cross1Icon } from '@radix-ui/react-icons';
+import { Cross1Icon, InfoCircledIcon } from '@radix-ui/react-icons';
 import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
 import ToothChartPanel from '../components/ToothChartPanel';
 import ToothPickerPopover from '../components/ToothPickerPopover';
 import { t } from '../design/tokens';
+import { formatLongDate } from '../domain/date';
 import { basePrice, formatMoney } from '../domain/money';
 import { resolveNev } from '../domain/nev';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
@@ -68,7 +69,8 @@ function sorMezokTetelbol(
 }
 
 export default function PlanEditorPage() {
-  const { plan, setPlan, priceList, loadedOsszesitokDiff, piszkozatHiba } = useAppState();
+  const { plan, setPlan, priceList, loadedOsszesitokDiff, frissitettDatum, piszkozatHiba } =
+    useAppState();
   const navigate = useNavigate();
   const currency = plan.penznem;
   const nyelv = plan.nyelv;
@@ -196,6 +198,25 @@ export default function PlanEditorPage() {
         statusz={plan.statusz}
         onPreview={() => navigate('/elonezet')}
       />
+
+      {/* docs/backlog-2-friss-datum-terv.md 6. döntés: semleges szín -- ez
+          várt, nem hiba-jellegű viselkedés, az amber az alatta lévő valódi
+          anomáliának (loadedOsszesitokDiff) van fenntartva. A `nyelv`
+          paraméter fixen 'hu': a kezelőfelület a CLAUDE.md szerint végig
+          magyar marad, a nyelvfüggő formázás csak a pdf/ alatt él. */}
+      {frissitettDatum && (
+        <Callout.Root color="gray" mb="4">
+          <Callout.Icon>
+            <InfoCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            Az új verzió mai dátummal indul (keltezés:{' '}
+            <Text weight="bold">{formatLongDate(frissitettDatum.keltezes, 'hu')}</Text>, érvényesség:{' '}
+            <Text weight="bold">{formatLongDate(frissitettDatum.ervenyesIg, 'hu')}</Text>) — a korábbi
+            tételek ára változatlan.
+          </Callout.Text>
+        </Callout.Root>
+      )}
 
       {loadedOsszesitokDiff && (
         <Callout.Root color="amber" mb="4">

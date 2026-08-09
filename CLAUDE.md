@@ -158,6 +158,16 @@ A piszkozat-perzisztencia (`docs/backlog-1-piszkozat-terv.md`) segédfüggvénye
   `StorageContext` `drafts` mezőjeként érhető el, ne hozz létre másik
   példányt vagy másik kulcsot piszkozat-mentéshez
 
+A friss-dátum tétel (`docs/backlog-2-friss-datum-terv.md`) segédfüggvényei,
+szintén ne írd újra őket:
+- `todayIso()` (`app/src/domain/date.ts`) — a mai nap ISO dátuma; az
+  EGYETLEN forrás, `createBlankPlan()` is ezt hívja
+- `frissDatummal(plan, settings, ma)` (`app/src/domain/ujVerzioDatum.ts`) —
+  egy betöltött terv `keltezes`/`ervenyesIg`-ét bélyegzi mai dátumra (D7
+  szerint minden más mező pillanatkép, érintetlen); az `AppState.tsx`
+  `loadPlanIntoDraft`-ja hívja betöltéskor, ne máshol és ne
+  véglegesítéskor
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

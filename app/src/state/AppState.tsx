@@ -22,6 +22,8 @@ import { Box, Button, Flex, Text } from '@radix-ui/themes';
 import { createBlankPlan } from '../domain/blankPlan';
 import { piszkozatTartalmas } from '../domain/piszkozat';
 import { osszesitokElter } from '../domain/totals';
+import { frissDatummal, type UjVerzioDatum } from '../domain/ujVerzioDatum';
+import { todayIso } from '../domain/date';
 import type { Osszesitok, Plan, PriceList, Settings } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
 import { t } from '../design/tokens';
@@ -71,6 +73,15 @@ interface AppStateValue {
    * triviális (épp azért szerkeszt a doki, hogy megváltozzon az összeg).
    */
   loadedOsszesitokDiff: Osszesitok | null;
+  /**
+   * docs/backlog-2-friss-datum-terv.md: a `loadPlanIntoDraft`-tal betöltött
+   * terv `keltezes`/`ervenyesIg`-e itt már a mai napra és az aktuális
+   * `settings.ervenyessegNap`-ra frissült (nem a régi terv dátuma) -- ez az
+   * ÚJ értékpár, amit a PlanEditorPage tájékoztató sávja olvas. `null`, ha
+   * nincs friss betöltés, vagy a betöltött terv dátuma már úgyis a mai volt
+   * (nincs tényleges változás, nincs mit jelezni).
+   */
+  frissitettDatum: UjVerzioDatum | null;
   saveSettings: (s: Settings) => Promise<void>;
   savePriceList: (pl: PriceList) => Promise<void>;
   /**
@@ -98,6 +109,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [piszkozatMentve, setPiszkozatMentve] = useState<string | null>(null);
   const [piszkozatHiba, setPiszkozatHiba] = useState<string | null>(null);
   const [loadedOsszesitokDiff, setLoadedOsszesitokDiff] = useState<Osszesitok | null>(null);
+  const [frissitettDatum, setFrissitettDatum] = useState<UjVerzioDatum | null>(null);
   const [loadError, setLoadError] = useState<Error | null>(null);
   const [loadToken, setLoadToken] = useState(0);
   // Amit legutóbb a DraftStorage-ból olvastunk vagy oda írtunk -- csak a
@@ -198,6 +210,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setPriceList(pl);
     setPlanState(createBlankPlan(s, pl));
     setLoadedOsszesitokDiff(null);
+    setFrissitettDatum(null);
     // A dp: kulcsokat (a piszkozatot is) a clearAll()/resetDemoData() már
     // elsöpörte -- csak a memóriabeli piszkozat-állapotot kell nullázni.
     setMentettPlan(null);
@@ -220,6 +233,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       resetPlanDraft: () => {
         setPlanState(createBlankPlan(settings, priceList));
         setLoadedOsszesitokDiff(null);
+        setFrissitettDatum(null);
         setMentettPlan(null);
         setPiszkozatMentve(null);
         setPiszkozatHiba(null);
@@ -235,12 +249,25 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         });
       },
       loadPlanIntoDraft: (p) => {
-        setPlanState(p);
+        // docs/backlog-2-friss-datum-terv.md 1. döntés: a dátumbélyeg itt,
+        // betöltéskor íródik, nem véglegesítéskor -- a PreviewPage a
+        // `pdfInstance`-t a `plan` state-ből rendereli, egy késői írás a
+        // mentett JSON-t és a már korábban renderelt PDF-blob-ot szétcsúsztatná.
+        const friss = frissDatummal(p, settings, todayIso());
+        setPlanState(friss);
         setLoadedOsszesitokDiff(osszesitokElter(p.osszesitok, p.fazisok));
+        setFrissitettDatum(
+          friss.keltezes !== p.keltezes || friss.ervenyesIg !== p.ervenyesIg
+            ? { keltezes: friss.keltezes, ervenyesIg: friss.ervenyesIg }
+            : null,
+        );
         // A betöltött terv nem "mentetlen munka", amíg hozzá nem nyúlnak --
         // az első szerkesztés után az író effekt magától felülírja a régi
-        // piszkozatot, külön törlés itt nem kell (6. döntés).
-        setMentettPlan(p);
+        // piszkozatot, külön törlés itt nem kell (6. döntés). UGYANAZT a
+        // `friss` referenciát kapja a `plan` és a `mentettPlan` is -- két
+        // külön példány hamis "mentetlen munka" jelzést adna, hiszen a
+        // dátumbélyeg gépi lépés, nem doki-szerkesztés.
+        setMentettPlan(friss);
       },
       vanMentetlenPiszkozat: piszkozatTartalmas(plan) && plan !== mentettPlan,
       piszkozatMentve,
@@ -256,9 +283,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setMentettPlan(persisted);
         setPiszkozatMentve(null);
         setPiszkozatHiba(null);
+        setFrissitettDatum(null);
         await drafts.clear();
       },
       loadedOsszesitokDiff,
+      frissitettDatum,
       saveSettings: async (s) => {
         await storage.saveSettings(s);
         setSettings(s);
@@ -277,6 +306,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     piszkozatMentve,
     piszkozatHiba,
     loadedOsszesitokDiff,
+    frissitettDatum,
     storage,
     drafts,
     reloadFromStorage,

@@ -9,12 +9,14 @@ sérthetetlen keretei (D1–D21) egyik tételt sem sértik — ahol ez nem
 nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Sorrend, ha priorizálni kell:** ~~1 (piszkozat-perzisztencia)~~ → 5
-(EUR-mező) → 2 (friss dátum) → 3 (sornév + egyedi sor) → 6
+(EUR-mező) → ~~2 (friss dátum)~~ → 3 (sornév + egyedi sor) → 6
 (placeholder-őr) → 8 (árlista-nap) → 4, 9 → a többi.
 (Az eredeti triázs-sorrend tévesen kihagyta az 1. tételt és duplán
 hivatkozott a 3.-ra — itt javítva. Az 1. tétel a doktor-nap narratívában
 háromszor is felmerül ugyanazon a délelőttön, és fél nap a mérete —
-ez indokolta az élen; 2026-08-09-én elkészült, lásd alább.)
+ez indokolta az élen; 2026-08-09-én elkészült, lásd alább. A 2. tétel a
+javasolt sorrendtől eltérően, az 5. előtt készült el — szintén
+2026-08-09-én.)
 
 ---
 
@@ -48,7 +50,7 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   véglegesítéskor (`PreviewPage.tsx`). Lásd git history a részletes
   commitokért.
 
-### 2. Visszatöltött terv új verziója friss dátummal induljon
+### 2. Visszatöltött terv új verziója friss dátummal induljon — KÉSZ (2026-08-09)
 
 - **Méret:** 3 óra — egy függvény (`loadPlanIntoDraft` kiegészítése) plusz
   egy tájékoztató sáv a szerkesztőben.
@@ -60,6 +62,16 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   funkció.
 - **20%-os verzió:** nincs kisebb, a hiba maga is kicsi — ez már a
   minimális javítás.
+- **Megvalósítás:** a döntési részletek `docs/backlog-2-friss-datum-terv.md`-ben
+  (grill-me munkamenet, 7 döntés). Új `todayIso()` export (`app/src/domain/date.ts`,
+  kiemelve a `blankPlan.ts`-ből inline élő számításból), új
+  `frissDatummal(plan, settings, ma)` pillanatkép-őrző segédfüggvény
+  (`app/src/domain/ujVerzioDatum.ts`), az `AppState.tsx` `loadPlanIntoDraft`-ja
+  ezt hívja betöltéskor és egy új `frissitettDatum` jelző-state-tel jelzi a
+  változást (ugyanazzal az objektumreferenciával a `plan`/`mentettPlan`
+  state-eknek, hogy a gépi dátumbélyeg ne fusson bele a "mentetlen piszkozat"
+  heurisztikába), semleges (`gray`) `Callout` a `PlanEditorPage`-en a meglévő
+  amber sáv fölött. Lásd git history a részletes commitért.
 
 ### 3. Sornév szerkeszthetővé tétele + szabad („egyedi") sor
 

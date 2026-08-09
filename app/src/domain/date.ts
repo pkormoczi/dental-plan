@@ -8,6 +8,11 @@
 
 import type { Nyelv } from './types';
 
+/** A mai nap ISO (YYYY-MM-DD) dátuma. */
+export function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 /** ISO (YYYY-MM-DD) dátum + N nap, szintén ISO formátumban. */
 export function addDaysIso(isoDate: string, days: number): string {
   const d = new Date(`${isoDate}T00:00:00Z`);
