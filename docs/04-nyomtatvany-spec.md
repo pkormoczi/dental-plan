@@ -127,13 +127,16 @@ SVG a forrása a szerkesztőbeli fogtérképnek is (`components/DentalChart.tsx`
 (`pdf/toothChartImage.ts`), nincs két külön rajz.
 
 Az érintett fogak a rájuk felvitt kezelés **kategóriánkénti színét** kapják
-(korona, gyökérkezelés, tömés stb. — lásd `app/src/design/treatmentVisuals.ts`,
-az EGYETLEN forrása ennek a palettának mindkét felületen), a kezeletlen fogak
-az eredeti rajz fehérjét. A fogtérkép alatt egy jelmagyarázat sorolja fel a
-tervben ténylegesen előforduló kategóriákat, egy-egy színes ponttal. Ha egy
-fogon több kezelés is van, egyetlen (a `KEZELES_VIZUAL_PRIORITAS` tábla
-szerinti legmagasabb prioritású) szín látszik rajta — az adott kezelés
-szövegesen a tételtáblázatban továbbra is szerepel.
+(korona, gyökérkezelés, tömés stb. — a tényleges szín az árlista
+`Kategoria.szin` mezőjén él, az Árlista admin Kategóriák paneljén
+szerkeszthető; a *választható* kurált paletta és az eltévedt hivatkozás
+tartalék-színe `app/src/design/treatmentVisuals.ts`-ben, az EGYETLEN
+forrásukban), a kezeletlen fogak az eredeti rajz fehérjét. A fogtérkép
+alatt egy jelmagyarázat sorolja fel a tervben ténylegesen előforduló
+kategóriákat, egy-egy színes ponttal. Ha egy fogon több kezelés is van,
+egyetlen (a legkisebb `sorrend`-ű kategóriának megfelelő) szín látszik
+rajta — az adott kezelés szövegesen a tételtáblázatban továbbra is
+szerepel.
 
 A rajz csak a 32 maradó fogat ábrázolja. Tejfog-szám (51–85) esetén a
 fogtérkép alatt egy külön sor sorolja fel szövegesen ("Tejfogak: 55, 65"),

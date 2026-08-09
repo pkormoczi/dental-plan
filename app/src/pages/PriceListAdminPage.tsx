@@ -6,8 +6,10 @@
 //
 // A sor kinyitása adja a teljes szerkesztést, benne a kategória
 // legördülővel -- ez a takarítás fő eszköze (a 11 árva tétel átmozgatása,
-// lásd docs/06-arlista-import.md). Kategória hozzáadás/átnevezés NINCS a
-// prototípusban sem -- csak a meglévők közötti mozgatás.
+// lásd docs/06-arlista-import.md). A tétel-táblázat fölötti "Kategóriák"
+// panel (docs/08-backlog.md 8. tétel) adja a másik felet: kategória
+// létrehozás/átnevezés/színezés/sorrendezés/törlés, egy helyen a
+// tétel-mozgatással, hogy a doki ne navigáljon oda-vissza a takarításkor.
 
 import { Fragment, useMemo, useState } from 'react';
 import {
@@ -18,6 +20,7 @@ import {
   Grid,
   Heading,
   IconButton,
+  RadioCards,
   SegmentedControl,
   Select,
   Separator,
@@ -26,17 +29,23 @@ import {
   TextField,
 } from '@radix-ui/themes';
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   Cross2Icon,
   EyeClosedIcon,
   EyeOpenIcon,
   InfoCircledIcon,
   StarFilledIcon,
   StarIcon,
+  TrashIcon,
 } from '@radix-ui/react-icons';
 import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
+import { ALAP_KATEGORIA_SZIN, KATEGORIA_PALETTA } from '../design/treatmentVisuals';
 import { formatPrice } from '../domain/money';
-import { nextTetelId } from '../domain/priceListIds';
+import { nextKategoriaId, nextTetelId } from '../domain/priceListIds';
 import { nevEgyezik, norm } from '../domain/search';
 import type { Ar, Kategoria, PriceList, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
@@ -56,6 +65,8 @@ export default function PriceListAdminPage() {
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<FilterKey>('all');
   const [open, setOpen] = useState<string | null>(null);
+  const [catPanelOpen, setCatPanelOpen] = useState(false);
+  const [openCat, setOpenCat] = useState<string | null>(null);
   // P0-8-hoz hasonlóan (SettingsPage) -- a `savePriceList` korábban `void`-olva
   // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -75,11 +86,69 @@ export default function PriceListAdminPage() {
     });
   }
 
+  const sortedKategoriak = useMemo(
+    () => priceList.kategoriak.slice().sort((a, b) => a.sorrend - b.sorrend),
+    [priceList.kategoriak],
+  );
+
+  function patchCategory(id: string, patch: Partial<Kategoria>) {
+    commit({
+      ...priceList,
+      kategoriak: priceList.kategoriak.map((k) => (k.id === id ? { ...k, ...patch } : k)),
+    });
+  }
+
+  function addCategory() {
+    const id = nextKategoriaId(priceList.kategoriak);
+    const maxSorrend = priceList.kategoriak.reduce((max, k) => Math.max(max, k.sorrend), 0);
+    const newCategory: Kategoria = {
+      id,
+      nev: { hu: 'Új kategória', de: null },
+      sorrend: maxSorrend + 1,
+      szin: ALAP_KATEGORIA_SZIN,
+    };
+    commit({ ...priceList, kategoriak: [...priceList.kategoriak, newCategory] });
+    setCatPanelOpen(true);
+    setOpenCat(id);
+  }
+
+  /**
+   * Fel/le mozgatás: a `sortedKategoriak`-beli szomszéddal cserél, majd a
+   * teljes listát 1..n-re újraszámozza -- így a tömbsorrend és a `sorrend`
+   * mező soha nem csúszik szét (docs/backlog-8-kategoriakezeles-terv.md 10.
+   * döntés). Ez most már nemcsak a lista-/PDF-sorrendet, hanem a fogszín-
+   * ütközés kimenetelét is befolyásolja (domain/toothVisual.ts
+   * `resolveToothVisual`, 3. döntés).
+   */
+  function moveCategory(id: string, irany: -1 | 1) {
+    const idx = sortedKategoriak.findIndex((k) => k.id === id);
+    const cel = idx + irany;
+    if (idx < 0 || cel < 0 || cel >= sortedKategoriak.length) return;
+    const atrendezve = sortedKategoriak.slice();
+    [atrendezve[idx], atrendezve[cel]] = [atrendezve[cel], atrendezve[idx]];
+    commit({
+      ...priceList,
+      kategoriak: atrendezve.map((k, i) => ({ ...k, sorrend: i + 1 })),
+    });
+  }
+
+  /**
+   * Csak akkor törölhető, ha SEM aktív, SEM inaktív tétel nem hivatkozik rá
+   * (8. döntés) -- egy `aktiv: false` tétel bármikor visszakapcsolható az
+   * "Aktív" szem ikonnal, tehát egy csak aktív tételek alapján "üresnek"
+   * ítélt kategória valójában nem az. Valódi törlés (nincs `aktiv` mező a
+   * `Kategoria` típuson) -- semmi más nem hivatkozik rá tartalmilag.
+   */
+  function deleteCategory(id: string) {
+    commit({ ...priceList, kategoriak: priceList.kategoriak.filter((k) => k.id !== id) });
+    if (openCat === id) setOpenCat(null);
+  }
+
   function addNewItem() {
     const id = nextTetelId(priceList.tetelek);
     const newItem: Tetel = {
       id,
-      kategoriaId: priceList.kategoriak[0]?.id ?? '',
+      kategoriaId: sortedKategoriak[0]?.id ?? '',
       sorrend: priceList.tetelek.length + 1,
       aktiv: true,
       gyakori: false,
@@ -136,6 +205,19 @@ export default function PriceListAdminPage() {
           verzió {priceList.arlistaVerzio}
         </Text>
       </Flex>
+
+      <KategoriaPanel
+        open={catPanelOpen}
+        onOpenChange={setCatPanelOpen}
+        kategoriak={sortedKategoriak}
+        tetelek={priceList.tetelek}
+        openCat={openCat}
+        onOpenCatChange={setOpenCat}
+        onPatch={patchCategory}
+        onMove={moveCategory}
+        onDelete={deleteCategory}
+        onAdd={addCategory}
+      />
 
       <TextField.Root
         value={q}
@@ -279,7 +361,7 @@ export default function PriceListAdminPage() {
                         <Table.Cell colSpan={5} style={{ background: t.surfaceAlt }}>
                           <ItemEditor
                             item={it}
-                            categories={priceList.kategoriak}
+                            categories={sortedKategoriak}
                             onPatch={(p) => patchItem(it.id, p)}
                           />
                         </Table.Cell>
@@ -401,7 +483,20 @@ function ItemEditor({
             <Select.Content>
               {categories.map((k) => (
                 <Select.Item key={k.id} value={k.id}>
-                  {k.nev.hu}
+                  <Flex as="span" align="center" gap="2">
+                    <span
+                      aria-hidden
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: k.szin ?? ALAP_KATEGORIA_SZIN,
+                        display: 'inline-block',
+                        flexShrink: 0,
+                      }}
+                    />
+                    {k.nev.hu}
+                  </Flex>
                 </Select.Item>
               ))}
             </Select.Content>
@@ -504,6 +599,227 @@ function ItemEditor({
 
       <Text as="div" size="1" color="gray" mt="3" style={{ fontFamily: t.mono }}>
         id: {item.id} — soha nem használjuk újra, a régi tervek erre hivatkoznak
+      </Text>
+    </Box>
+  );
+}
+
+/**
+ * Kategória-karbantartó -- alapból csukott, összecsukható panel a
+ * tétel-táblázat FÖLÖTT (docs/backlog-8-kategoriakezeles-terv.md 11.
+ * döntés), a `ToothChartPanel.tsx` mintáját követve (feltételes render,
+ * `aria-expanded`/`aria-controls`, nincs nyitás/csukás-animáció). Egy sor
+ * kattintásra nyílik ki a `KategoriaEditor`-ra, ugyanúgy, mint a tétel-
+ * táblázat sorai az `ItemEditor`-ra.
+ */
+function KategoriaPanel({
+  open,
+  onOpenChange,
+  kategoriak,
+  tetelek,
+  openCat,
+  onOpenCatChange,
+  onPatch,
+  onMove,
+  onDelete,
+  onAdd,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  /** Már `sorrend` szerint rendezve -- lásd `sortedKategoriak`. */
+  kategoriak: Kategoria[];
+  tetelek: Tetel[];
+  openCat: string | null;
+  onOpenCatChange: (id: string | null) => void;
+  onPatch: (id: string, patch: Partial<Kategoria>) => void;
+  onMove: (id: string, irany: -1 | 1) => void;
+  onDelete: (id: string) => void;
+  onAdd: () => void;
+}) {
+  return (
+    <Box mb="4">
+      <Button
+        type="button"
+        variant="soft"
+        color="gray"
+        aria-expanded={open}
+        aria-controls="kategoriak-panel"
+        onClick={() => onOpenChange(!open)}
+      >
+        {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
+        Kategóriák
+      </Button>
+
+      {open && (
+        <Box id="kategoriak-panel" mt="3">
+          <Table.Root size="1" mb="2">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell width="24px" />
+                <Table.ColumnHeaderCell>Kategória</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell justify="end">Tételek</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell width="60px" />
+                <Table.ColumnHeaderCell width="34px" />
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {kategoriak.map((k, i) => {
+                const sajatTetelek = tetelek.filter((x) => x.kategoriaId === k.id);
+                // Aktív ÉS inaktív tétel is számít -- egy `aktiv: false` tétel
+                // bármikor visszakapcsolható, tehát egy csak aktív tételek
+                // alapján "üresnek" ítélt kategória valójában nem az (8. döntés).
+                const ures = sajatTetelek.length === 0;
+                const inaktiv = sajatTetelek.filter((x) => !x.aktiv).length;
+
+                return (
+                  <Fragment key={k.id}>
+                    <Table.Row
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => onOpenCatChange(openCat === k.id ? null : k.id)}
+                    >
+                      <Table.Cell>
+                        <span
+                          aria-hidden
+                          style={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            background: k.szin ?? ALAP_KATEGORIA_SZIN,
+                            display: 'inline-block',
+                          }}
+                        />
+                      </Table.Cell>
+                      <Table.RowHeaderCell>{k.nev.hu}</Table.RowHeaderCell>
+                      <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {sajatTetelek.length} tétel
+                        {inaktiv > 0 && (
+                          <Text size="1" ml="1" color="gray">
+                            ({inaktiv} inaktív)
+                          </Text>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Flex gap="1">
+                          <IconButton
+                            aria-label="Kategória feljebb"
+                            variant="ghost"
+                            color="gray"
+                            size="1"
+                            disabled={i === 0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onMove(k.id, -1);
+                            }}
+                          >
+                            <ArrowUpIcon />
+                          </IconButton>
+                          <IconButton
+                            aria-label="Kategória lejjebb"
+                            variant="ghost"
+                            color="gray"
+                            size="1"
+                            disabled={i === kategoriak.length - 1}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onMove(k.id, 1);
+                            }}
+                          >
+                            <ArrowDownIcon />
+                          </IconButton>
+                        </Flex>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <IconButton
+                          aria-label="Kategória törlése"
+                          title={
+                            ures
+                              ? undefined
+                              : 'Előbb mozgasd át a hozzá tartozó tételeket másik kategóriába'
+                          }
+                          variant="ghost"
+                          color="gray"
+                          size="1"
+                          disabled={!ures}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(k.id);
+                          }}
+                        >
+                          <TrashIcon />
+                        </IconButton>
+                      </Table.Cell>
+                    </Table.Row>
+
+                    {openCat === k.id && (
+                      <Table.Row>
+                        <Table.Cell colSpan={5} style={{ background: t.surfaceAlt }}>
+                          <KategoriaEditor kategoria={k} onPatch={(p) => onPatch(k.id, p)} />
+                        </Table.Cell>
+                      </Table.Row>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </Table.Body>
+          </Table.Root>
+          <Button type="button" size="1" variant="soft" onClick={onAdd}>
+            + Új kategória
+          </Button>
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+/** Kinyitott kategória-sor -- a mai `ItemEditor` mintájára. */
+function KategoriaEditor({
+  kategoria,
+  onPatch,
+}: {
+  kategoria: Kategoria;
+  onPatch: (patch: Partial<Kategoria>) => void;
+}) {
+  return (
+    <Box py="2">
+      <Grid columns="2" gap="3" mb="3">
+        <Field label="Megnevezés (magyar)">
+          <TextField.Root
+            value={kategoria.nev.hu}
+            onChange={(e) => onPatch({ nev: { ...kategoria.nev, hu: e.target.value } })}
+          />
+        </Field>
+        <Field label="Bezeichnung (német)">
+          <TextField.Root
+            value={kategoria.nev.de || ''}
+            placeholder="még nincs megadva"
+            onChange={(e) => onPatch({ nev: { ...kategoria.nev, de: e.target.value || null } })}
+          />
+        </Field>
+      </Grid>
+
+      {/* Kurált paletta, nincs szabad hex/natív color input -- két kategória
+          kaphat azonos színt, a felület ezt nem jelzi (docs/backlog-8-
+          kategoriakezeles-terv.md 4-5. döntés). */}
+      <FieldGroup label="Szín (a fogtérképen ez jelöli a kategória kezeléseit)">
+        <RadioCards.Root
+          value={kategoria.szin ?? ALAP_KATEGORIA_SZIN}
+          onValueChange={(v) => onPatch({ szin: v })}
+          columns="8"
+          gap="2"
+        >
+          {KATEGORIA_PALETTA.map((p) => (
+            <RadioCards.Item key={p.hex} value={p.hex} aria-label={p.nev}>
+              <span
+                aria-hidden
+                style={{ display: 'block', width: 20, height: 20, borderRadius: 4, background: p.hex }}
+              />
+            </RadioCards.Item>
+          ))}
+        </RadioCards.Root>
+      </FieldGroup>
+
+      <Text as="div" size="1" color="gray" mt="3" style={{ fontFamily: t.mono }}>
+        id: {kategoria.id}
       </Text>
     </Box>
   );

@@ -39,7 +39,7 @@ nincs szerver.
 
 ## `arlista.json`
 
-Kész seed: `data/arlista.seed.json` (118 tétel, 12 kategória).
+Kész seed: `data/arlista.seed.json` (118 tétel, 13 kategória).
 
 ```jsonc
 {
@@ -47,7 +47,12 @@ Kész seed: `data/arlista.seed.json` (118 tétel, 12 kategória).
   "arlistaVerzio": "2026-07-01",   // ez kerül a nyomtatvány láblécére
   "modositva": "2026-08-05",
   "kategoriak": [
-    { "id": "k02", "nev": { "hu": "Tömések", "de": null }, "sorrend": 2 }
+    {
+      "id": "k02",
+      "nev": { "hu": "Tömések", "de": null },
+      "sorrend": 2,
+      "szin": "#51cf66"            // fogtérkép-szín (hex), opcionális -- lásd design/treatmentVisuals.ts
+    }
   ],
   "tetelek": [
     {

@@ -76,11 +76,15 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
 ### Szín, forma, sűrűség
 
 - EGY akcentus az egész appban. Nincs második kiemelőszín. **Nevesített
-  kivétel: a fogtérkép kezelés-kategóriánkénti palettája**
-  (`app/src/design/treatmentVisuals.ts`) — ott a szín információt hordoz
-  (melyik fogat milyen kezelés érinti), nem díszítés. Ez a paletta EGYETLEN
-  helyen, ebben a fájlban él, a szerkesztő és a nyomtatvány is innen olvas
-  — ne vezess be hozzá második definíciót.
+  kivétel: a fogtérkép kezelés-kategóriánkénti színezése** — ott a szín
+  információt hordoz (melyik fogat milyen kezelés érinti), nem díszítés.
+  A tényleges szín az árlista `Kategoria.szin` mezőjén él (docs/08-backlog.md
+  8. tétel, a kategória-karbantartó panelen szerkeszthető, kurált
+  palettából); a *választható* paletta (`KATEGORIA_PALETTA`) és az
+  eltévedt hivatkozás fix tartalék-színe (`ISMERETLEN_KATEGORIA`) viszont
+  EGYETLEN helyen, `app/src/design/treatmentVisuals.ts`-ben él — a
+  szerkesztő és a nyomtatvány is innen (illetve az árlista-adatból) olvas,
+  ne vezess be hozzá második definíciót.
   Ugyanígy nevesített kivétel a fogtérkép kattintható módjának
   kurzor-/kijelölés-gyűrűje (`.is-active`/`.is-picked`,
   `design/toothChartSvg.ts`): `ink` (semleges, billentyűzetes kurzor) és

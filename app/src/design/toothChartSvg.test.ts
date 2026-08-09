@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { buildToothChartSvg } from './toothChartSvg';
-import { KEZELES_VIZUALOK } from './treatmentVisuals';
+import type { KategoriaVizual } from './treatmentVisuals';
 import type { FogterkepAllapot, FogVizualisAllapot } from '../domain/toothVisual';
 
-function makeAllapot(fogak: Record<string, keyof typeof KEZELES_VIZUALOK>): FogterkepAllapot {
+const KORONA_VIZUAL: KategoriaVizual = {
+  id: 'k10',
+  nev: { hu: 'Korona és híd', de: 'Krone und Brücke' },
+  szin: '#4dabf7',
+  sorrend: 4,
+};
+
+function makeAllapot(fogak: Record<string, KategoriaVizual>): FogterkepAllapot {
   const map = new Map<string, FogVizualisAllapot>();
   for (const [fdi, vizual] of Object.entries(fogak)) {
     map.set(fdi, { fdi, vizual, kezelesek: [] });
@@ -34,8 +41,8 @@ describe('buildToothChartSvg', () => {
   });
 
   it('pontosan a várt fogra injektál színszabályt', () => {
-    const svg = buildToothChartSvg(makeAllapot({ '11': 'KORONA' }));
-    expect(svg).toContain(`#tooth-11{color:${KEZELES_VIZUALOK.KORONA.szin}}`);
+    const svg = buildToothChartSvg(makeAllapot({ '11': KORONA_VIZUAL }));
+    expect(svg).toContain(`#tooth-11{color:${KORONA_VIZUAL.szin}}`);
     expect(svg).not.toContain('#tooth-12{color:');
   });
 
@@ -52,7 +59,7 @@ describe('buildToothChartSvg', () => {
 
   describe('interactive (PDF-regressziós védőháló + kattintható mód)', () => {
     it('interactive nélkül (alap, a PDF-útvonal ezt kapja) NINCS role/aria-label a fog-csoportokon, a gyökér marad aria-hidden a magyar címmel', () => {
-      const svg = buildToothChartSvg(makeAllapot({ '11': 'KORONA' }));
+      const svg = buildToothChartSvg(makeAllapot({ '11': KORONA_VIZUAL }));
       expect(svg).not.toContain('role="button"');
       expect(svg).not.toContain('role="option"');
       expect(svg).not.toContain('aria-label="11');
@@ -74,9 +81,21 @@ describe('buildToothChartSvg', () => {
     });
 
     it('kezelt fog beszédes aria-label-t kap a kategórianévvel, kezeletlen fog "nincs kezelés"-t', () => {
-      const svg = buildToothChartSvg(makeAllapot({ '11': 'KORONA' }), { interactive: true });
+      const svg = buildToothChartSvg(makeAllapot({ '11': KORONA_VIZUAL }), { interactive: true });
       expect(svg).toContain('aria-label="11. fog – Korona és híd"');
       expect(svg).toContain('aria-label="12. fog – nincs kezelés"');
+    });
+
+    it('a kategórianévben lévő idézőjelet/kacsacsőrt escape-eli, hogy ne törje el az attribútumot', () => {
+      const vegyes: KategoriaVizual = {
+        id: 'k99',
+        nev: { hu: 'Fura "kategória" <script>', de: null },
+        szin: '#adb5bd',
+        sorrend: 9,
+      };
+      const svg = buildToothChartSvg(makeAllapot({ '11': vegyes }), { interactive: true });
+      expect(svg).toContain('aria-label="11. fog – Fura &quot;kategória&quot; &lt;script&gt;"');
+      expect(svg).not.toContain('aria-label="11. fog – Fura "kategória" <script>"');
     });
 
     it('focusedTooth az adott fogra (és csakis arra) is-active classt tesz', () => {

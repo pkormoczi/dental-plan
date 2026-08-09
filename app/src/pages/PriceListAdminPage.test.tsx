@@ -206,4 +206,164 @@ describe('PriceListAdminPage', () => {
     expect(await screen.findByText('Fognyaki tömés')).toBeInTheDocument();
     expect(screen.queryByText('Zahnhalsfüllung')).not.toBeInTheDocument();
   });
+
+  // docs/08-backlog.md 8. tétel: kategória-karbantartó panel.
+  describe('Kategóriák panel', () => {
+    function catPanel(): HTMLElement {
+      return document.getElementById('kategoriak-panel')!;
+    }
+
+    async function openCatPanel(user: ReturnType<typeof userEvent.setup>) {
+      await screen.findByText(/118 \/ 118 tétel látszik/);
+      const toggle = screen.getByRole('button', { name: /Kategóriák/ });
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await user.click(toggle);
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    }
+
+    it('alapból csukva van, nyitva az összes kategóriát felsorolja', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      expect(document.getElementById('kategoriak-panel')).not.toBeInTheDocument();
+
+      await openCatPanel(user);
+      const kategoriak = readPriceList().kategoriak;
+      for (const k of kategoriak) {
+        expect(within(catPanel()).getByText(k.nev.hu)).toBeInTheDocument();
+      }
+    });
+
+    it('"+ Új kategória" szürke, üres kategóriát hoz létre és megnyitja szerkesztésre', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      const before = readPriceList().kategoriak.length;
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+
+      const pl = readPriceList();
+      expect(pl.kategoriak).toHaveLength(before + 1);
+      const created = pl.kategoriak.at(-1)!;
+      expect(created.nev.hu).toBe('Új kategória');
+      expect(created.szin).toBe('#adb5bd');
+      expect(created.sorrend).toBe(before + 1);
+
+      // Rögtön szerkesztésre nyílik -- a HU név mező a jelenlegi értékkel látszik.
+      expect(within(catPanel()).getByDisplayValue('Új kategória')).toBeInTheDocument();
+    });
+
+    it('kategória átnevezése (HU/DE) perzisztálódik', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+      const created = readPriceList().kategoriak.at(-1)!;
+
+      const huInput = within(catPanel()).getByDisplayValue('Új kategória');
+      await user.clear(huInput);
+      await user.type(huInput, 'Fogszabályozás');
+
+      const deInput = within(catPanel()).getByPlaceholderText('még nincs megadva');
+      await user.type(deInput, 'Kieferorthopädie');
+
+      const updated = readPriceList().kategoriak.find((k) => k.id === created.id)!;
+      expect(updated.nev.hu).toBe('Fogszabályozás');
+      expect(updated.nev.de).toBe('Kieferorthopädie');
+    });
+
+    it('fel/le mozgatás megcseréli két szomszédos kategória sorrendjét, a szélső nyíl tiltva', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      const sorted = readPriceList().kategoriak.slice().sort((a, b) => a.sorrend - b.sorrend);
+      const first = sorted[0];
+      const second = sorted[1];
+
+      const firstRow = within(catPanel()).getByText(first.nev.hu).closest('tr')!;
+      expect(within(firstRow).getByRole('button', { name: 'Kategória feljebb' })).toBeDisabled();
+
+      await user.click(within(firstRow).getByRole('button', { name: 'Kategória lejjebb' }));
+
+      const updated = readPriceList().kategoriak;
+      expect(updated.find((k) => k.id === first.id)!.sorrend).toBe(second.sorrend);
+      expect(updated.find((k) => k.id === second.id)!.sorrend).toBe(first.sorrend);
+    });
+
+    it('a törlés gomb tiltva marad akkor is, ha egy kategória MINDEN tétele inaktív (8. döntés)', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      // A legkisebb tételszámú kategóriát választjuk, hogy a tesztben minden
+      // tételét kényelmesen inaktiválni tudjuk -- utána a kategória "üresnek"
+      // TŰNIK aktív tételek alapján nézve, de a törlés gombnak mégis
+      // tiltottnak kell maradnia, mert az inaktív tételek bármikor
+      // visszakapcsolhatók.
+      const pl = readPriceList();
+      const counts = new Map<string, number>();
+      for (const x of pl.tetelek) counts.set(x.kategoriaId, (counts.get(x.kategoriaId) ?? 0) + 1);
+      const smallestId = [...counts.entries()].sort((a, b) => a[1] - b[1])[0][0];
+      const smallest = pl.kategoriak.find((k) => k.id === smallestId)!;
+      const itemsInSmallest = pl.tetelek.filter((x) => x.kategoriaId === smallestId);
+
+      for (const item of itemsInSmallest) {
+        const nameCell = await screen.findByText(item.nev.hu);
+        const rowDiv = nameCell.parentElement!;
+        await user.click(within(rowDiv).getByLabelText('Aktív'));
+      }
+
+      expect(
+        readPriceList().tetelek.filter((x) => x.kategoriaId === smallestId && x.aktiv),
+      ).toHaveLength(0);
+
+      const catRow = within(catPanel()).getByText(smallest.nev.hu).closest('tr')!;
+      expect(within(catRow).getByRole('button', { name: 'Kategória törlése' })).toBeDisabled();
+    });
+
+    it('üres (frissen létrehozott) kategória törölhető', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+      const created = readPriceList().kategoriak.at(-1)!;
+
+      const createdRow = within(catPanel()).getByText(created.nev.hu).closest('tr')!;
+      const deleteButton = within(createdRow).getByRole('button', { name: 'Kategória törlése' });
+      expect(deleteButton).not.toBeDisabled();
+      await user.click(deleteButton);
+
+      expect(readPriceList().kategoriak.some((k) => k.id === created.id)).toBe(false);
+    });
+
+    it('a színválasztó palettából kiválasztott szín perzisztálódik', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+      const created = readPriceList().kategoriak.at(-1)!;
+
+      await user.click(within(catPanel()).getByRole('radio', { name: 'Türkiz' }));
+
+      const updated = readPriceList().kategoriak.find((k) => k.id === created.id)!;
+      expect(updated.szin).toBe('#20c997');
+    });
+
+    it('az új kategória a tétel-szerkesztő Kategória legördülőjében is megjelenik', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+
+      const nameCell = await screen.findByText('CBCT');
+      await user.click(nameCell);
+      await user.click(screen.getByRole('combobox', { name: 'Kategória' }));
+
+      expect(await screen.findByRole('option', { name: /Új kategória/ })).toBeInTheDocument();
+    });
+  });
 });

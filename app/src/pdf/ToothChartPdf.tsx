@@ -11,7 +11,6 @@
 
 import { Image, Text, View } from '@react-pdf/renderer';
 import { t } from '../design/tokens';
-import { KEZELES_VIZUALOK } from '../design/treatmentVisuals';
 import { resolveNev } from '../domain/nev';
 import type { FogterkepAllapot } from '../domain/toothVisual';
 import type { Nyelv } from '../domain/types';
@@ -44,15 +43,12 @@ export function ToothChartPdf({
       <Image src={pngDataUrl} style={s.image} />
       {allapot.jelmagyarazat.length > 0 && (
         <View style={s.legend}>
-          {allapot.jelmagyarazat.map((kategoria) => {
-            const { szin, cimke } = KEZELES_VIZUALOK[kategoria];
-            return (
-              <View key={kategoria} style={s.legendItem}>
-                <View style={[s.legendDot, { backgroundColor: szin }]} />
-                <Text style={s.legendLabel}>{resolveNev(cimke, nyelv).szoveg}</Text>
-              </View>
-            );
-          })}
+          {allapot.jelmagyarazat.map((kategoria) => (
+            <View key={kategoria.id} style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: kategoria.szin }]} />
+              <Text style={s.legendLabel}>{resolveNev(kategoria.nev, nyelv).szoveg}</Text>
+            </View>
+          ))}
         </View>
       )}
       {allapot.tejfogak.length > 0 && (

@@ -2,10 +2,17 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import DentalChart from './DentalChart';
-import { KEZELES_VIZUALOK } from '../design/treatmentVisuals';
+import type { KategoriaVizual } from '../design/treatmentVisuals';
 import type { FogterkepAllapot, FogVizualisAllapot } from '../domain/toothVisual';
 
-function makeAllapot(fogak: Record<string, keyof typeof KEZELES_VIZUALOK>): FogterkepAllapot {
+const KORONA_VIZUAL: KategoriaVizual = {
+  id: 'k10',
+  nev: { hu: 'Korona és híd', de: 'Krone und Brücke' },
+  szin: '#4dabf7',
+  sorrend: 4,
+};
+
+function makeAllapot(fogak: Record<string, KategoriaVizual>): FogterkepAllapot {
   const map = new Map<string, FogVizualisAllapot>();
   for (const [fdi, vizual] of Object.entries(fogak)) {
     map.set(fdi, { fdi, vizual, kezelesek: [] });
@@ -15,16 +22,16 @@ function makeAllapot(fogak: Record<string, keyof typeof KEZELES_VIZUALOK>): Fogt
 
 describe('DentalChart', () => {
   it('a 11-es fogra kapott kezelés a megfelelő szín-szabályt injektálja a fog elemére', () => {
-    const allapot = makeAllapot({ '11': 'KORONA' });
+    const allapot = makeAllapot({ '11': KORONA_VIZUAL });
     const { container } = render(<DentalChart allapot={allapot} />);
 
     expect(container.querySelector('[data-tooth="11"]')).toBeInTheDocument();
     const styleText = container.querySelector('style')?.textContent ?? '';
-    expect(styleText).toContain(`#tooth-11{color:${KEZELES_VIZUALOK.KORONA.szin}}`);
+    expect(styleText).toContain(`#tooth-11{color:${KORONA_VIZUAL.szin}}`);
   });
 
   it('kezeletlen fogon nincs felülíró szabály -- az eredeti asset fehérje marad', () => {
-    const allapot = makeAllapot({ '11': 'KORONA' });
+    const allapot = makeAllapot({ '11': KORONA_VIZUAL });
     const { container } = render(<DentalChart allapot={allapot} />);
 
     const styleText = container.querySelector('style')?.textContent ?? '';
@@ -33,7 +40,7 @@ describe('DentalChart', () => {
 
   it('onToothClick nélkül a kattintás nem vált ki interakciót (readonly/PDF mód)', async () => {
     const user = userEvent.setup();
-    const allapot = makeAllapot({ '11': 'KORONA' });
+    const allapot = makeAllapot({ '11': KORONA_VIZUAL });
     const { container } = render(<DentalChart allapot={allapot} />);
 
     const tooth = container.querySelector('[data-tooth="11"]') as Element;
@@ -46,7 +53,7 @@ describe('DentalChart', () => {
   it('onToothClick megadásakor a kattintott fog FDI-kódja érkezik a callbackbe', async () => {
     const user = userEvent.setup();
     const onToothClick = vi.fn();
-    const allapot = makeAllapot({ '11': 'KORONA' });
+    const allapot = makeAllapot({ '11': KORONA_VIZUAL });
     const { container } = render(<DentalChart allapot={allapot} onToothClick={onToothClick} />);
 
     const tooth = container.querySelector('[data-tooth="11"]') as Element;

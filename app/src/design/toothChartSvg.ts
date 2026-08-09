@@ -11,14 +11,17 @@
 // tetején) vagy a path-adathoz hozzá kellene nyúlni.
 //
 // Biztonság: mivel ez `dangerouslySetInnerHTML`-be kerül, a beszúrt adat
-// zárt halmazokból jön -- a fog-id-k csak `isMaradoFog()`-on átment FDI
-// kódok lehetnek (`buildToothVisualStates` már ezt garantálja), a színek
-// csak a `KEZELES_VIZUALOK` statikus hex-értékei. Az injektált szabályok
-// előállítása így nem enged tetszőleges stringet a markupba.
+// jórészt zárt halmazokból jön -- a fog-id-k csak `isMaradoFog()`-on átment
+// FDI kódok lehetnek (`buildToothVisualStates` már ezt garantálja), a színek
+// pedig a `HEX_COLOR_RE`-n átmenő (vagy `ALAP_KATEGORIA_SZIN`-re eső) hex
+// értékek. A kategórianév viszont a docs/08-backlog.md 8. tétel óta a doki
+// által szerkesztett szabadszöveg (`Kategoria.nev`, a kategória-karbantartó
+// panelen) -- interaktív módban ez kerül az `aria-label` attribútumba, ezért
+// a `attrEscape()` mindig lefut rá, mielőtt markupba kerülne.
 
 import chartSvgRaw from '../assets/dental-chart-fdi-32.svg?raw';
 import { isMaradoFog, type FogterkepAllapot } from '../domain/toothVisual';
-import { KEZELES_VIZUALOK } from './treatmentVisuals';
+import { ALAP_KATEGORIA_SZIN } from './treatmentVisuals';
 
 export const CHART_ARIA_LABEL = 'Fogászati kezelési terv – érintett fogak vizuális jelölése';
 
@@ -125,8 +128,9 @@ export function buildToothChartSvg(
   const colorRules: string[] = [];
   for (const [fdi, fogAllapot] of allapot.fogak) {
     if (!isMaradoFog(fdi)) continue; // védőháló, lásd fejléckomment
-    const szin = KEZELES_VIZUALOK[fogAllapot.vizual].szin;
-    if (!HEX_COLOR_RE.test(szin)) continue; // védőháló
+    // `kategoriaVizual()`/`vizualKategoriaFor()` már garantál érvényes hexet
+    // -- ez a regex csak második védőháló, ha mégis érvénytelen jutna ide.
+    const szin = HEX_COLOR_RE.test(fogAllapot.vizual.szin) ? fogAllapot.vizual.szin : ALAP_KATEGORIA_SZIN;
     colorRules.push(`#tooth-${fdi}{color:${szin}}`);
   }
   if (colorRules.length) {
@@ -145,11 +149,19 @@ export function buildToothChartSvg(
   return svg;
 }
 
+/** `"`/`&`/`<`/`>` escape-elése attribútumértékbe illesztés előtt -- a
+ *  kategórianév (lásd lent) a doki szabadszövege, nem statikus tábla. */
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 /**
  * Fogankénti `role`/`aria-label`(/`aria-selected`) + `is-active`/`is-picked`
  * class injektálás -- lásd `ToothChartSvgOptions.interactive` fejléckommentjét
- * a biztonsági indoklásért (zárt halmazok: FDI-kódok a `TOOTH_GROUP_OPEN_RE`
- * saját capture-jéből, kategórianevek a statikus `KEZELES_VIZUALOK`-ból).
+ * a biztonsági indoklásért. A FDI-kódok zárt halmazból jönnek
+ * (`TOOTH_GROUP_OPEN_RE` saját capture-je), a kategórianév viszont a doki
+ * szerkesztett szövege (`Kategoria.nev.hu` a kategória-karbantartó panelen,
+ * mindig magyar -- a kezelőfelület magyar), ezért `escapeAttr()`-en megy át.
  */
 function makeInteractive(
   svg: string,
@@ -161,7 +173,7 @@ function makeInteractive(
   const selected = new Set(selectedTeeth ?? []);
   return svg.replace(TOOTH_GROUP_OPEN_RE, (_match, fdi: string, rest: string) => {
     const kezeles = allapot.fogak.get(fdi);
-    const cimke = kezeles ? KEZELES_VIZUALOK[kezeles.vizual].cimke.hu : 'nincs kezelés';
+    const cimke = escapeAttr(kezeles ? kezeles.vizual.nev.hu : 'nincs kezelés');
     const isPicked = selected.has(fdi);
     const classes = ['tooth', fdi === focusedTooth && 'is-active', isPicked && 'is-picked']
       .filter(Boolean)

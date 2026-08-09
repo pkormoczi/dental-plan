@@ -123,17 +123,25 @@ A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne ír
 őket:
 - `buildToothVisualStates(plan, priceList)` (`app/src/domain/toothVisual.ts`)
   — a terv soraiból fogankénti vizuális állapotot épít (melyik fog milyen
-  kezelés-kategória színét kapja, több kezelés esetén melyiket); `parseTeeth`-re
+  kategória színét kapja, több kezelés esetén melyiket); `parseTeeth`-re
   épül, nem duplikálja a fogszám-parsolást
 - `resolveToothVisual(kezelesek)` (`app/src/domain/toothVisual.ts`) — egy
-  fogon több kezelés esetén a `KEZELES_VIZUAL_PRIORITAS` tábla szerint dönti
-  el a megjelenő színt; ez az EGYETLEN hely, ahol ez a precedencia eldől
-- `vizualKategoriaFor(kategoriaId)` / `KEZELES_VIZUALOK` / `KEZELES_VIZUAL_PRIORITAS`
-  (`app/src/design/treatmentVisuals.ts`) — az árlista `kategoriaId`-jának
-  megfeleltetése egy kezelés-vizuál kategóriának és annak színe/felirata; ez
-  az EGYETLEN színforrás, a szerkesztő (`components/DentalChart.tsx`,
-  `DentalChartLegend.tsx`) és a nyomtatvány (`pdf/ToothChartPdf.tsx`) is
-  innen olvas
+  fogon több kezelés esetén a legkisebb `sorrend`-ű kategória (a
+  kategória-lista sorrendje egyben ütközési prioritás, docs/08-backlog.md
+  8. tétel) szín dönt; ez az EGYETLEN hely, ahol ez a precedencia eldől
+- `kategoriaVizual(kategoria)` / `vizualKategoriaFor(kategoriaId, kategoriak)`
+  / `KATEGORIA_PALETTA` / `ALAP_KATEGORIA_SZIN` / `ISMERETLEN_KATEGORIA`
+  (`app/src/design/treatmentVisuals.ts`) — a `Kategoria.szin` mező (az
+  árlista-adminban, a Kategóriák panelen szerkeszthető) a tényleges
+  színforrás; ez a fájl adja a kurált *választható* palettát a
+  színválasztóhoz és az eltévedt hivatkozás (`kategoriaId` nem létező
+  kategóriára mutat) fix tartalék-színét. A szerkesztő
+  (`components/DentalChart.tsx`, `DentalChartLegend.tsx`) és a nyomtatvány
+  (`pdf/ToothChartPdf.tsx`) mindig a `buildToothVisualStates` eredményéből
+  olvas, nem közvetlenül innen
+- `nextKategoriaId(kategoriak)` (`app/src/domain/priceListIds.ts`) — a
+  `nextTetelId` kategória-párja, ugyanazzal a D17-szerű max-alapú
+  (nem hossz-alapú) számítással
 - `buildToothChartSvg(allapot, opts)` (`app/src/design/toothChartSvg.ts`) —
   az `assets/dental-chart-fdi-32.svg` nyers markupjából épít egy már
   színezett SVG-stringet; ugyanez a markup megy DOM-ba a szerkesztőben és
@@ -241,7 +249,7 @@ magyar, magyarul gépel akkor is, ha német ajánlatot állít össze (D21).
 
 ## Adat és ismert hiányok
 
-`data/arlista.seed.json` = 118 tétel, 12 kategória, az eredeti Excel `Arlista`
+`data/arlista.seed.json` = 118 tétel, 13 kategória, az eredeti Excel `Arlista`
 lapjából importálva. A tényleges, folyamatosan változó állapot (mi van
 lektorálva, mi van bekategorizálva, hány tétel kapott `gyakori` jelölést)
 **a `docs/06-arlista-import.md`-ben él, ne itt** — ez a fájl gyorsan

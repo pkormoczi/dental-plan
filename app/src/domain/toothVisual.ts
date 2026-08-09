@@ -15,11 +15,7 @@
 
 import { parseTeeth } from './teeth';
 import type { Plan, PriceList, Sor } from './types';
-import {
-  KEZELES_VIZUAL_PRIORITAS,
-  type KezelesVizual,
-  vizualKategoriaFor,
-} from '../design/treatmentVisuals';
+import { ISMERETLEN_KATEGORIA, kategoriaVizual, type KategoriaVizual } from '../design/treatmentVisuals';
 
 /** A 32 maradó fog, az asset (dental-chart-fdi-32.svg) authored sorrendjében. */
 export const FDI_MARADO: readonly string[] = [
@@ -41,7 +37,7 @@ export function isTejfog(kod: string): boolean {
 export interface FogKezeles {
   fdi: string;
   sor: Sor;
-  vizual: KezelesVizual;
+  vizual: KategoriaVizual;
   /** A `Plan.fazisok`/`Fazis.sorok` beli pozíció -- a fogtérkép kattintás-
    *  kezelője (PlanEditorPage) ebből talál vissza a konkrét sorra, mert a
    *  `sor` maga a `structuredClone`-os `updatePlan` miatt renderelésenként
@@ -53,7 +49,7 @@ export interface FogKezeles {
 /** MINDEN kezelés megmarad egy fogon, akkor is, ha csak egy szín látszik. */
 export interface FogVizualisAllapot {
   fdi: string;
-  vizual: KezelesVizual;
+  vizual: KategoriaVizual;
   kezelesek: FogKezeles[];
 }
 
@@ -71,25 +67,41 @@ export interface FogterkepAllapot {
   ismeretlen: string[];
   /** Volt legalább egy sor, aminek a `tetelId`-je nincs a mai árlistában. */
   hianyzoTetel: boolean;
-  /** Csak a tervben ténylegesen előforduló kategóriák, prioritási sorrendben. */
-  jelmagyarazat: KezelesVizual[];
+  /** Csak a tervben ténylegesen előforduló kategóriák, `sorrend` szerint. */
+  jelmagyarazat: KategoriaVizual[];
 }
 
 /**
  * Egy fogon több kezelés is lehet (pl. gyökérkezelés + korona ugyanazon a
- * fogon) -- a megjelenő szín a `KEZELES_VIZUAL_PRIORITAS` tábla szerinti
- * legmagasabb prioritású kategória. Ez az EGYETLEN hely, ahol ez a
+ * fogon) -- a megjelenő szín a legkisebb `sorrend`-ű kategóriáé (a
+ * kategória-lista sorrendje egyben fontossági sorrend is,
+ * docs/backlog-8-kategoriakezeles-terv.md 3. döntés). Holtversenynél (két
+ * kategória azonos `sorrend`-del -- rendes adaton nem fordulhat elő) az
+ * `id` dönt, hogy az eredmény determinisztikus maradjon. Az
+ * `ISMERETLEN_KATEGORIA` (`sorrend: Infinity`) így sosem nyerhet egy valódi
+ * kategóriájú kezeléssel szemben. Ez az EGYETLEN hely, ahol ez a
  * precedencia eldől.
  */
-export function resolveToothVisual(kezelesek: FogKezeles[]): KezelesVizual {
-  for (const v of KEZELES_VIZUAL_PRIORITAS) {
-    if (kezelesek.some((k) => k.vizual === v)) return v;
+export function resolveToothVisual(kezelesek: FogKezeles[]): KategoriaVizual {
+  let best: KategoriaVizual = ISMERETLEN_KATEGORIA;
+  for (const { vizual } of kezelesek) {
+    if (vizual.sorrend < best.sorrend || (vizual.sorrend === best.sorrend && vizual.id < best.id)) {
+      best = vizual;
+    }
   }
-  return 'EGYEB';
+  return best;
 }
 
 export function buildToothVisualStates(plan: Plan, priceList: PriceList): FogterkepAllapot {
   const tetelekById = new Map(priceList.tetelek.map((tetel) => [tetel.id, tetel]));
+  // Egyszer épül fel, ciklus előtt -- a `kategoriaVizual()` minden hívása új
+  // objektumot adna vissza, ami eltörné a lenti `jelmagyarazat`
+  // dedupját (a `Set` referencia szerint hasonlít). Így ugyanaz a
+  // `KategoriaVizual` példány jár egy adott kategóriaId-hoz a teljes hívás
+  // alatt.
+  const vizualById = new Map(priceList.kategoriak.map((k) => [k.id, kategoriaVizual(k)]));
+  const vizualFor = (kategoriaId: string | undefined): KategoriaVizual =>
+    (kategoriaId && vizualById.get(kategoriaId)) || ISMERETLEN_KATEGORIA;
   const perFog = new Map<string, FogKezeles[]>();
   const tejfogSet = new Set<string>();
   const ismeretlenSet = new Set<string>();
@@ -105,7 +117,7 @@ export function buildToothVisualStates(plan: Plan, priceList: PriceList): Fogter
 
       const tetel = tetelekById.get(sor.tetelId);
       if (sor.tetelId && !tetel) hianyzoTetel = true;
-      const vizual = vizualKategoriaFor(tetel?.kategoriaId);
+      const vizual = vizualFor(tetel?.kategoriaId);
 
       for (const fdi of parsed.teeth) {
         if (isMaradoFog(fdi)) {
@@ -123,7 +135,7 @@ export function buildToothVisualStates(plan: Plan, priceList: PriceList): Fogter
   });
 
   const fogak = new Map<string, FogVizualisAllapot>();
-  const jelmagyarazatSet = new Set<KezelesVizual>();
+  const jelmagyarazatSet = new Set<KategoriaVizual>();
   for (const [fdi, kezelesek] of perFog) {
     const vizual = resolveToothVisual(kezelesek);
     fogak.set(fdi, { fdi, vizual, kezelesek });
@@ -135,6 +147,6 @@ export function buildToothVisualStates(plan: Plan, priceList: PriceList): Fogter
     tejfogak: [...tejfogSet].sort(),
     ismeretlen: [...ismeretlenSet],
     hianyzoTetel,
-    jelmagyarazat: KEZELES_VIZUAL_PRIORITAS.filter((v) => jelmagyarazatSet.has(v)),
+    jelmagyarazat: [...jelmagyarazatSet].sort((a, b) => a.sorrend - b.sorrend),
   };
 }

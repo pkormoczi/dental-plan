@@ -5,8 +5,13 @@ import {
   isTejfog,
   resolveToothVisual,
 } from './toothVisual';
-import type { Plan, PriceList, Sor, Tetel } from './types';
-import { KATEGORIA_VIZUAL, KEZELES_VIZUALOK, vizualKategoriaFor } from '../design/treatmentVisuals';
+import type { Kategoria, Plan, PriceList, Sor, Tetel } from './types';
+import {
+  ALAP_KATEGORIA_SZIN,
+  ISMERETLEN_KATEGORIA,
+  kategoriaVizual,
+  vizualKategoriaFor,
+} from '../design/treatmentVisuals';
 
 function tetel(id: string, kategoriaId: string): Tetel {
   return {
@@ -20,12 +25,29 @@ function tetel(id: string, kategoriaId: string): Tetel {
   };
 }
 
-function makePriceList(tetelek: Tetel[]): PriceList {
+function kategoria(id: string, sorrend: number, szin: string): Kategoria {
+  return { id, nev: { hu: `Kategória ${id}`, de: null }, sorrend, szin };
+}
+
+// A régi vödör-alapú prioritási tábla (SEBESZET, IMPLANTATUM, FOGSOR, KORONA,
+// GYOKERKEZELES, PARODONTOLOGIA, TOMES, EGYEB) precedenciáját utánozzuk itt:
+// minél kisebb a `sorrend`, annál előrébb áll ütközésnél (docs/backlog-8-
+// kategoriakezeles-terv.md 3. döntés). A `KAT_*` a nyers `Kategoria` (a
+// `priceList.kategoriak`-ba való), a `K_*` a belőle számított
+// `KategoriaVizual` (a `FogKezeles.vizual`/`jelmagyarazat` alakja).
+const KAT_KORONA = kategoria('k10', 1, '#4dabf7');
+const KAT_GYOKER = kategoria('k03', 2, '#fcc419');
+const KAT_TOMES = kategoria('k02', 3, '#51cf66');
+const K_KORONA = kategoriaVizual(KAT_KORONA);
+const K_GYOKER = kategoriaVizual(KAT_GYOKER);
+const K_TOMES = kategoriaVizual(KAT_TOMES);
+
+function makePriceList(tetelek: Tetel[], kategoriak: Kategoria[] = []): PriceList {
   return {
     schemaVersion: 1,
     arlistaVerzio: '2026-01-01',
     modositva: '2026-01-01',
-    kategoriak: [],
+    kategoriak,
     tetelek,
   };
 }
@@ -80,20 +102,30 @@ function makeMultiPhasePlan(fazisok: Sor[][]): Plan {
   };
 }
 
-describe('vizualKategoriaFor', () => {
-  it('minden k01..k12 kategóriának van vizuális leképezése egy ismert színnel', () => {
-    for (let i = 1; i <= 12; i++) {
-      const id = `k${String(i).padStart(2, '0')}`;
-      const vizual = vizualKategoriaFor(id);
-      expect(KATEGORIA_VIZUAL[id]).toBe(vizual);
-      expect(KEZELES_VIZUALOK[vizual].szin).toMatch(/^#[0-9a-f]{6}$/i);
-    }
+describe('kategoriaVizual', () => {
+  it('érvényes hex `szin` esetén azt adja vissza', () => {
+    const v = kategoriaVizual(KAT_TOMES);
+    expect(v).toEqual({ id: 'k02', nev: KAT_TOMES.nev, szin: '#51cf66', sorrend: 3 });
   });
 
-  it('ismeretlen vagy hiányzó kategória semleges EGYEB-et kap', () => {
-    expect(vizualKategoriaFor('k99')).toBe('EGYEB');
-    expect(vizualKategoriaFor(null)).toBe('EGYEB');
-    expect(vizualKategoriaFor(undefined)).toBe('EGYEB');
+  it('hiányzó vagy érvénytelen `szin` esetén ALAP_KATEGORIA_SZIN-re esik vissza', () => {
+    expect(kategoriaVizual({ ...KAT_TOMES, szin: undefined }).szin).toBe(ALAP_KATEGORIA_SZIN);
+    expect(kategoriaVizual({ ...KAT_TOMES, szin: 'nem-hex' }).szin).toBe(ALAP_KATEGORIA_SZIN);
+  });
+});
+
+describe('vizualKategoriaFor', () => {
+  const kategoriak = [KAT_KORONA, KAT_GYOKER, KAT_TOMES];
+
+  it('ismert kategoriaId a listából oldódik fel', () => {
+    const v = vizualKategoriaFor('k02', kategoriak);
+    expect(v.szin).toBe('#51cf66');
+  });
+
+  it('ismeretlen vagy hiányzó kategoriaId a fix tartalékot adja', () => {
+    expect(vizualKategoriaFor('k99', kategoriak)).toBe(ISMERETLEN_KATEGORIA);
+    expect(vizualKategoriaFor(null, kategoriak)).toBe(ISMERETLEN_KATEGORIA);
+    expect(vizualKategoriaFor(undefined, kategoriak)).toBe(ISMERETLEN_KATEGORIA);
   });
 });
 
@@ -118,33 +150,56 @@ describe('isMaradoFog / isTejfog', () => {
 });
 
 describe('resolveToothVisual', () => {
-  it('üres kezeléslistára semleges EGYEB-et ad', () => {
-    expect(resolveToothVisual([])).toBe('EGYEB');
+  it('üres kezeléslistára a fix tartalékot adja', () => {
+    expect(resolveToothVisual([])).toBe(ISMERETLEN_KATEGORIA);
   });
 
-  it('a prioritási tábla szerinti legmagasabb kategóriát választja', () => {
+  it('a legkisebb sorrendű kategóriát választja', () => {
     const v = resolveToothVisual([
-      { fdi: '16', sor: sor({}), vizual: 'GYOKERKEZELES', fazisIndex: 0, sorIndex: 0 },
-      { fdi: '16', sor: sor({}), vizual: 'KORONA', fazisIndex: 0, sorIndex: 1 },
+      { fdi: '16', sor: sor({}), vizual: K_GYOKER, fazisIndex: 0, sorIndex: 0 },
+      { fdi: '16', sor: sor({}), vizual: K_KORONA, fazisIndex: 0, sorIndex: 1 },
     ]);
-    // KORONA a GYOKERKEZELES előtt áll a KEZELES_VIZUAL_PRIORITAS táblában.
-    expect(v).toBe('KORONA');
+    expect(v).toBe(K_KORONA);
+  });
+
+  it('azonos sorrend esetén az id dönt (determinizmus)', () => {
+    const a = { ...K_TOMES, id: 'k02', sorrend: 5 };
+    const b = { ...K_TOMES, id: 'k01', sorrend: 5 };
+    const v = resolveToothVisual([
+      { fdi: '16', sor: sor({}), vizual: a, fazisIndex: 0, sorIndex: 0 },
+      { fdi: '16', sor: sor({}), vizual: b, fazisIndex: 0, sorIndex: 1 },
+    ]);
+    expect(v).toBe(b);
+  });
+
+  it('az ismeretlen tartalék (sorrend: Infinity) sosem nyer valódi kategóriával szemben', () => {
+    const v = resolveToothVisual([
+      { fdi: '16', sor: sor({}), vizual: ISMERETLEN_KATEGORIA, fazisIndex: 0, sorIndex: 0 },
+      { fdi: '16', sor: sor({}), vizual: K_TOMES, fazisIndex: 0, sorIndex: 1 },
+    ]);
+    expect(v).toBe(K_TOMES);
   });
 });
 
 describe('buildToothVisualStates', () => {
-  const pl = makePriceList([
-    tetel('t-tomes', 'k02'), // TOMES
-    tetel('t-gyoker', 'k03'), // GYOKERKEZELES
-    tetel('t-korona', 'k10'), // KORONA
-  ]);
+  const pl = makePriceList(
+    [
+      tetel('t-tomes', 'k02'), // TOMES
+      tetel('t-gyoker', 'k03'), // GYOKERKEZELES
+      tetel('t-korona', 'k10'), // KORONA
+    ],
+    [KAT_KORONA, KAT_GYOKER, KAT_TOMES],
+  );
 
   it('egy kezelés egy fogon', () => {
     const plan = makePlan([sor({ tetelId: 't-tomes', fogak: '16' })]);
     const allapot = buildToothVisualStates(plan, pl);
     expect(allapot.fogak.size).toBe(1);
     const fog16 = allapot.fogak.get('16');
-    expect(fog16?.vizual).toBe('TOMES');
+    // buildToothVisualStates a priceList.kategoriak-ból saját (a fenti K_*-
+    // fixtúráktól eltérő objektum-azonosságú) KategoriaVizual-t épít --
+    // toEqual (szerkezeti), nem toBe (referencia).
+    expect(fog16?.vizual).toEqual(K_TOMES);
     expect(fog16?.kezelesek).toHaveLength(1);
   });
 
@@ -154,7 +209,7 @@ describe('buildToothVisualStates', () => {
     expect([...allapot.fogak.keys()].sort()).toEqual(['16', '17', '26']);
   });
 
-  it('több kezelés ugyanazon a fogon -- mindkettő megmarad, a szín a prioritás szerinti', () => {
+  it('több kezelés ugyanazon a fogon -- mindkettő megmarad, a szín a sorrend szerinti', () => {
     const plan = makePlan([
       sor({ tetelId: 't-gyoker', fogak: '16' }),
       sor({ tetelId: 't-korona', fogak: '16' }),
@@ -162,7 +217,7 @@ describe('buildToothVisualStates', () => {
     const allapot = buildToothVisualStates(plan, pl);
     const fog16 = allapot.fogak.get('16');
     expect(fog16?.kezelesek).toHaveLength(2);
-    expect(fog16?.vizual).toBe('KORONA'); // KORONA megelőzi a GYOKERKEZELES-t
+    expect(fog16?.vizual).toEqual(K_KORONA); // KORONA (sorrend 1) megelőzi a GYOKERKEZELES-t (sorrend 2)
   });
 
   it('kezeletlen fog nincs a fogak Mapben (a rajzon fehér marad)', () => {
@@ -171,10 +226,10 @@ describe('buildToothVisualStates', () => {
     expect(allapot.fogak.has('11')).toBe(false);
   });
 
-  it('ismeretlen tetelId esetén a fog EGYEB színt kap és hianyzoTetel jelez', () => {
+  it('ismeretlen tetelId esetén a fog a fix tartalékot kapja és hianyzoTetel jelez', () => {
     const plan = makePlan([sor({ tetelId: 't-nincs-ilyen', fogak: '21' })]);
     const allapot = buildToothVisualStates(plan, pl);
-    expect(allapot.fogak.get('21')?.vizual).toBe('EGYEB');
+    expect(allapot.fogak.get('21')?.vizual).toBe(ISMERETLEN_KATEGORIA);
     expect(allapot.hianyzoTetel).toBe(true);
   });
 
@@ -193,14 +248,15 @@ describe('buildToothVisualStates', () => {
     expect(allapot.ismeretlen).toEqual([]);
   });
 
-  it('a jelmagyarázat csak az előforduló kategóriákat tartalmazza, prioritási sorrendben', () => {
+  it('a jelmagyarázat csak az előforduló kategóriákat tartalmazza, sorrend szerint, dedupolva', () => {
     const plan = makePlan([
       sor({ tetelId: 't-tomes', fogak: '16' }),
       sor({ tetelId: 't-korona', fogak: '21' }),
+      sor({ tetelId: 't-korona', fogak: '22' }), // ugyanaz a kategória, ne duplikálódjon
     ]);
     const allapot = buildToothVisualStates(plan, pl);
-    // KORONA megelőzi a TOMES-t a prioritási táblában.
-    expect(allapot.jelmagyarazat).toEqual(['KORONA', 'TOMES']);
+    // KORONA (sorrend 1) megelőzi a TOMES-t (sorrend 3).
+    expect(allapot.jelmagyarazat).toEqual([K_KORONA, K_TOMES]);
   });
 
   it('a FogKezeles helyes fazisIndex/sorIndex-et hordoz, több fázison és soron át', () => {
@@ -211,9 +267,9 @@ describe('buildToothVisualStates', () => {
     const allapot = buildToothVisualStates(plan, pl);
     const kezelesek = allapot.fogak.get('16')?.kezelesek ?? [];
     expect(kezelesek).toEqual([
-      expect.objectContaining({ fazisIndex: 0, sorIndex: 0, vizual: 'TOMES' }),
-      expect.objectContaining({ fazisIndex: 0, sorIndex: 1, vizual: 'GYOKERKEZELES' }),
-      expect.objectContaining({ fazisIndex: 1, sorIndex: 0, vizual: 'KORONA' }),
+      expect.objectContaining({ fazisIndex: 0, sorIndex: 0, vizual: K_TOMES }),
+      expect.objectContaining({ fazisIndex: 0, sorIndex: 1, vizual: K_GYOKER }),
+      expect.objectContaining({ fazisIndex: 1, sorIndex: 0, vizual: K_KORONA }),
     ]);
   });
 
