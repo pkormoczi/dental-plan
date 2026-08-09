@@ -375,7 +375,6 @@ export function TervDocument({
 
   return (
     <Document>
-      {/* ---------- 1. oldal ---------- */}
       <Page size="A4" style={s.page}>
         <MainHeader plan={plan} settings={settings} L={L} />
 
