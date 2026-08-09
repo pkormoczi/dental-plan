@@ -18,10 +18,9 @@ tervdokumentum fájlneve (`backlog-N-*.md`) ne ütközzön a már létező,
 kész tételekhez tartozókkal.
 
 **Sorrend:** a listákon belül hasznosság szerint — a napi fájdalom
-mérete × gyakorisága, holtversenynél a kisebb munka előre. Tervdokumentuma
-a 8., 10. és 13. tételnek van (grill-me munkamenetek döntési
-összefoglalói); a 16. és 17. tételhez implementáció előtt grill-me
-ajánlott; a 18–23. apró tételek terv nélkül is indíthatók.
+mérete × gyakorisága, holtversenynél a kisebb munka előre. A MOST
+szakasz mind a 11 tételéhez van tervdokumentum (grill-me munkamenetek
+döntési összefoglalói).
 
 ---
 
@@ -94,6 +93,7 @@ duplikátum inaktiválva (`aktiv: false`, id megtartva, D17).
 - **20%-os verzió:** csak a páciensadat-átvétel (2–3 óra) — de a B-napi
   változat-fájdalmat csak a sorokkal együtt másolás oldja, és a
   mechanizmus ugyanaz; együtt javasolt.
+- **Terv:** `docs/backlog-17-terv-masolas-terv.md` (10 döntés).
 
 ### 4. hely — 10. tétel: Tétel-leírás a csomagtételekhez
 
@@ -138,6 +138,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   piszkozat-autosave azonnal rögzíti is. Az általános undo tudatosan nem
   ez a tétel (lásd SOHA).
 - **20%-os verzió:** nincs kisebb — ez már a minimális védelem.
+- **Terv:** `docs/backlog-18-fazis-torles-terv.md` (6 döntés).
 
 ### 7. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
@@ -152,6 +153,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   dokumentumra; ugyanez véd az egyedi soron elfelejtett ár ellen.
 - **20%-os verzió:** ez maga a 20% — az egyedi-sor-felvétel megerősítése
   rosszabb lenne, mert eltörné a billentyűzetes ciklust.
+- **Terv:** `docs/backlog-19-nulla-forint-terv.md` (7 döntés).
 
 ### 8. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
 
@@ -166,6 +168,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   előtag egyben a „kiadott, de nem archivált PDF" audit-lyuk (KÉSŐBB:
   vízjel) olcsó első védvonala.
 - **20%-os verzió:** ez maga a 20%.
+- **Terv:** `docs/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
 
 ### 9. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
@@ -180,6 +183,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   hivatkozási pont.
 - **20%-os verzió:** ez maga a 20% (egy kézi „árlista-verzió kiadása"
   fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
+- **Terv:** `docs/backlog-21-arlista-verzio-terv.md` (5 döntés).
 
 ### 10. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
@@ -192,6 +196,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   mappán át.
 - **20%-os verzió:** ez maga a 20% (beépített olvasó nézet felesleges, a
   böngésző PDF-nézője elég).
+- **Terv:** `docs/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
 ### 11. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
@@ -204,6 +209,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   egyedi sorra ma az őr „farkast kiált", és a hamis riasztás pont ott
   koptatja a riasztás hitelét, ahol a valódi találat komoly.
 - **20%-os verzió:** ez maga a 20%.
+- **Terv:** `docs/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
 
 ---
 
