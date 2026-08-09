@@ -10,7 +10,7 @@ nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Sorrend, ha priorizálni kell:** ~~1 (piszkozat-perzisztencia)~~ → 5
 (EUR-mező) → ~~2 (friss dátum)~~ → ~~3 (sornév + egyedi sor)~~ → 6
-(placeholder-őr) → 8 (árlista-nap) → 4, 9 → a többi.
+(placeholder-őr) → 8 (árlista-nap) → ~~4~~, 9 → a többi.
 (Az eredeti triázs-sorrend tévesen kihagyta az 1. tételt és duplán
 hivatkozott a 3.-ra — itt javítva. Az 1. tétel a doktor-nap narratívában
 háromszor is felmerül ugyanazon a délelőttön, és fél nap a mérete —
@@ -18,7 +18,10 @@ ez indokolta az élen; 2026-08-09-én elkészült, lásd alább. A 2. tétel a
 javasolt sorrendtől eltérően, az 5. előtt készült el — szintén
 2026-08-09-én. A 3. tétel a javasolt sorrendtől eltérően, az 5. előtt
 készült el — szintén 2026-08-09-én, és menet közben felfedte a 15. tételt
-(nyelváltás névmegőrzése), ami rögtön utána, ugyanaznap el is készült.)
+(nyelváltás névmegőrzése), ami rögtön utána, ugyanaznap el is készült. A
+4. tétel a javasolt sorrendtől eltérően, az 5. és a 8. előtt készült el —
+szintén 2026-08-09-én, mert a 3. tétel menet közben nyitva hagyott egy
+záratlan szálat — lásd alább.)
 
 ---
 
@@ -108,7 +111,7 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   A backlog 5. tétele (`unit="EUR"` a Tényleges ár mezőn) tudatosan
   **nem** része ennek a körnek. Lásd git history a részletes commitokért.
 
-### 4. Sor-szintű „becsült ár" (csillag) kapcsoló
+### 4. Sor-szintű „becsült ár" (csillag) kapcsoló — KÉSZ (2026-08-09)
 
 - **Méret:** ~2 óra — a `Sor.savos` mező már létezik és már vezérli a PDF
   csillagot/lábjegyzetet, csak UI-kapcsoló kell rá minden sorhoz, nem csak
@@ -122,6 +125,25 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
 - **20%-os verzió:** ez már maga a 20%-os verzió egy nagyobb „tételenkénti
   megjegyzés" funkcióhoz képest — nincs nála egyszerűbb, ami ugyanezt a
   kockázatot kezelné.
+- **Megvalósítás:** a döntési részletek
+  `docs/backlog-4-becsult-ar-kapcsolo-terv.md`-ben (grill-me munkamenet, 6
+  döntés). A `LineRow` névcellájában (`PlanEditorPage.tsx`) a mai, csak
+  olvasható „sávos" szöveges jelvény helyén egy mindig látható csillag
+  `IconButton` (a `PriceListAdminPage.tsx` `gyakori`-csillagjának mintája),
+  ami `onPatch({ savos: !line.savos })`-t hív — bármelyik sor bármelyik
+  irányba átbillenthető, eredet-nyilvántartás nélkül (egy ma is SAVOS
+  árlistai tételről is levehető). A `pdf/TervDocument.tsx` nem változott —
+  a csillag és a lábjegyzet ott már korábban is generikusan a `savos`
+  mezőt olvasta. Mellékesen feloldotta a 3. backlog-tétel (egyedi sor) 7.
+  döntését, ami a `savos: false`-t addig kezdőértéknek, nem zárolásnak
+  szánta: az egyedi soron a csillag ugyanúgy működik, mint bármelyik
+  máson, a `sorMezokEgyedibol` kódkommentje ezt most már tükrözi. Új
+  `app/src/pdf/TervDocument.test.tsx` — az első teszt, ami közvetlenül a
+  `TervDocument`-et rendereli (a react-pdf primitíveket egyszerű
+  DOM-elemekre képező mockon át), és egy manuálisan bekapcsolt, nem
+  árlistai-SAVOS-eredetű (egyedi) soron igazolja a csillagot és a
+  lábjegyzetet a nyomtatványon, magyarul és németül is. Lásd git history a
+  részletes commitért.
 
 ### 5. `unit="EUR"` a szerkesztő „Tényleges ár" mezőjén
 

@@ -38,6 +38,12 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   fel, melyik tételnek nincs egyáltalán német neve, és melyik sor neve tér el kézzel az
   árlistától. (Eddig egy vele összefüggő hiba miatt ez a figyelmeztetés hiányos páciensadat
   mellett néha teljesen kimaradt a véglegesítésből — ez is javítva.)
+- Bármelyik soron megjelölhető egy csillaggal, hogy az ára csak becslés (eddig csak azokon a
+  tételeken lehetett, amiket az árlista eleve "sávos"-nak jelölt). A csillaggal jelölt sor a
+  nyomtatványon is csillagot és egy magyarázó lábjegyzetet kap — így egy csontpótló anyag
+  vagy más, csak a műtőben pontosítható tétel nem kerül fix, kötelező érvényű árként az
+  aláírandó dokumentumra. A csillag szabadon be- és kikapcsolható bármelyik soron, egyedi
+  soron is.
 
 ## 2026. augusztus 8.
 

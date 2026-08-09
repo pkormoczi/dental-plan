@@ -19,7 +19,7 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes';
-import { Cross1Icon, InfoCircledIcon } from '@radix-ui/react-icons';
+import { Cross1Icon, InfoCircledIcon, StarFilledIcon, StarIcon } from '@radix-ui/react-icons';
 import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
 import ToothChartPanel from '../components/ToothChartPanel';
@@ -75,8 +75,9 @@ function sorMezokTetelbol(
  * hivatkozás, tehát nincs értelmezhető listaár sem, ezért
  * `listaEgysegar === tenylegesEgysegar` induláskor és minden későbbi
  * árszerkesztéskor is (lásd `LineRow` "Tényleges ár" mezője) -- így egyedi
- * soron sosem jelenik meg kedvezmény-jelvény. `savos: false` rögzítve: a
- * soronkénti "becsült ár" kapcsoló külön, a 4. backlog-tétel feladata.
+ * soron sosem jelenik meg kedvezmény-jelvény. `savos: false` csak kezdőérték --
+ * a 4. backlog-tétel csillag-kapcsolója (`LineRow` névcella) ugyanúgy szabadon
+ * átbillenthető egyedi soron is, mint bármelyik máson.
  */
 function sorMezokEgyedibol(
   nev: string,
@@ -616,15 +617,23 @@ function LineRow({
                 style={{ borderColor: line.nevSnapshot.trim() ? t.controlBorder : t.danger }}
               />
             </Box>
+            <IconButton
+              type="button"
+              aria-label="Becsült ár"
+              aria-pressed={line.savos}
+              title="Becsült ár — csillag és lábjegyzet a nyomtatványon"
+              variant="ghost"
+              color="gray"
+              size="1"
+              onClick={() => onPatch({ savos: !line.savos })}
+              style={{ color: line.savos ? t.warn : t.uiTextFaint }}
+            >
+              {line.savos ? <StarFilledIcon /> : <StarIcon />}
+            </IconButton>
             {egyedi && (
               <Badge color="gray" variant="soft" size="1">
                 egyedi
               </Badge>
-            )}
-            {line.savos && (
-              <Text size="1" style={{ color: t.warn, whiteSpace: 'nowrap' }}>
-                sávos
-              </Text>
             )}
             {fallback === 'nincsForditas' && <HuChip />}
             {fallback === 'elterAzArlistatol' && (

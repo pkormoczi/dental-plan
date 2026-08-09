@@ -104,7 +104,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     // A hozzáadott sor tényleges ára a min értékre inicializálódik (38 000 Ft).
     const actualPriceInputs = screen.getAllByDisplayValue('38000');
     expect(actualPriceInputs.length).toBeGreaterThan(0);
-    expect(screen.getByText('sávos')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Becsült ár', pressed: true })).toBeInTheDocument();
   });
 
   it('shows a discount indicator when the actual price is lowered below the list price (editor-only, D9)', async () => {
@@ -462,18 +462,18 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
     await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    // Sávos tétel -- a "sávos" jelzés és a min-ár (38 000 Ft) induló állapota.
-    expect(screen.getByText('sávos')).toBeInTheDocument();
+    // Sávos tétel -- a "becsült ár" csillag és a min-ár (38 000 Ft) induló állapota.
+    expect(screen.getByRole('button', { name: 'Becsült ár', pressed: true })).toBeInTheDocument();
     expect(screen.getAllByDisplayValue('38000').length).toBeGreaterThan(0);
 
     const nameInput = screen.getByDisplayValue('Gyökértömés csatornaszámtól függően');
     await user.clear(nameInput);
     await user.type(nameInput, 'Gyökértömés (rövidítve)');
 
-    // A név megváltozott, de az árlistai kötés (ár, sávos jelzés) érintetlen
+    // A név megváltozott, de az árlistai kötés (ár, csillag) érintetlen
     // -- a tetelId csak hivatkozásnak marad, a nevSnapshot önálló (D7).
     expect(screen.getByDisplayValue('Gyökértömés (rövidítve)')).toBeInTheDocument();
-    expect(screen.getByText('sávos')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Becsült ár', pressed: true })).toBeInTheDocument();
     expect(screen.getAllByDisplayValue('38000').length).toBeGreaterThan(0);
     // Nincs "egyedi" jelvény -- a sor még mindig árlistai tételhez kötött.
     expect(screen.queryByText('egyedi')).not.toBeInTheDocument();
@@ -502,5 +502,60 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
     await user.tab();
 
     expect(screen.queryByText(/−\d+%/)).not.toBeInTheDocument();
+  });
+});
+
+describe('PlanEditorPage -- backlog-4: becsült ár (csillag) kapcsoló', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('FIX árú tételen a csillag alapból kikapcsolt, kattintásra bekapcsol -- ez a tétel lényege', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const star = screen.getByRole('button', { name: 'Becsült ár' });
+    expect(star).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(star);
+    expect(star).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('SAVOS árú tételen a csillag alapból bekapcsolt, kattintásra levehető -- kétirányú', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'gyokerto');
+    await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const star = screen.getByRole('button', { name: 'Becsült ár' });
+    expect(star).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(star);
+    expect(star).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('egyedi soron is megjelenik és átbillenthető a csillag -- backlog-3 7. döntése ebben a körben oldódik fel', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'Érzéstelenítés');
+    await screen.findByText(/Egyedi tétel felvétele/);
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const star = screen.getByRole('button', { name: 'Becsült ár' });
+    expect(star).toHaveAttribute('aria-pressed', 'false');
+
+    await user.click(star);
+    expect(star).toHaveAttribute('aria-pressed', 'true');
   });
 });
