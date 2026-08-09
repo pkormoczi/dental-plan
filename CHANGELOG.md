@@ -2,6 +2,23 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. augusztus 10.
+
+- Az Árlista adminban új "Kategóriák" panel jelent meg: kategória létrehozható, átnevezhető, egy
+  kurált palettából színt kaphat, sorrendje fel/le nyilakkal állítható, és törölhető is, ha már
+  egyetlen tétel sincs benne.
+- A fogtérképen egy kezelés színét mostantól közvetlenül a hozzá tartozó kategória színe adja
+  (ugyanaz, amit a Kategóriák panelen be lehet állítani), nem egy előre rögzített, kódba írt
+  táblázat — így egy átszínezett kategória azonnal megjelenik a fogtérképen is.
+- Kijavítottunk kb. 20 elgépelést az árlista tételneveiben (például "Neodetn" → "Neodent",
+  "Ideigenes" → "Ideiglenes").
+- A "Besorolatlan" kategória neve "Diagnosztika és konzultáció"-ra változott.
+- Új "Fogszabályozás" kategória jött létre, és a 6 odaillő tétel átkerült hozzá az "Egyéb
+  kezelések" közül.
+- Az 5 francia nyelvű maradványtétel és egy duplikált "Lokátor felépítmény" tétel inaktívvá vált
+  (nem törlődtek, csak elrejtve a keresésből) — szükség esetén egy kattintással
+  visszakapcsolhatók.
+
 ## 2026. augusztus 9.
 
 - A fogtérkép mostantól beviteli eszköz is: egy még kezeletlen fogra kattintva új sor indul,
