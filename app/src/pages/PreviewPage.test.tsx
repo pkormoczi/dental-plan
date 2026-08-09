@@ -165,7 +165,7 @@ function seedGermanPlanWithOneTranslatedItem() {
   );
 }
 
-// docs/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 4. döntés: a véglegesítés
+// docs/archive/backlog/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 4. döntés: a véglegesítés
 // megerősítő dialógusa két külön okot sorol fel -- ne keveredjenek egy
 // listába.
 describe('PreviewPage -- backlog-3b: hiányzó és eltérő tételnevek két külön listában', () => {
@@ -225,7 +225,7 @@ describe('PreviewPage -- backlog-3b: hiányzó és eltérő tételnevek két kü
   );
 });
 
-// docs/backlog-6-sablon-placeholder-terv.md 1. döntés: a betöltött
+// docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 1. döntés: a betöltött
 // nyilatkozat placeholder (jogilag még nincs lezárva) esetén a "Csak
 // ajánlat" mód kényszerítve/letiltva -- a 3. oldal (nyilatkozat + aláírás)
 // garantáltan kimarad a PDF-ből.
@@ -284,7 +284,7 @@ describe('PreviewPage -- backlog-6: nyilatkozat placeholder kemény zár', () =>
   );
 });
 
-// docs/backlog-6-sablon-placeholder-terv.md 2. döntés: a fizetési feltételek
+// docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 2. döntés: a fizetési feltételek
 // placeholderje a meglévő HU-visszaesésbe esik, NEM a nyilatkozat kemény
 // zárába -- a "Csak ajánlat" ilyenkor NEM kényszerített.
 describe('PreviewPage -- backlog-6: csak a fizetési feltételek placeholder', () => {

@@ -1,6 +1,6 @@
 // A csillag-kapcsoló (backlog-4) egyetlen olyan tesztje, ami a hatást a
 // nyomtatványig bizonyítja, nem csak a szerkesztő UI-ját (a döntési
-// összefoglaló -- docs/backlog-4-becsult-ar-kapcsolo-terv.md -- 6. döntése
+// összefoglaló -- docs/archive/backlog/backlog-4-becsult-ar-kapcsolo-terv.md -- 6. döntése
 // ezt kifejezetten megköveteli). A sor itt SZÁNDÉKOSAN egyedi (tetelId: '',
 // nem árlistai SAVOS eredetű) -- ez igazolja, hogy a csillag a `Sor.savos`
 // mezőt olvassa, nem az árlistai ártípust.
