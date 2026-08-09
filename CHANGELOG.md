@@ -16,6 +16,10 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   névtelen, 0 Ft-os sor nem kerülhet az aláírandó dokumentumra.
 - A félbehagyott terv nem vész el: ha véletlenül bezárul vagy összeomlik az ablak, a
   kezdőoldal felajánlja a piszkozat folytatását, és rákérdez, mielőtt egy új terv felülírná.
+- Javítottuk, hogy egy korábbi, már véglegesített terv új verzióra nyitásakor a keltezés és
+  az érvényesség lejárt, régi dátumot mutatott — ilyenkor aláírásra alkalmatlan lett volna a
+  dokumentum. Mostantól a program a mai napra állítja ezt a két dátumot (a tételek ára nem
+  változik), és egy tájékoztató sávval jelzi is ezt a szerkesztőben.
 
 ## 2026. augusztus 8.
 

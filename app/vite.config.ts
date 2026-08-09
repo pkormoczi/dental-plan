@@ -8,6 +8,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: '/dental-plan/',
   plugins: [react()],
+  server: {
+    // A Kezdőlap changelog-blokkja a repo gyökerében lévő CHANGELOG.md-t
+    // olvassa be `?raw` importtal (components/ChangelogCard.tsx) -- az az
+    // `app/` mappán kívül van, enélkül a dev szerver/vitest elutasítaná.
+    fs: { allow: ['..'] },
+  },
   test: {
     environment: 'jsdom',
     environmentOptions: {
