@@ -143,13 +143,31 @@ Ha egyetlen fogszám (maradó vagy tejfog) sincs a tervben, a fogtérkép
 
 ### Összegzés
 
+Az összegzés **feltételesen egy vagy két soros**. Két sor csak akkor
+jelenik meg, ha a listaárakból számolt összeg ténylegesen eltér a
+tényleges árakból számolttól (`fizetendo`):
+
 ```
 Kezelések összesen                820 000 Ft
 ──────────────────────────────────────────── (1.5px, #976445)
 Fizetendő                         780 000 Ft
 ```
 
-**Kedvezmény sor nincs** (D9). A `fizetendo` a tényleges árakból számol.
+Ha a kettő megegyezik — tipikusan amikor a doki nem adott kedvezményt —,
+a `Kezelések összesen` sor és az elválasztó is **kimarad**, és csak a
+kiemelt `Fizetendő` sor marad, változatlan felirattal:
+
+```
+Fizetendő                         820 000 Ft
+```
+
+Az eltérés **iránya nem számít**: felár (a tényleges ár a listaár fölött)
+ugyanúgy megnyitja mindkét sort, mint a kedvezmény — a `Kezelések
+összesen` mindkét esetben ugyanazt az információt hordozza („ebből
+indultunk"), külön felirat vagy eltérő megfogalmazás nélkül.
+
+**Kedvezmény sor nincs** (D9) — a kedvezmény *összege* sehol nem jelenik
+meg, csak a két végösszeg. A `fizetendo` a tényleges árakból számol.
 
 Alatta: *„Az ajánlat 2026. november 5. napjáig érvényes."* — számított
 dátum, nem „3 hónapig érvényes" szöveg. (A korábbi *„…5-ig érvényes."*

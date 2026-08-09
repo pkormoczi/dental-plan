@@ -150,6 +150,29 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(await screen.findByText(/Kedvezmény: 5000 Ft/)).toBeInTheDocument();
   });
 
+  it('shows a surcharge indicator when the actual price is raised above the list price', async () => {
+    // A fenti kedvezmény-teszt tükre (backlog-12, 4. döntés): a "Tényleges ár"
+    // mezőnek nincs felső korlátja, a felfelé eltérést a szerkesztő korábban
+    // némán elnyelte -- a nyomtatvány viszont mostantól mindkét irányban
+    // megmutatja a "Kezelések összesen" referenciasort.
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    const result = await screen.findByText('Fogeltávolítás');
+    await user.click(result);
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const actualPriceInput = screen.getByDisplayValue('25000');
+    await user.clear(actualPriceInput);
+    await user.type(actualPriceInput, '30000');
+    await user.tab();
+
+    expect(await screen.findByText(/Felár: 5000 Ft/)).toBeInTheDocument();
+    expect(screen.queryByText(/Kedvezmény:/)).not.toBeInTheDocument();
+  });
+
   it('shows the non-blocking tooth-count mismatch warning without preventing entry', async () => {
     const user = userEvent.setup();
     renderEditor();

@@ -30,8 +30,8 @@ sorrenden kívül, a mérete miatt készült el — szintén 2026-08-09-én, mer
 15 perc volt, és a publikus demón látható hibát javított.)
 
 **A MOST lista minden tételének van tervdokumentuma.** A kész tételeknél
-(1–6, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a még nyitott
-tételeknél (7–13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
+(1–6, 12, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a még
+nyitott tételeknél (7–11, 13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
 munkamenetek döntési összefoglalói — a nyitott tételek tehát **meg vannak
 tervezve, de nincsenek implementálva**: a tervek nem tartalmaznak kódot,
 az implementáció módja a megvalósító feladata. Ahol a tervezés
@@ -40,7 +40,7 @@ sor jelzi.
 
 ---
 
-## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 8 kész tétel után kb. 4–4,5 nap van hátra, a 8. tétel megnőtt becslésével együtt)
+## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 9 kész tétel után kb. 4 nap van hátra, a 8. tétel megnőtt becslésével együtt)
 
 Mindegyik kicsi, és egy konkrét, a `06-doktor-harom-nap` munkanapjain
 ténylegesen felmerült fájdalmat szüntet meg (lásd a Függelékben). Egyik
@@ -326,7 +326,7 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   betöltés a meglévő kezdeti `useEffect` `Promise.allSettled`-jébe épül be,
   olvashatatlan verziónál „—" áll az összeg helyén. Méret változatlan.
 
-### 12. Döntés: kettős összegsor (Kezelések összesen / Fizetendő) marad-e
+### 12. Döntés: kettős összegsor (Kezelések összesen / Fizetendő) marad-e — KÉSZ (2026-08-09)
 
 - **Méret:** fél óra kód, bármelyik irányban.
 - **Kereteket sért?** A jelenlegi állapot feszíti a D9 szándékát (kedvezmény
@@ -345,8 +345,21 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   már bevált `discount > 0` mintáját általánosítva mindkét eltérés-irányra
   (a felár ugyanúgy nyit két sort, mint a kedvezmény). Egysoros állapotban
   nincs új felirat és nincs séma-/label-bővítés. A `docs/04-nyomtatvany-spec.md`
-  is frissül. Marad a kódolatlan rész — ez a tétel innentől nem döntés,
-  hanem fél óra munka.
+  is frissül.
+- **Megvalósítás:** a `pdf/TervDocument.tsx` összegzés-blokkjában a
+  `Kezelések összesen` sor és a `summaryDivider` egy `grand !== listTotal`
+  feltétel mögé került (a `Fizetendő` sor mindig marad, változatlan
+  felirattal és stílussal) — se új `pdfLabels()` kulcs, se séma-változás.
+  A `PlanEditorPage.tsx` `Summary` doboza a mai `discount` ág mellé kapott
+  egy `surcharge` tükör-ágat („Felár: X"), azonos `t.ok` színnel: a
+  felfelé eltérést eddig se a szerkesztő, se a nyomtatvány nem jelezte,
+  most mindkettő megmutatja. Új teszt-blokk a `pdf/TervDocument.test.tsx`-
+  ben (eltérés nélkül nincs referenciasor — magyarul és németül is;
+  kedvezmény és felár esetén viszont van, a listaárral), és egy tükör-teszt
+  a `PlanEditorPage.test.tsx`-ben a felár-jelzésre. A `buildPlan`/`renderDoc`
+  segédfüggvények egy opcionális `{ lista, tenyleges }` paraméterrel
+  bővültek. `docs/04-nyomtatvany-spec.md` „Összegzés" szakasza a
+  feltételes viselkedést írja le, a CHANGELOG a doki nyelvén.
 
 ### 13. Garancia szakasz a nyomtatványon
 

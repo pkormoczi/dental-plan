@@ -389,11 +389,21 @@ export function TervDocument({
             </View>
           )}
           <View style={showToothChart ? s.summaryBlockNarrow : s.summaryBlockFull}>
-            <View style={s.summaryLine}>
-              <Text style={s.summaryLabelMuted}>{L.kezelesekOsszesen}</Text>
-              <Text>{formatMoney(listTotal, plan.penznem)}</Text>
-            </View>
-            <View style={s.summaryDivider} />
+            {/* A "Kezelések összesen" referenciasor csak akkor jelenik meg, ha
+                ténylegesen eltér a fizetendőtől -- eltérés nélkül a két szám
+                azonos lenne, és ugyanaz az összeg állna kétszer egymás alatt
+                (backlog-12). Az eltérés IRÁNYA nem számít: a felár ugyanúgy
+                megnyitja, mint a kedvezmény. Maga a kedvezmény összege
+                továbbra sem jelenik meg a nyomtatványon (D9). */}
+            {grand !== listTotal && (
+              <>
+                <View style={s.summaryLine}>
+                  <Text style={s.summaryLabelMuted}>{L.kezelesekOsszesen}</Text>
+                  <Text>{formatMoney(listTotal, plan.penznem)}</Text>
+                </View>
+                <View style={s.summaryDivider} />
+              </>
+            )}
             <View style={s.summaryLine}>
               <Text style={s.summaryTotalLabel}>{L.fizetendo}</Text>
               <Text style={s.summaryTotalValue}>{formatMoney(grand, plan.penznem)}</Text>

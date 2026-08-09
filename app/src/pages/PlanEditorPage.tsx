@@ -752,7 +752,14 @@ function Summary({
   listTotal: number;
   currency: Penznem;
 }) {
+  // A két ág kizárja egymást (`listTotal` és `grand` közül csak az egyik
+  // lehet nagyobb). A felár azonos vizuális súlyt kap, mint a kedvezmény:
+  // semleges ténymegállapítás, nem hibajelzés -- a doki dolgozhat felárral
+  // (backlog-12, 4. döntés). A nyomtatvány mindkét irányú eltérésre
+  // megmutatja a "Kezelések összesen" referenciasort, ezért indokolatlan
+  // lenne, ha a szerkesztő csak az egyik irányról adna visszajelzést.
   const discount = listTotal - grand;
+  const surcharge = grand - listTotal;
   return (
     <Flex justify="between" align="baseline" gap="4">
       <Text size="3" color="gray">
@@ -771,6 +778,11 @@ function Summary({
           // Csak a szerkesztőben látszik. A nyomtatványon NEM (D9).
           <Text as="div" size="2" style={{ color: t.ok }}>
             Kedvezmény: {formatMoney(discount, currency)}
+          </Text>
+        )}
+        {surcharge > 0 && (
+          <Text as="div" size="2" style={{ color: t.ok }}>
+            Felár: {formatMoney(surcharge, currency)}
           </Text>
         )}
       </Box>

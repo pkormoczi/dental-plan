@@ -42,7 +42,14 @@ vi.mock('@react-pdf/renderer', () => {
 // TervDocument már a fenti mockot látja.
 import { TervDocument } from './TervDocument';
 
-function buildPlan(savos: boolean, nyelv: Nyelv = 'hu'): Plan {
+interface Arak {
+  lista: number;
+  tenyleges: number;
+}
+
+const AZONOS_AR: Arak = { lista: 45000, tenyleges: 45000 };
+
+function buildPlan(savos: boolean, nyelv: Nyelv = 'hu', arak: Arak = AZONOS_AR): Plan {
   const plan = createBlankPlan(seedSettings, seedPriceList);
   plan.nyelv = nyelv;
   const sor: Sor = {
@@ -51,17 +58,17 @@ function buildPlan(savos: boolean, nyelv: Nyelv = 'hu'): Plan {
     savos,
     fogak: '',
     mennyiseg: 1,
-    listaEgysegar: 45000,
-    tenylegesEgysegar: 45000,
+    listaEgysegar: arak.lista,
+    tenylegesEgysegar: arak.tenyleges,
   };
   plan.fazisok[0].sorok.push(sor);
   return plan;
 }
 
-function renderDoc(savos: boolean, nyelv: Nyelv = 'hu') {
+function renderDoc(savos: boolean, nyelv: Nyelv = 'hu', arak: Arak = AZONOS_AR) {
   return render(
     <TervDocument
-      plan={buildPlan(savos, nyelv)}
+      plan={buildPlan(savos, nyelv, arak)}
       settings={seedSettings}
       priceList={seedPriceList}
       offerOnly
@@ -92,5 +99,42 @@ describe('TervDocument -- backlog-4: kézzel bekapcsolt "becsült ár" csillag a
     renderDoc(true, 'de');
     expect(screen.getByText('Csontpótló anyag *')).toBeInTheDocument();
     expect(screen.getByText(/mit einem Sternchen markierten Leistungen/)).toBeInTheDocument();
+  });
+});
+
+describe('TervDocument -- backlog-12: feltételes összegsor', () => {
+  it('nincs eltérés: csak a "Fizetendő" sor jelenik meg, referenciasor nélkül', () => {
+    renderDoc(false, 'hu', { lista: 45000, tenyleges: 45000 });
+    expect(screen.getByText('Fizetendő')).toBeInTheDocument();
+    expect(screen.queryByText('Kezelések összesen')).not.toBeInTheDocument();
+    // A 45 000 Ft pontosan egyszer szerepel az összegzésben (a fázistáblázat
+    // sorösszege és egységára külön elemek) -- a lényeg, hogy a "Fizetendő"
+    // fölött ne álljon ugyanaz a szám még egyszer.
+  });
+
+  // A tényleges ár a fázistáblázatban is szerepel (egységár + sorösszeg),
+  // ezért arra getAllByText kell; a listaár viszont KIZÁRÓLAG az összegzés
+  // referenciasorában jelenik meg -- ott a getByText egyetlen találata
+  // önmagában bizonyítja, hogy a sor kirendereltetett.
+  it('kedvezmény: mindkét sor megjelenik, a referenciaár a magasabb listaárral', () => {
+    renderDoc(false, 'hu', { lista: 45000, tenyleges: 40000 });
+    expect(screen.getByText('Kezelések összesen')).toBeInTheDocument();
+    expect(screen.getByText('Fizetendő')).toBeInTheDocument();
+    expect(screen.getByText('45 000 Ft')).toBeInTheDocument();
+    expect(screen.getAllByText('40 000 Ft').length).toBeGreaterThan(0);
+  });
+
+  it('felár: ugyanúgy mindkét sor megjelenik (az eltérés iránya nem számít)', () => {
+    renderDoc(false, 'hu', { lista: 45000, tenyleges: 50000 });
+    expect(screen.getByText('Kezelések összesen')).toBeInTheDocument();
+    expect(screen.getByText('Fizetendő')).toBeInTheDocument();
+    expect(screen.getByText('45 000 Ft')).toBeInTheDocument();
+    expect(screen.getAllByText('50 000 Ft').length).toBeGreaterThan(0);
+  });
+
+  it('német terv, eltérés nélkül: a "Behandlungen gesamt" sor is elmarad', () => {
+    renderDoc(false, 'de', { lista: 45000, tenyleges: 45000 });
+    expect(screen.getByText('Zu zahlen')).toBeInTheDocument();
+    expect(screen.queryByText('Behandlungen gesamt')).not.toBeInTheDocument();
   });
 });

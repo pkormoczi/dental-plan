@@ -49,6 +49,12 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   csontpótló anyag vagy más, csak a műtőben pontosítható tétel nem kerül fix, kötelező
   érvényű árként az aláírandó dokumentumra. A jelölés szabadon be- és kikapcsolható
   bármelyik soron, egyedi soron is.
+- A nyomtatványon a "Kezelések összesen" sor csak akkor jelenik meg, ha ténylegesen eltér a
+  fizetendő összegtől — kedvezmény nélkül eddig ugyanaz a szám állt kétszer egymás alatt,
+  ami a páciensnek is zavaró volt. Ilyenkor mostantól csak a kiemelt "Fizetendő" sor látszik.
+  (A kedvezmény összege továbbra sem jelenik meg a nyomtatványon.) Ha egy sor tényleges ára a
+  listaár fölé kerül, azt a szerkesztő "Felár" sorként jelzi a végösszeg alatt — eddig erről
+  nem adott visszajelzést.
 
 ## 2026. augusztus 8.
 
