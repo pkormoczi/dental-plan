@@ -13,9 +13,9 @@ describe('seed templates', () => {
     expect(FIZETESI_FELTETELEK_HU_V1).not.toContain('[PLACEHOLDER');
   });
 
-  it('the DE seeds are still explicit placeholders (machine translation is not allowed here)', () => {
-    expect(NYILATKOZAT_DE_V1).toContain('[PLATZHALTER');
-    expect(FIZETESI_FELTETELEK_DE_V1).toContain('[PLATZHALTER');
+  it('the DE seeds are AI-translated real text, not a legal-work placeholder (doctor opted out of the review gate on 2026-08-10)', () => {
+    expect(NYILATKOZAT_DE_V1).not.toContain('[PLATZHALTER');
+    expect(FIZETESI_FELTETELEK_DE_V1).not.toContain('[PLATZHALTER');
   });
 
   it('the nyilatkozat seed contains the {{orvos}} placeholder for the signing physician', () => {

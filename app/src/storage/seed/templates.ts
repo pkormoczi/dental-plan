@@ -56,25 +56,41 @@ Megrendelő a kezelési tervben szereplő kezelés sorozat elvégzésével, az e
 
 // D21: a német sablonok is szükségesek ahhoz, hogy egy német nyelvű terv
 // egyáltalán véglegesíthető legyen (lásd storage/DemoStorage.ts
-// `ensureSeedTemplates`). A magyar szöveg megvan, de a német fordítás
-// SZÁNDÉKOSAN nem gépi -- ez jogi munka, mert a páciens aláírja (lásd
-// docs/01-attekintes-es-dontesek.md, "Nyitott kérdések, amik a dokira
-// várnak"). A doki jogásza tölti fel a lektorált fordítást a Beállítások
-// képernyőn, ami itt egy új verziófájlt hoz létre (nyilatkozat-de-v2.md
-// / fizetesi-feltetelek-de-v2.md), a jelenlegi placeholder megmarad.
+// `ensureSeedTemplates`).
+//
+// Eredetileg ez a két szöveg placeholder volt: a német fordítás jogi munka,
+// mert a páciens aláírja, ezért a projekt korábbi szabálya szerint nem
+// gépi/AI fordítás töltötte volna ki, hanem a doki jogásza a Beállítások
+// képernyőn (lásd docs/01-attekintes-es-dontesek.md, "Nyitott kérdések,
+// amik a dokira várnak" #1). A doki 2026-08-10-én kifejezetten úgy döntött,
+// hogy ehelyett AI-fordítás kerüljön be, jelölés (és a hozzá kötött
+// biztonsági zár, lásd `isPlaceholderTemplate`/PreviewPage) NÉLKÜL -- tehát
+// ez a két szöveg NEM esett át jogi lektoráláson. Ha ez változna (pl. a
+// jogász mégis átnézi), a Beállításokban szerkesztve/mentve új
+// verziófájl (nyilatkozat-de-v2.md / fizetesi-feltetelek-de-v2.md)
+// keletkezik, a jelenlegi (v1, AI-fordítás) megmarad.
 
 export const NYILATKOZAT_DE_V1 = `# Erklärung
 
-[PLATZHALTER / HELYKITÖLTŐ -- Dieser Text ist noch nicht freigegeben, weil er
-vom Patienten unterschrieben wird und daher juristische Arbeit ist, keine
-maschinelle Übersetzung. / Ez a szövegrész jogi munka, nem gépi fordítás,
-mert a páciens aláírja. A magyar forrásszöveg elkészült
-(nyilatkozat-hu-v1.md) -- a doki jogásza tölti fel a lektorált fordítást a
-Beállítások képernyőn, ami itt egy új verziófájlt hoz létre
-(nyilatkozat-de-v2.md), a jelenlegi megmarad.]
+Der Auftraggeber bestellt die im BEHANDLUNGSPLAN aufgeführten Behandlungen, Leistungen und Materialien.
+
+Der Dienstleister verpflichtet sich zu deren Erbringung. Mit ihrer Unterschrift vereinbaren die Vertragsparteien ausdrücklich, dass der Dienstleister zur Erbringung der bestellten Leistungen, der zahnärztlichen Versorgung, der zahntechnischen Tätigkeit sowie sonstiger medizinischer Eingriffe und Heilbehandlungen auch Subunternehmer in Anspruch nimmt.
+
+Der Auftraggeber hat den ANAMNESE-Bogen ausgefüllt, unterschrieben und dem Dienstleister übergeben.
+
+Der Auftraggeber erklärt, dass er über die Behandlungen sowie deren mögliche Komplikationen und Risiken umfassend aufgeklärt wurde; der behandelnde Arzt hat ihn über im Behandlungsplan nicht enthaltene alternative Lösungen und deren mögliche Risiken informiert. Er nimmt zur Kenntnis, dass sich der Behandlungsplan in Abhängigkeit von klinischen und sonstigen Untersuchungen ändern kann.
+
+Die Vertragsparteien haben den vorliegenden Vertrag gelesen und einvernehmlich unterschrieben.
+
+Mit dem Vorstehenden bin ich einverstanden, meine Fragen wurden beantwortet. Der Behandlungsplan wurde im gemeinsamen Gespräch erstellt; mit der Durchführung der oben genannten Behandlungen sowie mit der Anfertigung des Zahnersatzes/der Zahnersätze beauftrage ich {{orvos}}.
 `;
 
 export const FIZETESI_FELTETELEK_DE_V1 = `# Zahlungsbedingungen
 
-- [PLATZHALTER -- Übersetzung ausstehend / fordítás még nincs kész. Forrásszöveg: fizetesi-feltetelek-hu-v1.md]
+Der Auftraggeber stimmt der Durchführung der im Behandlungsplan aufgeführten Behandlungsreihe sowie dem Einbau der damit verbundenen zahntechnischen Materialien zu und erteilt hierzu seine Einwilligung. Hinsichtlich der Rechnungsstellung und der Zahlungsbedingungen akzeptiert der Auftraggeber Folgendes:
+
+- Enthält die Behandlung keine zahntechnische Arbeit, ist der Gegenwert der jeweils erbrachten Leistung sofort fällig.
+- Bei einer Behandlung mit zahntechnischer Arbeit sind {{elolegSzazalek}} % des Behandlungsbetrags bei Beginn der Arbeit fällig; dies ist Voraussetzung für die Weiterleitung an den Zahntechniker. Der Restbetrag ist bei Übergabe der Arbeit fällig.
+- Voraussetzung für die Übergabe der Arbeit ist die beglichene Rechnung.
+- Zahlungsart: Bargeld, Gesundheitskassenkarte oder Kartenüberweisung.
 `;

@@ -13,8 +13,8 @@ nincs szerver.
   sablonok/
     nyilatkozat-hu-v1.md
     fizetesi-feltetelek-hu-v1.md
-    nyilatkozat-de-v1.md            ; placeholder -- jogi munka, lásd README "Nyitott kérdések"
-    fizetesi-feltetelek-de-v1.md    ; placeholder -- jogi munka, lásd README "Nyitott kérdések"
+    nyilatkozat-de-v1.md            ; AI-fordítás, jogi lektorálás nélkül -- lásd README "Nyitott kérdések" #1
+    fizetesi-feltetelek-de-v1.md    ; AI-fordítás, jogi lektorálás nélkül -- lásd README "Nyitott kérdések" #1
   paciensek/
     Kovacs-Janos_a3f9c1/
       2026-08-05_v1/

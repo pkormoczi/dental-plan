@@ -31,8 +31,8 @@ describe('isPlaceholderTemplate', () => {
     expect(isPlaceholderTemplate(FIZETESI_FELTETELEK_HU_V1)).toBe(false);
   });
 
-  it('a német seed sablonok (jogi lektorálásra várva) placeholderek', () => {
-    expect(isPlaceholderTemplate(NYILATKOZAT_DE_V1)).toBe(true);
-    expect(isPlaceholderTemplate(FIZETESI_FELTETELEK_DE_V1)).toBe(true);
+  it('a német seed sablonok AI-fordítás után már nem placeholderek (2026-08-10, jogi lektorálás nélkül)', () => {
+    expect(isPlaceholderTemplate(NYILATKOZAT_DE_V1)).toBe(false);
+    expect(isPlaceholderTemplate(FIZETESI_FELTETELEK_DE_V1)).toBe(false);
   });
 });

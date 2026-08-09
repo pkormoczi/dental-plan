@@ -293,7 +293,9 @@ A tételnevek (`nev.de`) és a nyilatkozat/fizetési feltételek sablonjai
 (`nyilatkozat-de-v1.md`, `fizetesi-feltetelek-de-v1.md`) **külön
 hiányzó tartalom** — ha egy tételnek nincs német neve, a nyomtatvány a
 magyar nevet használja, jelöléssel (lásd `03-funkcionalis-spec.md` „2.
-Páciens adatlap"). A sablonok ma placeholder szöveget tartalmaznak.
+Páciens adatlap"). A sablonok 2026-08-10 óta AI-fordítást tartalmaznak,
+jogi lektorálás nélkül (lásd `README.md` „Nyitott kérdések" #1) — ez már
+nem a korábbi placeholder szöveg, de nem is lektorált végleges szöveg.
 
 ## Számformátum
 

@@ -67,9 +67,9 @@ describe('SettingsPage', () => {
     });
 
     // A seed nemetEngedelyezve:true (mockup-alapérték), tehát a kártya saját
-    // nyelvváltója is megjelenik -- a Deutsch chip váltás a placeholder DE
+    // nyelvváltója is megjelenik -- a Deutsch chip váltás a német (AI-fordítású)
     // szöveget mutatja, a nem mentett HU piszkozat pedig visszaváltáskor megmarad.
-    it('switching the card language to Deutsch shows the DE placeholder, HU draft survives switching back', async () => {
+    it('switching the card language to Deutsch shows the DE seed text, HU draft survives switching back', async () => {
       const user = userEvent.setup();
       renderSettings();
 
@@ -80,7 +80,7 @@ describe('SettingsPage', () => {
       await user.click(within(card).getByRole('radio', { name: 'Deutsch' }));
 
       const deNyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
-      expect(deNyilatkozat.value).toContain('PLATZHALTER');
+      expect(deNyilatkozat.value).toContain('Der Auftraggeber bestellt die im BEHANDLUNGSPLAN');
 
       await user.click(within(card).getByRole('radio', { name: 'Magyar' }));
       const huAgain = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;

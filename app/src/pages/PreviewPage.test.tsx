@@ -236,10 +236,23 @@ describe('PreviewPage -- backlog-6: nyilatkozat placeholder kemény zár', () =>
   });
 
   it(
-    'alapértelmezett (nem szerkesztett) német tervnél a "Csak ajánlat" bepipálva és letiltva, mindkét Callout látszik',
+    'placeholder sablonokkal (pl. jogilag visszavont AI-fordítás) a "Csak ajánlat" bepipálva és letiltva, mindkét Callout látszik',
     async () => {
       const user = userEvent.setup();
       seedGermanPlanWithOneTranslatedItem();
+      // A seed v1 sablonok 2026-08-10 óta AI-fordítású, nem placeholder
+      // szöveget tartalmaznak (lásd storage/seed/templates.ts) -- a
+      // placeholder-kemény-zárat itt egy explicit -v2 placeholderrel
+      // szimuláljuk, mintha egy korábban élesített fordítást vissza kellene
+      // vonni jogi lektorálásra.
+      localStorage.setItem(
+        'dp:sablonok/nyilatkozat-de-v2.md',
+        '# Erklärung\n\n[PLATZHALTER -- Übersetzung ausstehend]\n',
+      );
+      localStorage.setItem(
+        'dp:sablonok/fizetesi-feltetelek-de-v2.md',
+        '# Zahlungsbedingungen\n\n[PLATZHALTER -- Übersetzung ausstehend]\n',
+      );
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
@@ -285,11 +298,18 @@ describe('PreviewPage -- backlog-6: csak a fizetési feltételek placeholder', (
     async () => {
       const user = userEvent.setup();
       seedGermanPlanWithOneTranslatedItem();
-      // Egy valódi (nem placeholder) német nyilatkozat -v2 -- csak a
-      // fizetési feltételek marad a seed placeholderjén.
+      // Egy valódi (nem placeholder) német nyilatkozat -v2 -- a fizetési
+      // feltételek marad placeholderen (a seed v1 2026-08-10 óta már nem
+      // placeholder, lásd storage/seed/templates.ts -- itt egy explicit
+      // -v2 placeholderrel szimuláljuk, mintha egy korábban élesített
+      // fordítást vissza kellene vonni jogi lektorálásra).
       localStorage.setItem(
         'dp:sablonok/nyilatkozat-de-v2.md',
         '# Erklärung\n\nEin echter, bereits lektorierter deutscher Text.\n',
+      );
+      localStorage.setItem(
+        'dp:sablonok/fizetesi-feltetelek-de-v2.md',
+        '# Zahlungsbedingungen\n\n[PLATZHALTER -- Übersetzung ausstehend]\n',
       );
       render(<App />);
 

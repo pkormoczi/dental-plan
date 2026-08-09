@@ -40,25 +40,35 @@ A tervezési fázis (ez a dokumentumcsomag) lezárult, az implementáció az
 
 **Benne van:** magyar nyelvű terv készítés, árlista admin, PDF generálás
 és mentés a fájlrendszerre, korábbi tervek visszatöltése. A német nyelv
-*tartalma* (118 tételnév, EUR ár) 2026-08-06 óta kitöltött — a kapcsoló
-kipróbálható (D21), a hiányt az app számszerűen mutatja.
+*tartalma* (118 tételnév, EUR ár) 2026-08-06 óta kitöltött, a nyilatkozat
+és a fizetési feltételek szövege 2026-08-10 óta — a kapcsoló kipróbálható
+(D21), a hiányt az app számszerűen mutatja.
 
-**Nincs benne:** a német tételnevek **orvosi lektorálása** (ma gépi/AI
-fordítás), a nyilatkozat és a fizetési feltételek **jogi fordítása**
-németre, és az EUR árak **véglegesítése** (ma egyszeri árfolyam-becslés,
-lásd `docs/06-arlista-import.md`). Szintén nincs benne: automatikus
+**Nincs benne:** a német tételnevek **orvosi lektorálása**, illetve a
+nyilatkozat és a fizetési feltételek **jogi lektorálása** — mindhárom ma
+gépi/AI fordítás, a nyilatkozat/fizetési feltételek esetén a doki
+kifejezett, 2026-08-10-i döntése alapján lektorálás és jelölés nélkül
+élesítve (lásd lent, „Nyitott kérdések" #1). Az EUR árak
+**véglegesítése** is nyitott (ma egyszeri árfolyam-becslés, lásd
+`docs/06-arlista-import.md`). Szintén nincs benne: automatikus
 darabszám a fogszámokból, statisztikák, többfelhasználós működés,
 szerveroldali komponens.
 
 ## Nyitott kérdések, amik a dokira várnak
 
-1. A német tételnevek orvosi lektorálása és a nyilatkozat/fizetési
-   feltételek szövegének **jogi fordítása** — ez **jogi munka**, nem
-   gépi fordítás, mert a páciens aláírja. (A PDF néhány további mondata —
-   a sávos ár lábjegyzete, D15 jogi védelme, az anyagköltség- és a
-   kiskorú-figyelmeztetés, az érvényességi mondat — szintén jogi
-   lektorálást igényel, lásd `docs/04-nyomtatvany-spec.md` „Nyelv"
-   szakasza.)
+1. A német tételnevek orvosi lektorálása, valamint a nyilatkozat és a
+   fizetési feltételek szövegének **jogi lektorálása** — mindhárom ma
+   gépi/AI fordítás. A nyilatkozat/fizetési feltételek esetén ez jogi
+   munka lenne (a páciens aláírja): a projekt eredeti szabálya szerint
+   nem gépi fordítás töltötte volna ki, hanem a doki jogásza a
+   Beállítások képernyőn — a doki 2026-08-10-én kifejezetten úgy
+   döntött, hogy az AI-fordítás mégis éles szövegként kerüljön be,
+   lektorálás és jelölés nélkül (lásd `app/src/storage/seed/templates.ts`).
+   A lektorálás tehát továbbra is nyitott, csak már nem blokkolja a
+   nyomtatványt. (A PDF néhány további mondata — a sávos ár lábjegyzete,
+   D15 jogi védelme, az anyagköltség- és a kiskorú-figyelmeztetés, az
+   érvényességi mondat — szintén jogi lektorálást igényel, lásd
+   `docs/04-nyomtatvany-spec.md` „Nyelv" szakasza.)
 2. A cégadatok a lábléchez: adószám, cégjegyzékszám, és ha van ilyen
    kötelezettség, működési engedély szám.
 3. Az árlista takarítása — lásd `docs/06-arlista-import.md`.
