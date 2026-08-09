@@ -1,4 +1,4 @@
-// docs/backlog-1-piszkozat-terv.md 3. döntés: az "érintetlen, üres
+// docs/archive/backlog/backlog-1-piszkozat-terv.md 3. döntés: az "érintetlen, üres
 // piszkozatot (ami megegyezik a friss createBlankPlan() eredményével) nem
 // perzisztáljuk -- csak az első tartalmi módosítás után kezd írni". Ez a
 // "tartalmas piszkozat" definíciója, amit az AppState (írási trigger) és a

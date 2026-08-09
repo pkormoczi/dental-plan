@@ -1,6 +1,6 @@
 // A sablon (nyilatkozat/fizetési feltételek) jogi-lezáratlanság jelölője --
 // EGYETLEN forrás, hogy egy sablon szövege mikor számít még jogilag le nem
-// zártnak (lásd docs/backlog-6-sablon-placeholder-terv.md 3. döntés). A
+// zártnak (lásd docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 3. döntés). A
 // zárójeles forma a kanonikus -- a seed szövegek mindig
 // "[PLATZHALTER ...]"/"[PLACEHOLDER ...]" alakban kezdik a jelölést, egy
 // jövőbeli, a szót csak emlegető, de valódi szövegen ez nem üt félre.

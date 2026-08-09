@@ -25,7 +25,7 @@ export function resolveNev(nev: LokalizaltSzoveg, nyelv: Nyelv): FeloldottNev {
  * árlistát ezen a nyelven. Ez a mag-összehasonlítás adja mind a szerkesztő
  * jelvényét (`sorFallback`, a JELENLEGI nyelvvel), mind a nyelváltás
  * névmegőrzését (`PatientPage.tsx` `applyNyelv`, a RÉGI nyelvvel) --
- * docs/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 1. döntés.
+ * docs/archive/backlog/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 1. döntés.
  */
 export function nevKoveti(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
   const arlistaiNev = nyelv === 'hu' ? tetel.nev.hu : tetel.nev.de;
@@ -53,7 +53,7 @@ export type SorFallbackOk =
  * `tetelId`-hez kötött sornál a `nevKoveti` dönt: ha a tételnek nincs neve
  * ezen a nyelven, `'nincsForditas'`; ha van, de a sor mást mond (a doki
  * kézzel pontosította, lásd 3. tétel 2. döntése), `'elterAzArlistatol'` --
- * docs/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 2-3. döntés.
+ * docs/archive/backlog/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 2-3. döntés.
  */
 export function sorFallback(
   sor: Sor,
