@@ -8,8 +8,8 @@ felvetései, szoftverarchitekt-triázzsal együtt. A `docs/01`
 sérthetetlen keretei (D1–D21) egyik tételt sem sértik — ahol ez nem
 nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
-**Sorrend, ha priorizálni kell:** ~~1 (piszkozat-perzisztencia)~~ → 5
-(EUR-mező) → ~~2 (friss dátum)~~ → ~~3 (sornév + egyedi sor)~~ → 6
+**Sorrend, ha priorizálni kell:** ~~1 (piszkozat-perzisztencia)~~ → ~~5
+(EUR-mező)~~ → ~~2 (friss dátum)~~ → ~~3 (sornév + egyedi sor)~~ → 6
 (placeholder-őr) → 8 (árlista-nap) → ~~4~~, 9 → a többi.
 (Az eredeti triázs-sorrend tévesen kihagyta az 1. tételt és duplán
 hivatkozott a 3.-ra — itt javítva. Az 1. tétel a doktor-nap narratívában
@@ -21,7 +21,8 @@ készült el — szintén 2026-08-09-én, és menet közben felfedte a 15. téte
 (nyelváltás névmegőrzése), ami rögtön utána, ugyanaznap el is készült. A
 4. tétel a javasolt sorrendtől eltérően, az 5. és a 8. előtt készült el —
 szintén 2026-08-09-én, mert a 3. tétel menet közben nyitva hagyott egy
-záratlan szálat — lásd alább.)
+záratlan szálat — lásd alább. Az 5. tétel a javasolt pozíciójában,
+szintén 2026-08-09-én készült el.)
 
 ---
 
@@ -145,7 +146,7 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   lábjegyzetet a nyomtatványon, magyarul és németül is. Lásd git history a
   részletes commitért.
 
-### 5. `unit="EUR"` a szerkesztő „Tényleges ár" mezőjén
+### 5. `unit="EUR"` a szerkesztő „Tényleges ár" mezőjén — KÉSZ (2026-08-09)
 
 - **Méret:** 15 perc — egy prop átadása, ami az árlista adminban már megvan.
 - **Kereteket sért?** Nem.
@@ -153,6 +154,18 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   beviteli hiba lehetősége éles pénzügyi dokumentumon (cent vs. euró
   tévesztés, lásd Függelék C).
 - **20%-os verzió:** nincs kisebb egység, ez már a legkisebb javítás.
+- **Megvalósítás:** a döntési részletek `docs/backlog-5-eur-mezo-terv.md`-ben
+  (grill-me munkamenet, 3 döntés). A `LineRow` „Tényleges" `NumberField`-je
+  (`PlanEditorPage.tsx`) megkapta a `unit={currency}` propot — a `Penznem`
+  típus szó szerint megegyezik a `NumberField.unit` típusával, nem
+  igényelt leképezést. A `PhaseSection` táblázatfejléce (`Listaár`/
+  `Tényleges`/`Összeg`) mindhárom pénzoszlopon jelzi a terv pénznemét
+  (`(Ft)`/`(€)`), nem csak a szerkeszthető oszlopon — vizuális
+  következetesség miatt. Új regressziós teszt a
+  `PlanEditorPage.test.tsx`-ben, ami a bevált teljes-App útvonalon EUR
+  pénznemű tervet indít, felvesz egy EUR-áras tételt (CBCT), és igazolja,
+  hogy a mező euróban jelenít meg (`66,00`, nem `6600`), és a beírt
+  `35,50` euróként (3550 centként), nem HUF-ágon parseolva committálódik.
 
 ### 6. Sablonszerkesztő bekötése + placeholder-őr a véglegesítésnél
 

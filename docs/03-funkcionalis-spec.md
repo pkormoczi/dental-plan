@@ -137,8 +137,12 @@ megjelennek a kereső alatt. Egy kattintás = hozzáadás.
 | Fog | Szabad szöveg, felsorolás. Nem kötelező. A beírt *számokat* validáljuk (lásd lent), a folyószöveges jegyzet (pl. „jobb felső") változatlanul megengedett |
 | Db | Kézi, alapérték 1, minimum 1 |
 | Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve. Egyedi sornál `—` (nincs árlistai referenciaár) |
-| Tényleges ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`) |
+| Tényleges ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`). EUR pénznemű tervnél a mező **euróban** fogad be és jelenít meg szöveget (pl. `35,50`), a tárolás változatlanul centben történik — ugyanaz a `NumberField` `unit` mechanizmus, ami az árlista adminban már véd az euró/cent tévesztéstől |
 | Összeg | `tenylegesEgysegar * mennyiseg` |
+
+A „Listaár"/„Tényleges"/„Összeg" oszlopfejléc a terv pénznemét is jelzi
+(`(Ft)` / `(€)`), hogy egyetlen oszlop se tűnjön „biztonságosnak" a
+pénznem-összetévesztéssel szemben.
 
 Ha `tenylegesEgysegar < listaEgysegar`, a soron megjelenik egy `−X%`
 jelölés. **Ez csak a szerkesztőben látszik, a nyomtatványon nem** (D9).

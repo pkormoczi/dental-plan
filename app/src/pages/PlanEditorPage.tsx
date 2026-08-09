@@ -415,6 +415,9 @@ function PhaseSection({
   // gépelt szövege) átvándorolna egy MÁSIK sorra. Ugyanaz a minta, mint a
   // fázistörlésnél a fazisResetToken (lásd fent).
   const [sorResetToken, setSorResetToken] = useState(0);
+  // Tisztán UI-réteg felirat, nem pénzösszeg-formázás -- nem indokol közös
+  // domain segédfüggvényt, lásd docs/backlog-5-eur-mezo-terv.md 2. döntés.
+  const penznemJel = currency === 'EUR' ? '€' : 'Ft';
   return (
     <Box>
       <Flex justify="between" align="center" mb="3" gap="3">
@@ -440,13 +443,13 @@ function PhaseSection({
                 Db
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="104px" justify="end">
-                Listaár
+                Listaár ({penznemJel})
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="112px" justify="end">
-                Tényleges
+                Tényleges ({penznemJel})
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="112px" justify="end">
-                Összeg
+                Összeg ({penznemJel})
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="32px" />
             </Table.Row>
@@ -701,6 +704,7 @@ function LineRow({
       <Table.Cell justify="end">
         <NumberField
           value={line.tenylegesEgysegar}
+          unit={currency}
           min={0}
           onCommit={(v) =>
             // Egyedi sornál nincs "listaár" mező -- a `listaEgysegar` a

@@ -38,6 +38,11 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   fel, melyik tételnek nincs egyáltalán német neve, és melyik sor neve tér el kézzel az
   árlistától. (Eddig egy vele összefüggő hiba miatt ez a figyelmeztetés hiányos páciensadat
   mellett néha teljesen kimaradt a véglegesítésből — ez is javítva.)
+- Javítottuk, hogy euró pénznemű tervnél a "Tényleges" ár mező nyers centet mutatott és
+  fogadott be a szerkesztőben (pl. `2800` `28,00 €` helyett) — a beírt szám ráadásul rossz
+  nagyságrenden íródott a tervbe. Mostantól ez a mező is euróban jelenít meg és fogad be,
+  ugyanúgy, ahogy az árlista admin EUR mezői már eddig is. Az oszlopfejlécek is jelzik a
+  terv pénznemét ("Listaár (Ft)"/"(€)" stb.).
 - Bármelyik soron megjelölhető egy csillaggal, hogy az ára csak becslés (eddig csak azokon a
   tételeken lehetett, amiket az árlista eleve "sávos"-nak jelölt). A csillaggal jelölt sor a
   nyomtatványon is csillagot és egy magyarázó lábjegyzetet kap — így egy csontpótló anyag

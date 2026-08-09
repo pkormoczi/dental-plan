@@ -55,6 +55,20 @@ function seedWithGermanEnabledAndNoEurPrices() {
   );
 }
 
+/**
+ * A `nemetEngedelyezve` kapcsoló egy ÉRINTETLEN árlistával -- a
+ * `seedWithGermanEnabledAndNoEurPrices`-tól eltérően itt minden tételnek
+ * megvan az EUR ára, hogy egy EUR pénznemű terv szerkesztőjében ténylegesen
+ * fel lehessen venni beárazott tételt (backlog-5).
+ */
+function seedWithGermanEnabled() {
+  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+  localStorage.setItem(
+    'dp:beallitasok.json',
+    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
+  );
+}
+
 describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -445,6 +459,41 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     await user.type(search, 'fogeltavolitas');
 
     expect(await screen.findByText(/egyetlen aktív tétel sincs beárazva/)).toBeInTheDocument();
+  });
+
+  it('backlog-5: a "Tényleges" mező euróban jelenít meg és fogad be egy EUR pénznemű tervnél, a commit centben történik', async () => {
+    const user = userEvent.setup();
+    seedWithGermanEnabled();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'cbct');
+    await user.click(await screen.findByText('CBCT'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // A fejléc is jelzi a terv pénznemét, nem csak a szerkeszthető oszlop.
+    expect(screen.getByText('Listaár (€)')).toBeInTheDocument();
+    expect(screen.getByText('Tényleges (€)')).toBeInTheDocument();
+    expect(screen.getByText('Összeg (€)')).toBeInTheDocument();
+
+    // CBCT EUR ára a seedben FIX 6600 cent -- euróban megjelenítve "66,00",
+    // NEM a nyers "6600".
+    const priceField = screen.getByLabelText('Tényleges egységár') as HTMLInputElement;
+    expect(priceField.value).toBe('66,00');
+
+    // A mező blur-re commitál (P1-4) -- "35,50" beírva a tárolt értéknek
+    // 3550 centnek kell lennie. Javítás előtt a hiányzó unit prop miatt ez
+    // a HUF-ágon parseolódott volna ("35.5" -> 36 cent -> "0,36 €").
+    await user.clear(priceField);
+    await user.type(priceField, '35,50');
+    await user.tab();
+    expect(priceField.value).toBe('35,50');
+    expect((await screen.findAllByText(/35,50/)).length).toBeGreaterThan(0);
   });
 });
 
