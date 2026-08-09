@@ -42,7 +42,9 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
       await user.type(nameInput, 'Teszt Ilona');
       await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
-      // Fogtérkép-kattintással létrehozott, tétel nélküli sor.
+      // Fogtérkép-kattintással létrehozott, tétel nélküli sor -- a panel
+      // alapból csukva, előbb ki kell nyitni.
+      await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
       const chart = await screen.findByRole('toolbar');
       const tooth16 = chart.querySelector('[data-tooth="16"]') as Element;
       await user.click(tooth16);

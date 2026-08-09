@@ -68,6 +68,37 @@ gyorsan akar árajánlatot adni.
 Ez dönti el, hogy az app gyorsabb-e az Excelnél. Prototípus:
 `ui/PlanEditor.jsx`.
 
+### Fogtérkép (kattintható)
+
+A fogtérkép a **beavatkozás lista fölött**, egy lenyíló panelben van —
+alapból **csukva**, akkor is, ha a tervben már vannak érintett fogak; a
+csukott gomb felirata mutatja a darabszámot (`🦷 Érintett fogak (6)`).
+Kattintásra nyílik ki. Kinyitva nemcsak áttekintés, beviteli eszköz is —
+kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`).
+
+- **Kattintás egy már érintett fogra** a hozzá tartozó sorra ugrik
+  (fókusz + görgetés a „Fog" mezőre). Ha több sor is érinti (pl.
+  gyökérkezelés és korona ugyanazon a fogon), az ismételt kattintás a
+  következő érintett sorra lép, körbe.
+- **Kattintás egy kezeletlen fogra** új, tétel nélküli sort vesz fel a
+  kiválasztott fázisban, a fogszámmal már kitöltve, és a sor
+  „Beavatkozás" cellájában megjelenő keresőre fókuszál — ugyanazzal a
+  gépel → nyíl → Enter ciklussal, mint a fázis alatti keresőnél. A
+  választás a sort **a helyén tölti ki**, nem fűz újat. (A panel nyitva
+  marad, hogy a fókusz odaugorhasson.)
+- **Fázisválasztó** csak nyitott panelen, és csak akkor jelenik meg, ha
+  egynél több fázis van — eldönti, melyik fázisba kerüljön az új sor.
+- **Soronkénti fogválasztó**: a „Fog" mező melletti 🦷 ikongomb egy felugró
+  fogtérképet nyit, ahol kattintással jelölhetők ki a sor fogai (a mező
+  szabadszöveges marad — ha nem FDI-formátumú tartalmat talál, pl. „jobb
+  felső", megerősítést kér felülírás előtt, nem ír felül némán).
+- **Billentyűzet**: csukva a panel gombja egy sima Tab-megálló; nyitva a
+  fogtérkép **is** egyetlen Tab-megállóként érhető el, nyilakkal lépked a
+  fogak közt (`←`/`→` az állcsonton belül, `↑`/`↓` állcsontot vált
+  ugyanabban a pozícióban), `Enter`/`Szóköz` aktivál.
+- A darabszám (`Db`) továbbra is **kézi** — a fogtérkép nem állítja be
+  automatikusan (D14 nem nyílik meg).
+
 ### Tételkereső
 
 - **Csak keresés, nincs kategória böngésző.**
@@ -114,33 +145,6 @@ van emelve — jelzi, hogy itt dönteni kell.
 
 Ha a `Fog` mező N érvényes FDI számot tartalmaz és `mennyiseg !== N`,
 halvány jelzés a sor alatt. Ennyi — nincs automatikus javítás (D14).
-
-### Fogtérkép (kattintható)
-
-A fogtérkép a szerkesztő alján **mindig látszik**, üresen is — nemcsak
-áttekintés, beviteli eszköz is. Kezelés-kategóriánként színezve (lásd
-`app/src/design/treatmentVisuals.ts`).
-
-- **Kattintás egy már érintett fogra** a hozzá tartozó sorra ugrik
-  (fókusz + görgetés a „Fog" mezőre). Ha több sor is érinti (pl.
-  gyökérkezelés és korona ugyanazon a fogon), az ismételt kattintás a
-  következő érintett sorra lép, körbe.
-- **Kattintás egy kezeletlen fogra** új, tétel nélküli sort vesz fel a
-  kiválasztott fázisban, a fogszámmal már kitöltve, és a sor
-  „Beavatkozás" cellájában megjelenő keresőre fókuszál — ugyanazzal a
-  gépel → nyíl → Enter ciklussal, mint a fázis alatti keresőnél. A
-  választás a sort **a helyén tölti ki**, nem fűz újat.
-- **Fázisválasztó** csak akkor jelenik meg a fogtérkép mellett, ha egynél
-  több fázis van — eldönti, melyik fázisba kerüljön az új sor.
-- **Soronkénti fogválasztó**: a „Fog" mező melletti ikongomb egy felugró
-  fogtérképet nyit, ahol kattintással jelölhetők ki a sor fogai (a mező
-  szabadszöveges marad — ha nem FDI-formátumú tartalmat talál, pl. „jobb
-  felső", megerősítést kér felülírás előtt, nem ír felül némán).
-- **Billentyűzet**: a fogtérkép egyetlen Tab-megállóként érhető el,
-  nyilakkal lépked a fogak közt (`←`/`→` az állcsonton belül, `↑`/`↓`
-  állcsontot vált ugyanabban a pozícióban), `Enter`/`Szóköz` aktivál.
-- A darabszám (`Db`) továbbra is **kézi** — a fogtérkép nem állítja be
-  automatikusan (D14 nem nyílik meg).
 
 ### Fázisok
 

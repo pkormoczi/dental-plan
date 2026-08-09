@@ -64,6 +64,15 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   kattintható/billentyűzetes SVG adatvizualizáció ÉS beviteli eszköz —
   lásd `components/DentalChart.tsx`, `design/toothChartSvg.ts`) és a
   nyomtatvány (`pdf/TervDocument.tsx`, A4 layout).
+- Lenyíló/összecsukható panel (pl. a tervszerkesztő „Érintett fogak"
+  fogtérkép-panelje, `components/ToothChartPanel.tsx`): egy `useState`
+  boolean + feltételes render, Radix Themes `Button` triggerrel
+  (`aria-expanded` + `aria-controls`). Nincs `@radix-ui/react-collapsible`
+  vagy hasonló hozzáadva — a `@radix-ui/themes@3`-ban amúgy sincs
+  Collapsible/Accordion komponens, ez a minta nem igényel újat. A trigger
+  csukott/nyitott állapotot chevron ikonnal jelzi
+  (`ChevronRightIcon`/`ChevronDownIcon`), nincs nyitás/csukás-animáció
+  (lásd „Amit soha ne csinálj").
 
 ### Szín, forma, sűrűség
 
@@ -118,6 +127,10 @@ Minden nézetnek van loading, empty és error állapota.
   32-ként — a fogak közti mozgás nyilakkal (roving kurzor,
   `aria-activedescendant`), `Enter`/`Szóköz` aktivál. 32 külön Tab-megálló
   szétverné a Tab-sorrendet egy már amúgy is sűrű oldalon.
+- A tervszerkesztőben a fogtérkép egy csukott panel mögött van (lásd
+  „Komponensek"): csukva a panel triggere az egyetlen Tab-megálló, a
+  fogtérkép feltételes renderrel teljesen kiesik a Tab-sorrendből (nem
+  csak CSS-sel rejtett); nyitva a fenti egy-Tab-megálló szabály él.
 
 ### Akadálymentesség (nem opcionális)
 
@@ -150,4 +163,11 @@ Minden nézetnek van loading, empty és error állapota.
 - Ne tegyél animációt oda, ahol nincs visszajelzési funkciója.
 - Ne generálj kép- vagy illusztrációs tartalmat.
 - Ne vezess be második UI könyvtárat a Radix mellé.
-- Ne írj kézzel SVG ikont. Ikon a `@radix-ui/react-icons`-ból jön.
+- Ne írj kézzel SVG ikont. Ikon a `@radix-ui/react-icons`-ból jön. **Egyetlen
+  nevesített kivétel:** a soronkénti fogválasztó gombja (`Fog` mező mellett,
+  `components/ToothPickerPopover.tsx`) és az „Érintett fogak" panel triggere
+  (`components/ToothChartPanel.tsx`) 🦷 emojit használ — a
+  `@radix-ui/react-icons`-ban nincs fog ikon, a korábbi `GridIcon` (rács)
+  félrevezető volt. Az emoji `aria-hidden`, a gomb akadálymentes neve mindig
+  szöveges (`aria-label` vagy a gomb felirata). Ne terjeszd ki más ikonra —
+  minden más helyen `@radix-ui/react-icons` marad kötelező.

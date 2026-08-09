@@ -184,8 +184,21 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     localStorage.clear();
   });
 
-  it('üres terven is látszik a fogtérkép, útmutató szöveggel', async () => {
+  /** A panel alapból csukva -- a chart-tesztek előbb kinyitják, mielőtt a `toolbar`-t lekérdeznék. */
+  async function nyisdKiFogterkepet(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
+  }
+
+  it('üres terven a fogtérkép csukva indul, kattintásra nyílik, útmutató szöveggel', async () => {
+    const user = userEvent.setup();
     renderEditor();
+
+    // Csukva a fogtérkép -- billentyűzetes toolbarként -- nem elérhető, a
+    // gomb feliratában nincs darabszám (üres terv).
+    expect(await screen.findByRole('button', { name: 'Érintett fogak' })).toBeInTheDocument();
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
+
+    await nyisdKiFogterkepet(user);
     expect(await screen.findByRole('toolbar')).toBeInTheDocument();
     expect(await screen.findByText(/Kattints egy fogra/)).toBeInTheDocument();
   });
@@ -193,6 +206,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
   it('kezeletlen fogra kattintva új, tétel nélküli sort hoz létre a fogszámmal, és a soron belüli keresőre fókuszál -- a választás a helyén tölti ki, nem fűz újat', async () => {
     const user = userEvent.setup();
     renderEditor();
+    await nyisdKiFogterkepet(user);
 
     const chart = await screen.findByRole('toolbar');
     const tooth16 = chart.querySelector('[data-tooth="16"]') as Element;
@@ -232,6 +246,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     await user.type(fogInputs[0], '16');
     await user.type(fogInputs[1], '16');
 
+    await nyisdKiFogterkepet(user);
     // A fogtérkép markup-ja minden kattintás után újraépül (a kattintott fog
     // lesz az új billentyűzetes kurzor, lásd DentalChart.tsx `aktivFog`) --
     // a `dangerouslySetInnerHTML` teljesen kicseréli a fog-elemeket, ezért a
@@ -253,6 +268,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
   it('egyetlen fázisnál nincs fázisválasztó; kettőnél megjelenik, és az új sor a kiválasztott fázisba kerül', async () => {
     const user = userEvent.setup();
     renderEditor();
+    await nyisdKiFogterkepet(user);
 
     await screen.findByRole('toolbar');
     expect(screen.queryByRole('combobox', { name: /Új sor ide/ })).not.toBeInTheDocument();
@@ -285,6 +301,21 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     await user.click(tooth24);
 
     expect(screen.getByDisplayValue('24')).toBeInTheDocument();
+  });
+
+  it('a csukott gomb felirata mutatja az érintett fogak számát', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const fogInput = screen.getByPlaceholderText('16, 17, 26');
+    await user.type(fogInput, '16, 17');
+
+    expect(await screen.findByRole('button', { name: 'Érintett fogak (2)' })).toBeInTheDocument();
   });
 });
 

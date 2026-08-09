@@ -12,7 +12,6 @@
 
 import { useState } from 'react';
 import { Button, Callout, IconButton, Popover, Text } from '@radix-ui/themes';
-import { GridIcon } from '@radix-ui/react-icons';
 import DentalChart from './DentalChart';
 import { parseTeeth, toggleFog } from '../domain/teeth';
 import type { FogterkepAllapot } from '../domain/toothVisual';
@@ -43,7 +42,9 @@ export default function ToothPickerPopover({ fogak, allapot, onChange }: ToothPi
           color="gray"
           size="1"
         >
-          <GridIcon />
+          <span aria-hidden="true" style={{ fontSize: 14, lineHeight: 1 }}>
+            🦷
+          </span>
         </IconButton>
       </Popover.Trigger>
       <Popover.Content style={{ maxWidth: 340 }}>

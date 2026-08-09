@@ -14,17 +14,15 @@ import {
   Flex,
   Heading,
   IconButton,
-  Select,
   Separator,
   Table,
   Text,
   TextField,
 } from '@radix-ui/themes';
 import { Cross1Icon } from '@radix-ui/react-icons';
-import DentalChart from '../components/DentalChart';
-import DentalChartLegend from '../components/DentalChartLegend';
 import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
+import ToothChartPanel from '../components/ToothChartPanel';
 import ToothPickerPopover from '../components/ToothPickerPopover';
 import { t } from '../design/tokens';
 import { basePrice, formatMoney } from '../domain/money';
@@ -153,7 +151,6 @@ export default function PlanEditorPage() {
   const grand = plan.fazisok.reduce((s, p) => s + fazisOsszeg(p), 0);
   const listTotal = plan.fazisok.reduce((s, p) => s + fazisListaOsszeg(p), 0);
   const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
-  const hasFogterkep = fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0;
 
   /**
    * A fogtérkép beviteli logikája: ha a fog már érintett, ugrás a sorára
@@ -211,6 +208,18 @@ export default function PlanEditorPage() {
           </Callout.Text>
         </Callout.Root>
       )}
+
+      {/* A beavatkozás lista fölött, alapból csukva -- kattintásra nyílik
+          (lásd components/ToothChartPanel.tsx). Korábban az oldal alján,
+          mindig nyitva állt; a doki kérésére show-hide módra váltott. */}
+      <ToothChartPanel
+        allapot={fogterkep}
+        onToothClick={onToothClick}
+        fazisok={plan.fazisok}
+        celFazisIndex={celFazisIndexClamped}
+        onCelFazisChange={setCelFazisIndex}
+      />
+      <Separator size="4" mb="6" mt="4" />
 
       {plan.fazisok.map((p, pi) => (
         <Box key={`${fazisResetToken}-${pi}`} mb="6">
@@ -273,49 +282,7 @@ export default function PlanEditorPage() {
 
       <Box mt="6">
         <Separator size="4" />
-        <Flex gap="6" mt="4" wrap="wrap" align="start" justify="between">
-          {/* Mindig látszik, üresen is -- beviteli eszköz, nem csak áttekintés
-              (korábban `hasFogterkep` mögött rejtve volt). */}
-          <Box style={{ flex: '1 1 260px', maxWidth: 480 }}>
-            <Flex justify="between" align="center" mb="2" gap="3" wrap="wrap">
-              <Text as="div" size="1" color="gray">
-                Érintett fogak
-              </Text>
-              {plan.fazisok.length > 1 && (
-                <Flex align="center" gap="2">
-                  <Text as="div" size="1" color="gray">
-                    Új sor ide:
-                  </Text>
-                  <Select.Root
-                    value={String(celFazisIndexClamped)}
-                    onValueChange={(v) => setCelFazisIndex(Number(v))}
-                  >
-                    <Select.Trigger aria-label="Új sor ide melyik fázisba kerüljön" />
-                    <Select.Content>
-                      {plan.fazisok.map((f, i) => (
-                        <Select.Item key={i} value={String(i)}>
-                          {f.megnevezes}
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select.Root>
-                </Flex>
-              )}
-            </Flex>
-            <DentalChart allapot={fogterkep} onToothClick={onToothClick} />
-            <DentalChartLegend kategoriak={fogterkep.jelmagyarazat} />
-            {fogterkep.tejfogak.length > 0 && (
-              <Text as="div" size="1" color="gray" mt="2">
-                Tejfogak: {fogterkep.tejfogak.join(', ')}
-              </Text>
-            )}
-            {!hasFogterkep && (
-              <Text as="div" size="1" color="gray" mt="2">
-                Kattints egy fogra, és felveszünk rá egy sort — vagy írd be a fogszámokat a sor
-                „Fog” mezőjébe.
-              </Text>
-            )}
-          </Box>
+        <Flex mt="4" justify="end">
           <Box style={{ flex: '0 1 320px' }}>
             <Summary grand={grand} listTotal={listTotal} currency={currency} />
           </Box>
@@ -516,6 +483,11 @@ function LineRow({
 }) {
   const uj = line.tetelId === ''; // fogtérkép-kattintással létrehozott, még tétel nélküli sor
   const teeth = parseTeeth(line.fogak);
+  // Nem blokkoló: a mező szándékosan szabad szöveges marad (pl. „jobb
+  // felső" jegyzet -- docs/03-funkcionalis-spec.md "Soronkénti
+  // fogválasztó"), csak vizuálisan jelezzük, ha a tartalom nem érvényes
+  // FDI-lista (kvadráns 1-4/tejfog 5-8 + fog 1-8/1-5, lásd domain/teeth.ts).
+  const invalidFormat = line.fogak.trim() !== '' && !teeth.valid;
   // A darabszám mezőbe gépelt, még nem committált érték -- a NumberField
   // csak blur/Enterre írja a törzsadatot (P1-4), de ez a figyelmeztetés
   // gépelés közben is éljen, ne csak commit után.
@@ -576,7 +548,8 @@ function LineRow({
               value={line.fogak}
               placeholder="16, 17, 26"
               onChange={(e) => onPatch({ fogak: e.target.value })}
-              style={{ textAlign: 'center' }}
+              aria-invalid={invalidFormat || undefined}
+              style={{ textAlign: 'center', borderColor: invalidFormat ? t.danger : t.controlBorder }}
             />
           </Box>
           <ToothPickerPopover
@@ -585,6 +558,11 @@ function LineRow({
             onChange={(fogak) => onPatch({ fogak })}
           />
         </Flex>
+        {invalidFormat && (
+          <Text as="div" size="1" mt="1" style={{ color: t.danger }}>
+            Nem érvényes FDI fogszám (pl. 16, 17, 26) -- a kvadráns 1-4, a fog a kvadránsban 1-8 lehet.
+          </Text>
+        )}
         {mismatch && (
           <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
             {teeth.teeth.length} fog van felsorolva, a darabszám {mennyisegDraft}. Szándékos?
