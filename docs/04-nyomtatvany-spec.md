@@ -110,7 +110,8 @@ Miért fontos:
 
 Sávos árú tétel neve után `*`, és a táblázat alatt egyszer:
 
-> \* A csillaggal jelölt tételek ára a kezelés során derül ki
+> \* A csillaggal jelölt tételek ára — és a belőlük számított összegek
+> (fizetendő, előleg, fennmaradó rész) — a kezelés során derül ki
 > véglegesen, a megadott ár becslés.
 
 Ez jogi védelem: sávos árat fix számként nyomtatni annyi, mint kötelező
@@ -168,6 +169,21 @@ indultunk"), külön felirat vagy eltérő megfogalmazás nélkül.
 
 **Kedvezmény sor nincs** (D9) — a kedvezmény *összege* sehol nem jelenik
 meg, csak a két végösszeg. A `fizetendo` a tényleges árakból számol.
+
+Ha a terven be van kapcsolva az előleg (`elolegSzazalek != null`), a
+`Fizetendő` alatt még két sor áll, kisebb súllyal:
+
+```
+Fizetendő                         780 000 Ft
+Előleg (50%)                      390 000 Ft
+Fennmaradó rész                   390 000 Ft
+```
+
+Mindkettő a `Fizetendő`-ből számol, egész pénznemegységre kerekítve, és a
+kettő együtt pontosan a `Fizetendő`-t adja ki. Ha a tervben van becsült
+árú (csillagos) tétel, **mindkét** sor csillagot kap — ugyanazt a
+lábjegyzetet használva, ami a tételekre is vonatkozik (nincs második
+csillag-jelentés az oldalon).
 
 Alatta: *„Az ajánlat 2026. november 5. napjáig érvényes."* — számított
 dátum, nem „3 hónapig érvényes" szöveg. (A korábbi *„…5-ig érvényes."*

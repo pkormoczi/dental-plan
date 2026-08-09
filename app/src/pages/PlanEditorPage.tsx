@@ -11,6 +11,7 @@ import {
   Box,
   Button,
   Callout,
+  Checkbox,
   Flex,
   Heading,
   IconButton,
@@ -30,7 +31,12 @@ import { basePrice, formatMoney } from '../domain/money';
 import { resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
 import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
-import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
+import {
+  ELOLEG_ALAP_SZAZALEK,
+  elolegOsszegek,
+  fazisListaOsszeg,
+  fazisOsszeg,
+} from '../domain/totals';
 import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import ItemPicker from './planEditor/ItemPicker';
@@ -339,6 +345,16 @@ export default function PlanEditorPage() {
         <Flex mt="4" justify="end">
           <Box style={{ flex: '0 1 320px' }}>
             <Summary grand={grand} listTotal={listTotal} currency={currency} />
+            <ElolegBlokk
+              grand={grand}
+              currency={currency}
+              elolegSzazalek={plan.elolegSzazalek ?? null}
+              onChange={(next) =>
+                updatePlan((draft) => {
+                  draft.elolegSzazalek = next;
+                })
+              }
+            />
           </Box>
         </Flex>
       </Box>
@@ -787,5 +803,82 @@ function Summary({
         )}
       </Box>
     </Flex>
+  );
+}
+
+/**
+ * Előleg-kapcsoló (backlog-9). A `Summary` ALATT áll, mert az előleg a
+ * végösszegből számol -- ez az a pillanat, amikor a doki amúgy is azt nézi.
+ *
+ * Egyetlen nullázható mező hordozza a kapcsoló állapotát ÉS az értéket:
+ * `null` = nincs előleg-sor a nyomtatványon. Így nem kerülhet egymásnak
+ * ellentmondó állapotba egy külön boolean és egy szám.
+ */
+function ElolegBlokk({
+  grand,
+  currency,
+  elolegSzazalek,
+  onChange,
+}: {
+  grand: number;
+  currency: Penznem;
+  elolegSzazalek: number | null;
+  onChange: (next: number | null) => void;
+}) {
+  const be = elolegSzazalek != null;
+  const osszegek = be ? elolegOsszegek(grand, elolegSzazalek) : null;
+
+  return (
+    <Box mt="3">
+      <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Checkbox
+          checked={be}
+          onCheckedChange={(checked) => onChange(checked === true ? ELOLEG_ALAP_SZAZALEK : null)}
+        />
+        Ez a terv fogtechnikai munkát tartalmaz — előleg feltüntetése
+      </Text>
+
+      {be && (
+        <Box mt="2">
+          <Flex justify="between" align="center" gap="3">
+            <Text size="2" color="gray">
+              Előleg
+            </Text>
+            <Flex align="center" gap="2">
+              <Box style={{ width: 64 }}>
+                <NumberField
+                  value={elolegSzazalek}
+                  min={0}
+                  aria-label="Előleg százaléka"
+                  textAlign="right"
+                  // 0-100 közé szorítva: az előleg nem lehet negatív, és nem
+                  // lehet több a teljes összegnél. A `step()` nyilai is ezen
+                  // az `onCommit`-en mennek át.
+                  onCommit={(v) => onChange(Math.min(100, Math.max(0, Math.round(v))))}
+                />
+              </Box>
+              <Text size="2" color="gray">
+                %
+              </Text>
+              <Text
+                size="2"
+                weight="medium"
+                style={{ fontVariantNumeric: 'tabular-nums', minWidth: '6.5rem', textAlign: 'right' }}
+              >
+                {formatMoney(osszegek!.eloleg, currency)}
+              </Text>
+            </Flex>
+          </Flex>
+          <Flex justify="between" align="baseline" mt="1">
+            <Text size="2" color="gray">
+              Fennmaradó rész
+            </Text>
+            <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {formatMoney(osszegek!.fennmarado, currency)}
+            </Text>
+          </Flex>
+        </Box>
+      )}
+    </Box>
   );
 }

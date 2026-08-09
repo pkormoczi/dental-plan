@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeOsszesitok, osszesitokElter } from './totals';
+import { computeOsszesitok, elolegOsszegek, osszesitokElter } from './totals';
 import type { Fazis } from './types';
 
 const fazisok: Fazis[] = [
@@ -40,5 +40,26 @@ describe('osszesitokElter', () => {
     const mentettCopy = { ...mentett };
     osszesitokElter(mentett, fazisok);
     expect(mentett).toEqual(mentettCopy);
+  });
+});
+
+describe('elolegOsszegek', () => {
+  it('a szokásos 50%-ot pontosan felezi', () => {
+    expect(elolegOsszegek(820000, 50)).toEqual({ eloleg: 410000, fennmarado: 410000 });
+  });
+
+  it('egész pénznemegységre kerekít, és a két szám együtt PONTOSAN a fizetendőt adja', () => {
+    // 33% egy páratlan összegre: a kerekítés nem hozhat létre 1 Ft-os rést.
+    const { eloleg, fennmarado } = elolegOsszegek(100001, 33);
+    expect(eloleg).toBe(33000);
+    expect(eloleg + fennmarado).toBe(100001);
+  });
+
+  it('0%: nincs előleg, a teljes összeg marad fenn', () => {
+    expect(elolegOsszegek(45000, 0)).toEqual({ eloleg: 0, fennmarado: 45000 });
+  });
+
+  it('100%: a teljes összeg előleg, nincs fennmaradó rész', () => {
+    expect(elolegOsszegek(45000, 100)).toEqual({ eloleg: 45000, fennmarado: 0 });
   });
 });

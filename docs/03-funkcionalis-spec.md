@@ -165,8 +165,10 @@ sorként vehető fel — lásd fent, „Tételkereső". Az egyedi sor:
 - **Egy ármező van rajta**, nincs külön „listaár" — a Tényleges ár
   szerkesztése a listaárat is vele együtt írja, ezért egyedi soron
   **sosem** jelenik meg kedvezmény-jelölés.
-- **Mindig fix áron nyomtat**, csillag/lábjegyzet nélkül — a soronkénti
-  „becsült ár" kapcsoló (4. backlog-tétel) egyelőre nem érhető el rajta.
+- **A „becsült ár" jelölő ugyanúgy működik rajta**, mint bármelyik más
+  soron (4. backlog-tétel) — bekapcsolva a nyomtatványon csillagot és
+  lábjegyzetet kap. (Ez a bekezdés korábban az ellenkezőjét állította, a
+  4. tétel elkészülte előtti állapotot leírva.)
 - Német nyelvű ajánlaton egy **kitöltött** egyedi sor is bekerül a
   „hiányzó német tételnevek" figyelmeztetésbe (a szerkesztőben `HU`
   jelvénnyel, véglegesítéskor a megerősítő listában) — szabad szöveghez
@@ -209,6 +211,20 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
   is megjelenik. Ide megy az időzítés: *„az implantáció beépülési ideje
   után, kb. 3 hónappal"*.
 - Fázisonkénti összeg, alul mindösszesen.
+
+### Előleg
+
+A „Mindösszesen" doboz alatt egy kapcsoló: *„Ez a terv fogtechnikai
+munkát tartalmaz — előleg feltüntetése"*. Bekapcsolva egy 50%-ról induló,
+0–100 közé szorított százalék mező jelenik meg, mellette az előleg és a
+fennmaradó rész forintban — mindkettő a **tényleges** végösszegből
+számolva, élőben követve a sorok változását.
+
+A kapcsoló állapotát és az értéket egyetlen mező hordozza
+(`elolegSzazalek`, `null` = kikapcsolva), így a kettő nem kerülhet
+egymásnak ellentmondó állapotba. Bekapcsolva a nyomtatvány 1. oldala két
+új sort kap, és a 2. oldal fizetési feltételeinek szövege is ugyanezt a
+százalékot mondja (lásd `docs/04-nyomtatvany-spec.md`).
 
 ### Autosave
 

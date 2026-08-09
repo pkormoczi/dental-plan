@@ -84,7 +84,7 @@ describe('TervDocument -- backlog-4: kézzel bekapcsolt "becsült ár" csillag a
     renderDoc(true);
     expect(screen.getByText('Csontpótló anyag *')).toBeInTheDocument();
     expect(
-      screen.getByText(/A csillaggal jelölt tételek ára a kezelés során derül ki véglegesen/),
+      screen.getByText(/A csillaggal jelölt tételek ára .* a kezelés során derül ki véglegesen/),
     ).toBeInTheDocument();
   });
 
@@ -136,5 +136,68 @@ describe('TervDocument -- backlog-12: feltételes összegsor', () => {
     renderDoc(false, 'de', { lista: 45000, tenyleges: 45000 });
     expect(screen.getByText('Zu zahlen')).toBeInTheDocument();
     expect(screen.queryByText('Behandlungen gesamt')).not.toBeInTheDocument();
+  });
+});
+
+describe('TervDocument -- backlog-9: előleg-sor', () => {
+  function renderEloleg(elolegSzazalek: number | null, savos = false, nyelv: Nyelv = 'hu') {
+    const plan = buildPlan(savos, nyelv, { lista: 45000, tenyleges: 45000 });
+    plan.elolegSzazalek = elolegSzazalek;
+    return render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly
+        nyilatkozatMd=""
+        fizetesiFeltetelekMd="- A kezelési összeg {{elolegSzazalek}}%-a fizetendő a munka megkezdésekor."
+        toothChartPng={null}
+      />,
+    );
+  }
+
+  it('kikapcsolva: nincs Előleg/Fennmaradó sor, a sablonszöveg az 50%-os alapértékre esik vissza', () => {
+    renderEloleg(null);
+    expect(screen.queryByText(/Előleg/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Fennmaradó rész')).not.toBeInTheDocument();
+    // A mai, aláírt szöveggel szó szerint azonos mondat.
+    expect(screen.getByText(/A kezelési összeg 50%-a fizetendő/)).toBeInTheDocument();
+  });
+
+  it('bekapcsolva: két új sor a Fizetendőből számolva, a sablonszöveg ugyanazt a százalékot mondja', () => {
+    renderEloleg(50);
+    expect(screen.getByText('Előleg (50%)')).toBeInTheDocument();
+    expect(screen.getByText('Fennmaradó rész')).toBeInTheDocument();
+    // 45 000 Ft fizetendő -> 22 500 / 22 500.
+    expect(screen.getAllByText('22 500 Ft')).toHaveLength(2);
+    expect(screen.getByText(/A kezelési összeg 50%-a fizetendő/)).toBeInTheDocument();
+  });
+
+  it('50-től eltérő százaléknál a nyomtatvány és a fizetési feltételek szövege nem mond ellent', () => {
+    renderEloleg(30);
+    expect(screen.getByText('Előleg (30%)')).toBeInTheDocument();
+    expect(screen.getByText('13 500 Ft')).toBeInTheDocument(); // előleg
+    expect(screen.getByText('31 500 Ft')).toBeInTheDocument(); // fennmaradó
+    expect(screen.getByText(/A kezelési összeg 30%-a fizetendő/)).toBeInTheDocument();
+  });
+
+  it('becsült (savos) tétel esetén MINDKÉT új sor csillagot kap', () => {
+    renderEloleg(50, true);
+    expect(screen.getByText('Előleg (50%) *')).toBeInTheDocument();
+    expect(screen.getByText('Fennmaradó rész *')).toBeInTheDocument();
+    // Egy lábjegyzet fedi le a tételeket és a belőlük számolt összegeket is.
+    expect(screen.getByText(/fizetendő, előleg, fennmaradó rész/)).toBeInTheDocument();
+  });
+
+  it('savos tétel NÉLKÜL nincs csillag az új sorokon', () => {
+    renderEloleg(50, false);
+    expect(screen.getByText('Előleg (50%)')).toBeInTheDocument();
+    expect(screen.queryByText('Előleg (50%) *')).not.toBeInTheDocument();
+  });
+
+  it('német terv: az új sorok németül jelennek meg', () => {
+    renderEloleg(50, false, 'de');
+    expect(screen.getByText('Anzahlung (50%)')).toBeInTheDocument();
+    expect(screen.getByText('Restbetrag')).toBeInTheDocument();
   });
 });

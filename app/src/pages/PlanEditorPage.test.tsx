@@ -173,6 +173,36 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(screen.queryByText(/Kedvezmény:/)).not.toBeInTheDocument();
   });
 
+  // backlog-9: a doki eddig fejben osztotta ki az előleget és kézzel írta a
+  // papír aljára.
+  it('az előleg-kapcsoló bekapcsolva 50%-ról indul, és a végösszegből számol', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // Alapból nincs előleg-blokk, csak a kapcsoló.
+    expect(screen.queryByLabelText('Előleg százaléka')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+
+    // 25 000 Ft végösszeg -> 50% = 12 500 / 12 500.
+    const szazalek = await screen.findByLabelText('Előleg százaléka');
+    expect(szazalek).toHaveValue('50');
+    expect(screen.getAllByText('12 500 Ft')).toHaveLength(2);
+
+    // Százalék átírása után mindkét szám követi (a mező blur-re commitál).
+    await user.clear(szazalek);
+    await user.type(szazalek, '30');
+    await user.tab();
+
+    expect(await screen.findByText('7500 Ft')).toBeInTheDocument();
+    expect(screen.getByText('17 500 Ft')).toBeInTheDocument();
+  });
+
   it('shows the non-blocking tooth-count mismatch warning without preventing entry', async () => {
     const user = userEvent.setup();
     renderEditor();

@@ -40,6 +40,9 @@ export interface PdfLabels {
   tejfogakPrefix: string;
   kezelesekOsszesen: string;
   fizetendo: string;
+  /** Az előleg sor felirata a százalékkal -- ragozás miatt függvény, az `ervenyessegMondat` mintájára. */
+  elolegSor: (szazalek: number) => string;
+  fennmaradoResz: string;
   /** JOGI SZÖVEG — lektorálandó, mielőtt éles németnyelvű PDF-re kerül. */
   anyagkoltseg: string;
   /** JOGI SZÖVEG — a D15 (sávos ár) jogi védelme, lektorálandó. */
@@ -79,9 +82,11 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     tejfogakPrefix: 'Tejfogak: ',
     kezelesekOsszesen: 'Kezelések összesen',
     fizetendo: 'Fizetendő',
+    elolegSor: (szazalek) => `Előleg (${szazalek}%)`,
+    fennmaradoResz: 'Fennmaradó rész',
     anyagkoltseg: 'Az árak tartalmazzák az anyagköltséget.',
     savosFootnote:
-      '* A csillaggal jelölt tételek ára a kezelés során derül ki véglegesen, a megadott ár becslés.',
+      '* A csillaggal jelölt tételek ára — és a belőlük számított összegek (fizetendő, előleg, fennmaradó rész) — a kezelés során derül ki véglegesen, a megadott ár becslés.',
     fizetesiFeltetelekCim: 'Fizetési feltételek',
     nyilatkozatCim: 'Nyilatkozat',
     megbizott: 'Megbízott:',
@@ -117,9 +122,11 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     tejfogakPrefix: 'Milchzähne: ',
     kezelesekOsszesen: 'Behandlungen gesamt',
     fizetendo: 'Zu zahlen',
+    elolegSor: (szazalek) => `Anzahlung (${szazalek}%)`,
+    fennmaradoResz: 'Restbetrag',
     anyagkoltseg: 'Die Preise beinhalten die Materialkosten.',
     savosFootnote:
-      '* Der Preis der mit einem Sternchen markierten Leistungen wird während der Behandlung endgültig festgelegt; der angegebene Preis ist eine Schätzung.',
+      '* Der Preis der mit einem Sternchen markierten Leistungen — und die daraus berechneten Beträge (zu zahlen, Anzahlung, Restbetrag) — wird während der Behandlung endgültig festgelegt; der angegebene Preis ist eine Schätzung.',
     fizetesiFeltetelekCim: 'Zahlungsbedingungen',
     nyilatkozatCim: 'Erklärung',
     megbizott: 'Auftragnehmer:',

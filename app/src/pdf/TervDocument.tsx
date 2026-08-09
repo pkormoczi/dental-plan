@@ -15,7 +15,7 @@ import { formatLongDate, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
 import { formatTeethForPrint } from '../domain/teeth';
 import { buildToothVisualStates } from '../domain/toothVisual';
-import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
+import { ELOLEG_ALAP_SZAZALEK, elolegOsszegek, fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
 import type { Fazis, Plan, PriceList, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
 import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
@@ -131,6 +131,9 @@ const s = {
   summaryDivider: { height: 1.5, backgroundColor: t.brand, marginVertical: 5 },
   summaryTotalLabel: { fontSize: 11, fontWeight: 600, color: t.brand },
   summaryTotalValue: { fontSize: 11, fontWeight: 600, color: t.brand },
+  // Az előleg/fennmaradó sorok a Fizetendő ALATT, kisebb súllyal: a
+  // szerződéses végösszeg marad a kiemelt szám, ezek abból bontanak.
+  summaryEloleg: { fontSize: 9, color: t.textMuted, marginTop: 3 },
   validityNote: { fontSize: 8, color: t.textMuted, marginTop: 6, lineHeight: 1.5 },
 
   h2: { fontSize: 12.5, fontWeight: 600, color: t.brand, marginBottom: 10 },
@@ -353,7 +356,18 @@ export function TervDocument({
   const showToothChart = toothChartPng != null && (fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0);
   // A sablonszövegben álló {{orvos}}/{{paciens}} helyőrzőket a tényleges
   // terv-adatok váltják fel, mielőtt bekezdésekre/felsorolásra bontanánk.
-  const placeholderValues = { orvos: plan.orvos, paciens: plan.paciens.nev };
+  // Előleg (backlog-9): a százalék a terven él, az összeg élőben számol a
+  // `grand`-ból -- ugyanúgy, ahogy a Fizetendő sor, nem a mentett
+  // `osszesitok`-ból. `null` = a doki nem kapcsolta be, nincs új sor.
+  const elolegSzazalek = plan.elolegSzazalek ?? null;
+  const eloleg = elolegSzazalek == null ? null : elolegOsszegek(grand, elolegSzazalek);
+  const placeholderValues = {
+    orvos: plan.orvos,
+    paciens: plan.paciens.nev,
+    // Kikapcsolt kapcsolónál az alapértékre esik vissza, így a fizetési
+    // feltételek mondata szó szerint a mai, statikus szöveg marad.
+    elolegSzazalek: String(elolegSzazalek ?? ELOLEG_ALAP_SZAZALEK),
+  };
   const fizetesiFeltetelekBlocks = parseBlocks(
     fillPlaceholders(fizetesiFeltetelekMd, placeholderValues),
   );
@@ -408,6 +422,27 @@ export function TervDocument({
               <Text style={s.summaryTotalLabel}>{L.fizetendo}</Text>
               <Text style={s.summaryTotalValue}>{formatMoney(grand, plan.penznem)}</Text>
             </View>
+            {eloleg && (
+              // Mindkét sor csillagot kap, ha a tervben van becsült árú
+              // tétel: mindkettő ugyanabból a becsült Fizetendőből számol,
+              // csak az egyiket jelölni félrevezető lenne (backlog-9).
+              <>
+                <View style={s.summaryLine}>
+                  <Text style={s.summaryEloleg}>
+                    {L.elolegSor(elolegSzazalek!)}
+                    {hasRange && ' *'}
+                  </Text>
+                  <Text style={s.summaryEloleg}>{formatMoney(eloleg.eloleg, plan.penznem)}</Text>
+                </View>
+                <View style={s.summaryLine}>
+                  <Text style={s.summaryEloleg}>
+                    {L.fennmaradoResz}
+                    {hasRange && ' *'}
+                  </Text>
+                  <Text style={s.summaryEloleg}>{formatMoney(eloleg.fennmarado, plan.penznem)}</Text>
+                </View>
+              </>
+            )}
             <Text style={s.validityNote}>
               {L.ervenyessegMondat(formatLongDate(plan.ervenyesIg, plan.nyelv))}
               {'\n'}

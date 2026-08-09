@@ -119,6 +119,12 @@ describe('piszkozatTartalmas', () => {
     expect(piszkozatTartalmas(withNote)).toBe(true);
   });
 
+  // backlog-9: a kapcsoló bekapcsolása tudatos döntés, nem gépi alapérték.
+  it('is true once the előleg switch is turned on, even with nothing else filled in', () => {
+    const plan = createBlankPlan(settings, priceList);
+    expect(piszkozatTartalmas({ ...plan, elolegSzazalek: 50 })).toBe(true);
+  });
+
   it('is NOT affected by nyelv/penznem toggles alone (két kattintás, nem gépelt munka)', () => {
     const plan = createBlankPlan(settings, priceList);
     expect(piszkozatTartalmas({ ...plan, nyelv: 'de', penznem: 'EUR' })).toBe(false);

@@ -30,8 +30,8 @@ sorrenden kívül, a mérete miatt készült el — szintén 2026-08-09-én, mer
 15 perc volt, és a publikus demón látható hibát javított.)
 
 **A MOST lista minden tételének van tervdokumentuma.** A kész tételeknél
-(1–7, 11, 12, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a
-még nyitott tételeknél (8–10, 13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
+(1–7, 9, 11, 12, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a
+még nyitott tételeknél (8, 10, 13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
 munkamenetek döntési összefoglalói — a nyitott tételek tehát **meg vannak
 tervezve, de nincsenek implementálva**: a tervek nem tartalmaznak kódot,
 az implementáció módja a megvalósító feladata. Ahol a tervezés
@@ -40,7 +40,7 @@ sor jelzi.
 
 ---
 
-## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 11 kész tétel után kb. 4 nap van hátra, a 8. tétel megnőtt becslésével együtt)
+## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 12 kész tétel után kb. 3,5 nap van hátra, a 8. tétel megnőtt becslésével együtt)
 
 Mindegyik kicsi, és egy konkrét, a `06-doktor-harom-nap` munkanapjain
 ténylegesen felmerült fájdalmat szüntet meg (lásd a Függelékben). Egyik
@@ -288,7 +288,7 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   eredeti becslés nem tartalmazott. A tétel másik fele (fél nap közös munka
   a dokival) változatlan.
 
-### 9. Előleg-sor a nyomtatványon
+### 9. Előleg-sor a nyomtatványon — KÉSZ (2026-08-09)
 
 - **Méret:** fél nap — opcionális mező a `Plan`-en (visszafelé
   kompatibilis, `schemaVersion` nem változik), szerkesztő mező, PDF-sor.
@@ -305,6 +305,31 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   `Kezelések összesen`-ből; az 1. oldal összegzése két új sort kap (Előleg /
   Fennmaradó), a 2. oldal sablonszövegébe viszont csak a százalék kerül,
   forintösszeg nem. Méret változatlan.
+- **Megvalósítás:** új opcionális `Plan.elolegSzazalek` mező (`domain/types.ts`,
+  `schemaVersion` marad 1; hiányzó mező egy régi `terv.json`-ben `null`-ként
+  olvasódik), `createBlankPlan()` `null`-lal indul, és a
+  `piszkozatTartalmas()` is figyeli (egy bekapcsolt kapcsoló önmagában is
+  védendő tartalom). Új `elolegOsszegek(fizetendo, szazalek)` +
+  `ELOLEG_ALAP_SZAZALEK` export (`domain/totals.ts`) — az EGYETLEN hely,
+  ahol a kerekítés eldől; a fennmaradó részt KIVONÁSSAL adja, nem külön
+  kerekítéssel, hogy a két szám mindig pontosan a fizetendőt adja ki. A
+  szerkesztőben új `ElolegBlokk` a `Summary` alatt (checkbox +
+  0–100 közé szorított `NumberField` + a két összeg élőben). A
+  nyomtatványon két új sor a `Fizetendő` alatt, kisebb súllyal, `hasRange`
+  esetén MINDKETTŐ csillaggal; új `elolegSor(szazalek)`/`fennmaradoResz`
+  felirat (`pdf/labels.ts`, mindkét nyelven), és a `savosFootnote` szövege
+  is bővült, hogy a belőlük számolt összegeket is lefedje — nincs második
+  csillag-jelentés az oldalon. A fizetési feltételek seed-sablonja
+  `{{elolegSzazalek}}` helyőrzőt kapott, ami kikapcsolt kapcsolónál az
+  50-es alapértékre esik vissza (a mondat így szó szerint a mai, aláírt
+  szöveg marad) — nem kellett feltételes sablon-blokk. 12 új teszt
+  (`totals.test.ts` kerekítés/szélsőértékek, `piszkozat.test.ts`,
+  `TervDocument.test.tsx` ki/be/eltérő százalék/csillag/német,
+  `PlanEditorPage.test.tsx` a kapcsoló élő számolása).
+  `docs/02-domain-modell.md`, `docs/03-funkcionalis-spec.md` és
+  `docs/04-nyomtatvany-spec.md` frissült. Menet közben javítva egy
+  doc-drift: a `docs/03` „Egyedi sor" szakasza még azt állította, hogy a
+  becsült-ár jelölő nem érhető el egyedi soron (a 4. tétel óta elérhető).
 
 ### 10. Tétel-leírás a csomagtételekhez
 

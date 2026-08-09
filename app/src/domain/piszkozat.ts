@@ -45,6 +45,11 @@ export function piszkozatTartalmas(plan: Plan): boolean {
   const vanSor = plan.fazisok.some((f) => f.sorok.length > 0);
   if (vanSor) return true;
 
+  // Az előleg-kapcsoló bekapcsolása tudatos doki-döntés (backlog-9), nem
+  // gépi alapérték -- önmagában is védendő tartalom, még üres páciensadat
+  // és sorok nélkül is.
+  if (plan.elolegSzazalek != null) return true;
+
   const csakEgyAlapFazis =
     plan.fazisok.length === 1 &&
     plan.fazisok[0].megnevezes === ELSO_FAZIS_NEV &&

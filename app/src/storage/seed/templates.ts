@@ -7,6 +7,12 @@
 // generáláskor a terv kezelőorvosának neve váltja fel (lásd
 // pdf/markdownLite.ts `fillPlaceholders`).
 //
+// A fizetési feltételek `{{elolegSzazalek}}` helyőrzője (backlog-9) a terv
+// `elolegSzazalek` mezőjére old fel, kikapcsolt kapcsolónál az 50-es
+// alapértékre -- vagyis a mondat ilyenkor szó szerint az eredeti,
+// aláírt szöveget adja vissza. Ezért NEM feltételes blokk, csak
+// szöveghelyettesítés.
+//
 // A doki jogásza a Beállítások képernyőn szerkesztheti/pontosíthatja ezt a
 // szöveget -- mentéskor `storage.saveTemplate()` mindig ÚJ verziófájlt hoz
 // létre (pl. nyilatkozat-hu-v2.md), a jelenlegi megmarad, mert a már
@@ -43,7 +49,7 @@ export const FIZETESI_FELTETELEK_HU_V1 = `# Fizetési feltételek
 Megrendelő a kezelési tervben szereplő kezelés sorozat elvégzésével, az ehhez kapcsolódó fogtechnikai anyagok beépítésével egyetért, ehhez beleegyezését adja. Számlázási, fizetési feltételek tekintetében Megrendelő elfogadja az alábbiakat:
 
 - Amennyiben a kezelés nem tartalmaz fogtechnikai munkát, akkor az alkalmanként elvégzett munka ellenértéke azonnal fizetendő.
-- Fogtechnikai munkát tartalmazó kezelés esetén a kezelési összeg 50%-a fizetendő a munka megkezdésekor; ez a feltétele a technikus felé való továbbításnak. A fennmaradó rész a munka átadásakor fizetendő.
+- Fogtechnikai munkát tartalmazó kezelés esetén a kezelési összeg {{elolegSzazalek}}%-a fizetendő a munka megkezdésekor; ez a feltétele a technikus felé való továbbításnak. A fennmaradó rész a munka átadásakor fizetendő.
 - A munka átadásának feltétele a kiegyenlített számla.
 - Fizetési mód: készpénz, egészségpénztári kártya, vagy bankkártyás utalás.
 `;

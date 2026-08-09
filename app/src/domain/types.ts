@@ -97,6 +97,15 @@ export interface Plan {
   paciens: Paciens;
   fazisok: Fazis[];
   osszesitok: Osszesitok;
+  /**
+   * Fogtechnikai munkát tartalmazó kezelésnél a munka megkezdésekor
+   * fizetendő előleg százaléka. `null` (vagy hiányzó mező egy régi
+   * `terv.json`-ben) = a doki nem jelölte be, nincs előleg-sor a
+   * nyomtatványon. A százalék az igazság, nem a belőle számolt összeg: az
+   * mindig élőben számol a `fazisok`-ból (lásd `elolegOsszegek`), ahogy a
+   * `Fizetendő` sor is. `schemaVersion` nem emelkedett, a mező opcionális.
+   */
+  elolegSzazalek?: number | null;
 }
 
 export interface Rendelo {

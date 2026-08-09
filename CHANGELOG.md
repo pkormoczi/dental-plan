@@ -61,6 +61,11 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 - Az Árlista keresője a német néven is talál — eddig csak a magyar nevet nézte, így egy csak
   németül elgépelt vagy elnevezett tétel egyáltalán nem jött elő az adminban (a szerkesztő
   keresője viszont már eddig is megtalálta).
+- Fogtechnikai munkát tartalmazó kezelésnél a program kiszámolja az előleget: a szerkesztőben
+  a végösszeg alatt egy kapcsoló ("Ez a terv fogtechnikai munkát tartalmaz"), alapból 50%-kal,
+  szabadon átírható. Bekapcsolva a nyomtatványon a Fizetendő alatt megjelenik az "Előleg" és a
+  "Fennmaradó rész" sor, a fizetési feltételek szövegében pedig ugyanaz a százalék szerepel,
+  amit a doki beállított. Eddig ezt fejben kellett kiszámolni és kézzel a papír aljára írni.
 - A "Korábbi tervek" listában minden verzió mellett ott a végösszege is, így megnyitás nélkül
   látszik, mennyiért ment ki egy korábbi ajánlat. (Ha egy terv fájlja sérült, annál a
   sornál "—" áll az összeg helyén.)

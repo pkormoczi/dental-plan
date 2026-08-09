@@ -133,7 +133,11 @@ kerekítési hiba az összegzésben.
     "kezelesekOsszesen": 820000,
     "kedvezmeny": 40000,
     "fizetendo": 780000
-  }
+  },
+
+  // Opcionális (hiányozhat egy régi fájlból, ilyenkor `null`-ként olvasandó).
+  // Lásd "Előleg" lentebb.
+  "elolegSzazalek": 50
 }
 ```
 
@@ -161,6 +165,27 @@ doki a keresőben begépelt szöveget vette fel `nevSnapshot`-ként, mert
 egyetlen árlistai tétel sem talált rá. Ilyen soron nincs értelmezhető
 árlistai referenciaár, ezért `listaEgysegar === tenylegesEgysegar` mindig
 (az ártétel utólagos szerkesztése mindkettőt együtt írja).
+
+### Előleg (`elolegSzazalek`)
+
+Fogtechnikai munkát tartalmazó kezelésnél a munka megkezdésekor fizetendő
+előleg **százaléka**. `null` (vagy hiányzó mező) = a doki nem jelölte be,
+nincs előleg-sor a nyomtatványon. Nem emelt `schemaVersion`-t: a mező
+opcionális, egy régi `terv.json` változatlanul betölthető.
+
+**Százalék tárolódik, nem összeg.** Az előleg és a fennmaradó rész összege
+mindig élőben számol a `fazisok`-ból (a *tényleges*, kedvezménnyel
+csökkentett végösszegből), ugyanúgy, ahogy a nyomtatvány `Fizetendő` sora
+— így nem lehet elcsúszni a sorok és a belőlük számolt előleg között. A
+számítás determinisztikusan reprodukálható a perzisztált százalékból és a
+perzisztált sorokból, ezért ez nem sérti a D7 pillanatkép-elvét (a
+verziómappát amúgy sem írjuk felül, D4).
+
+Ugyanez a százalék tölti ki a fizetési feltételek sablonszövegének
+`{{elolegSzazalek}}` helyőrzőjét, hogy az 1. oldal és a 2. oldal jogi
+szövege ne mondhasson ellent egymásnak. Kikapcsolt kapcsolónál a
+helyőrző az 50-es alapértékre esik vissza — a mondat ilyenkor szó szerint
+az eredeti, aláírt szöveggel azonos.
 
 ### Miért van `osszesitok`, ha származtatható
 

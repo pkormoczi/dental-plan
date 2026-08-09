@@ -21,6 +21,31 @@ export function fazisListaOsszeg(fazis: Fazis): number {
   return fazis.sorok.reduce((sum, sor) => sum + sorListaOsszeg(sor), 0);
 }
 
+/** Az előleg alapértelmezett százaléka, amikor a doki bekapcsolja a jelölőt. */
+export const ELOLEG_ALAP_SZAZALEK = 50;
+
+export interface ElolegOsszegek {
+  eloleg: number;
+  fennmarado: number;
+}
+
+/**
+ * Az előleg és a fennmaradó rész összege egy adott százalékhoz.
+ *
+ * A `fizetendo` a TÉNYLEGES (kedvezménnyel csökkentett) végösszeg, nem a
+ * listaáras -- a páciens ehhez képest fizet előleget (D9: a nyomtatványon
+ * amúgy sem látszik a kedvezmény). Egész pénznemegységre kerekít (HUF:
+ * forint, EUR: cent), és a fennmaradó részt KIVONÁSSAL adja, nem külön
+ * kerekítéssel, hogy a két szám mindig pontosan a `fizetendo`-t adja ki.
+ *
+ * Ez az EGYETLEN hely, ahol az előleg számítása/kerekítése eldől -- a
+ * szerkesztő és a nyomtatvány is ezt hívja.
+ */
+export function elolegOsszegek(fizetendo: number, szazalek: number): ElolegOsszegek {
+  const eloleg = Math.round((szazalek / 100) * fizetendo);
+  return { eloleg, fennmarado: fizetendo - eloleg };
+}
+
 export function computeOsszesitok(fazisok: Fazis[]): Osszesitok {
   const kezelesekOsszesen = fazisok.reduce((sum, f) => sum + fazisListaOsszeg(f), 0);
   const fizetendo = fazisok.reduce((sum, f) => sum + fazisOsszeg(f), 0);

@@ -63,5 +63,7 @@ export function createBlankPlan(settings: Settings, priceList: PriceList): Plan 
     },
     fazisok: [{ sorszam: 1, megnevezes: ELSO_FAZIS_NEV, megjegyzes: '', sorok: [] }],
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+    // A doki kapcsolója a szerkesztőben -- alapból nincs előleg-sor.
+    elolegSzazalek: null,
   };
 }
