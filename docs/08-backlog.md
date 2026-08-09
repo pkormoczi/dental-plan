@@ -32,23 +32,28 @@ ajánlott; a 18–23. apró tételek terv nélkül is indíthatók.
 *(korábbi 8. tétel — mindkét review-kör ezt hozta ki a legnagyobb
 haszon/befektetés arányú tételnek)*
 
-- **Méret:** a kódrész 1.5–2 fejlesztői nap (kategória-CRUD +
-  szín-architektúra átírás, lásd a tervet) + fél nap közös munka a
-  dokival az adatra.
-- **Kereteket sért?** Nem — a D16 kifejezetten az adminra bízza a
-  takarítást, csak ma az admin nem tud kategóriát létrehozni/átnevezni.
-- **Valódi haszon:** időmegtakarítás (a gyorsgomb-hiány minden betegnél
-  fizetett ár), hibacsökkentés (a k07 All-on-X kategória elgépelései —
-  „Neodetn", „felépítmány", „Ideigenes" — ma minden ajánlaton kézi
-  javítást igényelnek), pácienskommunikáció.
-- **20%-os verzió:** a gyakori-csillagozás + a legdurvább elgépelések
-  javítása **ma, kód nélkül** menne — a valódi blokkoló két review-kör
-  óta az, hogy a fél napos közös ülés nincs kitűzve. **A második kör
-  javaslata: az ülés napirendjére kerüljön a 13. tétel magyar
-  garanciaszövegének begyűjtése és a sáv-alsóhatárok visszaigazolása
-  (`docs/06`) is** — egyetlen ülés adja az összes embermunka-inputot.
-- **Terv:** `docs/backlog-8-kategoriakezeles-terv.md` (15 döntés, csak a
-  kódrészre).
+**Kódrész — KÉSZ (2026-08-10).** Kategória-CRUD (létrehozás, átnevezés,
+színezés, fel/le sorrendezés, törlés csak üres kategórián) egy
+összecsukható panelen az Árlista adminban; a fogtérkép színe a kódba
+huzalozott 8 elemű "vödör"-tábla helyett most közvetlenül az árlista
+`Kategoria.szin` mezőjéből olvas (`design/treatmentVisuals.ts`
+átírva). Megvalósítás: `docs/backlog-8-kategoriakezeles-terv.md` (15
+döntés). Emellett a `data/arlista.seed.json`-ban is elvégeztük azt az
+adattisztítást, ami tisztán mechanikus volt (nem igényelt doktori
+döntést): ~20 elgépelés javítva, `k01 Besorolatlan` átnevezve
+„Diagnosztika és konzultáció"-ra, az `k12 Egyéb kezelések` 6
+fogszabályozási tétele saját `k13 Fogszabályozás` kategóriába
+átmozgatva, az 5 francia maradványtétel + a `Lokátor felépítmény`
+duplikátum inaktiválva (`aktiv: false`, id megtartva, D17).
+
+- **Még nyitva — közös munka a dokival (fél nap):** a `gyakori`
+  csillagozás (mind a 118 tétel `false`), a két `SAVOS` tétel
+  alsó-határ visszaigazolása, és a `docs/06-arlista-import.md`
+  „Ismert szennyeződés" táblázatában maradt, valódi ár-/kategorizálási
+  döntést igénylő tételek (pl. `t072`/`t073` azonos ára, `t078` „Sín"
+  kategóriája). **A második kör javaslata: az ülés napirendjére
+  kerüljön a 13. tétel magyar garanciaszövegének begyűjtése is** —
+  egyetlen ülés adja az összes még hátralévő embermunka-inputot.
 
 ### 2. hely — 16. tétel: Terv-szintű „kerek végösszeg" kedvezmény
 
@@ -69,6 +74,7 @@ haszon/befektetés arányú tételnek)*
 - **20%-os verzió:** „cél végösszeg" segédmező a Summary-ban, ami csak
   kiírja a szükséges kedvezményt (2 óra) — nem javasolt önállóan, mert a
   kézi visszaosztás megmarad, csak a számológép esik ki.
+- **Terv:** `docs/backlog-16-kerek-vegosszeg-terv.md` (10 döntés).
 
 ### 3. hely — 17. tétel: Terv másolása új tervként / új terv a páciens adataival
 

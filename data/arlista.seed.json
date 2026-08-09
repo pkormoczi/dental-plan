@@ -1,15 +1,16 @@
 {
   "schemaVersion": 1,
   "arlistaVerzio": "2026-07-01",
-  "modositva": "2026-08-06",
+  "modositva": "2026-08-09",
   "kategoriak": [
     {
       "id": "k01",
       "nev": {
-        "hu": "Besorolatlan",
-        "de": "Nicht kategorisiert"
+        "hu": "Diagnosztika és konzultáció",
+        "de": "Diagnostik und Beratung"
       },
-      "sorrend": 1
+      "sorrend": 1,
+      "szin": "#adb5bd"
     },
     {
       "id": "k02",
@@ -17,7 +18,8 @@
         "hu": "Tömések",
         "de": "Füllungen"
       },
-      "sorrend": 2
+      "sorrend": 2,
+      "szin": "#51cf66"
     },
     {
       "id": "k03",
@@ -25,7 +27,8 @@
         "hu": "Gyökérkezelés",
         "de": "Wurzelbehandlung"
       },
-      "sorrend": 3
+      "sorrend": 3,
+      "szin": "#fcc419"
     },
     {
       "id": "k04",
@@ -33,7 +36,8 @@
         "hu": "Fogkőeltávolítás",
         "de": "Zahnsteinentfernung"
       },
-      "sorrend": 4
+      "sorrend": 4,
+      "szin": "#adb5bd"
     },
     {
       "id": "k05",
@@ -41,7 +45,8 @@
         "hu": "Fogfehérítés",
         "de": "Zahnaufhellung"
       },
-      "sorrend": 5
+      "sorrend": 5,
+      "szin": "#adb5bd"
     },
     {
       "id": "k06",
@@ -49,7 +54,8 @@
         "hu": "Gyermekfogászat",
         "de": "Kinderzahnheilkunde"
       },
-      "sorrend": 6
+      "sorrend": 6,
+      "szin": "#adb5bd"
     },
     {
       "id": "k07",
@@ -57,7 +63,8 @@
         "hu": "All-on-X csomagok",
         "de": "All-on-X-Pakete"
       },
-      "sorrend": 7
+      "sorrend": 7,
+      "szin": "#9775fa"
     },
     {
       "id": "k08",
@@ -65,7 +72,8 @@
         "hu": "Szájsebészet",
         "de": "Mundchirurgie"
       },
-      "sorrend": 8
+      "sorrend": 8,
+      "szin": "#ff6b6b"
     },
     {
       "id": "k09",
@@ -73,7 +81,8 @@
         "hu": "Parodontológia",
         "de": "Parodontologie"
       },
-      "sorrend": 9
+      "sorrend": 9,
+      "szin": "#20c997"
     },
     {
       "id": "k10",
@@ -81,7 +90,8 @@
         "hu": "Korona és hídpótlások",
         "de": "Kronen- und Brückenversorgungen"
       },
-      "sorrend": 10
+      "sorrend": 10,
+      "szin": "#4dabf7"
     },
     {
       "id": "k11",
@@ -89,7 +99,8 @@
         "hu": "Kivehető fogsorok",
         "de": "Herausnehmbarer Zahnersatz"
       },
-      "sorrend": 11
+      "sorrend": 11,
+      "szin": "#e8590c"
     },
     {
       "id": "k12",
@@ -97,7 +108,17 @@
         "hu": "Egyéb kezelések",
         "de": "Sonstige Behandlungen"
       },
-      "sorrend": 12
+      "sorrend": 12,
+      "szin": "#adb5bd"
+    },
+    {
+      "id": "k13",
+      "nev": {
+        "hu": "Fogszabályozás",
+        "de": "Kieferorthopädie"
+      },
+      "sorrend": 13,
+      "szin": "#cc5de8"
     }
   ],
   "tetelek": [
@@ -240,7 +261,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Esztétikus tömés 2felszin",
+        "hu": "Esztétikus tömés 2 felszín",
         "de": "Ästhetische Füllung, 2 Flächen"
       },
       "ar": {
@@ -350,7 +371,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "alábélelés",
+        "hu": "Alábélelés",
         "de": "Unterfüllung"
       },
       "ar": {
@@ -372,7 +393,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "csonkfelépítés",
+        "hu": "Csonkfelépítés",
         "de": "Stumpfaufbau"
       },
       "ar": {
@@ -508,7 +529,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Komplett fogsor",
+        "hu": "Fogfehérítés, komplett fogsor",
         "de": "Aufhellung, kompletter Zahnbogen"
       },
       "ar": {
@@ -530,7 +551,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "1 db fog (belső és külső)",
+        "hu": "Fogfehérítés, 1 db fog (belső és külső)",
         "de": "Aufhellung, 1 Zahn (innen und außen)"
       },
       "ar": {
@@ -662,7 +683,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "All-on-x Anax fogpótlás",
+        "hu": "All-on-X Anax fogpótlás",
         "de": "All-on-X Anax-Zahnersatz"
       },
       "ar": {
@@ -706,7 +727,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Neodetn implantátum csomagban",
+        "hu": "Neodent implantátum csomagban",
         "de": "Neodent-Implantat im Paket"
       },
       "ar": {
@@ -750,7 +771,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Ideigenes 10 tag PMMA",
+        "hu": "Ideiglenes 10 tagú PMMA",
         "de": "Provisorium, 10-gliedrig, PMMA"
       },
       "ar": {
@@ -794,7 +815,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Arcüregemelés (csontpotló anyag és membrán ára külön fizetendő )",
+        "hu": "Arcüregemelés (csontpótló anyag és membrán ára külön fizetendő)",
         "de": "Sinuslift (Knochenersatzmaterial und Membran gesondert zu bezahlen)"
       },
       "ar": {
@@ -838,7 +859,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Bölcsességfog mütéti eljárással (seb.gond.,varrat szedés)",
+        "hu": "Bölcsességfog műtéti eljárással (seb. gond., varratszedés)",
         "de": "Weisheitszahnentfernung, chirurgisch (Wundversorgung, Fadenentfernung)"
       },
       "ar": {
@@ -1190,7 +1211,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Humán csont gran 0,5 gr",
+        "hu": "Humán csontgranulátum 0,5 g",
         "de": "Humanes Knochengranulat 0,5 g"
       },
       "ar": {
@@ -1300,7 +1321,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Implantatum Straumann implantátum",
+        "hu": "Straumann implantátum",
         "de": "Straumann-Implantat"
       },
       "ar": {
@@ -1344,7 +1365,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Neodent implantatum",
+        "hu": "Neodent implantátum",
         "de": "Neodent-Implantat"
       },
       "ar": {
@@ -1366,7 +1387,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Neodent implantatum azonnali terheléssel",
+        "hu": "Neodent implantátum azonnali terheléssel",
         "de": "Neodent-Implantat mit Sofortbelastung"
       },
       "ar": {
@@ -1432,7 +1453,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Impl.ideiglenes korona",
+        "hu": "Impl. ideiglenes korona",
         "de": "Implantat, provisorische Krone"
       },
       "ar": {
@@ -1894,7 +1915,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Neodent implantatumfej",
+        "hu": "Neodent implantátumfej",
         "de": "Neodent-Implantataufbau (Abutment)"
       },
       "ar": {
@@ -1982,7 +2003,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Porcelán Inlay,Onlay",
+        "hu": "Porcelán inlay, onlay",
         "de": "Porzellan-Inlay/Onlay"
       },
       "ar": {
@@ -2026,7 +2047,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Csapos műcsonktöbb gyökér esetén",
+        "hu": "Csapos műcsont, több gyökér esetén",
         "de": "Stiftaufbau bei mehreren Wurzeln"
       },
       "ar": {
@@ -2133,7 +2154,7 @@
       "id": "t093",
       "kategoriaId": "k11",
       "sorrend": 93,
-      "aktiv": true,
+      "aktiv": false,
       "gyakori": false,
       "nev": {
         "hu": "Lokátor felépítmény",
@@ -2400,7 +2421,7 @@
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Fogékszer (kristály, arany, fehérarany",
+        "hu": "Fogékszer (kristály, arany, fehérarany)",
         "de": "Zahnschmuck (Kristall, Gold, Weißgold)"
       },
       "ar": {
@@ -2463,7 +2484,7 @@
       "id": "t108",
       "kategoriaId": "k12",
       "sorrend": 108,
-      "aktiv": true,
+      "aktiv": false,
       "gyakori": false,
       "nev": {
         "hu": "Dévitalisation",
@@ -2485,7 +2506,7 @@
       "id": "t109",
       "kategoriaId": "k12",
       "sorrend": 109,
-      "aktiv": true,
+      "aktiv": false,
       "gyakori": false,
       "nev": {
         "hu": "Pivot",
@@ -2507,7 +2528,7 @@
       "id": "t110",
       "kategoriaId": "k12",
       "sorrend": 110,
-      "aktiv": true,
+      "aktiv": false,
       "gyakori": false,
       "nev": {
         "hu": "Couronne provisoire",
@@ -2529,7 +2550,7 @@
       "id": "t111",
       "kategoriaId": "k12",
       "sorrend": 111,
-      "aktiv": true,
+      "aktiv": false,
       "gyakori": false,
       "nev": {
         "hu": "Opération de gencive",
@@ -2551,7 +2572,7 @@
       "id": "t112",
       "kategoriaId": "k12",
       "sorrend": 112,
-      "aktiv": true,
+      "aktiv": false,
       "gyakori": false,
       "nev": {
         "hu": "Couronne zircon",
@@ -2571,7 +2592,7 @@
     },
     {
       "id": "t113",
-      "kategoriaId": "k12",
+      "kategoriaId": "k13",
       "sorrend": 113,
       "aktiv": true,
       "gyakori": false,
@@ -2593,7 +2614,7 @@
     },
     {
       "id": "t114",
-      "kategoriaId": "k12",
+      "kategoriaId": "k13",
       "sorrend": 114,
       "aktiv": true,
       "gyakori": false,
@@ -2615,7 +2636,7 @@
     },
     {
       "id": "t115",
-      "kategoriaId": "k12",
+      "kategoriaId": "k13",
       "sorrend": 115,
       "aktiv": true,
       "gyakori": false,
@@ -2637,12 +2658,12 @@
     },
     {
       "id": "t116",
-      "kategoriaId": "k12",
+      "kategoriaId": "k13",
       "sorrend": 116,
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Rögzitett fogszabályzó eltávolítás polirozás",
+        "hu": "Rögzített fogszabályzó eltávolítás, polírozás",
         "de": "Entfernung der festsitzenden Zahnspange, Politur"
       },
       "ar": {
@@ -2659,12 +2680,12 @@
     },
     {
       "id": "t117",
-      "kategoriaId": "k12",
+      "kategoriaId": "k13",
       "sorrend": 117,
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Retencios készülék állcsontonként",
+        "hu": "Retenciós készülék állcsontonként",
         "de": "Retentionsgerät pro Kiefer"
       },
       "ar": {
@@ -2681,12 +2702,12 @@
     },
     {
       "id": "t118",
-      "kategoriaId": "k12",
+      "kategoriaId": "k13",
       "sorrend": 118,
       "aktiv": true,
       "gyakori": false,
       "nev": {
-        "hu": "Rögzitett készülék aktíválása alkalmanként",
+        "hu": "Rögzített készülék aktiválása alkalmanként",
         "de": "Aktivierung der festsitzenden Apparatur, je Sitzung"
       },
       "ar": {

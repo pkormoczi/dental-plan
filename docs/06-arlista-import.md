@@ -1,6 +1,6 @@
 # 6. Árlista import
 
-A kész seed: **`data/arlista.seed.json`** — 118 tétel, 12 kategória, az
+A kész seed: **`data/arlista.seed.json`** — 118 tétel, 13 kategória, az
 eredeti `MINTA_Kezelesi_Terv.xls` `Arlista` lapjából generálva.
 
 Ezt nem kell újra előállítani. Az app első indításakor ez másolódik a
@@ -23,9 +23,12 @@ a felesleges szóközök levágva — szándékosan nem javítottam semmit.
 
 ## Megoszlás
 
+A `docs/08-backlog.md` 8. tétele (2026-08-09) óta — lásd „Két strukturális
+probléma" alább arra, mi változott az eredeti importhoz képest:
+
 | id | Kategória | Tétel |
 |---|---|---|
-| k01 | Besorolatlan | 3 |
+| k01 | Diagnosztika és konzultáció | 3 |
 | k02 | Tömések | 10 |
 | k03 | Gyökérkezelés | 3 |
 | k04 | Fogkőeltávolítás | 2 |
@@ -36,43 +39,58 @@ a felesleges szóközök levágva — szándékosan nem javítottam semmit.
 | k09 | Parodontológia | 7 |
 | k10 | Korona és hídpótlások | 21 |
 | k11 | Kivehető fogsorok | 13 |
-| k12 | Egyéb kezelések | 14 |
+| k12 | Egyéb kezelések | 8 |
+| k13 | Fogszabályozás | 6 |
 | | **Összesen** | **118** |
 
-## Két strukturális probléma az eredeti táblában
+## Két strukturális probléma az eredeti táblában — MEGOLDVA (2026-08-09)
 
-### A `Besorolatlan` kategória (k01)
+Az alábbi két probléma az eredeti importban (2026-07-01) még nyitva állt;
+a `docs/08-backlog.md` 8. tétele (kategória-CRUD + adattisztítás) óta
+megoldva. Az eredeti leírás lent marad — a kategória-karbantartó panel
+elkészülte előtt ez volt az egyetlen mód a besorolásra (a sor kinyitása →
+kategória legördülő), és a jövőbeli hasonló import-eseteknek is mintát ad.
 
-A tábla első három sora minden kategóriafejléc **előtt** van:
+### A `Besorolatlan` kategória (k01) — átnevezve
+
+A tábla első három sora minden kategóriafejléc **előtt** volt:
 
 - Konzultáció/fél óránként — 10 000
 - Panoráma-, TeleRtg, Arcüregfelvétel — 9 000
 - CBCT — 24 000
 
-Nem találtam ki nekik kategóriát. A `Besorolatlan` néven kerültek be, hogy
-az adminban azonnal szembeötlők legyenek. Valószínű célkategória:
-*„Diagnosztika"* vagy *„Konzultáció és röntgen"*.
+Nem találtunk ki nekik kategóriát, a `Besorolatlan` néven kerültek be,
+hogy az adminban azonnal szembeötlők legyenek. A kategória azóta át van
+nevezve **„Diagnosztika és konzultáció"**-ra (`k01`, ugyanaz az id — a
+tételek besorolása nem változott, csak a kategórianév).
 
-### Az „Egyéb kezelések" 14 tétele félrevezető
+### Az „Egyéb kezelések" (k12) 14 tétele — szétválasztva
 
-Valójában **3** tartozik oda (fogékszer, horkolásgátló, ínyformázás
-hyaluronsavval). A maradék 11 azért került alá, mert az eredeti tábla
-145. sora után elfogytak a kategóriafejlécek:
+Eredetileg valójában **3** tartozott oda (fogékszer, horkolásgátló,
+ínyformázás hyaluronsavval). A maradék 11 azért került alá, mert az
+eredeti tábla 145. sora után elfogytak a kategóriafejlécek:
 
 **Francia nyelvű maradványok** (valószínűleg egy korábbi idegennyelvű
-próbálkozásból):
-`Dévitalisation` · `Pivot` · `Couronne provisoire` ·
-`Opération de gencive` · `Couronne zircon`
+próbálkozásból) — **inaktiválva** (`aktiv: false`), mert a magyar párjuk
+mindegyiknek létezik az árlistában, de az ár nem egyezik meg, és nem
+eldönthető import-szinten, melyik az érvényes (a doki egy kattintással
+visszakapcsolhatja, ha mégis szükség van rájuk):
+`Dévitalisation` (t108) · `Pivot` (t109) · `Couronne provisoire` (t110) ·
+`Opération de gencive` (t111) · `Couronne zircon` (t112)
 
-**Fogszabályozási tételek, saját kategória nélkül:**
+**Fogszabályozási tételek** — saját `k13 Fogszabályozás` kategóriát
+kaptak, a `k12`-ből átmozgatva:
 `Hyrax készülék` · `Önligírozó multiband készülék felső` ·
 `Önligírozó multiband készülék alsó` ·
-`Rögzitett fogszabályzó eltávolítás polirozás` ·
-`Retencios készülék állcsontonként` ·
-`Rögzitett készülék aktíválása alkalmanként`
+`Rögzített fogszabályzó eltávolítás, polírozás` ·
+`Retenciós készülék állcsontonként` ·
+`Rögzített készülék aktiválása alkalmanként`
 
-Az adminban a sor kinyitása → kategória legördülő mozgatja át őket.
-Ez a takarítás fő eszköze.
+Az adminban a Kategóriák panel (docs/08-backlog.md 8. tétel) adja a
+kategória létrehozását/átnevezését/törlését; a tétel-táblázat sorának
+kinyitása → kategória legördülő mozgatja át a tételeket köztük — ez
+továbbra is a takarítás fő eszköze egy-egy jövőbeli, hasonlóan
+félresorolt tételre.
 
 ## Sávos árú tételek
 
@@ -91,18 +109,29 @@ Kettő van, mindkettő a `Gyökérkezelés` alatt:
 
 Ezek a tételek kapják a `*` jelölést a nyomtatványon (D15).
 
-## Ismert szennyeződés, amit szándékosan nem javítottam
+## Ismert szennyeződés — státusz 2026-08-09 után
 
-| Tétel | Probléma |
+A `docs/08-backlog.md` 8. tétele során ~20 egyértelmű elgépelés lett
+kijavítva közvetlenül a seedben (hiányzó szóközök/ékezetek, bezáratlan
+zárójel, kisbetűs tételkezdés, vegyes `implantatum`/`implantátum`
+írásmód — a teljes lista a tétel implementációs jegyzeteiben). A
+`Lokátor felépítmény` duplikátum (`t083`/`t093`, azonos 130 000 Ft)
+**inaktiválva** lett (`t093`, `aktiv: false`) — nem törölve (D17), a doki
+egy kattintással visszakapcsolhatja, ha mégis két külön tétel volt a
+szándék.
+
+Amit **szándékosan nem** javítottunk — ár- vagy kategorizálási döntés,
+ami a dokira tartozik, az adminban egy-egy szerkesztés:
+
+| Tétel(ek) | Probléma |
 |---|---|
-| `Esztétikus tömés 2felszin` | Hiányzó szóköz, hiányzó ékezet |
-| `Fogékszer (kristály, arany, fehérarany` | Bezáratlan zárójel |
-| `Rögzitett fogszabályzó eltávolítás polirozás` | Rövid `i` és `o` |
-| `Lokátor felépítmény` | Kétszer szerepel (k10 és k11 alatt) — lehet szándékos, lehet duplikátum |
-| `Implantátum BLX`, `Neodent implantatum` | Vegyes ékezethasználat ugyanazon fogalomra |
-
-Ezek mind egy-egy admin-szerkesztés. A doki dolga eldönteni, mi a hiba és
-mi a szándék.
+| `t072`/`t073` „Fémkerámia implantátumra” | Azonos 95 000 Ft, csak a zárójeles kiegészítésben térnek el — az egyik valószínűleg felesleges |
+| `t078` „Sín” | A `k10 Korona és hídpótlások` alatt, valószínűleg `k12`-be való |
+| `t064`/`t066` „Zárt/nyitott küret foganként” | Mindkettő 10 000 Ft, miközben a kvadránsos változatuk eltér (60 000 vs 85 000 Ft) — érdemes visszaigazolni |
+| `t054`/`t055`/`t056` (BLX/Straumann implantátumok) | Ékezethasználat már egységes, de a névforma (szórend) a három sor közt eltér |
+| `gyakori` jelölés | Mind `false` — a dokinak kell 8–12 tételt megjelölnie |
+| A két `SAVOS` tétel alsó határa | Az import értelmezte, nem másolta (lásd fent) |
+| `k04`/`k05`/`k06`/`k12` fogtérkép-színe | Mind az alap szürke (`#adb5bd`) — a kategória-karbantartó panelben (docs/08-backlog.md 8. tétel) egy kattintással átszínezhető |
 
 ## Amit a seed 2026-08-06 óta tartalmaz, és mit még nem
 
@@ -124,3 +153,8 @@ mi a szándék.
   megjelölnie, ezek lesznek a szerkesztő gyorsgombjai.
 - **`forrasSor`**: az eredeti Excel sorszáma, hogy az első átnézésnél
   vissza lehessen keresni. Az első admin-mentés után elhagyható.
+- **`Kategoria.szin`**: mind a 13 kategórián ki van töltve (2026-08-09,
+  docs/08-backlog.md 8. tétel) — a korábbi, kódba huzalozott
+  kategória→szín "vödör"-tábla (`design/treatmentVisuals.ts`) helyett a
+  fogtérkép színe innen olvas. Additív mező, nincs `schemaVersion`-emelés
+  (D18 ettől függetlenül érvényben marad).

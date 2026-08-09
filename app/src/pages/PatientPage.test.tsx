@@ -95,8 +95,13 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
 
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
 
+    // A `lefedettseg()` csak az AKTÍV tételeket számolja -- a seedben (a 8.
+    // backlog-tétel adattisztítása óta) néhány tétel `aktiv: false`.
+    const aktivOsszes = seedPriceList.tetelek.filter((x) => x.aktiv).length;
     expect(
-      await screen.findByText(/118 \/ 118 aktív tételnek nincs német neve/),
+      await screen.findByText(
+        new RegExp(`${aktivOsszes} / ${aktivOsszes} aktív tételnek nincs német neve`),
+      ),
     ).toBeInTheDocument();
   });
 
