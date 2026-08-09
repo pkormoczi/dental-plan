@@ -258,7 +258,17 @@ Az Előnézet maga nem blokkolódik, csak a véglegesítés.
 ## 5. Korábbi tervek
 
 A `paciensek/` fa beolvasása, kereshető listával. Páciensnév szerint
-csoportosítva, alatta a verziók dátummal.
+csoportosítva, alatta a verziók dátummal és **végösszeggel**.
+
+A verziósoron megjelenő összeg a verzió saját `terv.json`-jából jött
+`osszesitok.fizetendo` (a ténylegesen fizetendő, nem a listaáras
+`kezelesekOsszesen`), a verzió saját pénznemében — a doki nyitás nélkül
+látja, mennyiért adta azt az ajánlatot. A mentett érték az igazság,
+nincs újraszámolás: az `osszesitok` eltérés-őre ott fut, ahol
+ténylegesen kockázatos (szerkesztőbe töltéskor). Ha egy verzió
+`terv.json`-ja nem olvasható, csak annál a sornál „—” áll az összeg
+helyén, és a páciens megkapja a meglévő „⚠ néhány verziója nem
+olvasható” jelzést.
 
 Ez a legerősebb indoka a fájlrendszer-hozzáférésnek — nem a mentés, hanem
 a betöltés. Egy visszatérő pácienshez ne kelljen újragépelni 12 tételt.

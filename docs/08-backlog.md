@@ -30,8 +30,8 @@ sorrenden kívül, a mérete miatt készült el — szintén 2026-08-09-én, mer
 15 perc volt, és a publikus demón látható hibát javított.)
 
 **A MOST lista minden tételének van tervdokumentuma.** A kész tételeknél
-(1–6, 12, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a még
-nyitott tételeknél (7–11, 13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
+(1–6, 11, 12, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a
+még nyitott tételeknél (7–10, 13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
 munkamenetek döntési összefoglalói — a nyitott tételek tehát **meg vannak
 tervezve, de nincsenek implementálva**: a tervek nem tartalmaznak kódot,
 az implementáció módja a megvalósító feladata. Ahol a tervezés
@@ -40,7 +40,7 @@ sor jelzi.
 
 ---
 
-## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 9 kész tétel után kb. 4 nap van hátra, a 8. tétel megnőtt becslésével együtt)
+## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 10 kész tétel után kb. 4 nap van hátra, a 8. tétel megnőtt becslésével együtt)
 
 Mindegyik kicsi, és egy konkrét, a `06-doktor-harom-nap` munkanapjain
 ténylegesen felmerült fájdalmat szüntet meg (lásd a Függelékben). Egyik
@@ -308,7 +308,7 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   `Plan.leirasokMutatasa` (nyomtatáskori be/ki) és egy szűken értelmezett
   `Tetel.csomag: boolean`. `schemaVersion` marad 1, méret változatlan.
 
-### 11. Verziónkénti végösszeg a Korábbi tervek listában
+### 11. Verziónkénti végösszeg a Korábbi tervek listában — KÉSZ (2026-08-09)
 
 - **Méret:** ~1 óra — a lista már betölti a legfrissebb `terv.json`-t
   páciensenként, csak minden verziót kell betöltenie (a
@@ -325,6 +325,22 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   lista nem az a hely, ahol egy eltérésre figyelmeztetni kellene); a
   betöltés a meglévő kezdeti `useEffect` `Promise.allSettled`-jébe épül be,
   olvashatatlan verziónál „—" áll az összeg helyén. Méret változatlan.
+- **Megvalósítás:** a `PlanHistoryPage.tsx` kezdeti `useEffect`-jében a
+  „csak a legfrissebb verzió betöltése a névhez" kör helyére egy minden
+  verzióra futó `Promise.allSettled` került — a páciensnév ugyanebből a
+  batch-ből oldódik fel, tehát nem lett plusz kör, csak szélesebb. Új
+  `totalsByVersion` state (`patientDir/versionDir` kulcs → `{ fizetendo,
+  penznem }`; a pénznem verziónként a saját `terv.json`-jából, D21), új
+  `versionKey()` helyi segédfüggvény, és a verziósoron egy jobbra
+  igazított, `tabular-nums` összeg a gombok előtt (`docs/07`). Sikertelen
+  betöltésnél a kulcs kimarad, `formatMoney(null)` „—"-t ad, és a páciens
+  a meglévő `unreadable` halmazba kerül — nem kellett új
+  hibamegjelenítési minta. Két új teszt a `PlanHistoryPage.test.tsx`-ben
+  (Nagy Éva két verziója a SAJÁT összegét mutatja; sérült verziónál „—",
+  a többi páciens érintetlen). A tesztekben egy `penz()` helper váltja a
+  `formatMoney` nem törhető szóközét sima szóközre — a testing-library a
+  DOM szövegét normalizálja, az elvárt stringet nem.
+  `docs/03-funkcionalis-spec.md` „5. Korábbi tervek" szakasza frissült.
 
 ### 12. Döntés: kettős összegsor (Kezelések összesen / Fizetendő) marad-e — KÉSZ (2026-08-09)
 

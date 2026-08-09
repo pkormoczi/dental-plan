@@ -22,8 +22,9 @@ import {
 } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
+import { formatMoney } from '../domain/money';
 import { norm } from '../domain/search';
-import type { PatientFolder, PlanVersion } from '../domain/types';
+import type { PatientFolder, Penznem, Plan, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
@@ -38,6 +39,18 @@ interface VersionRef {
   versionDir: string;
 }
 
+// Egy verzió végösszege a saját terv.json-jából. A pénznem verziónként jön
+// (D21: `penznem` plan-szintű mező), nem globális beállításból -- két
+// verzió eltérő pénznemű is lehet ugyanannál a páciensnél.
+interface VersionTotal {
+  fizetendo: number;
+  penznem: Penznem;
+}
+
+function versionKey({ patientDir, versionDir }: VersionRef): string {
+  return `${patientDir}/${versionDir}`;
+}
+
 export default function PlanHistoryPage() {
   const { storage, loadPlanPdf } = useStorage();
   const { loadPlanIntoDraft, vanMentetlenPiszkozat } = useAppState();
@@ -50,6 +63,7 @@ export default function PlanHistoryPage() {
   const [patients, setPatients] = useState<PatientFolder[]>([]);
   const [versionsByPatient, setVersionsByPatient] = useState<Record<string, PlanVersion[]>>({});
   const [namesByPatient, setNamesByPatient] = useState<Record<string, string>>({});
+  const [totalsByVersion, setTotalsByVersion] = useState<Record<string, VersionTotal>>({});
   // P1-2: eddig egyetlen sérült/inkompatibilis terv (`Promise.all`,
   // all-or-nothing) az EGÉSZ listát megbénította -- egy páciens sem
   // jelent meg, csak az örök "Betöltés…". `Promise.allSettled`-del a
@@ -87,32 +101,57 @@ export default function PlanHistoryPage() {
           }
         });
 
+        // Korábban itt páciensenként CSAK a legfrissebb verzió terv.json-ja
+        // töltődött be, a megjelenített névhez. A verziónkénti végösszeghez
+        // (backlog-11) minden verzió kell -- ugyanabban az egy körben, és a
+        // név is ebből a batch-ből olvasható ki, nem kell rá külön hívás.
+        const refs = list.flatMap((p) =>
+          (versionsMap[p.dirName] ?? []).map((v) => ({
+            patientDir: p.dirName,
+            versionDir: v.dirName,
+          })),
+        );
+        const planResults = await Promise.allSettled(refs.map((ref) => storage.loadPlan(ref)));
+
+        const totalsMap: Record<string, VersionTotal> = {};
+        const plansByKey: Record<string, Plan> = {};
+        planResults.forEach((res, i) => {
+          const ref = refs[i];
+          if (res.status === 'fulfilled') {
+            plansByKey[versionKey(ref)] = res.value;
+            // A mentett osszesitok az igazság, nincs újraszámolás -- az
+            // eltérés-őr (osszesitokElter) ott fut, ahol ténylegesen
+            // kockázatos: szerkesztőbe töltéskor (AppState.tsx).
+            totalsMap[versionKey(ref)] = {
+              fizetendo: res.value.osszesitok.fizetendo,
+              penznem: res.value.penznem,
+            };
+          } else {
+            // Az összeg helyén "—" jelenik meg (formatMoney(null)), és a
+            // páciens megkapja a meglévő "⚠ néhány verziója nem olvasható"
+            // jelzést -- nincs külön, verzió-szintű hibaüzenet.
+            failed.add(ref.patientDir);
+          }
+        });
+
         // A megjelenített név a terv.json paciens.nev mezőjéből jön -- a
         // mappanév-visszafejtés (parsePatientDirName) csak best-effort.
-        const nameResults = await Promise.allSettled(
-          list.map(async (p) => {
-            const versions = versionsMap[p.dirName] ?? [];
-            const latest = versions[versions.length - 1];
-            if (!latest) return `${p.vezeteknev} ${p.keresztnev}`.trim();
-            const plan = await storage.loadPlan({ patientDir: p.dirName, versionDir: latest.dirName });
-            return plan.paciens.nev;
-          }),
-        );
         const namesMap: Record<string, string> = {};
-        nameResults.forEach((res, i) => {
-          const p = list[i];
-          if (res.status === 'fulfilled') {
-            namesMap[p.dirName] = res.value;
-          } else {
-            failed.add(p.dirName);
-            namesMap[p.dirName] = `${p.vezeteknev} ${p.keresztnev}`.trim() || p.dirName;
-          }
+        list.forEach((p) => {
+          const versions = versionsMap[p.dirName] ?? [];
+          const latest = versions[versions.length - 1];
+          const plan = latest
+            ? plansByKey[versionKey({ patientDir: p.dirName, versionDir: latest.dirName })]
+            : undefined;
+          namesMap[p.dirName] =
+            plan?.paciens.nev ?? (`${p.vezeteknev} ${p.keresztnev}`.trim() || p.dirName);
         });
 
         if (cancelled) return;
         setPatients(list);
         setVersionsByPatient(versionsMap);
         setNamesByPatient(namesMap);
+        setTotalsByVersion(totalsMap);
         setUnreadable(failed);
       } catch (err) {
         if (!cancelled) {
@@ -231,32 +270,54 @@ export default function PlanHistoryPage() {
           {(versionsByPatient[p.dirName] ?? [])
             .slice()
             .reverse()
-            .map((v, vi) => (
+            .map((v, vi) => {
+              const total = totalsByVersion[
+                versionKey({ patientDir: p.dirName, versionDir: v.dirName })
+              ];
+              return (
               <Box key={v.dirName}>
                 {vi > 0 && <Separator size="4" />}
                 <Flex justify="between" align="center" py="2">
                   <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
                     v{v.verzio} · {v.isoDate}
                   </Text>
-                  <Flex gap="2">
-                    <Button
-                      size="1"
-                      variant="soft"
-                      color="gray"
-                      onClick={() => downloadVersion(p.dirName, v.dirName, p.patientId)}
+                  <Flex align="center" gap="4">
+                    {/* A verzió végösszege (osszesitok.fizetendo) a saját
+                        terv.json-jából, a saját pénznemében -- külön, jobbra
+                        igazított elem, nem a bal oldali szöveghez fűzve
+                        (docs/07-felulet-rendszer.md: pénzérték jobbra,
+                        tabular-nums). Olvashatatlan verziónál "—". */}
+                    <Text
+                      size="2"
+                      weight="medium"
+                      style={{
+                        fontVariantNumeric: 'tabular-nums',
+                        textAlign: 'right',
+                        minWidth: '7rem',
+                      }}
                     >
-                      Letöltés
-                    </Button>
-                    <Button
-                      size="1"
-                      onClick={() =>
-                        vanMentetlenPiszkozat
-                          ? setPendingOpen({ patientDir: p.dirName, versionDir: v.dirName })
-                          : openVersion(p.dirName, v.dirName)
-                      }
-                    >
-                      Megnyitás szerkesztésre
-                    </Button>
+                      {formatMoney(total?.fizetendo ?? null, total?.penznem ?? 'HUF')}
+                    </Text>
+                    <Flex gap="2">
+                      <Button
+                        size="1"
+                        variant="soft"
+                        color="gray"
+                        onClick={() => downloadVersion(p.dirName, v.dirName, p.patientId)}
+                      >
+                        Letöltés
+                      </Button>
+                      <Button
+                        size="1"
+                        onClick={() =>
+                          vanMentetlenPiszkozat
+                            ? setPendingOpen({ patientDir: p.dirName, versionDir: v.dirName })
+                            : openVersion(p.dirName, v.dirName)
+                        }
+                      >
+                        Megnyitás szerkesztésre
+                      </Button>
+                    </Flex>
                   </Flex>
                 </Flex>
                 {actionError?.patientDir === p.dirName && actionError.versionDir === v.dirName && (
@@ -268,7 +329,8 @@ export default function PlanHistoryPage() {
                   </Callout.Root>
                 )}
               </Box>
-            ))}
+              );
+            })}
 
           {pi < filtered.length - 1 && <Separator size="4" mt="3" color="gray" />}
         </Box>

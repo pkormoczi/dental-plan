@@ -55,6 +55,9 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   (A kedvezmény összege továbbra sem jelenik meg a nyomtatványon.) Ha egy sor tényleges ára a
   listaár fölé kerül, azt a szerkesztő "Felár" sorként jelzi a végösszeg alatt — eddig erről
   nem adott visszajelzést.
+- A "Korábbi tervek" listában minden verzió mellett ott a végösszege is, így megnyitás nélkül
+  látszik, mennyiért ment ki egy korábbi ajánlat. (Ha egy terv fájlja sérült, annál a
+  sornál "—" áll az összeg helyén.)
 
 ## 2026. augusztus 8.
 
