@@ -16,6 +16,14 @@ export function sablonVerzioFor(nyelv: Nyelv): string {
   return `nyilatkozat-${nyelv}-v1`;
 }
 
+/**
+ * Az egyetlen kezdő fázis neve egy friss tervben. Exportálva, mert a
+ * `piszkozat.ts` `piszkozatTartalmas()`-a ehhez hasonlítja a piszkozat
+ * fázislistáját (átnevezett/extra fázis = tartalmas piszkozat) -- két
+ * helyen ugyanaz a string-literál driftelne.
+ */
+export const ELSO_FAZIS_NEV = '1. kezelés';
+
 export function createBlankPlan(settings: Settings, priceList: PriceList): Plan {
   const today = new Date().toISOString().slice(0, 10);
   // D21: a nyelv és a pénznem független -- a német páciens Magyarországon
@@ -53,7 +61,7 @@ export function createBlankPlan(settings: Settings, priceList: PriceList): Plan 
       kiskoru: false,
       torvenyesKepviselo: null,
     },
-    fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+    fazisok: [{ sorszam: 1, megnevezes: ELSO_FAZIS_NEV, megjegyzes: '', sorok: [] }],
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
   };
 }

@@ -169,9 +169,23 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
 
 ### Autosave
 
-A piszkozat IndexedDB-be mentődik folyamatosan. **Ez nem system of
-record** — csak azért van, hogy egy félbeszakadt terv ne vesszen el.
-A fájlrendszerre csak véglegesítéskor írunk.
+A piszkozat egy `DraftStorage` interface mögött mentődik folyamatosan,
+minden tartalmi módosításra azonnal (debounce nélkül) — mockupban
+`localStorage` (`app/src/storage/DemoDraftStorage.ts`, `dp:piszkozat`
+kulcs), a végleges alkalmazásban IndexedDB. **Ez nem system of record** —
+csak azért van, hogy frissítés vagy összeomlás ne törölje a félbeszakadt
+tervet. A fájlrendszerre csak véglegesítéskor írunk, a piszkozat pedig
+sikeres véglegesítéskor törlődik.
+
+Ez a védelem `plan.statusz`/`tervId`-től függetlenül minden aktív
+szerkesztésre vonatkozik — egy visszatérő páciens régi, `VEGLEGES` tervének
+új verzióra nyitása is védett, amíg újra nem véglegesítik. Az érintetlen,
+üres piszkozatot (ami megegyezik egy friss tervvel) nem perzisztálja, csak
+az első tartalmi módosítás után kezd írni. A visszaállítás csendes és
+memóriabeli — a Kezdőlap „Piszkozat folytatása” kártyája a belépési pont
+hozzá; a Kezdőlap „Új terv indítása” és a „Korábbi tervek” → „Megnyitás
+szerkesztésre” gombja megerősítést kér, mielőtt felülírná. Részletek:
+`docs/backlog-1-piszkozat-terv.md`.
 
 ---
 

@@ -1,12 +1,26 @@
 // Az alkalmazás-szintű állapot: a beállítások, az árlista, és a jelenleg
-// szerkesztett terv piszkozata. A piszkozat SZÁNDÉKOSAN csak memóriában él
-// (nem IndexedDB) -- az autosave a 2. fázis feladata, lásd CLAUDE.md
-// "Két fázisú build". Oldalváltás közben megmarad, frissítéskor elvész,
-// ami a mockup validációs céljának megfelelő.
+// szerkesztett terv piszkozata. A piszkozat memóriában él, de MINDEN
+// tartalmi módosításra azonnal perzisztálódik is a DraftStorage-on keresztül
+// (mockupban localStorage, lásd storage/DemoDraftStorage.ts) -- frissítés
+// vagy összeomlás után visszaáll. Ez a docs/03-funkcionalis-spec.md
+// "Autosave" szakaszának korábbra hozott terve (eredetileg a 2. fázisra,
+// IndexedDB-vel ütemezve), mert a valós fájdalom már a mockup-fázisban
+// jelentkezett -- lásd docs/backlog-1-piszkozat-terv.md és
+// docs/08-backlog.md Függelék A) napja.
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Box, Button, Flex, Text } from '@radix-ui/themes';
 import { createBlankPlan } from '../domain/blankPlan';
+import { piszkozatTartalmas } from '../domain/piszkozat';
 import { osszesitokElter } from '../domain/totals';
 import type { Osszesitok, Plan, PriceList, Settings } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
@@ -21,6 +35,32 @@ interface AppStateValue {
   resetPlanDraft: () => void;
   /** Betölt egy korábbi tervet a piszkozatba szerkesztésre (lásd "Korábbi tervek"). */
   loadPlanIntoDraft: (plan: Plan) => void;
+  /**
+   * Igaz, ha `plan`-en van olyan tartalom (`piszkozatTartalmas`), ami még
+   * nincs a fájl-storage-ban -- azaz `plan` egy másik objektumreferencia,
+   * mint a legutóbb onnan betöltött/oda mentett terv. Ez vezérli a Home
+   * "Piszkozat folytatása" kártyáját és a felülírás elleni AlertDialog-okat
+   * (Home "Új terv indítása", PlanHistoryPage "Megnyitás szerkesztésre") --
+   * lásd docs/backlog-1-piszkozat-terv.md 1. és 5. döntés.
+   */
+  vanMentetlenPiszkozat: boolean;
+  /** Az utolsó sikeres automatikus piszkozat-mentés ISO időbélyege, vagy `null`. */
+  piszkozatMentve: string | null;
+  /** A piszkozat visszaállításának vagy írásának hibaüzenete, vagy `null`. */
+  piszkozatHiba: string | null;
+  /**
+   * A Home "Piszkozat elvetése" gombja hívja egy nem visszaállítható
+   * (sérült/inkompatibilis) perzisztált piszkozatnál (7. döntés) -- addig a
+   * kulcs a helyén marad, a hiba minden indításkor visszatér.
+   */
+  discardPersistedDraft: () => Promise<void>;
+  /**
+   * Véglegesítés után hívandó (PreviewPage.tsx `doFinalize` sikerág) -- a
+   * most fájlba írt `persisted` Plan-t "mentett" állapotúnak jelöli, és
+   * törli a perzisztált piszkozatot. Ez a docs/03-funkcionalis-spec.md
+   * véglegesítés-láncának 4. lépése ("A piszkozat törlése").
+   */
+  markPlanSaved: (persisted: Plan) => Promise<void>;
   /**
    * P1-3: "`osszesitok` a fájlból számít igaznak, eltérés esetén
    * figyelmeztetni kell" (CLAUDE.md) -- ezt eddig semmi nem ellenőrizte. A
@@ -47,13 +87,23 @@ interface AppStateValue {
 const AppStateContext = createContext<AppStateValue | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const { storage, ready } = useStorage();
+  const { storage, ready, drafts } = useStorage();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [priceList, setPriceList] = useState<PriceList | null>(null);
   const [plan, setPlanState] = useState<Plan | null>(null);
+  // A legutóbb a fájl-storage-ban is meglévő (onnan betöltött vagy oda
+  // mentett) Plan-referencia -- `plan !== mentettPlan` a "van mentetlen
+  // munka" jelzés (lásd `vanMentetlenPiszkozat` a value-useMemo-ban).
+  const [mentettPlan, setMentettPlan] = useState<Plan | null>(null);
+  const [piszkozatMentve, setPiszkozatMentve] = useState<string | null>(null);
+  const [piszkozatHiba, setPiszkozatHiba] = useState<string | null>(null);
   const [loadedOsszesitokDiff, setLoadedOsszesitokDiff] = useState<Osszesitok | null>(null);
   const [loadError, setLoadError] = useState<Error | null>(null);
   const [loadToken, setLoadToken] = useState(0);
+  // Amit legutóbb a DraftStorage-ból olvastunk vagy oda írtunk -- csak a
+  // fölösleges újraírás kiszűrésére (lásd az író useEffect-et lent), nem
+  // felhasználói állapot.
+  const irtPiszkozatRef = useRef<Plan | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,7 +119,34 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setSettings(s);
         setPriceList(pl);
-        setPlanState((prev) => prev ?? createBlankPlan(s, pl));
+
+        // docs/backlog-1-piszkozat-terv.md 4. döntés: csendes, memóriabeli
+        // restore -- a láthatóságot a Home "Piszkozat folytatása" kártyája
+        // adja, itt nincs semmilyen felhasználó felé szóló jelzés.
+        //
+        // 7. döntés: egy sérült/inkompatibilis piszkozat NEM kerülhet a
+        // `loadError` ágra -- az az egész alkalmazás betöltését blokkolná;
+        // csak a Home saját hibaállapotát kell megkapnia.
+        let restored: Plan | null = null;
+        try {
+          const rec = await drafts.load();
+          if (!cancelled && rec) {
+            restored = rec.plan;
+            irtPiszkozatRef.current = rec.plan;
+            setPiszkozatMentve(rec.mentve);
+          }
+        } catch (err) {
+          if (!cancelled) {
+            setPiszkozatHiba(
+              err instanceof Error
+                ? err.message
+                : 'A piszkozat visszaállítása váratlanul meghiúsult.',
+            );
+          }
+        }
+
+        if (cancelled) return;
+        setPlanState((prev) => prev ?? restored ?? createBlankPlan(s, pl));
       } catch (err) {
         if (!cancelled) setLoadError(err instanceof Error ? err : new Error(String(err)));
       }
@@ -77,11 +154,43 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-    // A storage csak egyszer, a Provider élettartama alatt cserélődik (reset esetén sem
-    // az objektum-referencia változik, csak a benne lévő adat) -- a `loadToken` a kézi
-    // "Újrapróbálás" triggere egy sikertelen betöltés után.
+    // A storage/drafts csak egyszer, a Provider élettartama alatt cserélődik
+    // (reset esetén sem az objektum-referencia változik, csak a benne lévő
+    // adat) -- a `loadToken` a kézi "Újrapróbálás" triggere egy sikertelen
+    // betöltés után.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, storage, loadToken]);
+  }, [ready, storage, drafts, loadToken]);
+
+  // Írási trigger: minden tartalmi plan-változásra azonnal ír, debounce
+  // nélkül (3. döntés) -- a terv-objektum kicsi, egy JSON.stringify +
+  // localStorage.setItem ezen a méreten elhanyagolható költségű, a debounce
+  // itt csak egy felesleges adatvesztési ablakot nyitna összeomláskor. Az
+  // érintetlen, üres piszkozatot (`piszkozatTartalmas` false) NEM írja, hogy
+  // minden "Új terv indítása" után ne jöjjön létre azonnal egy tartalmilag
+  // üres, de technikailag létező perzisztált piszkozat.
+  useEffect(() => {
+    if (!plan) return;
+    if (!piszkozatTartalmas(plan)) return;
+    if (plan === irtPiszkozatRef.current) return; // épp visszaállított/mentett terv, nincs új tartalom
+    let cancelled = false;
+    drafts.save(plan).then(
+      (rec) => {
+        if (cancelled) return;
+        irtPiszkozatRef.current = plan;
+        setPiszkozatMentve(rec.mentve);
+        setPiszkozatHiba(null);
+      },
+      (err) => {
+        if (cancelled) return;
+        setPiszkozatHiba(
+          err instanceof Error ? err.message : 'A piszkozat mentése váratlanul meghiúsult.',
+        );
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [plan, drafts]);
 
   const reloadFromStorage = useCallback(async () => {
     const [s, pl] = await Promise.all([storage.loadSettings(), storage.loadPriceList()]);
@@ -89,6 +198,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setPriceList(pl);
     setPlanState(createBlankPlan(s, pl));
     setLoadedOsszesitokDiff(null);
+    // A dp: kulcsokat (a piszkozatot is) a clearAll()/resetDemoData() már
+    // elsöpörte -- csak a memóriabeli piszkozat-állapotot kell nullázni.
+    setMentettPlan(null);
+    setPiszkozatMentve(null);
+    setPiszkozatHiba(null);
+    irtPiszkozatRef.current = null;
   }, [storage]);
 
   const value = useMemo<AppStateValue | null>(() => {
@@ -105,10 +220,43 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       resetPlanDraft: () => {
         setPlanState(createBlankPlan(settings, priceList));
         setLoadedOsszesitokDiff(null);
+        setMentettPlan(null);
+        setPiszkozatMentve(null);
+        setPiszkozatHiba(null);
+        irtPiszkozatRef.current = null;
+        // Explicit törlés -- egy üres tervre az író effekt nem fut le,
+        // tehát a régi kulcs magától bennmaradna (6. döntés). P1-1 tanulsága
+        // szerint egy `void`-olt promise hibája nyomtalanul elveszne -- ha a
+        // törlés elhasal, a hiba a Home hibaállapotában landol.
+        drafts.clear().catch((err) => {
+          setPiszkozatHiba(
+            err instanceof Error ? err.message : 'A piszkozat törlése váratlanul meghiúsult.',
+          );
+        });
       },
       loadPlanIntoDraft: (p) => {
         setPlanState(p);
         setLoadedOsszesitokDiff(osszesitokElter(p.osszesitok, p.fazisok));
+        // A betöltött terv nem "mentetlen munka", amíg hozzá nem nyúlnak --
+        // az első szerkesztés után az író effekt magától felülírja a régi
+        // piszkozatot, külön törlés itt nem kell (6. döntés).
+        setMentettPlan(p);
+      },
+      vanMentetlenPiszkozat: piszkozatTartalmas(plan) && plan !== mentettPlan,
+      piszkozatMentve,
+      piszkozatHiba,
+      discardPersistedDraft: async () => {
+        await drafts.clear();
+        setPiszkozatHiba(null);
+        setPiszkozatMentve(null);
+      },
+      markPlanSaved: async (persisted) => {
+        irtPiszkozatRef.current = persisted;
+        setPlanState(persisted);
+        setMentettPlan(persisted);
+        setPiszkozatMentve(null);
+        setPiszkozatHiba(null);
+        await drafts.clear();
       },
       loadedOsszesitokDiff,
       saveSettings: async (s) => {
@@ -121,7 +269,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       },
       reloadFromStorage,
     };
-  }, [settings, priceList, plan, loadedOsszesitokDiff, storage, reloadFromStorage]);
+  }, [
+    settings,
+    priceList,
+    plan,
+    mentettPlan,
+    piszkozatMentve,
+    piszkozatHiba,
+    loadedOsszesitokDiff,
+    storage,
+    drafts,
+    reloadFromStorage,
+  ]);
 
   if (loadError) {
     return (

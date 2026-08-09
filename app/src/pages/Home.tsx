@@ -5,11 +5,34 @@ import { t } from '../design/tokens';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
-type PendingAction = 'reset' | 'clearAll' | null;
+type PendingAction = 'reset' | 'clearAll' | 'newPlan' | null;
+
+/**
+ * Csak a Home "Piszkozat folytatása" kártyájának időbélyege -- nem a
+ * nyomtatvány (docs/04-nyomtatvany-spec.md) formátuma, ezért nem
+ * `domain/date.ts` `formatLongDate`/`formatShortDate`-je: azok tisztán
+ * naptári dátumot (nap felbontás, UTC-re rögzítve) formáznak, ide viszont
+ * egy tényleges időpillanat (dátum + óra:perc, a böngésző időzónájában)
+ * kell.
+ */
+function formatPiszkozatIdo(iso: string): string {
+  const d = new Date(iso);
+  const datum = d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const ido = d.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+  return `${datum} ${ido}`;
+}
 
 export default function Home() {
   const { resetDemoData, clearAll } = useStorage();
-  const { resetPlanDraft, reloadFromStorage } = useAppState();
+  const {
+    plan,
+    resetPlanDraft,
+    reloadFromStorage,
+    vanMentetlenPiszkozat,
+    piszkozatMentve,
+    piszkozatHiba,
+    discardPersistedDraft,
+  } = useAppState();
   const navigate = useNavigate();
   const [justReset, setJustReset] = useState(false);
   const [justCleared, setJustCleared] = useState(false);
@@ -48,9 +71,58 @@ export default function Home() {
   }
 
   function startNewPlan() {
+    setPendingAction(null);
     resetPlanDraft();
     navigate('/paciens');
   }
+
+  async function handleDiscardDraft() {
+    setError(null);
+    try {
+      await discardPersistedDraft();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'A piszkozat elvetése váratlanul meghiúsult.');
+    }
+  }
+
+  // docs/backlog-1-piszkozat-terv.md 5. döntés: ugyanaz a felülírás-kockázat,
+  // mint a "Demó adat visszaállítása"/"Minden adat törlése" gomboknál -- a
+  // doki figyelmetlenül eldobná a folyamatban lévő munkáját. Egyetlen
+  // AlertDialog, cím/leírás/gombfelirat/onConfirm egy lookup-táblából -- 3
+  // ágnál az egymásba ágyazott ternáriusok már olvashatatlanok lennének.
+  const confirmSpecs: Record<
+    Exclude<PendingAction, null>,
+    { title: string; description: string; actionLabel: string; onConfirm: () => void }
+  > = {
+    reset: {
+      title: 'Demó adat visszaállítása',
+      description: 'Biztosan visszaállítod a demó adatot? Minden saját szerkesztésed elvész.',
+      actionLabel: 'Visszaállítás',
+      onConfirm: () => void performReset(),
+    },
+    clearAll: {
+      title: 'Minden adat törlése',
+      description:
+        'Biztosan törlöd ÖSSZES adatot (árlista, beállítások, minden mentett terv)? Ez ' +
+        'nem demó-visszaállítás, hanem teljes törlés -- utána a Demó adat visszaállítása ' +
+        'gombbal tudsz újra a seedből kiindulni.',
+      actionLabel: 'Törlés',
+      onConfirm: () => void performClearAll(),
+    },
+    newPlan: {
+      title: 'Piszkozat elvetése',
+      description:
+        'Van mentetlen piszkozatod. Ha új tervet indítasz, ez elvész -- nem került ' +
+        'fájlba, csak ebben a böngészőben volt meg. Biztosan új tervvel kezded?',
+      // Szándékosan NEM ugyanaz a felirat, mint a triggerelő gombé ("Új
+      // terv indítása") -- amíg a dialógus nyitva van, mindkét gomb a
+      // DOM-ban marad, azonos accessible name-mel megkülönböztethetetlen
+      // lenne (lásd Home.test.tsx).
+      actionLabel: 'Elvetés és új terv',
+      onConfirm: startNewPlan,
+    },
+  };
+  const activeSpec = pendingAction ? confirmSpecs[pendingAction] : null;
 
   return (
     <Box style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -67,6 +139,43 @@ export default function Home() {
         </Callout.Root>
       )}
 
+      {piszkozatHiba && (
+        <Card size="2" mb="4">
+          <Callout.Root color="red" mb="3">
+            <Callout.Text>
+              A mentett piszkozatot nem sikerült visszaállítani: {piszkozatHiba}
+            </Callout.Text>
+          </Callout.Root>
+          <Text as="p" size="2" color="gray" mt="0" mb="3">
+            A piszkozat nem tűnt el, csak nem olvasható -- ha nem tudod/akarod
+            helyreállítani, itt elvetheted. Ha inkább új munkát kezdesz, az automatikusan
+            felülírja.
+          </Text>
+          <Button variant="soft" color="gray" onClick={handleDiscardDraft}>
+            Piszkozat elvetése
+          </Button>
+        </Card>
+      )}
+
+      {vanMentetlenPiszkozat && (
+        <Card size="2" mb="4">
+          <Text as="p" size="2" weight="bold" mb="1" style={{ color: t.brand }}>
+            Piszkozat folytatása
+          </Text>
+          <Text as="p" size="2" mt="0" mb="1">
+            {plan.paciens.nev.trim() || 'Névtelen piszkozat'}
+          </Text>
+          {piszkozatMentve && (
+            <Text as="p" size="1" color="gray" mt="0" mb="3">
+              Utolsó módosítás: {formatPiszkozatIdo(piszkozatMentve)}
+            </Text>
+          )}
+          <Button onClick={() => navigate(plan.paciens.nev.trim() ? '/terv' : '/paciens')}>
+            Megnyitás
+          </Button>
+        </Card>
+      )}
+
       <Card size="2" mb="4">
         <Text as="p" size="2" mt="0">
           Ez a mockup a végleges alkalmazás vázán fut, demó adatokkal. A
@@ -74,7 +183,11 @@ export default function Home() {
           mappába ír majd — itt egyelőre a böngésző tárolja az adatot.
         </Text>
         <Flex gap="3" mt="4" wrap="wrap">
-          <Button onClick={startNewPlan}>Új terv indítása</Button>
+          <Button
+            onClick={() => (vanMentetlenPiszkozat ? setPendingAction('newPlan') : startNewPlan())}
+          >
+            Új terv indítása
+          </Button>
           <Button variant="soft" color="gray" onClick={() => navigate('/tervek')}>
             Korábbi tervek
           </Button>
@@ -104,16 +217,8 @@ export default function Home() {
         onOpenChange={(open) => !open && setPendingAction(null)}
       >
         <AlertDialog.Content maxWidth="440px">
-          <AlertDialog.Title>
-            {pendingAction === 'reset' ? 'Demó adat visszaállítása' : 'Minden adat törlése'}
-          </AlertDialog.Title>
-          <AlertDialog.Description size="2">
-            {pendingAction === 'reset'
-              ? 'Biztosan visszaállítod a demó adatot? Minden saját szerkesztésed elvész.'
-              : 'Biztosan törlöd ÖSSZES adatot (árlista, beállítások, minden mentett terv)? Ez ' +
-                'nem demó-visszaállítás, hanem teljes törlés -- utána a Demó adat visszaállítása ' +
-                'gombbal tudsz újra a seedből kiindulni.'}
-          </AlertDialog.Description>
+          <AlertDialog.Title>{activeSpec?.title}</AlertDialog.Title>
+          <AlertDialog.Description size="2">{activeSpec?.description}</AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray">
@@ -121,11 +226,8 @@ export default function Home() {
               </Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action>
-              <Button
-                color="red"
-                onClick={pendingAction === 'reset' ? performReset : performClearAll}
-              >
-                {pendingAction === 'reset' ? 'Visszaállítás' : 'Törlés'}
+              <Button color="red" onClick={activeSpec?.onConfirm}>
+                {activeSpec?.actionLabel}
               </Button>
             </AlertDialog.Action>
           </Flex>

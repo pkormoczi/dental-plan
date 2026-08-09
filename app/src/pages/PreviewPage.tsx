@@ -21,7 +21,7 @@ import { useStorage } from '../storage/StorageContext';
 type ConfirmStep = 'missing-fields' | 'de-fallback-names' | null;
 
 export default function PreviewPage() {
-  const { plan, setPlan, settings, priceList, resetPlanDraft } = useAppState();
+  const { plan, settings, priceList, resetPlanDraft, markPlanSaved } = useAppState();
   const { storage, loadLatestTemplateByBase } = useStorage();
   const navigate = useNavigate();
 
@@ -190,7 +190,11 @@ export default function PreviewPage() {
       const bytes = new Uint8Array(await pdfInstance.blob.arrayBuffer());
       const ref = await storage.savePlan(finalPlan, bytes);
       const persisted = await storage.loadPlan(ref); // tervId/verzio a storage tölti ki (D4)
-      setPlan(persisted);
+      // docs/03-funkcionalis-spec.md véglegesítés-lánc 4. lépése: a
+      // piszkozat törlése -- enélkül a lenti setPlan azonnal visszaírná
+      // piszkozatként a most fájlba mentett tervet (markPlanSaved a
+      // "mentett" referenciát is frissíti, lásd AppState.tsx).
+      await markPlanSaved(persisted);
       setSavedRef(ref);
     } catch (err) {
       // P0-1: korábban nem volt catch itt -- egy kvótahiba vagy a

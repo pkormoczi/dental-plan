@@ -157,4 +157,43 @@ describe('Végpontok közötti folyamat', () => {
     expect(saved.penznem).toBe('HUF');
     expect(saved.sablonVerzio).toBe('nyilatkozat-de-v1');
   }, 20000);
+
+  // docs/08-backlog.md 1. tétel -- ez a tétel valódi próbája: a piszkozat
+  // frissítést/összeomlást éljen túl. `unmount()` + újbóli `render(<App/>)`
+  // egy friss AppStateProvider-t (és benne friss, memóriabeli `plan` state-et)
+  // hoz létre, ugyanazon a `localStorage`-on -- ez modellezi az F5-öt.
+  it('egy félkész piszkozat túléli az "F5"-öt (unmount + újbóli render, ugyanaz a localStorage)', async () => {
+    const user = userEvent.setup();
+    const first = render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.type(nameInput, 'Piszkozat Ilona');
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await screen.findByText('Fogeltávolítás');
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // Az író effekt debounce nélkül fut (3. döntés) -- megvárjuk, hogy a
+    // piszkozat ténylegesen a localStorage-ban landoljon, mielőtt
+    // "frissítünk".
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+
+    first.unmount();
+    window.location.hash = '';
+
+    render(<App />);
+
+    // Csendes, memóriabeli restore (4. döntés) -- a Kezdőlapon a "Piszkozat
+    // folytatása" kártya a belépési pont, a páciensnévvel.
+    expect(await screen.findByText('Piszkozat folytatása')).toBeInTheDocument();
+    expect(screen.getByText('Piszkozat Ilona')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Megnyitás' }));
+    await screen.findByPlaceholderText(/Tétel keresése/);
+    expect(screen.getByText('Fogeltávolítás')).toBeInTheDocument();
+  }, 20000);
 });

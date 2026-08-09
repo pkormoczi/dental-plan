@@ -8,13 +8,13 @@ felvetései, szoftverarchitekt-triázzsal együtt. A `docs/01`
 sérthetetlen keretei (D1–D21) egyik tételt sem sértik — ahol ez nem
 nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
-**Sorrend, ha priorizálni kell:** 1 (piszkozat-perzisztencia) → 5
+**Sorrend, ha priorizálni kell:** ~~1 (piszkozat-perzisztencia)~~ → 5
 (EUR-mező) → 2 (friss dátum) → 3 (sornév + egyedi sor) → 6
 (placeholder-őr) → 8 (árlista-nap) → 4, 9 → a többi.
 (Az eredeti triázs-sorrend tévesen kihagyta az 1. tételt és duplán
 hivatkozott a 3.-ra — itt javítva. Az 1. tétel a doktor-nap narratívában
 háromszor is felmerül ugyanazon a délelőttön, és fél nap a mérete —
-ez indokolja az élen.)
+ez indokolta az élen; 2026-08-09-én elkészült, lásd alább.)
 
 ---
 
@@ -24,14 +24,14 @@ Mindegyik kicsi, és egy konkrét, a `06-doktor-harom-nap` munkanapjain
 ténylegesen felmerült fájdalmat szüntet meg (lásd a Függelékben). Egyik
 sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
 
-### 1. Piszkozat-perzisztencia (frissítés/összeomlás ne törölje a félkész tervet)
+### 1. Piszkozat-perzisztencia (frissítés/összeomlás ne törölje a félkész tervet) — KÉSZ (2026-08-09)
 
 - **Méret:** fél nap. Mockupban egy `dp:piszkozat` localStorage-kulcs, a
   véglegesben IndexedDB — pontosan az, amit a `docs/03` már úgyis a 2.
   fázisra ütemezett, csak korábbra hozva.
-- **Kereteket sért?** Nem — az IndexedDB itt is csak piszkozat-cache marad,
-  nem lesz system of record, mert véglegesítéskor törlődik és csak
-  `PISZKOZAT` státuszú tervet tölt vissza.
+- **Kereteket sért?** Nem — a `DraftStorage` itt is csak piszkozat-cache
+  marad, nem lesz system of record, mert véglegesítéskor törlődik és csak
+  `PISZKOZAT` (vagy újranyitott `VEGLEGES`) státuszú tervet tölt vissza.
 - **Valódi haszon:** hibacsökkentés és időmegtakarítás közvetlenül mérhető —
   a Függelék A) napján ez háromszori újragépelést jelentett volna megspórolva.
 - **20%-os verzió:** `beforeunload` figyelmeztetés („nem mentett
@@ -39,6 +39,14 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   szándékos bezárást védi, az összeomlást nem. Nem javasolt helyette, mert
   pont az összeomlás ellen kell a védelem, és a teljes megoldás is csak fél
   nap.
+- **Megvalósítás:** a döntési részletek `docs/backlog-1-piszkozat-terv.md`-ben
+  (grill-me munkamenet, 8 döntés). Új `DraftStorage` interfész + mockup
+  `DemoDraftStorage` (`app/src/storage/`), `piszkozatTartalmas()`
+  (`app/src/domain/piszkozat.ts`), `AppState.tsx` restore/írás/törlés
+  logika, Home „Piszkozat folytatása” kártya + felülírás elleni
+  AlertDialog-ok (Home, PlanHistoryPage), piszkozat törlése sikeres
+  véglegesítéskor (`PreviewPage.tsx`). Lásd git history a részletes
+  commitokért.
 
 ### 2. Visszatöltött terv új verziója friss dátummal induljon
 

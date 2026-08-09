@@ -18,6 +18,7 @@ import type {
   PriceList,
   Settings,
 } from '../domain/types';
+import { parseJson } from './json';
 import type { PlanStorage } from './PlanStorage';
 import {
   assertVersionDirAvailable,
@@ -51,7 +52,14 @@ function isPlaceholderTemplate(body: string): boolean {
   return body.includes('[PLACEHOLDER') || body.includes('[PLATZHALTER');
 }
 
-const PREFIX = 'dp:';
+/**
+ * Exportált, mert a DemoDraftStorage (docs/backlog-1-piszkozat-terv.md 2.
+ * döntés) is ezt a prefixet használja a `dp:piszkozat` kulcsához -- ez adja
+ * a garanciát, hogy a lenti `clearAll()` prefix-seprése (és vele a "Minden
+ * adat törlése"/"Demó adat visszaállítása" gomb) a piszkozatot is eltünteti,
+ * külön kód nélkül. Egy literál duplikálása itt driftelhetne.
+ */
+export const PREFIX = 'dp:';
 const PRICE_LIST_KEY = `${PREFIX}arlista.json`;
 const SETTINGS_KEY = `${PREFIX}beallitasok.json`;
 const PATIENTS_PREFIX = `${PREFIX}paciensek/`;
@@ -87,23 +95,6 @@ function base64ToUint8(base64: string): Uint8Array {
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/**
- * P1-6: eddig a `JSON.parse` sosem volt `try/catch`-ben -- egy kézzel
- * piszkált vagy megszakadt írás miatt sérült JSON esetén a `SyntaxError`
- * kiszivárgott a hívóhoz formázatlanul (vagy egy `useEffect`-ben elnyelve
- * sosem jutott el a felhasználóig, lásd PreviewPage `loadOrFallback`).
- */
-function parseJson<T>(raw: string, fileKind: string): T {
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    throw new Error(
-      `A(z) ${fileKind} fájl nem érvényes JSON, valószínűleg sérült. Próbáld a ` +
-        `"Demó adat visszaállítása" gombot a Kezdőlapon.`,
-    );
-  }
 }
 
 export class DemoStorage implements PlanStorage {

@@ -94,3 +94,49 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
     20000,
   );
 });
+
+// docs/03-funkcionalis-spec.md véglegesítés-lánc 4. lépése ("A piszkozat
+// törlése") -- ha ez elmaradna, a most fájlba mentett terv azonnal
+// vissza"íródna" piszkozatként (lásd AppState.tsx markPlanSaved).
+describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'sikeres véglegesítés után nincs perzisztált dp:piszkozat kulcs',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Piszkozat Béla');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await screen.findByText('Fogeltávolítás');
+      await user.keyboard('{Enter}');
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      // A piszkozat itt már perzisztálva van -- az író effekt debounce
+      // nélkül fut (3. döntés).
+      await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+      await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+
+      expect(localStorage.getItem('dp:piszkozat')).toBeNull();
+    },
+    20000,
+  );
+});

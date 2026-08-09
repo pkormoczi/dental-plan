@@ -1,10 +1,44 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import PlanHistoryPage from './PlanHistoryPage';
 import { TestProviders } from '../testUtils';
 import { DemoStorage } from '../storage/DemoStorage';
 import { seedPlans } from '../storage/seed/plans';
+import type { Plan } from '../domain/types';
+
+function seedPersistedDraft(overrides: Partial<Plan> = {}) {
+  const plan: Plan = {
+    schemaVersion: 1,
+    tervId: '',
+    verzio: 0,
+    statusz: 'PISZKOZAT',
+    nyelv: 'hu',
+    penznem: 'HUF',
+    keltezes: '2026-08-05',
+    ervenyesIg: '2026-11-03',
+    arlistaVerzio: '2026-07-01',
+    sablonVerzio: 'nyilatkozat-hu-v1',
+    orvos: 'Dr. Mándoki István',
+    paciens: {
+      nev: 'Piszkozat Panni',
+      szuletesiIdo: '',
+      lakcim: '',
+      telefon: '',
+      email: '',
+      taj: '',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+    },
+    fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+    osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+    ...overrides,
+  };
+  localStorage.setItem(
+    'dp:piszkozat',
+    JSON.stringify({ schemaVersion: 1, mentve: '2026-08-09T10:00:00.000Z', plan }),
+  );
+}
 
 function renderHistory() {
   return render(
@@ -62,5 +96,31 @@ describe('PlanHistoryPage', () => {
     await user.click(openBtn);
 
     expect(await within(card).findByText(/A terv megnyitása nem sikerült/)).toBeInTheDocument();
+  });
+
+  // docs/backlog-1-piszkozat-terv.md 5. döntés: ugyanaz a felülírás-kockázat,
+  // mint a Home "Új terv indítása" gombjánál -- a "Megnyitás szerkesztésre"
+  // szó nélkül felülírná a folyamatban lévő, mentetlen piszkozatot.
+  it('"Megnyitás szerkesztésre" megerősítést kér mentetlen piszkozatnál, és csak megerősítésre nyit meg', async () => {
+    seedPersistedDraft();
+    const user = userEvent.setup();
+    renderHistory();
+
+    const nagyEva = await screen.findByText('Nagy Éva');
+    const card = nagyEva.parentElement as HTMLElement;
+    const openBtn = within(card).getAllByRole('button', { name: 'Megnyitás szerkesztésre' })[0];
+
+    await user.click(openBtn);
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
+
+    // Mégse -- nem navigál, nem hívja loadPlanIntoDraft-ot.
+    await user.click(screen.getByRole('button', { name: 'Mégse' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(await screen.findByText('Korábbi tervek')).toBeInTheDocument();
+
+    // Megerősítés -- ténylegesen megnyitja (loadPlanIntoDraft -> navigate).
+    await user.click(openBtn);
+    await user.click(await screen.findByRole('button', { name: 'Megnyitás, piszkozat elvetésével' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
   });
 });

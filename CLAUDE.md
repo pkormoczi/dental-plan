@@ -53,7 +53,10 @@ adatot tartalmaz, ezért ez nem implementációs részlet, hanem tervezési korl
 - A doki egyszer kijelöl egy **gyökérmappát** — ez a teljes rendszerállapot,
   nincs máshol állapot (D3), Google Drive-val szinkronizálva.
 - Fájlrendszer-hozzáférés a `PlanStorage` interface mögött.
-- IndexedDB **csak piszkozat-autosave**, soha nem system of record.
+- Piszkozat-autosave egy külön, a `PlanStorage` MELLETTI `DraftStorage`
+  interface mögött (mockupban `localStorage`, lásd
+  `app/src/storage/DemoDraftStorage.ts`; a végleges alkalmazásban IndexedDB)
+  — soha nem system of record, csak a félbeszakadt szerkesztés cache-e.
 - PDF generálás kliensoldalon, a páciensadat nem mehet szerverre.
 
 Részletek (stack, `PlanStorage` interface, PDF generálás, mappastruktúra,
@@ -75,7 +78,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | `null` ár egy pénznemben ≠ `0` — a tétel abban a pénznemben nem ajánlható, a keresőben sem jelenik meg | `02-domain-modell.md` |
 | Minden JSON `schemaVersion`-nel indul; magasabb verzió észlelésekor **a betöltést meg kell tagadni**, érthető üzenettel | D18 — ezek a fájlok évekig élnek a Drive-on |
 | Páciensmappa-névben az **ékezetek maradnak**, nincs transzliteráció; csak a tiltott karaktereket (`/ \ : * ? " < > \|`) kell cserélni; nevek rövidek (Windows 260 karakteres útvonalkorlát) | A doki a Fájlkezelőben keres rájuk névre |
-| IndexedDB nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez |
+| A `DraftStorage` (piszkozat-autosave) nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez; mockupban `localStorage`, véglegesben IndexedDB |
 | `@react-pdf/renderer` esetén **Unicode fontot kell regisztrálni** (pl. Inter, Source Sans, Noto Sans) | A beépített Helvetica nem tartalmazza az `ő`/`ű` karaktereket — ez csak a végleges PDF-en látszik, a HTML előnézeten nem |
 | `#f77409` (a márka narancsa) **soha nem lehet szövegszín** | Fehéren 2,82:1, kis méretben olvashatatlan; csak díszítővonalra való. A fogtérkép saját, kezelés-kategóriánkénti palettát használ (`design/treatmentVisuals.ts`), nem ezt a színt |
 
@@ -140,6 +143,20 @@ A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne ír
   nélküli (fogtérkép-kattintással létrehozott, de be nem azonosított)
   sorokat sorolja fel; a `PreviewPage` véglegesítés-őre KEMÉNY blokként
   hívja, ne írj hozzá második ellenőrzést máshol
+
+A piszkozat-perzisztencia (`docs/backlog-1-piszkozat-terv.md`) segédfüggvényei
+és rétege, szintén ne írd újra őket:
+- `piszkozatTartalmas(plan)` (`app/src/domain/piszkozat.ts`) — az EGYETLEN
+  hely, ahol eldől, hogy egy `Plan`-en van-e olyan tartalom, amit kár lenne
+  elveszíteni; ezt hasonlítja az `AppState` (írási trigger) és a
+  Home/PlanHistoryPage (felülírás elleni AlertDialog) is, ne implementáld
+  újra egy `createBlankPlan()`-nal való mély-egyenlőség-hasonlítással (a
+  `keltezes`/`orvos`/`nyelv` a mai dátumtól/beállításoktól függ, hamis
+  "módosítva"-t adna)
+- `DraftStorage` interfész + `DemoDraftStorage` implementáció
+  (`app/src/storage/`) — a `dp:piszkozat` localStorage-kulcson; a
+  `StorageContext` `drafts` mezőjeként érhető el, ne hozz létre másik
+  példányt vagy másik kulcsot piszkozat-mentéshez
 
 ## Domain szókincs
 

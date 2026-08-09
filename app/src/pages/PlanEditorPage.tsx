@@ -68,7 +68,7 @@ function sorMezokTetelbol(
 }
 
 export default function PlanEditorPage() {
-  const { plan, setPlan, priceList, loadedOsszesitokDiff } = useAppState();
+  const { plan, setPlan, priceList, loadedOsszesitokDiff, piszkozatHiba } = useAppState();
   const navigate = useNavigate();
   const currency = plan.penznem;
   const nyelv = plan.nyelv;
@@ -206,6 +206,15 @@ export default function PlanEditorPage() {
             A fájlban lévő (mentett) érték az igazság — az aláírt papírral kell egyeznie —, ezt nem
             írjuk felül automatikusan.
           </Callout.Text>
+        </Callout.Root>
+      )}
+
+      {/* Itt dolgozik a doki -- ha az automatikus piszkozat-mentés elhasal
+          (pl. kvótahiba), azt itt kell látnia, nem csak a Kezdőlapon (lásd
+          docs/backlog-1-piszkozat-terv.md). */}
+      {piszkozatHiba && (
+        <Callout.Root color="red" mb="4">
+          <Callout.Text>A piszkozat automatikus mentése nem sikerült: {piszkozatHiba}</Callout.Text>
         </Callout.Root>
       )}
 

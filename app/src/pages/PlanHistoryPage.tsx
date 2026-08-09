@@ -8,7 +8,18 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Callout, Flex, Heading, Separator, Skeleton, Text, TextField } from '@radix-ui/themes';
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Callout,
+  Flex,
+  Heading,
+  Separator,
+  Skeleton,
+  Text,
+  TextField,
+} from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
 import { norm } from '../domain/search';
@@ -22,10 +33,19 @@ interface ActionError {
   message: string;
 }
 
+interface VersionRef {
+  patientDir: string;
+  versionDir: string;
+}
+
 export default function PlanHistoryPage() {
   const { storage, loadPlanPdf } = useStorage();
-  const { loadPlanIntoDraft } = useAppState();
+  const { loadPlanIntoDraft, vanMentetlenPiszkozat } = useAppState();
   const navigate = useNavigate();
+  // docs/backlog-1-piszkozat-terv.md 5. döntés: ugyanaz a felülírás-kockázat,
+  // mint a Home "Új terv indítása" gombjánál -- a `loadPlanIntoDraft` szó
+  // nélkül felülírná a folyamatban lévő, mentetlen piszkozatot.
+  const [pendingOpen, setPendingOpen] = useState<VersionRef | null>(null);
 
   const [patients, setPatients] = useState<PatientFolder[]>([]);
   const [versionsByPatient, setVersionsByPatient] = useState<Record<string, PlanVersion[]>>({});
@@ -227,7 +247,14 @@ export default function PlanHistoryPage() {
                     >
                       Letöltés
                     </Button>
-                    <Button size="1" onClick={() => openVersion(p.dirName, v.dirName)}>
+                    <Button
+                      size="1"
+                      onClick={() =>
+                        vanMentetlenPiszkozat
+                          ? setPendingOpen({ patientDir: p.dirName, versionDir: v.dirName })
+                          : openVersion(p.dirName, v.dirName)
+                      }
+                    >
                       Megnyitás szerkesztésre
                     </Button>
                   </Flex>
@@ -246,6 +273,44 @@ export default function PlanHistoryPage() {
           {pi < filtered.length - 1 && <Separator size="4" mt="3" color="gray" />}
         </Box>
       ))}
+
+      <AlertDialog.Root
+        open={pendingOpen !== null}
+        onOpenChange={(open) => !open && setPendingOpen(null)}
+      >
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Piszkozat felülírása</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            Van mentetlen piszkozatod. Ha ezt a verziót megnyitod szerkesztésre, a jelenlegi
+            piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan
+            folytatod?
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                color="red"
+                onClick={() => {
+                  if (pendingOpen) void openVersion(pendingOpen.patientDir, pendingOpen.versionDir);
+                  setPendingOpen(null);
+                }}
+              >
+                {/* Szándékosan NEM ugyanaz a felirat, mint a sorbeli
+                    triggereké ("Megnyitás szerkesztésre") -- amíg a
+                    dialógus nyitva van, minden sor trigger-gombja is a
+                    DOM-ban marad, azonos accessible name-mel
+                    megkülönböztethetetlenek lennének (lásd
+                    PlanHistoryPage.test.tsx). */}
+                Megnyitás, piszkozat elvetésével
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Box>
   );
 }

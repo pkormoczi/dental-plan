@@ -7,9 +7,10 @@ Statikus React SPA, ami a doki gépén lévő mappába ír PDF-et és JSON-t.
 
 ```
 React + TypeScript SPA
-  ├─ PlanStorage       → Drive-tükrözött helyi mappa
-  ├─ PDF generálás     → kliensoldal (páciensadat nem hagyhatja el a gépet)
-  └─ IndexedDB         → csak piszkozat-autosave, nem system of record
+  ├─ PlanStorage    → Drive-tükrözött helyi mappa
+  ├─ DraftStorage   → csak piszkozat-autosave, nem system of record
+  │                    (mockup: localStorage, végleges: IndexedDB)
+  └─ PDF generálás  → kliensoldal (páciensadat nem hagyhatja el a gépet)
 ```
 
 Miért nem Spring Boot + Postgres: nincs szerveroldali páciensadat, egy
@@ -35,6 +36,30 @@ interface PlanStorage {
   saveTemplate(name: string, body: string): Promise<string>  // új verziófájlt ad vissza
 }
 ```
+
+### Piszkozat-autosave: `DraftStorage`, a `PlanStorage` MELLETT
+
+Külön, kicsi interfész — nem a `PlanStorage` bővítése, mert az IndexedDB
+(illetve a mockupban a `localStorage`) itt is csak testvér-doboz marad, nem
+a fájlrendszeres tárolás része:
+
+```ts
+interface DraftStorage {
+  load(): Promise<{ schemaVersion: 1; mentve: string; plan: Plan } | null>
+  save(plan: Plan): Promise<{ schemaVersion: 1; mentve: string; plan: Plan }>
+  clear(): Promise<void>
+}
+```
+
+Mockup-implementáció: `app/src/storage/DemoDraftStorage.ts`, a `dp:piszkozat`
+localStorage-kulcson (ugyanaz a `dp:` prefix, mint a `DemoStorage`
+kulcsainál — a "Minden adat törlése"/"Demó adat visszaállítása" gomb
+prefix-seprése emiatt a piszkozatot is elsöpri, külön kód nélkül). A
+véglegesben ugyanezt az interfészt egy IndexedDB-alapú implementáció váltja.
+Az olvasás ugyanazt a sémaverzió- és alak-ellenőrzést követi, mint a
+`PlanStorage.loadPlan()` (D18) — egy sérült/inkompatibilis piszkozatot a
+betöltés megtagad, érthető üzenettel, nem néma eldobással. Részletek:
+`docs/backlog-1-piszkozat-terv.md`.
 
 ### Kezdd a File System Access API-val
 
@@ -129,7 +154,8 @@ költség.
 
 - Ne írj felül meglévő verziómappát (D4).
 - Ne használj újra tétel-`id`-t (D17).
-- Ne tedd az IndexedDB-t system of recorddá — az csak piszkozat-cache.
+- Ne tedd a `DraftStorage`-ot (mockupban `localStorage`, véglegesben
+  IndexedDB) system of recorddá — az csak piszkozat-cache.
 - Ne rajzold újra a mentett tervet az aktuális árlistából — a snapshot az
   igazság (D7).
 - Ne tárolj pénzt lebegőpontosan — egész szám a pénznem alapegységében.

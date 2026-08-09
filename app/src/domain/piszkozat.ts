@@ -1,0 +1,55 @@
+// docs/backlog-1-piszkozat-terv.md 3. döntés: az "érintetlen, üres
+// piszkozatot (ami megegyezik a friss createBlankPlan() eredményével) nem
+// perzisztáljuk -- csak az első tartalmi módosítás után kezd írni". Ez a
+// "tartalmas piszkozat" definíciója, amit az AppState (írási trigger) és a
+// Home/PlanHistoryPage (felülírás elleni AlertDialog, lásd ugyanott 5.
+// döntés) egyaránt használ -- ne írd újra máshol.
+
+import { ELSO_FAZIS_NEV } from './blankPlan';
+import type { Plan } from './types';
+
+/**
+ * Igaz, ha a terven van olyan tartalom, amit kár lenne elveszíteni.
+ *
+ * SZÁNDÉKOSAN NEM `createBlankPlan()`-nal mély-egyenlőséget hasonlít: a
+ * `keltezes`/`ervenyesIg` a mai dátumból, az `orvos`/`nyelv`/`sablonVerzio`
+ * a beállításokból, az `arlistaVerzio` az árlistából származik -- egy
+ * éjfél vagy egy beállítás-módosítás hamis "módosítva" jelzést adna. Ehelyett
+ * a ténylegesen doki által begépelt mezőket nézi.
+ *
+ * Az `osszesitok` szándékosan kimarad: a UI sehol nem szerkeszti közvetlenül,
+ * csak véglegesítéskor számolódik (PreviewPage.tsx `computeOsszesitok`).
+ * A `nyelv`/`penznem` váltás is kimarad: két kattintás, nem gépelt munka --
+ * önmagában nem teszi kárba veszővé a piszkozatot.
+ */
+export function piszkozatTartalmas(plan: Plan): boolean {
+  // A PatientPage.tsx szerint a tervId -- nem a statusz -- a jó
+  // diszkriminátor a "már mentve volt" jelzésre: egy újranyitott VEGLEGES
+  // terv is védendő, amíg a doki újra véglegesíti (1. döntés).
+  if (plan.tervId !== '') return true;
+
+  const p = plan.paciens;
+  if (
+    p.nev.trim() ||
+    p.szuletesiIdo.trim() ||
+    p.lakcim.trim() ||
+    p.telefon.trim() ||
+    p.email.trim() ||
+    p.taj.trim() ||
+    p.kiskoru ||
+    p.torvenyesKepviselo
+  ) {
+    return true;
+  }
+
+  const vanSor = plan.fazisok.some((f) => f.sorok.length > 0);
+  if (vanSor) return true;
+
+  const csakEgyAlapFazis =
+    plan.fazisok.length === 1 &&
+    plan.fazisok[0].megnevezes === ELSO_FAZIS_NEV &&
+    !plan.fazisok[0].megjegyzes.trim();
+  if (!csakEgyAlapFazis) return true;
+
+  return false;
+}
