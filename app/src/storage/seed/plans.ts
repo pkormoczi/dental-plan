@@ -2,9 +2,13 @@
 // képernyő és a D4 append-only viselkedés (mindkét verzió megmarad, egymás
 // mellett) már a mockupban is látszódjon valódi adaton.
 //
-// Csak olyan tetelId-kat használ, amik ténylegesen szerepelnek a
-// data/arlista.seed.json-ban (ellenőrizve ui/PlanEditor.jsx és
-// ui/PriceListAdmin.jsx SAMPLE-jei alapján).
+// A tetelId-k egyetlen hiteles forrása a data/arlista.seed.json (a
+// seedPriceList-en át) -- NE egy prototípus vagy minta-konstans ellen
+// ellenőrizd őket. Korábban pontosan ez volt a hiba: a seed a repo
+// gyökerén állt ui/*.jsx prototípusok SAMPLE tömbjei ellen készült, amik
+// más tXXX számozást használtak, így 8 sor egy létező, de rossz tételre
+// mutatott (a fogtérkép ettől csendben rossz kategória-színt adott).
+// A plans.test.ts mostantól kikényszeríti az egyezést.
 
 import { addDaysIso } from '../../domain/date';
 import { computeOsszesitok } from '../../domain/totals';
@@ -32,7 +36,7 @@ const kovacsFazisok: Fazis[] = [
     megjegyzes: '',
     sorok: [
       {
-        tetelId: 't009',
+        tetelId: 't008',
         nevSnapshot: 'Esztétikus tömés 3 felszín',
         savos: false,
         fogak: '16, 17, 26',
@@ -50,7 +54,7 @@ const kovacsFazisok: Fazis[] = [
         tenylegesEgysegar: 55000,
       },
       {
-        tetelId: 't051',
+        tetelId: 't041',
         nevSnapshot: 'Fogeltávolítás',
         savos: false,
         fogak: '38',
@@ -66,7 +70,7 @@ const kovacsFazisok: Fazis[] = [
     megjegyzes: 'Az implantáció beépülési ideje után, kb. 3 hónappal.',
     sorok: [
       {
-        tetelId: 't077',
+        tetelId: 't057',
         nevSnapshot: 'Neodent implantátum',
         savos: false,
         fogak: '36',
@@ -75,7 +79,7 @@ const kovacsFazisok: Fazis[] = [
         tenylegesEgysegar: 170000,
       },
       {
-        tetelId: 't103',
+        tetelId: 't074',
         nevSnapshot: 'Zirkonkerámia korona fogra',
         savos: false,
         fogak: '35, 36',
@@ -130,7 +134,7 @@ const nagyEvaV1Fazisok: Fazis[] = [
     megjegyzes: '',
     sorok: [
       {
-        tetelId: 't007',
+        tetelId: 't004',
         nevSnapshot: 'Fognyaki tömés',
         savos: false,
         fogak: '24',
@@ -139,7 +143,7 @@ const nagyEvaV1Fazisok: Fazis[] = [
         tenylegesEgysegar: 25000,
       },
       {
-        tetelId: 't009',
+        tetelId: 't008',
         nevSnapshot: 'Esztétikus tömés 3 felszín',
         savos: false,
         fogak: '36, 37',
@@ -186,7 +190,7 @@ const nagyEvaV2 = buildPlan({
       megjegyzes: '',
       sorok: [
         {
-          tetelId: 't100',
+          tetelId: 't071',
           nevSnapshot: 'Fémkerámia',
           savos: false,
           fogak: '36',
@@ -237,7 +241,7 @@ const tothZoltan = buildPlan({
           tenylegesEgysegar: 10000,
         },
         {
-          tetelId: 't051',
+          tetelId: 't041',
           nevSnapshot: 'Fogeltávolítás',
           savos: false,
           fogak: '55',

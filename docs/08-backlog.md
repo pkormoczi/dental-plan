@@ -25,11 +25,13 @@ záratlan szálat — lásd alább. Az 5. tétel a javasolt pozíciójában,
 szintén 2026-08-09-én készült el. A 6. tétel a javasolt pozíciójában,
 szintén 2026-08-09-én készült el — kutatással kiderült, hogy a benne
 leírt sablonszerkesztő rész már korábban, a `119ab74` commit óta kész
-volt, a ténylegesen hátralévő munka a placeholder-őr volt.)
+volt, a ténylegesen hátralévő munka a placeholder-őr volt. A 14. tétel a
+sorrenden kívül, a mérete miatt készült el — szintén 2026-08-09-én, mert
+15 perc volt, és a publikus demón látható hibát javított.)
 
 **A MOST lista minden tételének van tervdokumentuma.** A kész tételeknél
-(1–6, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a még nyitott
-tételeknél (7–14) a tétel végén álló **Terv:** sor. Ezek `grill-me`
+(1–6, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a még nyitott
+tételeknél (7–13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
 munkamenetek döntési összefoglalói — a nyitott tételek tehát **meg vannak
 tervezve, de nincsenek implementálva**: a tervek nem tartalmaznak kódot,
 az implementáció módja a megvalósító feladata. Ahol a tervezés
@@ -38,7 +40,7 @@ sor jelzi.
 
 ---
 
-## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 7 kész tétel után kb. 4–4,5 nap van hátra, a 8. tétel megnőtt becslésével együtt)
+## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 8 kész tétel után kb. 4–4,5 nap van hátra, a 8. tétel megnőtt becslésével együtt)
 
 Mindegyik kicsi, és egy konkrét, a `06-doktor-harom-nap` munkanapjain
 ténylegesen felmerült fájdalmat szüntet meg (lásd a Függelékben). Egyik
@@ -364,7 +366,7 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   egyelőre placeholder — vagyis a 6. tétel placeholder-őrébe fut bele.
   Méret változatlan.
 
-### 14. Demó tervek hibás `tetelId`-jainak javítása
+### 14. Demó tervek hibás `tetelId`-jainak javítása — KÉSZ (2026-08-09)
 
 - **Méret:** 15 perc.
 - **Kereteket sért?** Nem — ez csak a demó adat belső hibája (a
@@ -385,6 +387,26 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   ellen. A javítás minden párnál egyértelmű (a `nevSnapshot` ÉS a
   `listaEgysegar` kétszeresen igazolja), plusz egy új `plans.test.ts`
   integritás-teszt köti meg. Méret változatlan.
+- **Megvalósítás:** 8 `tetelId` cseréje az
+  `app/src/storage/seed/plans.ts`-ben (6 különböző id: `t009`→`t008`,
+  `t051`→`t041`, `t077`→`t057`, `t103`→`t074`, `t007`→`t004`,
+  `t100`→`t071`) — a `nevSnapshot`/`listaEgysegar`/`tenylegesEgysegar`
+  értékek egyike sem változott, a két szándékos kedvezmény is érintetlen.
+  A fejléc-komment mostantól a `data/arlista.seed.json`-t nevezi meg
+  egyetlen hiteles forrásként (korábban a törölt `ui/*.jsx` prototípusokra
+  hivatkozott, ez volt a hiba gyökere). Új
+  `app/src/storage/seed/plans.test.ts`: minden nem üres `tetelId`-jű demó
+  sorra (a) az id létezik a `seedPriceList`-ben, (b)
+  `basePrice(tetel.ar[penznem]) === sor.listaEgysegar`. A névre
+  SZÁNDÉKOSAN nincs assertion — a `nevSnapshot` a demóban is lehet
+  pontosabb az árlistainál (`t057` ékezet, `t074` „korona" szó), és a 3.
+  tétel óta kézzel is szerkeszthető, tehát a szó szerinti egyezés nem
+  érvényes invariáns; a hiba elkapásához az ár-egyezés bizonyítottan elég
+  (a javítás visszaállításával mind a 10 sor-előfordulás piroson bukik).
+  A fogtérkép ezzel a demóban a helyes színt adja: Kovács János 36-os foga
+  SEBESZET (`t057` → `k08`), a 35/36 és Nagy Éva v2 36-os foga KORONA
+  (`t074`/`t071` → `k10`). CHANGELOG-bejegyzést nem kapott: belső
+  demóadat-hiba, nem a dokinak kommunikált viselkedésváltozás.
 
 ### 15. Nyelváltás megőrzi a kézzel szerkesztett tételneveket — KÉSZ (2026-08-09)
 
