@@ -58,7 +58,7 @@ describe('Végpontok közötti folyamat', () => {
     await screen.findByText('Fogeltávolítás');
     await user.keyboard('{Enter}');
     await waitFor(() => expect(search).toHaveValue(''));
-    expect(screen.getByText('Fogeltávolítás')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
 
     // Előnézet -> Véglegesítés és mentés.
     await user.click(screen.getByRole('button', { name: 'Előnézet' }));
@@ -84,7 +84,7 @@ describe('Végpontok közötti folyamat', () => {
     // ezért nem kell újragépelni (ez a "Korábbi tervek" fő létjogosultsága).
     await user.click(within(patientCard).getByRole('button', { name: 'Megnyitás szerkesztésre' }));
     await screen.findByPlaceholderText(/Tétel keresése/);
-    expect(screen.getByText('Fogeltávolítás')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
 
     // Újabb véglegesítés -- új verzió (v2) keletkezik, a v1 nem sérül.
     await user.click(screen.getByRole('button', { name: 'Előnézet' }));
@@ -194,7 +194,7 @@ describe('Végpontok közötti folyamat', () => {
 
     await user.click(screen.getByRole('button', { name: 'Megnyitás' }));
     await screen.findByPlaceholderText(/Tétel keresése/);
-    expect(screen.getByText('Fogeltávolítás')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
   }, 20000);
 
   // docs/08-backlog.md 2. tétel -- a Függelék A) napi Nagy Éva-jelenet: a
@@ -223,6 +223,6 @@ describe('Végpontok közötti folyamat', () => {
     expect(screen.getByText(/a korábbi tételek ára változatlan/)).toBeInTheDocument();
     expect(screen.queryByText(/2026\. július 22\./)).not.toBeInTheDocument();
     // A korábbi (pillanatkép) sorok érintetlenek -- D7.
-    expect(screen.getByText('Fémkerámia')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Fémkerámia')).toBeInTheDocument();
   }, 20000);
 });

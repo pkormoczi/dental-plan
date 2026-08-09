@@ -76,8 +76,10 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await waitFor(() => expect(search).toHaveValue(''));
     expect(search).toHaveFocus();
 
-    // A tétel bekerült a fázis soraiba (a dropdown már bezárult, egyetlen találat).
-    expect(screen.getByText('Gyökértömés csatornaszámtól függően')).toBeInTheDocument();
+    // A tétel bekerült a fázis soraiba (a dropdown már bezárult, egyetlen
+    // találat) -- a sornév backlog-3 óta szerkeszthető mező, tehát az
+    // értéke `getByDisplayValue`-val ellenőrizhető, nem `getByText`-tel.
+    expect(screen.getByDisplayValue('Gyökértömés csatornaszámtól függően')).toBeInTheDocument();
 
     // Tovább lehet gépelni azonnal -- második tétel hozzáadása ugyanazzal a
     // ciklussal. A "tomes 3" kifejezetten a "3 felszín" változatra illik rá
@@ -87,7 +89,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await screen.findByText('Esztétikus tömés 3 felszín');
     await user.keyboard('{Enter}');
     await waitFor(() => expect(search).toHaveValue(''));
-    expect(screen.getByText('Esztétikus tömés 3 felszín')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Esztétikus tömés 3 felszín')).toBeInTheDocument();
   });
 
   it('shows a SAVOS (sávos) price range and lets the actual price be edited from the min', async () => {
@@ -280,7 +282,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
 
     // A sor a helyén töltődött ki -- a fogszám megmaradt, nincs második sor.
     expect(screen.getByDisplayValue('16')).toBeInTheDocument();
-    expect(screen.getByText('Fogeltávolítás')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
     expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(1); // csak a fázis alatti maradt
   });
 
@@ -378,7 +380,7 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     await user.click(result);
 
     await waitFor(() => expect(search).toHaveValue(''));
-    expect(screen.getByText('Zahnextraktion')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Zahnextraktion')).toBeInTheDocument();
     expect(screen.queryByText('HU')).toBeNull();
   });
 
@@ -396,8 +398,37 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     await user.click(result);
 
     await waitFor(() => expect(search).toHaveValue(''));
-    expect(screen.getByText('Gyökértömés csatornaszámtól függően')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Gyökértömés csatornaszámtól függően')).toBeInTheDocument();
     expect(screen.getByText('HU')).toBeInTheDocument();
+  });
+
+  it('backlog-3b: "átírt" jelvény egy kézzel eltérített, fordítással rendelkező soron -- nem "HU", és a kettő nem keveredik', async () => {
+    const user = userEvent.setup();
+    seedGermanPlanWithOneTranslatedItem();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'zahnextraktion');
+    await user.click(await screen.findByText('Zahnextraktion'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // Az árlistai nevet még követi -- nincs jelvény.
+    expect(screen.queryByText('átírt')).not.toBeInTheDocument();
+    expect(screen.queryByText('HU')).not.toBeInTheDocument();
+
+    // Kézzel eltérítjük a nevet -- "átírt" jelvényt kap, nem "HU"-t (VAN
+    // fordítása, csak a sor mást mond).
+    const nameField = screen.getByDisplayValue('Zahnextraktion');
+    await user.clear(nameField);
+    await user.type(nameField, 'Egyedi megjegyzéssel kihúzva');
+    expect(await screen.findByText('átírt')).toBeInTheDocument();
+    expect(screen.queryByText('HU')).not.toBeInTheDocument();
+
+    // Egy másik, fordítás NÉLKÜLI tétel -- "HU" jelvényt kap, nem "átírt"-at.
+    await user.type(search, 'csatornaszam');
+    await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+    await waitFor(() => expect(search).toHaveValue(''));
+    expect(await screen.findByText('HU')).toBeInTheDocument();
   });
 
   it('shows the empty-currency message in the search when the plan currency has zero priced items', async () => {
@@ -414,5 +445,62 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     await user.type(search, 'fogeltavolitas');
 
     expect(await screen.findByText(/egyetlen aktív tétel sincs beárazva/)).toBeInTheDocument();
+  });
+});
+
+describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('egy árlistai tételből felvett sor nevének felülírása után a tetelId-hez kötött ár és a sávos jelzés változatlan marad', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'gyokerto');
+    await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // Sávos tétel -- a "sávos" jelzés és a min-ár (38 000 Ft) induló állapota.
+    expect(screen.getByText('sávos')).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue('38000').length).toBeGreaterThan(0);
+
+    const nameInput = screen.getByDisplayValue('Gyökértömés csatornaszámtól függően');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Gyökértömés (rövidítve)');
+
+    // A név megváltozott, de az árlistai kötés (ár, sávos jelzés) érintetlen
+    // -- a tetelId csak hivatkozásnak marad, a nevSnapshot önálló (D7).
+    expect(screen.getByDisplayValue('Gyökértömés (rövidítve)')).toBeInTheDocument();
+    expect(screen.getByText('sávos')).toBeInTheDocument();
+    expect(screen.getAllByDisplayValue('38000').length).toBeGreaterThan(0);
+    // Nincs "egyedi" jelvény -- a sor még mindig árlistai tételhez kötött.
+    expect(screen.queryByText('egyedi')).not.toBeInTheDocument();
+  });
+
+  it('nulla találatra a fázis alatti keresőből egyedi sor vehető fel -- "egyedi" jelvénnyel, listaár nélkül, sosem kedvezmény-jelvénnyel', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'Érzéstelenítés');
+    await screen.findByText(/Egyedi tétel felvétele/);
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(search).toHaveValue(''));
+    expect(screen.getByDisplayValue('Érzéstelenítés')).toBeInTheDocument();
+    expect(screen.getByText('egyedi')).toBeInTheDocument();
+    // Listaár helyén "—" -- nincs értelmezhető árlistai referenciaár.
+    expect(screen.getByText('—')).toBeInTheDocument();
+
+    // A tényleges ár szerkesztése után sincs kedvezmény-jelvény -- egyedi
+    // sornál a listaEgysegar mindig a tenylegesEgysegar-ral együtt íródik.
+    const priceInput = screen.getByDisplayValue('0');
+    await user.clear(priceInput);
+    await user.type(priceInput, '15000');
+    await user.tab();
+
+    expect(screen.queryByText(/−\d+%/)).not.toBeInTheDocument();
   });
 });

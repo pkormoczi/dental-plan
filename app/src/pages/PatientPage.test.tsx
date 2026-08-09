@@ -2,7 +2,7 @@
 // CLAUDE.md "A UX kritikus pontja" -- ez a szomszédos képernyő, ahol a
 // terv nyelve/pénzneme eldől, mielőtt a doki a szerkesztőbe lép.
 
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import App from '../App';
@@ -124,5 +124,72 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     expect(await screen.findByText('Az ajánlat nyelve és pénzneme')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Deutsch' })).toBeNull();
     expect(screen.getByText(/nem módosítható/)).toBeInTheDocument();
+  });
+});
+
+describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztett neveket', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('szerkesztetlen sor neve frissül nyelváltáskor, a dialógus egyszerű szöveget mutat', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.type(nameInput, 'Teszt Elek');
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByText(/A tervben már 1 tétel szerepel/)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/átírt/)).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Folytatás' }));
+
+    await user.click(screen.getByRole('link', { name: 'Terv szerkesztő' }));
+    expect(await screen.findByDisplayValue('Zahnextraktion')).toBeInTheDocument();
+    expect(screen.queryByText('átírt')).toBeNull();
+  });
+
+  it('kézzel átírt sor neve NEM frissül nyelváltáskor, "átírt" jelvényt kap, a dialógus jelzi előre', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.type(nameInput, 'Teszt Elek');
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const nameField = screen.getByDisplayValue('Fogeltávolítás');
+    await user.clear(nameField);
+    await user.type(nameField, 'Kihúzás megbeszélt módon');
+
+    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
+
+    expect(
+      await screen.findByText(/1 kézzel átírt név változatlan marad/),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Folytatás' }));
+
+    await user.click(screen.getByRole('link', { name: 'Terv szerkesztő' }));
+    expect(await screen.findByDisplayValue('Kihúzás megbeszélt módon')).toBeInTheDocument();
+    expect(screen.getByText('átírt')).toBeInTheDocument();
   });
 });

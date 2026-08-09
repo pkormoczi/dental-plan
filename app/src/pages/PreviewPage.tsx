@@ -20,6 +20,15 @@ import { useStorage } from '../storage/StorageContext';
 
 type ConfirmStep = 'missing-fields' | 'de-fallback-names' | null;
 
+/** Egy névlista szöveges blokkja a "Hiányzó/eltérő tételnevek" dialógushoz, üres listánál `''`. */
+function nevListaSzoveg(cim: string, nevek: string[]): string {
+  if (nevek.length === 0) return '';
+  return (
+    `${cim} (${nevek.length}):\n${nevek.slice(0, 8).join('\n')}` +
+    (nevek.length > 8 ? `\n… és további ${nevek.length - 8}` : '')
+  );
+}
+
 export default function PreviewPage() {
   const { plan, settings, priceList, resetPlanDraft, markPlanSaved } = useAppState();
   const { storage, loadLatestTemplateByBase } = useStorage();
@@ -163,10 +172,12 @@ export default function PreviewPage() {
     !plan.paciens.telefon ||
     !plan.paciens.email ||
     !plan.paciens.taj;
-  // D21/1.1: a hiányzó német tételnevek soha nem eshetnek magyarra
-  // véglegesítéskor néma módon -- a doki itt látja, mely nevek érintettek,
-  // mielőtt a páciens aláírja a dokumentumot.
-  const hianyzoNevek = fallbackSorok(plan, priceList);
+  // D21/1.1: a hiányzó VAGY kézzel eltérített német tételnevek soha nem
+  // eshetnek/maradhatnak néma módon a terven -- a doki itt látja, mely
+  // nevek érintettek, mielőtt a páciens aláírja a dokumentumot. Két külön
+  // ok (docs/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 4. döntés).
+  const { nincsForditas, elterAzArlistatol } = fallbackSorok(plan, priceList);
+  const nevProblemaSzama = nincsForditas.length + elterAzArlistatol.length;
   // A fogtérkép-kattintással felvett, de be nem azonosított sorok -- lásd
   // attemptFinalize: ez KEMÉNY blokk, nem a confirmStep-lánc egy tagja,
   // mert egy névtelen, 0 Ft-os sor sosem kerülhet az aláírandó PDF-re.
@@ -231,7 +242,7 @@ export default function PreviewPage() {
       setConfirmStep('missing-fields');
       return;
     }
-    if (hianyzoNevek.length > 0) {
+    if (nevProblemaSzama > 0) {
       setConfirmStep('de-fallback-names');
       return;
     }
@@ -241,7 +252,7 @@ export default function PreviewPage() {
   function confirmStepContinue() {
     // A hiányzó-mezők megerősítés után -- ha német nevek is hiányoznak --
     // a láncban a KÖVETKEZŐ dialógus nyílik meg, nem a mentés fut le rögtön.
-    if (confirmStep === 'missing-fields' && hianyzoNevek.length > 0) {
+    if (confirmStep === 'missing-fields' && nevProblemaSzama > 0) {
       setConfirmStep('de-fallback-names');
       return;
     }
@@ -319,12 +330,13 @@ export default function PreviewPage() {
       {uresSorokNotice && uresSorok.length > 0 && (
         <Callout.Root color="red" mb="3">
           <Callout.Text>
-            A terv {uresSorok.length} kitöltetlen sort tartalmaz (nincs kiválasztva
+            A terv {uresSorok.length} kitöltetlen sort tartalmaz (nincs megnevezve a
             beavatkozás):{' '}
             {uresSorok
               .map((s) => `${s.fazisNev} — ${s.fogak.trim() || 'nincs fogszám megadva'}`)
               .join('; ')}
-            . Válaszd ki a beavatkozást a szerkesztőben, vagy töröld a sort.
+            . Válassz tételt a keresőben, vagy írd be egyedi néven a szerkesztőben, vagy
+            töröld a sort.
           </Callout.Text>
           <Flex mt="2">
             <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>
@@ -387,15 +399,19 @@ export default function PreviewPage() {
       >
         <AlertDialog.Content maxWidth="480px">
           <AlertDialog.Title>
-            {confirmStep === 'missing-fields' ? 'Hiányzó páciensadatok' : 'Hiányzó német tételnevek'}
+            {confirmStep === 'missing-fields' ? 'Hiányzó páciensadatok' : 'Tételnevek nem németül'}
           </AlertDialog.Title>
           <AlertDialog.Description size="2" style={{ whiteSpace: 'pre-line' }}>
             {confirmStep === 'missing-fields'
               ? 'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad). Folytatod a véglegesítést?'
-              : `Ez egy német nyelvű ajánlat, de ${hianyzoNevek.length} tétel neve magyarul kerül a ` +
-                `nyomtatványra (nincs német fordításuk):\n\n${hianyzoNevek.slice(0, 8).join('\n')}` +
-                `${hianyzoNevek.length > 8 ? `\n… és további ${hianyzoNevek.length - 8}` : ''}\n\n` +
-                'A páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?'}
+              : 'Ez egy német nyelvű ajánlat, de néhány sor neve nem németül kerül a nyomtatványra.\n\n' +
+                [
+                  nevListaSzoveg('Nincs német nevük az árlistában', nincsForditas),
+                  nevListaSzoveg('Kézzel átírt, eltér az árlistától', elterAzArlistatol),
+                ]
+                  .filter(Boolean)
+                  .join('\n\n') +
+                '\n\nA páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?'}
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
@@ -403,11 +419,19 @@ export default function PreviewPage() {
                 Mégse
               </Button>
             </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button color="red" onClick={confirmStepContinue}>
-                Folytatás
-              </Button>
-            </AlertDialog.Action>
+            {/* NEM `AlertDialog.Action` -- az beépítetten bezárja a dialógust
+                minden kattintásra (`onOpenChange(false)`), ami UGYANABBAN a
+                kattintás-eseményben versenyhelyzetbe kerül a
+                `confirmStepContinue` lánc-váltásával (missing-fields ->
+                de-fallback-names): mindkét setConfirmStep egy React-batch-
+                ben fut, és a Radix belső bezárása mindig felülírja a mi
+                'de-fallback-names' állításunkat null-ra -- a második
+                dialógus emiatt sosem jelent meg, egyenesen véglegesített.
+                Plain Button-nal az `open` prop KIZÁRÓLAG a mi
+                setConfirmStep hívásainktól függ. */}
+            <Button color="red" onClick={confirmStepContinue}>
+              Folytatás
+            </Button>
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>

@@ -27,7 +27,7 @@ import ToothPickerPopover from '../components/ToothPickerPopover';
 import { t } from '../design/tokens';
 import { formatLongDate } from '../domain/date';
 import { basePrice, formatMoney } from '../domain/money';
-import { resolveNev } from '../domain/nev';
+import { resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
 import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
 import { fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
@@ -66,6 +66,22 @@ function sorMezokTetelbol(
     listaEgysegar: base,
     tenylegesEgysegar: base,
   };
+}
+
+/**
+ * Egy egyedi (árlistán kívüli) sor mezői -- backlog-3: a doki a keresőben
+ * begépelt szöveget veszi fel névként, ha egyetlen árlistai tétel sem talál
+ * rá (`ItemPicker` `onPickEgyedi`). `tetelId: ''` -- nincs árlistai
+ * hivatkozás, tehát nincs értelmezhető listaár sem, ezért
+ * `listaEgysegar === tenylegesEgysegar` induláskor és minden későbbi
+ * árszerkesztéskor is (lásd `LineRow` "Tényleges ár" mezője) -- így egyedi
+ * soron sosem jelenik meg kedvezmény-jelvény. `savos: false` rögzítve: a
+ * soronkénti "becsült ár" kapcsoló külön, a 4. backlog-tétel feladata.
+ */
+function sorMezokEgyedibol(
+  nev: string,
+): Pick<Sor, 'tetelId' | 'nevSnapshot' | 'savos' | 'listaEgysegar' | 'tenylegesEgysegar'> {
+  return { tetelId: '', nevSnapshot: nev.trim(), savos: false, listaEgysegar: 0, tenylegesEgysegar: 0 };
 }
 
 export default function PlanEditorPage() {
@@ -120,13 +136,13 @@ export default function PlanEditorPage() {
   );
   const frequent = useMemo(() => available.filter((x) => x.gyakori), [available]);
 
-  // D21/1.1: melyik tétel neve esne vissza magyarra ezen a nyelven -- a
-  // kereső HU jelölésének és a felvett soroknak a forrása. `hu` tervnél
-  // sosem eshet vissza (resolveNev mindig nev.hu-t ad), ezért üres halmaz.
-  const fallbackTetelIds = useMemo(() => {
-    if (nyelv === 'hu') return new Set<string>();
-    return new Set(priceList.tetelek.filter((x) => !x.nev.de).map((x) => x.id));
-  }, [priceList, nyelv]);
+  // A `sorFallback` (HU/„átírt" jelvény) soronként a tényleges árlistai
+  // nevet nézi, ezért egy id -> Tetel lookupra van szüksége, nem csak egy
+  // "van-e fordítás" halmazra -- lásd domain/nev.ts.
+  const tetelekById = useMemo(
+    () => new Map(priceList.tetelek.map((x) => [x.id, x])),
+    [priceList],
+  );
 
   function updatePlan(fn: (draft: Plan) => void) {
     setPlan((prev) => {
@@ -141,6 +157,12 @@ export default function PlanEditorPage() {
     if (!mezok) return; // available már kiszűrte, de a típusnak ez kell
     updatePlan((draft) => {
       draft.fazisok[phaseIdx].sorok.push({ ...mezok, fogak: '', mennyiseg: 1 });
+    });
+  }
+
+  function addEgyediLine(phaseIdx: number, nev: string) {
+    updatePlan((draft) => {
+      draft.fazisok[phaseIdx].sorok.push({ ...sorMezokEgyedibol(nev), fogak: '', mennyiseg: 1 });
     });
   }
 
@@ -262,11 +284,12 @@ export default function PlanEditorPage() {
             available={available}
             catName={catName}
             frequent={frequent}
-            fallbackTetelIds={fallbackTetelIds}
+            tetelekById={tetelekById}
             fogterkep={fogterkep}
             canDelete={plan.fazisok.length > 1}
             total={fazisOsszeg(p)}
             onAdd={(item) => addLine(pi, item)}
+            onAddEgyedi={(nev) => addEgyediLine(pi, nev)}
             onPatchLine={(li, patch) => patchLine(pi, li, patch)}
             onRemoveLine={(li) =>
               updatePlan((draft) => {
@@ -354,11 +377,12 @@ function PhaseSection({
   available,
   catName,
   frequent,
-  fallbackTetelIds,
+  tetelekById,
   fogterkep,
   total,
   canDelete,
   onAdd,
+  onAddEgyedi,
   onPatchLine,
   onRemoveLine,
   onRename,
@@ -372,17 +396,24 @@ function PhaseSection({
   available: Tetel[];
   catName: (id: string) => string;
   frequent: Tetel[];
-  fallbackTetelIds: Set<string>;
+  tetelekById: Map<string, Tetel>;
   fogterkep: FogterkepAllapot;
   total: number;
   canDelete: boolean;
   onAdd: (item: Tetel) => void;
+  onAddEgyedi: (nev: string) => void;
   onPatchLine: (li: number, patch: Partial<Sor>) => void;
   onRemoveLine: (li: number) => void;
   onRename: (v: string) => void;
   onNote: (v: string) => void;
   onDelete: () => void;
 }) {
+  // Sortörléskor a maradék sorok indexe (li) eltolódik -- index-kulcs
+  // mellett egy remount nélkül ugyanaz a DOM-csomópont (és benne a
+  // LineRow lokális `keresoMod` állapota vagy egy soron belüli ItemPicker
+  // gépelt szövege) átvándorolna egy MÁSIK sorra. Ugyanaz a minta, mint a
+  // fázistörlésnél a fazisResetToken (lásd fent).
+  const [sorResetToken, setSorResetToken] = useState(0);
   return (
     <Box>
       <Flex justify="between" align="center" mb="3" gap="3">
@@ -422,7 +453,7 @@ function PhaseSection({
           <Table.Body>
             {phase.sorok.map((l, li) => (
               <LineRow
-                key={li}
+                key={`${sorResetToken}-${li}`}
                 pi={pi}
                 li={li}
                 line={l}
@@ -431,9 +462,12 @@ function PhaseSection({
                 available={available}
                 catName={catName}
                 fogterkep={fogterkep}
-                fallback={fallbackTetelIds.has(l.tetelId)}
+                fallback={sorFallback(l, nyelv, tetelekById)}
                 onPatch={(p) => onPatchLine(li, p)}
-                onRemove={() => onRemoveLine(li)}
+                onRemove={() => {
+                  onRemoveLine(li);
+                  setSorResetToken((n) => n + 1);
+                }}
               />
             ))}
           </Table.Body>
@@ -446,6 +480,7 @@ function PhaseSection({
         currency={currency}
         nyelv={nyelv}
         onPick={onAdd}
+        onPickEgyedi={onAddEgyedi}
       />
 
       {frequent.length > 0 && (
@@ -507,11 +542,23 @@ function LineRow({
   available: Tetel[];
   catName: (id: string) => string;
   fogterkep: FogterkepAllapot;
-  fallback: boolean;
+  fallback: SorFallbackOk | null;
   onPatch: (patch: Partial<Sor>) => void;
   onRemove: () => void;
 }) {
-  const uj = line.tetelId === ''; // fogtérkép-kattintással létrehozott, még tétel nélküli sor
+  // A fogtérkép-kattintással létrehozott, még meg nem nevezett sor -- ez az
+  // EGYETLEN eset, ami a keresőt mutatja induláskor (backlog-3 1-2.
+  // döntés: a névmező-pontosítás és az egyedi sor felvétele ugyanaz a
+  // mechanizmus, csak azonositatlan sornál indul kereső módban).
+  const azonositatlan = line.tetelId.trim() === '' && line.nevSnapshot.trim() === '';
+  const [keresoMod, setKeresoMod] = useState(azonositatlan);
+  // CSAK kikapcsolni szabad -- ha a doki utólag kiüríti egy egyedi sor
+  // névmezőjét, a cella nem ránthatja ki alóla a fókuszt egy hirtelen
+  // visszaugró keresővel.
+  useEffect(() => {
+    if (!azonositatlan) setKeresoMod(false);
+  }, [azonositatlan]);
+  const egyedi = line.tetelId.trim() === '';
   const teeth = parseTeeth(line.fogak);
   // Nem blokkoló, és a szabadszöveges jegyzet (pl. „jobb felső") nem hiba --
   // docs/02-domain-modell.md "Fogszám kezelés" szerint ez érvényes tartalom.
@@ -538,7 +585,7 @@ function LineRow({
   return (
     <Table.Row>
       <Table.Cell>
-        {uj ? (
+        {keresoMod ? (
           <ItemPicker
             available={available}
             catName={catName}
@@ -551,23 +598,46 @@ function LineRow({
             onPick={(item) => {
               const mezok = sorMezokTetelbol(item, currency, nyelv);
               if (mezok) onPatch(mezok);
+              setKeresoMod(false);
+            }}
+            onPickEgyedi={(nev) => {
+              onPatch(sorMezokEgyedibol(nev));
+              setKeresoMod(false);
             }}
           />
         ) : (
-          <Text size="2">
-            {line.nevSnapshot}
+          <Flex align="center" gap="1" wrap="wrap">
+            <Box flexGrow="1" style={{ minWidth: 160 }}>
+              <TextField.Root
+                value={line.nevSnapshot}
+                onChange={(e) => onPatch({ nevSnapshot: e.target.value })}
+                aria-label="Beavatkozás megnevezése"
+                aria-invalid={!line.nevSnapshot.trim() || undefined}
+                style={{ borderColor: line.nevSnapshot.trim() ? t.controlBorder : t.danger }}
+              />
+            </Box>
+            {egyedi && (
+              <Badge color="gray" variant="soft" size="1">
+                egyedi
+              </Badge>
+            )}
             {line.savos && (
-              <Text size="1" ml="2" style={{ color: t.warn }}>
+              <Text size="1" style={{ color: t.warn, whiteSpace: 'nowrap' }}>
                 sávos
               </Text>
             )}
-            {fallback && <HuChip />}
+            {fallback === 'nincsForditas' && <HuChip />}
+            {fallback === 'elterAzArlistatol' && (
+              <Badge color="amber" variant="soft" size="1">
+                átírt
+              </Badge>
+            )}
             {discount > 0 && (
-              <Badge color="green" variant="soft" ml="2" size="1">
+              <Badge color="green" variant="soft" size="1">
                 −{discount}%
               </Badge>
             )}
-          </Text>
+          </Flex>
         )}
       </Table.Cell>
 
@@ -614,14 +684,21 @@ function LineRow({
       </Table.Cell>
 
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums', color: t.uiTextFaint }}>
-        {formatMoney(line.listaEgysegar, currency)}
+        {/* Egyedi sornál nincs értelmezhető árlistai referenciaár -- lásd
+            sorMezokEgyedibol. */}
+        {egyedi ? '—' : formatMoney(line.listaEgysegar, currency)}
       </Table.Cell>
 
       <Table.Cell justify="end">
         <NumberField
           value={line.tenylegesEgysegar}
           min={0}
-          onCommit={(v) => onPatch({ tenylegesEgysegar: v })}
+          onCommit={(v) =>
+            // Egyedi sornál nincs "listaár" mező -- a `listaEgysegar` a
+            // `tenylegesEgysegar`-ral együtt íródik, hogy sosem legyen
+            // kedvezmény-jelvény egy nem létező referenciaárhoz képest.
+            onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
+          }
           textAlign="right"
           style={{ borderColor: discount || line.savos ? t.brand : t.controlBorder }}
           aria-label="Tényleges egységár"

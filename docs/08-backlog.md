@@ -9,14 +9,16 @@ sérthetetlen keretei (D1–D21) egyik tételt sem sértik — ahol ez nem
 nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Sorrend, ha priorizálni kell:** ~~1 (piszkozat-perzisztencia)~~ → 5
-(EUR-mező) → ~~2 (friss dátum)~~ → 3 (sornév + egyedi sor) → 6
+(EUR-mező) → ~~2 (friss dátum)~~ → ~~3 (sornév + egyedi sor)~~ → 6
 (placeholder-őr) → 8 (árlista-nap) → 4, 9 → a többi.
 (Az eredeti triázs-sorrend tévesen kihagyta az 1. tételt és duplán
 hivatkozott a 3.-ra — itt javítva. Az 1. tétel a doktor-nap narratívában
 háromszor is felmerül ugyanazon a délelőttön, és fél nap a mérete —
 ez indokolta az élen; 2026-08-09-én elkészült, lásd alább. A 2. tétel a
 javasolt sorrendtől eltérően, az 5. előtt készült el — szintén
-2026-08-09-én.)
+2026-08-09-én. A 3. tétel a javasolt sorrendtől eltérően, az 5. előtt
+készült el — szintén 2026-08-09-én, és menet közben felfedte a 15. tételt
+(nyelváltás névmegőrzése), ami rögtön utána, ugyanaznap el is készült.)
 
 ---
 
@@ -73,7 +75,7 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   heurisztikába), semleges (`gray`) `Callout` a `PlanEditorPage`-en a meglévő
   amber sáv fölött. Lásd git history a részletes commitért.
 
-### 3. Sornév szerkeszthetővé tétele + szabad („egyedi") sor
+### 3. Sornév szerkeszthetővé tétele + szabad („egyedi") sor — KÉSZ (2026-08-09)
 
 - **Méret:** ~1 nap — mező típusváltás, `assertPlanShape` és
   `fallbackSorok` ellenőrzése üres `tetelId`-re, teszt.
@@ -89,6 +91,22 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   fél nap. A teljes verzió javasolt, mert az egyedi sor ugyanazt a
   mechanizmust használja, és a Függelék B) napi „nincs tétel az
   érzéstelenítésre" problémája enélkül megmarad.
+- **Megvalósítás:** a döntési részletek `docs/backlog-3-sornev-egyedi-sor-terv.md`-ben
+  (grill-me munkamenet, 11 döntés). A `Sor` „Beavatkozás" cellája
+  (`PlanEditorPage.tsx` `LineRow`) mindig szerkeszthető szövegmező lett,
+  „egyedi" jelvénnyel, ha a sor `tetelId`-je üres. A `ItemPicker`
+  (`pages/planEditor/ItemPicker.tsx`) új `onPickEgyedi` prop-ja: nulla
+  találatnál az Enter, találatok mellett egy pszeudo-opció a lista alján
+  veszi fel a gépelt szöveget egyedi sorként — ugyanabban a
+  gépel → nyíl → Enter ciklusban. `kitoltetlenSorok`
+  (`domain/kitoltetlen.ts`) kritériuma `tetelId`-ről `nevSnapshot`-ra
+  váltott (a kemény véglegesítés-blokk mostantól a *nevet* várja el, az
+  ár lehet 0). Új `sorFallback()` export (`domain/nev.ts`) — az EGYETLEN
+  hely, ahol eldől, hogy egy sor neve visszaesne-e magyarra a terv nyelvén
+  (a szerkesztő `HU` jelvénye és a `fallbackSorok` véglegesítés-őr is ezt
+  hívja), egyedi soron mindig visszaesésként számolva, ha van neve.
+  A backlog 5. tétele (`unit="EUR"` a Tényleges ár mezőn) tudatosan
+  **nem** része ennek a körnek. Lásd git history a részletes commitokért.
 
 ### 4. Sor-szintű „becsült ár" (csillag) kapcsoló
 
@@ -228,6 +246,44 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   is hitelesnek kell lennie.
 - **Valódi haszon:** nem pácienst érintő, hanem fejlesztői minőségi tétel.
 - **20%-os verzió:** nincs kisebb.
+
+### 15. Nyelváltás megőrzi a kézzel szerkesztett tételneveket — KÉSZ (2026-08-09)
+
+- **Méret:** ~fél nap. Felfedezve a 3. tétel (sornév-szerkeszthetőség)
+  implementálása közben, nem az eredeti triázsban.
+- **Kereteket sért?** Nem — a `PatientPage.tsx` `applyNyelv()` nyelvváltáskor
+  minden `tetelId`-hez kötött soron feltétel nélkül felülírta a
+  `nevSnapshot`-ot az árlista aktuális nevére. A 3. tétel előtt ártalmatlan
+  volt (a név úgysem térhetett el), utána viszont egy kézzel pontosított
+  nevet is szó nélkül eltüntetett volna, ha a doki a névszerkesztés UTÁN
+  vált nyelvet a Páciens adatlapon.
+- **Valódi haszon:** hibacsökkentés — pontosan a 3. tétel által frissen
+  bevezetett funkciót (névpontosítás) védi egy néma adatvesztéstől.
+- **20%-os verzió:** nem készült — a teljes megoldás (mag-összehasonlítás +
+  két jelvény + megerősítő dialógus élő számlálással) egy összefüggő
+  döntéssorozat volt, nem bontható kisebbre új mező bevezetése nélkül.
+- **Megvalósítás:** a döntési részletek
+  `docs/backlog-3b-nyelvvaltas-nevmegorzes-terv.md`-ben (grill-me
+  munkamenet, 7 döntés). Új `nevKoveti()` mag-összehasonlítás
+  (`app/src/domain/nev.ts`) — igaz, ha egy sor neve még pontosan az
+  árlistai nevet használja adott nyelven; ezt hívja mind a `sorFallback`
+  (a szerkesztő `HU`/„átírt" jelvényéhez, a JELENLEGI nyelvvel), mind a
+  `PatientPage.tsx` `applyNyelv`-je (a RÉGI nyelvvel, hogy eldöntse, melyik
+  sor nevét frissítse). A `sorFallback` visszatérési típusa `boolean`-ból
+  egy ok-típusra (`SorFallbackOk`) váltott, mert két, vizuálisan
+  megkülönböztetett esetet kell jeleznie. Új `nyelvvaltasHatasa()` a
+  Páciens adatlap nyelváltás-megerősítő dialógusának élő számlálásához.
+  A `PreviewPage.tsx` véglegesítés-őrének „Tételnevek nem németül"
+  dialógusa két külön listára bontva sorolja fel a hiányzó fordítású és a
+  kézzel eltérített neveket (`fallbackSorok` visszatérési típusa is ennek
+  megfelelően objektummá vált). Mellékesen felszínre került és javításra
+  került egy ettől független, korábban rejtett hiba is: a dialógus
+  „Folytatás" gombja `AlertDialog.Action`-be volt csomagolva, aminek
+  beépített auto-close viselkedése versenyhelyzetbe került a kétlépéses
+  megerősítő lánccal (`missing-fields` → `de-fallback-names`), és emiatt a
+  második dialógus sosem jelent meg — egy hiányos páciensadatú, hiányzó
+  német tétellel rendelkező német terv csendben átugrotta a német
+  figyelmeztetést. Lásd git history a részletes commitért.
 
 ---
 

@@ -20,6 +20,24 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   az érvényesség lejárt, régi dátumot mutatott — ilyenkor aláírásra alkalmatlan lett volna a
   dokumentum. Mostantól a program a mai napra állítja ezt a két dátumot (a tételek ára nem
   változik), és egy tájékoztató sávval jelzi is ezt a szerkesztőben.
+- A kezelési sor neve mostantól javítható: egy elgépelt vagy túl rövidített árlistai
+  megnevezés a soron pontosítható, az ár és a többi adat nem változik. Ha a keresőben nincs
+  megfelelő tétel, a beírt szöveg egyedi sorként vehető fel (például egyedi anyagköltség
+  vagy egy árlistában nem szereplő tétel) — a soron ekkor egy "egyedi" jelölés látszik, és
+  nincs listaár, csak a beírt ár. Egy meg nem nevezett sor továbbra sem kerülhet az
+  aláírandó dokumentumra.
+- Német nyelvű ajánlaton egy kitöltött egyedi sor is megkapja a "HU" jelölést, és bekerül a
+  véglegesítés előtti "hiányzó német tételnevek" figyelmeztetésbe — szabad szöveghez
+  ugyanis nincs német fordítás.
+- Javítottuk, hogy a terv nyelvének utólagos váltása (Páciens adatlap) csendben felülírta
+  volna egy kézzel pontosított sornevet. Mostantól csak azok a sorok frissülnek az új
+  nyelvre, amik még az árlistai eredeti nevet viselték; egy kézzel átírt név változatlan
+  marad, "átírt" jelöléssel a szerkesztőben, és a nyelvváltás előtt a program előre
+  megmondja, hány sor frissül és hány marad változatlan.
+- A véglegesítés előtti "hiányzó német tételnevek" figyelmeztetés mostantól külön sorolja
+  fel, melyik tételnek nincs egyáltalán német neve, és melyik sor neve tér el kézzel az
+  árlistától. (Eddig egy vele összefüggő hiba miatt ez a figyelmeztetés hiányos páciensadat
+  mellett néha teljesen kimaradt a véglegesítésből — ez is javítva.)
 
 ## 2026. augusztus 8.
 

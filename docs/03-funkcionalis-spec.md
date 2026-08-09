@@ -118,6 +118,11 @@ kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`
 - **Hozzáadás után a kereső kiürül és visszakapja a fókuszt.** Ez a
   ciklus a lényeg: gépel → nyíl → Enter → gépel tovább, egérhasználat
   nélkül.
+- **Nulla találat esetén** az Enter nem tesz semmit üresen — a gépelt
+  szöveget veszi fel egyedi sorként (lásd „Egyedi sor" lent). Ha **van**
+  találat, de egyik sem megfelelő, a lista alján egy „Egyedi tétel
+  felvétele: „…"" pszeudo-opció is végigjárható ugyanazzal a `↑ ↓`/`Enter`
+  ciklussal, a valódi találatok után.
 
 ### Gyorsgombok
 
@@ -128,11 +133,11 @@ megjelennek a kereső alatt. Egy kattintás = hozzáadás.
 
 | Mező | Viselkedés |
 |---|---|
-| Beavatkozás | Csak megjelenítés, snapshot a hozzáadás pillanatából |
+| Beavatkozás | **Szerkeszthető** szövegmező, alapból a felvételkor rögzített (árlistai vagy egyedi) névvel kitöltve — a doki pontosíthatja, elgépelt/rövidített árlistai nevet javíthat. Üresen a sor véglegesítéskor kemény blokk (lásd „Kitöltetlen sor" lent) |
 | Fog | Szabad szöveg, felsorolás. Nem kötelező. A beírt *számokat* validáljuk (lásd lent), a folyószöveges jegyzet (pl. „jobb felső") változatlanul megengedett |
 | Db | Kézi, alapérték 1, minimum 1 |
-| Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve |
-| Tényleges ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`) |
+| Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve. Egyedi sornál `—` (nincs árlistai referenciaár) |
+| Tényleges ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`) |
 | Összeg | `tenylegesEgysegar * mennyiseg` |
 
 Ha `tenylegesEgysegar < listaEgysegar`, a soron megjelenik egy `−X%`
@@ -140,6 +145,35 @@ jelölés. **Ez csak a szerkesztőben látszik, a nyomtatványon nem** (D9).
 
 Sávos tételnél a listaár helyén a sáv látszik, és a tényleges ár mező ki
 van emelve — jelzi, hogy itt dönteni kell.
+
+### Egyedi sor
+
+Ha a tételkeresőben nincs (megfelelő) találat, a gépelt szöveg egyedi
+sorként vehető fel — lásd fent, „Tételkereső". Az egyedi sor:
+
+- **Nincs árlistai hivatkozása** (`tetelId` üres) — a soron egy semleges
+  „egyedi" jelvény jelzi, ugyanott, ahol a „sávos" felirat állna.
+- **Egy ármező van rajta**, nincs külön „listaár" — a Tényleges ár
+  szerkesztése a listaárat is vele együtt írja, ezért egyedi soron
+  **sosem** jelenik meg kedvezmény-jelölés.
+- **Mindig fix áron nyomtat**, csillag/lábjegyzet nélkül — a soronkénti
+  „becsült ár" kapcsoló (4. backlog-tétel) egyelőre nem érhető el rajta.
+- Német nyelvű ajánlaton egy **kitöltött** egyedi sor is bekerül a
+  „hiányzó német tételnevek" figyelmeztetésbe (a szerkesztőben `HU`
+  jelvénnyel, véglegesítéskor a megerősítő listában) — szabad szöveghez
+  nincs német változat.
+- Nem kötelező kitölteni azonnal: a fogtérkép-kattintással létrehozott,
+  még névtelen sor is ugyanezt a mechanizmust használja (lásd fent,
+  „Fogtérkép"), csak addig kereső módban marad, amíg a doki tételt nem
+  választ vagy egyedi nevet nem ad neki.
+
+### Kitöltetlen sor
+
+Egy **meg nem nevezett** sor (üres Beavatkozás mező) a véglegesítésnél
+kemény blokk — nem folytatható, amíg a doki tételt nem választ, egyedi
+nevet nem ad, vagy nem törli a sort. Az ár lehet `0` egy kitöltött nevű
+soron, ez önmagában nem blokkol (`app/src/domain/kitoltetlen.ts`
+`kitoltetlenSorok`).
 
 ### Figyelmeztetés (nem blokkoló)
 

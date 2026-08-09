@@ -36,6 +36,13 @@ function renderPicker(props: Partial<React.ComponentProps<typeof ItemPicker>> = 
   return { ...utils, onPick };
 }
 
+/** Ugyanaz, mint `renderPicker`, de `onPickEgyedi`-t is bekötve adja vissza -- a backlog-3 tesztekhez. */
+function renderPickerWithEgyedi(props: Partial<React.ComponentProps<typeof ItemPicker>> = {}) {
+  const onPickEgyedi = vi.fn();
+  const { onPick, ...utils } = renderPicker({ onPickEgyedi, ...props });
+  return { ...utils, onPick, onPickEgyedi };
+}
+
 describe('ItemPicker', () => {
   it('inline (alap) mód: gépel -> nyíl -> Enter -> a kereső kiürül és visszakapja a fókuszt', async () => {
     const user = userEvent.setup();
@@ -79,5 +86,63 @@ describe('ItemPicker', () => {
     await user.click(talalat);
 
     expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
+  });
+
+  it('regresszió: onPickEgyedi átadása mellett is a találat marad az Enter célja, nem az egyedi opció', async () => {
+    const user = userEvent.setup();
+    const { onPick, onPickEgyedi } = renderPickerWithEgyedi();
+
+    const input = screen.getByPlaceholderText(/Tétel keresése/);
+    await user.type(input, 'gyoker');
+    await screen.findByText('Gyökértömés');
+    await user.keyboard('{Enter}');
+
+    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
+    expect(onPickEgyedi).not.toHaveBeenCalled();
+  });
+
+  it('nulla találatra az Enter az egyedi opciót veszi fel, ha a hívó kéri (onPickEgyedi)', async () => {
+    const user = userEvent.setup();
+    const { onPick, onPickEgyedi } = renderPickerWithEgyedi();
+
+    const input = screen.getByPlaceholderText(/Tétel keresése/);
+    await user.type(input, 'érzéstelenítés');
+    await screen.findByText(/Egyedi tétel felvétele/);
+    await user.keyboard('{Enter}');
+
+    expect(onPickEgyedi).toHaveBeenCalledWith('érzéstelenítés');
+    expect(onPick).not.toHaveBeenCalled();
+    // A ciklus (kereső kiürül és visszakapja a fókuszt) egyedi opciónál is él.
+    await waitFor(() => expect(input).toHaveValue(''));
+    expect(input).toHaveFocus();
+  });
+
+  it('nulla találatnál onPickEgyedi hiányában az Enter nem csinál semmit (a régi viselkedés)', async () => {
+    const user = userEvent.setup();
+    const { onPick } = renderPicker();
+
+    const input = screen.getByPlaceholderText(/Tétel keresése/);
+    await user.type(input, 'érzéstelenítés');
+    await screen.findByText('Nincs találat.');
+    await user.keyboard('{Enter}');
+
+    expect(onPick).not.toHaveBeenCalled();
+    expect(input).toHaveValue('érzéstelenítés');
+  });
+
+  it('van találat ÉS onPickEgyedi is: a lista végén megjelenő egyedi opció nyíllal elérhető és Enterrel commitálható', async () => {
+    const user = userEvent.setup();
+    const { onPick, onPickEgyedi } = renderPickerWithEgyedi();
+
+    const input = screen.getByPlaceholderText(/Tétel keresése/);
+    await user.type(input, 'gyoker');
+    await screen.findByText('Gyökértömés');
+    await screen.findByText(/Egyedi tétel felvétele/);
+    // Egyetlen találat ("gyoker" -> csak "Gyökértömés") -- egy ArrowDown a
+    // lista végén túlra, az egyedi opcióra visz.
+    await user.keyboard('{ArrowDown}{Enter}');
+
+    expect(onPickEgyedi).toHaveBeenCalledWith('gyoker');
+    expect(onPick).not.toHaveBeenCalled();
   });
 });

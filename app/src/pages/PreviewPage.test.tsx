@@ -4,10 +4,12 @@
 // @react-pdf/renderer usePDF()-jét ugyanúgy mockoljuk, mint App.test.tsx-ben
 // (lásd ott a header-kommentet az indoklásért).
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
+import { seedPriceList } from '../storage/seed/priceList';
+import { seedSettings } from '../storage/seed/settings';
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@react-pdf/renderer')>();
@@ -74,7 +76,7 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
 
       await user.type(rowSearch, 'fogeltavolitas');
       await user.click(await screen.findByText('Fogeltávolítás'));
-      expect(screen.getByText('Fogeltávolítás')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
       expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(1);
 
       // Most már folytatható a véglegesítés (a hiányos páciensadat miatt a
@@ -136,6 +138,88 @@ describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => 
       await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
       expect(localStorage.getItem('dp:piszkozat')).toBeNull();
+    },
+    20000,
+  );
+});
+
+/**
+ * Egy német tervhez szükséges beállítás + egy árlista, amiben pontosan egy
+ * tételnek ("Fogeltávolítás") van német neve -- a többi 117-nek nincs.
+ * Ugyanaz a minta, mint `PlanEditorPage.test.tsx`
+ * `seedGermanPlanWithOneTranslatedItem`-je.
+ */
+function seedGermanPlanWithOneTranslatedItem() {
+  const custom = {
+    ...seedPriceList,
+    tetelek: seedPriceList.tetelek.map((x) =>
+      x.nev.hu === 'Fogeltávolítás'
+        ? { ...x, nev: { ...x.nev, de: 'Zahnextraktion' } }
+        : { ...x, nev: { ...x.nev, de: null } },
+    ),
+  };
+  localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+  localStorage.setItem(
+    'dp:beallitasok.json',
+    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true, alapertelmezettNyelv: 'de' }),
+  );
+}
+
+// docs/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 4. döntés: a véglegesítés
+// megerősítő dialógusa két külön okot sorol fel -- ne keveredjenek egy
+// listába.
+describe('PreviewPage -- backlog-3b: hiányzó és eltérő tételnevek két külön listában', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'a dialógus külön sorolja fel a fordítás nélküli és a kézzel eltérített tételneveket',
+    async () => {
+      const user = userEvent.setup();
+      seedGermanPlanWithOneTranslatedItem();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Teszt Elek');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      // Fordítás nélküli tétel -- "nincsForditas".
+      await user.type(search, 'csatornaszam');
+      await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      // Fordítással rendelkező, de kézzel eltérített tétel -- "elterAzArlistatol".
+      await user.type(search, 'zahnextraktion');
+      await user.click(await screen.findByText('Zahnextraktion'));
+      await waitFor(() => expect(search).toHaveValue(''));
+      const nameField = screen.getByDisplayValue('Zahnextraktion');
+      await user.clear(nameField);
+      await user.type(nameField, 'Kihúzás egyedi megjegyzéssel');
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+      // A páciens hiányos (csak a név kitöltött), ezért előbb a
+      // "Hiányzó páciensadatok" dialógus jön -- a "Folytatás" a láncban a
+      // KÖVETKEZŐ dialógust nyitja meg, nem véglegesít rögtön.
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+
+      const dialog = await screen.findByRole('alertdialog');
+      expect(within(dialog).getByText('Tételnevek nem németül')).toBeInTheDocument();
+      expect(
+        within(dialog).getByText(/Nincs német nevük az árlistában \(1\)/),
+      ).toBeInTheDocument();
+      expect(
+        within(dialog).getByText(/Kézzel átírt, eltér az árlistától \(1\)/),
+      ).toBeInTheDocument();
     },
     20000,
   );

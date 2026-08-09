@@ -53,27 +53,41 @@ describe('kitoltetlenSorok', () => {
     expect(kitoltetlenSorok(makePlan([]))).toEqual([]);
   });
 
-  it('minden sor kitöltött -- üres lista', () => {
+  it('minden sor megnevezett -- üres lista', () => {
     const plan = makePlan([[sor({ tetelId: 't1' }), sor({ tetelId: 't2' })]]);
     expect(kitoltetlenSorok(plan)).toEqual([]);
   });
 
-  it('egy tetelId nélküli sort jelez a fázis nevével és a fogszámmal', () => {
-    const plan = makePlan([[sor({ tetelId: '', fogak: '16' })]]);
+  it('egy meg nem nevezett sort jelez a fázis nevével és a fogszámmal', () => {
+    const plan = makePlan([[sor({ tetelId: '', nevSnapshot: '', fogak: '16' })]]);
     expect(kitoltetlenSorok(plan)).toEqual([
       { fazisIndex: 0, fazisNev: '1. kezelés', sorIndex: 0, fogak: '16' },
     ]);
   });
 
-  it('csak whitespace-t tartalmazó tetelId is kitöltetlennek számít', () => {
-    const plan = makePlan([[sor({ tetelId: '   ' })]]);
+  it('csak whitespace-t tartalmazó nevSnapshot is kitöltetlennek számít', () => {
+    const plan = makePlan([[sor({ nevSnapshot: '   ' })]]);
+    expect(kitoltetlenSorok(plan)).toHaveLength(1);
+  });
+
+  it('backlog-3: névvel ellátott, tetelId nélküli (egyedi) sor NEM kitöltetlen', () => {
+    const plan = makePlan([
+      [sor({ tetelId: '', nevSnapshot: 'Egyedi anyagköltség', listaEgysegar: 0, tenylegesEgysegar: 0 })],
+    ]);
+    expect(kitoltetlenSorok(plan)).toEqual([]);
+  });
+
+  it('backlog-3: meg nem nevezett sor kitöltetlen akkor is, ha van rajta ár', () => {
+    const plan = makePlan([
+      [sor({ tetelId: '', nevSnapshot: '', listaEgysegar: 5000, tenylegesEgysegar: 5000 })],
+    ]);
     expect(kitoltetlenSorok(plan)).toHaveLength(1);
   });
 
   it('több fázison és soron át a terv-sorrendet követi', () => {
     const plan = makePlan([
-      [sor({ tetelId: 't1' }), sor({ tetelId: '', fogak: '16' })],
-      [sor({ tetelId: '', fogak: '26' }), sor({ tetelId: 't2' })],
+      [sor({ tetelId: 't1' }), sor({ tetelId: '', nevSnapshot: '', fogak: '16' })],
+      [sor({ tetelId: '', nevSnapshot: '', fogak: '26' }), sor({ tetelId: 't2' })],
     ]);
     expect(kitoltetlenSorok(plan)).toEqual([
       { fazisIndex: 0, fazisNev: '1. kezelés', sorIndex: 1, fogak: '16' },
@@ -81,8 +95,8 @@ describe('kitoltetlenSorok', () => {
     ]);
   });
 
-  it('MÁS, mint a hianyzoTetel -- nem néz árlistát, csak az üres tetelId-t nézi', () => {
-    // Egy nem-létező (törölt) tetelId-jű, de KITÖLTÖTT sor nem kitöltetlen.
+  it('MÁS, mint a hianyzoTetel -- nem néz árlistát, csak a nevet nézi', () => {
+    // Egy nem-létező (törölt) tetelId-jű, de KITÖLTÖTT (megnevezett) sor nem kitöltetlen.
     const plan = makePlan([[sor({ tetelId: 't-torolve' })]]);
     expect(kitoltetlenSorok(plan)).toEqual([]);
   });

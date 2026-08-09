@@ -14,6 +14,14 @@
 //    levágná az abszolút pozicionált listát egy táblázatcellában.
 //
 // Csak keresés, nincs kategória böngésző (D19). Ékezetfüggetlen.
+//
+// `onPickEgyedi` (backlog-3, opcionális): ha a gépelt szövegre nincs
+// árlistai találat, a találati lista alján megjelenik egy pszeudo-opció
+// ("Egyedi tétel felvétele: ...„...”"), ami a gépel -> nyíl -> Enter
+// ciklusban ugyanúgy elérhető, mint egy valódi találat -- a hívó ilyenkor a
+// gépelt szöveget veszi fel `nevSnapshot`-ként, `tetelId: ''`-vel. Ha a
+// hívó nem ad `onPickEgyedi`-t, a komponens a régi viselkedést tartja
+// (nincs egyedi opció, üres találat esetén csak a "Nincs találat" jegyzet).
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Box, Popover, TextField } from '@radix-ui/themes';
@@ -30,6 +38,12 @@ export interface ItemPickerProps {
   currency: Penznem;
   nyelv: Nyelv;
   onPick: (item: Tetel) => void;
+  /**
+   * Ha adott, a találati lista alján megjelenik egy "Egyedi tétel
+   * felvétele: ..." opció, ami a gépelt szöveget adja át -- lásd a fájl
+   * fejléckommentjét. Hiányában a komponens a régi viselkedést tartja.
+   */
+  onPickEgyedi?: (nev: string) => void;
   /**
    * `'inline'` (alap): a találati lista egy `position:absolute` dobozban,
    * közvetlen a mező alatt -- a fázis alatti eredeti eset, változatlan.
@@ -58,6 +72,7 @@ export default function ItemPicker({
   currency,
   nyelv,
   onPick,
+  onPickEgyedi,
   floating = 'inline',
   autoFocus = false,
   clearOnPick = true,
@@ -80,12 +95,29 @@ export default function ItemPicker({
 
   useEffect(() => setHi(0), [q]);
 
-  function commit(item: Tetel) {
-    onPick(item);
+  // Az egyedi opció csak akkor létezik, ha a hívó kéri ÉS van gépelt szöveg
+  // -- mindig a lista VÉGÉN, ezért az index-tartomány [0, results.length]
+  // (a results.length-edik = az egyedi opció).
+  const egyediElerheto = Boolean(onPickEgyedi) && q.trim() !== '';
+  const opcioSzam = results.length + (egyediElerheto ? 1 : 0);
+
+  function finishPick() {
     if (clearOnPick) {
       setQ('');
       requestAnimationFrame(() => ref.current?.focus());
     }
+  }
+
+  function pickTetel(item: Tetel) {
+    onPick(item);
+    finishPick();
+  }
+
+  function pickEgyedi() {
+    const nev = q.trim();
+    if (!nev) return;
+    onPickEgyedi?.(nev);
+    finishPick();
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -96,16 +128,17 @@ export default function ItemPicker({
       setQ('');
       return;
     }
-    if (!results.length) return;
+    if (!opcioSzam) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setHi((h) => (h + 1) % results.length);
+      setHi((h) => (h + 1) % opcioSzam);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setHi((h) => (h - 1 + results.length) % results.length);
+      setHi((h) => (h - 1 + opcioSzam) % opcioSzam);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      commit(results[hi]);
+      if (hi < results.length) pickTetel(results[hi]);
+      else if (egyediElerheto) pickEgyedi();
     }
   }
 
@@ -123,74 +156,72 @@ export default function ItemPicker({
     />
   );
 
-  const list = (
-    <>
-      {results.length > 0 && (
-        <div
-          style={{
-            background: t.surface,
-            border: `1px solid ${t.controlBorder}`,
-            borderRadius: t.radiusLg,
-            padding: 4,
-            maxHeight: 280,
-            overflowY: 'auto',
-            boxShadow: t.shadowLg,
-          }}
-        >
-          {results.map((r, i) => {
-            const category = catName(r.kategoriaId);
-            const header = category !== lastCat ? ((lastCat = category), category) : null;
-            const rn = resolveNev(r.nev, nyelv);
-            return (
-              <div key={r.id}>
-                {header && (
-                  <div style={{ fontSize: 11, color: t.uiTextFaint, padding: '6px 10px 2px' }}>
-                    {header}
-                  </div>
-                )}
-                <div
-                  onMouseEnter={() => setHi(i)}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    commit(r);
-                  }}
+  // Egy közös konténerben: a találatok (ha vannak), különben a "Nincs
+  // találat" jegyzet, a végén pedig -- ha a hívó kéri -- az egyedi opció.
+  // Így egy nulla-találatos keresés sosem zsákutca: a jegyzet a pszeudo-sor
+  // FÖLÖTT áll, informatív szövegként (backlog-3 3-4. döntés).
+  const list = q.trim() === '' ? null : (
+    <div
+      style={{
+        background: t.surface,
+        border: `1px solid ${t.controlBorder}`,
+        borderRadius: t.radiusLg,
+        padding: 4,
+        maxHeight: 280,
+        overflowY: 'auto',
+        boxShadow: t.shadowLg,
+      }}
+    >
+      {results.length > 0 &&
+        results.map((r, i) => {
+          const category = catName(r.kategoriaId);
+          const header = category !== lastCat ? ((lastCat = category), category) : null;
+          const rn = resolveNev(r.nev, nyelv);
+          return (
+            <div key={r.id}>
+              {header && (
+                <div style={{ fontSize: 11, color: t.uiTextFaint, padding: '6px 10px 2px' }}>
+                  {header}
+                </div>
+              )}
+              <div
+                onMouseEnter={() => setHi(i)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  pickTetel(r);
+                }}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  padding: '7px 10px',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  borderRadius: t.radius,
+                  background: i === hi ? t.accentWash : 'transparent',
+                  boxShadow: i === hi ? `inset 3px 0 0 ${t.accent}` : 'none',
+                }}
+              >
+                <span>
+                  {rn.szoveg}
+                  {rn.fallback && <HuChip />}
+                </span>
+                <span
                   style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    padding: '7px 10px',
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    borderRadius: t.radius,
-                    background: i === hi ? t.accentWash : 'transparent',
-                    boxShadow: i === hi ? `inset 3px 0 0 ${t.accent}` : 'none',
+                    color: t.uiTextFaint,
+                    whiteSpace: 'nowrap',
+                    fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  <span>
-                    {rn.szoveg}
-                    {rn.fallback && <HuChip />}
-                  </span>
-                  <span
-                    style={{
-                      color: t.uiTextFaint,
-                      whiteSpace: 'nowrap',
-                      fontVariantNumeric: 'tabular-nums',
-                    }}
-                  >
-                    {formatPrice(r.ar[currency], currency)}
-                  </span>
-                </div>
+                  {formatPrice(r.ar[currency], currency)}
+                </span>
               </div>
-            );
-          })}
-        </div>
-      )}
-      {results.length === 0 && q.trim() && (
+            </div>
+          );
+        })}
+      {results.length === 0 && (
         <div
           style={{
-            background: available.length === 0 ? t.warnBg : t.surface,
-            border: `1px solid ${available.length === 0 ? t.warn : t.controlBorder}`,
-            borderRadius: t.radiusLg,
             padding: '10px 12px',
             fontSize: 12.5,
             color: available.length === 0 ? t.warn : t.uiTextFaint,
@@ -201,7 +232,30 @@ export default function ItemPicker({
             : 'Nincs találat.'}
         </div>
       )}
-    </>
+      {egyediElerheto && (
+        <div
+          onMouseEnter={() => setHi(results.length)}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            pickEgyedi();
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '7px 10px',
+            fontSize: 13,
+            cursor: 'pointer',
+            borderRadius: t.radius,
+            color: t.uiTextMuted,
+            background: hi === results.length ? t.accentWash : 'transparent',
+            boxShadow: hi === results.length ? `inset 3px 0 0 ${t.accent}` : 'none',
+          }}
+        >
+          Egyedi tétel felvétele: „{q.trim()}”
+        </div>
+      )}
+    </div>
   );
 
   if (floating === 'portal') {

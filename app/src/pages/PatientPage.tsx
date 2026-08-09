@@ -26,7 +26,7 @@ import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import ChipGroup from '../components/ChipGroup';
 import { sablonVerzioFor } from '../domain/blankPlan';
 import { lefedettseg } from '../domain/coverage';
-import { resolveNev } from '../domain/nev';
+import { nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import type { Nyelv, Penznem } from '../domain/types';
 import { t } from '../design/tokens';
 import { useAppState } from '../state/AppState';
@@ -56,16 +56,25 @@ export default function PatientPage() {
   const locked = plan.tervId !== '';
   const cov = lefedettseg(priceList, plan.penznem);
   const sorokSzama = plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
+  // A nyelváltás-megerősítő dialógus élő számlálásához -- lásd lent.
+  const nyelvvaltasHatas = nyelvvaltasHatasa(plan, priceList);
 
   function applyNyelv(nyelv: Nyelv) {
     setPlan((prev) => {
       const next = structuredClone(prev);
+      // A RÉGI nyelvvel hasonlítjuk össze -- csak azok a sorok frissülnek
+      // az új nyelvre, amik még az árlistai automatikus nevet viselték; egy
+      // kézzel pontosított (backlog-3) név nem íródik felül -- lásd
+      // docs/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 6. döntés.
+      const regiNyelv = prev.nyelv;
       next.nyelv = nyelv;
       next.sablonVerzio = sablonVerzioFor(nyelv);
       for (const f of next.fazisok) {
         for (const s of f.sorok) {
           const tetel = priceList.tetelek.find((x) => x.id === s.tetelId);
-          if (tetel) s.nevSnapshot = resolveNev(tetel.nev, nyelv).szoveg;
+          if (tetel && nevKoveti(s, tetel, regiNyelv)) {
+            s.nevSnapshot = resolveNev(tetel.nev, nyelv).szoveg;
+          }
         }
       }
       return next;
@@ -278,8 +287,12 @@ export default function PatientPage() {
           </AlertDialog.Title>
           <AlertDialog.Description size="2">
             {pending?.kind === 'nyelv'
-              ? `A tervben már ${sorokSzama} tétel szerepel. A nyelv váltásakor a tételnevek ` +
-                'újra rögzülnek az új nyelven. Folytatod?'
+              ? nyelvvaltasHatas.valtozatlan > 0
+                ? `A nyelv váltásakor ${nyelvvaltasHatas.frissul} sor neve frissül az új ` +
+                  `nyelvre, ${nyelvvaltasHatas.valtozatlan} kézzel átírt név változatlan marad ` +
+                  '(ezeket a szerkesztőben egy „átírt” jelvény jelzi). Folytatod?'
+                : `A tervben már ${sorokSzama} tétel szerepel. A nyelv váltásakor a tételnevek ` +
+                  'frissülnek az új nyelvre. Folytatod?'
               : `A tervben már ${sorokSzama} tétel szerepel, a jelenlegi pénznemben ` +
                 `(${plan.penznem}) rögzített árral. Pénznemváltáskor ezek a sorok törlődnek, ` +
                 'hogy ne maradjon rossz pénznemben rögzített ár a tervben. Folytatod?'}

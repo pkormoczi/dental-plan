@@ -155,6 +155,13 @@ a tételt vagy változik az ára, a kinyomtatott és aláírt terv attól még
 ugyanazt jelentette. A `tetelId` megmarad hivatkozásnak, de nem abból
 rajzoljuk újra a dokumentumot.
 
+Az üres `tetelId` (`''`) is érvényes érték: **egyedi, árlistán kívüli**
+sort jelent (backlog-3, `docs/backlog-3-sornev-egyedi-sor-terv.md`) — a
+doki a keresőben begépelt szöveget vette fel `nevSnapshot`-ként, mert
+egyetlen árlistai tétel sem talált rá. Ilyen soron nincs értelmezhető
+árlistai referenciaár, ezért `listaEgysegar === tenylegesEgysegar` mindig
+(az ártétel utólagos szerkesztése mindkettőt együtt írja).
+
 ### Miért van `osszesitok`, ha származtatható
 
 Mert ez az, ami **ténylegesen ki lett nyomtatva**. Ha egy későbbi

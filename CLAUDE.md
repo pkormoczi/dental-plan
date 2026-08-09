@@ -102,7 +102,13 @@ akadálymentesség) vonatkozó, ugyanígy kötelező szabályok külön fájlban
 D21 (nyelv/pénznem szétválasztás) hozott néhány újat, ezeket se írd újra:
 - `resolveNev(nev, nyelv)` / `fallbackSorok(plan, priceList)` (`app/src/domain/nev.ts`)
   — a tétel nevének nyelvfüggő feloldása magyar visszaeséssel + a
-  véglegesítés-őr diagnosztikája
+  véglegesítés-őr diagnosztikája (két listára bontva: `nincsForditas` /
+  `elterAzArlistatol`, lásd alább, backlog-3b). `sorFallback(sor, nyelv,
+  tetelById)` (ugyanitt) az EGYETLEN hely, ahol eldől, hogy egy SOR neve
+  miért nem a terv nyelvén szerepel — a `fallbackSorok` és a szerkesztő
+  `HU`/„átírt" jelvénye is ezt hívja. `nevKoveti(sor, tetel, nyelv)`
+  (ugyanitt) a mag-összehasonlítás mindkettő, és a nyelváltás
+  névmegőrzésének (`PatientPage.tsx` `applyNyelv`) forrása
 - `lefedettseg(priceList, penznem)` (`app/src/domain/coverage.ts`) — a
   német tartalom készültsége (Beállítások, Páciens adatlap)
 - `formatLongDate(iso, nyelv)` / `formatShortDate(iso, nyelv)` (`app/src/domain/date.ts`)
@@ -139,10 +145,11 @@ A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne ír
   be-/kikapcsol a szabadszöveges `fogak` felsorolásban, sorrendtartóan;
   ez az EGYETLEN írási útja a `ToothPickerPopover`-nek (soronkénti
   fogválasztó), ne kezeld a tokeneket a hívóban
-- `kitoltetlenSorok(plan)` (`app/src/domain/kitoltetlen.ts`) — a tétel
-  nélküli (fogtérkép-kattintással létrehozott, de be nem azonosított)
-  sorokat sorolja fel; a `PreviewPage` véglegesítés-őre KEMÉNY blokként
-  hívja, ne írj hozzá második ellenőrzést máshol
+- `kitoltetlenSorok(plan)` (`app/src/domain/kitoltetlen.ts`) — a meg nem
+  nevezett (üres `nevSnapshot`-ú — pl. fogtérkép-kattintással létrehozott,
+  de be nem azonosított) sorokat sorolja fel; a `PreviewPage`
+  véglegesítés-őre KEMÉNY blokként hívja, ne írj hozzá második
+  ellenőrzést máshol
 
 A piszkozat-perzisztencia (`docs/backlog-1-piszkozat-terv.md`) segédfüggvényei
 és rétege, szintén ne írd újra őket:
@@ -167,6 +174,36 @@ szintén ne írd újra őket:
   szerint minden más mező pillanatkép, érintetlen); az `AppState.tsx`
   `loadPlanIntoDraft`-ja hívja betöltéskor, ne máshol és ne
   véglegesítéskor
+
+A sornév-szerkesztés + egyedi sor tétel
+(`docs/backlog-3-sornev-egyedi-sor-terv.md`) segédfüggvényei, szintén ne
+írd újra őket:
+- `sorMezokEgyedibol(nev)` (`app/src/pages/PlanEditorPage.tsx`) — a
+  `sorMezokTetelbol` egyedi (árlistán kívüli) párja: `tetelId: ''`,
+  `listaEgysegar === tenylegesEgysegar === 0` kezdőértékkel; ezt hívja
+  mind a fázis alatti, mind a soron belüli `ItemPicker` `onPickEgyedi`-je
+- `ItemPicker` `onPickEgyedi` prop (`app/src/pages/planEditor/ItemPicker.tsx`)
+  — nulla találatnál az Enter, találatok mellett egy pszeudo-opció a lista
+  alján veszi fel a gépelt szöveget a gépel → nyíl → Enter cikluson belül;
+  ne építs mellé külön UI-utat egyedi sor felvitelére
+- `sorFallback(sor, nyelv, tetelById)` (`app/src/domain/nev.ts`) — lásd
+  fent, D21 blokk
+
+A nyelváltás-névmegőrzés tétel (`docs/backlog-3b-nyelvvaltas-nevmegorzes-
+terv.md`) segédfüggvényei, szintén ne írd újra őket:
+- `nevKoveti(sor, tetel, nyelv)` (`app/src/domain/nev.ts`) — lásd fent, D21
+  blokk; a `PatientPage.tsx` `applyNyelv`-je a RÉGI nyelvvel hívja (csak az
+  ezt teljesítő sorok neve frissül az új nyelvre), a `sorFallback` a
+  JELENLEGI nyelvvel
+- `nyelvvaltasHatasa(plan, priceList)` (`app/src/domain/nev.ts`) — hány
+  `tetelId`-hez kötött sor neve frissülne/maradna változatlan egy
+  nyelváltáskor; a `PatientPage.tsx` nyelváltás-megerősítő `AlertDialog`-
+  jának élő számlálásához, ne számold újra máshol
+- A `PreviewPage.tsx` „Tételnevek nem németül" dialógusának „Folytatás"
+  gombja SZÁNDÉKOSAN nem `AlertDialog.Action` — lásd a helyi kommentet: az
+  Action beépített auto-close-a versenyhelyzetbe kerülne a `confirmStep`-
+  lánc `missing-fields` → `de-fallback-names` váltásával, és mindig
+  átugorná a második dialógust
 
 ## Domain szókincs
 
