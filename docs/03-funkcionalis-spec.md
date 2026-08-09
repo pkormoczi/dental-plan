@@ -244,7 +244,7 @@ az első tartalmi módosítás után kezd írni. A visszaállítás csendes és
 memóriabeli — a Kezdőlap „Piszkozat folytatása” kártyája a belépési pont
 hozzá; a Kezdőlap „Új terv indítása” és a „Korábbi tervek” → „Megnyitás
 szerkesztésre” gombja megerősítést kér, mielőtt felülírná. Részletek:
-`docs/backlog-1-piszkozat-terv.md`.
+`docs/archive/backlog/backlog-1-piszkozat-terv.md`.
 
 ---
 

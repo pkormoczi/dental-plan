@@ -154,7 +154,7 @@ A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne ír
   véglegesítés-őre KEMÉNY blokként hívja, ne írj hozzá második
   ellenőrzést máshol
 
-A piszkozat-perzisztencia (`docs/backlog-1-piszkozat-terv.md`) segédfüggvényei
+A piszkozat-perzisztencia (`docs/archive/backlog/backlog-1-piszkozat-terv.md`) segédfüggvényei
 és rétege, szintén ne írd újra őket:
 - `piszkozatTartalmas(plan)` (`app/src/domain/piszkozat.ts`) — az EGYETLEN
   hely, ahol eldől, hogy egy `Plan`-en van-e olyan tartalom, amit kár lenne
@@ -168,7 +168,7 @@ A piszkozat-perzisztencia (`docs/backlog-1-piszkozat-terv.md`) segédfüggvénye
   `StorageContext` `drafts` mezőjeként érhető el, ne hozz létre másik
   példányt vagy másik kulcsot piszkozat-mentéshez
 
-A friss-dátum tétel (`docs/backlog-2-friss-datum-terv.md`) segédfüggvényei,
+A friss-dátum tétel (`docs/archive/backlog/backlog-2-friss-datum-terv.md`) segédfüggvényei,
 szintén ne írd újra őket:
 - `todayIso()` (`app/src/domain/date.ts`) — a mai nap ISO dátuma; az
   EGYETLEN forrás, `createBlankPlan()` is ezt hívja
@@ -179,7 +179,7 @@ szintén ne írd újra őket:
   véglegesítéskor
 
 A sornév-szerkesztés + egyedi sor tétel
-(`docs/backlog-3-sornev-egyedi-sor-terv.md`) segédfüggvényei, szintén ne
+(`docs/archive/backlog/backlog-3-sornev-egyedi-sor-terv.md`) segédfüggvényei, szintén ne
 írd újra őket:
 - `sorMezokEgyedibol(nev)` (`app/src/pages/PlanEditorPage.tsx`) — a
   `sorMezokTetelbol` egyedi (árlistán kívüli) párja: `tetelId: ''`,
@@ -192,8 +192,8 @@ A sornév-szerkesztés + egyedi sor tétel
 - `sorFallback(sor, nyelv, tetelById)` (`app/src/domain/nev.ts`) — lásd
   fent, D21 blokk
 
-A nyelváltás-névmegőrzés tétel (`docs/backlog-3b-nyelvvaltas-nevmegorzes-
-terv.md`) segédfüggvényei, szintén ne írd újra őket:
+A nyelváltás-névmegőrzés tétel (`docs/archive/backlog/backlog-3b-nyelvvaltas-
+nevmegorzes-terv.md`) segédfüggvényei, szintén ne írd újra őket:
 - `nevKoveti(sor, tetel, nyelv)` (`app/src/domain/nev.ts`) — lásd fent, D21
   blokk; a `PatientPage.tsx` `applyNyelv`-je a RÉGI nyelvvel hívja (csak az
   ezt teljesítő sorok neve frissül az új nyelvre), a `sorFallback` a
@@ -209,7 +209,7 @@ terv.md`) segédfüggvényei, szintén ne írd újra őket:
   átugorná a második dialógust
 
 A sablonszerkesztő + placeholder-őr tétel
-(`docs/backlog-6-sablon-placeholder-terv.md`) segédfüggvénye, szintén ne írd
+(`docs/archive/backlog/backlog-6-sablon-placeholder-terv.md`) segédfüggvénye, szintén ne írd
 újra:
 - `isPlaceholderTemplate(body)` (`app/src/domain/templates.ts`) — az
   EGYETLEN hely, ahol eldől, hogy egy sablon (nyilatkozat/fizetési

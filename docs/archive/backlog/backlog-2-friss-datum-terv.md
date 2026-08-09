@@ -74,7 +74,7 @@ híváskor — nincs külön `statusz === 'VEGLEGES'` őrfeltétel.
 ma elérhető, ezen az úton betölthető PISZKOZAT-státuszú terv (az 1. tétel,
 piszkozat-perzisztencia, a Home-oldal "Piszkozat folytatása" kártyáján át
 tölt vissza, nem a `loadPlanIntoDraft`-on keresztül — lásd
-`docs/backlog-1-piszkozat-terv.md` 4. döntés). Felesleges őrfeltételt írni
+`docs/archive/backlog/backlog-1-piszkozat-terv.md` 4. döntés). Felesleges őrfeltételt írni
 egy ma nem létező esetre; ha ez a feltevés a jövőben megváltozna (pl. a
 `loadPlanIntoDraft`-ot egy másik hívó is elkezdi használni PISZKOZAT
 tervekre), ide vissza kell térni.

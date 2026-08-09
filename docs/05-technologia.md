@@ -59,7 +59,7 @@ véglegesben ugyanezt az interfészt egy IndexedDB-alapú implementáció váltj
 Az olvasás ugyanazt a sémaverzió- és alak-ellenőrzést követi, mint a
 `PlanStorage.loadPlan()` (D18) — egy sérült/inkompatibilis piszkozatot a
 betöltés megtagad, érthető üzenettel, nem néma eldobással. Részletek:
-`docs/backlog-1-piszkozat-terv.md`.
+`docs/archive/backlog/backlog-1-piszkozat-terv.md`.
 
 ### Kezdd a File System Access API-val
 

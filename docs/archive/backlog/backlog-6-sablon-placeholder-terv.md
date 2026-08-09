@@ -156,7 +156,7 @@ Felülvizsgálati találat: a `SettingsPage.tsx` sablonszerkesztő `templates`
 állapota tiszta komponens-szintű `useState`/`useRef` — ha a doki ír egy
 javítást, de elnavigál mentés előtt, a szerkesztés némán elvész. Ugyanaz a
 hibaosztály, amit az 1. backlog-tétel (piszkozat-perzisztencia, lásd
-`docs/backlog-1-piszkozat-terv.md`) a tervszerkesztőre már megoldott — a
+`docs/archive/backlog/backlog-1-piszkozat-terv.md`) a tervszerkesztőre már megoldott — a
 sablonszerkesztőre nem terjedt ki.
 
 **Építészeti döntés:** NEM a meglévő `DraftStorage`/`DemoDraftStorage`

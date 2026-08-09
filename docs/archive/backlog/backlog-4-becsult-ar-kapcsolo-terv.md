@@ -94,8 +94,9 @@ szélességét.
 ma mindig az `uj` (kereső) ágban van, amíg tétel nem választódik. Ha a 3.
 backlog-tétel (szerkeszthető sornév + egyedi sor) megépül, ugyanez a
 kapcsoló változtatás nélkül fog megjelenni az akkor létrejövő egyedi
-sorokon is — a 3. tétel döntési dokumentuma (`docs/backlog-3-sornev-egyedi-sor-terv.md`
-7. döntés) ma explicit `savos: false`-ra zárja az egyedi sort, ezt majd a
+sorokon is — a 3. tétel döntési dokumentuma
+(`docs/archive/backlog/backlog-3-sornev-egyedi-sor-terv.md` 7. döntés) ma
+explicit `savos: false`-ra zárja az egyedi sort, ezt majd a
 3. tétel implementálásakor kell feloldani erre a kapcsolóra hivatkozva.
 
 ### 5. Nincs hatás a számításra, csak a megjelenítésre
@@ -136,7 +137,7 @@ frissül — a tétel valódi értéke (jogi védelem olyan soron is, ami nem
 - **Egyedi sor (`tetelId === ''`, gépelt névvel) `savos`-kapcsolása** — a
   3. backlog-tétel hatóköre; ez a tétel csak előkészíti (a kapcsoló
   ugyanabban a cellaágban él, ahova az egyedi sor is kerül majd), de nem
-  módosítja a `docs/backlog-3-sornev-egyedi-sor-terv.md` 7. döntését.
+  módosítja a `docs/archive/backlog/backlog-3-sornev-egyedi-sor-terv.md` 7. döntését.
 - **`schemaVersion` emelés** — nem szükséges, a `Sor.savos` mező már ma is
   létezik, ez a tétel csak egy meglévő mezőhöz ad írási UI-t.
 - **Tömeges/árlista-szintű "becsült" jelölés** — ez a tétel kizárólag

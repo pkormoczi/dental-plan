@@ -1,6 +1,6 @@
 # Backlog 3b. — Nyelváltás megőrzi a kézzel szerkesztett tételneveket — döntési összefoglaló
 
-Ez a fájl a `docs/backlog-3-sornev-egyedi-sor-terv.md` (sornév szerkeszthetővé
+Ez a fájl a `docs/archive/backlog/backlog-3-sornev-egyedi-sor-terv.md` (sornév szerkeszthetővé
 tétele + egyedi sor) implementálása közben felmerült utókövetkezmény
 megbeszélt megvalósítási döntéseit rögzíti, implementáció-indításhoz. Nem
 tartalmaz kódot vagy függvényszignatúrákat — az implementáció módja és a
@@ -13,8 +13,8 @@ A `PatientPage.tsx` `applyNyelv()` (60-73. sor) nyelvváltáskor minden
 az árlista *jelenlegi* nevéből az *új* nyelven. A 3. tétel (sornév-
 szerkeszthetőség) előtt ez ártalmatlan volt — a `nevSnapshot` úgysem
 térhetett el az árlistai névtől, mert nem volt szerkeszthető. A 3. tétel
-óta a doki kézzel pontosíthatja a sor nevét (2. döntés, `docs/backlog-3-
-sornev-egyedi-sor-terv.md`); egy ilyen pontosítást a mai `applyNyelv` szó
+óta a doki kézzel pontosíthatja a sor nevét (2. döntés,
+`docs/archive/backlog/backlog-3-sornev-egyedi-sor-terv.md`); egy ilyen pontosítást a mai `applyNyelv` szó
 nélkül felülír, ha a doki a névszerkesztés UTÁN vált nyelvet a Páciens
 adatlapon.
 
@@ -32,7 +32,7 @@ de névben pontosított sorokra vonatkozik.
 
 ### 1. A megőrzés alapelve — mag-összehasonlítás, új mező nélkül
 
-A `docs/backlog-3-sornev-egyedi-sor-terv.md` kifejezett döntése volt, hogy
+A `docs/archive/backlog/backlog-3-sornev-egyedi-sor-terv.md` kifejezett döntése volt, hogy
 nem vezetünk be új mezőt a `Sor`-on. Ezt itt is tartjuk: nincs explicit
 „szerkesztve" jelző. Helyette egy összehasonlítás dönti el, hogy egy
 `tetelId`-hez kötött sor neve *még mindig* az árlistai automatikus nevet
