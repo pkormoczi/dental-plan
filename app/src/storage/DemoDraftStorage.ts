@@ -1,5 +1,5 @@
 // Mockup-implementáció a DraftStorage-hoz -- lásd DraftStorage.ts fejléce és
-// docs/backlog-1-piszkozat-terv.md. localStorage, a `dp:piszkozat` kulcson,
+// docs/archive/backlog/backlog-1-piszkozat-terv.md. localStorage, a `dp:piszkozat` kulcson,
 // a DemoStorage.ts PREFIX konstansát újrahasznosítva, hogy a "Minden adat
 // törlése"/"Demó adat visszaállítása" gomb prefix-seprése (DemoStorage.ts
 // `clearAll()`) a piszkozatot is elsöpörje, külön kód nélkül.

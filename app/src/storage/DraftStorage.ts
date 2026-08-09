@@ -1,4 +1,4 @@
-// docs/backlog-1-piszkozat-terv.md 2. döntés: külön, kicsi interfész a
+// docs/archive/backlog/backlog-1-piszkozat-terv.md 2. döntés: külön, kicsi interfész a
 // PlanStorage MELLETT, nem alatta -- docs/05-technologia.md architektúra-
 // diagramja az IndexedDB-t testvér-dobozként rajzolja a PlanStorage mellett
 // ("IndexedDB -- csak piszkozat-autosave, nem system of record"), ez a
