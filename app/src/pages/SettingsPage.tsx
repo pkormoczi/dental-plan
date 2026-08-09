@@ -21,9 +21,11 @@ import {
 } from '@radix-ui/themes';
 import ChipGroup from '../components/ChipGroup';
 import { lefedettseg } from '../domain/coverage';
+import { isPlaceholderTemplate } from '../domain/templates';
 import type { Nyelv } from '../domain/types';
 import { t } from '../design/tokens';
 import { stripMarkdownHeading } from '../pdf/markdownLite';
+import { PREFIX } from '../storage/DemoStorage';
 import { TEMPLATE_HEADINGS } from '../storage/seed/templates';
 import { useStorage } from '../storage/StorageContext';
 import { useAppState } from '../state/AppState';
@@ -48,8 +50,45 @@ function templateBase(key: TemplateSlotKey, nyelv: Nyelv): string {
   return `${key}-${nyelv}`;
 }
 
-function isPlaceholderBody(body: string): boolean {
-  return body.includes('PLACEHOLDER') || body.includes('PLATZHALTER');
+// Ad hoc localStorage-cache a sablonszerkesztő piszkozatához --
+// docs/backlog-6-sablon-placeholder-terv.md 4. döntés: NEM a `DraftStorage`
+// bővítése (az kizárólag `Plan`-ra típusozott, és egy már lezárt
+// backlog-tétel kódja), hanem egy önálló, base-kulcsolt JSON objektum. A
+// `dp:` prefix (`DemoStorage.ts` `PREFIX`-je) miatt a "Minden adat
+// törlése"/"Demó adat visszaállítása" prefix-seprése ezt is elviszi, külön
+// kód nélkül.
+const TEMPLATE_DRAFT_CACHE_KEY = `${PREFIX}sablon-piszkozat`;
+
+function readTemplateDraftCache(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(TEMPLATE_DRAFT_CACHE_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeTemplateDraftCache(cache: Record<string, string>): void {
+  try {
+    localStorage.setItem(TEMPLATE_DRAFT_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // Alacsony tét (csak szövegbevitel elvesztésének kockázata, nincs
+    // páciensadat) -- egy kvótahiba itt nem kap külön UI-hibát, a
+    // szerkesztés a komponens state-jében eddig is megmaradt.
+  }
+}
+
+function updateTemplateDraftCache(base: string, value: string): void {
+  const cache = readTemplateDraftCache();
+  cache[base] = value;
+  writeTemplateDraftCache(cache);
+}
+
+function clearTemplateDraftCacheEntry(base: string): void {
+  const cache = readTemplateDraftCache();
+  if (!(base in cache)) return;
+  delete cache[base];
+  writeTemplateDraftCache(cache);
 }
 
 export default function SettingsPage() {
@@ -79,6 +118,10 @@ export default function SettingsPage() {
   // csak a HIÁNYZÓ (de) sablonokat kérjük le, a magyar oldalon esetleg már
   // megkezdett, nem mentett szerkesztés nem vész el egy újratöltéssel.
   const loadedTemplateBasesRef = useRef<Set<string>>(new Set());
+  // Dupla-kattintás elleni in-flight zár, ugyanaz a minta, mint a
+  // `PreviewPage.tsx` `savingRef`-je -- a `templateSaving` state önmagában
+  // nem elég, mert egy második kattintás a render ELŐTT is megtörténhet.
+  const templateSavingRef = useRef(false);
 
   useEffect(() => {
     if (!settings.nemetEngedelyezve && templateLang === 'de') setTemplateLang('hu');
@@ -93,11 +136,19 @@ export default function SettingsPage() {
 
     (async () => {
       try {
+        // A piszkozat-cache-t egyszer olvassuk be a body elején -- szinkron
+        // művelet, nem kell base-enként újraolvasni.
+        const draftCache = readTemplateDraftCache();
         const entries = await Promise.all(
           missing.map(async (base) => {
             const { name, body } = await loadLatestTemplateByBase(base);
             const text = stripMarkdownHeading(body);
-            return [base, { name, original: text, draft: text }] as const;
+            // Néma visszaállítás (4. döntés): ha van cache-elt piszkozat
+            // ehhez a base-hez, az kerül a `draft` mezőbe -- az `original`
+            // marad a ténylegesen tárolt szöveg, hogy a meglévő "Nem
+            // mentett módosítás" felirat automatikusan jelezze az eltérést.
+            const cachedDraft = draftCache[base];
+            return [base, { name, original: text, draft: cachedDraft ?? text }] as const;
           }),
         );
         if (cancelled) return;
@@ -126,11 +177,18 @@ export default function SettingsPage() {
       if (!existing) return prev;
       return { ...prev, [base]: { ...existing, draft: value } };
     });
+    // Minden leütésre ír, debounce nélkül -- a localStorage-írás szinkron és
+    // olcsó, a meglévő piszkozat-minta (DemoDraftStorage) sem debounce-ol.
+    updateTemplateDraftCache(base, value);
   }
 
   const templatesDirty = Object.values(templates).some((d) => d.draft !== d.original);
 
   async function handleSaveTemplates() {
+    // 5. döntés: dupla-kattintás elleni zár, lásd a `templateSavingRef` fenti
+    // kommentjét -- a `disabled` prop önmagában nem elég.
+    if (templateSavingRef.current) return;
+    templateSavingRef.current = true;
     setTemplateSaving(true);
     setTemplateSaveError(null);
     try {
@@ -142,6 +200,8 @@ export default function SettingsPage() {
           const fullBody = `# ${heading}\n\n${draft.draft.trim()}\n`;
           const newName = await storage.saveTemplate(base, fullBody);
           updated[base] = { name: newName, original: draft.draft, draft: draft.draft };
+          // Törlés kizárólag sikeres mentéskor, base-enként (4. döntés).
+          clearTemplateDraftCacheEntry(base);
         }
         setTemplates((prev) => ({ ...prev, ...updated }));
       }
@@ -152,12 +212,13 @@ export default function SettingsPage() {
         err instanceof Error ? err.message : 'A sablonszövegek mentése váratlanul meghiúsult.',
       );
     } finally {
+      templateSavingRef.current = false;
       setTemplateSaving(false);
     }
   }
 
   const deNyilatkozat = templates['nyilatkozat-de'];
-  const deNyilatkozatKesz = deNyilatkozat != null && !isPlaceholderBody(deNyilatkozat.original);
+  const deNyilatkozatKesz = deNyilatkozat != null && !isPlaceholderTemplate(deNyilatkozat.original);
 
   // P0-8: korábban `void saveSettings(...)` volt -- a hívó nem várta meg és
   // nem ellenőrizte az eredményét, tehát egy sikertelen mentés (pl. kvóta)

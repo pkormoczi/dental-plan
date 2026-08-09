@@ -9,8 +9,8 @@ sérthetetlen keretei (D1–D21) egyik tételt sem sértik — ahol ez nem
 nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Sorrend, ha priorizálni kell:** ~~1 (piszkozat-perzisztencia)~~ → ~~5
-(EUR-mező)~~ → ~~2 (friss dátum)~~ → ~~3 (sornév + egyedi sor)~~ → 6
-(placeholder-őr) → 8 (árlista-nap) → ~~4~~, 9 → a többi.
+(EUR-mező)~~ → ~~2 (friss dátum)~~ → ~~3 (sornév + egyedi sor)~~ → ~~6
+(placeholder-őr)~~ → 8 (árlista-nap) → ~~4~~, 9 → a többi.
 (Az eredeti triázs-sorrend tévesen kihagyta az 1. tételt és duplán
 hivatkozott a 3.-ra — itt javítva. Az 1. tétel a doktor-nap narratívában
 háromszor is felmerül ugyanazon a délelőttön, és fél nap a mérete —
@@ -22,7 +22,10 @@ készült el — szintén 2026-08-09-én, és menet közben felfedte a 15. téte
 4. tétel a javasolt sorrendtől eltérően, az 5. és a 8. előtt készült el —
 szintén 2026-08-09-én, mert a 3. tétel menet közben nyitva hagyott egy
 záratlan szálat — lásd alább. Az 5. tétel a javasolt pozíciójában,
-szintén 2026-08-09-én készült el.)
+szintén 2026-08-09-én készült el. A 6. tétel a javasolt pozíciójában,
+szintén 2026-08-09-én készült el — kutatással kiderült, hogy a benne
+leírt sablonszerkesztő rész már korábban, a `119ab74` commit óta kész
+volt, a ténylegesen hátralévő munka a placeholder-őr volt.)
 
 ---
 
@@ -167,11 +170,9 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   hogy a mező euróban jelenít meg (`66,00`, nem `6600`), és a beírt
   `35,50` euróként (3550 centként), nem HUF-ágon parseolva committálódik.
 
-### 6. Sablonszerkesztő bekötése + placeholder-őr a véglegesítésnél
+### 6. Sablonszerkesztő bekötése + placeholder-őr a véglegesítésnél — KÉSZ (2026-08-09)
 
-- **Méret:** ~1 nap — a `saveTemplate` már implementált és tesztelt a
-  storage rétegben, csak UI és a `StorageContext` exportja hiányzik, plusz
-  egy megerősítő lépés a véglegesítés-láncba.
+- **Méret:** ~1 nap.
 - **Kereteket sért?** Nem — ugyanazt a verziófájl-mechanizmust használja,
   amit a D4 már megkövetel (`nyilatkozat-hu-v2.md`, a régi megmarad).
 - **Valódi haszon:** ez nem funkció, hanem egy éles hiba elhárítása — ma
@@ -182,6 +183,37 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   de akkor a doki jogásza sehol nem tudja feltölteni a végleges szöveget az
   appon belül, csak fájlrendszeri kerülővel a végleges verzióban. Mivel a
   szerkesztő maga is csak fél nap plusz, együtt javasolt.
+- **Megvalósítás:** a döntési részletek
+  `docs/backlog-6-sablon-placeholder-terv.md`-ben (grill-me munkamenet, 5
+  döntés). Hatókör-korrekció a munkamenet elején: a „sablonszerkesztő
+  bekötése” rész már a `119ab74` commit óta kész volt (a `SettingsPage.tsx`
+  „Nyomtatvány szövegei" kártyája), a backlog szövege elavult volt — a
+  ténylegesen hátralévő munka a placeholder-őr és két, felülvizsgálat során
+  talált szerkesztő-hiányosság volt. Új `isPlaceholderTemplate()` export
+  (`app/src/domain/templates.ts`) — a `DemoStorage.ts` és a `SettingsPage.tsx`
+  korábban egymástól eltérő privát duplikátumai erre álltak át, a
+  `PreviewPage.tsx` a harmadik (immár egyetlen) hívási hely. A
+  `TervDocument.tsx` szerint a „Csak ajánlat” kapcsoló csak a 3. oldalt
+  (nyilatkozat + aláírás) zárja ki, a 2. oldal (fizetési feltételek) mindig
+  nyomtatódik — emiatt a két sablon placeholderjét nem lehet egyformán
+  kezelni. Ha a MEGJELENÍTETT nyilatkozat placeholder, a „Csak ajánlat”
+  checkbox bepipálva és letiltva jelenik meg (nincs felülírási lehetőség,
+  ez KEMÉNY zár, nem a `confirmStep`-lánc egy tagja), piros Callout
+  magyarázza miért; egy `effectiveOfferOnly` derived érték
+  (`offerOnly || nyilatkozatIsPlaceholder`) váltotta fel a nyers `offerOnly`
+  state-et a PDF-generálásban, a letöltési fájlnévben és a checkbox
+  megjelenítésében is, hogy a zár ne csak vizuális legyen. A fizetési
+  feltételek placeholderje ezzel szemben a meglévő, hiányzó-sablon esetén
+  már működő HU-visszaesésbe (`sablonFallback`, sárga Callout) esik bele —
+  csak nem-magyar tervnél fut le, hogy egy magyar terv ne essen vissza
+  önmagára. Mellékesen, felülvizsgálati találatként bekerült a körbe: a
+  sablonszerkesztő piszkozata ezután túléli az elnavigálást (ad hoc
+  `localStorage`, `dp:sablon-piszkozat` kulcs, base-kulcsolt JSON, néma
+  visszaállítás, törlés csak sikeres mentéskor — szándékosan NEM a `Plan`-ra
+  típusozott `DraftStorage` bővítése), és a „Szöveg mentése” gomb
+  `templateSavingRef`-alapú dupla-kattintás zárat kapott, ugyanazt a mintát
+  követve, mint a `PreviewPage.tsx` `savingRef`-je. Lásd git history a
+  részletes commitért.
 
 ### 7. Kereső: néma találat-csonkítás jelzése + admin kereső kiegészítése némettel
 

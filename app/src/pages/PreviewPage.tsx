@@ -10,6 +10,7 @@ import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
 import { kitoltetlenSorok } from '../domain/kitoltetlen';
 import { fallbackSorok } from '../domain/nev';
+import { isPlaceholderTemplate } from '../domain/templates';
 import { computeOsszesitok } from '../domain/totals';
 import { buildToothVisualStates } from '../domain/toothVisual';
 import type { PlanRef } from '../domain/types';
@@ -78,9 +79,20 @@ export default function PreviewPage() {
     async function loadOrFallback(
       load: () => Promise<{ name: string; body: string }>,
       fallback: () => Promise<{ name: string; body: string }>,
+      // KIZÁRÓLAG a fizetési feltételek hívja ezzel -- egy sikeresen
+      // betöltött, de még placeholder törzsű sablon ugyanabba a
+      // fallback-ágba esik, mint a ténylegesen hiányzó fájl (lásd
+      // docs/backlog-6-sablon-placeholder-terv.md 2. döntés). A nyilatkozat
+      // placeholder-esetét EZ nem kezeli -- azt a kemény zár váltja ki
+      // (lásd nyilatkozatIsPlaceholder lent), nem egy HU-visszaesés.
+      extraFallbackCondition?: (result: { name: string; body: string }) => boolean,
     ) {
       try {
-        return { ...(await load()), fellback: false };
+        const result = await load();
+        if (extraFallbackCondition?.(result)) {
+          return { ...(await fallback()), fellback: true };
+        }
+        return { ...result, fellback: false };
       } catch (err) {
         // P1-8 (05-hibakezeles #9): csak a VÁRT "nincs ilyen sablon" hibát
         // nyeljük el -- minden mást (pl. egy jövőbeli sérült bejegyzés)
@@ -102,6 +114,9 @@ export default function PreviewPage() {
           loadOrFallback(
             () => loadLatestTemplateByBase(`fizetesi-feltetelek-${plan.nyelv}`),
             () => loadLatestTemplateByBase('fizetesi-feltetelek-hu'),
+            // Magyar tervnél a fallback maga a magyar szöveg lenne --
+            // önmagára visszaesni félrevezető "sablonFallback" jelzést adna.
+            plan.nyelv !== 'hu' ? (result) => isPlaceholderTemplate(result.body) : undefined,
           ),
         ]);
         if (!cancelled) {
@@ -140,12 +155,20 @@ export default function PreviewPage() {
     };
   }, [plan, priceList]);
 
+  // Ha a MEGJELENÍTETT nyilatkozat placeholder (jogilag még nincs lezárva),
+  // a 3. oldal (nyilatkozat + aláírás) garantáltan kimarad -- a doki nem
+  // kapcsolhatja vissza, amíg a szöveg placeholder marad (lásd
+  // docs/backlog-6-sablon-placeholder-terv.md 1. döntés). A nyers
+  // `offerOnly` state-et mindenhol ez az effektív érték váltja fel.
+  const nyilatkozatIsPlaceholder = isPlaceholderTemplate(nyilatkozatMd);
+  const effectiveOfferOnly = offerOnly || nyilatkozatIsPlaceholder;
+
   const tervDocument = (
     <TervDocument
       plan={plan}
       settings={settings}
       priceList={priceList}
-      offerOnly={offerOnly}
+      offerOnly={effectiveOfferOnly}
       nyilatkozatMd={nyilatkozatMd}
       fizetesiFeltetelekMd={fizetesiFeltetelekMd}
       toothChartPng={toothChartPng}
@@ -163,7 +186,7 @@ export default function PreviewPage() {
   useEffect(() => {
     updatePdf(tervDocument);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan, settings, offerOnly, nyilatkozatMd, fizetesiFeltetelekMd, toothChartPng, updatePdf]);
+  }, [plan, settings, effectiveOfferOnly, nyilatkozatMd, fizetesiFeltetelekMd, toothChartPng, updatePdf]);
 
   const nameMissing = !plan.paciens.nev.trim();
   const otherFieldsMissing =
@@ -300,12 +323,21 @@ export default function PreviewPage() {
           <Callout.Text>A sablonok betöltése meghiúsult: {templateError}</Callout.Text>
         </Callout.Root>
       )}
+      {nyilatkozatIsPlaceholder && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>
+            A nyilatkozat szövege ezen a nyelven még jogi lektorálásra vár (helykitöltő szöveg) —
+            emiatt a nyilatkozat és aláírás oldal nem kerülhet a nyomtatványra, a „Csak ajánlat”
+            mód kényszerítve van. A Beállítások → Nyomtatvány szövegei alatt oldható fel, a
+            szöveg lektorálása után.
+          </Callout.Text>
+        </Callout.Root>
+      )}
       {sablonFallback && (
         <Callout.Root color="amber" mb="3">
           <Callout.Text>
-            A tervhez tartozó sablon nem található a tárolóban — helyette a magyar
-            nyilatkozat/fizetési feltételek szövege jelenik meg a nyomtatványon. Próbáld a
-            Kezdőlapon a „Demó adat visszaállítása” gombot, vagy nyiss új tervet.
+            A tervhez tartozó sablon nem érhető el a megfelelő nyelven (hiányzik, vagy még jogi
+            lektorálásra vár) — helyette a magyar szöveg jelenik meg a nyomtatványon.
           </Callout.Text>
         </Callout.Root>
       )}
@@ -348,7 +380,11 @@ export default function PreviewPage() {
 
       <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
         <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Checkbox checked={offerOnly} onCheckedChange={(checked) => setOfferOnly(checked === true)} />
+          <Checkbox
+            checked={effectiveOfferOnly}
+            disabled={nyilatkozatIsPlaceholder}
+            onCheckedChange={(checked) => setOfferOnly(checked === true)}
+          />
           Csak ajánlat — a nyilatkozat és aláírás oldal nélkül
         </Text>
         <Flex gap="3">
@@ -361,7 +397,7 @@ export default function PreviewPage() {
               <Button asChild variant="soft" color="gray">
                 <a
                   href={pdfInstance.url}
-                  download={`kezelesi-terv-${plan.tervId || 'uj'}${offerOnly ? '-ajanlat' : ''}.pdf`}
+                  download={`kezelesi-terv-${plan.tervId || 'uj'}${effectiveOfferOnly ? '-ajanlat' : ''}.pdf`}
                 >
                   Letöltés
                 </a>

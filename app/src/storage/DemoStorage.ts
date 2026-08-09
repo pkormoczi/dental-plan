@@ -9,6 +9,7 @@
 // terv.json PDF-be ágyazása (pdf-lib) is a 2. fázisra marad.
 
 import { assertKnownSchemaVersion } from '../domain/schema';
+import { isPlaceholderTemplate } from '../domain/templates';
 import { assertPlanShape, assertPriceListShape, assertSettingsShape } from '../domain/validate';
 import type {
   PatientFolder,
@@ -46,11 +47,6 @@ const DEFAULT_TEMPLATES: Array<[string, string]> = [
   ['nyilatkozat-de-v1.md', NYILATKOZAT_DE_V1],
   ['fizetesi-feltetelek-de-v1.md', FIZETESI_FELTETELEK_DE_V1],
 ];
-
-/** Igaz, ha a sablon törzse még a jogi-munka helykitöltőt tartalmazza. */
-function isPlaceholderTemplate(body: string): boolean {
-  return body.includes('[PLACEHOLDER') || body.includes('[PLATZHALTER');
-}
 
 /**
  * Exportált, mert a DemoDraftStorage (docs/backlog-1-piszkozat-terv.md 2.

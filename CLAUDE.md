@@ -205,6 +205,19 @@ terv.md`) segédfüggvényei, szintén ne írd újra őket:
   lánc `missing-fields` → `de-fallback-names` váltásával, és mindig
   átugorná a második dialógust
 
+A sablonszerkesztő + placeholder-őr tétel
+(`docs/backlog-6-sablon-placeholder-terv.md`) segédfüggvénye, szintén ne írd
+újra:
+- `isPlaceholderTemplate(body)` (`app/src/domain/templates.ts`) — az
+  EGYETLEN hely, ahol eldől, hogy egy sablon (nyilatkozat/fizetési
+  feltételek) törzse még jogi lektorálásra vár-e (`[PLACEHOLDER`/
+  `[PLATZHALTER` jelölő); a `DemoStorage.ts` (`ensureSeedTemplates`), a
+  `SettingsPage.tsx` (a német nyilatkozat készültség-jelzése) és a
+  `PreviewPage.tsx` (a nyilatkozat kemény zára + a fizetési feltételek
+  HU-visszaesése) mind ezt hívja — korábban két, egymástól eltérő
+  string-egyezésű privát duplikátum létezett, egy harmadik hívási hely
+  bevezetése volt az alkalom a konszolidálásra
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
