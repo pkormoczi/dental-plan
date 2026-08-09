@@ -43,12 +43,12 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   nagyságrenden íródott a tervbe. Mostantól ez a mező is euróban jelenít meg és fogad be,
   ugyanúgy, ahogy az árlista admin EUR mezői már eddig is. Az oszlopfejlécek is jelzik a
   terv pénznemét ("Listaár (Ft)"/"(€)" stb.).
-- Bármelyik soron megjelölhető egy csillaggal, hogy az ára csak becslés (eddig csak azokon a
-  tételeken lehetett, amiket az árlista eleve "sávos"-nak jelölt). A csillaggal jelölt sor a
-  nyomtatványon is csillagot és egy magyarázó lábjegyzetet kap — így egy csontpótló anyag
-  vagy más, csak a műtőben pontosítható tétel nem kerül fix, kötelező érvényű árként az
-  aláírandó dokumentumra. A csillag szabadon be- és kikapcsolható bármelyik soron, egyedi
-  soron is.
+- Bármelyik soron megjelölhető egy "≈ Becsült" jelölővel, hogy az ára csak becslés (eddig
+  csak azokon a tételeken lehetett, amiket az árlista eleve "sávos"-nak jelölt). Az így
+  jelölt sor a nyomtatványon csillagot és egy magyarázó lábjegyzetet kap — így egy
+  csontpótló anyag vagy más, csak a műtőben pontosítható tétel nem kerül fix, kötelező
+  érvényű árként az aláírandó dokumentumra. A jelölés szabadon be- és kikapcsolható
+  bármelyik soron, egyedi soron is.
 
 ## 2026. augusztus 8.
 

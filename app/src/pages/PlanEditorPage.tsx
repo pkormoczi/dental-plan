@@ -19,7 +19,7 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes';
-import { Cross1Icon, InfoCircledIcon, StarFilledIcon, StarIcon } from '@radix-ui/react-icons';
+import { Cross1Icon, InfoCircledIcon } from '@radix-ui/react-icons';
 import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
 import ToothChartPanel from '../components/ToothChartPanel';
@@ -74,9 +74,9 @@ function sorMezokTetelbol(
  * rá (`ItemPicker` `onPickEgyedi`). `tetelId: ''` -- nincs árlistai
  * hivatkozás, tehát nincs értelmezhető listaár sem, ezért
  * `listaEgysegar === tenylegesEgysegar` induláskor és minden későbbi
- * árszerkesztéskor is (lásd `LineRow` "Tényleges ár" mezője) -- így egyedi
+ * árszerkesztéskor is (lásd `LineRow` "Ajánlati ár" mezője) -- így egyedi
  * soron sosem jelenik meg kedvezmény-jelvény. `savos: false` csak kezdőérték --
- * a 4. backlog-tétel csillag-kapcsolója (`LineRow` névcella) ugyanúgy szabadon
+ * a 4. backlog-tétel becsült ár chipje (`LineRow` ár-cella) ugyanúgy szabadon
  * átbillenthető egyedi soron is, mint bármelyik máson.
  */
 function sorMezokEgyedibol(
@@ -445,8 +445,8 @@ function PhaseSection({
               <Table.ColumnHeaderCell width="104px" justify="end">
                 Listaár ({penznemJel})
               </Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="112px" justify="end">
-                Tényleges ({penznemJel})
+              <Table.ColumnHeaderCell width="200px" justify="end">
+                Ajánlati ár ({penznemJel})
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="112px" justify="end">
                 Összeg ({penznemJel})
@@ -620,19 +620,6 @@ function LineRow({
                 style={{ borderColor: line.nevSnapshot.trim() ? t.controlBorder : t.danger }}
               />
             </Box>
-            <IconButton
-              type="button"
-              aria-label="Becsült ár"
-              aria-pressed={line.savos}
-              title="Becsült ár — csillag és lábjegyzet a nyomtatványon"
-              variant="ghost"
-              color="gray"
-              size="1"
-              onClick={() => onPatch({ savos: !line.savos })}
-              style={{ color: line.savos ? t.warn : t.uiTextFaint }}
-            >
-              {line.savos ? <StarFilledIcon /> : <StarIcon />}
-            </IconButton>
             {egyedi && (
               <Badge color="gray" variant="soft" size="1">
                 egyedi
@@ -702,20 +689,38 @@ function LineRow({
       </Table.Cell>
 
       <Table.Cell justify="end">
-        <NumberField
-          value={line.tenylegesEgysegar}
-          unit={currency}
-          min={0}
-          onCommit={(v) =>
-            // Egyedi sornál nincs "listaár" mező -- a `listaEgysegar` a
-            // `tenylegesEgysegar`-ral együtt íródik, hogy sosem legyen
-            // kedvezmény-jelvény egy nem létező referenciaárhoz képest.
-            onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
-          }
-          textAlign="right"
-          style={{ borderColor: discount || line.savos ? t.brand : t.controlBorder }}
-          aria-label="Tényleges egységár"
-        />
+        <Flex align="center" gap="1" justify="end">
+          <Box flexGrow="1">
+            <NumberField
+              value={line.tenylegesEgysegar}
+              unit={currency}
+              min={0}
+              onCommit={(v) =>
+                // Egyedi sornál nincs "listaár" mező -- a `listaEgysegar` a
+                // `tenylegesEgysegar`-ral együtt íródik, hogy sosem legyen
+                // kedvezmény-jelvény egy nem létező referenciaárhoz képest.
+                onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
+              }
+              textAlign="right"
+              style={{ borderColor: discount ? t.brand : t.controlBorder }}
+              aria-label="Ajánlati egységár"
+            />
+          </Box>
+          <Button
+            type="button"
+            size="1"
+            radius="full"
+            variant={line.savos ? 'solid' : 'outline'}
+            color={line.savos ? 'amber' : 'gray'}
+            aria-pressed={line.savos}
+            aria-label="Becsült ár"
+            title="Becsült ár – a végleges összeg a kezelés során változhat."
+            onClick={() => onPatch({ savos: !line.savos })}
+            style={line.savos ? undefined : { borderColor: t.controlBorder }}
+          >
+            ≈ Becsült
+          </Button>
+        </Flex>
       </Table.Cell>
 
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>

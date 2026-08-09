@@ -461,7 +461,7 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     expect(await screen.findByText(/egyetlen aktív tétel sincs beárazva/)).toBeInTheDocument();
   });
 
-  it('backlog-5: a "Tényleges" mező euróban jelenít meg és fogad be egy EUR pénznemű tervnél, a commit centben történik', async () => {
+  it('backlog-5: az "Ajánlati ár" mező euróban jelenít meg és fogad be egy EUR pénznemű tervnél, a commit centben történik', async () => {
     const user = userEvent.setup();
     seedWithGermanEnabled();
     render(<App />);
@@ -478,12 +478,12 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
 
     // A fejléc is jelzi a terv pénznemét, nem csak a szerkeszthető oszlop.
     expect(screen.getByText('Listaár (€)')).toBeInTheDocument();
-    expect(screen.getByText('Tényleges (€)')).toBeInTheDocument();
+    expect(screen.getByText('Ajánlati ár (€)')).toBeInTheDocument();
     expect(screen.getByText('Összeg (€)')).toBeInTheDocument();
 
     // CBCT EUR ára a seedben FIX 6600 cent -- euróban megjelenítve "66,00",
     // NEM a nyers "6600".
-    const priceField = screen.getByLabelText('Tényleges egységár') as HTMLInputElement;
+    const priceField = screen.getByLabelText('Ajánlati egységár') as HTMLInputElement;
     expect(priceField.value).toBe('66,00');
 
     // A mező blur-re commitál (P1-4) -- "35,50" beírva a tárolt értéknek
@@ -511,7 +511,7 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
     await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    // Sávos tétel -- a "becsült ár" csillag és a min-ár (38 000 Ft) induló állapota.
+    // Sávos tétel -- a "becsült ár" chip és a min-ár (38 000 Ft) induló állapota.
     expect(screen.getByRole('button', { name: 'Becsült ár', pressed: true })).toBeInTheDocument();
     expect(screen.getAllByDisplayValue('38000').length).toBeGreaterThan(0);
 
@@ -519,7 +519,7 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
     await user.clear(nameInput);
     await user.type(nameInput, 'Gyökértömés (rövidítve)');
 
-    // A név megváltozott, de az árlistai kötés (ár, csillag) érintetlen
+    // A név megváltozott, de az árlistai kötés (ár, becsült-ár chip) érintetlen
     // -- a tetelId csak hivatkozásnak marad, a nevSnapshot önálló (D7).
     expect(screen.getByDisplayValue('Gyökértömés (rövidítve)')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Becsült ár', pressed: true })).toBeInTheDocument();
@@ -554,12 +554,12 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
   });
 });
 
-describe('PlanEditorPage -- backlog-4: becsült ár (csillag) kapcsoló', () => {
+describe('PlanEditorPage -- backlog-4: becsült ár ("≈ Becsült" chip) kapcsoló', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it('FIX árú tételen a csillag alapból kikapcsolt, kattintásra bekapcsol -- ez a tétel lényege', async () => {
+  it('FIX árú tételen a chip alapból kikapcsolt, kattintásra bekapcsol -- ez a tétel lényege', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -568,14 +568,14 @@ describe('PlanEditorPage -- backlog-4: becsült ár (csillag) kapcsoló', () => 
     await user.click(await screen.findByText('Fogeltávolítás'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    const star = screen.getByRole('button', { name: 'Becsült ár' });
-    expect(star).toHaveAttribute('aria-pressed', 'false');
+    const chip = screen.getByRole('button', { name: 'Becsült ár' });
+    expect(chip).toHaveAttribute('aria-pressed', 'false');
 
-    await user.click(star);
-    expect(star).toHaveAttribute('aria-pressed', 'true');
+    await user.click(chip);
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('SAVOS árú tételen a csillag alapból bekapcsolt, kattintásra levehető -- kétirányú', async () => {
+  it('SAVOS árú tételen a chip alapból bekapcsolt, kattintásra levehető -- kétirányú', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -584,14 +584,14 @@ describe('PlanEditorPage -- backlog-4: becsült ár (csillag) kapcsoló', () => 
     await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    const star = screen.getByRole('button', { name: 'Becsült ár' });
-    expect(star).toHaveAttribute('aria-pressed', 'true');
+    const chip = screen.getByRole('button', { name: 'Becsült ár' });
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
 
-    await user.click(star);
-    expect(star).toHaveAttribute('aria-pressed', 'false');
+    await user.click(chip);
+    expect(chip).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('egyedi soron is megjelenik és átbillenthető a csillag -- backlog-3 7. döntése ebben a körben oldódik fel', async () => {
+  it('egyedi soron is megjelenik és átbillenthető a chip -- backlog-3 7. döntése ebben a körben oldódik fel', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -601,10 +601,10 @@ describe('PlanEditorPage -- backlog-4: becsült ár (csillag) kapcsoló', () => 
     await user.keyboard('{Enter}');
     await waitFor(() => expect(search).toHaveValue(''));
 
-    const star = screen.getByRole('button', { name: 'Becsült ár' });
-    expect(star).toHaveAttribute('aria-pressed', 'false');
+    const chip = screen.getByRole('button', { name: 'Becsült ár' });
+    expect(chip).toHaveAttribute('aria-pressed', 'false');
 
-    await user.click(star);
-    expect(star).toHaveAttribute('aria-pressed', 'true');
+    await user.click(chip);
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
   });
 });
