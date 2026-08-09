@@ -65,8 +65,8 @@ gyorsan akar árajánlatot adni.
 
 ## 3. Terv szerkesztő
 
-Ez dönti el, hogy az app gyorsabb-e az Excelnél. Prototípus:
-`ui/PlanEditor.jsx`.
+Ez dönti el, hogy az app gyorsabb-e az Excelnél. Megvalósítás:
+`app/src/pages/PlanEditorPage.tsx`.
 
 ### Fogtérkép (kattintható)
 
@@ -270,7 +270,7 @@ a beágyazott JSON-ból is menjen.
 
 ## 6. Árlista admin
 
-Prototípus: `ui/PriceListAdmin.jsx`.
+Megvalósítás: `app/src/pages/PriceListAdminPage.tsx`.
 
 ### Tábla
 

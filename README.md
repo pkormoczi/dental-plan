@@ -33,18 +33,8 @@ A tervezési fázis (ez a dokumentumcsomag) lezárult, az implementáció az
 | `docs/07-felulet-rendszer.md` | Felület- és nyomtatvány-kinézeti szabályok — kötelező, nem javaslat |
 | `docs/08-backlog.md` | Még fejlesztendő tételek, technikai adósság, honnan jönnek az igények |
 | `data/arlista.seed.json` | **Kész seed adat** — 118 tétel, 12 kategória, az eredeti Excelből generálva |
-| `ui/tokens.js` | Design tokenek (márkaszínek, tipográfia, spacing) |
-| `ui/PlanEditor.jsx` | Kezelési terv szerkesztő — a legfontosabb képernyő |
-| `ui/PriceListAdmin.jsx` | Árlista admin, kinyitható sorokkal |
-| `ui/PrintPreview.jsx` | A nyomtatvány három oldala |
 | `assets/mandoki-dental-logo.png` | Márkalogó, átlátszó háttér (navy eredeti — az app egy, a honlap arculatához átszínezett másolatot használ, `app/src/assets/logo.png`) |
 | `app/` | A tényleges implementáció — lásd `CLAUDE.md` |
-
-## A `ui/*.jsx` fájlok státusza
-
-**Kattintható prototípusok, nem végleges kód** — az elrendezést és az
-interakciókat vették át belőlük, nem a kódszervezést. Részletek:
-`CLAUDE.md` "A `ui/*.jsx` fájlok státusza".
 
 ## Az MVP határa
 

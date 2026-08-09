@@ -7,7 +7,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 docs/     8 tervdokumentum (01–08, lásd térkép alul)
 data/     arlista.seed.json (118 tétel), az eredeti .xls
-ui/       PlanEditor.jsx, PriceListAdmin.jsx, PrintPreview.jsx, tokens.js — REFERENCIA, nem buildelődik
 assets/   márkalogó, navy eredeti (PNG + eredeti PDF-ek) — az app egy átszínezett másolatot használ
 app/      a tényleges Vite + React + TypeScript alkalmazás — IDE dolgozz
 ```
@@ -23,15 +22,13 @@ A márka a klinika nyilvános honlapját (drmandoki.hu) követi (`#976445` /
 `docs/04-nyomtatvany-spec.md` "Márka" és `docs/07-felulet-rendszer.md` a
 teljes felület-szabályrendszerért (kötelező, nem javaslat).
 
-## A `ui/*.jsx` fájlok státusza
-
-`ui/PlanEditor.jsx`, `ui/PriceListAdmin.jsx`, `ui/PrintPreview.jsx` = **kattintható UX
-prototípus, nem kiindulási kód**. Az elrendezést és az interakciókat vedd át belőlük,
-a kódszervezést ne. Mindháromban van egy beégetett `SAMPLE`/`DEMO` konstans — élesben
-ezek propból/store-ból jönnek. A state-shape viszont szándékosan megegyezik a
-`docs/02-domain-modell.md` JSON sémáival, tehát arra igen érdemes építeni.
-Az `ui/tokens.js` segédfüggvényei (`formatMoney`, `norm`, `parseTeeth`, `basePrice`)
-1:1 portolva élnek az `app/src/domain/` és `app/src/design/` alatt — ne írd újra őket.
+A gyökérben korábban volt egy `ui/` mappa (`PlanEditor.jsx`, `PriceListAdmin.jsx`,
+`PrintPreview.jsx`, `tokens.js`) kattintható UX-prototípusként — ez volt az
+elrendezés/interakció referenciája, mielőtt az `app/` alatti végleges képernyők
+(`PlanEditorPage.tsx`, `PriceListAdminPage.tsx`, `PreviewPage.tsx`) elkészültek.
+Miután a segédfüggvényei (`formatMoney`, `norm`, `parseTeeth`, `basePrice`) 1:1
+portolva lettek az `app/src/domain/` és `app/src/design/` alá, a mappa elavult, és
+törölve lett — a git history-ban elérhető, ha valaha vissza kellene nézni rá.
 
 ## Két fázisú build
 
@@ -89,7 +86,8 @@ akadálymentesség) vonatkozó, ugyanígy kötelező szabályok külön fájlban
 
 ## Meglévő segédfüggvények — használd, ne írd újra
 
-`ui/tokens.js` már tartalmazza (portolva: `app/src/domain/`, `app/src/design/tokens.ts`):
+Ezek (eredetileg a törölt `ui/tokens.js` prototípusból portolva) már megvannak
+`app/src/domain/` és `app/src/design/tokens.ts` alatt:
 - `t` — design tokenek (márkaszínek, tipográfia, spacing)
 - `formatMoney(value, currency)` / `formatPrice(ar, currency)` — a
   `docs/04-nyomtatvany-spec.md` kötelező formátuma szerint (`1 234 567 Ft`,

@@ -15,8 +15,7 @@ nincsenek dísz-illusztrációk.
 
 ### A két felület külön szabályrendszer
 
-**1. Nyomtatvány (`app/src/pdf/TervDocument.tsx`, prototípus:
-`ui/PrintPreview.jsx`) — ezt a PÁCIENS látja.**
+**1. Nyomtatvány (`app/src/pdf/TervDocument.tsx`) — ezt a PÁCIENS látja.**
 Kövesse a klinika weboldalának (drmandoki.hu) arculatát: ugyanaz a logó,
 paletta és betűtípus. A páciens a weboldal után kapja kézhez ezt a papírt,
 a kettő egy márkaélmény. Részletes specifikáció: `docs/04-nyomtatvany-spec.md`.

@@ -1,6 +1,6 @@
 # 4. Nyomtatvány specifikáció
 
-Prototípus: `ui/PrintPreview.jsx`
+Megvalósítás: `app/src/pages/PreviewPage.tsx`
 
 A4, ~18 mm margó, három oldal. A jelenlegi Excel két dokumentumot présel
 egybe („Kezelési terv" és „Egyedi szolgáltatási szerződés"), ezért itt
