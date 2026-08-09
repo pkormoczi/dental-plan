@@ -43,12 +43,12 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   nagyságrenden íródott a tervbe. Mostantól ez a mező is euróban jelenít meg és fogad be,
   ugyanúgy, ahogy az árlista admin EUR mezői már eddig is. Az oszlopfejlécek is jelzik a
   terv pénznemét ("Listaár (Ft)"/"(€)" stb.).
-- Bármelyik soron megjelölhető egy "≈ Becsült" jelölővel, hogy az ára csak becslés (eddig
-  csak azokon a tételeken lehetett, amiket az árlista eleve "sávos"-nak jelölt). Az így
-  jelölt sor a nyomtatványon csillagot és egy magyarázó lábjegyzetet kap — így egy
-  csontpótló anyag vagy más, csak a műtőben pontosítható tétel nem kerül fix, kötelező
-  érvényű árként az aláírandó dokumentumra. A jelölés szabadon be- és kikapcsolható
-  bármelyik soron, egyedi soron is.
+- Bármelyik soron megjelölhető egy ≈ ikonnal az ajánlati ár mellett, hogy az ára csak
+  becslés (eddig csak azokon a tételeken lehetett, amiket az árlista eleve "sávos"-nak
+  jelölt). Az így jelölt sor a nyomtatványon csillagot és egy magyarázó lábjegyzetet kap —
+  így egy csontpótló anyag vagy más, csak a műtőben pontosítható tétel nem kerül fix,
+  kötelező érvényű árként az aláírandó dokumentumra. A jelölés szabadon be- és
+  kikapcsolható bármelyik soron, egyedi soron is.
 - A nyomtatványon a "Kezelések összesen" sor csak akkor jelenik meg, ha ténylegesen eltér a
   fizetendő összegtől — kedvezmény nélkül eddig ugyanaz a szám állt kétszer egymás alatt,
   ami a páciensnek is zavaró volt. Ilyenkor mostantól csak a kiemelt "Fizetendő" sor látszik.

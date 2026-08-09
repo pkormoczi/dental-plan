@@ -143,7 +143,7 @@ frissül — a tétel valódi értéke (jogi védelem olyan soron is, ami nem
   soronkénti, terv-példányra vonatkozó kapcsoló; nem írja vissza az
   árlistai tétel `ar.tipus`-át.
 
-## Érintett helyek (tájékoztató, nem kimerítő)
+## Érintett helyek (tájékoztató, nem kimerítő -- a végleges elhelyezésért lásd az Utóirat)
 
 - `app/src/pages/PlanEditorPage.tsx`
   - Import kiegészítése: `StarIcon`, `StarFilledIcon` a
@@ -159,3 +159,29 @@ frissül — a tétel valódi értéke (jogi védelem olyan soron is, ami nem
 - `app/src/pdf/TervDocument.tsx` — nincs kódmódosítás (a `hasRange`/
   csillag/lábjegyzet már ma is generikusan a `savos` mezőt olvassa),
   csak az ezt igazoló teszt bővül/készül.
+
+## Utóirat (2026. augusztus 9., még aznap) — a 2. és 4. döntés felülírása
+
+A fenti terv szerint valósult meg elsőként a kapcsoló, de két, ugyanazon a
+napon történt iteráció felülírta a 2. és 4. döntést:
+
+1. **Első iteráció** (`a7323d3`): a csillag-ikon a névcellából átkerült egy
+   "≈ Becsült" szövegű, pirula alakú `Button`-ra, az immár "Ajánlati ár"-ra
+   átnevezett ár-cellába (`LineRow` ár-cella, az ár `NumberField` mellett,
+   az oszlop 112px → 200px szélesedett) — mert a névcellás csillag
+   összetéveszthető volt a `PriceListAdminPage.tsx` "gyakori"-csillagával.
+2. **Második iteráció** (grill-me munkamenet, ugyanaznap): a pirula túl
+   széles volt a 200px-es oszlopban, szorongatta az ár `NumberField`-et. A
+   vezérlő visszatért a 2. döntésben leírt ghost `IconButton`-mintához
+   (nincs kitöltött háttér, csak a glyph színe jelez), de tartalma nem
+   `StarFilledIcon`/`StarIcon`, hanem egy `≈` szövegglyph (nem SVG ikon,
+   nem sérti a `docs/07-felulet-rendszer.md` "csak `@radix-ui/react-icons`"
+   szabályát) — a csillag ugyanis már ki volt zárva a "gyakori"-jelöléssel
+   való összetéveszthetőség miatt. Az oszlopszélesség 200px → 148px.
+
+**Végleges állapot:** `LineRow` ár-cella (`PlanEditorPage.tsx` kb. 691-724.
+sor), ghost `IconButton` (`variant="ghost"`, `color="gray"`, `size="1"`),
+tartalom `≈`, szín `t.warn` be- / `t.uiTextFaint` kikapcsolt állapotban,
+`aria-label="Becsült ár"` és a `title` szöveg változatlan az eredeti (1.
+iterációt megelőző) tervhez képest. A "Beavatkozás" (név) oszlop fix
+`width` nélküli, a felszabaduló hely oda folyik.

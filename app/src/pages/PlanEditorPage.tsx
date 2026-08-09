@@ -82,8 +82,8 @@ function sorMezokTetelbol(
  * `listaEgysegar === tenylegesEgysegar` induláskor és minden későbbi
  * árszerkesztéskor is (lásd `LineRow` "Ajánlati ár" mezője) -- így egyedi
  * soron sosem jelenik meg kedvezmény-jelvény. `savos: false` csak kezdőérték --
- * a 4. backlog-tétel becsült ár chipje (`LineRow` ár-cella) ugyanúgy szabadon
- * átbillenthető egyedi soron is, mint bármelyik máson.
+ * a 4. backlog-tétel becsült ár kapcsolója (`LineRow` ár-cella) ugyanúgy
+ * szabadon átbillenthető egyedi soron is, mint bármelyik máson.
  */
 function sorMezokEgyedibol(
   nev: string,
@@ -461,7 +461,7 @@ function PhaseSection({
               <Table.ColumnHeaderCell width="104px" justify="end">
                 Listaár ({penznemJel})
               </Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="200px" justify="end">
+              <Table.ColumnHeaderCell width="148px" justify="end">
                 Ajánlati ár ({penznemJel})
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="112px" justify="end">
@@ -722,20 +722,19 @@ function LineRow({
               aria-label="Ajánlati egységár"
             />
           </Box>
-          <Button
+          <IconButton
             type="button"
+            variant="ghost"
+            color="gray"
             size="1"
-            radius="full"
-            variant={line.savos ? 'solid' : 'outline'}
-            color={line.savos ? 'amber' : 'gray'}
             aria-pressed={line.savos}
             aria-label="Becsült ár"
             title="Becsült ár – a végleges összeg a kezelés során változhat."
             onClick={() => onPatch({ savos: !line.savos })}
-            style={line.savos ? undefined : { borderColor: t.controlBorder }}
+            style={{ color: line.savos ? t.warn : t.uiTextFaint }}
           >
-            ≈ Becsült
-          </Button>
+            ≈
+          </IconButton>
         </Flex>
       </Table.Cell>
 

@@ -607,7 +607,7 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
   });
 });
 
-describe('PlanEditorPage -- backlog-4: becsült ár ("≈ Becsült" chip) kapcsoló', () => {
+describe('PlanEditorPage -- backlog-4: becsült ár (≈ ikon) kapcsoló', () => {
   beforeEach(() => {
     localStorage.clear();
   });
