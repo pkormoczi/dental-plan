@@ -2,16 +2,35 @@
 
 grill-me munkamenet, 2026-08-09. Forrás: `docs/08-backlog.md` 14. tétel.
 
+> **Frissítve 2026-08-09** (implementáció előtt, a terv megírása után):
+> a hivatkozott `ui/` prototípusmappa azóta törölve lett, és a javasolt
+> integritás-teszt egyik feltétele ellentmondásosnak bizonyult. Mindkettő
+> lentebb, a helyén javítva — a javítás lényege (a 8 `tetelId`-csere)
+> változatlan, és a jelenlegi `data/arlista.seed.json` ellen újra
+> ellenőrizve.
+
 ## A hiba
 
 `app/src/storage/seed/plans.ts` fejléc-kommentje szerint a demó tervek
 `tetelId`-jait "ellenőrizve ui/PlanEditor.jsx és ui/PriceListAdmin.jsx
 SAMPLE-jei alapján" — vagyis a szerző a két, kézzel írt, referencia-jellegű
-UX-prototípus (`ui/PlanEditor.jsx`, `ui/PriceListAdmin.jsx`, lásd
-CLAUDE.md "A `ui/*.jsx` fájlok státusza") beégetett `SAMPLE` konstansai
-ellen ellenőrzött, nem a tényleges, azóta módosult
-`data/arlista.seed.json` ellen. A két adatforrás `tXXX` id-számozása nem
-egyezik — ez a gyökéroka.
+UX-prototípus beégetett `SAMPLE` konstansai ellen ellenőrzött, nem a
+tényleges, azóta módosult `data/arlista.seed.json` ellen. A két adatforrás
+`tXXX` id-számozása nem egyezik — ez a gyökéroka.
+
+**A prototípusmappa azóta törölve lett** (`aab43f8`, „Remove PlanEditor,
+PriceListAdmin, and PrintPreview from codebase"; a CLAUDE.md „Repo
+elrendezés" szakasza írja le, miért — a segédfüggvényei 1:1 portolva
+lettek az `app/src/domain/` és `app/src/design/` alá). Ez a gyökérokot
+nem érinti, csak a bizonyítás helyét: a hibás referenciaadat a git
+history-ban nézhető meg, `git show aab43f8^:ui/PlanEditor.jsx`. Ott a
+`SAMPLE` szerint `t009` = „Esztétikus tömés 3 felszín" (45 000) és
+`t077` = „Neodent implantatum" (170 000) — a valódi árlistában viszont a
+`t009` az „Esztétikus tömés 4 felszín (betét indikáció)" (50 000), a
+`t077` pedig a „Teleszkóp korona (primer-szekunder)" (70 000). A törlés
+mellékhatásaként a `plans.ts` fejléc-kommentje ma már **nem létező
+fájlokra** hivatkozik, ami önmagában is indokolja a lentebbi
+komment-frissítést.
 
 Ennek eredményeként **8 a 10-ből** demó sorban a `tetelId` egy létező, de
 **rossz** árlistai tételre mutat (a `nevSnapshot` egy másik tételt ír le,
@@ -72,11 +91,22 @@ A `t016` (Kovács #2, "Gyökértömés...") és `t001` (Tóth Zoltán #1,
 Egyetlen sor sem üres `tetelId`-jű (egyedi sor) a demó adatban — a
 backlog 3. tétel egyedi-sor esete itt nem fordul elő, nincs dolgunk vele.
 
+**A táblázat újraellenőrizve** a jelenlegi `data/arlista.seed.json` ellen:
+mind a 8 cél-`tetelId` létezik, és mindegyiknél a név és a HUF-ár is a
+fentiek szerint egyezik. Két helyen a `nevSnapshot` **szándékosan
+eltér** az árlistai névtől — ezt a lenti teszt-szakasz kezeli:
+
+| Cél-id | Árlistai név | Demó `nevSnapshot` | Eltérés |
+|---|---|---|---|
+| `t057` | „Neodent implantatum" | „Neodent implantátum" | ékezethiba az árlistában (a 8. tétel adattisztítása javítja) |
+| `t074` | „Zirkonkerámia fogra" | „Zirkonkerámia korona fogra" | a demó neve pontosabb, a „korona" szó hiányzik az árlistából |
+
 ## Root-cause komment frissítése
 
 A `plans.ts:4-7` fejléc-komment ("ellenőrizve ui/PlanEditor.jsx és
 ui/PriceListAdmin.jsx SAMPLE-jei alapján") a hiba tényleges forrása —
-rossz referenciaadat ellen lett ellenőrizve. A javítással együtt a
+rossz referenciaadat ellen lett ellenőrizve — ráadásul az `aab43f8` óta
+két olyan fájlra hivatkozik, amik már nem is léteznek. A javítással együtt a
 komment is frissül: a `data/arlista.seed.json`-t (a `seedPriceList`-en
 át) nevezze meg az egyetlen hiteles forrásként, és utaljon az új
 `plans.test.ts` integritás-tesztre, ami mostantól kikényszeríti az
@@ -92,17 +122,31 @@ a meglévő `priceList.test.ts`/`templates.test.ts` (co-located, `describe`
 aminek nem üres a `tetelId`-je:
 1. a `tetelId` létezik `seedPriceList.tetelek`-ben (`tetelekById.get(...)`
    mintájára, mint `toothVisual.ts`-ben),
-2. `resolveNev(tetel.nev, 'hu').szoveg === sor.nevSnapshot` (a demó
-   tervek mind magyar nyelvűek — `nyelv: 'hu'` — tehát a `hu` ág az
-   irányadó),
-3. `basePrice(tetel.ar[plan.penznem]) === sor.listaEgysegar` (a
+2. `basePrice(tetel.ar[plan.penznem]) === sor.listaEgysegar` (a
    `domain/money.ts` `basePrice()` hívásával, SAVOS típusnál a `min`
    értékkel — ugyanaz a segédfüggvény, amit a UI is használ, nem
    duplikáljuk a HUF/EUR branch-elést).
 
-Mindkét feltétel együtt kell — ez pontosan az a kombináció, ami a
-jelenlegi hibát elkapta volna (a hibás id-k mindegyike létezik, tehát
-csak a létezés-ellenőrzés nem lett volna elég; lásd fent).
+Mindkét feltétel együtt kell — a létezés-ellenőrzés önmagában nem lett
+volna elég, mert mind a 6 hibás id létezik (lásd fent). Az ár-egyezés
+viszont **mind a 6-ot elkapja**: egyik hibás id ára sem esik egybe a sor
+`listaEgysegar`-jával (`t009` 50 000 ≠ 45 000, `t051` 35 000 ≠ 25 000,
+`t077` 70 000 ≠ 170 000, `t103` 80 000 ≠ 135 000, `t007` 40 000 ≠ 25 000,
+`t100` 52 000 ≠ 95 000) — ellenőrizve a jelenlegi seed adaton.
+
+**A terv eredeti 2. feltétele (`resolveNev(tetel.nev, 'hu').szoveg ===
+sor.nevSnapshot`) törölve — ellentmondásos volt.** A javítás UTÁN is
+bukott volna két soron: a `t057` árlistai neve ékezethibás („Neodent
+implantatum"), a `t074`-é pedig rövidebb („Zirkonkerámia fogra"), miközben
+a demó `nevSnapshot`-ja mindkettőnél a helyesebb, pácienshez való szöveg.
+A javítás ezeket a neveket **nem** rontja el az árlistai változatra: a
+`nevSnapshot` D7 szerint pillanatkép, és a 3. backlog-tétel óta a doki
+kézzel is pontosíthatja egy soron — vagyis a szó szerinti névegyezés már
+a demó adaton sem érvényes invariáns. Normalizált (`norm()`)
+összehasonlítás sem segítene, mert a `t074`-nél egy egész szó a
+különbség. Mivel az ár-egyezés bizonyítottan elegendő a hiba
+elkapásához, névre nem marad assertion; a két szándékos eltérést a fenti
+javítás-szakasz táblázata dokumentálja.
 
 **Hatókör:** kizárólag a demó/seed tervadatra vonatkozik, nem általános
 motor-szintű szabály. Éles, véglegesített terveken a `nevSnapshot`
@@ -115,12 +159,16 @@ ahol az egyezés helyes elvárás.
 
 - CHANGELOG.md — nem kap bejegyzést, mert ez belső demóadat-hiba, nem a
   dokinak kommunikált funkció-/viselkedésváltozás.
-- `ui/PlanEditor.jsx` / `ui/PriceListAdmin.jsx` SAMPLE-jei — tisztán
-  referencia-prototípus, nem buildelődik, nem fut, a hibás id-k ott nem
-  okoznak tényleges problémát; a hatókör kizárólag az `app/`-beli, ténylegesen
-  futó demó/seed adatra korlátozódik.
+- ~~`ui/PlanEditor.jsx` / `ui/PriceListAdmin.jsx` SAMPLE-jei~~ — tárgytalan,
+  a mappa a terv megírása óta törölve lett (`aab43f8`). A hatókör
+  változatlanul kizárólag az `app/`-beli, ténylegesen futó demó/seed adat.
 - `data/arlista.seed.json` — nem változik, ez az egyetlen hiteles forrás,
-  ehhez igazodik a demó adat, nem fordítva.
+  ehhez igazodik a demó adat, nem fordítva. A benne lévő ékezethiba
+  („Neodent implantatum") **itt nem javul** — az a 8. tétel
+  adattisztításának a dolga, és a demó `nevSnapshot`-ja addig is a helyes
+  szöveget mutatja.
+- A demó sorok `nevSnapshot` értékei — csak a `tetelId` mező változik,
+  lásd a javítás-szakaszt.
 
 ## Elfogadási kritérium
 
