@@ -5,8 +5,7 @@
 // vagy összeomlás után visszaáll. Ez a docs/03-funkcionalis-spec.md
 // "Autosave" szakaszának korábbra hozott terve (eredetileg a 2. fázisra,
 // IndexedDB-vel ütemezve), mert a valós fájdalom már a mockup-fázisban
-// jelentkezett -- lásd docs/archive/backlog/backlog-1-piszkozat-terv.md és
-// docs/08-backlog.md Függelék A) napja.
+// jelentkezett.
 
 import {
   createContext,
@@ -43,7 +42,7 @@ interface AppStateValue {
    * mint a legutóbb onnan betöltött/oda mentett terv. Ez vezérli a Home
    * "Piszkozat folytatása" kártyáját és a felülírás elleni AlertDialog-okat
    * (Home "Új terv indítása", PlanHistoryPage "Megnyitás szerkesztésre") --
-   * lásd docs/archive/backlog/backlog-1-piszkozat-terv.md 1. és 5. döntés.
+   * lásd docs/03-funkcionalis-spec.md § Autosave.
    */
   vanMentetlenPiszkozat: boolean;
   /** Az utolsó sikeres automatikus piszkozat-mentés ISO időbélyege, vagy `null`. */
@@ -74,9 +73,10 @@ interface AppStateValue {
    */
   loadedOsszesitokDiff: Osszesitok | null;
   /**
-   * docs/archive/backlog/backlog-2-friss-datum-terv.md: a `loadPlanIntoDraft`-tal betöltött
-   * terv `keltezes`/`ervenyesIg`-e itt már a mai napra és az aktuális
-   * `settings.ervenyessegNap`-ra frissült (nem a régi terv dátuma) -- ez az
+   * docs/03-funkcionalis-spec.md § Korábbi terv új verzióra nyitása (D22):
+   * a `loadPlanIntoDraft`-tal betöltött terv `keltezes`/`ervenyesIg`-e itt
+   * már a mai napra és az aktuális `settings.ervenyessegNap`-ra frissült
+   * (nem a régi terv dátuma) -- ez az
    * ÚJ értékpár, amit a PlanEditorPage tájékoztató sávja olvas. `null`, ha
    * nincs friss betöltés, vagy a betöltött terv dátuma már úgyis a mai volt
    * (nincs tényleges változás, nincs mit jelezni).
@@ -132,13 +132,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setSettings(s);
         setPriceList(pl);
 
-        // docs/archive/backlog/backlog-1-piszkozat-terv.md 4. döntés: csendes, memóriabeli
-        // restore -- a láthatóságot a Home "Piszkozat folytatása" kártyája
-        // adja, itt nincs semmilyen felhasználó felé szóló jelzés.
+        // Csendes, memóriabeli restore -- a láthatóságot a Home "Piszkozat
+        // folytatása" kártyája adja, itt nincs semmilyen felhasználó felé
+        // szóló jelzés.
         //
-        // 7. döntés: egy sérült/inkompatibilis piszkozat NEM kerülhet a
-        // `loadError` ágra -- az az egész alkalmazás betöltését blokkolná;
-        // csak a Home saját hibaállapotát kell megkapnia.
+        // Egy sérült/inkompatibilis piszkozat NEM kerülhet a `loadError`
+        // ágra -- az az egész alkalmazás betöltését blokkolná; csak a Home
+        // saját hibaállapotát kell megkapnia.
         let restored: Plan | null = null;
         try {
           const rec = await drafts.load();
@@ -249,7 +249,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         });
       },
       loadPlanIntoDraft: (p) => {
-        // docs/archive/backlog/backlog-2-friss-datum-terv.md 1. döntés: a dátumbélyeg itt,
+        // D22 (docs/01-attekintes-es-dontesek.md): a dátumbélyeg itt,
         // betöltéskor íródik, nem véglegesítéskor -- a PreviewPage a
         // `pdfInstance`-t a `plan` state-ből rendereli, egy késői írás a
         // mentett JSON-t és a már korábban renderelt PDF-blob-ot szétcsúsztatná.

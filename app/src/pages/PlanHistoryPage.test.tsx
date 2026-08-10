@@ -149,7 +149,7 @@ describe('PlanHistoryPage', () => {
     expect(await within(card).findByText(/A terv megnyitása nem sikerült/)).toBeInTheDocument();
   });
 
-  // docs/archive/backlog/backlog-1-piszkozat-terv.md 5. döntés: ugyanaz a felülírás-kockázat,
+  // docs/03-funkcionalis-spec.md § Autosave: ugyanaz a felülírás-kockázat,
   // mint a Home "Új terv indítása" gombjánál -- a "Megnyitás szerkesztésre"
   // szó nélkül felülírná a folyamatban lévő, mentetlen piszkozatot.
   it('"Megnyitás szerkesztésre" megerősítést kér mentetlen piszkozatnál, és csak megerősítésre nyit meg', async () => {

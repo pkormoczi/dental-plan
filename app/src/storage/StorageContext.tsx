@@ -28,7 +28,7 @@ export interface StorageContextValue {
   loadPlanPdf: (ref: { patientDir: string; versionDir: string }) => Promise<Uint8Array | null>;
   loadLatestTemplateByBase: (base: string) => Promise<{ name: string; body: string }>;
   /**
-   * docs/archive/backlog/backlog-1-piszkozat-terv.md 2. döntés: a PlanStorage MELLETTI,
+   * docs/05-technologia.md § Piszkozat-autosave: a PlanStorage MELLETTI,
    * testvér-doboz -- nem annak metódusa, mert a végleges alkalmazásban is
    * külön marad (IndexedDB a FileSystemStorage mellett, nem alatta).
    */

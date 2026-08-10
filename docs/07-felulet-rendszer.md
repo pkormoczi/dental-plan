@@ -170,3 +170,8 @@ Minden nézetnek van loading, empty és error állapota.
   soronkénti fogválasztó gombja (`Fog` mező mellett,
   `components/ToothPickerPopover.tsx`) a `Crosshair2Icon`-t használja —
   nincs kivétel, a `@radix-ui/react-icons` marad kötelező mindenhol.
+  **Nevesített kivétel:** a soronkénti „Becsült ár" kapcsoló (`LineRow`
+  ár-cella) tartalma egy `≈` **szövegglyph** ghost `IconButton`-ban, nem
+  SVG ikon — ez nem ikon, tehát nem sérti a fenti szabályt, de tudatos: a
+  csillag-ikon szándékosan ki van zárva, mert összetéveszthető lenne az
+  Árlista admin „gyakori" csillagával. Ne cseréld SVG-re.

@@ -82,7 +82,7 @@ export default function PreviewPage() {
       // KIZÁRÓLAG a fizetési feltételek hívja ezzel -- egy sikeresen
       // betöltött, de még placeholder törzsű sablon ugyanabba a
       // fallback-ágba esik, mint a ténylegesen hiányzó fájl (lásd
-      // docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 2. döntés). A nyilatkozat
+      // docs/03-funkcionalis-spec.md § Sablon-placeholder őr). A nyilatkozat
       // placeholder-esetét EZ nem kezeli -- azt a kemény zár váltja ki
       // (lásd nyilatkozatIsPlaceholder lent), nem egy HU-visszaesés.
       extraFallbackCondition?: (result: { name: string; body: string }) => boolean,
@@ -157,8 +157,8 @@ export default function PreviewPage() {
 
   // Ha a MEGJELENÍTETT nyilatkozat placeholder (jogilag még nincs lezárva),
   // a 3. oldal (nyilatkozat + aláírás) garantáltan kimarad -- a doki nem
-  // kapcsolhatja vissza, amíg a szöveg placeholder marad (lásd
-  // docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 1. döntés). A nyers
+  // kapcsolhatja vissza, amíg a szöveg placeholder marad (D23, lásd
+  // docs/03-funkcionalis-spec.md § Sablon-placeholder őr). A nyers
   // `offerOnly` state-et mindenhol ez az effektív érték váltja fel.
   const nyilatkozatIsPlaceholder = isPlaceholderTemplate(nyilatkozatMd);
   const effectiveOfferOnly = offerOnly || nyilatkozatIsPlaceholder;
@@ -195,10 +195,10 @@ export default function PreviewPage() {
     !plan.paciens.telefon ||
     !plan.paciens.email ||
     !plan.paciens.taj;
-  // D21/1.1: a hiányzó VAGY kézzel eltérített német tételnevek soha nem
+  // D21/D24: a hiányzó VAGY kézzel eltérített német tételnevek soha nem
   // eshetnek/maradhatnak néma módon a terven -- a doki itt látja, mely
   // nevek érintettek, mielőtt a páciens aláírja a dokumentumot. Két külön
-  // ok (docs/archive/backlog/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 4. döntés).
+  // ok (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés).
   const { nincsForditas, elterAzArlistatol } = fallbackSorok(plan, priceList);
   const nevProblemaSzama = nincsForditas.length + elterAzArlistatol.length;
   // A fogtérkép-kattintással felvett, de be nem azonosított sorok -- lásd

@@ -9,8 +9,8 @@ az implementáció módja és a részletek kidolgozása a megvalósító feladat
 
 Egy összetett tétel (pl. „All-on-4 Anax csomag") ma egyetlen sorként megy
 be a tervbe, egyetlen árral — a páciens megkérdezi, mi van benne, és a
-dokinak nincs mit mutatni, csak amit szóban elmond (`docs/08-backlog.md`
-Függelék B napja). Nincs mező, ami a sor tartalmát részletezné, sem az
+dokinak nincs mit mutatni, csak amit szóban elmond (az első körös
+doktor-nap narratíva B napja). Nincs mező, ami a sor tartalmát részletezné, sem az
 árlistán (a tétel törzsadatában), sem a terven (a soron, D7 szerint
 pillanatképként).
 
@@ -54,7 +54,8 @@ aktuális értékéről indul, utána a szerkesztőben szabadon átírható
 ("átírt" jelvénnyel, ha eltér az árlistától), és nyelvváltáskor a
 `nevKoveti`/`applyNyelv` (`PatientPage.tsx`) mintájára újraszinkronizál,
 **hacsak** a doki kézzel nem pontosította — ugyanaz a "kézzel írt szöveg
-nem íródik felül" elv, mint a névnél (`docs/backlog-3b-...`).
+nem íródik felül" elv, mint a névnél (`docs/01-attekintes-es-dontesek.md`
+D24).
 
 **Miért:** a döntés explicit cél volt a konzisztencia a névkezeléssel —
 nem külön, egyszerűsített mechanizmus, hanem ugyanaz a már bevált minta.
@@ -97,8 +98,8 @@ is átjönnek (nem egyetlen automatikusan tördelt bekezdés).
 
 **Miért:** egy csomagtartalom felsorolásszerű megjelenítést kíván (pl.
 "Implantátum / Felépítmény / Korona / Anesztézia" egymás alatt) — ez a
-Függelék B napi "mi van ebben az egy sorban" kérdésre olvashatóbb választ
-ad, mint egy folyó mondat.
+doktor-nap narratíva B napi "mi van ebben az egy sorban" kérdésre
+olvashatóbb választ ad, mint egy folyó mondat.
 
 ### 7. Puha hosszkorlát-figyelmeztetés
 

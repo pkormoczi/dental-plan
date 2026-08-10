@@ -87,7 +87,7 @@ export default function Home() {
     }
   }
 
-  // docs/archive/backlog/backlog-1-piszkozat-terv.md 5. döntés: ugyanaz a felülírás-kockázat,
+  // docs/03-funkcionalis-spec.md § Autosave: ugyanaz a felülírás-kockázat,
   // mint a "Demó adat visszaállítása"/"Minden adat törlése" gomboknál -- a
   // doki figyelmetlenül eldobná a folyamatban lévő munkáját. Egyetlen
   // AlertDialog, cím/leírás/gombfelirat/onConfirm egy lookup-táblából -- 3

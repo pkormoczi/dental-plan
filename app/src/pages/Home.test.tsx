@@ -1,4 +1,4 @@
-// docs/archive/backlog/backlog-1-piszkozat-terv.md 4. döntés: a Home "Piszkozat folytatása"
+// docs/03-funkcionalis-spec.md § Autosave: a Home "Piszkozat folytatása"
 // kártyája az EGYETLEN belépési pont egy visszaállított/mentetlen
 // piszkozathoz -- ezeket a teszteket egy előre, közvetlenül a `dp:piszkozat`
 // localStorage-kulcsba írt DraftRecord-dal szimuláljuk (AppState a betöltő

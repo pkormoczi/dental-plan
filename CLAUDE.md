@@ -5,7 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repo elrendezés
 
 ```
-docs/     8 tervdokumentum (01–08, lásd térkép alul)
+docs/     8 fő dokumentum (01–08, lásd térkép alul) + nyitott backlog-tervek
+          (`backlog-N-*-terv.md`) + archive/ (lezárt anyag, nem hivatkozott)
 data/     arlista.seed.json (118 tétel), az eredeti .xls
 assets/   márkalogó, navy eredeti (PNG + eredeti PDF-ek) — az app egy átszínezett másolatot használ
 app/      a tényleges Vite + React + TypeScript alkalmazás — IDE dolgozz
@@ -71,9 +72,11 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | Mentett tervet soha nem rajzolunk újra az aktuális árlistából | D7 — a soron `nevSnapshot` + `listaEgysegar` a pillanatkép, ez az igazság |
 | `osszesitok` a fájlból számít igaznak, eltérés esetén figyelmeztetni kell | Az aláírt papírral kell egyeznie, nem az újraszámolt értékkel |
 | Kedvezmény csak a szerkesztőben látszik, a nyomtatványon **nem** | D9 |
-| A sor `savos` mezője (nem az árlistai `SAVOS` ártípus!) dönt a nyomtatvány `*` + lábjegyzetéről, soha nem csupasz fix szám | D15 — jogi védelem: fix számként kötelező érvényű ajánlattá válna. A szerkesztőben soronként kézzel is átbillenthető (backlog-4) — a sor lehet fix árú tételből, de a doki jelölheti becsültnek, ha a mennyiség csak a kezelés során derül ki |
+| A sor `savos` mezője (nem az árlistai `SAVOS` ártípus!) dönt a nyomtatvány `*` + lábjegyzetéről, soha nem csupasz fix szám | D15 — jogi védelem: fix számként kötelező érvényű ajánlattá válna. A szerkesztőben soronként kézzel is átbillenthető — a sor lehet fix árú tételből, de a doki jelölheti becsültnek, ha a mennyiség csak a kezelés során derül ki |
 | `null` ár egy pénznemben ≠ `0` — a tétel abban a pénznemben nem ajánlható, a keresőben sem jelenik meg | `02-domain-modell.md` |
 | Minden JSON `schemaVersion`-nel indul; magasabb verzió észlelésekor **a betöltést meg kell tagadni**, érthető üzenettel | D18 — ezek a fájlok évekig élnek a Drive-on |
+| Placeholder-jelölésű nyilatkozat mellett a nyomtatvány 3. oldala (nyilatkozat + aláírás) nem kerülhet PDF-be — a „csak ajánlat" mód kényszerített, felülírás nélkül | D23 — jogi védelem: a jogász által „még nincs lezárva" jelöléssel ellátott szöveg nem kerülhet aláírásra. Az `isPlaceholderTemplate()` (`app/src/domain/templates.ts`) az EGYETLEN hely, ahol ez eldől |
+| Korábbi terv új verzióra nyitásakor a dátumbélyeg (`keltezes`/`ervenyesIg`) a betöltés pillanatában íródik (`frissDatummal`), soha nem véglegesítéskor | D22 — különben a mentett JSON és a már renderelt PDF-blob dátuma szétcsúszik, vagy egy lejárt keltezésű ajánlatot írnak alá |
 | Páciensmappa-névben az **ékezetek maradnak**, nincs transzliteráció; csak a tiltott karaktereket (`/ \ : * ? " < > \|`) kell cserélni; nevek rövidek (Windows 260 karakteres útvonalkorlát) | A doki a Fájlkezelőben keres rájuk névre |
 | A `DraftStorage` (piszkozat-autosave) nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez; mockupban `localStorage`, véglegesben IndexedDB |
 | `@react-pdf/renderer` esetén **Unicode fontot kell regisztrálni** (pl. Inter, Source Sans, Noto Sans) | A beépített Helvetica nem tartalmazza az `ő`/`ű` karaktereket — ez csak a végleges PDF-en látszik, a HTML előnézeten nem |
@@ -83,6 +86,21 @@ A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
 akadálymentesség) vonatkozó, ugyanígy kötelező szabályok külön fájlban:
 `docs/07-felulet-rendszer.md`.
+
+## Böngésző-automatizálás — nem tárgyalható
+
+A chrome-devtools MCP KIZÁRÓLAG izolált módban futhat.
+
+TILOS a configba kerülnie: --autoConnect, --browserUrl, vagy --user-data-dir
+a fejlesztő valós Chrome profiljára mutatva.
+
+TILOS javasolni vagy megkísérelni a futó Chrome példányhoz csatlakozást,
+és tilos remote debuggingot bekapcsolni bármilyen böngészőben.
+
+Ha egy feladat látszólag valós profilt igényelne (bejelentkezett munkamenet,
+korábban megadott mappa-engedély), NE kerüld meg. Jelezd, hogy ez a
+korlátozás miatt nem megy, és javasolj alternatívát a PlanStorage
+teszt-implementációval.
 
 ## Meglévő segédfüggvények — használd, ne írd újra
 
@@ -162,8 +180,9 @@ A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne ír
   véglegesítés-őre KEMÉNY blokként hívja, ne írj hozzá második
   ellenőrzést máshol
 
-A piszkozat-perzisztencia (`docs/archive/backlog/backlog-1-piszkozat-terv.md`) segédfüggvényei
-és rétege, szintén ne írd újra őket:
+A piszkozat-perzisztencia (`docs/03-funkcionalis-spec.md` § Autosave,
+`docs/05-technologia.md` § Piszkozat-autosave) segédfüggvényei és rétege,
+szintén ne írd újra őket:
 - `piszkozatTartalmas(plan)` (`app/src/domain/piszkozat.ts`) — az EGYETLEN
   hely, ahol eldől, hogy egy `Plan`-en van-e olyan tartalom, amit kár lenne
   elveszíteni; ezt hasonlítja az `AppState` (írási trigger) és a
@@ -176,8 +195,8 @@ A piszkozat-perzisztencia (`docs/archive/backlog/backlog-1-piszkozat-terv.md`) s
   `StorageContext` `drafts` mezőjeként érhető el, ne hozz létre másik
   példányt vagy másik kulcsot piszkozat-mentéshez
 
-A friss-dátum tétel (`docs/archive/backlog/backlog-2-friss-datum-terv.md`) segédfüggvényei,
-szintén ne írd újra őket:
+A friss-dátum tétel (`docs/03-funkcionalis-spec.md` § Korábbi terv új
+verzióra nyitása, D22) segédfüggvényei, szintén ne írd újra őket:
 - `todayIso()` (`app/src/domain/date.ts`) — a mai nap ISO dátuma; az
   EGYETLEN forrás, `createBlankPlan()` is ezt hívja
 - `frissDatummal(plan, settings, ma)` (`app/src/domain/ujVerzioDatum.ts`) —
@@ -186,9 +205,8 @@ szintén ne írd újra őket:
   `loadPlanIntoDraft`-ja hívja betöltéskor, ne máshol és ne
   véglegesítéskor
 
-A sornév-szerkesztés + egyedi sor tétel
-(`docs/archive/backlog/backlog-3-sornev-egyedi-sor-terv.md`) segédfüggvényei, szintén ne
-írd újra őket:
+A sornév-szerkesztés + egyedi sor tétel (`docs/03-funkcionalis-spec.md`
+§ Sor mezői, § Egyedi sor) segédfüggvényei, szintén ne írd újra őket:
 - `sorMezokEgyedibol(nev)` (`app/src/pages/PlanEditorPage.tsx`) — a
   `sorMezokTetelbol` egyedi (árlistán kívüli) párja: `tetelId: ''`,
   `listaEgysegar === tenylegesEgysegar === 0` kezdőértékkel; ezt hívja
@@ -200,8 +218,8 @@ A sornév-szerkesztés + egyedi sor tétel
 - `sorFallback(sor, nyelv, tetelById)` (`app/src/domain/nev.ts`) — lásd
   fent, D21 blokk
 
-A nyelváltás-névmegőrzés tétel (`docs/archive/backlog/backlog-3b-nyelvvaltas-
-nevmegorzes-terv.md`) segédfüggvényei, szintén ne írd újra őket:
+A nyelváltás-névmegőrzés tétel (`docs/03-funkcionalis-spec.md` § Nyelv és
+pénznem (D21), D24) segédfüggvényei, szintén ne írd újra őket:
 - `nevKoveti(sor, tetel, nyelv)` (`app/src/domain/nev.ts`) — lásd fent, D21
   blokk; a `PatientPage.tsx` `applyNyelv`-je a RÉGI nyelvvel hívja (csak az
   ezt teljesítő sorok neve frissül az új nyelvre), a `sorFallback` a
@@ -216,9 +234,8 @@ nevmegorzes-terv.md`) segédfüggvényei, szintén ne írd újra őket:
   lánc `missing-fields` → `de-fallback-names` váltásával, és mindig
   átugorná a második dialógust
 
-A sablonszerkesztő + placeholder-őr tétel
-(`docs/archive/backlog/backlog-6-sablon-placeholder-terv.md`) segédfüggvénye, szintén ne írd
-újra:
+A sablonszerkesztő + placeholder-őr tétel (`docs/03-funkcionalis-spec.md`
+§ Sablon-placeholder őr, D23) segédfüggvénye, szintén ne írd újra:
 - `isPlaceholderTemplate(body)` (`app/src/domain/templates.ts`) — az
   EGYETLEN hely, ahol eldől, hogy egy sablon (nyilatkozat/fizetési
   feltételek) törzse még jogi lektorálásra vár-e (`[PLACEHOLDER`/
@@ -279,19 +296,64 @@ Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
-döntések (D1–D21) egy helyen, számozva élnek a
-`docs/01-attekintes-es-dontesek.md`-ben; egy-egy funkció tervezési
-háttere külön fájlban, `docs/backlog-<n>-<cim>-terv.md` néven (a már
-megvalósítottak a `docs/archive/backlog/` alá kerülnek). Amikor egy
-modul vagy komponens "miért így van megcsinálva" kérdés merül fel,
-először nézd meg a `docs/` könyvtárat, mielőtt találgatnál vagy
-rákérdeznél.
+döntések (D1–D24) egy helyen, számozva élnek a
+`docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
+háttere külön fájlban, `docs/backlog-<n>-<cim>-terv.md` néven. Amikor egy
+modul vagy komponens "miért így van megcsinálva" kérdés merül fel, először
+nézd meg a `docs/` könyvtárat, mielőtt találgatnál vagy rákérdeznél.
+
+## Backlog-tétel lezárása
+
+**A `docs/archive/` mappára és a benne lévő fájlokra sehonnan sem szabad
+hivatkozni** — sem `docs/*.md`-ből, sem forráskódból, sem ebből a
+fájlból. Kivétel: a `docs/08-backlog.md` NYITOTT tételeinek `**Terv:**`
+sora a még nyitott (nem archivált) tervfájlra mutathat — ez lezárásig élő
+navigáció, és lezáráskor a 4. lépéssel együtt, magával a tétellel tűnik
+el, nem marad dangling pointerként.
+
+Egy backlog-tétel megvalósítása után ezt a sorrendet kell követni,
+ugyanabban a körben, nem később:
+
+1. **Csak teljesen kész tételnél.** Ha a tétel csak részben kész (pl.
+   kódrész kész, doktori adatmunka nyitva — lásd a 8. tétel mintáját a
+   `docs/08-backlog.md`-ben: „**Kódrész — KÉSZ (dátum).**" + „Még nyitva"
+   albekezdés), a tétel a `docs/08-backlog.md`-ben marad, ugyanebben a
+   mintában jelölve. **Nem archiválunk, nem törlünk semmit**, amíg a tétel
+   csak részben kész.
+2. **Döntések átvezetése.** A tervdokumentum (`docs/backlog-N-*-terv.md`)
+   döntéseiből, ami tartósan érvényes (nem feladatlista, nem elvetett
+   alternatíva, nem teszt-terv), az bekerül a megfelelő `docs/02`–`07`
+   szakaszba prózaként; a valóban sérthetetlen invariáns új sorként a
+   `docs/01` D-táblájába (a következő szabad D-számmal) és — ha jogi/
+   adatintegritási következménye van — a „Sérthetetlen szabályok"
+   táblába is. Ha a tétel új, újrahasznosítható segédfüggvényt vezetett
+   be, egy új bekezdés kerül a „Meglévő segédfüggvények" alá, a meglévők
+   mintájában (docs-anchorra/D-számra hivatkozva, SOHA a terv-fájlra).
+3. **Tervdokumentum archiválása.** `git mv docs/backlog-N-*.md
+   docs/archive/backlog/`. A tétel száma (N) ezután véglegesen
+   nyugdíjazva — soha nem osztható ki új tételnek, ugyanaz az elv, mint a
+   D17 ártétel-`id`-nél.
+4. **Backlog-bejegyzés törlése + zárt-napló bővítése.** A tétel teljes
+   szakasza törlődik a `docs/08-backlog.md`-ből (nem jelöljük KÉSZ-nek, nem
+   hagyunk stub-ot) — a maradék tételek „N. hely" rangsorát
+   újraszámozzuk. Egy tömör összefoglaló (méret, a végleges megoldás 1-2
+   mondatban, `docs/0X` hivatkozás a részletekhez) bekerül a
+   `docs/archive/08-backlog-closed.md` végére — ez a bejegyzés NEM
+   hivatkozhat a most archivált terv-fájlra, csak a fő dokumentumokra és a
+   git history-ra.
+5. **Referencia-seprés.** Minden helyen (forráskód-kommentek, ez a fájl,
+   `docs/*.md`), ahol a most archivált terv-fájlra vagy a `docs/archive/`
+   mappára mutató hivatkozás volt, át kell írni a megfelelő `docs/0X`
+   szakaszra vagy D-számra.
+6. **CHANGELOG.** Ha a tétel a pácienst/dokit érintő, felhasználó-szemszögű
+   változás, a `/update-changelog` továbbra is külön, explicit lépés — ez
+   a checklist nem helyettesíti.
 
 ## Dokumentáció-térkép
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D21 döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D24 döntések és indoklásuk; adatvédelmi keret; kockázatok |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, árlista admin, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |
@@ -299,3 +361,4 @@ rákérdeznél.
 | `docs/06-arlista-import.md` | Az Excel-import szabályai, ismert szennyeződések, mit ne javíts az importban |
 | `docs/07-felulet-rendszer.md` | Felület- és nyomtatvány-kinézeti szabályok: márkatokenek, komponensek, billentyűzet, akadálymentesség — kötelező, nem javaslat |
 | `docs/08-backlog.md` | Még fejlesztendő tételek (priorizálva), technikai adósság, és honnan jönnek az igények |
+| `docs/backlog-N-*-terv.md` | Egy nyitott backlog-tétel részletes döntései — a `docs/08-backlog.md` tétel `**Terv:**` sora mutat rá; lezáráskor a `docs/archive/backlog/`-ba költözik és eltűnik a listából (lásd „Backlog-tétel lezárása") |

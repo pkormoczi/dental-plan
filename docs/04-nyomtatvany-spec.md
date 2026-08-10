@@ -213,6 +213,11 @@ egy bevezető bekezdés, utána a felsorolás. A szöveg forrása
 Ha itt még van hely, a fázisok folytatódhatnak róla — a fizetési
 feltételek a tartalom után jönnek.
 
+Ez az oldal a „csak ajánlat" módban is **mindig** nyomtatódik (szemben a
+3. oldallal) — ezért kezeli a placeholder-őr a két sablon lezáratlan
+állapotát eltérően: itt HU-visszaesés, nem zár (lásd
+`03-funkcionalis-spec.md` § Sablon-placeholder őr).
+
 A sablon-markdown egyszerű: üres sorokkal elválasztott bekezdések, és
 "- " kezdetű listaelemek (lásd `app/src/pdf/markdownLite.ts`
 `parseBlocks`). Bekezdésben és listaelemben is használható a
@@ -242,6 +247,11 @@ Dr. Mándoki István
 **A törvényes képviselő blokkja csak akkor jelenik meg, ha
 `paciens.kiskoru === true`.** A jelenlegi Excel minden felnőttnek
 kinyomtatja, feleslegesen.
+
+Ha a tervhez tartozó nyilatkozat-sablon még placeholder-jelölésű, ez az
+oldal **nem nyomtatható** — a „csak ajánlat" mód ilyenkor kényszerített
+és letiltott (D23), lásd `03-funkcionalis-spec.md` § Sablon-placeholder
+őr.
 
 ## Nyelv (D21)
 

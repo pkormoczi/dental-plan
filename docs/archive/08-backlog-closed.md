@@ -1,10 +1,15 @@
-# 8. Backlog — még fejlesztendő
+# Lezárt backlog-tételek
 
-> **ARCHIVÁLT (2026-08-09).** Ez az első kör backlogja, a kész tételek
-> teljes megvalósítási jegyzeteivel és az első doktor-nap Függelékkel —
-> a `docs/backlog-N-*.md` tervdokumentumok Függelék-hivatkozásai erre a
-> fájlra értendők. Az aktuális, második körrel összefésült backlog:
-> `docs/08-backlog.md`.
+> **Folyamatosan bővülő napló**, nem egyszeri pillanatkép: ide kerül egy
+> backlog-tétel összefoglalója, amikor a `docs/08-backlog.md`-ből
+> „Backlog-tétel lezárása" (lásd `CLAUDE.md`) szerint törlődik, mert
+> teljesen elkészült. **Erre a fájlra sehonnan sem szabad hivatkozni** —
+> sem `docs/*.md`-ből, sem forráskódból, sem a `CLAUDE.md`-ből.
+>
+> Az alábbi, 2026-08-09 előtti szakasz az első kör lezárt anyaga —
+> változatlanul hagyva, szándékosan történeti hűséggel (a belső
+> kereszthivatkozásai a saját `docs/archive/backlog/`-beli tervfájljaira
+> mutatnak, ezek nem íródtak át).
 
 Ez a fejezet a jövőbeli munka gyűjtőhelye: a 2026-08-06-i kódreview
 (P0/P1 minden tétele javítva, lásd git history — a nyers review-passzok

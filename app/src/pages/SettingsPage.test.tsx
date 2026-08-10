@@ -128,10 +128,10 @@ describe('SettingsPage', () => {
       vi.restoreAllMocks();
     });
 
-    // docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 4. döntés: a sablonszerkesztő
+    // docs/03-funkcionalis-spec.md § 7. Beállítások: a sablonszerkesztő
     // piszkozata a `dp:sablon-piszkozat` localStorage-kulcson él, néma
-    // visszaállítással -- ugyanaz a hibaosztály, amit az 1. backlog-tétel
-    // (piszkozat-perzisztencia) a tervszerkesztőre már megoldott.
+    // visszaállítással -- ugyanaz a hibaosztály, amit a § Autosave a
+    // tervszerkesztőre már megoldott.
     it('a piszkozat túléli az elnavigálást (unmount + újrarender) mentés nélkül', async () => {
       const user = userEvent.setup();
       const { unmount } = renderSettings();
@@ -150,7 +150,7 @@ describe('SettingsPage', () => {
       expect(screen.getByText('Nem mentett módosítás')).toBeInTheDocument();
     });
 
-    // docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 5. döntés: ugyanaz a
+    // docs/03-funkcionalis-spec.md § 7. Beállítások: ugyanaz a
     // `useRef`-alapú in-flight zár, mint a `PreviewPage.tsx` `savingRef`-je --
     // a `disabled` prop önmagában megkerülhető egy render előtti második
     // kattintással (`fireEvent.click` szinkron, `await` nélkül a kettő közt).

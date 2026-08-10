@@ -49,13 +49,16 @@ logóval). Az alkalmazás valódi indokai ezek:
 | D12 | Tetszőleges számú fázis és sor | Az Excel 3×7 limitje tisztán technikai artefaktum volt |
 | D13 | Egy `Fog` mező soronként, szabad felsorolás | Nem külön megjegyzés oszlop. Megjegyzés fázis szinten van |
 | D14 | Egységtípus és automatikus darabszám **kimarad az MVP-ből** | A 118 tétel besorolása hetekre elakasztotta volna a projektet |
-| D15 | Sávos árú tétel jelölése `*` + lábjegyzet | Jogi védelem: a sávos ár fix számként nyomtatva kötelező érvényű ajánlattá válna |
+| D15 | Sávos árú tétel jelölése `*` + lábjegyzet | Jogi védelem: a sávos ár fix számként nyomtatva kötelező érvényű ajánlattá válna. A `*` forrása a **sor** `savos` mezője, nem az árlistai ártípus — a doki soronként kézzel is átbillentheti egy fix árú tételt becsültre, ha a mennyiség csak a kezelés során derül ki |
 | D16 | Minden nem-null Excel sor importálódik | A takarítás az adminban történik, nem az importban |
 | D17 | Tétel inaktiválható, de nem törölhető | Az `id` soha nem használható újra — a régi tervek értelmezhetősége múlik rajta |
 | D18 | Minden JSON fájl `schemaVersion` mezővel indul | Ezek a fájlok évekig élnek a Drive-on; a 3. verziónak is olvasnia kell a mait |
 | D19 | Search-only tételkereső, nincs kategória böngésző | A doki fejből tudja a tételeket; a keresés ékezetfüggetlen |
 | D20 | „Gyakori" tételek kézzel jelölve | Nem használati statisztikából — kiszámítható, nem ugrál a UI |
 | D21 | A terv nyelve és pénzneme egymástól **függetlenül** választható | A német páciens Magyarországon forintban is fizethet. Az 1:1 kötés (`de` → EUR) rossz tervezés lenne még kész fordítás/árazás mellett is — a nyelv a nyomtatvány szövegét vezérli (tételnevek, feliratok, dátumformátum, sablon), a pénznem az ajánlható tételkört és a pénzformátumot. Emellett a döntés idején (és amíg a doki nem lektorálta a 118 gépi fordítást és becsült EUR árat, lásd `docs/06-arlista-import.md`) a kötés használhatatlanná is tenné a német módot |
+| D22 | Korábbi terv új verzióra nyitásakor a `keltezes` és az `ervenyesIg` a betöltés pillanatában frissül a mai napra (és az aktuális `ervenyessegNap`-ra), nem véglegesítéskor | Visszatöltött terv különben hónapokkal korábbi, akár lejárt keltezéssel nyomtatna. A véglegesítéskori írás a mentett JSON-t és a már renderelt PDF-blobot szétcsúsztatná. Csak dokumentum-metaadat változik: a sorok ára és `nevSnapshot`-ja pillanatkép marad (D7) |
+| D23 | Placeholder-jelölésű (`[PLACEHOLDER`/`[PLATZHALTER`) nyilatkozat esetén a nyomtatvány 3. oldala nem nyomtatható — a „csak ajánlat" mód kényszerített és letiltott, felülírás nélkül | Jogi kockázat: a páciens elé nem kerülhet aláírandó lap, amit a jogász „még nincs lezárva" jelöléssel látott el. A fizetési feltételek (2. oldal) `offerOnly` módban is nyomtatódik, ezért ott a magyar szövegre visszaesés + jelzés a helyes válasz, nem zár |
+| D24 | Kézzel megadott sornevet automatikus mechanizmus soha nem ír felül némán — nyelvváltáskor csak az a `tetelId`-hez kötött sor frissül, ami a váltás előtti nyelven még pontosan az árlistai nevet viselte | A `nevSnapshot` szerkeszthető; a feltétel nélküli újraírás törölné a doki pontosítását. Új sémamező nélkül eldönthető (`nevSnapshot === tetel.nev[nyelv]`); az eltérést az „átírt" jelvény és a véglegesítés megerősítő listája teszi láthatóvá |
 
 ## Adatvédelmi keret
 

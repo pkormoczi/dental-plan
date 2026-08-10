@@ -1,9 +1,9 @@
-// docs/archive/backlog/backlog-1-piszkozat-terv.md 3. döntés: az "érintetlen, üres
+// docs/03-funkcionalis-spec.md § Autosave: az "érintetlen, üres
 // piszkozatot (ami megegyezik a friss createBlankPlan() eredményével) nem
 // perzisztáljuk -- csak az első tartalmi módosítás után kezd írni". Ez a
 // "tartalmas piszkozat" definíciója, amit az AppState (írási trigger) és a
-// Home/PlanHistoryPage (felülírás elleni AlertDialog, lásd ugyanott 5.
-// döntés) egyaránt használ -- ne írd újra máshol.
+// Home/PlanHistoryPage (felülírás elleni AlertDialog) egyaránt használ --
+// ne írd újra máshol.
 
 import { ELSO_FAZIS_NEV } from './blankPlan';
 import type { Plan } from './types';

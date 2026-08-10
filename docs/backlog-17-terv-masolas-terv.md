@@ -94,8 +94,8 @@ csak akkor bélyegez, ha a régi dátum lejárt).
 **Miért:** a `ujVerzioDatum.ts` fájl-fejléce ezt már kijelöli az EGYETLEN
 forrásnak a betöltéskori dátumbélyegre — újraírása két, egymástól
 független dátumszámítás driftjét kockáztatná (pontosan az a hibaosztály,
-amit ez a modul a Nagy Éva-eset után orvosolt, lásd
-`docs/backlog-2-friss-datum-terv.md`).
+amit ez a modul orvosolt, lásd `docs/03-funkcionalis-spec.md`
+§ Korábbi terv új verzióra nyitása és D22).
 
 ### 6. Célpont navigáció: mindkét gomb a Páciens adatlapra visz
 

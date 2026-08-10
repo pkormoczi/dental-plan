@@ -1,12 +1,10 @@
 # 8. Backlog — még fejlesztendő (2. kör, 2026-08-09)
 
 Ez a fájl az első kör backlogjának **nyitott** tételeit és a második
-termékreview-kör (`review/doktor-harom-nap-2.md` +
-`review/architekt-triazs-2.md`) architekt-triázsának tételeit fésüli
-össze. Az első kör teljes anyaga — a 12 kész tétel megvalósítási
-jegyzeteivel és az első doktor-nap Függelékkel együtt — archiválva:
-`docs/archive/08-backlog-2026-08-09.md`. A `docs/backlog-N-*.md`
-tervdokumentumok Függelék-hivatkozásai az archivált fájlra értendők.
+termékreview-kör architekt-triázsának tételeit fésüli össze. Az első kör
+teljes anyaga — a 12 kész tétel megvalósítási jegyzeteivel és az első
+doktor-nap narratívával együtt — archiválva, lásd „Honnan jönnek az
+igények" lent.
 
 A `docs/01` sérthetetlen keretei (D1–D21) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
@@ -250,11 +248,11 @@ legnagyobb fájl (`PlanEditorPage.tsx`, `PriceListAdminPage.tsx`,
 `pdf/TervDocument.tsx`) bontása; háromféle gombstílus;
 `PreviewPage.finalize()` őrlogikája nem tesztelhető pure functionként;
 `SettingsPage.tsx:28` közvetlenül importálja a `DemoStorage.ts` `PREFIX`
-konstansát a sablon-piszkozat cache kulcsához (`docs/reviews/2026-08-10-
-arch-react-review.md`) — tudatos, a fájl saját kommentje indokolja (hogy a
-"Minden adat törlése" prefix-seprése ezt is elvigye), de ez a cache-
-mechanizmus explicit localStorage-specifikus, a `FileSystemStorage`-váltás
-(2. fázis) tervezésekor újragondolandó, nem a mockup feladata most.
+konstansát a sablon-piszkozat cache kulcsához — tudatos, a fájl saját
+kommentje indokolja (hogy a "Minden adat törlése" prefix-seprése ezt is
+elvigye), de ez a cache-mechanizmus explicit localStorage-specifikus, a
+`FileSystemStorage`-váltás (2. fázis) tervezésekor újragondolandó, nem a
+mockup feladata most.
 
 ---
 
@@ -375,10 +373,9 @@ Hasznosság szerint sorrendezve:
 
 ## Honnan jönnek az igények
 
-- **1. kör:** doktor-nap narratíva + triázs, a teljes anyag (a kész
-  tételek megvalósítási jegyzeteivel) az archivált backlogban:
-  `docs/archive/08-backlog-2026-08-09.md` (Függelék).
-- **2. kör (2026-08-09, a 12 kész tétel utáni állapotra):**
-  `review/doktor-harom-nap-2.md` (elbeszélés) és
-  `review/architekt-triazs-2.md` (a 15 igény teljes értékelése —
-  méret, keretsértés, haszon, 20%-os változat tételenként).
+- **1. kör:** doktor-nap narratíva + architekt-triázs, a teljes anyag (a
+  kész tételek megvalósítási jegyzeteivel) archiválva a git history-ban.
+- **2. kör (2026-08-09, a 12 kész tétel utáni állapotra):** ugyanilyen
+  szerkezetű doktor-nap narratíva és architekt-triázs (a 15 igény teljes
+  értékelése — méret, keretsértés, haszon, 20%-os változat tételenként),
+  szintén a git history-ban.

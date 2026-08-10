@@ -228,8 +228,8 @@ export default function PlanEditorPage() {
         onPreview={() => navigate('/elonezet')}
       />
 
-      {/* docs/archive/backlog/backlog-2-friss-datum-terv.md 6. döntés: semleges szín -- ez
-          várt, nem hiba-jellegű viselkedés, az amber az alatta lévő valódi
+      {/* docs/03-funkcionalis-spec.md § Korábbi terv új verzióra nyitása:
+          semleges szín -- ez várt, nem hiba-jellegű viselkedés, az amber az alatta lévő valódi
           anomáliának (loadedOsszesitokDiff) van fenntartva. A `nyelv`
           paraméter fixen 'hu': a kezelőfelület a CLAUDE.md szerint végig
           magyar marad, a nyelvfüggő formázás csak a pdf/ alatt él. */}
@@ -261,7 +261,7 @@ export default function PlanEditorPage() {
 
       {/* Itt dolgozik a doki -- ha az automatikus piszkozat-mentés elhasal
           (pl. kvótahiba), azt itt kell látnia, nem csak a Kezdőlapon (lásd
-          docs/archive/backlog/backlog-1-piszkozat-terv.md). */}
+          docs/03-funkcionalis-spec.md § Autosave). */}
       {piszkozatHiba && (
         <Callout.Root color="red" mb="4">
           <Callout.Text>A piszkozat automatikus mentése nem sikerült: {piszkozatHiba}</Callout.Text>
@@ -432,7 +432,7 @@ function PhaseSection({
   // fázistörlésnél a fazisResetToken (lásd fent).
   const [sorResetToken, setSorResetToken] = useState(0);
   // Tisztán UI-réteg felirat, nem pénzösszeg-formázás -- nem indokol közös
-  // domain segédfüggvényt, lásd docs/archive/backlog/backlog-5-eur-mezo-terv.md 2. döntés.
+  // domain segédfüggvényt, lásd docs/03-funkcionalis-spec.md § Sor mezői.
   const penznemJel = currency === 'EUR' ? '€' : 'Ft';
   return (
     <Box>

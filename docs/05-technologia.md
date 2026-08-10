@@ -58,8 +58,11 @@ prefix-seprése emiatt a piszkozatot is elsöpri, külön kód nélkül). A
 véglegesben ugyanezt az interfészt egy IndexedDB-alapú implementáció váltja.
 Az olvasás ugyanazt a sémaverzió- és alak-ellenőrzést követi, mint a
 `PlanStorage.loadPlan()` (D18) — egy sérült/inkompatibilis piszkozatot a
-betöltés megtagad, érthető üzenettel, nem néma eldobással. Részletek:
-`docs/archive/backlog/backlog-1-piszkozat-terv.md`.
+betöltés megtagad, érthető üzenettel, nem néma eldobással.
+
+Egyetlen `dp:piszkozat` kulcs, egyetlen memóriabeli `plan` slot — több
+böngészőfül esetén last-write-wins, ütközésfeloldás nélkül. **Elfogadott
+kockázat**: egyszemélyes asztali eszköznél nem realisztikus munkafolyamat.
 
 ### Kezdd a File System Access API-val
 

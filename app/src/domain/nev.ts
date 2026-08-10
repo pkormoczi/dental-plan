@@ -25,7 +25,7 @@ export function resolveNev(nev: LokalizaltSzoveg, nyelv: Nyelv): FeloldottNev {
  * árlistát ezen a nyelven. Ez a mag-összehasonlítás adja mind a szerkesztő
  * jelvényét (`sorFallback`, a JELENLEGI nyelvvel), mind a nyelváltás
  * névmegőrzését (`PatientPage.tsx` `applyNyelv`, a RÉGI nyelvvel) --
- * docs/archive/backlog/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 1. döntés.
+ * docs/01-attekintes-es-dontesek.md D24.
  */
 export function nevKoveti(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
   const arlistaiNev = nyelv === 'hu' ? tetel.nev.hu : tetel.nev.de;
@@ -45,15 +45,15 @@ export type SorFallbackOk =
  * `LineRow`, és a `fallbackSorok` véglegesítés-őre is ezt hívja).
  * `null`, ha a sor rendben van (követi az árlistát, vagy hu terven vagyunk).
  *
- * Egyedi (üres `tetelId`-jű, backlog-3) sornál nincs mit a `priceList`-ben
- * megkeresni -- szabad szöveghez sosem volt/lesz fordítás, tehát ez a sor
- * mindig `'nincsForditas'`-t ad, amíg van kitöltött neve. Üres nevű egyedi
- * sort nem jelez -- azt a `kitoltetlenSorok` kemény blokkja úgyis elkapja.
+ * Egyedi (üres `tetelId`-jű) sornál nincs mit a `priceList`-ben megkeresni --
+ * szabad szöveghez sosem volt/lesz fordítás, tehát ez a sor mindig
+ * `'nincsForditas'`-t ad, amíg van kitöltött neve. Üres nevű egyedi sort nem
+ * jelez -- azt a `kitoltetlenSorok` kemény blokkja úgyis elkapja.
  *
  * `tetelId`-hez kötött sornál a `nevKoveti` dönt: ha a tételnek nincs neve
  * ezen a nyelven, `'nincsForditas'`; ha van, de a sor mást mond (a doki
- * kézzel pontosította, lásd 3. tétel 2. döntése), `'elterAzArlistatol'` --
- * docs/archive/backlog/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 2-3. döntés.
+ * kézzel pontosította), `'elterAzArlistatol'` --
+ * docs/03-funkcionalis-spec.md § Nyelv és pénznem (D21).
  */
 export function sorFallback(
   sor: Sor,

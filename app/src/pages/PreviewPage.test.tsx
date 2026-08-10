@@ -165,10 +165,10 @@ function seedGermanPlanWithOneTranslatedItem() {
   );
 }
 
-// docs/archive/backlog/backlog-3b-nyelvvaltas-nevmegorzes-terv.md 4. döntés: a véglegesítés
-// megerősítő dialógusa két külön okot sorol fel -- ne keveredjenek egy
-// listába.
-describe('PreviewPage -- backlog-3b: hiányzó és eltérő tételnevek két külön listában', () => {
+// docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés: a
+// véglegesítés megerősítő dialógusa két külön okot sorol fel -- ne
+// keveredjenek egy listába.
+describe('PreviewPage -- hiányzó és eltérő tételnevek két külön listában', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -225,11 +225,11 @@ describe('PreviewPage -- backlog-3b: hiányzó és eltérő tételnevek két kü
   );
 });
 
-// docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 1. döntés: a betöltött
+// docs/03-funkcionalis-spec.md § Sablon-placeholder őr (D23): a betöltött
 // nyilatkozat placeholder (jogilag még nincs lezárva) esetén a "Csak
 // ajánlat" mód kényszerítve/letiltva -- a 3. oldal (nyilatkozat + aláírás)
 // garantáltan kimarad a PDF-ből.
-describe('PreviewPage -- backlog-6: nyilatkozat placeholder kemény zár', () => {
+describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -284,10 +284,10 @@ describe('PreviewPage -- backlog-6: nyilatkozat placeholder kemény zár', () =>
   );
 });
 
-// docs/archive/backlog/backlog-6-sablon-placeholder-terv.md 2. döntés: a fizetési feltételek
+// docs/03-funkcionalis-spec.md § Sablon-placeholder őr: a fizetési feltételek
 // placeholderje a meglévő HU-visszaesésbe esik, NEM a nyilatkozat kemény
 // zárába -- a "Csak ajánlat" ilyenkor NEM kényszerített.
-describe('PreviewPage -- backlog-6: csak a fizetési feltételek placeholder', () => {
+describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';

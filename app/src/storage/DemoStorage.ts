@@ -49,8 +49,8 @@ const DEFAULT_TEMPLATES: Array<[string, string]> = [
 ];
 
 /**
- * Exportált, mert a DemoDraftStorage (docs/archive/backlog/backlog-1-piszkozat-terv.md
- * 2. döntés) is ezt a prefixet használja a `dp:piszkozat` kulcsához -- ez adja
+ * Exportált, mert a DemoDraftStorage (docs/05-technologia.md
+ * § Piszkozat-autosave) is ezt a prefixet használja a `dp:piszkozat` kulcsához -- ez adja
  * a garanciát, hogy a lenti `clearAll()` prefix-seprése (és vele a "Minden
  * adat törlése"/"Demó adat visszaállítása" gomb) a piszkozatot is eltünteti,
  * külön kód nélkül. Egy literál duplikálása itt driftelhetne.

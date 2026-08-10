@@ -47,6 +47,18 @@ német nyelvű ajánlatnál is.
 Mindkettő **az első mentés után fagy** (D4) — a kártya ilyenkor statikus
 szöveget mutat, chipek nélkül; új tervet kell nyitni a váltáshoz.
 
+**Nyelváltás (fagyás előtt) megőrzi a kézzel szerkesztett sorneveket**
+(D24): egy `tetelId`-hez kötött sor neve **csak akkor** frissül az új
+nyelv szerinti árlistai névre, ha a váltás előtti nyelven még pontosan az
+árlistai nevet viselte (`nevSnapshot === tetel.nev[nyelv]`, nyers érték,
+nem hu-visszaeséses). Ha a doki kézzel pontosította, a név **változatlan
+marad** — a nyelváltás sosem ír felül némán egy kézzel írt szöveget. Az
+egyedi (`tetelId` üres) sorokat a nyelváltás sosem érinti, mert nincs
+mihez viszonyítani. Ha a tervben már vannak sorok, a nyelváltás
+megerősítő párbeszéde **előre kiírja a tényleges hatást**: hány sor
+frissül az új nyelvre és hány marad változatlan, nem egy általános
+figyelmeztető mondat.
+
 Ha a kiválasztott nyelven/pénznemen hiányos a tartalom, a kártya alatt
 figyelmeztetés jelenik meg (hány aktív tételnek nincs neve az adott
 nyelven, illetve hogy a kiválasztott pénznemben van-e egyáltalán
@@ -117,7 +129,9 @@ kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`
 - A lista **legfeljebb 12 találatot** mutat. Ha ennél több egyezik, a
   lista alján egy nem választható, tájékoztató sor jelzi: „+N további
   találat — pontosíts a kereséssel". Pontosan 12 (vagy kevesebb) találatnál
-  nincs jelzés — a lista ilyenkor teljes.
+  nincs jelzés — a lista ilyenkor teljes. A 12-es megjelenítési limit
+  szándékosan **nem** emelkedik: a nagyobb limit csak elodázná, hogy a
+  doki pontosítson.
 - Billentyűzet: `↑ ↓` navigál, `Enter` hozzáad, `Esc` bezár. A csonkítás-
   jelző sor **nem** része a ciklusnak.
 - **Hozzáadás után a kereső kiürül és visszakapja a fókuszt.** Ez a
@@ -138,37 +152,43 @@ megjelennek a kereső alatt. Egy kattintás = hozzáadás.
 
 | Mező | Viselkedés |
 |---|---|
-| Beavatkozás | **Szerkeszthető** szövegmező, alapból a felvételkor rögzített (árlistai vagy egyedi) névvel kitöltve — a doki pontosíthatja, elgépelt/rövidített árlistai nevet javíthat. Üresen a sor véglegesítéskor kemény blokk (lásd „Kitöltetlen sor" lent) |
+| Beavatkozás | **Szerkeszthető** szövegmező, alapból a felvételkor rögzített (árlistai vagy egyedi) névvel kitöltve — a doki pontosíthatja, elgépelt/rövidített árlistai nevet javíthat. Az átírás megtartja a `tetelId`-t: az ár, a fogtérkép kategória-színe és a német-fallback ellenőrzés változatlanul az árlistai tételen át működik, csak a megjelenő szöveg (`nevSnapshot`) más. Üresen a sor véglegesítéskor kemény blokk (lásd „Kitöltetlen sor" lent) |
 | Fog | Szabad szöveg, felsorolás. Nem kötelező. A beírt *számokat* validáljuk (lásd lent), a folyószöveges jegyzet (pl. „jobb felső") változatlanul megengedett |
 | Db | Kézi, alapérték 1, minimum 1 |
 | Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve. Egyedi sornál `—` (nincs árlistai referenciaár) |
-| Tényleges ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`). EUR pénznemű tervnél a mező **euróban** fogad be és jelenít meg szöveget (pl. `35,50`), a tárolás változatlanul centben történik — ugyanaz a `NumberField` `unit` mechanizmus, ami az árlista adminban már véd az euró/cent tévesztéstől |
+| Ajánlati ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`). EUR pénznemű tervnél a mező **euróban** fogad be és jelenít meg szöveget (pl. `35,50`), a tárolás változatlanul centben történik — ugyanaz a `NumberField` `unit` mechanizmus, ami az árlista adminban már véd az euró/cent tévesztéstől. Ez tisztán UI-réteg felirat, nem pénzösszeg-formázás, ezért nem indokol közös `domain/money.ts` segédfüggvényt |
+| Becsült ár (≈) | Soronkénti, szabad és kétirányú kapcsoló az Ajánlati ár mező mellett (ghost ikongomb, `≈` szövegglyph) — bármelyik soron be- és kikapcsolható, függetlenül attól, hogy a sor árlistai FIX, SAVOS, fogtérkép-kattintásos vagy egyedi eredetű. Bekapcsolva a nyomtatványon `*` + lábjegyzetet kap (D15). Csak megjelenítést vezérel, az összegzésbe nem szól bele; nincs eredet-nyilvántartás, a sor nem jegyzi meg, honnan jött, és az aktuális árlistából sem kérdezzük vissza (D7) |
 | Összeg | `tenylegesEgysegar * mennyiseg` |
 
-A „Listaár"/„Tényleges"/„Összeg" oszlopfejléc a terv pénznemét is jelzi
+A „Listaár"/„Ajánlati"/„Összeg" oszlopfejléc a terv pénznemét is jelzi
 (`(Ft)` / `(€)`), hogy egyetlen oszlop se tűnjön „biztonságosnak" a
 pénznem-összetévesztéssel szemben.
 
 Ha `tenylegesEgysegar < listaEgysegar`, a soron megjelenik egy `−X%`
 jelölés. **Ez csak a szerkesztőben látszik, a nyomtatványon nem** (D9).
 
-Sávos tételnél a listaár helyén a sáv látszik, és a tényleges ár mező ki
+Sávos tételnél a listaár helyén a sáv látszik, és az ajánlati ár mező ki
 van emelve — jelzi, hogy itt dönteni kell.
+
+Német nyelvű terven a Beavatkozás mező mellett két, egymást kizáró jelvény
+jelenhet meg: `HU`, ha a tételnek nincs német neve az árlistában, vagy
+„átírt", ha van német neve, de a sor szövege attól eltér (kézzel
+pontosítva). Csak `tetelId`-hez kötött soron jelenhet meg az „átírt" —
+egyedi sor sosem kaphatja, hiszen nincs mihez viszonyítani. Magyar terven
+egyik sem jelenik meg (a doki magyarul gépel, ott nincs mit jelezni, D21).
 
 ### Egyedi sor
 
 Ha a tételkeresőben nincs (megfelelő) találat, a gépelt szöveg egyedi
 sorként vehető fel — lásd fent, „Tételkereső". Az egyedi sor:
 
-- **Nincs árlistai hivatkozása** (`tetelId` üres) — a soron egy semleges
-  „egyedi" jelvény jelzi, ugyanott, ahol a „sávos" felirat állna.
-- **Egy ármező van rajta**, nincs külön „listaár" — a Tényleges ár
+- **Nincs árlistai hivatkozása** (`tetelId` üres) — a Beavatkozás mező
+  mellett egy semleges „egyedi" jelvény jelzi.
+- **Egy ármező van rajta**, nincs külön „listaár" — az Ajánlati ár
   szerkesztése a listaárat is vele együtt írja, ezért egyedi soron
   **sosem** jelenik meg kedvezmény-jelölés.
 - **A „becsült ár" jelölő ugyanúgy működik rajta**, mint bármelyik más
-  soron (4. backlog-tétel) — bekapcsolva a nyomtatványon csillagot és
-  lábjegyzetet kap. (Ez a bekezdés korábban az ellenkezőjét állította, a
-  4. tétel elkészülte előtti állapotot leírva.)
+  soron — bekapcsolva a nyomtatványon csillagot és lábjegyzetet kap.
 - Német nyelvű ajánlaton egy **kitöltött** egyedi sor is bekerül a
   „hiányzó német tételnevek" figyelmeztetésbe (a szerkesztőben `HU`
   jelvénnyel, véglegesítéskor a megerősítő listában) — szabad szöveghez
@@ -210,7 +230,12 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
 - Fázisonként egy szabad szöveges **megjegyzés** sor, ami a nyomtatványon
   is megjelenik. Ide megy az időzítés: *„az implantáció beépülési ideje
   után, kb. 3 hónappal"*.
-- Fázisonkénti összeg, alul mindösszesen.
+- Fázisonkénti összeg, alul mindösszesen. A „Mindösszesen" doboz eltérés
+  esetén egy kisebb alszöveget mutat: kedvezménynél „Kedvezmény: X",
+  **felárnál „Felár: X"** (az ajánlati árnak nincs felső korlátja, tehát a
+  tényleges ár a listaár fölé is emelhető). A kettő kizárja egymást, és
+  ugyanazt a zöld színt kapja — ez semleges ténymegállapítás, nem
+  hibajelzés, a doki dolgozhat felárral is (pl. sietős munka).
 
 ### Előleg
 
@@ -243,8 +268,12 @@ szerkesztésre vonatkozik — egy visszatérő páciens régi, `VEGLEGES` tervé
 az első tartalmi módosítás után kezd írni. A visszaállítás csendes és
 memóriabeli — a Kezdőlap „Piszkozat folytatása” kártyája a belépési pont
 hozzá; a Kezdőlap „Új terv indítása” és a „Korábbi tervek” → „Megnyitás
-szerkesztésre” gombja megerősítést kér, mielőtt felülírná. Részletek:
-`docs/archive/backlog/backlog-1-piszkozat-terv.md`.
+szerkesztésre” gombja megerősítést kér, mielőtt felülírná. A megerősített
+felülírás pillanatában a perzisztált piszkozat **azonnal** törlődik, nem a
+következő írási triggerre vár.
+
+Ha az automatikus mentés elhasal (pl. localStorage-kvóta), a hiba a Terv
+szerkesztőben is látszik, nem csak a Kezdőlapon — ott dolgozik a doki.
 
 ---
 
@@ -262,10 +291,14 @@ szerkesztésre” gombja megerősítést kér, mielőtt felülírná. Részletek
 Meglévő terv szerkesztése **soha nem írja felül** a korábbi verziómappát
 (D4).
 
-**Német terv, hiányzó tételnevekkel:** ha a tervben olyan sor van, amihez
-nem tartozik német tétel név (lásd D21), a véglegesítés a hiányzó neveket
-felsorolva megerősítést kér — a páciens ezt a dokumentumot írja alá, ezért
-ez a figyelmeztetés soha nem néma.
+**Német terv, hiányzó/eltérő tételnevekkel:** ha a tervben olyan sor van,
+amihez nem tartozik német tétel név, vagy amelynek neve kézzel eltér az
+árlistától (lásd D21, D24), a véglegesítés megerősítést kér — a páciens
+ezt a dokumentumot írja alá, ezért ez a figyelmeztetés soha nem néma. A
+megerősítő dialógus **két külön felsorolást** mutat: „N tételnek nincs
+német neve" és „M sor neve eltér az árlistától (kézzel szerkesztve)" — a
+két ok különböző dokitennivalót jelent, nem szabad egy lista mögé
+bújtatni.
 
 **Kitöltetlen sor (kemény blokk):** ha a fogtérképről kattintással felvett
 sor tétel nélkül maradt, a véglegesítés **nem** kérhető meg és nem
@@ -273,6 +306,30 @@ folytatható — ez nem figyelmeztetés, hanem blokk, hogy névtelen, 0 Ft-os
 sor sose kerülhessen az aláírandó dokumentumra. A hibaüzenet megnevezi a
 fázist és a fogszámot; „Vissza a szerkesztőbe" gomb visz a hiányzó sorhoz.
 Az Előnézet maga nem blokkolódik, csak a véglegesítés.
+
+### Sablon-placeholder őr
+
+Egy sablon (nyilatkozat vagy fizetési feltételek) akkor számít jogilag
+lezáratlannak, ha a törzse `[PLACEHOLDER` vagy `[PLATZHALTER` jelölőt
+tartalmaz (zárójellel — a jelölő nélküli szóemlítés nem elég). Ez
+**egyetlen predikátum**, egyetlen helyen (`app/src/domain/templates.ts`
+`isPlaceholderTemplate`); a sablonszerkesztő készültség-jelzése, a
+seed-feltöltés és a véglegesítés-őr mind ezt hívja.
+
+- **Nyilatkozat placeholder → kemény zár.** Ha a ténylegesen betöltött
+  nyilatkozat placeholder, a „csak ajánlat" kapcsoló automatikusan
+  bepipálva és **letiltva** jelenik meg, tehát a 3. oldal (nyilatkozat +
+  aláírás) garantáltan kimarad minden PDF-ből — letöltésből és
+  véglegesítésből egyaránt, mert mindkettő ugyanabból a renderelt
+  példányból dolgozik. Piros figyelmeztetés jelzi az okot és hogy hol
+  kell javítani (Beállítások → Nyomtatvány szövegei). **Nincs „Folytatás
+  mindenképp"** — ez blokk, ugyanabban a súlyban, mint a kitöltetlen sor
+  (D23).
+- **Fizetési feltételek placeholder → HU-visszaesés, nem zár.** A 2.
+  oldal „csak ajánlat" módban is mindig nyomtatódik, ezért ott a
+  kényszerített ajánlat-mód nulla védelmet adna; helyette a hiányzó
+  sablonnál is használt HU-visszaesés fut le (a magyar szöveg jelenik
+  meg), sárga figyelmeztetéssel.
 
 ---
 
@@ -296,6 +353,23 @@ a betöltés. Egy visszatérő pácienshez ne kelljen újragépelni 12 tételt.
 
 Betöltés a `terv.json`-ból. Ha csak PDF van (kézzel átmozgatott fájl),
 a beágyazott JSON-ból is menjen.
+
+### Korábbi terv új verzióra nyitása
+
+Egy korábbi (jellemzően `VEGLEGES`) terv szerkesztésre nyitásakor a
+`keltezes` a mai napra, az `ervenyesIg` ebből és az **aktuális**
+`beallitasok.ervenyessegNap`-ból újraszámolva íródik — nem a régi terv
+megőrzött érvényességi ablak-hossza (D22). A bélyegzés **a betöltés
+pillanatában** történik, nem véglegesítéskor: az előnézet a `plan`
+state-ből rendereli a PDF-et, egy késői írás a mentett JSON-t és a már
+renderelt PDF-blobot szétcsúsztatná. Minden más mező (sorok ára,
+`nevSnapshot`, `listaEgysegar`, `tetelId`, `arlistaVerzio`) érintetlen
+marad — a dátumfrissítés dokumentum-metaadat, nem újraárazás (D7).
+
+A szerkesztő egy **semleges színű** tájékoztató sávban jelzi az új
+dátumot és érvényességet, és kimondja, hogy a tételek ára változatlan. Az
+amber sáv a valódi anomáliának (mentett vs. újraszámolt `osszesitok`
+eltérése) van fenntartva — ugyanaz a szín itt félrevezető lenne.
 
 ---
 
@@ -357,7 +431,15 @@ Kategória hozzáadása, átnevezése, sorrendezése ugyanitt.
   marad, mert a korábbi tervek arra hivatkoznak — a mentés a
   véglegesítéskor épp aktuális (legfrissebb) verziót pinneli a tervre. A
   nyilatkozat szövegében a `{{orvos}}` helyőrző a kezelőorvos nevére
-  cserélődik a nyomtatványon.
+  cserélődik a nyomtatványon. A szerkesztőmezők tartalma elnavigálásig sem
+  vész el: egy `dp:sablon-piszkozat` localStorage-kulcs base-enként
+  cache-eli, néma visszaállítással, és sikeres mentéskor base-enként
+  törlődik. **Ez tudatosan nem a `DraftStorage` bővítése** — az
+  kizárólag `Plan`-ra típusozott, egyetlen felelősséggel; a `dp:` prefix
+  miatt a „Minden adat törlése"/„Demó adat visszaállítása" ezt is elsöpri,
+  külön kód nélkül. A „Szöveg mentése" gomb `useRef`-alapú in-flight
+  zárat visel, mert a `disabled` prop önmagában megkerülhető egy render
+  előtti második kattintással.
 - **Német nyelvű ajánlat engedélyezése** (`nemetEngedelyezve`) — checkbox.
   Bekapcsolva megjelenik az **alapértelmezett nyelv** kapcsolója (ez lesz
   az új tervek nyelve), alatta a **német tartalom készültsége**:

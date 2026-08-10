@@ -7,7 +7,7 @@ az implementáció módja és a részletek kidolgozása a megvalósító feladat
 
 ## Probléma
 
-A `docs/08-backlog.md` Függelék C) napi review egyik konkrét, ma
+Az első körös doktor-nap narratíva C) napi review egyik konkrét, ma
 megválaszolatlan pácienskérdése: „Van rá garancia?" A nyomtatványon ma
 nincs semmilyen garanciális tartalom, és a doki ezt fejben, szóban mondja
 el a páciensnek.
