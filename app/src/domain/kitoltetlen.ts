@@ -44,7 +44,7 @@ export interface HianyzoCsomagLeiras {
 }
 
 /**
- * PUHA diagnosztika (docs/08-backlog.md 10. tétel, 14. döntés) -- szándékosan
+ * PUHA diagnosztika (docs/02-domain-modell.md § Tétel-leírás) -- szándékosan
  * KÜLÖN a fenti `kitoltetlenSorok` kemény blokkjától: azon sorok, amik egy
  * `csomag: true` tételre hivatkoznak, de a leírásuk üres. A `PreviewPage`
  * `confirmStep`-láncába kerül (megerősíthető, átugorható), NEM ide.

@@ -74,8 +74,8 @@ export interface FogterkepAllapot {
 /**
  * Egy fogon több kezelés is lehet (pl. gyökérkezelés + korona ugyanazon a
  * fogon) -- a megjelenő szín a legkisebb `sorrend`-ű kategóriáé (a
- * kategória-lista sorrendje egyben fontossági sorrend is,
- * docs/backlog-8-kategoriakezeles-terv.md 3. döntés). Holtversenynél (két
+ * kategória-lista sorrendje egyben fontossági sorrend is, D28
+ * `docs/01-attekintes-es-dontesek.md`). Holtversenynél (két
  * kategória azonos `sorrend`-del -- rendes adaton nem fordulhat elő) az
  * `id` dönt, hogy az eredmény determinisztikus maradjon. Az
  * `ISMERETLEN_KATEGORIA` (`sorrend: Infinity`) így sosem nyerhet egy valódi

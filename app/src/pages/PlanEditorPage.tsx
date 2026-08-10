@@ -612,7 +612,7 @@ function LineRow({
   catName: (id: string) => string;
   fogterkep: FogterkepAllapot;
   fallback: SorFallbackOk | null;
-  /** true, ha a sor egy `csomag: true` tételre hivatkozik (docs/08-backlog.md 10. tétel, 15. döntés). */
+  /** true, ha a sor egy `csomag: true` tételre hivatkozik (docs/02-domain-modell.md § Tétel-leírás). */
   csomag: boolean;
   onPatch: (patch: Partial<Sor>) => void;
   onRemove: () => void;
@@ -653,8 +653,8 @@ function LineRow({
       ? Math.round((1 - line.tenylegesEgysegar / line.listaEgysegar) * 100)
       : 0;
 
-  // "+ leírás" összecsukható trigger (docs/08-backlog.md 10. tétel, 8.
-  // döntés) -- ha már van tartalom, nyitva induljon; nincs "csak
+  // "+ leírás" összecsukható trigger (docs/02-domain-modell.md § Tétel-leírás)
+  // -- ha már van tartalom, nyitva induljon; nincs "csak
   // kikapcsolni szabad" korlátozás, mert itt (a keresőmódtól eltérően)
   // nincs auto-collapse kockázat.
   const leirasTartalom = (line.leirasSnapshot ?? '').trim();

@@ -236,7 +236,7 @@ export default function PreviewPage() {
   // attemptFinalize: ez KEMÉNY blokk, nem a confirmStep-lánc egy tagja,
   // mert egy névtelen, 0 Ft-os sor sosem kerülhet az aláírandó PDF-re.
   const uresSorok = kitoltetlenSorok(plan);
-  // PUHA figyelmeztetés (docs/08-backlog.md 10. tétel, 14. döntés) -- csak
+  // PUHA figyelmeztetés (docs/02-domain-modell.md § Tétel-leírás) -- csak
   // akkor releváns, ha a leírások ténylegesen nyomtatódnak; kikapcsolt
   // `leirasokMutatasa` mellett a hiányuk nem érinti a nyomtatványt.
   const hianyzoLeirasok = (plan.leirasokMutatasa ?? true)

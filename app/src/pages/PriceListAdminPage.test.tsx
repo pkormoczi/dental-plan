@@ -348,7 +348,6 @@ describe('PriceListAdminPage', () => {
     expect(screen.queryByText('Zahnhalsfüllung')).not.toBeInTheDocument();
   });
 
-  // docs/08-backlog.md 8. tétel: kategória-karbantartó panel.
   describe('Kategóriák panel', () => {
     function catPanel(): HTMLElement {
       return document.getElementById('kategoriak-panel')!;

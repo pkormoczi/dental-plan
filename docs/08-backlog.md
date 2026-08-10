@@ -6,80 +6,27 @@ teljes anyaga — a 12 kész tétel megvalósítási jegyzeteivel és az első
 doktor-nap narratívával együtt — archiválva, lásd „Honnan jönnek az
 igények" lent.
 
-A `docs/01` sérthetetlen keretei (D1–D25) egyik tételt sem sértik —
+A `docs/01` sérthetetlen keretei (D1–D28) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
-**Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. A
-korábbi nyitott tételek (8., 13.) megtartják a régi számukat, az új
-tételek a régi sorozatot folytatják (16–23), hogy egy jövőbeli
-tervdokumentum fájlneve (`backlog-N-*.md`) ne ütközzön a már létező,
-kész tételekhez tartozókkal.
+**Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. Lezárt
+tétel száma véglegesen nyugdíjazva, soha nem osztható ki újra (ahogy a
+D17 az ártétel-`id`-nél) — az új tételek a sorozatot onnan folytatják,
+ahol a legutóbb kiosztott szám állt.
 
 **Sorrend:** a listákon belül hasznosság szerint — a napi fájdalom
-mérete × gyakorisága, holtversenynél a kisebb munka előre. A MOST
-szakasz mind a 8 tételéhez van tervdokumentum (grill-me munkamenetek
-döntési összefoglalói).
+mérete × gyakorisága, holtversenynél a kisebb munka előre. A 24. tétel a
+lista végén áll, mert nem fejlesztői munka, tehát nem esik a
+haszon-rangsorba. A MOST szakasz hat fejlesztői tételéhez van
+tervdokumentum (grill-me munkamenetek döntési összefoglalói); a 24.
+tételnek nincs, és nem is lesz — tisztán adattisztítás és
+információkérés a dokitól.
 
 ---
 
-## MOST (kb. 3,5–5 fejlesztői nap + fél nap közös munka a dokival)
+## MOST (kb. 1–1,5 fejlesztői nap + fél nap közös munka a dokival)
 
-### 1. hely — 8. tétel: Árlista-nap: kategóriakezelés kódban + adattisztítás a dokival
-
-*(korábbi 8. tétel — mindkét review-kör ezt hozta ki a legnagyobb
-haszon/befektetés arányú tételnek)*
-
-**Kódrész — KÉSZ (2026-08-10).** Kategória-CRUD (létrehozás, átnevezés,
-színezés, fel/le sorrendezés, törlés csak üres kategórián) egy
-összecsukható panelen az Árlista adminban; a fogtérkép színe a kódba
-huzalozott 8 elemű "vödör"-tábla helyett most közvetlenül az árlista
-`Kategoria.szin` mezőjéből olvas (`design/treatmentVisuals.ts`
-átírva). Megvalósítás: `docs/backlog-8-kategoriakezeles-terv.md` (15
-döntés). Emellett a `data/arlista.seed.json`-ban is elvégeztük azt az
-adattisztítást, ami tisztán mechanikus volt (nem igényelt doktori
-döntést): ~20 elgépelés javítva, `k01 Besorolatlan` átnevezve
-„Diagnosztika és konzultáció"-ra, az `k12 Egyéb kezelések` 6
-fogszabályozási tétele saját `k13 Fogszabályozás` kategóriába
-átmozgatva, az 5 francia maradványtétel + a `Lokátor felépítmény`
-duplikátum inaktiválva (`aktiv: false`, id megtartva, D17).
-
-- **Még nyitva — közös munka a dokival (fél nap):** a `gyakori`
-  csillagozás (mind a 118 tétel `false`), a két `SAVOS` tétel
-  alsó-határ visszaigazolása, és a `docs/06-arlista-import.md`
-  „Ismert szennyeződés" táblázatában maradt, valódi ár-/kategorizálási
-  döntést igénylő tételek (pl. `t072`/`t073` azonos ára, `t078` „Sín"
-  kategóriája). **A második kör javaslata: az ülés napirendjére
-  kerüljön a 13. tétel magyar garanciaszövegének begyűjtése is**, és
-  ugyanide a tétel-leírás (docs/02-domain-modell.md § Tétel-leírás)
-  `csomag`-jelöléseinek és leírás-szövegeinek begyűjtése
-  (docs/06-arlista-import.md) — egyetlen ülés adja az összes még
-  hátralévő embermunka-inputot.
-
-### 2. hely — 13. tétel: Garancia szakasz a nyomtatványon
-
-*(korábbi 13. tétel)*
-
-**Kódrész — KÉSZ (2026-08-10).** Új, önálló oldal a nyomtatványon (a
-fizetési feltételek után, a nyilatkozat előtt — 1–2. oldal terv és ár,
-3. oldal garancia, 4. oldal nyilatkozat és aláírás), harmadik
-sablon-szlotként (`garancia-hu`/`garancia-de`) a nyilatkozat/fizetési
-feltételek már meglévő, teljesen generikus betöltő-/mentő-/verziózó
-infrastruktúráján — a Beállításokban szerkeszthető, „csak ajánlat"
-módban is mindig megjelenik (a nyilatkozattal ellentétben nincs kemény
-placeholder-zára, a fizetési feltételekkel egyező HU-visszaesést kap).
-Megvalósítás: `docs/backlog-13-garancia-terv.md` (9 döntés).
-
-- **Még nyitva — a magyar garanciaszöveg (a doki):** kezeléstípusonkénti
-  garanciaidők, kivételek — a `GARANCIA_HU_V1` seed egyelőre
-  `[PLACEHOLDER — a garanciafeltételek még nincsenek megadva]`, a
-  nyomtatványon ez a szöveg jelenik meg, amíg a doki meg nem írja a
-  tényleges tartalmat a Beállítások → Nyomtatvány szövegei alatt (lásd
-  az 1. hely „Még nyitva" bekezdését — ugyanaz az árlista-napi ülés adja
-  ezt az inputot is). A német verzió eddig is placeholder maradt volna
-  (9. döntés) — most már azért is, mert nincs mit AI-fordítani, amíg a
-  magyar forrás maga is helykitöltő.
-
-### 3. hely — 18. tétel: Fázis törlése megerősítéssel
+### 1. hely — 18. tétel: Fázis törlése megerősítéssel
 
 - **Méret:** 1–2 óra — a meglévő `AlertDialog`-minta a „Fázis törlése"
   gombon, csak akkor, ha a fázisban van sor (üres fázis törlése maradjon
@@ -92,7 +39,7 @@ Megvalósítás: `docs/backlog-13-garancia-terv.md` (9 döntés).
 - **20%-os verzió:** nincs kisebb — ez már a minimális védelem.
 - **Terv:** `docs/backlog-18-fazis-torles-terv.md` (6 döntés).
 
-### 4. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
+### 2. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
 - **Méret:** 2–3 óra — új, nem blokkoló lépés a `PreviewPage` meglévő
   `confirmStep`-láncában: a 0 Ft-os, kitöltött nevű sorok felsorolása. A
@@ -107,7 +54,7 @@ Megvalósítás: `docs/backlog-13-garancia-terv.md` (9 döntés).
   rosszabb lenne, mert eltörné a billentyűzetes ciklust.
 - **Terv:** `docs/backlog-19-nulla-forint-terv.md` (7 döntés).
 
-### 5. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
+### 3. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
 
 - **Méret:** 1–2 óra — a `PreviewPage` és `PlanHistoryPage` letöltési
   fájlneveiben a páciensnév (a `paths.ts` meglévő
@@ -122,7 +69,7 @@ Megvalósítás: `docs/backlog-13-garancia-terv.md` (9 döntés).
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `docs/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
 
-### 6. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
+### 4. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
 - **Méret:** 1 óra + teszt — a `savePriceList` a `modositva` mellett az
   `arlistaVerzio`-t is a mentés napjára állítja tartalmi változásnál. A
@@ -137,7 +84,7 @@ Megvalósítás: `docs/backlog-13-garancia-terv.md` (9 döntés).
   fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
 - **Terv:** `docs/backlog-21-arlista-verzio-terv.md` (5 döntés).
 
-### 7. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
+### 5. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
 - **Méret:** 1–2 óra — a PlanHistoryPage-en a már betöltött
   PDF-bájtokból blob-URL, új fül; nincs új nézet, nincs új útvonal.
@@ -150,7 +97,7 @@ Megvalósítás: `docs/backlog-13-garancia-terv.md` (9 döntés).
   böngésző PDF-nézője elég).
 - **Terv:** `docs/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
-### 8. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 6. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
@@ -162,6 +109,27 @@ Megvalósítás: `docs/backlog-13-garancia-terv.md` (9 döntés).
   koptatja a riasztás hitelét, ahol a valódi találat komoly.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `docs/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
+
+### 7. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
+
+**Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
+Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
+
+- a `gyakori` csillagozás (ma mind a 118 tétel `false`)
+- a két `SAVOS` tétel alsó-határának visszaigazolása
+- a `docs/06-arlista-import.md` „Ismert szennyeződés" táblázatában maradt,
+  valódi ár-/kategorizálási döntést igénylő tételek (pl. `t072`/`t073`
+  azonos ára, `t078` „Sín" kategóriája)
+- a `k04`/`k05`/`k06`/`k12` fogtérkép-színe (ma mind alap szürke,
+  `docs/06-arlista-import.md`)
+- a nyomtatvány garancia-szakaszának magyar szövege — kezeléstípusonkénti
+  garanciaidők, kivételek; a `GARANCIA_HU_V1` seed egyelőre
+  `[PLACEHOLDER — a garanciafeltételek még nincsenek megadva]`, a doki a
+  Beállítások → Nyomtatvány szövegei alatt adja meg (a német verzió eddig
+  is placeholder maradt volna, most már azért is, mert nincs mit
+  AI-fordítani, amíg a magyar forrás maga is helykitöltő)
+- a tétel-leírás (docs/02-domain-modell.md § Tétel-leírás) `csomag`-jelöléseinek
+  és leírás-szövegeinek begyűjtése (docs/06-arlista-import.md)
 
 ---
 

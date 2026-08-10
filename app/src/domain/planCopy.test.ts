@@ -121,7 +121,7 @@ describe('planMasolatKent', () => {
     expect(masolat.arlistaVerzio).toBe(plan.arlistaVerzio);
     expect(masolat.elolegSzazalek).toBe(plan.elolegSzazalek);
     expect(masolat.kedvezmenyOsszeg).toBe(plan.kedvezmenyOsszeg);
-    // docs/08-backlog.md 10. tétel, 12. döntés: ugyanúgy pillanatkép-jellegű,
+    // docs/02-domain-modell.md § Tétel-leírás: ugyanúgy pillanatkép-jellegű,
     // mint nyelv/penznem -- öröklődik, nem nullázódik.
     expect(masolat.leirasokMutatasa).toBe(plan.leirasokMutatasa);
   });

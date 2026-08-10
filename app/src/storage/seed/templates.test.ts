@@ -24,10 +24,11 @@ describe('seed templates', () => {
     expect(NYILATKOZAT_HU_V1).toContain('{{orvos}}');
   });
 
-  // docs/08-backlog.md korábbi 13. tétel (Garancia szakasz a nyomtatványon):
-  // ellentétben a fenti négy sablonnal, itt SZÁNDÉKOSAN a MAGYAR is
-  // placeholder -- az eredeti Excelben nincs garancia-szöveg, a doki adja
-  // meg. A német ebből következően is placeholder (nincs mit AI-fordítani).
+  // Garancia szakasz a nyomtatványon (docs/04-nyomtatvany-spec.md § „3.
+  // oldal — garancia"): ellentétben a fenti négy sablonnal, itt
+  // SZÁNDÉKOSAN a MAGYAR is placeholder -- az eredeti Excelben nincs
+  // garancia-szöveg, a doki adja meg. A német ebből következően is
+  // placeholder (nincs mit AI-fordítani).
   // Ne "javítsd" ezt a negatív asserteket másoló mintára.
   it('the garancia seeds are STILL a legal-work placeholder, both HU and DE (no doctor input yet)', () => {
     expect(GARANCIA_HU_V1).toContain('[PLACEHOLDER');

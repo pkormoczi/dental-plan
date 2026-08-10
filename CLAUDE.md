@@ -153,8 +153,8 @@ A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne ír
   épül, nem duplikálja a fogszám-parsolást
 - `resolveToothVisual(kezelesek)` (`app/src/domain/toothVisual.ts`) — egy
   fogon több kezelés esetén a legkisebb `sorrend`-ű kategória (a
-  kategória-lista sorrendje egyben ütközési prioritás, docs/08-backlog.md
-  8. tétel) szín dönt; ez az EGYETLEN hely, ahol ez a precedencia eldől
+  kategória-lista sorrendje egyben ütközési prioritás, D28) szín dönt; ez az
+  EGYETLEN hely, ahol ez a precedencia eldől
 - `kategoriaVizual(kategoria)` / `vizualKategoriaFor(kategoriaId, kategoriak)`
   / `KATEGORIA_PALETTA` / `ALAP_KATEGORIA_SZIN` / `ISMERETLEN_KATEGORIA`
   (`app/src/design/treatmentVisuals.ts`) — a `Kategoria.szin` mező (az
@@ -352,7 +352,7 @@ Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
-döntések (D1–D24) egy helyen, számozva élnek a
+döntések (D1–D28) egy helyen, számozva élnek a
 `docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
 háttere külön fájlban, `docs/backlog-<n>-<cim>-terv.md` néven. Amikor egy
 modul vagy komponens "miért így van megcsinálva" kérdés merül fel, először
@@ -371,11 +371,12 @@ Egy backlog-tétel megvalósítása után ezt a sorrendet kell követni,
 ugyanabban a körben, nem később:
 
 1. **Csak teljesen kész tételnél.** Ha a tétel csak részben kész (pl.
-   kódrész kész, doktori adatmunka nyitva — lásd a 8. tétel mintáját a
-   `docs/08-backlog.md`-ben: „**Kódrész — KÉSZ (dátum).**" + „Még nyitva"
-   albekezdés), a tétel a `docs/08-backlog.md`-ben marad, ugyanebben a
-   mintában jelölve. **Nem archiválunk, nem törlünk semmit**, amíg a tétel
-   csak részben kész.
+   kódrész kész, doktori adatmunka nyitva), a tétel a `docs/08-backlog.md`-ben
+   marad, „**Kódrész — KÉSZ (dátum).**" bekezdéssel + „Még nyitva"
+   albekezdéssel jelölve. **Nem archiválunk, nem törlünk semmit**, amíg a
+   tétel csak részben kész — ha a maradék tisztán doktori adatmunka (nincs
+   hozzá kódfeladat), az önálló, kódot nem igénylő backlog-tételként is
+   kiválhat, és a kódrész ekkor a szokásos módon lezárható.
 2. **Döntések átvezetése.** A tervdokumentum (`docs/backlog-N-*-terv.md`)
    döntéseiből, ami tartósan érvényes (nem feladatlista, nem elvetett
    alternatíva, nem teszt-terv), az bekerül a megfelelő `docs/02`–`07`
@@ -409,7 +410,7 @@ ugyanabban a körben, nem később:
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D24 döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D28 döntések és indoklásuk; adatvédelmi keret; kockázatok |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, árlista admin, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |

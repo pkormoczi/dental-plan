@@ -14,10 +14,10 @@
 // jórészt zárt halmazokból jön -- a fog-id-k csak `isMaradoFog()`-on átment
 // FDI kódok lehetnek (`buildToothVisualStates` már ezt garantálja), a színek
 // pedig a `HEX_COLOR_RE`-n átmenő (vagy `ALAP_KATEGORIA_SZIN`-re eső) hex
-// értékek. A kategórianév viszont a docs/08-backlog.md 8. tétel óta a doki
-// által szerkesztett szabadszöveg (`Kategoria.nev`, a kategória-karbantartó
-// panelen) -- interaktív módban ez kerül az `aria-label` attribútumba, ezért
-// a `attrEscape()` mindig lefut rá, mielőtt markupba kerülne.
+// értékek. A kategórianév viszont a doki által szerkesztett szabadszöveg
+// (`Kategoria.nev`, a kategória-karbantartó panelen) -- interaktív módban ez
+// kerül az `aria-label` attribútumba, ezért a `attrEscape()` mindig lefut rá,
+// mielőtt markupba kerülne.
 
 import chartSvgRaw from '../assets/dental-chart-fdi-32.svg?raw';
 import { isMaradoFog, type FogterkepAllapot } from '../domain/toothVisual';

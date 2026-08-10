@@ -33,8 +33,7 @@ export default function DentalChartLegend({ kategoriak, nyelv = 'hu' }: DentalCh
           />
           {/* Csendes HU-visszaesés, `HU` jelvény NÉLKÜL -- a jelmagyarázat
               dekoratív (fogtérkép színkulcs), nem egy ajánlott sor neve, tehát
-              nem esik a D21-őr (fallbackSorok) hatálya alá, lásd
-              docs/backlog-8-kategoriakezeles-terv.md 13. döntés. */}
+              nem esik a D21-őr (fallbackSorok) hatálya alá. */}
           <Text size="1" color="gray">
             {resolveNev(kategoria.nev, nyelv).szoveg}
           </Text>

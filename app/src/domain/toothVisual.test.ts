@@ -31,8 +31,8 @@ function kategoria(id: string, sorrend: number, szin: string): Kategoria {
 
 // A régi vödör-alapú prioritási tábla (SEBESZET, IMPLANTATUM, FOGSOR, KORONA,
 // GYOKERKEZELES, PARODONTOLOGIA, TOMES, EGYEB) precedenciáját utánozzuk itt:
-// minél kisebb a `sorrend`, annál előrébb áll ütközésnél (docs/backlog-8-
-// kategoriakezeles-terv.md 3. döntés). A `KAT_*` a nyers `Kategoria` (a
+// minél kisebb a `sorrend`, annál előrébb áll ütközésnél (D28,
+// `docs/01-attekintes-es-dontesek.md`). A `KAT_*` a nyers `Kategoria` (a
 // `priceList.kategoriak`-ba való), a `K_*` a belőle számított
 // `KategoriaVizual` (a `FogKezeles.vizual`/`jelmagyarazat` alakja).
 const KAT_KORONA = kategoria('k10', 1, '#4dabf7');

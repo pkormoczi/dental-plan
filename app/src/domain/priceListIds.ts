@@ -11,7 +11,7 @@ export function nextTetelId(tetelek: { id: string }[]): string {
   return `t${String(max + 1).padStart(3, '0')}`;
 }
 
-/** A `nextTetelId` kategória-párja (docs/08-backlog.md 8. tétel, 9. döntés). */
+/** A `nextTetelId` kategória-párja, ugyanazzal a D17-szerű elvvel. */
 export function nextKategoriaId(kategoriak: { id: string }[]): string {
   let max = 0;
   for (const item of kategoriak) {

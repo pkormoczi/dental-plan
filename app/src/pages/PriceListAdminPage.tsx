@@ -7,9 +7,10 @@
 // A sor kinyitása adja a teljes szerkesztést, benne a kategória
 // legördülővel -- ez a takarítás fő eszköze (a 11 árva tétel átmozgatása,
 // lásd docs/06-arlista-import.md). A tétel-táblázat fölötti "Kategóriák"
-// panel (docs/08-backlog.md 8. tétel) adja a másik felet: kategória
-// létrehozás/átnevezés/színezés/sorrendezés/törlés, egy helyen a
-// tétel-mozgatással, hogy a doki ne navigáljon oda-vissza a takarításkor.
+// panel (docs/03-funkcionalis-spec.md § Kategóriák panel) adja a másik
+// felet: kategória létrehozás/átnevezés/színezés/sorrendezés/törlés, egy
+// helyen a tétel-mozgatással, hogy a doki ne navigáljon oda-vissza a
+// takarításkor.
 
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
@@ -110,7 +111,7 @@ function BufferedTextField({
   );
 }
 
-/** `BufferedTextField` többsoros párja -- a tétel-leírás mezőkhöz (docs/08-backlog.md 10. tétel). Ugyanaz a draft/focused minta, lásd fent. */
+/** `BufferedTextField` többsoros párja -- a tétel-leírás mezőkhöz (docs/02-domain-modell.md § Tétel-leírás). Ugyanaz a draft/focused minta, lásd fent. */
 function BufferedTextArea({
   value,
   onChange,
@@ -204,10 +205,9 @@ export default function PriceListAdminPage() {
   /**
    * Fel/le mozgatás: a `sortedKategoriak`-beli szomszéddal cserél, majd a
    * teljes listát 1..n-re újraszámozza -- így a tömbsorrend és a `sorrend`
-   * mező soha nem csúszik szét (docs/backlog-8-kategoriakezeles-terv.md 10.
-   * döntés). Ez most már nemcsak a lista-/PDF-sorrendet, hanem a fogszín-
-   * ütközés kimenetelét is befolyásolja (domain/toothVisual.ts
-   * `resolveToothVisual`, 3. döntés).
+   * mező soha nem csúszik szét. Ez nemcsak a lista-/PDF-sorrendet, hanem a
+   * fogszín-ütközés kimenetelét is befolyásolja (D28,
+   * domain/toothVisual.ts `resolveToothVisual`).
    */
   function moveCategory(id: string, irany: -1 | 1) {
     const idx = sortedKategoriak.findIndex((k) => k.id === id);
@@ -805,8 +805,8 @@ function ItemEditor({
 
 /**
  * Kategória-karbantartó -- alapból csukott, összecsukható panel a
- * tétel-táblázat FÖLÖTT (docs/backlog-8-kategoriakezeles-terv.md 11.
- * döntés), a `ToothChartPanel.tsx` mintáját követve (feltételes render,
+ * tétel-táblázat FÖLÖTT (docs/03-funkcionalis-spec.md § Kategóriák panel),
+ * a `ToothChartPanel.tsx` mintáját követve (feltételes render,
  * `aria-expanded`/`aria-controls`, nincs nyitás/csukás-animáció). Egy sor
  * kattintásra nyílik ki a `KategoriaEditor`-ra, ugyanúgy, mint a tétel-
  * táblázat sorai az `ItemEditor`-ra.
@@ -1014,8 +1014,7 @@ function KategoriaEditor({
       </Grid>
 
       {/* Kurált paletta, nincs szabad hex/natív color input -- két kategória
-          kaphat azonos színt, a felület ezt nem jelzi (docs/backlog-8-
-          kategoriakezeles-terv.md 4-5. döntés). */}
+          kaphat azonos színt, a felület ezt nem jelzi. */}
       <FieldGroup label="Szín (a fogtérképen ez jelöli a kategória kezeléseit)">
         <RadioCards.Root
           value={kategoria.szin ?? ALAP_KATEGORIA_SZIN}

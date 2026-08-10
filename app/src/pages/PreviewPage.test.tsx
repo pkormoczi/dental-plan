@@ -360,7 +360,7 @@ function seedWithCsomagItem() {
   localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
 }
 
-// docs/08-backlog.md 10. tétel, 14. döntés: PUHA megerősítő lépés, nem kemény
+// docs/02-domain-modell.md § Tétel-leírás: PUHA megerősítő lépés, nem kemény
 // blokk -- a doki tudatosan átugorhatja és véglegesíthet leírás nélkül is.
 describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lépés', () => {
   beforeEach(() => {

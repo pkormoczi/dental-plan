@@ -23,7 +23,7 @@ a felesleges szóközök levágva — szándékosan nem javítottam semmit.
 
 ## Megoszlás
 
-A `docs/08-backlog.md` 8. tétele (2026-08-09) óta — lásd „Két strukturális
+A 2026-08-09-i kategória-CRUD + adattisztítás óta — lásd „Két strukturális
 probléma" alább arra, mi változott az eredeti importhoz képest:
 
 | id | Kategória | Tétel |
@@ -46,8 +46,8 @@ probléma" alább arra, mi változott az eredeti importhoz képest:
 ## Két strukturális probléma az eredeti táblában — MEGOLDVA (2026-08-09)
 
 Az alábbi két probléma az eredeti importban (2026-07-01) még nyitva állt;
-a `docs/08-backlog.md` 8. tétele (kategória-CRUD + adattisztítás) óta
-megoldva. Az eredeti leírás lent marad — a kategória-karbantartó panel
+a 2026-08-09-i kategória-CRUD + adattisztítás óta megoldva. Az eredeti
+leírás lent marad — a kategória-karbantartó panel
 elkészülte előtt ez volt az egyetlen mód a besorolásra (a sor kinyitása →
 kategória legördülő), és a jövőbeli hasonló import-eseteknek is mintát ad.
 
@@ -86,8 +86,9 @@ kaptak, a `k12`-ből átmozgatva:
 `Retenciós készülék állcsontonként` ·
 `Rögzített készülék aktiválása alkalmanként`
 
-Az adminban a Kategóriák panel (docs/08-backlog.md 8. tétel) adja a
-kategória létrehozását/átnevezését/törlését; a tétel-táblázat sorának
+Az adminban a Kategóriák panel (docs/03-funkcionalis-spec.md § Kategóriák
+panel) adja a kategória létrehozását/átnevezését/törlését; a tétel-táblázat
+sorának
 kinyitása → kategória legördülő mozgatja át a tételeket köztük — ez
 továbbra is a takarítás fő eszköze egy-egy jövőbeli, hasonlóan
 félresorolt tételre.
@@ -111,10 +112,10 @@ Ezek a tételek kapják a `*` jelölést a nyomtatványon (D15).
 
 ## Ismert szennyeződés — státusz 2026-08-09 után
 
-A `docs/08-backlog.md` 8. tétele során ~20 egyértelmű elgépelés lett
-kijavítva közvetlenül a seedben (hiányzó szóközök/ékezetek, bezáratlan
-zárójel, kisbetűs tételkezdés, vegyes `implantatum`/`implantátum`
-írásmód — a teljes lista a tétel implementációs jegyzeteiben). A
+A 2026-08-09-i kategória-CRUD + adattisztítás során ~20 egyértelmű
+elgépelés lett kijavítva közvetlenül a seedben (hiányzó szóközök/ékezetek,
+bezáratlan zárójel, kisbetűs tételkezdés, vegyes `implantatum`/`implantátum`
+írásmód). A
 `Lokátor felépítmény` duplikátum (`t083`/`t093`, azonos 130 000 Ft)
 **inaktiválva** lett (`t093`, `aktiv: false`) — nem törölve (D17), a doki
 egy kattintással visszakapcsolhatja, ha mégis két külön tétel volt a
@@ -131,7 +132,7 @@ ami a dokira tartozik, az adminban egy-egy szerkesztés:
 | `t054`/`t055`/`t056` (BLX/Straumann implantátumok) | Ékezethasználat már egységes, de a névforma (szórend) a három sor közt eltér |
 | `gyakori` jelölés | Mind `false` — a dokinak kell 8–12 tételt megjelölnie |
 | A két `SAVOS` tétel alsó határa | Az import értelmezte, nem másolta (lásd fent) |
-| `k04`/`k05`/`k06`/`k12` fogtérkép-színe | Mind az alap szürke (`#adb5bd`) — a kategória-karbantartó panelben (docs/08-backlog.md 8. tétel) egy kattintással átszínezhető |
+| `k04`/`k05`/`k06`/`k12` fogtérkép-színe | Mind az alap szürke (`#adb5bd`) — a kategória-karbantartó panelben egy kattintással átszínezhető |
 
 ## Amit a seed 2026-08-06 óta tartalmaz, és mit még nem
 
@@ -153,9 +154,9 @@ ami a dokira tartozik, az adminban egy-egy szerkesztés:
   megjelölnie, ezek lesznek a szerkesztő gyorsgombjai.
 - **`forrasSor`**: az eredeti Excel sorszáma, hogy az első átnézésnél
   vissza lehessen keresni. Az első admin-mentés után elhagyható.
-- **`Kategoria.szin`**: mind a 13 kategórián ki van töltve (2026-08-09,
-  docs/08-backlog.md 8. tétel) — a korábbi, kódba huzalozott
-  kategória→szín "vödör"-tábla (`design/treatmentVisuals.ts`) helyett a
+- **`Kategoria.szin`**: mind a 13 kategórián ki van töltve (2026-08-09) —
+  a korábbi, kódba huzalozott kategória→szín "vödör"-tábla
+  (`design/treatmentVisuals.ts`) helyett a
   fogtérkép színe innen olvas. Additív mező, nincs `schemaVersion`-emelés
   (D18 ettől függetlenül érvényben marad).
 - **`Tetel.leiras`/`Tetel.csomag`**: egyik 118 tételen sincs kitöltve

@@ -346,9 +346,9 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
     expect(screen.getByText('Garantie: 3 Jahre auf Zahnersatz.')).toBeInTheDocument();
   });
 
-  // A tervdokumentum (docs/08-backlog.md korábbi 13. tétel) 3. döntése
-  // ezt kifejezetten megköveteli: a Garancia -- a nyilatkozattal
-  // ellentétben -- NEM esik a "csak ajánlat" kapcsoló alá.
+  // A Sablon-placeholder őr (docs/03-funkcionalis-spec.md § Sablon-
+  // placeholder őr, D23) ezt kifejezetten megköveteli: a Garancia -- a
+  // nyilatkozattal ellentétben -- NEM esik a "csak ajánlat" kapcsoló alá.
   it('"csak ajánlat" (offerOnly) módban a Garancia oldal MARAD, a nyilatkozat és aláírás oldal eltűnik', () => {
     renderWithGarancia({ offerOnly: true, nyilatkozatMd: 'Nyilatkozat szövege.' });
     expect(screen.getByText('Garancia')).toBeInTheDocument();

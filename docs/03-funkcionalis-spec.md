@@ -598,7 +598,22 @@ A szem ikon inaktivál. Törölni nem lehet, és az `id`-t **soha nem
 használjuk újra** (D17) — ezen múlik, hogy a régi tervek évek múlva is
 értelmezhetők maradnak.
 
-Kategória hozzáadása, átnevezése, sorrendezése ugyanitt.
+### Kategóriák panel
+
+Összecsukható panel a tétel-táblázat FÖLÖTT. Kategória létrehozása,
+átnevezése, színezése (kurált palettából, `KATEGORIA_PALETTA`), fel/le
+sorrendezése; **törlés csak üres kategórián** — ha van rajta tétel, előbb
+át kell mozgatni (a tétel-táblázat sorának kinyitása → kategória legördülő,
+lásd „Sor kinyitása" fent).
+
+A kategória sorrendje nem csak megjelenítési sorrend: a fogtérkép
+ütközési prioritása is ebből olvas (docs/07-felulet-rendszer.md § Szín,
+forma, sűrűség, D28) — egy fogon több kezelés esetén a listában előrébb
+álló kategória színe nyer.
+
+Az új kategória `id`-je a `nextKategoriaId()` max-alapú számításával
+készül — a `nextTetelId` párja, ugyanaz a D17-szerű elv (soha nem
+hossz-alapú, soha nem újrahasznosított).
 
 ---
 

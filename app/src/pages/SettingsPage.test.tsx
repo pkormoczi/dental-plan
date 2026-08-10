@@ -107,8 +107,8 @@ describe('SettingsPage', () => {
       expect(v1).not.toContain('Kiegészítés.');
     });
 
-    // docs/08-backlog.md korábbi 13. tétel (Garancia szakasz a
-    // nyomtatványon): harmadik sablon-szlot, ugyanazon a mechanizmuson --
+    // Garancia szakasz a nyomtatványon (docs/04-nyomtatvany-spec.md § „3.
+    // oldal — garancia"): harmadik sablon-szlot, ugyanazon a mechanizmuson --
     // a mező alapból a placeholder szöveget mutatja (a nyilatkozattal/
     // fizetési feltételekkel ellentétben, azoknak már van valódi tartalma).
     it('backlog-13: a Garancia mező alapból a placeholder szöveget mutatja, szerkesztése új -v2 fájlt hoz létre', async () => {

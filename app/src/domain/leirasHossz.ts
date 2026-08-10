@@ -1,5 +1,5 @@
 // Puha hosszkorlát-figyelmeztetés a tétel-/sor-leírásra
-// (docs/08-backlog.md 10. tétel, 7. döntés) -- két hívó van rá (Árlista
+// (docs/02-domain-modell.md § Tétel-leírás) -- két hívó van rá (Árlista
 // admin `ItemEditor` ÉS a tervszerkesztő `LineRow`), ezért domain-szintű
 // segédfüggvény, nem UI-réteg duplikátum.
 

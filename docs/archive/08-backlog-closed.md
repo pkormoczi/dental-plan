@@ -604,6 +604,52 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   harmadik, puha megerősítő lépéssel jelzi a hiányzó csomag-leírásokat
   (`docs/03-funkcionalis-spec.md` § 4. Előnézet és véglegesítés).
 
+### 8. Árlista-nap: kategóriakezelés kódban + adattisztítás a dokival — KÉSZ (2026-08-10)
+
+- **Méret:** fél nap kód.
+- **Kereteket sért?** Nem.
+- **Valódi haszon:** kategória-CRUD (létrehozás, átnevezés, színezés,
+  fel/le sorrendezés, törlés csak üres kategórián) egy összecsukható
+  panelen az Árlista adminban — korábban a kategóriakezelés kódba
+  huzalozott átnevezést/újratelepítést igényelt.
+- **Megvalósítás:** a fogtérkép színe a kódba huzalozott 8 elemű
+  „vödör"-tábla helyett közvetlenül az árlista `Kategoria.szin` mezőjéből
+  olvas (`design/treatmentVisuals.ts` átírva); egy fogon több kezelés
+  esetén a kategórialista sorrendje az ütközési prioritás —
+  `docs/03-funkcionalis-spec.md` § Kategóriák panel,
+  `docs/07-felulet-rendszer.md` § Szín, forma, sűrűség, D28
+  (`docs/01-attekintes-es-dontesek.md`). Emellett a
+  `data/arlista.seed.json`-ban elvégeztük azt az adattisztítást, ami
+  tisztán mechanikus volt (nem igényelt doktori döntést): ~20 elgépelés
+  javítva, `k01 Besorolatlan` átnevezve „Diagnosztika és
+  konzultáció"-ra, az `k12 Egyéb kezelések` 6 fogszabályozási tétele
+  saját `k13 Fogszabályozás` kategóriába átmozgatva, az 5 francia
+  maradványtétel + a `Lokátor felépítmény` duplikátum inaktiválva
+  (`aktiv: false`, id megtartva, D17) — `docs/06-arlista-import.md`. A
+  hátralévő doktori adatmunka (`gyakori` csillagozás, `SAVOS`
+  alsó-határok, a maradék kategorizálási döntések) külön, kódot nem
+  igénylő tételként él tovább a `docs/08-backlog.md`-ben.
+
+### 13. Garancia szakasz a nyomtatványon — KÉSZ (2026-08-10)
+
+- **Méret:** fél nap kód.
+- **Kereteket sért?** Nem — D23 emiatt lett általánosítva: a garancia a
+  nyilatkozattal ellentétben nem kap kemény placeholder-zárat, mert nem
+  aláírandó lap, a fizetési feltételekkel egyező HU-visszaesést kap.
+- **Valódi haszon:** pácienskommunikáció — a „Van rá garancia?" kérdésre
+  ma csak szóbeli válasz van.
+- **Megvalósítás:** új, önálló oldal a nyomtatványon (a fizetési
+  feltételek után, a nyilatkozat előtt), harmadik sablon-szlotként
+  (`garancia-hu`/`garancia-de`) a nyilatkozat/fizetési feltételek már
+  meglévő, teljesen generikus betöltő-/mentő-/verziózó infrastruktúráján
+  — a Beállításokban szerkeszthető, „csak ajánlat" módban is mindig
+  megjelenik — `docs/04-nyomtatvany-spec.md` § „3. oldal — garancia",
+  `docs/03-funkcionalis-spec.md` § Sablon-placeholder őr, D23
+  (`docs/01-attekintes-es-dontesek.md`). A tényleges magyar
+  garanciaszöveg még a dokitól vár — a `GARANCIA_HU_V1` seed egyelőre
+  placeholder; ez külön, kódot nem igénylő tételként él tovább a
+  `docs/08-backlog.md`-ben.
+
 ---
 
 ## Technikai adósság (a 2026-08-06-i kódreview nyitva maradt tételei)

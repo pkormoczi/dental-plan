@@ -46,7 +46,7 @@ export interface Tetel {
   /** Csak az importból; a doksi szerint az első admin-mentés után elhagyható. */
   forrasSor?: number;
   /**
-   * Kétnyelvű "mi van benne" leírás (docs/08-backlog.md 10. tétel). Additív
+   * Kétnyelvű "mi van benne" leírás (docs/02-domain-modell.md § Tétel-leírás). Additív
    * mező, nincs `schemaVersion`-emelés -- hiányzó mező = a doki még nem adott
    * meg leírást ehhez a tételhez.
    */
@@ -144,7 +144,7 @@ export interface Plan {
    */
   kedvezmenyOsszeg?: number | null;
   /**
-   * Nyomtatásra kerüljenek-e a sorok leírásai (docs/08-backlog.md 10. tétel).
+   * Nyomtatásra kerüljenek-e a sorok leírásai (docs/02-domain-modell.md § Tétel-leírás).
    * Additív mező, `schemaVersion` nem emelkedett -- hiányzó mező = `true` (a
    * mező bevezetése előtti terv.json).
    */

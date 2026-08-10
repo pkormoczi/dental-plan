@@ -121,7 +121,7 @@ const s = {
   phaseTotalValue: { fontSize: 9.5, fontWeight: 600 },
   phaseNote: { fontSize: 8.5, color: t.textMuted, marginTop: 3 },
 
-  // Tétel-leírás sorai (docs/08-backlog.md 10. tétel, 9. döntés) -- a
+  // Tétel-leírás sorai (docs/02-domain-modell.md § Tétel-leírás) -- a
   // `savosFootnote`/`phaseNote` mintáján, behúzva, hogy alrészletnek
   // olvasódjon, ne új tételsornak.
   leirasBlock: { marginBottom: 2 },
@@ -239,7 +239,7 @@ function PhaseTable({
 }: {
   fazis: Fazis;
   currency: Plan['penznem'];
-  /** docs/08-backlog.md 10. tétel, 12. döntés -- `plan.leirasokMutatasa`. */
+  /** docs/02-domain-modell.md § Tétel-leírás -- `plan.leirasokMutatasa`. */
   leirasokMutatasa: boolean;
   L: PdfLabels;
 }) {

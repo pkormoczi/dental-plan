@@ -3,7 +3,7 @@
 // fogtérkép (design/toothChartSvg.ts) és a nyomtatvány (pdf/ToothChartPdf.tsx)
 // mind innen olvas -- ne duplikáld a színeket máshol.
 //
-// Idáig (docs/08-backlog.md 8. tétel előtt) volt egy köztes "vödör"-réteg: a
+// Korábban volt egy köztes "vödör"-réteg: a
 // 12 valódi árlista-kategória kódban be volt huzalozva 8 fix
 // `KezelesVizual` érték egyikébe (`KATEGORIA_VIZUAL`), és csak a vödör kapott
 // színt/feliratot/prioritást -- egy új kategória örökre szürke maradt volna.
@@ -41,12 +41,12 @@ const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
 /**
  * Kurált, egymástól jól megkülönböztethető színkészlet -- nincs szabad hex
- * vagy natív `<input type="color">` (docs/backlog-8-kategoriakezeles-terv.md
- * 4. döntés), hogy a doki ne választhasson két kategóriának ugyanolyan vagy
- * fehérhez közeli árnyalatot anélkül, hogy ezt a felület jelezné. A mai 8
+ * vagy natív `<input type="color">`, hogy a doki ne választhasson két
+ * kategóriának ugyanolyan vagy fehérhez közeli árnyalatot anélkül, hogy ezt
+ * a felület jelezné. A mai 8
  * "vödör"-szín (SEBESZET, IMPLANTATUM, FOGSOR, KORONA, GYOKERKEZELES,
  * PARODONTOLOGIA, TOMES, EGYEB) mind szerepel, hogy a meglévő seed-adat
- * (6. döntés) egy-az-egyben migrálható legyen.
+ * egy-az-egyben migrálható legyen.
  */
 export const KATEGORIA_PALETTA: readonly PalettaSzin[] = [
   { hex: '#ff6b6b', nev: 'Korall' },
@@ -68,9 +68,9 @@ export const KATEGORIA_PALETTA: readonly PalettaSzin[] = [
 ];
 
 /**
- * Új kategória alapszíne (docs/backlog-8-kategoriakezeles-terv.md 5. döntés)
- * ÉS a hiányzó/érvénytelen `Kategoria.szin` runtime-visszaesése (6. döntés) --
- * ugyanaz a semleges szürke, mint a régi `EGYEB` vödör színe volt.
+ * Új kategória alapszíne ÉS a hiányzó/érvénytelen `Kategoria.szin`
+ * runtime-visszaesése -- ugyanaz a semleges szürke, mint a régi `EGYEB`
+ * vödör színe volt.
  */
 export const ALAP_KATEGORIA_SZIN = '#adb5bd';
 

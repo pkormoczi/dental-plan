@@ -67,7 +67,7 @@ export function createBlankPlan(settings: Settings, priceList: PriceList): Plan 
     elolegSzazalek: null,
     // A doki kapcsolója a szerkesztőben -- alapból nincs terv-szintű kedvezmény.
     kedvezmenyOsszeg: null,
-    // Alapból bekapcsolva -- docs/08-backlog.md 10. tétel, 12. döntés.
+    // Alapból bekapcsolva -- docs/02-domain-modell.md § Tétel-leírás.
     leirasokMutatasa: true,
   };
 }

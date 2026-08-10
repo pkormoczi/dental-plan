@@ -34,7 +34,7 @@ describe('piszkozatTartalmas', () => {
     expect(piszkozatTartalmas(plan)).toBe(false);
   });
 
-  // docs/08-backlog.md 10. tétel, 12. döntés: alapból bekapcsolva.
+  // docs/02-domain-modell.md § Tétel-leírás: alapból bekapcsolva.
   it('createBlankPlan starts with leirasokMutatasa: true', () => {
     const plan = createBlankPlan(settings, priceList);
     expect(plan.leirasokMutatasa).toBe(true);

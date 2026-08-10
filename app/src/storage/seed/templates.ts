@@ -97,9 +97,9 @@ Der Auftraggeber stimmt der Durchführung der im Behandlungsplan aufgeführten B
 - Zahlungsart: Bargeld, Gesundheitskassenkarte oder Kartenüberweisung.
 `;
 
-// docs/08-backlog.md korábbi 13. tétel (Garancia szakasz a nyomtatványon):
-// az eredeti Excelben nincs garancia-szöveg, tehát -- a fenti kettővel
-// ellentétben -- itt a MAGYAR sem valódi, lektorált tartalom, hanem
+// Garancia szakasz a nyomtatványon (docs/04-nyomtatvany-spec.md § „3. oldal
+// — garancia"): az eredeti Excelben nincs garancia-szöveg, tehát -- a fenti
+// kettővel ellentétben -- itt a MAGYAR sem valódi, lektorált tartalom, hanem
 // szándékos placeholder: a doki adja meg (kezeléstípusonkénti
 // garanciaidők, kivételek), a Beállítások képernyőn. A német is
 // placeholder marad, de más okból, mint a fenti DE szövegeknél: nincs mit
