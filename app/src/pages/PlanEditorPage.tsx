@@ -633,7 +633,13 @@ function LineRow({
                 onChange={(e) => onPatch({ nevSnapshot: e.target.value })}
                 aria-label="Beavatkozás megnevezése"
                 aria-invalid={!line.nevSnapshot.trim() || undefined}
-                style={{ borderColor: line.nevSnapshot.trim() ? t.controlBorder : t.danger }}
+                // Radix a TextField keretét box-shadow-val rajzolja, nem
+                // border-rel (lásd index.css) -- `borderColor` itt nem
+                // hatna semmit, a hibaállapotot ezért box-shadow-val kell
+                // felülírni. Alapállapotban a globális CSS-szabály elég.
+                style={
+                  line.nevSnapshot.trim() ? undefined : { boxShadow: `inset 0 0 0 1px ${t.danger}` }
+                }
               />
             </Box>
             {egyedi && (
@@ -665,7 +671,12 @@ function LineRow({
               placeholder="16, 17, 26"
               onChange={(e) => onPatch({ fogak: e.target.value })}
               aria-invalid={invalidFormat || undefined}
-              style={{ textAlign: 'center', borderColor: invalidFormat ? t.danger : t.controlBorder }}
+              // lásd a soron fentebb: box-shadow, nem borderColor -- az
+              // utóbbi nem hatna semmit a Radix TextField-en.
+              style={{
+                textAlign: 'center',
+                ...(invalidFormat ? { boxShadow: `inset 0 0 0 1px ${t.danger}` } : {}),
+              }}
             />
           </Box>
           <ToothPickerPopover
@@ -718,7 +729,7 @@ function LineRow({
                 onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
               }
               textAlign="right"
-              style={{ borderColor: discount ? t.brand : t.controlBorder }}
+              style={discount ? { borderColor: t.brand } : undefined}
               aria-label="Ajánlati egységár"
             />
           </Box>

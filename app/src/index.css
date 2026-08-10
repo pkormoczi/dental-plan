@@ -26,3 +26,26 @@ h6 {
 button {
   font: inherit;
 }
+
+/*
+ * docs/07-felulet-rendszer.md controlBorder: minden interaktív kontroll
+ * kerete, a `solid` Button kivételével -- annak saját kitöltése már 3:1
+ * fölött van a lap hátterével szemben, a keret nélkül is látszik a
+ * határa. Radix a keretet box-shadow-val rajzolja, nem border-rel (lásd
+ * a `.rt-*` forrás-CSS-t) -- ezért itt is azt írjuk felül, hogy ne
+ * toljon el semmilyen layoutot. `--control-border` értékét `main.tsx`
+ * állítja be `tokens.ts` `controlBorder`-jéből.
+ * Kikapcsolt kontrollra nem vonatkozik (WCAG 1.4.11 csak aktív
+ * kontrollra kötelező).
+ */
+.rt-BaseButton:where(.rt-variant-soft, .rt-variant-ghost):not([data-disabled]) {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+.rt-TextFieldRoot:not(:has(.rt-TextFieldInput:disabled)):not(:has(.rt-TextFieldInput:read-only)) {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+.rt-CheckboxRoot[data-state='unchecked']:not(:disabled)::before {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}

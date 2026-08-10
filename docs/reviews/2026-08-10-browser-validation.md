@@ -16,19 +16,21 @@ vándorolnak, utána ez törölhető (ugyanaz az életciklus, mint a
 | Súlyosság | Darab |
 |---|---|
 | Kritikus | 0 |
-| Közepes | 3 |
-| Apró | 1 |
+| Közepes | 5 (1 javítva: K1) |
+| Apró | 1 (javítva: A1) |
 | Megerősített, hibátlan | 9 terület |
 
-A három Közepes tétel mindegyike **rendszerszintű** (az egész appot érinti, nem egy
-komponenst) — egyik sem trivi kis javítás, ezért nem lettek autonóm módon átírva.
-Az Apró (betöltő-állapot skeleton) tétel a menet része volt, azt javítottam is.
+A Közepes tételek mindegyike **rendszerszintű** (az egész appot érinti, nem egy
+komponenst) — egyik sem trivi kis javítás, ezért nem lettek autonóm módon átírva,
+K1 kivételével (lásd lent, a felhasználó explicit kérésére). K4 és K5 a K1
+javítás utólagos böngészős visszaellenőrzése (2026-08-10, második menet) során
+derült ki — nem az eredeti menet találatai.
 
 ---
 
 ## Közepes súlyosságú találatok
 
-### K1 — `controlBorder` egyetlen Radix `Button`-ra sincs alkalmazva
+### K1 — `controlBorder` egyetlen Radix `Button`-ra sincs alkalmazva — JAVÍTVA (2026-08-10)
 
 `docs/07-felulet-rendszer.md`: *"`controlBorder` — Minden interaktív kontroll (input,
 gomb, chip, dropdown) kerete — 3,00:1, WCAG 1.4.11. Nem az `uiLine`, az ahhoz túl
@@ -59,6 +61,41 @@ Ez szó szerinti, egyértelmű szabálysértés, de rendszerszintű: érinti, ho
 nyelvével egy `solid` gombnál, aminek amúgy is van kitöltés-kontrasztja), vagy csak a
 kontraszt nélküli variánsok (`soft`, `ghost`). Ez tervezési döntés, nem mechanikus
 patch — a `docs/08-backlog.md`-be javasolt.
+
+**Javítva.** A `solid` variáns kivétel maradt (saját kitöltés-kontrasztja miatt),
+minden más interaktív kontroll (Button `soft`/`ghost`, `IconButton`, natív Radix
+`TextField`, `Checkbox`) kivétel nélkül megkapja a keretet, a sűrű Árlista-tábla
+soronkénti ikon-kapcsolóit is beleértve. Egy globális CSS-szabály adja
+(`app/src/index.css`, Radix saját `.rt-*` osztályaira célozva box-shadow-val, mert
+Radix a keretet így rajzolja, nem `border`-rel) — ez minden jelenlegi ÉS jövőbeli
+Button/TextField/Checkbox-ra automatikusan érvényes, nem call site-onkénti patch.
+A `--control-border` CSS-változót `main.tsx` állítja be `tokens.ts`
+`controlBorder`-jéből, egy forrás marad. A korábbi kézzel bedrótozott
+`PlanEditorPage.tsx` két `TextField.Root` mezője (`borderColor`) mellékesen egy
+valódi, önálló hibát is tartalmazott: Radix a mezőkeretet `box-shadow`-val
+rajzolja, nem `border`-rel, tehát a `borderColor` felülírás — a hiba-állapotra
+(piros keret üres/érvénytelen mezőnél) is — sosem volt látható; ez `boxShadow`-ra
+lett javítva. Részletek: `docs/07-felulet-rendszer.md` `controlBorder` sora.
+`tsc -b`, `oxlint` és a teljes 386 teszt zöld a javítás után.
+
+**Böngészős visszaellenőrzés (2026-08-10, második menet).** A mechanizmus
+igazoltan működik: mind a 7 route-on + a Home „Minden adat törlése”
+`AlertDialog`-jában minden `soft`/`ghost` Button, `IconButton`, `TextField` és
+`Checkbox` (`#/arlista`: mind a 237 érintett kontroll) pontosan
+`rgb(136, 150, 171)` (`#8896AB`) `box-shadow`-t kap, a `solid` Button-ök
+(pl. dialógus „Törlés”) és a letiltott kontrollok kivételével — utóbbira nem
+volt élesben letiltott soft/ghost minta a menetben, de a CSS ugyanazt a
+`[data-disabled]`/`:disabled` mintát használja, mint amit Radix saját maga is.
+A `PlanEditorPage.tsx` `boxShadow`-ra javított hibaállapota élesben is igazolva:
+üres tételnév és `99` érvénytelen fogszám mellett mindkét mező ténylegesen
+piros (`rgb(179, 38, 30)` = `t.danger`) keretet kap, `aria-invalid="true"`-val
+— korábban ez tényleg nem látszott. Konzol tiszta, nincs React hiba/warning.
+
+Eközben **két új, a K1 hatókörén kívül eső találat** derült ki — lásd K4 és K5
+lent. Egyik sem az imént leírt javítás hibája (a mechanizmus önmagában
+pontosan a szándékolt `#8896AB` színt alkalmazza mindenhol), hanem a
+`controlBorder` token és a `docs/07` szabály hatókörének saját, korábban rejtett
+hiányossága, amit csak a most bekerült keret tett mérhetővé.
 
 ### K2 — Az elsődleges CTA-gombok fehér szövege 3,53:1-en fut a 4,5:1 helyett
 
@@ -119,6 +156,53 @@ A gyökérokot (fontkit súly-feloldás, TTF metaadat, vagy `Font.register` API
 használat) nem vizsgáltam tovább — ez implementáció-szintű nyomozást igényel,
 nem böngészős ellenőrzést. Backlogba javasolt, `@react-pdf/renderer` verzió
 frissítés / font-fájl csere kipróbálásával kezdve.
+
+### K4 — `controlBorder` (`#8896AB`) valós felületeken 2,4–2,96:1-en fut a mondott 3,00:1 helyett
+
+A `tokens.ts` fejléckommentje és a `docs/07` táblázata "3,00:1 fehéren" —
+ez pontosan igaz, de **nulla tartalékkal**: `#8896AB` fehér (`#FFFFFF`) hátteret
+feltételez, miközben az app UI-ja sehol nem tesz ki kontrollt tiszta fehér
+háttérre. A K1 javítás böngészős visszaellenőrzése során, most hogy a keret
+ténylegesen megjelenik és mérhető, minden mért előfordulás a névleges alá esett:
+
+| Háttér | Példa | Mért kontraszt |
+|---|---|---|
+| `t.page` (`#F1F5F9`, appháttér) | Home `soft` gombok, `#/terv` fázis-gombok | 2,40:1 |
+| `Card`/`Table.Cell` (majdnem fehér, de nem az) | `#/paciens` TextField-ek, `#/arlista` sorok | 2,74–2,96:1 |
+
+Egyik sem véletlen mérési hiba — a `box-shadow` színe minden esetben igazoltan
+pontosan `rgb(136, 150, 171)`, a `#8896AB` maga fut kontraszthiányban a
+tényleges (nem fehér) hátterek felett. Ez azt jelenti, hogy a K1 javítás **a
+`docs/07` betűje szerint helyes** (a keret jelen van), de a mögötte álló WCAG
+1.4.11-célt (3:1) a jelenlegi tokenérték a gyakorlatban **sehol nem éri el**,
+legfeljebb 0,04–0,60-dal marad alatta.
+
+Rendszerszintű: a `controlBorder` érték módosítása minden meglévő
+felhasználását (Button/TextField/Checkbox a mai javításból, plusz a korábbi
+kézzel bedrótozott `NumberField`/`ItemPicker`/`ErrorBoundary`/
+`PlanEditorPage`-előfordulások) egyszerre érintené, tehát vizuális
+súly-döntés, nem mechanikus patch. Backlogba javasolt — a döntés: sötétebb
+érték választása annyi tartalékkal, hogy a legvilágosabb ténylegesen
+előforduló háttéren (`t.page`) is teljesüljön a 3:1, vagy a szabály
+újrafogalmazása háttérfüggő értékre.
+
+### K5 — A `ChipGroup` (Radix `SegmentedControl`) nincs a K1 hatókörében, keret nélküli marad
+
+A `docs/07` `controlBorder` sora név szerint négy kontrolltípust sorol fel:
+"input, gomb, **chip**, dropdown". A K1 grillezés során egyeztetett hatókör
+(Button/IconButton/TextField/Checkbox) nem tartalmazta a "chip"-et, mert az
+eredeti K1-mérés nem talált ilyet — de a `PatientPage`/`SettingsPage`/
+`PriceListAdminPage` nyelv-, pénznem- és alapértelmezett nyelv-váltója mind a
+közös `ChipGroup.tsx`-en (Radix `SegmentedControl.Root`/`.Item`) megy át, ami
+**nem** `Button`, tehát a mai globális CSS-szabály nem éri el.
+
+Böngészőben mérve (`#/paciens`): `.rt-SegmentedControlRoot`/`.Item`
+`box-shadow: none` — nulla keret, ugyanaz a hibaosztály, mint K1 eredetileg
+volt. Rendszerszintű abban az értelemben, hogy egy új CSS-szabály (vagy a
+meglévő kiterjesztése) + a K4 alatti szín-döntés együtt dől el — ezért nem
+lett autonóm módon bővítve a mai javítás, csak jelentve. Backlogba javasolt,
+K1-hez hasonló megoldással (`.rt-SegmentedControlRoot`-ra célzó box-shadow
+override).
 
 ---
 

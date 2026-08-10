@@ -41,7 +41,7 @@ igazság, ezt a táblázatot kell utána igazítani.
 | `text` | `#1A1A1A` | Törzsszöveg, mindkét felület használja |
 | `uiTextMuted` / `uiTextFaint` | `#475569` / `#64748B` | App-oldali halvány szöveg (slate-600/500) |
 | `uiLine` / `uiLineStrong` | `#E2E8F0` / `#CBD5E1` | App-oldali díszítő hajszálvonal — **csak** sorelválasztóra, nem interaktív keretre |
-| `controlBorder` | `#8896AB` | Minden interaktív kontroll (input, gomb, chip, dropdown) kerete — 3,00:1, WCAG 1.4.11. Nem az `uiLine`, az ahhoz túl halvány |
+| `controlBorder` | `#8896AB` | Minden interaktív kontroll (input, gomb, chip, dropdown) kerete — 3,00:1, WCAG 1.4.11. Nem az `uiLine`, az ahhoz túl halvány. **Kivétel: a `solid` Button variáns** — saját kitöltése már 3:1 fölött van a lap hátterével szemben, a határa keret nélkül is látszik. Minden más interaktív kontrollra (Button `soft`/`ghost`, `IconButton`, `TextField`, `Checkbox`) kivétel nélkül vonatkozik, sűrű táblázat-sorban lévő ikon-kapcsolóra is — lásd a globális CSS-szabályt (`app/src/index.css`, Radix `.rt-*` osztályaira célozva, mert Radix a keretet box-shadow-val rajzolja, nem border-rel) |
 | betűtípus | Roboto | `@fontsource/roboto` |
 | Logó | átszínezett (weboldalas) lockup | Az eredeti navy **nem** ez — lásd `docs/04-nyomtatvany-spec.md` „Logó", 300 dpi, 2662×666 px |
 
