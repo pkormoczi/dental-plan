@@ -16,17 +16,17 @@ vándorolnak, utána ez törölhető (ugyanaz az életciklus, mint a
 | Súlyosság | Darab |
 |---|---|
 | Kritikus | 0 |
-| Közepes | 5 (4 javítva: K1, K2, K3, K4) |
+| Közepes | 5 (mind javítva: K1–K5) |
 | Apró | 1 (javítva: A1) |
 | Megerősített, hibátlan | 9 terület |
 
 A Közepes tételek mindegyike **rendszerszintű** (az egész appot érinti, nem egy
 komponenst) — egyik sem trivi kis javítás, ezért nem lettek autonóm módon átírva,
-K1 és K2 kivételével (lásd lent, a felhasználó explicit kérésére). K3 és K4
-utólag, külön a felhasználó kérésére lett kivizsgálva és javítva (lásd lent) —
-a review menetében csak jelentve lettek. K4 és K5 a K1 javítás utólagos
-böngészős visszaellenőrzése (2026-08-10, második menet) során derült ki — nem
-az eredeti menet találatai.
+K1 és K2 kivételével (lásd lent, a felhasználó explicit kérésére). K3, K4 és
+K5 utólag, külön a felhasználó kérésére lett kivizsgálva és javítva (lásd
+lent) — a review menetében csak jelentve lettek. K4 és K5 a K1 javítás
+utólagos böngészős visszaellenőrzése (2026-08-10, második menet) során
+derült ki — nem az eredeti menet találatai.
 
 ---
 
@@ -414,7 +414,7 @@ szemantikus tokenje, nem a `docs/07` egyedi tokenkészlete, és nem áll
 kivizsgálva vagy javítva ebben a menetben (hatókörön kívül); ha a felhasználó
 szeretné, külön tétel.
 
-### K5 — A `ChipGroup` (Radix `SegmentedControl`) nincs a K1 hatókörében, keret nélküli marad
+### K5 — A `ChipGroup` (Radix `SegmentedControl`) nincs a K1 hatókörében, keret nélküli marad — JAVÍTVA (2026-08-10)
 
 A `docs/07` `controlBorder` sora név szerint négy kontrolltípust sorol fel:
 "input, gomb, **chip**, dropdown". A K1 grillezés során egyeztetett hatókör
@@ -434,6 +434,109 @@ egy független kód-szintű felmérés (a K4 javítás közben) azt is megerős�
 hogy a `Select.Trigger` szintén kimarad a mai globális CSS-szabály
 hatóköréből, ugyanezzel a hibaosztállyal — érdemes ezt K5 hatókörébe vonni,
 amikor az sorra kerül. Backlogba javasolt.
+
+**Javítva.** A `Select.Trigger` a mai javítás hatókörébe került a
+`ChipGroup`-pal együtt, a felhasználó explicit döntése alapján (grillezés,
+2026-08-10) — nem lett külön backlog-tételként elhalasztva.
+
+A két komponens a Radix forrásában **nem** azonos hibaosztály, ahogy a fenti
+bekezdés feltételezte:
+
+- A `SegmentedControl.Root` valóban keret nélküli (`box-shadow: none`) —
+  ez K1 eredeti hibaosztálya, pótlás a feladat.
+- A `Select.Trigger` viszont MÁR kap Radix-keretet: az appban sehol nincs
+  `variant` prop rajta, tehát az alapértelmezett `surface` variáns fut,
+  aminek van saját `box-shadow: inset 0 0 0 1px var(--gray-a7)`-je. Itt a
+  feladat egy meglévő, túl halvány keret felülírása, nem pótlás. Kézzel
+  számolt (böngészőben **nem** igazolt) kontraszt a `--slate-a7`/`a8`
+  kompozitálva egy közel fehér trigger-kitöltésre: nyugalmi ~1,56:1,
+  hover/`[data-state='open']` ~1,69:1 — mindkettő messze 3:1 alatt, tehát a
+  felülírás minden mért állapotban javulás, sehol nem regresszió.
+
+Menet közben egy, a K5 eredeti leírásában nem szereplő előfordulás is
+kiderült: a `PriceListAdminPage.tsx` tétel-szűrője egy `SegmentedControl.Root`-ot
+használ **közvetlenül**, nem a közös `ChipGroup.tsx`-en keresztül — ez utólag
+igazolja, hogy a CSS-szabályos (nem komponens-szintű) megközelítés volt a
+helyes, mert egy `ChipGroup.tsx`-be írt javítás ezt a szűrőt csendben
+kihagyta volna.
+
+Két új szabály került az `app/src/index.css`-be, a K1 blokk mintájában,
+ugyanabból a `--control-border` forrásból (`main.tsx`/`tokens.ts`,
+változatlan):
+
+```css
+.rt-SegmentedControlRoot:not([data-disabled]) {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+.rt-SelectTrigger:where(.rt-variant-surface, .rt-variant-soft, .rt-variant-ghost):not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+```
+
+A `SegmentedControl` szabálya a gyökérre vonatkozik, nem `Item`-enként — a
+`rt-SegmentedControlItemSeparator` már rajzol belső elválasztót, `Item`-enkénti
+keret duplázódna vele. Nem szűkül variánsra sem: a Radix `SegmentedControl`-nak
+csak `surface`/`classic` variánsa van (nincs soft/ghost), és a `classic` a
+saját árnyékát az indikátor thumb-ra teszi, nem a gyökér körvonalára — a
+gyökér mindkét variánsban keret nélküli. A `Select.Trigger` szabálya viszont
+szűkül: a `classic` variáns kimarad, a K1 `solid` Button-kizárásának
+mintájában (saját többrétegű box-shadow-ja van, azt nem írjuk felül vakon) —
+ma nulla gyakorlati hatással, mert az appban sehol nincs `classic` Select,
+csak jövőbiztosítás. A disabled-szűrő komponensenként eltér, mindkettő a
+saját mechanizmusát követi: `[data-disabled]` a `SegmentedControl.Root`-on,
+natív `:disabled` a `Select.Trigger`-en (az egy `<button>`).
+
+`tsc -b`, `oxlint` és a teljes teszt-készlet zöld a javítás után — a
+vitest-készlet erre a rétegre (nem tölti be az `index.css`-t/Radix Themes
+CSS-t) strukturálisan vak, ugyanúgy, mint K1/K4-nél.
+
+**Böngészős visszaellenőrzés (2026-08-10, hatodik menet).** A fenti
+kontrasztbecslés helyesnek bizonyult iránynak, de a tényleges mért érték
+eltér tőle: `--control-border` ténylegesen `rgb(100, 116, 139)`-re állt
+(`#64748B`, K4-ből), és minden mért `.rt-SegmentedControlRoot`/
+`.rt-SelectTrigger` előfordulás ezt kapja meg, jó tartalékkal 3:1 fölött —
+a checklist naiv `CTRL` szelektora (`input,button,select,...`) egyiket sem
+fedi (a `SegmentedControl.Root` egy `radiogroup` div, a `Select.Trigger`
+egy `role="combobox"` gomb, de a `box-shadow`-t a `.rt-*` osztályokon kell
+mérni, nem a natív selectoron) — ugyanaz a K4-nél már dokumentált korlát,
+ezért a mérés közvetlenül a `.rt-SegmentedControlRoot`/`.rt-SelectTrigger`
+CSS-szelektorokra célzott, a K4 két-szomszéd módszerével a SegmentedControl
+saját (`gray-a3` gradiens-overlay-jel kompozitált) kitöltésére is:
+
+| Előfordulás | Route | `box-shadow` | Külső kontraszt | Belső kontraszt (saját kitöltés) |
+|---|---|---|---|---|
+| `ChipGroup` nyelv | `#/paciens` | `rgb(100,116,139)` | 4,34:1 | 4,12:1 |
+| `ChipGroup` pénznem | `#/paciens` | `rgb(100,116,139)` | 4,34:1 | 4,12:1 |
+| `ChipGroup` nyelv (×2) | `#/beallitasok` | `rgb(100,116,139)` | 4,34:1 | 4,12:1 |
+| `SegmentedControl` közvetlen (tétel-szűrő) | `#/arlista` | `rgb(100,116,139)` | 4,34:1 | 4,12:1 |
+| `Select.Trigger` (Kategória, „+ Új tétel" dialógus) | `#/arlista` | `rgb(100,116,139)` | — | 4,76:1 |
+| `Select.Trigger` (Kategória, sor-szerkesztő) | `#/arlista` | `rgb(100,116,139)` | — | 4,73:1 |
+| `Select.Trigger` (célfázis, fogtérkép panel) | `#/terv` | `rgb(100,116,139)` | — | 4,70:1 |
+
+A `PriceListAdminPage` közvetlen `SegmentedControl` (nem `ChipGroup`-on
+keresztül) ugyanazt a keretet kapja — a fenti kód-szintű előrejelzés
+(CSS-szabályos, nem komponens-szintű megközelítés a helyes) élesben is
+megerősítve. A `[data-state='open']` állapot igazoltan tartós, nem tranziens
+(K4-ben ez volt a kritikus eset): a „+ Új tétel" dialógus Kategória
+`Select.Trigger`-ét ténylegesen megnyitva a `box-shadow` és a 4,76:1
+kontraszt változatlan maradt — megerősítve a specificitás-számítást (a mi
+`:not(:disabled)` szabályunk 0,2,0, a Radix saját `[data-state='open']`
+szabálya `:where()`-be csomagolva csak 0,1,0, tehát a miénk mindig nyer,
+hover/open állapottól függetlenül, `!important` nélkül). Hover állapotot
+külön nem mértem — ugyanaz a specificitás-érv vonatkozik rá, mint a nyitott
+állapotra, és a Radix saját hover-szabálya (`gray-a7`→`a8`) ugyanabba a
+`:where(:hover)` blokkba esik, tehát ugyanúgy felülíródik.
+
+Screenshot (`#/arlista`, sor-szerkesztő nyitva): a szűrő-sáv és a
+Kategória-legördülő kerete vizuálisan is látható, korábban észrevétlenül
+egybeolvadt volna a háttérrel. Negatív ellenőrzés: nem találtam élő,
+letiltott `Select.Trigger`-mintát a demó adatban, ezt nem tudtam közvetlenül
+mérni — a CSS-szabály `:not(:disabled)` feltétele ugyanazt a mintát követi,
+mint a már igazolt K1 Button/TextField/Checkbox szabályok. Konzol tiszta a
+menetben: az egyetlen üzenet egy DevTools „issue” (form mező id/name
+hiánya, 4-5 előfordulás) — ez K5-től független, a change előtt is jelen
+lévő állapot, nem regresszió.
 
 ---
 

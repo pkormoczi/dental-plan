@@ -54,6 +54,27 @@ button {
 }
 
 /*
+ * K5 (docs/reviews/2026-08-10-browser-validation.md): a `controlBorder` sor
+ * a "chip"-et és a "dropdown"-t is név szerint követeli, de a fenti K1
+ * szabályok egyike sem éri el a SegmentedControl-t (`ChipGroup.tsx` ÉS a
+ * `PriceListAdminPage` közvetlen tétel-szűrője) vagy a Select.Trigger-t.
+ * A SegmentedControl gyökere mindkét Radix-variánsban (surface/classic)
+ * teljesen keret nélküli -- nem szűkítjük variánsra. Item-enként nem
+ * rajzolunk keretet: a `rt-SegmentedControlItemSeparator` már ad belső
+ * elválasztót, duplázódna. A Select.Trigger ezzel szemben MÁR kap Radix
+ * keretet (`gray-a7`), csak túl halványat -- ez felülírás, nem pótlás; a
+ * `classic` variáns kimarad, mert saját többrétegű box-shadow-ja van
+ * (ugyanaz a logika, mint a `solid` Button kizárása feljebb).
+ */
+.rt-SegmentedControlRoot:not([data-disabled]) {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+.rt-SelectTrigger:where(.rt-variant-surface, .rt-variant-soft, .rt-variant-ghost):not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+/*
  * docs/07-felulet-rendszer.md `ink`: ez az elsődleges gomb háttere -- a Radix
  * `brown` accentjének step-9-e (#ad7f58) viszont fehér felirattal csak 3,53:1
  * (K2). Nem hívási helyenként javítjuk, hanem Radix saját accent-aliasát: így
