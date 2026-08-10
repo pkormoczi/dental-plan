@@ -37,6 +37,20 @@ interface AppStateValue {
   /** Betölt egy korábbi tervet a piszkozatba szerkesztésre (lásd "Korábbi tervek"). */
   loadPlanIntoDraft: (plan: Plan) => void;
   /**
+   * Beteszi a piszkozatba egy `planUjPaciensselTervhez`/`planMasolatKent`
+   * (domain/planCopy.ts, backlog-17) hívás EREDMÉNYÉT -- a hívó (
+   * PlanHistoryPage.tsx) már elvégezte a tiszta transzformációt, ez a
+   * függvény csak a React-bekötésért felel. A `resetPlanDraft` mintáját
+   * követi, NEM a `loadPlanIntoDraft`-ét: a most kapott `next` MÉG SOHA
+   * nincs elmentve a saját `tervId` alatt (a `planMasolatKent` is üres
+   * `tervId`-t ad), tehát ténylegesen mentetlen munka -- ezért `plan` és
+   * `mentettPlan` szándékosan KÜLÖNBÖZŐ referencia lesz, `vanMentetlenPiszkozat`
+   * azonnal igaz. A `drafts.clear()` hívás (amit a `resetPlanDraft` a végén
+   * elvégez) itt NEM fut -- ott azért törlünk, mert egy ÜRES tervre váltunk,
+   * itt VAN tartalom, amit az autosave-effektnek meg kell őriznie.
+   */
+  copyPlanIntoDraft: (next: Plan) => void;
+  /**
    * Igaz, ha `plan`-en van olyan tartalom (`piszkozatTartalmas`), ami még
    * nincs a fájl-storage-ban -- azaz `plan` egy másik objektumreferencia,
    * mint a legutóbb onnan betöltött/oda mentett terv. Ez vezérli a Home
@@ -268,6 +282,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         // külön példány hamis "mentetlen munka" jelzést adna, hiszen a
         // dátumbélyeg gépi lépés, nem doki-szerkesztés.
         setMentettPlan(friss);
+      },
+      copyPlanIntoDraft: (next) => {
+        setPlanState(next);
+        setLoadedOsszesitokDiff(null);
+        setFrissitettDatum(null);
+        setMentettPlan(null);
       },
       vanMentetlenPiszkozat: piszkozatTartalmas(plan) && plan !== mentettPlan,
       piszkozatMentve,

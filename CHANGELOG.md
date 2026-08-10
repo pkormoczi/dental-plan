@@ -4,6 +4,13 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 
 ## 2026. augusztus 10.
 
+- A Korábbi tervek listán két új gomb jelent meg: "Új terv a páciens adataival" (a páciensnév
+  mellett — új, üres tervet indít, csak a személyes adatokat véve át, hogy visszatérő
+  pácienshez ne kelljen újragépelni azokat) és "Másolás új tervként" (minden verziósoron — a
+  kiválasztott ajánlat összes sorát átveszi egy önálló, új tervbe, amit utána szabadon lehet
+  módosítani anélkül, hogy az eredeti ajánlat felülíródna — ez teszi könnyűvé egy A/B
+  árváltozat elkészítését). Mindkét gomb a Páciens adatlapra visz, ahol az átvett adatok még
+  pontosíthatók, mielőtt bármi mentődik.
 - A Terv szerkesztőben új "Kerek végösszeg beállítása" kapcsoló jelent meg az Összesítés alatt —
   bekapcsolva megadható a kívánt kerek végösszeg (pl. "legyen kereken 2 050 000"), a program a
   belőle adódó kedvezményt automatikusan kiszámolja és kiírja, így ezt nem kell soronként fejben

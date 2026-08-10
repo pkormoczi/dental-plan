@@ -562,6 +562,23 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   továbbra sem jelenik meg (D9), és az előleg a csökkentett összegből
   számol.
 
+### 17. Terv másolása új tervként / új terv a páciens adataival — KÉSZ (2026-08-10)
+
+- **Méret:** fél–1 nap.
+- **Kereteket sért?** Nem — D4 érintetlen, a másolat mindig új, üres
+  `tervId`-vel indul, sosem csúszik be verzióként egy meglévő láncba.
+- **Valódi haszon:** időmegtakarítás (visszatérő páciens adatai és a
+  közös sorok újragépelése esik ki), pácienskommunikáció (A/B ajánlat a
+  legnagyobb értékű konzultáción), hibacsökkentés (TAJ/cím újragépelése).
+- **Megvalósítás:** két belépési pont a Korábbi tervek listán — „Új terv a
+  páciens adataival" (páciensszinten, csak a `paciens` blokkot viszi
+  tovább egy friss alaptervre) és „Másolás új tervként" (verziószinten,
+  mindent átvisz a kattintott verzióból az azonosító/állapot/dátum
+  kivételével). Mindkettő a Páciens adatlapra navigál, nem egyenesen a
+  szerkesztőbe, és nincs hozzá külön tisztázó dialógus — a meglévő
+  piszkozat-felülírás-őr elég. `docs/03-funkcionalis-spec.md` § Terv
+  másolása új tervként, D26 (`docs/01-attekintes-es-dontesek.md`).
+
 ---
 
 ## Technikai adósság (a 2026-08-06-i kódreview nyitva maradt tételei)

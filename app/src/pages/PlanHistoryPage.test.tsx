@@ -1,12 +1,32 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 import PlanHistoryPage from './PlanHistoryPage';
 import { TestProviders } from '../testUtils';
 import { DemoStorage } from '../storage/DemoStorage';
 import { seedPlans } from '../storage/seed/plans';
 import { formatMoney } from '../domain/money';
+import { useAppState } from '../state/AppState';
 import type { Plan } from '../domain/types';
+
+// backlog-17: a "Másolás új tervként"/"Új terv a páciens adataival" gombok
+// a Páciens adatlapra navigálnak (6. döntés) -- a navigáció TÉNYÉT és a
+// piszkozatba került Plan tartalmát kell látni, ezért a "/paciens" célpont
+// egy kis probe, ami a friss draftot írja ki, nem egy néma stub.
+function DraftProbe() {
+  const { plan } = useAppState();
+  const sorCount = plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
+  return (
+    <div>
+      <div data-testid="draft-oldal">PACIENS-OLDAL</div>
+      <div data-testid="draft-nev">{plan.paciens.nev}</div>
+      <div data-testid="draft-tervid">„{plan.tervId}”</div>
+      <div data-testid="draft-sorcount">{sorCount}</div>
+      <div data-testid="draft-keltezes">{plan.keltezes}</div>
+    </div>
+  );
+}
 
 function seedPersistedDraft(overrides: Partial<Plan> = {}) {
   const plan: Plan = {
@@ -51,7 +71,11 @@ function penz(osszeg: number): string {
 function renderHistory() {
   return render(
     <TestProviders>
-      <PlanHistoryPage />
+      <Routes>
+        <Route path="/" element={<PlanHistoryPage />} />
+        <Route path="/paciens" element={<DraftProbe />} />
+        <Route path="/terv" element={<div>TERV-OLDAL</div>} />
+      </Routes>
     </TestProviders>,
   );
 }
@@ -173,5 +197,85 @@ describe('PlanHistoryPage', () => {
     await user.click(openBtn);
     await user.click(await screen.findByRole('button', { name: 'Megnyitás, piszkozat elvetésével' }));
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+  });
+
+  // backlog-17: a két új belépési pont eltérő szinten él -- páciensenként
+  // EGY "Új terv a páciens adataival" a névfejlécnél, és minden verzió-soron
+  // egy "Másolás új tervként" a Letöltés/Megnyitás mellett.
+  it('"Új terv a páciens adataival" páciensszinten egyszer, "Másolás új tervként" minden verzió-soron megjelenik', async () => {
+    renderHistory();
+
+    const nagyEva = await screen.findByText('Nagy Éva');
+    const card = nagyEva.parentElement as HTMLElement;
+
+    expect(
+      within(card).getByRole('button', { name: 'Új terv a páciens adataival' }),
+    ).toBeInTheDocument();
+    // Nagy Éva két verzióval szerepel a seedben -- egy-egy "Másolás új
+    // tervként" gomb verziónként, nem csak egy a páciensnek.
+    expect(within(card).getAllByRole('button', { name: 'Másolás új tervként' })).toHaveLength(2);
+  });
+
+  it('"Másolás új tervként" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Páciens adatlapon', async () => {
+    const [, v2] = seedPlans.filter((e) => e.plan.paciens.nev === 'Nagy Éva');
+    const forrasSorSzam = v2.plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
+    expect(forrasSorSzam).toBe(3); // v1 két sora + a v2-ben hozzáadott korona sor
+
+    const user = userEvent.setup();
+    renderHistory();
+
+    const nagyEva = await screen.findByText('Nagy Éva');
+    const card = nagyEva.parentElement as HTMLElement;
+    // A verziók lista fordítva (legfrissebb elöl) -- az első "Másolás új
+    // tervként" gomb a v2 sorához tartozik.
+    const copyBtn = within(card).getAllByRole('button', { name: 'Másolás új tervként' })[0];
+
+    await user.click(copyBtn);
+
+    expect(await screen.findByTestId('draft-oldal')).toHaveTextContent('PACIENS-OLDAL');
+    expect(screen.getByTestId('draft-nev')).toHaveTextContent('Nagy Éva');
+    expect(screen.getByTestId('draft-tervid')).toHaveTextContent('„”'); // üres tervId -- új tervlánc
+    expect(screen.getByTestId('draft-sorcount')).toHaveTextContent(String(forrasSorSzam));
+    // A dátumbélyeg frissül (D22-mintájú, planMasolatKent) -- nem a forrás
+    // 2026-07-22-es keltezése marad.
+    expect(screen.getByTestId('draft-keltezes')).not.toHaveTextContent(v2.plan.keltezes);
+  });
+
+  it('"Új terv a páciens adataival" csak a páciensadatot viszi át, a LEGFRISSEBB verzióból, sorok nélkül', async () => {
+    const user = userEvent.setup();
+    renderHistory();
+
+    const nagyEva = await screen.findByText('Nagy Éva');
+    const card = nagyEva.parentElement as HTMLElement;
+    const ujTervBtn = within(card).getByRole('button', { name: 'Új terv a páciens adataival' });
+
+    await user.click(ujTervBtn);
+
+    expect(await screen.findByTestId('draft-oldal')).toHaveTextContent('PACIENS-OLDAL');
+    expect(screen.getByTestId('draft-nev')).toHaveTextContent('Nagy Éva');
+    expect(screen.getByTestId('draft-tervid')).toHaveTextContent('„”');
+    expect(screen.getByTestId('draft-sorcount')).toHaveTextContent('0');
+  });
+
+  // Ugyanaz a felülírás-kockázat, mint "Megnyitás szerkesztésre"-nél -- a
+  // két új gomb sem törölheti szó nélkül a mentetlen piszkozatot.
+  it('mindkét új gomb megerősítést kér mentetlen piszkozatnál, Mégse-re nem történik semmi', async () => {
+    seedPersistedDraft();
+    const user = userEvent.setup();
+    renderHistory();
+
+    const nagyEva = await screen.findByText('Nagy Éva');
+    const card = nagyEva.parentElement as HTMLElement;
+    const copyBtn = within(card).getAllByRole('button', { name: 'Másolás új tervként' })[0];
+
+    await user.click(copyBtn);
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Mégse' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('draft-oldal')).not.toBeInTheDocument();
+
+    await user.click(copyBtn);
+    await user.click(await screen.findByRole('button', { name: 'Másolás, piszkozat elvetésével' }));
+    expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
   });
 });

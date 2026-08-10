@@ -394,6 +394,53 @@ dátumot és érvényességet, és kimondja, hogy a tételek ára változatlan. 
 amber sáv a valódi anomáliának (mentett vs. újraszámolt `osszesitok`
 eltérése) van fenntartva — ugyanaz a szín itt félrevezető lenne.
 
+### Terv másolása új tervként
+
+Két belépési pont, más-más adatkörrel — a gombok elhelyezése ezt a
+különbséget követi, nem kényszeríti egy szintre:
+
+- **„Új terv a páciens adataival"** — a páciensnév-fejléc mellett,
+  páciensszinten (nem egy konkrét verzióhoz kötve). Mindig a doki által
+  látott LEGFRISSEBB verzió `paciens` adatát viszi tovább. Minden más mező
+  (`nyelv`, `penznem`, `orvos`, `fazisok`, `elolegSzazalek`,
+  `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss alapértéke — pontosan
+  úgy, mintha a doki a Kezdőlap „Új terv indítása" gombját nyomta volna
+  meg, csak a páciens mezők már ki vannak töltve.
+- **„Másolás új tervként"** — minden verzió-soron, a „Letöltés"/„Megnyitás
+  szerkesztésre" mellett, mert konkrétan AZT a verziót másolja, sorokkal
+  együtt (egy régebbi verzió sorai eltérhetnek a legfrissebbtől). A
+  `paciens`, `nyelv`, `penznem`, `orvos`, `fazisok`, `elolegSzazalek`,
+  `kedvezmenyOsszeg` és az `arlistaVerzio` is változatlanul átjön — ugyanaz
+  a snapshot-elv, mint egy meglévő terv új verzióra nyitásakor. Ez a
+  valódi A/B alku-változat használati eset: a doki utána csak azt
+  módosítja, ami eltér a két ajánlat között, nem gépeli be újra az
+  egészet.
+
+Mindkét út a meglévő `frissDatummal` (D22) hívásával bélyegzi a
+`keltezes`/`ervenyesIg`-et a mai napra, és a másolat `osszesitok`-ja a
+saját (átvett) soraiból újraszámolva indul, nem a forrás mentett
+értékének másolata (D26) — a forrás `osszesitok`-ja az EREDETI, már
+mentett terv fájl-igazsága (D7), nem a most keletkező piszkozaté. A
+`tervId`/`verzio`/`statusz` mindkét esetben nullázódik/`PISZKOZAT`-ra áll
+— a másolat sosem csúszhat be verzióként egy meglévő láncba (D4).
+
+Mindkét gomb a **Páciens adatlapra** navigál, nem egyenesen a
+szerkesztőbe — ugyanúgy, mint egy teljesen új terv indításakor. A doki itt
+látja és pontosíthatja az átvett páciensadatot (pl. időközbeni
+címváltozás), és ez a tranzitív lépés önmagában is jelzi, hogy ez egy ÚJ
+terv indítása, nem egy meglévő verzió folytatása — nincs hozzá külön,
+tisztázó megerősítő dialógus, csak a meglévő piszkozat-felülírás-őr fut le
+mindkét gombnál, ha van mentetlen munka.
+
+A másolat rögtön MENTETLEN piszkozatnak számít (a „Piszkozat folytatása"
+kártya azonnal megjelenik a Kezdőlapon), mert még soha nincs elmentve a
+saját `tervId` alatt — más, mint egy `loadPlanIntoDraft`-tal betöltött,
+már mentett terv. Mentéskor az új, üres `tervId` miatt a
+`storage.savePlan` automatikusan ÚJ páciensmappát nyit — nincs látható
+forrás-hivatkozás a másolat és az eredeti között, a doki a „Korábbi
+tervek" listában megjelenő névismétlésről ismeri fel, hogy összetartoznak
+(lásd `docs/02-domain-modell.md` § Mappanév szabályok).
+
 ---
 
 ## 6. Árlista admin

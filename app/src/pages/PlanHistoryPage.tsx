@@ -22,7 +22,9 @@ import {
 } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
+import { todayIso } from '../domain/date';
 import { formatMoney } from '../domain/money';
+import { planMasolatKent, planUjPaciensselTervhez } from '../domain/planCopy';
 import { norm } from '../domain/search';
 import type { PatientFolder, Penznem, Plan, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
@@ -30,7 +32,9 @@ import { useStorage } from '../storage/StorageContext';
 
 interface ActionError {
   patientDir: string;
-  versionDir: string;
+  // `null` = páciensszintű hiba ("Új terv a páciens adataival"), nem egy
+  // konkrét verzió-sorhoz kötött.
+  versionDir: string | null;
   message: string;
 }
 
@@ -38,6 +42,13 @@ interface VersionRef {
   patientDir: string;
   versionDir: string;
 }
+
+// A piszkozat-felülírás-őr (backlog-17) három belépési pontot fed le: a
+// meglévő "Megnyitás szerkesztésre" mellett a két új gomb is ugyanazt az
+// AlertDialog-ot használja, csak eltérő szöveggel és célfüggvénnyel -- a
+// Home.tsx `confirmSpecs` lookup-táblájának mintája.
+type PendingKind = 'open' | 'copy' | 'ujTerv';
+type PendingAction = VersionRef & { kind: PendingKind };
 
 // Egy verzió végösszege a saját terv.json-jából. A pénznem verziónként jön
 // (D21: `penznem` plan-szintű mező), nem globális beállításból -- két
@@ -53,12 +64,13 @@ function versionKey({ patientDir, versionDir }: VersionRef): string {
 
 export default function PlanHistoryPage() {
   const { storage, loadPlanPdf } = useStorage();
-  const { loadPlanIntoDraft, vanMentetlenPiszkozat } = useAppState();
+  const { settings, priceList, loadPlanIntoDraft, copyPlanIntoDraft, vanMentetlenPiszkozat } =
+    useAppState();
   const navigate = useNavigate();
   // docs/03-funkcionalis-spec.md § Autosave: ugyanaz a felülírás-kockázat,
-  // mint a Home "Új terv indítása" gombjánál -- a `loadPlanIntoDraft` szó
-  // nélkül felülírná a folyamatban lévő, mentetlen piszkozatot.
-  const [pendingOpen, setPendingOpen] = useState<VersionRef | null>(null);
+  // mint a Home "Új terv indítása" gombjánál -- egyik gomb sem nyithat/
+  // másolhat szó nélkül a folyamatban lévő, mentetlen piszkozat fölé.
+  const [pending, setPending] = useState<PendingAction | null>(null);
 
   const [patients, setPatients] = useState<PatientFolder[]>([]);
   const [versionsByPatient, setVersionsByPatient] = useState<Record<string, PlanVersion[]>>({});
@@ -192,6 +204,96 @@ export default function PlanHistoryPage() {
     }
   }
 
+  // backlog-17: "Másolás új tervként" -- konkrétan a kattintott verzió
+  // sorait viszi tovább, ezért a teljes Plan-t betölti (a lista csak az
+  // összesítőt tartja készenlétben). D6: a Páciens adatlapra navigál, nem
+  // egyenesen a szerkesztőbe -- ez maga is jelzi, hogy ez egy ÚJ terv, nem
+  // egy meglévő verzió folytatása.
+  async function copyVersion(patientDir: string, versionDir: string) {
+    setActionError(null);
+    try {
+      const plan = await storage.loadPlan({ patientDir, versionDir });
+      copyPlanIntoDraft(planMasolatKent(plan, settings, todayIso()));
+      navigate('/paciens');
+    } catch (err) {
+      setActionError({
+        patientDir,
+        versionDir,
+        message:
+          err instanceof Error
+            ? `A másolás nem sikerült: ${err.message}`
+            : 'A másolás váratlanul meghiúsult.',
+      });
+    }
+  }
+
+  // backlog-17: "Új terv a páciens adataival" -- páciensszintű, mindig a
+  // doki által látott LEGFRISSEBB verzió `paciens` adatát viszi tovább,
+  // sorok nélkül.
+  async function ujTervPaciensAdataival(patientDir: string, versionDir: string) {
+    setActionError(null);
+    try {
+      const plan = await storage.loadPlan({ patientDir, versionDir });
+      copyPlanIntoDraft(planUjPaciensselTervhez(plan, settings, priceList));
+      navigate('/paciens');
+    } catch (err) {
+      setActionError({
+        patientDir,
+        versionDir: null,
+        message:
+          err instanceof Error
+            ? `Az új terv indítása nem sikerült: ${err.message}`
+            : 'Az új terv indítása váratlanul meghiúsult.',
+      });
+    }
+  }
+
+  function runOrConfirm(action: PendingAction) {
+    if (vanMentetlenPiszkozat) {
+      setPending(action);
+      return;
+    }
+    void dispatchPending(action);
+  }
+
+  function dispatchPending(action: PendingAction): Promise<void> {
+    switch (action.kind) {
+      case 'open':
+        return openVersion(action.patientDir, action.versionDir);
+      case 'copy':
+        return copyVersion(action.patientDir, action.versionDir);
+      case 'ujTerv':
+        return ujTervPaciensAdataival(action.patientDir, action.versionDir);
+    }
+  }
+
+  const pendingSpecs: Record<
+    PendingKind,
+    { description: string; actionLabel: string }
+  > = {
+    open: {
+      description:
+        'Van mentetlen piszkozatod. Ha ezt a verziót megnyitod szerkesztésre, a jelenlegi ' +
+        'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
+        'folytatod?',
+      actionLabel: 'Megnyitás, piszkozat elvetésével',
+    },
+    copy: {
+      description:
+        'Van mentetlen piszkozatod. Ha ezt a verziót új tervként másolod, a jelenlegi ' +
+        'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
+        'folytatod?',
+      actionLabel: 'Másolás, piszkozat elvetésével',
+    },
+    ujTerv: {
+      description:
+        'Van mentetlen piszkozatod. Ha új tervet indítasz a páciens adataival, a jelenlegi ' +
+        'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
+        'folytatod?',
+      actionLabel: 'Új terv, piszkozat elvetésével',
+    },
+  };
+
   async function downloadVersion(patientDir: string, versionDir: string, tervId: string) {
     setActionError(null);
     try {
@@ -257,7 +359,10 @@ export default function PlanHistoryPage() {
         </Callout.Root>
       )}
 
-      {filtered.map((p, pi) => (
+      {filtered.map((p, pi) => {
+        const versions = versionsByPatient[p.dirName] ?? [];
+        const latest = versions[versions.length - 1];
+        return (
         <Box key={p.dirName} mb="5">
           <Text as="div" size="3" weight="bold" mb="2" style={{ color: t.brand }}>
             {namesByPatient[p.dirName] ?? p.dirName}
@@ -266,9 +371,29 @@ export default function PlanHistoryPage() {
                 ⚠ néhány verziója nem olvasható
               </Text>
             )}
+            {latest && (
+              <Button
+                size="1"
+                variant="soft"
+                ml="3"
+                onClick={() =>
+                  runOrConfirm({ kind: 'ujTerv', patientDir: p.dirName, versionDir: latest.dirName })
+                }
+              >
+                Új terv a páciens adataival
+              </Button>
+            )}
           </Text>
+          {actionError?.patientDir === p.dirName && actionError.versionDir === null && (
+            <Callout.Root color="red" size="1" mb="2">
+              <Callout.Icon>
+                <CrossCircledIcon />
+              </Callout.Icon>
+              <Callout.Text>{actionError.message}</Callout.Text>
+            </Callout.Root>
+          )}
 
-          {(versionsByPatient[p.dirName] ?? [])
+          {versions
             .slice()
             .reverse()
             .map((v, vi) => {
@@ -310,10 +435,18 @@ export default function PlanHistoryPage() {
                       </Button>
                       <Button
                         size="1"
+                        variant="soft"
+                        color="gray"
                         onClick={() =>
-                          vanMentetlenPiszkozat
-                            ? setPendingOpen({ patientDir: p.dirName, versionDir: v.dirName })
-                            : openVersion(p.dirName, v.dirName)
+                          runOrConfirm({ kind: 'copy', patientDir: p.dirName, versionDir: v.dirName })
+                        }
+                      >
+                        Másolás új tervként
+                      </Button>
+                      <Button
+                        size="1"
+                        onClick={() =>
+                          runOrConfirm({ kind: 'open', patientDir: p.dirName, versionDir: v.dirName })
                         }
                       >
                         Megnyitás szerkesztésre
@@ -335,18 +468,14 @@ export default function PlanHistoryPage() {
 
           {pi < filtered.length - 1 && <Separator size="4" mt="3" color="gray" />}
         </Box>
-      ))}
+        );
+      })}
 
-      <AlertDialog.Root
-        open={pendingOpen !== null}
-        onOpenChange={(open) => !open && setPendingOpen(null)}
-      >
+      <AlertDialog.Root open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
         <AlertDialog.Content maxWidth="440px">
           <AlertDialog.Title>Piszkozat felülírása</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            Van mentetlen piszkozatod. Ha ezt a verziót megnyitod szerkesztésre, a jelenlegi
-            piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan
-            folytatod?
+            {pending && pendingSpecs[pending.kind].description}
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
@@ -358,17 +487,16 @@ export default function PlanHistoryPage() {
               <Button
                 color="red"
                 onClick={() => {
-                  if (pendingOpen) void openVersion(pendingOpen.patientDir, pendingOpen.versionDir);
-                  setPendingOpen(null);
+                  if (pending) void dispatchPending(pending);
+                  setPending(null);
                 }}
               >
                 {/* Szándékosan NEM ugyanaz a felirat, mint a sorbeli
-                    triggereké ("Megnyitás szerkesztésre") -- amíg a
-                    dialógus nyitva van, minden sor trigger-gombja is a
-                    DOM-ban marad, azonos accessible name-mel
-                    megkülönböztethetetlenek lennének (lásd
+                    triggereké -- amíg a dialógus nyitva van, minden sor
+                    trigger-gombja is a DOM-ban marad, azonos accessible
+                    name-mel megkülönböztethetetlenek lennének (lásd
                     PlanHistoryPage.test.tsx). */}
-                Megnyitás, piszkozat elvetésével
+                {pending && pendingSpecs[pending.kind].actionLabel}
               </Button>
             </AlertDialog.Action>
           </Flex>
@@ -394,6 +522,9 @@ function HistorySkeleton() {
             <Flex gap="2">
               <Skeleton>
                 <Box height="28px" width="72px" />
+              </Skeleton>
+              <Skeleton>
+                <Box height="28px" width="130px" />
               </Skeleton>
               <Skeleton>
                 <Box height="28px" width="160px" />

@@ -17,12 +17,12 @@ kész tételekhez tartozókkal.
 
 **Sorrend:** a listákon belül hasznosság szerint — a napi fájdalom
 mérete × gyakorisága, holtversenynél a kisebb munka előre. A MOST
-szakasz mind a 10 tételéhez van tervdokumentum (grill-me munkamenetek
+szakasz mind a 9 tételéhez van tervdokumentum (grill-me munkamenetek
 döntési összefoglalói).
 
 ---
 
-## MOST (kb. 4,5–6 fejlesztői nap + fél nap közös munka a dokival)
+## MOST (kb. 3,5–5 fejlesztői nap + fél nap közös munka a dokival)
 
 ### 1. hely — 8. tétel: Árlista-nap: kategóriakezelés kódban + adattisztítás a dokival
 
@@ -52,27 +52,7 @@ duplikátum inaktiválva (`aktiv: false`, id megtartva, D17).
   kerüljön a 13. tétel magyar garanciaszövegének begyűjtése is** —
   egyetlen ülés adja az összes még hátralévő embermunka-inputot.
 
-### 2. hely — 17. tétel: Terv másolása új tervként / új terv a páciens adataival
-
-- **Méret:** fél–1 nap, grill-me ajánlott. Egy `loadPlanIntoDraft`-variáns,
-  ami a betöltött tervből **új tervet** csinál (`tervId: ''`,
-  `verzio: 0`, `statusz: 'PISZKOZAT'`, friss dátumok) — mentéskor a
-  meglévő `savePlan` automatikusan új páciensmappát ad, semmi nem íródik
-  felül. Két belépési pont: „Új terv a páciens adataival" (sorok nélkül)
-  és „Másolás új tervként" (sorokkal — a változat-eset).
-- **Kereteket sért?** Nem — D4 érintetlen, a verziólánc tisztább is
-  lesz, mert az A/B változatok nem verzióként csúsznak be. A grill-me fő
-  kérdése a címkézés: a „verzió" (felülír a láncban) és a „változat"
-  (párhuzamos ajánlat) fogalmát a felületnek élesen szét kell tartania.
-- **Valódi haszon:** időmegtakarítás (visszatérő páciens adatai és a
-  közös sorok újragépelése esik ki), pácienskommunikáció (A/B ajánlat a
-  legnagyobb értékű konzultáción), hibacsökkentés (TAJ/cím újragépelése).
-- **20%-os verzió:** csak a páciensadat-átvétel (2–3 óra) — de a B-napi
-  változat-fájdalmat csak a sorokkal együtt másolás oldja, és a
-  mechanizmus ugyanaz; együtt javasolt.
-- **Terv:** `docs/backlog-17-terv-masolas-terv.md` (10 döntés).
-
-### 3. hely — 10. tétel: Tétel-leírás a csomagtételekhez
+### 2. hely — 10. tétel: Tétel-leírás a csomagtételekhez
 
 *(korábbi 10. tétel — mindkét review-kör megerősítette: „mi van ebben az
 egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
@@ -88,7 +68,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   tételek listája" struktúrához képest (az a KÉSŐBB listán).
 - **Terv:** `docs/backlog-10-tetel-leiras-terv.md` (17 döntés).
 
-### 4. hely — 13. tétel: Garancia szakasz a nyomtatványon
+### 3. hely — 13. tétel: Garancia szakasz a nyomtatványon
 
 *(korábbi 13. tétel)*
 
@@ -104,7 +84,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
 - **Terv:** `docs/backlog-13-garancia-terv.md` (9 döntés; a német szöveg
   placeholder marad, a 6. tétel placeholder-őre kezeli).
 
-### 5. hely — 18. tétel: Fázis törlése megerősítéssel
+### 4. hely — 18. tétel: Fázis törlése megerősítéssel
 
 - **Méret:** 1–2 óra — a meglévő `AlertDialog`-minta a „Fázis törlése"
   gombon, csak akkor, ha a fázisban van sor (üres fázis törlése maradjon
@@ -117,7 +97,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
 - **20%-os verzió:** nincs kisebb — ez már a minimális védelem.
 - **Terv:** `docs/backlog-18-fazis-torles-terv.md` (6 döntés).
 
-### 6. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
+### 5. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
 - **Méret:** 2–3 óra — új, nem blokkoló lépés a `PreviewPage` meglévő
   `confirmStep`-láncában: a 0 Ft-os, kitöltött nevű sorok felsorolása. A
@@ -132,7 +112,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   rosszabb lenne, mert eltörné a billentyűzetes ciklust.
 - **Terv:** `docs/backlog-19-nulla-forint-terv.md` (7 döntés).
 
-### 7. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
+### 6. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
 
 - **Méret:** 1–2 óra — a `PreviewPage` és `PlanHistoryPage` letöltési
   fájlneveiben a páciensnév (a `paths.ts` meglévő
@@ -147,7 +127,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `docs/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
 
-### 8. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
+### 7. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
 - **Méret:** 1 óra + teszt — a `savePriceList` a `modositva` mellett az
   `arlistaVerzio`-t is a mentés napjára állítja tartalmi változásnál. A
@@ -175,7 +155,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   böngésző PDF-nézője elég).
 - **Terv:** `docs/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
-### 10. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 9. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb

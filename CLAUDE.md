@@ -269,6 +269,20 @@ segédfüggvényei, szintén ne írd újra őket:
   hívja a felső határhoz (a mező alapértéke a nyers, kedvezmény előtti
   összeg, nem a `tervVegosszeg()` eredménye)
 
+A terv másolása tétel (`docs/03-funkcionalis-spec.md` § Terv másolása új
+tervként, D26) segédfüggvényei, szintén ne írd újra őket:
+- `planUjPaciensselTervhez(plan, settings, priceList)` /
+  `planMasolatKent(plan, settings, ma)` (`app/src/domain/planCopy.ts`) —
+  a két tiszta transzformáció egy korábbi tervből: az első csak a
+  `paciens` blokkot viszi át egy friss `createBlankPlan()` fölé, a
+  második mindent átvisz az azonosító/állapot/dátum kivételével
+  (`frissDatummal`-t hívja a dátumbélyeghez, `computeOsszesitok`-ot az
+  `osszesitok` újraszámolásához — egyiket se írd újra itt sem)
+- `copyPlanIntoDraft(next)` (`app/src/state/AppState.tsx`) — a fenti két
+  függvény EREDMÉNYÉT teszi be a piszkozatba a `resetPlanDraft` mintáján
+  (nem a `loadPlanIntoDraft`-én): a másolat azonnal mentetlen munkának
+  számít, mert még soha nincs elmentve a saját `tervId` alatt
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

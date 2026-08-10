@@ -32,7 +32,11 @@ nincs szerver.
   keresni. Ne transzliterálj.
 - Tiltott karakterek cseréje: `/ \ : * ? " < > |` és a záró pont/szóköz.
 - A `_<id>` azért kell, mert két Kovács János is lehet, és a név
-  változhat.
+  változhat. Ugyanez teszi lehetővé, hogy egy terv másolása (D26,
+  `docs/03-funkcionalis-spec.md` § Terv másolása új tervként) ugyanahhoz a
+  névhez egy MÁSIK páciensmappát nyisson — a doki a Korábbi tervek listán
+  a névismétlésről ismeri fel, hogy összetartoznak, nincs köztük külön
+  hivatkozó mező.
 - Verziómappa: `<ISO dátum>_v<n>`. **Soha nem írunk felül** meglévőt.
 - Az útvonal a Drive mount alatt hosszú lesz — tartsd a neveket rövidre
   (Windows 260 karakter).
