@@ -40,8 +40,12 @@ button {
  * A keret `inset`, tehát a `soft` gomb saját kitöltése (`accent-a3`/`a4`/
  * `a5`) felől is 3:1-nek kell maradnia, nem csak a lap háttere felől --
  * ez volt a K4 tényleges mérőszáma (`tokens.ts` `controlBorder` sora).
+ * Kivétel: `IconButton` (docs/07 "Kivétel 2") -- egy glyph méretű, tipikusan
+ * size="1" gombon a kötelező keret vizuálisan dominál (feketésnek ható
+ * dobozkeret), és `controlBorder` már a legvilágosabb WCAG-megfelelő szín --
+ * nincs lejjebb vinni. Tudatos WCAG 1.4.11 kivétel, nem feledékenység.
  */
-.rt-BaseButton:where(.rt-variant-soft, .rt-variant-ghost):not([data-disabled]) {
+.rt-BaseButton:where(.rt-variant-soft, .rt-variant-ghost):not(.rt-IconButton):not([data-disabled]) {
   box-shadow: inset 0 0 0 1px var(--control-border);
 }
 

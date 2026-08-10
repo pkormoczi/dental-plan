@@ -99,6 +99,42 @@ pontosan a szándékolt `#8896AB` színt alkalmazza mindenhol), hanem a
 `controlBorder` token és a `docs/07` szabály hatókörének saját, korábban rejtett
 hiányossága, amit csak a most bekerült keret tett mérhetővé.
 
+**Utólagos hatókör-szűkítés (2026-08-10, felhasználói grillezés, két
+menetben).** A K1 (és K4 véglegesített `#64748B` értéke) fentebb szándékosan
+**minden** soft/ghost `IconButton`-ra kiterjedt, sűrű táblázat-soron belülire
+is (lásd fent). Élesben ez egy `size="1"` IconButton glyph-nyi dobozán (pl. a
+terv szerkesztő „Fog” fogtérkép-crosshairje, „≈” becsült ár jelvénye, sor
+törlése `X`-e; az Árlista admin „Gyakori”/„Aktív” sor-ikonjai, kategória
+fel/le/törlés nyilai) vizuálisan túl súlyosnak, feketés dobozkeretnek
+bizonyult. Mivel `controlBorder` `#64748B` már a legvilágosabb WCAG
+1.4.11-megfelelő érték (K4 bizonyította, hogy egy világosabb szín a valódi
+belső szomszédok — pl. `soft` gomb lenyomott kitöltése — ellen 3:1 alá esik),
+nincs "világosabb, de még megfelelő" szín, amivel a súlyosság csökkenthető
+lenne szín-oldalról.
+
+Első menetben egy `Table.Cell`-re szűkített kivétel készült
+(`.rt-TableCell .rt-IconButton { box-shadow: none; }`), abból a — tévesnek
+bizonyult — feltevésből, hogy csak a sűrű táblázat-sorbeli ikon-gombok
+érintettek. Egy explorer-alapú feltárás kiderítette, hogy **az app mind a
+kilenc `IconButton`-je** `Table.Cell` leszármazottja, beleértve a
+`PriceListAdminPage.tsx` „EUR ár törlése” gombját is (egy `Table.Cell
+colSpan={5}`-ön belüli `ItemEditor`-ben ül) — a szűk kivétel tehát a
+gyakorlatban már ekkor minden IconButont elért, csak a szelektor félrevezető
+volt, és a `ToothPickerPopover` crosshairje csak azért esett bele, mert ma
+kizárólag táblában van példányosítva.
+
+**Végleges döntés: minden `IconButton` elveszti a keretét**, táblán belül és
+kívül egyaránt — nem a hatókör tényleges eredménye változott, hanem a
+szabály immár explicit és jövőálló. `app/src/index.css`-ben a K1 alapszabály
+maga zárja ki az `IconButton`-t (`:not(.rt-IconButton)`), a különálló
+felülíró szabály törölve — egy `.rt-IconButton { box-shadow: none }`
+önmagában (0,1,0 specificitás) veszített volna a K1 szabállyal (0,2,0)
+szemben, forrássorrendtől függetlenül. Tudatos WCAG 1.4.11 kivétel,
+dokumentálva a `docs/07-felulet-rendszer.md` `controlBorder` sorában
+„Kivétel 2” néven. A `.claude/skills/browser-validation/checklist.md`
+`control-border-contrast` ellenőrzése is frissült, hogy ne jelezzen hamis
+`control-no-border` találatot minderre a kilenc `IconButton`-re.
+
 ### K2 — Az elsődleges CTA-gombok fehér szövege 3,53:1-en fut a 4,5:1 helyett — JAVÍTVA (2026-08-10)
 
 `docs/07-felulet-rendszer.md` azt állítja, hogy `ink` (`#2D2D2D`, 13,77:1) az
