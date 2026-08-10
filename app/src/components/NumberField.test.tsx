@@ -147,6 +147,28 @@ describe('NumberField', () => {
     expect(input).toHaveFocus();
   });
 
+  it('re-syncs the display after blur when the parent commits a different value (e.g. clamped)', async () => {
+    // Regresszió: a szülő (pl. az Előleg % mező, PlanEditorPage.tsx
+    // ElolegBlokk) a saját kerekített értéket tovább clampelheti egy
+    // szűkebb tartományra, és egy ELTÉRŐ `value` prop-pal rendereli újra a
+    // mezőt. Blur UTÁN a mezőnek ezt az új, tényleges értéket kell
+    // mutatnia, nem a begépelt (clamp előtti) számot.
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    const { rerender } = render(<NumberField value={50} onCommit={onCommit} />);
+
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    await user.clear(input);
+    await user.type(input, '150');
+    await user.tab();
+
+    expect(onCommit).toHaveBeenCalledWith(150);
+
+    rerender(<NumberField value={100} onCommit={onCommit} />);
+
+    expect(input.value).toBe('100');
+  });
+
   it('reports the not-yet-committed draft via onDraftChange on every keystroke', async () => {
     const user = userEvent.setup();
     const onDraftChange = vi.fn();

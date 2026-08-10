@@ -82,7 +82,10 @@ export default function NumberField({
 
   // A `value` propból csak akkor szinkronizálunk, ha a mező NINCS
   // fókuszban -- így egy időközben érkező (pl. reset utáni) prop-frissítés
-  // nem írja felül a doki éppen folyamatban lévő gépelését.
+  // nem írja felül a doki éppen folyamatban lévő gépelését. Ehhez a
+  // `focused` false-ra állítása onBlur-kor KÖTELEZŐ (lásd lent) -- enélkül
+  // ez a hatás a mező életének első fókuszálása után örökre leállna, akkor
+  // is, ha a mező rég elvesztette a tényleges DOM-fókuszt.
   useEffect(() => {
     if (!focused) setDraft(formatForDisplay(value, unit));
   }, [value, unit, focused]);
@@ -135,7 +138,10 @@ export default function NumberField({
           setDraft(e.target.value);
           onDraftChange?.(parseDraft(e.target.value, unit));
         }}
-        onBlur={commit}
+        onBlur={() => {
+          commit();
+          setFocused(false);
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
