@@ -16,13 +16,13 @@ vándorolnak, utána ez törölhető (ugyanaz az életciklus, mint a
 | Súlyosság | Darab |
 |---|---|
 | Kritikus | 0 |
-| Közepes | 5 (1 javítva: K1) |
+| Közepes | 5 (2 javítva: K1, K2) |
 | Apró | 1 (javítva: A1) |
 | Megerősített, hibátlan | 9 terület |
 
 A Közepes tételek mindegyike **rendszerszintű** (az egész appot érinti, nem egy
 komponenst) — egyik sem trivi kis javítás, ezért nem lettek autonóm módon átírva,
-K1 kivételével (lásd lent, a felhasználó explicit kérésére). K4 és K5 a K1
+K1 és K2 kivételével (lásd lent, a felhasználó explicit kérésére). K4 és K5 a K1
 javítás utólagos böngészős visszaellenőrzése (2026-08-10, második menet) során
 derült ki — nem az eredeti menet találatai.
 
@@ -97,7 +97,7 @@ pontosan a szándékolt `#8896AB` színt alkalmazza mindenhol), hanem a
 `controlBorder` token és a `docs/07` szabály hatókörének saját, korábban rejtett
 hiányossága, amit csak a most bekerült keret tett mérhetővé.
 
-### K2 — Az elsődleges CTA-gombok fehér szövege 3,53:1-en fut a 4,5:1 helyett
+### K2 — Az elsődleges CTA-gombok fehér szövege 3,53:1-en fut a 4,5:1 helyett — JAVÍTVA (2026-08-10)
 
 `docs/07-felulet-rendszer.md` azt állítja, hogy `ink` (`#2D2D2D`, 13,77:1) az
 "Elsődleges gomb háttere". A valóságban a variant nélküli `<Button>` a Radix Theme
@@ -122,7 +122,40 @@ letiltott „Szöveg mentése” gomb, 1,88:1.
 
 Ugyanaz a helyzet, mint K1-nél: a javítás nem egysoros — vagy a `Theme
 accentColor`/gomb-szín kap sötétebb árnyalatot, vagy a `<Button>` explicit
-`style={{ background: t.ink }}`-et kap mindenhol. Backlogba javasolt.
+`style={{ background: t.ink }}`-et kap mindenhol. Backlogba javasolt (ez meg is
+történt, `docs/08-backlog.md`-ben élt, mielőtt ez a javítás törölte onnan).
+
+**Javítva.** Nem call site-onként, hanem Radix saját accent-aliasát írja felül
+egy globális CSS-szabály (`app/src/index.css`, a Radix `[data-accent-color=
+'brown']` blokkját célozva): `--accent-9`/`--accent-10`/`--accent-contrast` a
+`t.ink`/`t.text`/`t.onBrand` hármasra mutat, `main.tsx`-ből beírva (egy
+forrás, `tokens.ts`). Menet közben kiderült egy MÁSODIK, eddig ismeretlen
+előfordulás: a `Select.Content` alapértelmezett variánsa is `solid`, tehát a
+kiemelt (hover/nyilazás alatti) dropdown-sor ugyanezt a 3,53:1-et futotta
+mindhárom `Select` használatnál (`ToothChartPanel`, `UjTetelDialog`,
+`PriceListAdminPage` kategória-választó) — ez a javítás ezt is lefedi,
+ugyanabból az egy CSS-szabályból, hívási helyenkénti módosítás nélkül.
+
+Szándékosan **nem** érinti: a `color="red"` gombokat (saját
+`data-accent-color`-t kapnak az elemükön, ami felülírja az örökölt barnát —
+pl. a „Törlés” megerősítő gombok változatlanul pirosak maradnak), a
+Checkbox/Radio/RadioCards kitöltését (`--accent-indicator` közvetlenül
+`--brown-9`-re mutat, nem `--accent-9`-re — szándékosan marad barna, grafikus
+elem, a WCAG 1.4.11 3:1-ét enélkül is teljesíti), és a `soft`/`ghost` Button
+és Badge megjelenését (külön `--accent-a*` alfa-skála).
+
+Egy mellékhatás, amit érdemes ismerni, nem hiba: a `--focus-9`/`--focus-10`
+is a `--accent-9`/`--accent-10`-ből öröklődik, és pontosan egy helyen van
+élő fogyasztója — egy bejelölt + billentyűzet-fókuszált `RadioCardsItem`
+(`PriceListAdminPage.tsx:901`, a kategória színválasztó) `::after` gyűrűje
+barnáról (~3,3:1) `t.text`-re (17,4:1) vált. Szigorúan jobb, nem
+regresszió, de egy jövőbeli visszaellenőrzésnél ne tűnjön véletlen eltérésnek.
+
+`tsc -b`, `oxlint` és a teljes teszt-készlet zöld a javítás után (a
+változtatás CSS-egyedi-tulajdonság-szintű, egyetlen teszt sem tölti be sem az
+`index.css`-t, sem a `main.tsx`-et, tehát a vitest-készlet erre a rétegre
+struktúrálisan vak — böngészős visszaellenőrzés szükséges, lásd lent, még
+nincs elvégezve).
 
 ### K3 — A NotoSans-SemiBold sosem ágyazódik be a tényleges PDF-be
 

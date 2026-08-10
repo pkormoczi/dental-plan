@@ -237,19 +237,6 @@ versenyben felülírhatja egymást. A `NumberField` blur-commitja után a
 versenyablak a gyakorlatban minimálisra szűkült, de nincs strukturálisan
 kizárva.
 
-**Elsődleges gombok fehér szövege 3,53:1 kontrasztú a WCAG AA 4,5:1 helyett**
-(méret: **S–M**, 7 előfordulás, nem pontszerűen javítható). A variant nélküli
-`<Button>` a Radix Theme `accentColor="brown"` alapértelmezett `solid`
-színét örökli (`rgb(173,127,88)`), nem a `docs/07` szerinti `t.ink`-et
-(`#2D2D2D`, 13,77:1) — Home „Új terv indítása", PatientPage „Tovább a terv
-szerkesztőhöz", PlanEditorPage „Előnézet", PriceListAdminPage „+ Új tétel",
-PlanHistoryPage „Megnyitás szerkesztésre", SettingsPage „Mentés",
-PreviewPage „Véglegesítés és mentés" egyaránt érintett. A javítás
-rendszerszintű döntés: vagy a Theme `accentColor`/gomb-szín kap sötétebb
-árnyalatot, vagy mind a 7 gomb explicit `style={{ background: t.ink }}`-et
-kap — egyetlen gomb pontszerű átírása a többitől eltérő stílust adna neki.
-Forrás: `docs/reviews/2026-08-10-browser-validation.md` K2.
-
 **Titkosítatlan `localStorage` páciensadattal** (méret: **L**, tervezési
 döntés a mockup-fázisban — szándékos, lásd CLAUDE.md). Az architekturális
 megoldás a `FileSystemStorage`-váltás (2. fázis), nem a mockup feladata.

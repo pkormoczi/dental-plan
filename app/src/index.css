@@ -49,3 +49,22 @@ button {
 .rt-CheckboxRoot[data-state='unchecked']:not(:disabled)::before {
   box-shadow: inset 0 0 0 1px var(--control-border);
 }
+
+/*
+ * docs/07-felulet-rendszer.md `ink`: ez az elsődleges gomb háttere -- a Radix
+ * `brown` accentjének step-9-e (#ad7f58) viszont fehér felirattal csak 3,53:1
+ * (K2). Nem hívási helyenként javítjuk, hanem Radix saját accent-aliasát: így
+ * a `solid` Button MELLETT a `Select.Content` kiemelt sora is javul (ugyanaz a
+ * `--accent-9`), és a jövőbeli gombok is automatikusan jók. A `color="red"`
+ * gombok saját `data-accent-color`-t kapnak az elemükön, azt ez nem érinti; a
+ * checkbox/rádió kitöltése `--accent-indicator` (közvetlenül `--brown-9`),
+ * szándékosan marad barna -- grafikus elem, a WCAG 1.4.11 3:1-ét teljesíti.
+ * Az értékeket `main.tsx` írja be `tokens.ts`-ből. A specificitás azonos a
+ * Radix saját `[data-accent-color='brown']` blokkjával, sorrendben nyerünk
+ * (index.css később töltődik be), `!important` nem kell.
+ */
+[data-accent-color='brown'] {
+  --accent-9: var(--solid-fill);
+  --accent-10: var(--solid-fill-hover);
+  --accent-contrast: var(--solid-fill-text);
+}

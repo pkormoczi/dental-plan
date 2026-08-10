@@ -13,6 +13,13 @@ import { t } from './design/tokens'
 // maradjon (a CSS fájl nem tud TS-konstansból importálni).
 document.documentElement.style.setProperty('--control-border', t.controlBorder)
 
+// Ugyanez a minta a `solid` variáns kitöltésére: a Radix `brown` accentjének
+// step-9-e (#ad7f58) fehér felirattal 3,53:1 -- index.css erre a három
+// változóra irányítja át. A hover külön token, hogy a gomb hoverre sötétedjen.
+document.documentElement.style.setProperty('--solid-fill', t.ink)
+document.documentElement.style.setProperty('--solid-fill-hover', t.text)
+document.documentElement.style.setProperty('--solid-fill-text', t.onBrand)
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

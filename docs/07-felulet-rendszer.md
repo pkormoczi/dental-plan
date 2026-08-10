@@ -37,8 +37,8 @@ igazság, ezt a táblázatot kell utána igazítani.
 |---|---|---|
 | `brand` | `#976445` | Címsorok, vonalak. Fehéren 4,97:1 — épphogy WCAG AA fölött, színes háttéren újraszámolandó |
 | `accent` | `#f77409` | **Soha nem szövegszín** — fehéren 2,82:1, kis méretben olvashatatlan. Csak díszítővonal |
-| `ink` | `#2D2D2D` | Elsődleges gomb háttere (a honlap gombszíne), 13,77:1 |
-| `text` | `#1A1A1A` | Törzsszöveg, mindkét felület használja |
+| `ink` | `#2D2D2D` | Elsődleges gomb háttere (a honlap gombszíne), 13,77:1. A Radix `solid` variáns nem magától ilyen: a `brown` accent step-9-e (`#ad7f58`) fehér felirattal 3,53:1 volt, ezért egy globális CSS-szabály (`app/src/index.css`, a Radix `[data-accent-color='brown']` blokkját írja felül) az `--accent-9`/`--accent-10`/`--accent-contrast` aliast erre a tokenre irányítja — ez a `solid` Button mellett a `Select.Content` kiemelt sorát is fedi. Hover: `text`. A `color="red"` gombok saját accent-skálát kapnak, rájuk nem vonatkozik; a checkbox/rádió/RadioCards kitöltése `--accent-indicator`-t használ, az szándékosan marad barna (grafikus elem, WCAG 1.4.11 3:1) |
+| `text` | `#1A1A1A` | Törzsszöveg, mindkét felület használja; egyben az elsődleges gomb hover-háttere (lásd `ink`) |
 | `uiTextMuted` / `uiTextFaint` | `#475569` / `#64748B` | App-oldali halvány szöveg (slate-600/500) |
 | `uiLine` / `uiLineStrong` | `#E2E8F0` / `#CBD5E1` | App-oldali díszítő hajszálvonal — **csak** sorelválasztóra, nem interaktív keretre |
 | `controlBorder` | `#8896AB` | Minden interaktív kontroll (input, gomb, chip, dropdown) kerete — 3,00:1, WCAG 1.4.11. Nem az `uiLine`, az ahhoz túl halvány. **Kivétel: a `solid` Button variáns** — saját kitöltése már 3:1 fölött van a lap hátterével szemben, a határa keret nélkül is látszik. Minden más interaktív kontrollra (Button `soft`/`ghost`, `IconButton`, `TextField`, `Checkbox`) kivétel nélkül vonatkozik, sűrű táblázat-sorban lévő ikon-kapcsolóra is — lásd a globális CSS-szabályt (`app/src/index.css`, Radix `.rt-*` osztályaira célozva, mert Radix a keretet box-shadow-val rajzolja, nem border-rel) |

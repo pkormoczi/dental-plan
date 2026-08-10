@@ -24,6 +24,10 @@ export default function App() {
     // a portáljuk tartalmát egy belső <Theme> újrainjektálással csomagolják,
     // ami hiba nélkül csak akkor működik, ha VAN ambiens Theme kontextus a
     // fán -- ezért ErrorBoundary is ezen belül van, ne kívül.
+
+    // `accentColor="brown"` ellenére a `solid` Button és a Select kiemelt sora
+    // majdnem fekete (`ink`): a barna step-9 fehér felirattal 3,53:1 volt, az
+    // accent-aliast `index.css` írja felül (K2) -- ne itt keresd.
     <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
       {/* Legkívül -- ez a StorageProvider/AppStateProvider betöltési hibáit is
           elkapja (P1-1), nem csak a lapok render-idejű kivételeit. */}
