@@ -48,6 +48,13 @@ describe('PriceListAdminPage', () => {
     seedPriceListWithNoEurPrices();
   });
 
+  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e (docs/07)', async () => {
+    renderAdmin();
+    expect(
+      await screen.findByRole('textbox', { name: 'Keresés a tételek között' }),
+    ).toBeInTheDocument();
+  });
+
   it('reflects that all 118 seed items are missing an EUR price (per the fixture set up above)', async () => {
     renderAdmin();
     expect(
@@ -139,6 +146,23 @@ describe('PriceListAdminPage', () => {
     const otherCategory = categories.find((k) => k.nev.hu === otherLabel)!;
     expect(cbct.kategoriaId).toBe(otherCategory.id);
     expect(cbct.kategoriaId).not.toBe(before);
+  });
+
+  it('a tétel-sor Enterrel/Space-szel is megnyitható, nem csak kattintással', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    expect(nameCell).toHaveAttribute('aria-expanded', 'false');
+
+    nameCell.focus();
+    await user.keyboard('{Enter}');
+    expect(nameCell).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByLabelText('Megnevezés (magyar)')).toBeInTheDocument();
+
+    await user.keyboard(' ');
+    expect(nameCell).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByLabelText('Megnevezés (magyar)')).not.toBeInTheDocument();
   });
 
   it('the "Nincs EUR ár" filter still shows everything before any EUR price is filled in', async () => {
@@ -350,6 +374,21 @@ describe('PriceListAdminPage', () => {
 
       const updated = readPriceList().kategoriak.find((k) => k.id === created.id)!;
       expect(updated.szin).toBe('#20c997');
+    });
+
+    it('a kategória-sor is Enterrel/Space-szel nyitható billentyűzetről', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      const first = readPriceList().kategoriak.slice().sort((a, b) => a.sorrend - b.sorrend)[0];
+      const nameCell = within(catPanel()).getByText(first.nev.hu);
+      expect(nameCell).toHaveAttribute('aria-expanded', 'false');
+
+      nameCell.focus();
+      await user.keyboard('{Enter}');
+      expect(nameCell).toHaveAttribute('aria-expanded', 'true');
+      expect(within(catPanel()).getByDisplayValue(first.nev.hu)).toBeInTheDocument();
     });
 
     it('az új kategória a tétel-szerkesztő Kategória legördülőjében is megjelenik', async () => {

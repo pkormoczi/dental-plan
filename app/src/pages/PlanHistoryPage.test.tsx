@@ -67,6 +67,11 @@ describe('PlanHistoryPage', () => {
     await seeder.init();
   });
 
+  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e (docs/07)', async () => {
+    renderHistory();
+    expect(await screen.findByRole('textbox', { name: 'Keresés páciensnévre' })).toBeInTheDocument();
+  });
+
   it('lists every patient even when one plan is corrupted -- one bad file cannot take down the rest (P1-2)', async () => {
     const kovacs = seedPlans[0]; // Kovács János, egyetlen verzió
     expect(kovacs.plan.paciens.nev).toBe('Kovács János');

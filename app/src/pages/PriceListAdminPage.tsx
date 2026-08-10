@@ -223,6 +223,7 @@ export default function PriceListAdminPage() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Keresés a tételek között…"
+        aria-label="Keresés a tételek között"
         mb="3"
       />
 
@@ -305,12 +306,29 @@ export default function PriceListAdminPage() {
                         </IconButton>
                       </Table.Cell>
 
+                      {/* Billentyűzettel is elérhető megnyitó -- a sor
+                          egészének onClick-je csak egérrel volt elérhető,
+                          Tab-bal nem lehetett a szerkesztőt megnyitni. Ez a
+                          cella a "sor fejléce" (RowHeaderCell), ezért ez
+                          kapja a trigger szerepet, nem a teljes sor -- így a
+                          csillag/aktív gombok maradnak a natív, egymástól
+                          független Tab-megállók. */}
                       <Table.RowHeaderCell
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={open === it.id}
+                        aria-controls={`tetel-szerkeszto-${it.id}`}
+                        onKeyDown={(e) => {
+                          if (e.key !== 'Enter' && e.key !== ' ') return;
+                          e.preventDefault();
+                          setOpen(open === it.id ? null : it.id);
+                        }}
                         style={{
                           maxWidth: 320,
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
+                          cursor: 'pointer',
                         }}
                       >
                         {it.nev.hu}
@@ -357,7 +375,7 @@ export default function PriceListAdminPage() {
                     </Table.Row>
 
                     {open === it.id && (
-                      <Table.Row>
+                      <Table.Row id={`tetel-szerkeszto-${it.id}`}>
                         <Table.Cell colSpan={5} style={{ background: t.surfaceAlt }}>
                           <ItemEditor
                             item={it}
@@ -689,7 +707,24 @@ function KategoriaPanel({
                           }}
                         />
                       </Table.Cell>
-                      <Table.RowHeaderCell>{k.nev.hu}</Table.RowHeaderCell>
+                      {/* Ugyanaz a minta, mint a tétel-táblázat sorának
+                          RowHeaderCell-je -- a sor fejléce a billentyűzetes
+                          trigger, a mozgatás/törlés gombok maradnak saját
+                          Tab-megállók. */}
+                      <Table.RowHeaderCell
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={openCat === k.id}
+                        aria-controls={`kategoria-szerkeszto-${k.id}`}
+                        onKeyDown={(e) => {
+                          if (e.key !== 'Enter' && e.key !== ' ') return;
+                          e.preventDefault();
+                          onOpenCatChange(openCat === k.id ? null : k.id);
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {k.nev.hu}
+                      </Table.RowHeaderCell>
                       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>
                         {sajatTetelek.length} tétel
                         {inaktiv > 0 && (
@@ -751,7 +786,7 @@ function KategoriaPanel({
                     </Table.Row>
 
                     {openCat === k.id && (
-                      <Table.Row>
+                      <Table.Row id={`kategoria-szerkeszto-${k.id}`}>
                         <Table.Cell colSpan={5} style={{ background: t.surfaceAlt }}>
                           <KategoriaEditor kategoria={k} onPatch={(p) => onPatch(k.id, p)} />
                         </Table.Cell>

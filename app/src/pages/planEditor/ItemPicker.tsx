@@ -158,6 +158,7 @@ export default function ItemPicker({
       onChange={(e) => setQ(e.target.value)}
       onKeyDown={onKeyDown}
       placeholder="Tétel keresése…  (ékezet nélkül is: eszt, koron, gyoker)"
+      aria-label="Tétel keresése"
       autoFocus={autoFocus}
     />
   );

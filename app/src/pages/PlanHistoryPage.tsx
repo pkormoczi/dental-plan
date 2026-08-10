@@ -229,6 +229,7 @@ export default function PlanHistoryPage() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Keresés páciensnévre…"
+        aria-label="Keresés páciensnévre"
         mb="4"
       />
 
