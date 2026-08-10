@@ -1,17 +1,18 @@
-// A gyökér CHANGELOG.md feldolgozása a Kezdőlap changelog-blokkjához. A
-// formátum kötött (lásd CHANGELOG.md): "## <dátum>" szakaszcímek, alattuk
-// "- " listaelemek, amik folytatódhatnak a következő, kötőjel nélküli
-// sorokon -- ezeket egy elemmé kell összefűzni. Szándékosan nem egy
-// általános markdown-parser, csak ennyit kell tudnia.
+// Közös szakasz-parser a Kezdőlap két fájl-alapú kártyájához: a gyökér
+// CHANGELOG.md-hez (ChangelogCard) és FEATURES.md-hez (FeatureOverviewCard).
+// A formátum mindkettőnél kötött: "## <cím>" szakaszcímek, alattuk "- "
+// listaelemek, amik folytatódhatnak a következő, kötőjel nélküli sorokon --
+// ezeket egy elemmé kell összefűzni. Szándékosan nem egy általános
+// markdown-parser, csak ennyit kell tudnia.
 
-export interface ChangelogSzakasz {
+export interface MarkdownSzakasz {
   cim: string;
   tetelek: string[];
 }
 
-export function parseChangelog(markdown: string): ChangelogSzakasz[] {
-  const szakaszok: ChangelogSzakasz[] = [];
-  let aktualis: ChangelogSzakasz | null = null;
+export function parseSections(markdown: string): MarkdownSzakasz[] {
+  const szakaszok: MarkdownSzakasz[] = [];
+  let aktualis: MarkdownSzakasz | null = null;
   let nyitottTetel: string | null = null;
 
   const lezarTetel = () => {

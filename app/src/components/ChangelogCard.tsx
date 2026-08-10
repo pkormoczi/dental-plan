@@ -4,11 +4,11 @@
 
 import { Box, Card, Heading, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
-import { parseChangelog } from '../domain/changelog';
+import { parseSections } from '../domain/markdownSections';
 import changelogNyers from '../../../CHANGELOG.md?raw';
 
 export default function ChangelogCard() {
-  const szakaszok = parseChangelog(changelogNyers);
+  const szakaszok = parseSections(changelogNyers);
   if (szakaszok.length === 0) return null;
 
   return (

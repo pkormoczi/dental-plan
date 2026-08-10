@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { parseChangelog } from './changelog';
+import { parseSections } from './markdownSections';
 
-describe('parseChangelog', () => {
+describe('parseSections', () => {
   it('szakaszokra bontja a "## " címeket, és listaelemekre a "- " sorokat', () => {
     const md = [
       '# Változásnapló',
@@ -18,7 +18,7 @@ describe('parseChangelog', () => {
       '- Harmadik tétel.',
     ].join('\n');
 
-    expect(parseChangelog(md)).toEqual([
+    expect(parseSections(md)).toEqual([
       { cim: '2026. augusztus 9.', tetelek: ['Első tétel.', 'Második tétel.'] },
       { cim: '2026. augusztus 8.', tetelek: ['Harmadik tétel.'] },
     ]);
@@ -34,7 +34,7 @@ describe('parseChangelog', () => {
       '- Másik tétel.',
     ].join('\n');
 
-    expect(parseChangelog(md)).toEqual([
+    expect(parseSections(md)).toEqual([
       {
         cim: '2026. augusztus 9.',
         tetelek: ['Egy hosszú mondat, ami a következő sorban folytatódik.', 'Másik tétel.'],
@@ -43,6 +43,6 @@ describe('parseChangelog', () => {
   });
 
   it('üres bemenetre üres tömböt ad', () => {
-    expect(parseChangelog('')).toEqual([]);
+    expect(parseSections('')).toEqual([]);
   });
 });

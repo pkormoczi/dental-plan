@@ -127,6 +127,10 @@ Ezek (eredetileg a törölt `ui/tokens.js` prototípusból portolva) már megvan
   előtt egyszer normalizál, ne tételenként
 - `parseTeeth(input)` — FDI fogszám-validáció (`11–18`/`21–28`/`31–38`/`41–48`
   maradó, `51–55` stb. tejfog)
+- `parseSections(markdown)` (`app/src/domain/markdownSections.ts`) — a
+  Kezdőlap két fájl-alapú kártyájának (`ChangelogCard`, `FeatureOverviewCard`)
+  közös, szándékosan minimális szakasz-parsere: `## cím` + `- tétel` formátum,
+  a gyökér `CHANGELOG.md`-t és `FEATURES.md`-t olvassa `?raw` importtal
 
 D21 (nyelv/pénznem szétválasztás) hozott néhány újat, ezeket se írd újra:
 - `resolveNev(nev, nyelv)` / `fallbackSorok(plan, priceList)` (`app/src/domain/nev.ts`)
@@ -404,7 +408,9 @@ ugyanabban a körben, nem később:
    szakaszra vagy D-számra.
 6. **CHANGELOG.** Ha a tétel a pácienst/dokit érintő, felhasználó-szemszögű
    változás, a `/update-changelog` továbbra is külön, explicit lépés — ez
-   a checklist nem helyettesíti.
+   a checklist nem helyettesíti. Ha a tétel megváltoztatta, mit lehet egy
+   képernyőn csinálni, a `/update-features` (`FEATURES.md` frissítése)
+   ugyanígy külön, explicit lépés.
 
 ## Dokumentáció-térkép
 

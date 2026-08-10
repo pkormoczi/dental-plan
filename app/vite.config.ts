@@ -9,9 +9,10 @@ export default defineConfig({
   base: '/dental-plan/',
   plugins: [react()],
   server: {
-    // A Kezdőlap changelog-blokkja a repo gyökerében lévő CHANGELOG.md-t
-    // olvassa be `?raw` importtal (components/ChangelogCard.tsx) -- az az
-    // `app/` mappán kívül van, enélkül a dev szerver/vitest elutasítaná.
+    // A Kezdőlap két kártyája a repo gyökerében lévő CHANGELOG.md-t és
+    // FEATURES.md-t olvassa be `?raw` importtal (components/ChangelogCard.tsx,
+    // components/FeatureOverviewCard.tsx) -- ezek az `app/` mappán kívül
+    // vannak, enélkül a dev szerver/vitest elutasítaná.
     fs: { allow: ['..'] },
   },
   test: {
