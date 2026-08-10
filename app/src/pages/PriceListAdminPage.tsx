@@ -62,6 +62,51 @@ const FILTERS: Array<[FilterKey, string]> = [
   ['fav', 'Gyakori'],
 ];
 
+/**
+ * `TextField.Root`, ami minden leütésre ment (a mai viselkedés
+ * változatlan), de a `NumberField` mintájára egy lokális `draft`-ból
+ * jelenít meg, nem közvetlenül a `value` propból, amíg fókuszban van.
+ *
+ * Ok: az `Árlista admin` `commit()`-je (`ItemEditor`/`KategoriaEditor`
+ * névmezői) a mentést a `priceList` context-en át, egy async
+ * kör-fordulóval perzisztálja (`AppState.tsx` `savePriceList`). Ha a
+ * mező közvetlenül a `value` propot jelenítené meg, egy gyors
+ * billentyűleütés-sorozat közben React a kör-forduló átfutási idejére
+ * visszaugratná a mezőt a RÉGI (még nem mentett) értékre, és a következő
+ * leütés erre a régi, rövidebb szövegre épülne -- némán elnyelt
+ * karaktert okozva. A `draft` ettől függetlenül mindig a ténylegesen
+ * begépelt szöveget mutatja.
+ */
+function BufferedTextField({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  placeholder?: string;
+}) {
+  const [focused, setFocused] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    if (!focused) setDraft(value);
+  }, [value, focused]);
+
+  return (
+    <TextField.Root
+      value={draft}
+      placeholder={placeholder}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onChange={(e) => {
+        setDraft(e.target.value);
+        onChange(e.target.value);
+      }}
+    />
+  );
+}
+
 export default function PriceListAdminPage() {
   const { priceList, savePriceList } = useAppState();
   const [q, setQ] = useState('');
@@ -538,16 +583,16 @@ function ItemEditor({
     <Box py="2">
       <Grid columns="2" gap="3" mb="3">
         <Field label="Megnevezés (magyar)">
-          <TextField.Root
+          <BufferedTextField
             value={item.nev.hu}
-            onChange={(e) => onPatch({ nev: { ...item.nev, hu: e.target.value } })}
+            onChange={(v) => onPatch({ nev: { ...item.nev, hu: v } })}
           />
         </Field>
         <Field label="Bezeichnung (német)">
-          <TextField.Root
+          <BufferedTextField
             value={item.nev.de || ''}
             placeholder="még nincs megadva"
-            onChange={(e) => onPatch({ nev: { ...item.nev, de: e.target.value || null } })}
+            onChange={(v) => onPatch({ nev: { ...item.nev, de: v || null } })}
           />
         </Field>
       </Grid>
@@ -880,16 +925,16 @@ function KategoriaEditor({
     <Box py="2">
       <Grid columns="2" gap="3" mb="3">
         <Field label="Megnevezés (magyar)">
-          <TextField.Root
+          <BufferedTextField
             value={kategoria.nev.hu}
-            onChange={(e) => onPatch({ nev: { ...kategoria.nev, hu: e.target.value } })}
+            onChange={(v) => onPatch({ nev: { ...kategoria.nev, hu: v } })}
           />
         </Field>
         <Field label="Bezeichnung (német)">
-          <TextField.Root
+          <BufferedTextField
             value={kategoria.nev.de || ''}
             placeholder="még nincs megadva"
-            onChange={(e) => onPatch({ nev: { ...kategoria.nev, de: e.target.value || null } })}
+            onChange={(v) => onPatch({ nev: { ...kategoria.nev, de: v || null } })}
           />
         </Field>
       </Grid>
