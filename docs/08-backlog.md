@@ -248,7 +248,13 @@ megoldás a `FileSystemStorage`-váltás (2. fázis), nem a mockup feladata.
 mezőkre nincs `min > max` validáció; `parseTeeth` nem dedupol; a három
 legnagyobb fájl (`PlanEditorPage.tsx`, `PriceListAdminPage.tsx`,
 `pdf/TervDocument.tsx`) bontása; háromféle gombstílus;
-`PreviewPage.finalize()` őrlogikája nem tesztelhető pure functionként.
+`PreviewPage.finalize()` őrlogikája nem tesztelhető pure functionként;
+`SettingsPage.tsx:28` közvetlenül importálja a `DemoStorage.ts` `PREFIX`
+konstansát a sablon-piszkozat cache kulcsához (`docs/reviews/2026-08-10-
+arch-react-review.md`) — tudatos, a fájl saját kommentje indokolja (hogy a
+"Minden adat törlése" prefix-seprése ezt is elvigye), de ez a cache-
+mechanizmus explicit localStorage-specifikus, a `FileSystemStorage`-váltás
+(2. fázis) tervezésekor újragondolandó, nem a mockup feladata most.
 
 ---
 
