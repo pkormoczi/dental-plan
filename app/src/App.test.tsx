@@ -16,6 +16,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { seedPriceList } from './storage/seed/priceList';
 import { seedSettings } from './storage/seed/settings';
+import { verzioMenupont } from './testQueries';
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@react-pdf/renderer')>();
@@ -77,11 +78,9 @@ describe('Végpontok közötti folyamat', () => {
     const patientCard = patientNameEl.closest('[data-patient]') as HTMLElement;
     expect(within(patientCard).getByText(/^v1 ·/)).toBeInTheDocument();
 
-    // Szerkesztés új verzióként -> a korábban felvitt tétel már ott van --
-    // ezért nem kell újragépelni (ez a "Korábbi tervek" fő létjogosultsága).
-    await user.click(
-      within(patientCard).getByRole('button', { name: 'Szerkesztés új verzióként' }),
-    );
+    // Új verzió -> a korábban felvitt tétel már ott van -- ezért nem kell
+    // újragépelni (ez a "Korábbi tervek" fő létjogosultsága).
+    await user.click(await verzioMenupont(user, patientCard, 'Új verzió'));
     await screen.findByPlaceholderText(/Tétel keresése/);
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
 
@@ -209,8 +208,7 @@ describe('Végpontok közötti folyamat', () => {
     const card = nagyEva.closest('[data-patient]') as HTMLElement;
     // A legfrissebb verzió (v2, 2026-07-22) van legfelül -- lásd
     // PlanHistoryPage.tsx `.slice().reverse()`.
-    const openBtn = within(card).getAllByRole('button', { name: 'Szerkesztés új verzióként' })[0];
-    await user.click(openBtn);
+    await user.click(await verzioMenupont(user, card, 'Új verzió'));
 
     // A visszatérő páciensnek két fázisa is van (1. kezelés + 2. kezelés —
     // korona), tehát két ItemPicker-keresőmező is renderel -- itt csak azt

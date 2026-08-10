@@ -4,6 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 import PlanHistoryPage from './PlanHistoryPage';
 import { TestProviders } from '../testUtils';
+import { patientCard, verzioMenupont } from '../testQueries';
 import { DemoStorage } from '../storage/DemoStorage';
 import { seedPlans } from '../storage/seed/plans';
 import { formatMoney } from '../domain/money';
@@ -68,26 +69,6 @@ function penz(osszeg: number): string {
   return formatMoney(osszeg, 'HUF').replace(/\u00a0/g, ' ');
 }
 
-// A páciensblokk a `data-patient` horgonyról kereshető -- a névfejléc DOM-beli
-// mélysége azóta nem stabil, hogy az akciógomb a fejléc MELLÉ került.
-function patientCard(nev: string): HTMLElement {
-  return screen.getByText(nev).closest('[data-patient]') as HTMLElement;
-}
-
-// A verziósor másodlagos akciói (Letöltés, "Új terv, ezzel a tartalommal")
-// egy "⋯" DropdownMenu mögött vannak -- a menü csak nyitáskor rendeli a
-// menüpontokat a DOM-ba, ezért minden ilyen teszt itt megy keresztül.
-// `vi` = 0 a legfrissebb verzió sora (a lista fordítva rendez).
-async function menupont(
-  user: ReturnType<typeof userEvent.setup>,
-  card: HTMLElement,
-  nev: string,
-  vi = 0,
-): Promise<HTMLElement> {
-  const triggers = within(card).getAllByRole('button', { name: /további műveletek$/ });
-  await user.click(triggers[vi]);
-  return screen.findByRole('menuitem', { name: nev });
-}
 
 function renderHistory() {
   return render(
@@ -184,29 +165,27 @@ describe('PlanHistoryPage', () => {
 
     const marker = await screen.findByText(/⚠ néhány verziója nem olvasható/);
     const card = marker.closest('[data-patient]') as HTMLElement;
-    const openBtn = within(card).getByRole('button', { name: 'Szerkesztés új verzióként' });
 
     // Korábban itt `alert()` jelent meg -- most a sérintett verzió-sora
     // mellett, a szövegben (docs/07-felulet-rendszer.md: "Nem toast, ha a
     // hiba egy mezőhöz tartozik").
-    await user.click(openBtn);
+    await user.click(await verzioMenupont(user, card, 'Új verzió'));
 
     expect(await within(card).findByText(/A terv megnyitása nem sikerült/)).toBeInTheDocument();
   });
 
   // docs/03-funkcionalis-spec.md § Autosave: ugyanaz a felülírás-kockázat,
-  // mint a Home "Új terv indítása" gombjánál -- a "Szerkesztés új verzióként"
-  // szó nélkül felülírná a folyamatban lévő, mentetlen piszkozatot.
-  it('"Szerkesztés új verzióként" megerősítést kér mentetlen piszkozatnál, és csak megerősítésre nyit meg', async () => {
+  // mint a Home "Új terv indítása" gombjánál -- az "Új verzió" szó nélkül
+  // felülírná a folyamatban lévő, mentetlen piszkozatot.
+  it('"Új verzió" megerősítést kér mentetlen piszkozatnál, és csak megerősítésre nyit meg', async () => {
     seedPersistedDraft();
     const user = userEvent.setup();
     renderHistory();
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    const openBtn = within(card).getAllByRole('button', { name: 'Szerkesztés új verzióként' })[0];
 
-    await user.click(openBtn);
+    await user.click(await verzioMenupont(user, card, 'Új verzió'));
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
 
     // Mégse -- nem navigál, nem hívja loadPlanIntoDraft-ot.
@@ -215,26 +194,23 @@ describe('PlanHistoryPage', () => {
     expect(await screen.findByText('Korábbi tervek')).toBeInTheDocument();
 
     // Megerősítés -- ténylegesen megnyitja (loadPlanIntoDraft -> navigate).
-    await user.click(openBtn);
+    await user.click(await verzioMenupont(user, card, 'Új verzió'));
     await user.click(
-      await screen.findByRole('button', { name: 'Szerkesztés, piszkozat elvetésével' }),
+      await screen.findByRole('button', { name: 'Új verzió, piszkozat elvetésével' }),
     );
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
   });
 
-  // backlog-17: a két új belépési pont eltérő szinten él -- páciensenként
-  // EGY "Új terv, csak a páciensadatokkal" a névfejlécnél, és minden
-  // verzió-soron egy "Új terv, ezzel a tartalommal" a Letöltés/Szerkesztés
-  // mellett.
-  it('"Új terv, csak a páciensadatokkal" páciensszinten egyszer, "Új terv, ezzel a tartalommal" minden verzió-soron megjelenik', async () => {
+  // backlog-17: a két belépési pont eltérő szinten él -- páciensenként EGY
+  // "Új terv" gomb a névfejlécnél, a verzió-szintű műveletek pedig
+  // soronként a saját "⋯" menüjükben.
+  it('"Új terv" páciensszinten egyszer, verzió-soronként egy-egy "⋯" menü jelenik meg', async () => {
     renderHistory();
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
 
-    expect(
-      within(card).getByRole('button', { name: 'Új terv, csak a páciensadatokkal' }),
-    ).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: 'Új terv' })).toBeInTheDocument();
     // Nagy Éva két verzióval szerepel a seedben -- egy-egy "⋯" menü
     // verziónként, nem csak egy a páciensnek. Az accessible name is
     // verziónként külön, hogy megkülönböztethetők legyenek.
@@ -242,7 +218,25 @@ describe('PlanHistoryPage', () => {
     expect(within(card).getByRole('button', { name: 'v1 — további műveletek' })).toBeInTheDocument();
   });
 
-  it('"Új terv, ezzel a tartalommal" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Páciens adatlapon', async () => {
+  // A doki explicit kérése volt ez a sorrend (Letöltés | Új verzió, Másolás
+  // új tervbe) -- ne csússzon el némán egy későbbi szerkesztésnél.
+  it('a "⋯" menü elemei rögzített sorrendben állnak', async () => {
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    await user.click(within(card).getByRole('button', { name: 'v2 — további műveletek' }));
+
+    const items = await screen.findAllByRole('menuitem');
+    expect(items.map((el) => el.textContent)).toEqual([
+      'Letöltés',
+      'Új verzió',
+      'Másolás új tervbe',
+    ]);
+  });
+
+  it('"Másolás új tervbe" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Páciens adatlapon', async () => {
     const [, v2] = seedPlans.filter((e) => e.plan.paciens.nev === 'Nagy Éva');
     const forrasSorSzam = v2.plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
     expect(forrasSorSzam).toBe(3); // v1 két sora + a v2-ben hozzáadott korona sor
@@ -254,7 +248,7 @@ describe('PlanHistoryPage', () => {
     const card = patientCard('Nagy Éva');
     // A verziók lista fordítva (legfrissebb elöl) -- az első "⋯" menü a v2
     // sorához tartozik.
-    await user.click(await menupont(user, card, 'Új terv, ezzel a tartalommal'));
+    await user.click(await verzioMenupont(user, card, 'Másolás új tervbe'));
 
     expect(await screen.findByTestId('draft-oldal')).toHaveTextContent('PACIENS-OLDAL');
     expect(screen.getByTestId('draft-nev')).toHaveTextContent('Nagy Éva');
@@ -265,14 +259,14 @@ describe('PlanHistoryPage', () => {
     expect(screen.getByTestId('draft-keltezes')).not.toHaveTextContent(v2.plan.keltezes);
   });
 
-  it('"Új terv, csak a páciensadatokkal" csak a páciensadatot viszi át, a LEGFRISSEBB verzióból, sorok nélkül', async () => {
+  it('"Új terv" csak a páciensadatot viszi át, a LEGFRISSEBB verzióból, sorok nélkül', async () => {
     const user = userEvent.setup();
     renderHistory();
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
     const ujTervBtn = within(card).getByRole('button', {
-      name: 'Új terv, csak a páciensadatokkal',
+      name: 'Új terv',
     });
 
     await user.click(ujTervBtn);
@@ -283,9 +277,9 @@ describe('PlanHistoryPage', () => {
     expect(screen.getByTestId('draft-sorcount')).toHaveTextContent('0');
   });
 
-  // Ugyanaz a felülírás-kockázat, mint "Szerkesztés új verzióként"-nél -- a
-  // két "Új terv…" gomb sem törölheti szó nélkül a mentetlen piszkozatot.
-  it('mindkét új gomb megerősítést kér mentetlen piszkozatnál, Mégse-re nem történik semmi', async () => {
+  // Ugyanaz a felülírás-kockázat, mint az "Új verzió"-nál -- a másolás sem
+  // törölheti szó nélkül a mentetlen piszkozatot.
+  it('a "Másolás új tervbe" is megerősítést kér mentetlen piszkozatnál, Mégse-re nem történik semmi', async () => {
     seedPersistedDraft();
     const user = userEvent.setup();
     renderHistory();
@@ -293,13 +287,13 @@ describe('PlanHistoryPage', () => {
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
 
-    await user.click(await menupont(user, card, 'Új terv, ezzel a tartalommal'));
+    await user.click(await verzioMenupont(user, card, 'Másolás új tervbe'));
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Mégse' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(screen.queryByTestId('draft-oldal')).not.toBeInTheDocument();
 
-    await user.click(await menupont(user, card, 'Új terv, ezzel a tartalommal'));
+    await user.click(await verzioMenupont(user, card, 'Másolás új tervbe'));
     // A menü záráskor nem halászhatja el a fókuszt a most nyíló dialógus elől
     // (DropdownMenu.Content onCloseAutoFocus) -- ha mégis, ez a kattintás nem
     // ér célba, és a piszkozat-őr megkerülhetővé válik.
@@ -317,7 +311,7 @@ describe('PlanHistoryPage', () => {
     // A seed-verziókhoz nincs mentett PDF (csak terv.json) -- a lényeg, hogy a
     // menüpont a downloadVersion ágra fut, és a hiánya a SOR alatt, inline
     // jelenik meg, nem alert()-tel (P1-2).
-    await user.click(await menupont(user, card, 'Letöltés'));
+    await user.click(await verzioMenupont(user, card, 'Letöltés'));
     expect(await within(card).findByText('Ehhez a verzióhoz nincs mentett PDF.')).toBeInTheDocument();
   });
 });

@@ -34,7 +34,7 @@ import { useStorage } from '../storage/StorageContext';
 
 interface ActionError {
   patientDir: string;
-  // `null` = páciensszintű hiba ("Új terv, csak a páciensadatokkal"), nem egy
+  // `null` = páciensszintű hiba (a névfejléc melletti "Új terv"), nem egy
   // konkrét verzió-sorhoz kötött.
   versionDir: string | null;
   message: string;
@@ -45,21 +45,21 @@ interface VersionRef {
   versionDir: string;
 }
 
-// A piszkozat-felülírás-őr (backlog-17) három belépési pontot fed le: a
-// meglévő "Szerkesztés új verzióként" mellett a két "Új terv…" gomb is
-// ugyanazt az AlertDialog-ot használja, csak eltérő szöveggel és
-// célfüggvénnyel -- a Home.tsx `confirmSpecs` lookup-táblájának mintája.
+// A piszkozat-felülírás-őr (backlog-17) mindhárom terv-létrehozó belépési
+// pontot fedi ("Új verzió", "Másolás új tervbe", "Új terv"): ugyanaz az
+// AlertDialog, csak eltérő szöveggel és célfüggvénnyel -- a Home.tsx
+// `confirmSpecs` lookup-táblájának mintája.
 //
 // A gombfeliratok rendszere (docs/03-funkcionalis-spec.md § Korábbi tervek):
-// minden ÚJ tervláncot indító akció "Új terv"-vel kezdődik, és egyedül a
-// meglévő láncot folytató akció feliratában szerepel a "verzió" szó -- ez a
+// minden ÚJ tervláncot indító akció felirata tartalmazza az "új terv"
+// kifejezést ("Új terv", "Másolás új tervbe"), és egyedül a meglévő láncot
+// folytató akció feliratában szerepel a "verzió" szó ("Új verzió") -- ez a
 // képernyő egyetlen olyan különbsége, amit a dokinak kattintás előtt látnia
 // kell (D4/D26).
 //
-// A verziósoron ebből csak a leggyakoribb ("Szerkesztés új verzióként")
-// látszik, a többi a "⋯" menübe került -- két rendezőelv, ne keveredjenek:
-// a LÁTHATÓSÁG gyakoriság szerint dől el, a SORREND (soron belül és menün
-// belül is) a legkevésbé invazívtól a legkockázatosabbig tart.
+// A verziósoron egyetlen látható gomb sincs, minden művelet a "⋯" menüben
+// van; a páciensszintű "Új terv" viszont látható marad, a névfejléc mellett,
+// mert az nem egy verzióhoz tartozik.
 type PendingKind = 'open' | 'copy' | 'ujTerv';
 type PendingAction = VersionRef & { kind: PendingKind };
 
@@ -217,7 +217,7 @@ export default function PlanHistoryPage() {
     }
   }
 
-  // backlog-17: "Új terv, ezzel a tartalommal" -- konkrétan a kattintott verzió
+  // backlog-17: "Másolás új tervbe" -- konkrétan a kattintott verzió
   // sorait viszi tovább, ezért a teljes Plan-t betölti (a lista csak az
   // összesítőt tartja készenlétben). D6: a Páciens adatlapra navigál, nem
   // egyenesen a szerkesztőbe -- ez maga is jelzi, hogy ez egy ÚJ terv, nem
@@ -234,13 +234,13 @@ export default function PlanHistoryPage() {
         versionDir,
         message:
           err instanceof Error
-            ? `Az új terv indítása nem sikerült: ${err.message}`
-            : 'Az új terv indítása váratlanul meghiúsult.',
+            ? `A másolás nem sikerült: ${err.message}`
+            : 'A másolás váratlanul meghiúsult.',
       });
     }
   }
 
-  // backlog-17: "Új terv, csak a páciensadatokkal" -- páciensszintű, mindig a
+  // backlog-17: "Új terv" (páciensszintű) -- mindig a
   // doki által látott LEGFRISSEBB verzió `paciens` adatát viszi tovább,
   // sorok nélkül.
   async function ujTervPaciensAdataival(patientDir: string, versionDir: string) {
@@ -286,10 +286,10 @@ export default function PlanHistoryPage() {
   > = {
     open: {
       description:
-        'Van mentetlen piszkozatod. Ha ezt a verziót új verzióként szerkeszted, a jelenlegi ' +
+        'Van mentetlen piszkozatod. Ha ebből a verzióból újat készítesz, a jelenlegi ' +
         'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
         'folytatod?',
-      actionLabel: 'Szerkesztés, piszkozat elvetésével',
+      actionLabel: 'Új verzió, piszkozat elvetésével',
     },
     copy: {
       description:
@@ -300,7 +300,7 @@ export default function PlanHistoryPage() {
     },
     ujTerv: {
       description:
-        'Van mentetlen piszkozatod. Ha csak a páciensadatokkal indítasz új tervet, a jelenlegi ' +
+        'Van mentetlen piszkozatod. Ha a páciens adataival új tervet indítasz, a jelenlegi ' +
         'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
         'folytatod?',
       actionLabel: 'Új terv, piszkozat elvetésével',
@@ -354,8 +354,8 @@ export default function PlanHistoryPage() {
           fölött. Nem Callout: nem hiba és nem figyelmeztetés. */}
       {!loading && !listError && patients.length > 0 && (
         <Text as="p" size="1" color="gray" mt="0" mb="4">
-          A „Szerkesztés új verzióként” ugyanahhoz a tervhez ír új verziót; az „Új terv…” gombok
-          önálló, új tervet indítanak.
+          Az „Új verzió” ugyanahhoz a tervhez készül; az „Új terv” és a „Másolás új tervbe”
+          önálló, új tervet indít.
         </Text>
       )}
 
@@ -392,8 +392,12 @@ export default function PlanHistoryPage() {
         return (
         <Box key={p.dirName} mb="5" data-patient={p.dirName}>
           {/* Az akciógomb a névfejléc MELLETT van, nem benne: a páciensnév
-              címke, a gomb akció -- egy Text-en belül a kettő összeolvad. */}
-          <Flex justify="between" align="baseline" gap="3" mb="2">
+              címke, a gomb akció -- egy Text-en belül a kettő összeolvad.
+              Balra zárva, közvetlenül a név után: a rövid "Új terv" felirat
+              nem mondja ki, hogy a páciensadatot átviszi -- ezt az
+              elhelyezés hordozza. Accent (nem szürke), a páciensnév
+              `t.brand` színével egy családban. */}
+          <Flex align="baseline" gap="3" mb="2">
             <Text as="div" size="3" weight="bold" style={{ color: t.brand }}>
               {namesByPatient[p.dirName] ?? p.dirName}
               {unreadable.has(p.dirName) && (
@@ -406,12 +410,11 @@ export default function PlanHistoryPage() {
               <Button
                 size="1"
                 variant="soft"
-                color="gray"
                 onClick={() =>
                   runOrConfirm({ kind: 'ujTerv', patientDir: p.dirName, versionDir: latest.dirName })
                 }
               >
-                Új terv, csak a páciensadatokkal
+                Új terv
               </Button>
             )}
           </Flex>
@@ -455,66 +458,63 @@ export default function PlanHistoryPage() {
                     >
                       {formatMoney(total?.fizetendo ?? null, total?.penznem ?? 'HUF')}
                     </Text>
-                    <Flex gap="2">
-                      {/* Szándékosan NEM `solid`, pedig ez a sor egyetlen
-                          látható akciója: a kiemelés a KOCKÁZATOT jelezné, ez
-                          pedig a legkockázatosabb művelet (aláírt láncba ír,
-                          mentetlen piszkozatot fenyeget). Hogy egy kattintásra
-                          van, a GYAKORISÁGÁBÓL következik -- ez a képernyő fő
-                          útja (lásd a fájl-fejlécet). */}
-                      <Button
-                        size="1"
-                        variant="soft"
-                        color="gray"
-                        onClick={() =>
-                          runOrConfirm({ kind: 'open', patientDir: p.dirName, versionDir: v.dirName })
-                        }
-                      >
-                        Szerkesztés új verzióként
-                      </Button>
-                      <DropdownMenu.Root>
-                        <DropdownMenu.Trigger>
-                          {/* Az aria-label verziószámmal képzett: egy
-                              páciensblokkban több sor is van, csupasz "További
-                              műveletek"-kel a képernyőolvasó (és a teszt) nem
-                              tudná megkülönböztetni őket. */}
-                          <IconButton
-                            size="1"
-                            variant="soft"
-                            color="gray"
-                            aria-label={`v${v.verzio} — további műveletek`}
-                          >
-                            <DotsHorizontalIcon />
-                          </IconButton>
-                        </DropdownMenu.Trigger>
-                        {/* onCloseAutoFocus: a menü záráskor visszavenné a
-                            fókuszt a triggerre, és ezzel elhalászná azt a
-                            piszkozat-őr AlertDialog-ja elől, ami ugyanabban a
-                            tickben nyílik (runOrConfirm). Ne cseréld
-                            setTimeout-os késleltetésre. */}
-                        <DropdownMenu.Content
+                    <DropdownMenu.Root>
+                      <DropdownMenu.Trigger>
+                        {/* Az aria-label verziószámmal képzett: egy
+                            páciensblokkban több sor is van, csupasz "További
+                            műveletek"-kel a képernyőolvasó (és a teszt) nem
+                            tudná megkülönböztetni őket. */}
+                        <IconButton
                           size="1"
-                          onCloseAutoFocus={(e) => e.preventDefault()}
+                          variant="soft"
+                          color="gray"
+                          aria-label={`v${v.verzio} — további műveletek`}
                         >
-                          <DropdownMenu.Item
-                            onSelect={() => downloadVersion(p.dirName, v.dirName, p.patientId)}
-                          >
-                            Letöltés
-                          </DropdownMenu.Item>
-                          <DropdownMenu.Item
-                            onSelect={() =>
-                              runOrConfirm({
-                                kind: 'copy',
-                                patientDir: p.dirName,
-                                versionDir: v.dirName,
-                              })
-                            }
-                          >
-                            Új terv, ezzel a tartalommal
-                          </DropdownMenu.Item>
-                        </DropdownMenu.Content>
-                      </DropdownMenu.Root>
-                    </Flex>
+                          <DotsHorizontalIcon />
+                        </IconButton>
+                      </DropdownMenu.Trigger>
+                      {/* onCloseAutoFocus: a menü záráskor visszavenné a
+                          fókuszt a triggerre, és ezzel elhalászná azt a
+                          piszkozat-őr AlertDialog-ja elől, ami ugyanabban a
+                          tickben nyílik (runOrConfirm). Ne cseréld
+                          setTimeout-os késleltetésre. */}
+                      <DropdownMenu.Content
+                        size="1"
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                      >
+                        {/* Az elválasztó a csak-olvasó műveletet választja el a
+                            terv-létrehozóktól; azon belül a gyakoribb (Új
+                            verzió) áll elöl. */}
+                        <DropdownMenu.Item
+                          onSelect={() => downloadVersion(p.dirName, v.dirName, p.patientId)}
+                        >
+                          Letöltés
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Separator />
+                        <DropdownMenu.Item
+                          onSelect={() =>
+                            runOrConfirm({
+                              kind: 'open',
+                              patientDir: p.dirName,
+                              versionDir: v.dirName,
+                            })
+                          }
+                        >
+                          Új verzió
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item
+                          onSelect={() =>
+                            runOrConfirm({
+                              kind: 'copy',
+                              patientDir: p.dirName,
+                              versionDir: v.dirName,
+                            })
+                          }
+                        >
+                          Másolás új tervbe
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Root>
                   </Flex>
                 </Flex>
                 {actionError?.patientDir === p.dirName && actionError.versionDir === v.dirName && (
@@ -575,26 +575,21 @@ function HistorySkeleton() {
     <>
       {[0, 1].map((i) => (
         <Box key={i} mb="5">
-          <Flex justify="between" align="baseline" gap="3">
+          <Flex align="baseline" gap="3">
             <Skeleton>
               <Box height="20px" width="160px" />
             </Skeleton>
             <Skeleton>
-              <Box height="28px" width="190px" />
+              <Box height="28px" width="70px" />
             </Skeleton>
           </Flex>
           <Flex justify="between" align="center" py="2" mt="2">
             <Skeleton>
               <Box height="16px" width="120px" />
             </Skeleton>
-            <Flex gap="2">
-              <Skeleton>
-                <Box height="28px" width="160px" />
-              </Skeleton>
-              <Skeleton>
-                <Box height="28px" width="28px" />
-              </Skeleton>
-            </Flex>
+            <Skeleton>
+              <Box height="28px" width="28px" />
+            </Skeleton>
           </Flex>
         </Box>
       ))}

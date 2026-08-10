@@ -8,11 +8,11 @@ módja és a részletek kidolgozása a megvalósító feladata.
 
 ## Probléma
 
-A `PlanHistoryPage.tsx`-en ma három akció van egy verziósoron:
-„Letöltés" (PDF a Letöltések mappába), „Új terv, ezzel a tartalommal"
-(a 17. tétel másolás-útja) és „Szerkesztés új verzióként" (betölti a
-tervet a piszkozatba, `loadPlanIntoDraft` + navigáció a szerkesztőbe —
-mentetlen piszkozat esetén megerősítést kér, mert felülírná azt). A „csak
+A `PlanHistoryPage.tsx`-en ma három akció van egy verziósoron, mind a sor
+végi „⋯" menüben: „Letöltés" (PDF a Letöltések mappába), „Új verzió"
+(betölti a tervet a piszkozatba, `loadPlanIntoDraft` + navigáció a
+szerkesztőbe — mentetlen piszkozat esetén megerősítést kér, mert
+felülírná azt) és „Másolás új tervbe" (a 17. tétel másolás-útja). A „csak
 ránézek, mit írtunk alá tavaly" eset egyiken sem fér el: vagy a
 szerkesztőbe nyitáson át (ami veszélyezteti a piszkozatot, és egy
 véletlen mentés új verziót hoz létre — D4 miatt ez végleges, nem
@@ -93,38 +93,38 @@ felszabadítja). Egy követő state-map bevezetése új állapotot és
 „Általános undo") is kimondott elvvel, hogy egyszemélyes rendelőben a
 ritka, alacsony kárú éleseteket nem érdemes túl-mérnökösíteni.
 
-### 5. Gomb szövege és helye: „Megnézés", a sor ELEJÉN
+### 5. Gomb szövege és helye: „Megnézés", a `⋯` menü ELSŐ eleme
 
-A verziósoron ma egyetlen látható gomb („Szerkesztés új verzióként") és
-egy `⋯` menü van (`Letöltés`, `Új terv, ezzel a tartalommal`). A
-„Megnézés" **a második látható gomb** lesz, a sor elején:
+A verziósoron **nincs látható akciógomb** — a doki kikötése szerint minden
+verzió-szintű művelet a sor végi `⋯` menüben marad, oda más gomb nem
+kerülhet. A „Megnézés" ezért nem külön gomb lesz, hanem a menü **első**
+eleme, a `Letöltés` fölött:
 
 ```
-v1 · 2026-08-05   780 000 Ft   [Megnézés] [Szerkesztés új verzióként] [⋯]
+v1 · 2026-08-05   780 000 Ft   [⋯]
+                                │
+                    ┌───────────┴────────┐
+                    │ Megnézés           │
+                    │ Letöltés           │
+                    ├────────────────────┤
+                    │ Új verzió          │
+                    │ Másolás új tervbe  │
+                    └────────────────────┘
 ```
 
-Ez kimeríti a `docs/07-felulet-rendszer.md` „legfeljebb két látható gomb
-egy adatsoron" keretét — további látható gomb ide már nem jöhet, a
-`Letöltés` marad a menüben.
-
-**Miért látható, és miért nem a menübe kerül:** ez a sor egyetlen
-kockázatmentes akciója (nem érinti a piszkozatot, lásd 6. döntés), és a
-tétel valódi haszna épp az, hogy a „csak ránézek" út egy kattintás
-legyen — egy menü mögé rejtve nem váltaná ki a mai kerülőutakat.
+Ez követi a `docs/07-felulet-rendszer.md` menü-sorrend szabályát: elöl a
+kockázatmentes/olvasó műveletek (`Megnézés`, `Letöltés`), elválasztó után
+a terv-létrehozók. A `Megnézés` a `Letöltés` ELŐTT áll, mert a kettő közül
+ez a könnyebb (nem hagy fájlt a Letöltések mappában).
 
 **Miért ez a név:** a „Megnézés" névnek világosan meg kell különböznie a
-másik háromtól — azok mindegyike a piszkozatot veszélyezteti (megerősítő
-dialógust dob mentetlen piszkozatnál), az új gomb NEM. Egy „Megnyitás új
-lapon"-szerű elnevezés ráadásul úgy tenne, mintha terv-létrehozó akció
-lenne, holott a képernyő feliratrendszerében
-(`docs/03-funkcionalis-spec.md` § Korábbi tervek) az „Új terv" előtag és
-a „verzió" szó is foglalt, pontosan meghatározott jelentéssel — a rövid,
-egyértelmű „Megnézés" ezt elkerüli.
-
-Variáns: `soft`, mint a szomszédja. A `solid` ezen a képernyőn a
-kockázatot jelezné (lásd `docs/03-funkcionalis-spec.md` § Korábbi
-tervek), a „Megnézés" pedig épp a kockázatmentes akció — kiemelése
-ellentmondana a sor logikájának.
+menü többi elemétől — az `Új verzió` és a `Másolás új tervbe` a piszkozatot
+veszélyezteti (megerősítő dialógust dob mentetlen piszkozatnál), a
+`Megnézés` NEM. Egy „Megnyitás új lapon"-szerű elnevezés ráadásul úgy
+tenne, mintha terv-létrehozó akció lenne, holott a képernyő
+feliratrendszerében (`docs/03-funkcionalis-spec.md` § Korábbi tervek) az
+„új terv" kifejezés és a „verzió" szó is foglalt, pontosan meghatározott
+jelentéssel — a rövid, egyértelmű „Megnézés" ezt elkerüli.
 
 ### 6. Nincs interakció a piszkozat-felülírás-őrrel
 

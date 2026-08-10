@@ -63,15 +63,16 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   kattintható/billentyűzetes SVG adatvizualizáció ÉS beviteli eszköz —
   lásd `components/DentalChart.tsx`, `design/toothChartSvg.ts`) és a
   nyomtatvány (`pdf/TervDocument.tsx`, A4 layout).
-- Soronkénti akciók: **legfeljebb két látható gomb egy adatsoron**, a
-  többi Radix Themes `DropdownMenu`-ba. A trigger `⋯`
+- Soronkénti akciók: **legfeljebb két látható gomb egy adatsoron** (nulla
+  is rendben van), a többi Radix Themes `DropdownMenu`-ba. A trigger `⋯`
   (`DotsHorizontalIcon`) `IconButton`, és az `aria-label`-jének
   tartalmaznia kell a SOR azonosítóját (pl. `v2 — további műveletek`),
   nem lehet csupasz „További műveletek" — egy listában több sor is van,
   azonos accessible name-mel képernyőolvasóval megkülönböztethetetlenek.
-  Ami látható marad, azt a művelet **gyakorisága** dönti el, a
-  gombok/menüpontok sorrendjét viszont az **invazivitás** (a legkevésbé
-  kockázatos elöl). A menüből nyíló megerősítő dialógusnál a
+  A menü első eleme a kockázatmentes/olvasó művelet, utána — elválasztóval
+  — a többi, gyakoriság szerint. Hosszú, didaktikus feliratot csak menüben
+  használj (ott egymás alatt állnak); egy sorban egymás mellett rövidnek
+  kell lenniük. A menüből nyíló megerősítő dialógusnál a
   `DropdownMenu.Content` `onCloseAutoFocus`-át meg kell előzni, különben a
   záró menü visszaveszi a fókuszt a dialógus elől (lásd
   `pages/PlanHistoryPage.tsx`).
