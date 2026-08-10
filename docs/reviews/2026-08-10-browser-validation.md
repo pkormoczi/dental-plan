@@ -16,15 +16,17 @@ vándorolnak, utána ez törölhető (ugyanaz az életciklus, mint a
 | Súlyosság | Darab |
 |---|---|
 | Kritikus | 0 |
-| Közepes | 5 (2 javítva: K1, K2) |
+| Közepes | 5 (3 javítva: K1, K2, K3) |
 | Apró | 1 (javítva: A1) |
 | Megerősített, hibátlan | 9 terület |
 
 A Közepes tételek mindegyike **rendszerszintű** (az egész appot érinti, nem egy
 komponenst) — egyik sem trivi kis javítás, ezért nem lettek autonóm módon átírva,
-K1 és K2 kivételével (lásd lent, a felhasználó explicit kérésére). K4 és K5 a K1
-javítás utólagos böngészős visszaellenőrzése (2026-08-10, második menet) során
-derült ki — nem az eredeti menet találatai.
+K1 és K2 kivételével (lásd lent, a felhasználó explicit kérésére). K3 utólag,
+külön a felhasználó kérésére lett kivizsgálva és javítva (lásd lent) — a review
+menetében csak jelentve lett. K4 és K5 a K1 javítás utólagos böngészős
+visszaellenőrzése (2026-08-10, második menet) során derült ki — nem az eredeti
+menet találatai.
 
 ---
 
@@ -154,10 +156,39 @@ regresszió, de egy jövőbeli visszaellenőrzésnél ne tűnjön véletlen elt�
 `tsc -b`, `oxlint` és a teljes teszt-készlet zöld a javítás után (a
 változtatás CSS-egyedi-tulajdonság-szintű, egyetlen teszt sem tölti be sem az
 `index.css`-t, sem a `main.tsx`-et, tehát a vitest-készlet erre a rétegre
-struktúrálisan vak — böngészős visszaellenőrzés szükséges, lásd lent, még
-nincs elvégezve).
+struktúrálisan vak).
 
-### K3 — A NotoSans-SemiBold sosem ágyazódik be a tényleges PDF-be
+**Böngészős visszaellenőrzés (2026-08-10, harmadik menet).** Minden változó
+pontosan a tervezett értéken (`getComputedStyle(document.querySelector(
+'.radix-themes'))`): `--accent-9: #2D2D2D`, `--accent-10: #1A1A1A`,
+`--accent-contrast: #FFFFFF`, `--accent-indicator` változatlanul `#ad7f58`,
+`--focus-8` változatlan, `--focus-10: #1A1A1A`. Mind a 7 route-on nulla
+szövegkontraszt-szabálysértés (a korábbi 7 előfordulás, köztük a 11,4px-es
+PlanHistoryPage-sorok, mind eltűntek), minden `solid` gomb ténylegesen
+`rgb(45, 45, 45)` háttéren `rgb(255, 255, 255)` szöveggel fut, hoverre
+igazoltan `rgb(26, 26, 26)`-ra sötétedik.
+
+A második, menet közben felfedezett előfordulás élesben is igazolva: mindhárom
+`Select.Content` (`ToothChartPanel` fázis-választó, `PriceListAdminPage` és az
+„+ Új tétel” dialógus kategória-választója) kiemelt sora `data-accent-color=
+"brown"`-t visel a portálban is, és `rgb(45, 45, 45)`/`rgb(255, 255, 255)`-öt
+fut — a glob­ális szabály a `#root`-on kívülre portállt tartalmat is eléri,
+ahogy vártuk.
+
+Negatív ellenőrzések, mind rendben: a Home „Minden adat törlése” dialógus
+„Törlés” gombja (`data-accent-color="red"`) változatlanul `rgb(229, 72, 77)`;
+a bejelölt Checkbox kitöltése változatlanul `rgb(173, 127, 88)` fehér
+pipával; a K1 `soft`/`ghost` keret (`rgb(136, 150, 171)`) érintetlen mind a
+237 `#/arlista`-kontrollon. A jelzett mellékhatás is megerősítve: egy
+bejelölt + billentyűzettel fókuszált `RadioCardsItem` (Kategóriák panel,
+színválasztó) gyűrűje ténylegesen `rgb(26, 26, 26)`-ra vált — igazoltan csak
+valódi `:focus-visible` billentyűzet-navigációval (programozott `.focus()`
+hívás ezt NEM váltja ki, ahogy az várható Chromium-ban). Konzol tiszta: a két
+jelenlévő üzenet (`Buffer is not defined` a `@react-pdf/renderer`-től, egy
+`id`/`name` hiány figyelmeztetés a Chrome beépített PDF-nézőjének zoom-mezőjén)
+egyike sem kapcsolódik ehhez a javításhoz.
+
+### K3 — A NotoSans-SemiBold sosem ágyazódik be a tényleges PDF-be — JAVÍTVA (2026-08-10)
 
 `pdf/fonts.ts` regisztrálja a `NotoSans` családot 400 és 600 súllyal
 (`Font.register({ family: 'NotoSans', fonts: [{...400}, {...600}] })`), és a
@@ -185,10 +216,81 @@ tartalomfolyama.
 Ez pontosan az a hibaosztály, amire ez az egész validációs réteg épült — a
 `pdf/fonts.ts` fejléc-kommentje szó szerint kimondja: *"ez csak a végleges
 PDF-en látszik, a HTML előnézeten nem"*. `@react-pdf/renderer` verzió: `^4.5.1`.
-A gyökérokot (fontkit súly-feloldás, TTF metaadat, vagy `Font.register` API
-használat) nem vizsgáltam tovább — ez implementáció-szintű nyomozást igényel,
-nem böngészős ellenőrzést. Backlogba javasolt, `@react-pdf/renderer` verzió
-frissítés / font-fájl csere kipróbálásával kezdve.
+
+**Javítva.** A gyökérok kivizsgálva (implementáció-szintű nyomozással,
+`fontTools` + a `@react-pdf/pdfkit`/`@react-pdf/font` forrás olvasásával): a
+`app/src/assets/fonts/NotoSans-SemiBold.ttf` name-táblája (nameID 1/2/4/6) a
+`README.md`-ben dokumentált `fontTools.varLib.instancer` lépés után is
+`NotoSans-Regular`-t mondott — az instancer az `OS/2.usWeightClass`-t
+helyesen állította be (600), de a name-record-okat nem nevezte át. A
+`@react-pdf/pdfkit` a beágyazott fontok cache-ét pontosan ezzel a
+postscriptName-mel kulcsolja (`pdfkit.js`
+`_fontFamilies[this._font.name]`, ahol `this.name = this.font.postscriptName`)
+— a SemiBold betöltésekor az azonos nevű, már beágyazott Regulart találja
+meg, és csendben azt használja helyette. A `@react-pdf/font` réteg
+(`Font.register`/`FontFamily.resolve`) önmagában hibátlan: a `fontWeight:
+600` alapján helyesen választja ki a SemiBold `FontSource`-ot, az ütközés
+kizárólag a pdfkit beágyazási cache-ében történik. Megerősítve, hogy csak
+metaadat-ütközés, nem hibás/duplikált font: a glyph-körvonalak ténylegesen
+eltérnek (`M` betű advance width 907 Regularban, 929 SemiBoldban; bbox
+maxX 810 vs 837), a két fájl bájtjai különböznek.
+
+A javítás a meglévő `NotoSans-SemiBold.ttf` name-táblájának (nameID
+1/2/4/6, +16/17) átírása `fontTools`-szal `NotoSans-Regular` → `NotoSans-
+SemiBold`-ra — a `glyf`/`OS/2`/`hmtx`/`cmap`/`head` táblákhoz nem nyúlva. A
+lépés hozzá lett adva `app/src/assets/fonts/README.md` reprodukálhatósági
+receptjéhez, hogy egy jövőbeli font-regenerálás ne hozza vissza csendben
+ugyanezt a hibát. Új regressziós teszt: `app/src/pdf/fonts.test.ts` (a két
+TTF nyers bájtjaiban ellenőrzi, hogy a SemiBold a saját nevét mondja, nem a
+Regularét — megerősítve, hogy a javítás előtti fájlon ez a teszt elbukott
+volna). Node-szintű, valódi PDF-bájt ellenőrzés (`@react-pdf/renderer`
+`renderToBuffer`, ugyanaz a mérés, mint a fenti böngészős lelet): a javítás
+után `fontFile2Count: 2`, és két különböző `BaseFont` (`...+NotoSans-
+Regular`, `...+NotoSans-SemiBold`). `tsc -b`, `oxlint` és a teljes
+teszt-készlet zöld a javítás után.
+
+A `14 0 obj` `/Helvetica` Type1 objektum kérdése (fentebb) szándékosan
+nyitva marad — nem azonosítottam kapcsolatot a SemiBold-hibával, valószínűleg
+a `@react-pdf/pdfkit` alapértelmezett Helvetica-regisztrációjának inert
+maradéka, de ez nincs megerősítve.
+
+**Böngészős visszaellenőrzés (2026-08-10, negyedik menet).** A javítás a
+tényleges appon keresztül, nem csak a Node-szintű ellenőrző szkripttel
+igazolva. Reset → `#/paciens` (`Tőkés Ödönné`) → `#/terv` egyedi sor
+(`Gyökérkezelés felső őrlőfogon`, fogszám `16, 26`) → `#/elonezet`. A
+valódi blob PDF nyers bájtjaiban (`fetch` a blob URL-ről, `objStmCount: 0`,
+tehát a reguláris kereséses módszer megbízható):
+
+```
+allBaseFonts: ["Helvetica", "XKAGAT+NotoSans-Regular", "XKAGAT+NotoSans-Regular",
+               "CQWUBS+NotoSans-SemiBold", "CQWUBS+NotoSans-SemiBold"]
+fontFile2Count: 2
+```
+
+— két különböző subset-tag (`XKAGAT`/`CQWUBS`), két beágyazott TTF, pontosan
+a várt javított állapot. `performance.getEntriesByType('resource')` szerint
+mindkét font ténylegesen letöltődött (`NotoSans-Regular.ttf` 59 840 B,
+`NotoSans-SemiBold.ttf` 59 908 B — utóbbi a name-tábla-javítás miatt 32
+bájttal nagyobb, mint a K3 leírásában idézett eredeti méret). Screenshot
+(90%-os nagyítás, PDFium): a fejléc-cím ("Kezelési terv és árajánlat"), a
+fázis-cím ("1. kezelés") és az összesítő ("Fizetendő" / "45 000 Ft")
+vizuálisan is láthatóan vastagabb, mint a törzsszöveg — korábban (a Regularra
+csendben visszaeső állapotban) ez a különbség nem lett volna látható. Az
+`ő`/`ű` glyphek (`Tőkés Ödönné`, `Gyökérkezelés felső őrlőfogon`) mindkét
+súlyban hibátlanok.
+
+Mellékesen, ugyanebben a menetben (a `docs/07` kadencia-táblázata szerint a
+fontokhoz nyúló változtatás a teljes PDF-menetet indokolja, nem csak a K3-at
+érintő részt) két másik, a K3-tól független PDF-viselkedés is
+visszaellenőrizve, mindkettő rendben, nincs regresszió: **D23
+placeholder-zár** valós bájtokon (`[PLACEHOLDER`-törzsű nyilatkozat →
+`pageCount` 3 → 2, a "Csak ajánlat" checkbox kényszerítve bejelölve és
+letiltva) és **fogtérkép A/B** (`imageXObjects` 8 → 4 a fogak törlésekor, a
+térkép és az "Érintett fogak" cím ténylegesen eltűnik a screenshoton). Konzol
+mindvégig tiszta: a két jelenlévő üzenet (`Buffer is not defined`, a Chrome
+beépített PDF-nézőjének zoom-mező `id`/`name` figyelmeztetése) egyike sem
+kapcsolódik a K3 javításhoz, mindkettő már a korábbi menetekben is
+dokumentált és jóváhagyott.
 
 ### K4 — `controlBorder` (`#8896AB`) valós felületeken 2,4–2,96:1-en fut a mondott 3,00:1 helyett
 
