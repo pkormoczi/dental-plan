@@ -31,6 +31,9 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 - Az 5 francia nyelvű maradványtétel és egy duplikált "Lokátor felépítmény" tétel inaktívvá vált
   (nem törlődtek, csak elrejtve a keresésből) — szükség esetén egy kattintással
   visszakapcsolhatók.
+- Javítottuk, hogy az Árlista adminban a tétel- vagy kategórianév mezőbe gyorsan gépelve néha
+  lemaradjon egy betű a beírt szövegből (például "Fogszabályozás" helyett "Fogszabályozs"
+  mentődött) — a mező mostantól mindig pontosan azt mutatja és menti, amit begépeltünk.
 
 ## 2026. augusztus 9.
 
