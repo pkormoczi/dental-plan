@@ -17,16 +17,38 @@ ahol a legutóbb kiosztott szám állt.
 **Sorrend:** a listákon belül hasznosság szerint — a napi fájdalom
 mérete × gyakorisága, holtversenynél a kisebb munka előre. A 24. tétel a
 lista végén áll, mert nem fejlesztői munka, tehát nem esik a
-haszon-rangsorba. A MOST szakasz hat fejlesztői tételéhez van
+haszon-rangsorba. A MOST szakasz hét fejlesztői tételéhez van
 tervdokumentum (grill-me munkamenetek döntési összefoglalói); a 24.
 tételnek nincs, és nem is lesz — tisztán adattisztítás és
-információkérés a dokitól.
+információkérés a dokitól. A 25. tétel kivétel a hasznosság szerinti
+sorrend alól: a doki kifejezett kérésére az élen áll, mert megelőzi (és
+megkönnyíti) a Korábbi tervek listát érintő további munkát.
 
 ---
 
-## MOST (kb. 1–1,5 fejlesztői nap + fél nap közös munka a dokival)
+## MOST (kb. 1–1,5 fejlesztői nap + fél nap közös munka a dokival, a 25. tétel ennél nagyobb — lásd ott)
 
-### 1. hely — 18. tétel: Fázis törlése megerősítéssel
+### 1. hely — 25. tétel: Páciens-entitás a Korábbi tervek fájában
+
+- **Méret:** 2–4 fejlesztői nap — új adatszint (páciens-mappa,
+  `paciens.json`, `terv-cimke.json`), a `PlanStorage` interfész és a
+  `DemoStorage`/seed-adat átalakítása, három érintett képernyő (Home,
+  Páciens adatlap, Korábbi tervek) és egy új domain-segédfüggvény
+  (domináns-kategória auto-javaslat).
+- **Kereteket sért?** D26-ot pontosítja (nem törli el) — lásd a terv 1.
+  döntését.
+- **Valódi haszon:** a lista ma páciensmappánként csoportosít, de egy
+  páciensmappa = egy terv-lánc (D26); egy visszatérő páciensnél, akinek
+  több terve is van, mindegyik 2-3 verzióval, ugyanaz a név
+  csoportosítás nélkül ismétlődik — a lista sok páciens/terv esetén
+  áttekinthetetlenné válik.
+- **20%-os verzió:** nincs — a 3 szintű fa (páciens → terv → verzió) és
+  az explicit páciens-azonosítás nem bontható kisebb, önmagában is
+  hasznos darabra anélkül, hogy a névegyezés-heurisztika kockázatait
+  (téves összevonás/szétválasztás) örökölné.
+- **Terv:** `docs/backlog-25-paciens-entitas-terv.md` (7 döntés).
+
+### 2. hely — 18. tétel: Fázis törlése megerősítéssel
 
 - **Méret:** 1–2 óra — a meglévő `AlertDialog`-minta a „Fázis törlése"
   gombon, csak akkor, ha a fázisban van sor (üres fázis törlése maradjon
@@ -39,7 +61,7 @@ információkérés a dokitól.
 - **20%-os verzió:** nincs kisebb — ez már a minimális védelem.
 - **Terv:** `docs/backlog-18-fazis-torles-terv.md` (6 döntés).
 
-### 2. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
+### 3. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
 - **Méret:** 2–3 óra — új, nem blokkoló lépés a `PreviewPage` meglévő
   `confirmStep`-láncában: a 0 Ft-os, kitöltött nevű sorok felsorolása. A
@@ -54,7 +76,7 @@ információkérés a dokitól.
   rosszabb lenne, mert eltörné a billentyűzetes ciklust.
 - **Terv:** `docs/backlog-19-nulla-forint-terv.md` (7 döntés).
 
-### 3. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
+### 4. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
 
 - **Méret:** 1–2 óra — a `PreviewPage` és `PlanHistoryPage` letöltési
   fájlneveiben a páciensnév (a `paths.ts` meglévő
@@ -69,7 +91,7 @@ információkérés a dokitól.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `docs/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
 
-### 4. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
+### 5. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
 - **Méret:** 1 óra + teszt — a `savePriceList` a `modositva` mellett az
   `arlistaVerzio`-t is a mentés napjára állítja tartalmi változásnál. A
@@ -84,7 +106,7 @@ információkérés a dokitól.
   fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
 - **Terv:** `docs/backlog-21-arlista-verzio-terv.md` (5 döntés).
 
-### 5. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
+### 6. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
 - **Méret:** 1–2 óra — a PlanHistoryPage-en a már betöltött
   PDF-bájtokból blob-URL, új fül; nincs új nézet, nincs új útvonal.
@@ -97,7 +119,7 @@ információkérés a dokitól.
   böngésző PDF-nézője elég).
 - **Terv:** `docs/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
-### 6. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 7. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
@@ -110,7 +132,7 @@ információkérés a dokitól.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `docs/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
 
-### 7. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
+### 8. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
 
 **Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
 Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
@@ -302,3 +324,5 @@ Hasznosság szerint sorrendezve:
   szerkezetű doktor-nap narratíva és architekt-triázs (a 15 igény teljes
   értékelése — méret, keretsértés, haszon, 20%-os változat tételenként),
   szintén a git history-ban.
+- **25. tétel (2026-08-11):** a doki közvetlen visszajelzése a Korábbi
+  tervek képernyőn (grill-me munkamenet), nem a fenti két kör része.
