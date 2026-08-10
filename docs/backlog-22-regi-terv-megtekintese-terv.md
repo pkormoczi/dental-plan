@@ -95,23 +95,36 @@ ritka, alacsony kárú éleseteket nem érdemes túl-mérnökösíteni.
 
 ### 5. Gomb szövege és helye: „Megnézés", a sor ELEJÉN
 
-A verziósor gombjainak sorrendje mostantól: „Megnézés" → „Letöltés" →
-„Új terv, ezzel a tartalommal" → „Szerkesztés új verzióként" — a
-legkevésbé invazív (csak megnézem) akció elöl, a leginkább kockázatos
-(szerkesztésre nyitás, piszkozat-felülírás kockázata) hátul.
+A verziósoron ma egyetlen látható gomb („Szerkesztés új verzióként") és
+egy `⋯` menü van (`Letöltés`, `Új terv, ezzel a tartalommal`). A
+„Megnézés" **a második látható gomb** lesz, a sor elején:
 
-**Miért:** a „Megnézés" névnek világosan meg kell különböznie a másik
-háromtól — azok mindegyike a piszkozatot veszélyezteti (megerősítő
-dialógust dob mentetlen piszkozatnál, lásd 6. döntés), az új gomb NEM.
-Egy „Megnyitás új lapon"-szerű elnevezés ráadásul úgy tenne úgy, mintha
-terv-létrehozó akció lenne, holott a képernyő feliratrendszerében
+```
+v1 · 2026-08-05   780 000 Ft   [Megnézés] [Szerkesztés új verzióként] [⋯]
+```
+
+Ez kimeríti a `docs/07-felulet-rendszer.md` „legfeljebb két látható gomb
+egy adatsoron" keretét — további látható gomb ide már nem jöhet, a
+`Letöltés` marad a menüben.
+
+**Miért látható, és miért nem a menübe kerül:** ez a sor egyetlen
+kockázatmentes akciója (nem érinti a piszkozatot, lásd 6. döntés), és a
+tétel valódi haszna épp az, hogy a „csak ránézek" út egy kattintás
+legyen — egy menü mögé rejtve nem váltaná ki a mai kerülőutakat.
+
+**Miért ez a név:** a „Megnézés" névnek világosan meg kell különböznie a
+másik háromtól — azok mindegyike a piszkozatot veszélyezteti (megerősítő
+dialógust dob mentetlen piszkozatnál), az új gomb NEM. Egy „Megnyitás új
+lapon"-szerű elnevezés ráadásul úgy tenne, mintha terv-létrehozó akció
+lenne, holott a képernyő feliratrendszerében
 (`docs/03-funkcionalis-spec.md` § Korábbi tervek) az „Új terv" előtag és
 a „verzió" szó is foglalt, pontosan meghatározott jelentéssel — a rövid,
 egyértelmű „Megnézés" ezt elkerüli.
 
-A „Megnézés" gomb — mint a sor egyetlen kockázatmentes akciója — kaphat
-`solid` variánst; a másik három szándékosan `soft`, lásd
-`docs/03-funkcionalis-spec.md` § Korábbi tervek.
+Variáns: `soft`, mint a szomszédja. A `solid` ezen a képernyőn a
+kockázatot jelezné (lásd `docs/03-funkcionalis-spec.md` § Korábbi
+tervek), a „Megnézés" pedig épp a kockázatmentes akció — kiemelése
+ellentmondana a sor logikájának.
 
 ### 6. Nincs interakció a piszkozat-felülírás-őrrel
 

@@ -410,7 +410,7 @@ kényelmi kérdés, hanem az, hogy az eredmény **melyik tervláncba** kerül:
 | Gomb | Hol | Mit visz át | Mentéskor |
 |---|---|---|---|
 | **„Szerkesztés új verzióként"** | verziósoron | mindent, a `tervId`-t is | ugyanabba a páciensmappába `<ma>_v<n+1>` (D4) |
-| **„Új terv, ezzel a tartalommal"** | verziósoron | mindent az azonosító/állapot/dátum kivételével | **új** páciensmappa, `<ma>_v1` (D26) |
+| **„Új terv, ezzel a tartalommal"** | verziósor `⋯` menüjében | mindent az azonosító/állapot/dátum kivételével | **új** páciensmappa, `<ma>_v1` (D26) |
 | **„Új terv, csak a páciensadatokkal"** | páciensnév-fejlécnél | csak a `paciens` blokkot | **új** páciensmappa, `<ma>_v1` (D26) |
 
 Ebből következik a feliratok kötelező rendszere: **minden új tervláncot
@@ -422,12 +422,27 @@ lásd `docs/07-felulet-rendszer.md` („a gombfelirat azt mondja, mi
 történik"). Ugyanezt mondja ki egy rövid, szürke magyarázó sor a lista
 tetején, a kereső alatt.
 
-A verziósor három gombja (`Letöltés` → `Új terv, ezzel a tartalommal` →
-`Szerkesztés új verzióként`) a legkevésbé invazívtól a legkockázatosabbig
-sorrendben áll, és **egyik sem `solid` variáns**: a sorban nincs
-elsődleges akció, mindhárom következményes, és épp a legkockázatosabbat
-(aláírt láncba ír, mentetlen piszkozatot fenyeget) kiemelni félrevezető
-lenne. A páciensszintű gomb a névfejléc **mellett** áll, nem benne — a
+A verziósoron ezek közül **csak a `Szerkesztés új verzióként` látszik**, a
+`Letöltés` és az `Új terv, ezzel a tartalommal` egy `⋯` menübe került (a
+három egyenrangú, hosszú feliratú gomb egymás mellett zsúfolt és
+összetéveszthető volt). Két rendezőelv dolgozik itt, és nem szabad
+összekeverni őket:
+
+- **Láthatóság = gyakoriság.** Egy kattintásra az kerül, amit a doki a
+  legtöbbször csinál — ez a visszatérő páciens tervének folytatása, a
+  képernyő fő létjogosultsága („nem a mentés, hanem a betöltés").
+- **Sorrend = invazivitás.** A soron belül és a menün belül is a
+  legkevésbé invazívtól a legkockázatosabbig.
+
+A látható gomb **nem `solid`**: a kiemelés a kockázatot jelezné, ez pedig
+épp a legkockázatosabb művelet (aláírt láncba ír, mentetlen piszkozatot
+fenyeget) — hogy egy kattintásra van, az a gyakoriságából következik, nem
+abból, hogy ez volna az „ajánlott" út. A `⋯` `IconButton`
+`aria-label`-jében benne van a verziószám (`v2 — további műveletek`): egy
+páciensblokkban több sor is van, csupasz „További műveletek" felirattal
+megkülönböztethetetlenek lennének.
+
+A páciensszintű gomb a névfejléc **mellett** áll, nem benne — a
 páciensnév címke, a gomb akció.
 
 ### Korábbi terv új verzióra nyitása
@@ -459,10 +474,9 @@ különbséget követi, nem kényszeríti egy szintre:
   `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss alapértéke — pontosan
   úgy, mintha a doki a Kezdőlap „Új terv indítása" gombját nyomta volna
   meg, csak a páciens mezők már ki vannak töltve.
-- **„Új terv, ezzel a tartalommal"** — minden verzió-soron, a
-  „Letöltés"/„Szerkesztés új verzióként" mellett, mert konkrétan AZT a
-  verziót másolja, sorokkal együtt (egy régebbi verzió sorai eltérhetnek a
-  legfrissebbtől). A
+- **„Új terv, ezzel a tartalommal"** — minden verzió-sor `⋯` menüjében, a
+  „Letöltés" mellett, mert konkrétan AZT a verziót másolja, sorokkal együtt
+  (egy régebbi verzió sorai eltérhetnek a legfrissebbtől). A
   `paciens`, `nyelv`, `penznem`, `orvos`, `fazisok`, `elolegSzazalek`,
   `kedvezmenyOsszeg` és az `arlistaVerzio` is változatlanul átjön — ugyanaz
   a snapshot-elv, mint egy meglévő terv új verzióra nyitásakor. Ez a

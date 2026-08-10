@@ -74,6 +74,21 @@ function patientCard(nev: string): HTMLElement {
   return screen.getByText(nev).closest('[data-patient]') as HTMLElement;
 }
 
+// A verziósor másodlagos akciói (Letöltés, "Új terv, ezzel a tartalommal")
+// egy "⋯" DropdownMenu mögött vannak -- a menü csak nyitáskor rendeli a
+// menüpontokat a DOM-ba, ezért minden ilyen teszt itt megy keresztül.
+// `vi` = 0 a legfrissebb verzió sora (a lista fordítva rendez).
+async function menupont(
+  user: ReturnType<typeof userEvent.setup>,
+  card: HTMLElement,
+  nev: string,
+  vi = 0,
+): Promise<HTMLElement> {
+  const triggers = within(card).getAllByRole('button', { name: /további műveletek$/ });
+  await user.click(triggers[vi]);
+  return screen.findByRole('menuitem', { name: nev });
+}
+
 function renderHistory() {
   return render(
     <TestProviders>
@@ -220,11 +235,11 @@ describe('PlanHistoryPage', () => {
     expect(
       within(card).getByRole('button', { name: 'Új terv, csak a páciensadatokkal' }),
     ).toBeInTheDocument();
-    // Nagy Éva két verzióval szerepel a seedben -- egy-egy "Új terv, ezzel a
-    // tartalommal" gomb verziónként, nem csak egy a páciensnek.
-    expect(
-      within(card).getAllByRole('button', { name: 'Új terv, ezzel a tartalommal' }),
-    ).toHaveLength(2);
+    // Nagy Éva két verzióval szerepel a seedben -- egy-egy "⋯" menü
+    // verziónként, nem csak egy a páciensnek. Az accessible name is
+    // verziónként külön, hogy megkülönböztethetők legyenek.
+    expect(within(card).getByRole('button', { name: 'v2 — további műveletek' })).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: 'v1 — további műveletek' })).toBeInTheDocument();
   });
 
   it('"Új terv, ezzel a tartalommal" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Páciens adatlapon', async () => {
@@ -237,13 +252,9 @@ describe('PlanHistoryPage', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    // A verziók lista fordítva (legfrissebb elöl) -- az első "Új terv, ezzel
-    // a tartalommal" gomb a v2 sorához tartozik.
-    const copyBtn = within(card).getAllByRole('button', {
-      name: 'Új terv, ezzel a tartalommal',
-    })[0];
-
-    await user.click(copyBtn);
+    // A verziók lista fordítva (legfrissebb elöl) -- az első "⋯" menü a v2
+    // sorához tartozik.
+    await user.click(await menupont(user, card, 'Új terv, ezzel a tartalommal'));
 
     expect(await screen.findByTestId('draft-oldal')).toHaveTextContent('PACIENS-OLDAL');
     expect(screen.getByTestId('draft-nev')).toHaveTextContent('Nagy Éva');
@@ -281,18 +292,32 @@ describe('PlanHistoryPage', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    const copyBtn = within(card).getAllByRole('button', {
-      name: 'Új terv, ezzel a tartalommal',
-    })[0];
 
-    await user.click(copyBtn);
+    await user.click(await menupont(user, card, 'Új terv, ezzel a tartalommal'));
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Mégse' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(screen.queryByTestId('draft-oldal')).not.toBeInTheDocument();
 
-    await user.click(copyBtn);
+    await user.click(await menupont(user, card, 'Új terv, ezzel a tartalommal'));
+    // A menü záráskor nem halászhatja el a fókuszt a most nyíló dialógus elől
+    // (DropdownMenu.Content onCloseAutoFocus) -- ha mégis, ez a kattintás nem
+    // ér célba, és a piszkozat-őr megkerülhetővé válik.
     await user.click(await screen.findByRole('button', { name: 'Másolás, piszkozat elvetésével' }));
     expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
+  });
+
+  it('a "⋯" menü Letöltés pontja a verzió mentett PDF-jét adja vissza', async () => {
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+
+    // A seed-verziókhoz nincs mentett PDF (csak terv.json) -- a lényeg, hogy a
+    // menüpont a downloadVersion ágra fut, és a hiánya a SOR alatt, inline
+    // jelenik meg, nem alert()-tel (P1-2).
+    await user.click(await menupont(user, card, 'Letöltés'));
+    expect(await within(card).findByText('Ehhez a verzióhoz nincs mentett PDF.')).toBeInTheDocument();
   });
 });

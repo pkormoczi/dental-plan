@@ -13,14 +13,16 @@ import {
   Box,
   Button,
   Callout,
+  DropdownMenu,
   Flex,
   Heading,
+  IconButton,
   Separator,
   Skeleton,
   Text,
   TextField,
 } from '@radix-ui/themes';
-import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
+import { CrossCircledIcon, DotsHorizontalIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
 import { todayIso } from '../domain/date';
 import { formatMoney } from '../domain/money';
@@ -53,6 +55,11 @@ interface VersionRef {
 // meglévő láncot folytató akció feliratában szerepel a "verzió" szó -- ez a
 // képernyő egyetlen olyan különbsége, amit a dokinak kattintás előtt látnia
 // kell (D4/D26).
+//
+// A verziósoron ebből csak a leggyakoribb ("Szerkesztés új verzióként")
+// látszik, a többi a "⋯" menübe került -- két rendezőelv, ne keveredjenek:
+// a LÁTHATÓSÁG gyakoriság szerint dől el, a SORREND (soron belül és menün
+// belül is) a legkevésbé invazívtól a legkockázatosabbig tart.
 type PendingKind = 'open' | 'copy' | 'ujTerv';
 type PendingAction = VersionRef & { kind: PendingKind };
 
@@ -449,29 +456,12 @@ export default function PlanHistoryPage() {
                       {formatMoney(total?.fizetendo ?? null, total?.penznem ?? 'HUF')}
                     </Text>
                     <Flex gap="2">
-                      <Button
-                        size="1"
-                        variant="soft"
-                        color="gray"
-                        onClick={() => downloadVersion(p.dirName, v.dirName, p.patientId)}
-                      >
-                        Letöltés
-                      </Button>
-                      <Button
-                        size="1"
-                        variant="soft"
-                        color="gray"
-                        onClick={() =>
-                          runOrConfirm({ kind: 'copy', patientDir: p.dirName, versionDir: v.dirName })
-                        }
-                      >
-                        Új terv, ezzel a tartalommal
-                      </Button>
-                      {/* Szándékosan NEM `solid`: a sor három akciója közül ez
-                          a legkockázatosabb (aláírt láncba ír, mentetlen
-                          piszkozatot fenyeget), elsődlegesként kiemelve
-                          félrevezető lenne. A sorrend a legkevésbé invazívtól
-                          a legkockázatosabbig tart. */}
+                      {/* Szándékosan NEM `solid`, pedig ez a sor egyetlen
+                          látható akciója: a kiemelés a KOCKÁZATOT jelezné, ez
+                          pedig a legkockázatosabb művelet (aláírt láncba ír,
+                          mentetlen piszkozatot fenyeget). Hogy egy kattintásra
+                          van, a GYAKORISÁGÁBÓL következik -- ez a képernyő fő
+                          útja (lásd a fájl-fejlécet). */}
                       <Button
                         size="1"
                         variant="soft"
@@ -482,6 +472,48 @@ export default function PlanHistoryPage() {
                       >
                         Szerkesztés új verzióként
                       </Button>
+                      <DropdownMenu.Root>
+                        <DropdownMenu.Trigger>
+                          {/* Az aria-label verziószámmal képzett: egy
+                              páciensblokkban több sor is van, csupasz "További
+                              műveletek"-kel a képernyőolvasó (és a teszt) nem
+                              tudná megkülönböztetni őket. */}
+                          <IconButton
+                            size="1"
+                            variant="soft"
+                            color="gray"
+                            aria-label={`v${v.verzio} — további műveletek`}
+                          >
+                            <DotsHorizontalIcon />
+                          </IconButton>
+                        </DropdownMenu.Trigger>
+                        {/* onCloseAutoFocus: a menü záráskor visszavenné a
+                            fókuszt a triggerre, és ezzel elhalászná azt a
+                            piszkozat-őr AlertDialog-ja elől, ami ugyanabban a
+                            tickben nyílik (runOrConfirm). Ne cseréld
+                            setTimeout-os késleltetésre. */}
+                        <DropdownMenu.Content
+                          size="1"
+                          onCloseAutoFocus={(e) => e.preventDefault()}
+                        >
+                          <DropdownMenu.Item
+                            onSelect={() => downloadVersion(p.dirName, v.dirName, p.patientId)}
+                          >
+                            Letöltés
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            onSelect={() =>
+                              runOrConfirm({
+                                kind: 'copy',
+                                patientDir: p.dirName,
+                                versionDir: v.dirName,
+                              })
+                            }
+                          >
+                            Új terv, ezzel a tartalommal
+                          </DropdownMenu.Item>
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Root>
                     </Flex>
                   </Flex>
                 </Flex>
@@ -557,13 +589,10 @@ function HistorySkeleton() {
             </Skeleton>
             <Flex gap="2">
               <Skeleton>
-                <Box height="28px" width="72px" />
-              </Skeleton>
-              <Skeleton>
-                <Box height="28px" width="170px" />
-              </Skeleton>
-              <Skeleton>
                 <Box height="28px" width="160px" />
+              </Skeleton>
+              <Skeleton>
+                <Box height="28px" width="28px" />
               </Skeleton>
             </Flex>
           </Flex>
