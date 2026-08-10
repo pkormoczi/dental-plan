@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
-import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Text } from '@radix-ui/themes';
+import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
 import { kitoltetlenSorok } from '../domain/kitoltetlen';
@@ -422,11 +422,19 @@ export default function PreviewPage() {
           }}
         />
       ) : (
-        <Box style={{ padding: 40, textAlign: 'center' }}>
-          <Text size="2" color="gray">
-            PDF előállítása…
-          </Text>
-        </Box>
+        // docs/07-felulet-rendszer.md: skeleton a végleges elrendezés
+        // alakjában, ne pörgő spinner -- a végleges elem az iframe fenti
+        // stílusával megegyező méretű, keretes doboz.
+        <Skeleton>
+          <Box
+            style={{
+              width: '100%',
+              height: '80vh',
+              border: `1px solid ${t.uiLine}`,
+              borderRadius: t.radiusLg,
+            }}
+          />
+        </Skeleton>
       )}
 
       <AlertDialog.Root

@@ -102,6 +102,13 @@ korábban megadott mappa-engedély), NE kerüld meg. Jelezd, hogy ez a
 korlátozás miatt nem megy, és javasolj alternatívát a PlanStorage
 teszt-implementációval.
 
+Ennek a szabálynak a kikényszerítési pontja a követett, verzió-pinnelt
+`.mcp.json` (`--isolated`). A vitest-készlet strukturálisan nem elérhető
+rétegeinek (kontraszt, `controlBorder`, valódi PDF, canvas→PNG fogtérkép,
+`paint-order`, Radix popover-geometria) böngészős ellenőrzését a
+`.claude/skills/browser-validation/` skill végzi — kézzel indítva, sose
+automatikusan.
+
 ## Meglévő segédfüggvények — használd, ne írd újra
 
 Ezek (eredetileg a törölt `ui/tokens.js` prototípusból portolva) már megvannak

@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { HashRouter, Route, Routes } from 'react-router-dom';
-import { Theme } from '@radix-ui/themes';
+import { Box, Flex, Skeleton, Theme } from '@radix-ui/themes';
 import DemoBanner from './components/DemoBanner';
 import ErrorBoundary from './components/ErrorBoundary';
 import NavBar from './components/NavBar';
@@ -65,10 +65,30 @@ export default function App() {
   );
 }
 
+// docs/07-felulet-rendszer.md: skeleton a végleges elrendezés alakjában, ne
+// pörgő spinner -- a PreviewPage saját (checkbox+gombsor, majd egy nagy
+// keretes doboz) elrendezését közelíti, hogy ne ugorjon a réteg, amikor a
+// lazy chunk (@react-pdf/renderer, ~1.5 MB) betöltése után a valódi tartalom
+// átveszi a helyét.
 function PreviewLoading() {
   return (
-    <div style={{ padding: 40, textAlign: 'center', color: t.uiTextMuted, fontSize: 13 }}>
-      Az előnézet-motor betöltése…
-    </div>
+    <>
+      <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
+        <Skeleton>
+          <Box height="20px" width="260px" />
+        </Skeleton>
+        <Flex gap="3">
+          <Skeleton>
+            <Box height="32px" width="90px" />
+          </Skeleton>
+          <Skeleton>
+            <Box height="32px" width="170px" />
+          </Skeleton>
+        </Flex>
+      </Flex>
+      <Skeleton>
+        <Box style={{ width: '100%', height: '80vh', borderRadius: t.radiusLg }} />
+      </Skeleton>
+    </>
   );
 }

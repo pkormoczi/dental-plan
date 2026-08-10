@@ -175,3 +175,20 @@ Minden nézetnek van loading, empty és error állapota.
   SVG ikon — ez nem ikon, tehát nem sérti a fenti szabályt, de tudatos: a
   csillag-ikon szándékosan ki van zárva, mert összetéveszthető lenne az
   Árlista admin „gyakori" csillagával. Ne cseréld SVG-re.
+
+### Ellenőrzés valódi böngészőben
+
+A fenti szabályok egy része a vitest-készlettel **strukturálisan nem**
+ellenőrizhető: a tesztkészlet (`app/src/test-setup.ts`) nem tölti be a Radix
+Themes CSS-t és a Robotót, tehát egyetlen computed style sem a kaszkádból
+származik benne — a kontraszt, a `controlBorder` és a fókuszgyűrű szabályok
+lefedettsége jsdom alatt nulla. Ugyanígy: `paint-order` nincs jsdom-ban
+implementálva, a `ResizeObserver`/pointer capture stubolt (Radix
+popover-geometria nem tesztelhető), és a valódi PDF/canvas→PNG fogtérkép út
+mockolt/`null`-t ad minden tesztben.
+
+Ezeket a `.claude/skills/browser-validation/` skill ellenőrzi, kézzel
+indítva, izolált Chrome-ban (chrome-devtools MCP) — lásd a skill `SKILL.md`-jét
+a protokollért és a `checklist.md`-t a konkrét ellenőrzésekért. Nem CI-ban fut,
+nem helyettesíti a vitest-készletet, csak azt a réteget fedi, amit az
+strukturálisan nem tud elérni.
