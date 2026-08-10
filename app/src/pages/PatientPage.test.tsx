@@ -116,9 +116,9 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     await user.click(await screen.findByRole('link', { name: 'Beállítások' }));
     await user.click(await screen.findByRole('link', { name: 'Korábbi tervek' }));
     const patientNameEl = await screen.findByText('Kovács János');
-    const patientCard = patientNameEl.parentElement as HTMLElement;
+    const patientCard = patientNameEl.closest('[data-patient]') as HTMLElement;
     await user.click(
-      within(patientCard).getByRole('button', { name: 'Megnyitás szerkesztésre' }),
+      within(patientCard).getByRole('button', { name: 'Szerkesztés új verzióként' }),
     );
     // Kovács János demó tervének két fázisa van, mindkettőnek saját
     // keresője -- findAllBy, nem findBy (ami az egyértelműséget várná el).

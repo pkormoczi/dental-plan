@@ -74,12 +74,14 @@ describe('Végpontok közötti folyamat', () => {
     // saját tervünket a kártyáján (nevén) belül keressük, nem globálisan.
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
     const patientNameEl = await screen.findByText('Teszt Aladár');
-    const patientCard = patientNameEl.parentElement as HTMLElement;
+    const patientCard = patientNameEl.closest('[data-patient]') as HTMLElement;
     expect(within(patientCard).getByText(/^v1 ·/)).toBeInTheDocument();
 
-    // Megnyitás szerkesztésre -> a korábban felvitt tétel már ott van --
+    // Szerkesztés új verzióként -> a korábban felvitt tétel már ott van --
     // ezért nem kell újragépelni (ez a "Korábbi tervek" fő létjogosultsága).
-    await user.click(within(patientCard).getByRole('button', { name: 'Megnyitás szerkesztésre' }));
+    await user.click(
+      within(patientCard).getByRole('button', { name: 'Szerkesztés új verzióként' }),
+    );
     await screen.findByPlaceholderText(/Tétel keresése/);
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
 
@@ -96,7 +98,7 @@ describe('Végpontok közötti folyamat', () => {
 
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
     const patientNameEl2 = await screen.findByText('Teszt Aladár');
-    const patientCard2 = patientNameEl2.parentElement as HTMLElement;
+    const patientCard2 = patientNameEl2.closest('[data-patient]') as HTMLElement;
     expect(within(patientCard2).getByText(/^v2 ·/)).toBeInTheDocument();
     expect(within(patientCard2).getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- D4
   }, 20000);
@@ -204,10 +206,10 @@ describe('Végpontok közötti folyamat', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Korábbi tervek' }));
     const nagyEva = await screen.findByText('Nagy Éva');
-    const card = nagyEva.parentElement as HTMLElement;
+    const card = nagyEva.closest('[data-patient]') as HTMLElement;
     // A legfrissebb verzió (v2, 2026-07-22) van legfelül -- lásd
     // PlanHistoryPage.tsx `.slice().reverse()`.
-    const openBtn = within(card).getAllByRole('button', { name: 'Megnyitás szerkesztésre' })[0];
+    const openBtn = within(card).getAllByRole('button', { name: 'Szerkesztés új verzióként' })[0];
     await user.click(openBtn);
 
     // A visszatérő páciensnek két fázisa is van (1. kezelés + 2. kezelés —

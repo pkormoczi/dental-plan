@@ -88,8 +88,8 @@ marad, amíg a dialógus nyitva van, egy azonos feliratú `AlertDialog.Action`
 gomb megkülönböztethetetlen lenne accessible name alapján a még látható
 trigger-gomboktól (`getByRole('button', { name: 'Fázis törlése' })`
 kettőt vagy többet találna). A `PlanHistoryPage.tsx` pontosan emiatt ad a
-saját megerősítő gombjának ("Megnyitás, piszkozat elvetésével") eltérő
-feliratot a sorbeli trigger ("Megnyitás szerkesztésre") helyett — lásd az
+saját megerősítő gombjának ("Szerkesztés, piszkozat elvetésével") eltérő
+feliratot a sorbeli trigger ("Szerkesztés új verzióként") helyett — lásd az
 ottani kód-kommentet és a hozzá tartozó tesztet. A rövid „Törlés" elég a
 megkülönböztetéshez, nem kell a `PlanHistoryPage` didaktikus,
 hosszabb mintáját másolni, mert itt a dialógus címe („Fázis törlése") már

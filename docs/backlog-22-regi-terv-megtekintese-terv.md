@@ -8,16 +8,16 @@ módja és a részletek kidolgozása a megvalósító feladata.
 
 ## Probléma
 
-A `PlanHistoryPage.tsx`-en ma két akció van egy verziósoron: „Letöltés"
-(PDF a Letöltések mappába) és „Megnyitás szerkesztésre" (betölti a
+A `PlanHistoryPage.tsx`-en ma három akció van egy verziósoron:
+„Letöltés" (PDF a Letöltések mappába), „Új terv, ezzel a tartalommal"
+(a 17. tétel másolás-útja) és „Szerkesztés új verzióként" (betölti a
 tervet a piszkozatba, `loadPlanIntoDraft` + navigáció a szerkesztőbe —
 mentetlen piszkozat esetén megerősítést kér, mert felülírná azt). A „csak
-ránézek, mit írtunk alá tavaly" eset ma csak ezen a két, nem erre való
-úton érhető el: vagy a szerkesztőbe nyitáson át (ami veszélyezteti a
-piszkozatot, és egy véletlen mentés új verziót hoz létre — D4 miatt ez
-végleges, nem visszavonható), vagy a Letöltések mappán át (kényelmetlen,
-és a 20. tétel előtti fájlnevek — puszta `tervId` — között nehéz
-eligazodni).
+ránézek, mit írtunk alá tavaly" eset egyiken sem fér el: vagy a
+szerkesztőbe nyitáson át (ami veszélyezteti a piszkozatot, és egy
+véletlen mentés új verziót hoz létre — D4 miatt ez végleges, nem
+visszavonható), vagy a Letöltések mappán át (kényelmetlen, és a 20. tétel
+előtti fájlnevek — puszta `tervId` — között nehéz eligazodni).
 
 **Fontos korrekció a backlog-szöveghez képest:** a backlog azt írja,
 hogy ez „a már betöltött PDF-bájtokból" építene blob-URL-t — ez NEM
@@ -96,17 +96,22 @@ ritka, alacsony kárú éleseteket nem érdemes túl-mérnökösíteni.
 ### 5. Gomb szövege és helye: „Megnézés", a sor ELEJÉN
 
 A verziósor gombjainak sorrendje mostantól: „Megnézés" → „Letöltés" →
-„Megnyitás szerkesztésre" — a legkevésbé invazív (csak megnézem) akció
-elöl, a leginkább kockázatos (szerkesztésre nyitás, piszkozat-felülírás
-kockázata) hátul.
+„Új terv, ezzel a tartalommal" → „Szerkesztés új verzióként" — a
+legkevésbé invazív (csak megnézem) akció elöl, a leginkább kockázatos
+(szerkesztésre nyitás, piszkozat-felülírás kockázata) hátul.
 
-**Miért:** a „Megnézés" névnek világosan meg kell különböznie a
-„Megnyitás szerkesztésre"-től — az utóbbi a piszkozatot veszélyezteti
-(megerősítő dialógust dob mentetlen piszkozatnál, lásd 6. döntés), az új
-gomb NEM. Egy „Megnyitás új lapon"-szerű elnevezés részleges szöveg-
-átfedést adna a „Megnyitás szerkesztésre"-vel (mindkettő „Megnyitás..."-
-sal kezdődne), ami növelné az összetévesztés esélyét egy gyorsan
-pásztázó dokinál — a rövid, egyértelmű „Megnézés" ezt elkerüli.
+**Miért:** a „Megnézés" névnek világosan meg kell különböznie a másik
+háromtól — azok mindegyike a piszkozatot veszélyezteti (megerősítő
+dialógust dob mentetlen piszkozatnál, lásd 6. döntés), az új gomb NEM.
+Egy „Megnyitás új lapon"-szerű elnevezés ráadásul úgy tenne úgy, mintha
+terv-létrehozó akció lenne, holott a képernyő feliratrendszerében
+(`docs/03-funkcionalis-spec.md` § Korábbi tervek) az „Új terv" előtag és
+a „verzió" szó is foglalt, pontosan meghatározott jelentéssel — a rövid,
+egyértelmű „Megnézés" ezt elkerüli.
+
+A „Megnézés" gomb — mint a sor egyetlen kockázatmentes akciója — kaphat
+`solid` variánst; a másik három szándékosan `soft`, lásd
+`docs/03-funkcionalis-spec.md` § Korábbi tervek.
 
 ### 6. Nincs interakció a piszkozat-felülírás-őrrel
 

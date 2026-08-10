@@ -10,7 +10,7 @@ import { frissDatummal } from './ujVerzioDatum';
 import type { Plan, PriceList, Settings } from './types';
 
 /**
- * "Új terv a páciens adataival" -- csak a `paciens` blokk jön a forrásból,
+ * "Új terv, csak a páciensadatokkal" -- csak a `paciens` blokk jön a forrásból,
  * minden más a mai `createBlankPlan()` friss alapértéke (nyelv/pénznem is),
  * ugyanúgy, mintha a doki a Kezdőlap "Új terv indítása" gombját nyomta volna.
  */
@@ -23,7 +23,7 @@ export function planUjPaciensselTervhez(
 }
 
 /**
- * "Másolás új tervként" -- mindent átvisz a forrásból, ami nem
+ * "Új terv, ezzel a tartalommal" -- mindent átvisz a forrásból, ami nem
  * azonosító/állapot/dátum (az `arlistaVerzio` is, ugyanaz a snapshot-elv,
  * mint egy meglévő terv új verzióra nyitásakor). Az `osszesitok` a saját
  * (átvett) `fazisok`-ból ÚJRASZÁMOLVA -- a forrás `osszesitok`-ja az EREDETI,

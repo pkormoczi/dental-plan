@@ -32,7 +32,7 @@ import { useStorage } from '../storage/StorageContext';
 
 interface ActionError {
   patientDir: string;
-  // `null` = páciensszintű hiba ("Új terv a páciens adataival"), nem egy
+  // `null` = páciensszintű hiba ("Új terv, csak a páciensadatokkal"), nem egy
   // konkrét verzió-sorhoz kötött.
   versionDir: string | null;
   message: string;
@@ -44,9 +44,15 @@ interface VersionRef {
 }
 
 // A piszkozat-felülírás-őr (backlog-17) három belépési pontot fed le: a
-// meglévő "Megnyitás szerkesztésre" mellett a két új gomb is ugyanazt az
-// AlertDialog-ot használja, csak eltérő szöveggel és célfüggvénnyel -- a
-// Home.tsx `confirmSpecs` lookup-táblájának mintája.
+// meglévő "Szerkesztés új verzióként" mellett a két "Új terv…" gomb is
+// ugyanazt az AlertDialog-ot használja, csak eltérő szöveggel és
+// célfüggvénnyel -- a Home.tsx `confirmSpecs` lookup-táblájának mintája.
+//
+// A gombfeliratok rendszere (docs/03-funkcionalis-spec.md § Korábbi tervek):
+// minden ÚJ tervláncot indító akció "Új terv"-vel kezdődik, és egyedül a
+// meglévő láncot folytató akció feliratában szerepel a "verzió" szó -- ez a
+// képernyő egyetlen olyan különbsége, amit a dokinak kattintás előtt látnia
+// kell (D4/D26).
 type PendingKind = 'open' | 'copy' | 'ujTerv';
 type PendingAction = VersionRef & { kind: PendingKind };
 
@@ -204,7 +210,7 @@ export default function PlanHistoryPage() {
     }
   }
 
-  // backlog-17: "Másolás új tervként" -- konkrétan a kattintott verzió
+  // backlog-17: "Új terv, ezzel a tartalommal" -- konkrétan a kattintott verzió
   // sorait viszi tovább, ezért a teljes Plan-t betölti (a lista csak az
   // összesítőt tartja készenlétben). D6: a Páciens adatlapra navigál, nem
   // egyenesen a szerkesztőbe -- ez maga is jelzi, hogy ez egy ÚJ terv, nem
@@ -221,13 +227,13 @@ export default function PlanHistoryPage() {
         versionDir,
         message:
           err instanceof Error
-            ? `A másolás nem sikerült: ${err.message}`
-            : 'A másolás váratlanul meghiúsult.',
+            ? `Az új terv indítása nem sikerült: ${err.message}`
+            : 'Az új terv indítása váratlanul meghiúsult.',
       });
     }
   }
 
-  // backlog-17: "Új terv a páciens adataival" -- páciensszintű, mindig a
+  // backlog-17: "Új terv, csak a páciensadatokkal" -- páciensszintű, mindig a
   // doki által látott LEGFRISSEBB verzió `paciens` adatát viszi tovább,
   // sorok nélkül.
   async function ujTervPaciensAdataival(patientDir: string, versionDir: string) {
@@ -273,21 +279,21 @@ export default function PlanHistoryPage() {
   > = {
     open: {
       description:
-        'Van mentetlen piszkozatod. Ha ezt a verziót megnyitod szerkesztésre, a jelenlegi ' +
+        'Van mentetlen piszkozatod. Ha ezt a verziót új verzióként szerkeszted, a jelenlegi ' +
         'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
         'folytatod?',
-      actionLabel: 'Megnyitás, piszkozat elvetésével',
+      actionLabel: 'Szerkesztés, piszkozat elvetésével',
     },
     copy: {
       description:
-        'Van mentetlen piszkozatod. Ha ezt a verziót új tervként másolod, a jelenlegi ' +
-        'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
-        'folytatod?',
+        'Van mentetlen piszkozatod. Ha ennek a verziónak a tartalmával új tervet indítasz, a ' +
+        'jelenlegi piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. ' +
+        'Biztosan folytatod?',
       actionLabel: 'Másolás, piszkozat elvetésével',
     },
     ujTerv: {
       description:
-        'Van mentetlen piszkozatod. Ha új tervet indítasz a páciens adataival, a jelenlegi ' +
+        'Van mentetlen piszkozatod. Ha csak a páciensadatokkal indítasz új tervet, a jelenlegi ' +
         'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
         'folytatod?',
       actionLabel: 'Új terv, piszkozat elvetésével',
@@ -335,6 +341,17 @@ export default function PlanHistoryPage() {
         mb="4"
       />
 
+      {/* A képernyő két, adatintegritásban gyökerező útja (új verzió a
+          meglévő láncban vs. önálló új tervlánc, D4/D26) a gombfeliratokból
+          önmagában nem következik -- ez a sor mondja ki egyszer, a lista
+          fölött. Nem Callout: nem hiba és nem figyelmeztetés. */}
+      {!loading && !listError && patients.length > 0 && (
+        <Text as="p" size="1" color="gray" mt="0" mb="4">
+          A „Szerkesztés új verzióként” ugyanahhoz a tervhez ír új verziót; az „Új terv…” gombok
+          önálló, új tervet indítanak.
+        </Text>
+      )}
+
       {listError && (
         <Callout.Root color="red" mb="4">
           <Callout.Icon>
@@ -362,28 +379,35 @@ export default function PlanHistoryPage() {
       {filtered.map((p, pi) => {
         const versions = versionsByPatient[p.dirName] ?? [];
         const latest = versions[versions.length - 1];
+        // `data-patient` a páciensblokk stabil horgonya -- a névfejléc DOM-beli
+        // mélysége az akciógomb kiemelése óta nem alkalmas erre (lásd
+        // PlanHistoryPage.test.tsx).
         return (
-        <Box key={p.dirName} mb="5">
-          <Text as="div" size="3" weight="bold" mb="2" style={{ color: t.brand }}>
-            {namesByPatient[p.dirName] ?? p.dirName}
-            {unreadable.has(p.dirName) && (
-              <Text size="1" weight="regular" ml="2" style={{ color: t.warn }}>
-                ⚠ néhány verziója nem olvasható
-              </Text>
-            )}
+        <Box key={p.dirName} mb="5" data-patient={p.dirName}>
+          {/* Az akciógomb a névfejléc MELLETT van, nem benne: a páciensnév
+              címke, a gomb akció -- egy Text-en belül a kettő összeolvad. */}
+          <Flex justify="between" align="baseline" gap="3" mb="2">
+            <Text as="div" size="3" weight="bold" style={{ color: t.brand }}>
+              {namesByPatient[p.dirName] ?? p.dirName}
+              {unreadable.has(p.dirName) && (
+                <Text size="1" weight="regular" ml="2" style={{ color: t.warn }}>
+                  ⚠ néhány verziója nem olvasható
+                </Text>
+              )}
+            </Text>
             {latest && (
               <Button
                 size="1"
                 variant="soft"
-                ml="3"
+                color="gray"
                 onClick={() =>
                   runOrConfirm({ kind: 'ujTerv', patientDir: p.dirName, versionDir: latest.dirName })
                 }
               >
-                Új terv a páciens adataival
+                Új terv, csak a páciensadatokkal
               </Button>
             )}
-          </Text>
+          </Flex>
           {actionError?.patientDir === p.dirName && actionError.versionDir === null && (
             <Callout.Root color="red" size="1" mb="2">
               <Callout.Icon>
@@ -441,15 +465,22 @@ export default function PlanHistoryPage() {
                           runOrConfirm({ kind: 'copy', patientDir: p.dirName, versionDir: v.dirName })
                         }
                       >
-                        Másolás új tervként
+                        Új terv, ezzel a tartalommal
                       </Button>
+                      {/* Szándékosan NEM `solid`: a sor három akciója közül ez
+                          a legkockázatosabb (aláírt láncba ír, mentetlen
+                          piszkozatot fenyeget), elsődlegesként kiemelve
+                          félrevezető lenne. A sorrend a legkevésbé invazívtól
+                          a legkockázatosabbig tart. */}
                       <Button
                         size="1"
+                        variant="soft"
+                        color="gray"
                         onClick={() =>
                           runOrConfirm({ kind: 'open', patientDir: p.dirName, versionDir: v.dirName })
                         }
                       >
-                        Megnyitás szerkesztésre
+                        Szerkesztés új verzióként
                       </Button>
                     </Flex>
                   </Flex>
@@ -512,9 +543,14 @@ function HistorySkeleton() {
     <>
       {[0, 1].map((i) => (
         <Box key={i} mb="5">
-          <Skeleton>
-            <Box height="20px" width="160px" />
-          </Skeleton>
+          <Flex justify="between" align="baseline" gap="3">
+            <Skeleton>
+              <Box height="20px" width="160px" />
+            </Skeleton>
+            <Skeleton>
+              <Box height="28px" width="190px" />
+            </Skeleton>
+          </Flex>
           <Flex justify="between" align="center" py="2" mt="2">
             <Skeleton>
               <Box height="16px" width="120px" />
@@ -524,7 +560,7 @@ function HistorySkeleton() {
                 <Box height="28px" width="72px" />
               </Skeleton>
               <Skeleton>
-                <Box height="28px" width="130px" />
+                <Box height="28px" width="170px" />
               </Skeleton>
               <Skeleton>
                 <Box height="28px" width="160px" />

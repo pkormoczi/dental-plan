@@ -55,8 +55,8 @@ interface AppStateValue {
    * nincs a fájl-storage-ban -- azaz `plan` egy másik objektumreferencia,
    * mint a legutóbb onnan betöltött/oda mentett terv. Ez vezérli a Home
    * "Piszkozat folytatása" kártyáját és a felülírás elleni AlertDialog-okat
-   * (Home "Új terv indítása", PlanHistoryPage "Megnyitás szerkesztésre") --
-   * lásd docs/03-funkcionalis-spec.md § Autosave.
+   * (Home "Új terv indítása", PlanHistoryPage mindhárom terv-létrehozó
+   * gombja) -- lásd docs/03-funkcionalis-spec.md § Autosave.
    */
   vanMentetlenPiszkozat: boolean;
   /** Az utolsó sikeres automatikus piszkozat-mentés ISO időbélyege, vagy `null`. */

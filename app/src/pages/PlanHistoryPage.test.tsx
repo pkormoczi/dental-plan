@@ -10,8 +10,8 @@ import { formatMoney } from '../domain/money';
 import { useAppState } from '../state/AppState';
 import type { Plan } from '../domain/types';
 
-// backlog-17: a "Másolás új tervként"/"Új terv a páciens adataival" gombok
-// a Páciens adatlapra navigálnak (6. döntés) -- a navigáció TÉNYÉT és a
+// backlog-17: a két "Új terv…" gomb a Páciens adatlapra navigál
+// (6. döntés) -- a navigáció TÉNYÉT és a
 // piszkozatba került Plan tartalmát kell látni, ezért a "/paciens" célpont
 // egy kis probe, ami a friss draftot írja ki, nem egy néma stub.
 function DraftProbe() {
@@ -66,6 +66,12 @@ function seedPersistedDraft(overrides: Partial<Plan> = {}) {
 // normalizálja, az elvárt stringet viszont nem -- ezért itt kell átváltani.
 function penz(osszeg: number): string {
   return formatMoney(osszeg, 'HUF').replace(/\u00a0/g, ' ');
+}
+
+// A páciensblokk a `data-patient` horgonyról kereshető -- a névfejléc DOM-beli
+// mélysége azóta nem stabil, hogy az akciógomb a fejléc MELLÉ került.
+function patientCard(nev: string): HTMLElement {
+  return screen.getByText(nev).closest('[data-patient]') as HTMLElement;
 }
 
 function renderHistory() {
@@ -125,8 +131,8 @@ describe('PlanHistoryPage', () => {
 
     renderHistory();
 
-    const nagyEva = await screen.findByText('Nagy Éva');
-    const card = nagyEva.parentElement as HTMLElement;
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
     expect(await within(card).findByText(penz(v1.plan.osszesitok.fizetendo))).toBeInTheDocument();
     expect(within(card).getByText(penz(v2.plan.osszesitok.fizetendo))).toBeInTheDocument();
   });
@@ -141,13 +147,13 @@ describe('PlanHistoryPage', () => {
     renderHistory();
 
     const marker = await screen.findByText(/⚠ néhány verziója nem olvasható/);
-    const card = marker.closest('div')!.parentElement as HTMLElement;
+    const card = marker.closest('[data-patient]') as HTMLElement;
     expect(within(card).getByText('—')).toBeInTheDocument();
 
     // A többi páciens összege változatlanul látszik -- egy sérült fájl nem
     // viszi magával a lista többi sorát (ugyanaz a P1-2 elv).
-    const nagyEva = await screen.findByText('Nagy Éva');
-    const nagyEvaCard = nagyEva.parentElement as HTMLElement;
+    await screen.findByText('Nagy Éva');
+    const nagyEvaCard = patientCard('Nagy Éva');
     const evaV2 = seedPlans.filter((e) => e.plan.paciens.nev === 'Nagy Éva')[1];
     expect(within(nagyEvaCard).getByText(penz(evaV2.plan.osszesitok.fizetendo))).toBeInTheDocument();
     expect(within(nagyEvaCard).queryByText('—')).not.toBeInTheDocument();
@@ -162,8 +168,8 @@ describe('PlanHistoryPage', () => {
     renderHistory();
 
     const marker = await screen.findByText(/⚠ néhány verziója nem olvasható/);
-    const card = marker.closest('div')!.parentElement as HTMLElement;
-    const openBtn = within(card).getByRole('button', { name: 'Megnyitás szerkesztésre' });
+    const card = marker.closest('[data-patient]') as HTMLElement;
+    const openBtn = within(card).getByRole('button', { name: 'Szerkesztés új verzióként' });
 
     // Korábban itt `alert()` jelent meg -- most a sérintett verzió-sora
     // mellett, a szövegben (docs/07-felulet-rendszer.md: "Nem toast, ha a
@@ -174,16 +180,16 @@ describe('PlanHistoryPage', () => {
   });
 
   // docs/03-funkcionalis-spec.md § Autosave: ugyanaz a felülírás-kockázat,
-  // mint a Home "Új terv indítása" gombjánál -- a "Megnyitás szerkesztésre"
+  // mint a Home "Új terv indítása" gombjánál -- a "Szerkesztés új verzióként"
   // szó nélkül felülírná a folyamatban lévő, mentetlen piszkozatot.
-  it('"Megnyitás szerkesztésre" megerősítést kér mentetlen piszkozatnál, és csak megerősítésre nyit meg', async () => {
+  it('"Szerkesztés új verzióként" megerősítést kér mentetlen piszkozatnál, és csak megerősítésre nyit meg', async () => {
     seedPersistedDraft();
     const user = userEvent.setup();
     renderHistory();
 
-    const nagyEva = await screen.findByText('Nagy Éva');
-    const card = nagyEva.parentElement as HTMLElement;
-    const openBtn = within(card).getAllByRole('button', { name: 'Megnyitás szerkesztésre' })[0];
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const openBtn = within(card).getAllByRole('button', { name: 'Szerkesztés új verzióként' })[0];
 
     await user.click(openBtn);
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
@@ -195,28 +201,33 @@ describe('PlanHistoryPage', () => {
 
     // Megerősítés -- ténylegesen megnyitja (loadPlanIntoDraft -> navigate).
     await user.click(openBtn);
-    await user.click(await screen.findByRole('button', { name: 'Megnyitás, piszkozat elvetésével' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Szerkesztés, piszkozat elvetésével' }),
+    );
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
   });
 
   // backlog-17: a két új belépési pont eltérő szinten él -- páciensenként
-  // EGY "Új terv a páciens adataival" a névfejlécnél, és minden verzió-soron
-  // egy "Másolás új tervként" a Letöltés/Megnyitás mellett.
-  it('"Új terv a páciens adataival" páciensszinten egyszer, "Másolás új tervként" minden verzió-soron megjelenik', async () => {
+  // EGY "Új terv, csak a páciensadatokkal" a névfejlécnél, és minden
+  // verzió-soron egy "Új terv, ezzel a tartalommal" a Letöltés/Szerkesztés
+  // mellett.
+  it('"Új terv, csak a páciensadatokkal" páciensszinten egyszer, "Új terv, ezzel a tartalommal" minden verzió-soron megjelenik', async () => {
     renderHistory();
 
-    const nagyEva = await screen.findByText('Nagy Éva');
-    const card = nagyEva.parentElement as HTMLElement;
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
 
     expect(
-      within(card).getByRole('button', { name: 'Új terv a páciens adataival' }),
+      within(card).getByRole('button', { name: 'Új terv, csak a páciensadatokkal' }),
     ).toBeInTheDocument();
-    // Nagy Éva két verzióval szerepel a seedben -- egy-egy "Másolás új
-    // tervként" gomb verziónként, nem csak egy a páciensnek.
-    expect(within(card).getAllByRole('button', { name: 'Másolás új tervként' })).toHaveLength(2);
+    // Nagy Éva két verzióval szerepel a seedben -- egy-egy "Új terv, ezzel a
+    // tartalommal" gomb verziónként, nem csak egy a páciensnek.
+    expect(
+      within(card).getAllByRole('button', { name: 'Új terv, ezzel a tartalommal' }),
+    ).toHaveLength(2);
   });
 
-  it('"Másolás új tervként" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Páciens adatlapon', async () => {
+  it('"Új terv, ezzel a tartalommal" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Páciens adatlapon', async () => {
     const [, v2] = seedPlans.filter((e) => e.plan.paciens.nev === 'Nagy Éva');
     const forrasSorSzam = v2.plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
     expect(forrasSorSzam).toBe(3); // v1 két sora + a v2-ben hozzáadott korona sor
@@ -224,11 +235,13 @@ describe('PlanHistoryPage', () => {
     const user = userEvent.setup();
     renderHistory();
 
-    const nagyEva = await screen.findByText('Nagy Éva');
-    const card = nagyEva.parentElement as HTMLElement;
-    // A verziók lista fordítva (legfrissebb elöl) -- az első "Másolás új
-    // tervként" gomb a v2 sorához tartozik.
-    const copyBtn = within(card).getAllByRole('button', { name: 'Másolás új tervként' })[0];
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    // A verziók lista fordítva (legfrissebb elöl) -- az első "Új terv, ezzel
+    // a tartalommal" gomb a v2 sorához tartozik.
+    const copyBtn = within(card).getAllByRole('button', {
+      name: 'Új terv, ezzel a tartalommal',
+    })[0];
 
     await user.click(copyBtn);
 
@@ -241,13 +254,15 @@ describe('PlanHistoryPage', () => {
     expect(screen.getByTestId('draft-keltezes')).not.toHaveTextContent(v2.plan.keltezes);
   });
 
-  it('"Új terv a páciens adataival" csak a páciensadatot viszi át, a LEGFRISSEBB verzióból, sorok nélkül', async () => {
+  it('"Új terv, csak a páciensadatokkal" csak a páciensadatot viszi át, a LEGFRISSEBB verzióból, sorok nélkül', async () => {
     const user = userEvent.setup();
     renderHistory();
 
-    const nagyEva = await screen.findByText('Nagy Éva');
-    const card = nagyEva.parentElement as HTMLElement;
-    const ujTervBtn = within(card).getByRole('button', { name: 'Új terv a páciens adataival' });
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const ujTervBtn = within(card).getByRole('button', {
+      name: 'Új terv, csak a páciensadatokkal',
+    });
 
     await user.click(ujTervBtn);
 
@@ -257,16 +272,18 @@ describe('PlanHistoryPage', () => {
     expect(screen.getByTestId('draft-sorcount')).toHaveTextContent('0');
   });
 
-  // Ugyanaz a felülírás-kockázat, mint "Megnyitás szerkesztésre"-nél -- a
-  // két új gomb sem törölheti szó nélkül a mentetlen piszkozatot.
+  // Ugyanaz a felülírás-kockázat, mint "Szerkesztés új verzióként"-nél -- a
+  // két "Új terv…" gomb sem törölheti szó nélkül a mentetlen piszkozatot.
   it('mindkét új gomb megerősítést kér mentetlen piszkozatnál, Mégse-re nem történik semmi', async () => {
     seedPersistedDraft();
     const user = userEvent.setup();
     renderHistory();
 
-    const nagyEva = await screen.findByText('Nagy Éva');
-    const card = nagyEva.parentElement as HTMLElement;
-    const copyBtn = within(card).getAllByRole('button', { name: 'Másolás új tervként' })[0];
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const copyBtn = within(card).getAllByRole('button', {
+      name: 'Új terv, ezzel a tartalommal',
+    })[0];
 
     await user.click(copyBtn);
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
