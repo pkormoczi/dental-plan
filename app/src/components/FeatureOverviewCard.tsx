@@ -51,7 +51,7 @@ const SZAKASZOK: Szakasz[] = [
     cim: 'Beállítások',
     pontok: [
       'Rendelő adatai, orvosok listája és logó a nyomtatvány fejlécéhez/lábléchez.',
-      'Nyilatkozat és fizetési feltételek sablonszövegének szerkesztése.',
+      'Nyilatkozat, fizetési feltételek és garancia sablonszövegének szerkesztése.',
       'Német nyelvű ajánlat engedélyezése, és annak áttekintése, mennyi tartalom áll már készen németül.',
     ],
   },

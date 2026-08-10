@@ -36,7 +36,7 @@ Két, egymástól **független** kétállású kapcsoló:
 
 - **Nyelv** (`hu` / `de`) — a nyomtatvány szövege: a tételnevek (ha
   van hozzájuk fordítás), a PDF fix feliratai, a dátumformátum, a
-  nyilatkozat-sablon.
+  sablonszövegek (nyilatkozat, fizetési feltételek, garancia).
 - **Pénznem** (`HUF` / `EUR`) — az ajánlható tételkör (csak azok a
   tételek, amiknek van áruk ebben a pénznemben) és a pénzformátum.
 
@@ -319,9 +319,10 @@ szerkesztőben is látszik, nem csak a Kezdőlapon — ott dolgozik a doki.
 
 ## 4. Előnézet és véglegesítés
 
-- A `PrintPreview` komponens rendereli a három oldalt.
-- Kapcsoló: **„csak ajánlat"** — ilyenkor a 3. oldal (nyilatkozat és
-  aláírás) kimarad. Ez a hazavitt példány.
+- A `PrintPreview` komponens rendereli a négy oldalt.
+- Kapcsoló: **„csak ajánlat"** — ilyenkor a 4. oldal (nyilatkozat és
+  aláírás) kimarad. Ez a hazavitt példány. A 3. oldal (garancia) ettől
+  függetlenül mindig megjelenik.
 - Véglegesítéskor:
   1. `tervId` generálás (új terv) vagy verzió növelés (meglévő)
   2. PDF generálás, a `terv.json` beágyazásával
@@ -357,16 +358,16 @@ ki van kapcsolva — ilyenkor a leírás úgysem kerül a nyomtatványra.
 
 ### Sablon-placeholder őr
 
-Egy sablon (nyilatkozat vagy fizetési feltételek) akkor számít jogilag
-lezáratlannak, ha a törzse `[PLACEHOLDER` vagy `[PLATZHALTER` jelölőt
-tartalmaz (zárójellel — a jelölő nélküli szóemlítés nem elég). Ez
-**egyetlen predikátum**, egyetlen helyen (`app/src/domain/templates.ts`
+Egy sablon (nyilatkozat, fizetési feltételek vagy garancia) akkor számít
+jogilag lezáratlannak, ha a törzse `[PLACEHOLDER` vagy `[PLATZHALTER`
+jelölőt tartalmaz (zárójellel — a jelölő nélküli szóemlítés nem elég).
+Ez **egyetlen predikátum**, egyetlen helyen (`app/src/domain/templates.ts`
 `isPlaceholderTemplate`); a sablonszerkesztő készültség-jelzése, a
 seed-feltöltés és a véglegesítés-őr mind ezt hívja.
 
 - **Nyilatkozat placeholder → kemény zár.** Ha a ténylegesen betöltött
   nyilatkozat placeholder, a „csak ajánlat" kapcsoló automatikusan
-  bepipálva és **letiltva** jelenik meg, tehát a 3. oldal (nyilatkozat +
+  bepipálva és **letiltva** jelenik meg, tehát a 4. oldal (nyilatkozat +
   aláírás) garantáltan kimarad minden PDF-ből — letöltésből és
   véglegesítésből egyaránt, mert mindkettő ugyanabból a renderelt
   példányból dolgozik. Piros figyelmeztetés jelzi az okot és hogy hol
@@ -378,6 +379,13 @@ seed-feltöltés és a véglegesítés-őr mind ezt hívja.
   kényszerített ajánlat-mód nulla védelmet adna; helyette a hiányzó
   sablonnál is használt HU-visszaesés fut le (a magyar szöveg jelenik
   meg), sárga figyelmeztetéssel.
+- **Garancia placeholder → HU-visszaesés, nem zár.** Ugyanaz a viselkedés,
+  mint a fizetési feltételeknél — a 3. oldal (garancia) „csak ajánlat"
+  módban is mindig nyomtatódik, tehát nála sincs mit védeni egy
+  kényszerített ajánlat-móddal. A magyar szöveg ma is placeholder (a doki
+  még nem adta meg), ezért a HU-visszaesés magyar nyelvű terven nem fut
+  le (a placeholder szöveg magyarul nyomtatódik, sárga figyelmeztetés
+  nélkül — nincs mire visszaesni), csak német nyelvű tervnél jelez.
 
 ---
 
@@ -601,8 +609,8 @@ Kategória hozzáadása, átnevezése, sorrendezése ugyanitt.
 - Orvosok listája
 - Logó fájl
 - Ajánlat érvényessége napokban (alapérték 90)
-- Sablonszövegek szerkesztése — a nyilatkozat és a fizetési feltételek,
-  saját nyelvváltóval (Magyar/Deutsch, ha a német engedélyezve van).
+- Sablonszövegek szerkesztése — a nyilatkozat, a fizetési feltételek és
+  a garancia, saját nyelvváltóval (Magyar/Deutsch, ha a német engedélyezve van).
   **Mentéskor új verziófájl keletkezik** (`nyilatkozat-hu-v2.md`), a régi
   marad, mert a korábbi tervek arra hivatkoznak — a mentés a
   véglegesítéskor épp aktuális (legfrissebb) verziót pinneli a tervre. A

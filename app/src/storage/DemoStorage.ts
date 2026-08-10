@@ -36,6 +36,8 @@ import { seedPlans } from './seed/plans';
 import {
   FIZETESI_FELTETELEK_DE_V1,
   FIZETESI_FELTETELEK_HU_V1,
+  GARANCIA_DE_V1,
+  GARANCIA_HU_V1,
   NYILATKOZAT_DE_V1,
   NYILATKOZAT_HU_V1,
 } from './seed/templates';
@@ -44,8 +46,10 @@ import {
 const DEFAULT_TEMPLATES: Array<[string, string]> = [
   ['nyilatkozat-hu-v1.md', NYILATKOZAT_HU_V1],
   ['fizetesi-feltetelek-hu-v1.md', FIZETESI_FELTETELEK_HU_V1],
+  ['garancia-hu-v1.md', GARANCIA_HU_V1],
   ['nyilatkozat-de-v1.md', NYILATKOZAT_DE_V1],
   ['fizetesi-feltetelek-de-v1.md', FIZETESI_FELTETELEK_DE_V1],
+  ['garancia-de-v1.md', GARANCIA_DE_V1],
 ];
 
 /**
@@ -135,12 +139,19 @@ export class DemoStorage implements PlanStorage {
 
   /**
    * A hiányzó alapértelmezett sablonfájlokat pótolja. Kivétel: ha egy
-   * meglévő -v1 sablon törzse még a régi "[PLACEHOLDER"/"[PLATZHALTER"
-   * jelölőt tartalmazza, felülírjuk a friss (immár valódi, az eredeti
-   * Excelből átvett) seed-szöveggel -- ez a frissítési út azoknak, akik a
-   * placeholder bevezetése előtt már használták a demót. Idempotens (a
-   * friss magyar szövegben nincs jelölő), és a doki által ténylegesen
-   * szerkesztett -- tehát már nem placeholder -- törzshöz nem nyúl.
+   * meglévő -v1 sablon törzse még a "[PLACEHOLDER"/"[PLATZHALTER" jelölőt
+   * tartalmazza, felülírjuk a friss seed-szöveggel -- ez a frissítési út
+   * azoknak, akik egy régebbi demó-állapotot hoznak magukkal. A nyilatkozat/
+   * fizetési feltételek HU szövege ma már valódi (az eredeti Excelből átvett,
+   * nem placeholder), ezért ott ez a felülírás egyszeri migráció, utána nem
+   * fut le újra. A garancia HU/DE viszont SZÁNDÉKOSAN placeholder marad
+   * (nincs a garanciának forrás az Excelben) -- rá ez az ág minden `init()`-en
+   * lefut, ártalmatlanul (ugyanazt a placeholdert írja vissza). A doki
+   * garanciaszövege sosem a `garancia-hu-v1.md`-be kerül -- a Beállítások
+   * mentése mindig ÚJ verziófájlt hoz létre (`garancia-hu-v2.md`), a v1
+   * pedig, mint minden más sablon esetén is, örökre változatlan placeholder
+   * marad (D4). A doki által ténylegesen szerkesztett -- tehát már nem
+   * placeholder -- törzshöz ez a függvény sosem nyúl.
    */
   private ensureSeedTemplates(): void {
     for (const [name, body] of DEFAULT_TEMPLATES) {

@@ -107,6 +107,31 @@ describe('SettingsPage', () => {
       expect(v1).not.toContain('Kiegészítés.');
     });
 
+    // docs/08-backlog.md korábbi 13. tétel (Garancia szakasz a
+    // nyomtatványon): harmadik sablon-szlot, ugyanazon a mechanizmuson --
+    // a mező alapból a placeholder szöveget mutatja (a nyilatkozattal/
+    // fizetési feltételekkel ellentétben, azoknak már van valódi tartalma).
+    it('backlog-13: a Garancia mező alapból a placeholder szöveget mutatja, szerkesztése új -v2 fájlt hoz létre', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+
+      const garancia = (await screen.findByLabelText('Garancia')) as HTMLTextAreaElement;
+      expect(garancia.value).toContain('[PLACEHOLDER');
+
+      await user.type(garancia, ' Kiegészítés.');
+      await user.click(screen.getByRole('button', { name: 'Szöveg mentése' }));
+
+      expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
+      expect(screen.getByText('garancia-hu-v2.md')).toBeInTheDocument();
+
+      const stored = localStorage.getItem('dp:sablonok/garancia-hu-v2.md');
+      expect(stored).toContain('Kiegészítés.');
+      // A v1 (a placeholder) változatlan marad (D4).
+      const v1 = localStorage.getItem('dp:sablonok/garancia-hu-v1.md');
+      expect(v1).toContain('[PLACEHOLDER');
+      expect(v1).not.toContain('Kiegészítés.');
+    });
+
     it('does NOT show "Mentve ✓" when saving a template fails, and shows the error instead', async () => {
       const user = userEvent.setup();
       renderSettings();

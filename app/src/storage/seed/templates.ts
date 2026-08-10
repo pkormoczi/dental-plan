@@ -18,15 +18,17 @@
 // létre (pl. nyilatkozat-hu-v2.md), a jelenlegi megmarad, mert a már
 // véglegesített tervek erre hivatkoznak (D4, `plan.sablonVerzio`).
 //
-// A négy sablon fix címét (a "# Cím" sor) a `TEMPLATE_HEADINGS` tartja --
+// A hat sablon fix címét (a "# Cím" sor) a `TEMPLATE_HEADINGS` tartja --
 // ez teszi lehetővé, hogy a Beállítások szerkesztődobozában a cím nélküli
 // törzs látszódjon, mentéskor pedig a cím visszakerüljön.
 
 export const TEMPLATE_HEADINGS = {
   'nyilatkozat-hu': 'Nyilatkozat',
   'fizetesi-feltetelek-hu': 'Fizetési feltételek',
+  'garancia-hu': 'Garancia',
   'nyilatkozat-de': 'Erklärung',
   'fizetesi-feltetelek-de': 'Zahlungsbedingungen',
+  'garancia-de': 'Garantie',
 } as const;
 
 export const NYILATKOZAT_HU_V1 = `# Nyilatkozat
@@ -93,4 +95,21 @@ Der Auftraggeber stimmt der Durchführung der im Behandlungsplan aufgeführten B
 - Bei einer Behandlung mit zahntechnischer Arbeit sind {{elolegSzazalek}} % des Behandlungsbetrags bei Beginn der Arbeit fällig; dies ist Voraussetzung für die Weiterleitung an den Zahntechniker. Der Restbetrag ist bei Übergabe der Arbeit fällig.
 - Voraussetzung für die Übergabe der Arbeit ist die beglichene Rechnung.
 - Zahlungsart: Bargeld, Gesundheitskassenkarte oder Kartenüberweisung.
+`;
+
+// docs/08-backlog.md korábbi 13. tétel (Garancia szakasz a nyomtatványon):
+// az eredeti Excelben nincs garancia-szöveg, tehát -- a fenti kettővel
+// ellentétben -- itt a MAGYAR sem valódi, lektorált tartalom, hanem
+// szándékos placeholder: a doki adja meg (kezeléstípusonkénti
+// garanciaidők, kivételek), a Beállítások képernyőn. A német is
+// placeholder marad, de más okból, mint a fenti DE szövegeknél: nincs mit
+// AI-fordítani, amíg a magyar forrás maga is helykitöltő.
+export const GARANCIA_HU_V1 = `# Garancia
+
+[PLACEHOLDER — a garanciafeltételek még nincsenek megadva]
+`;
+
+export const GARANCIA_DE_V1 = `# Garantie
+
+[PLATZHALTER — Übersetzung ausstehend]
 `;

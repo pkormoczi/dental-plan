@@ -75,7 +75,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A sor `savos` mezője (nem az árlistai `SAVOS` ártípus!) dönt a nyomtatvány `*` + lábjegyzetéről, soha nem csupasz fix szám | D15 — jogi védelem: fix számként kötelező érvényű ajánlattá válna. A szerkesztőben soronként kézzel is átbillenthető — a sor lehet fix árú tételből, de a doki jelölheti becsültnek, ha a mennyiség csak a kezelés során derül ki |
 | `null` ár egy pénznemben ≠ `0` — a tétel abban a pénznemben nem ajánlható, a keresőben sem jelenik meg | `02-domain-modell.md` |
 | Minden JSON `schemaVersion`-nel indul; magasabb verzió észlelésekor **a betöltést meg kell tagadni**, érthető üzenettel | D18 — ezek a fájlok évekig élnek a Drive-on |
-| Placeholder-jelölésű nyilatkozat mellett a nyomtatvány 3. oldala (nyilatkozat + aláírás) nem kerülhet PDF-be — a „csak ajánlat" mód kényszerített, felülírás nélkül | D23 — jogi védelem: a jogász által „még nincs lezárva" jelöléssel ellátott szöveg nem kerülhet aláírásra. Az `isPlaceholderTemplate()` (`app/src/domain/templates.ts`) az EGYETLEN hely, ahol ez eldől |
+| Placeholder-jelölésű nyilatkozat mellett a nyomtatvány nyilatkozat + aláírás oldala nem kerülhet PDF-be — a „csak ajánlat" mód kényszerített, felülírás nélkül | D23 — jogi védelem: a jogász által „még nincs lezárva" jelöléssel ellátott szöveg nem kerülhet aláírásra. Az `isPlaceholderTemplate()` (`app/src/domain/templates.ts`) az EGYETLEN hely, ahol ez eldől |
 | Korábbi terv új verzióra nyitásakor a dátumbélyeg (`keltezes`/`ervenyesIg`) a betöltés pillanatában íródik (`frissDatummal`), soha nem véglegesítéskor | D22 — különben a mentett JSON és a már renderelt PDF-blob dátuma szétcsúszik, vagy egy lejárt keltezésű ajánlatot írnak alá |
 | Páciensmappa-névben az **ékezetek maradnak**, nincs transzliteráció; csak a tiltott karaktereket (`/ \ : * ? " < > \|`) kell cserélni; nevek rövidek (Windows 260 karakteres útvonalkorlát) | A doki a Fájlkezelőben keres rájuk névre |
 | A `DraftStorage` (piszkozat-autosave) nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez; mockupban `localStorage`, véglegesben IndexedDB |
@@ -246,11 +246,11 @@ A sablonszerkesztő + placeholder-őr tétel (`docs/03-funkcionalis-spec.md`
 § Sablon-placeholder őr, D23) segédfüggvénye, szintén ne írd újra:
 - `isPlaceholderTemplate(body)` (`app/src/domain/templates.ts`) — az
   EGYETLEN hely, ahol eldől, hogy egy sablon (nyilatkozat/fizetési
-  feltételek) törzse még jogi lektorálásra vár-e (`[PLACEHOLDER`/
+  feltételek/garancia) törzse még jogi lektorálásra vár-e (`[PLACEHOLDER`/
   `[PLATZHALTER` jelölő); a `DemoStorage.ts` (`ensureSeedTemplates`), a
   `SettingsPage.tsx` (a német nyilatkozat készültség-jelzése) és a
-  `PreviewPage.tsx` (a nyilatkozat kemény zára + a fizetési feltételek
-  HU-visszaesése) mind ezt hívja — korábban két, egymástól eltérő
+  `PreviewPage.tsx` (a nyilatkozat kemény zára + a fizetési feltételek/
+  garancia HU-visszaesése) mind ezt hívja — korábban két, egymástól eltérő
   string-egyezésű privát duplikátum létezett, egy harmadik hívási hely
   bevezetése volt az alkalom a konszolidálásra
 

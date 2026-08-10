@@ -1,9 +1,10 @@
 // A generált PDF -- portolva ui/PrintPreview.jsx-ből react-pdf primitívekre.
 // Lásd docs/04-nyomtatvany-spec.md a teljes specifikációért.
 //
-// 1-2. oldal: terv és ár. 3. oldal: nyilatkozat és aláírás -- ez marad ki
-// "csak ajánlat" módban, hogy a hazavitt példány ne legyen aláírandó
-// szerződés.
+// 1-2. oldal: terv és ár, majd fizetési feltételek. 3. oldal: garancia --
+// "csak ajánlat" módban is mindig megjelenik. 4. oldal: nyilatkozat és
+// aláírás -- ez marad ki "csak ajánlat" módban, hogy a hazavitt példány
+// ne legyen aláírandó szerződés.
 //
 // D21: a fix feliratok forrása a `pdf/labels.ts` (`plan.nyelv` szerint) --
 // ez az egyetlen hely, ahol a nyomtatvány nyelve eldől, a kezelőfelület
@@ -315,8 +316,8 @@ function Footer({ plan, settings, L }: { plan: Plan; settings: Settings; L: PdfL
           </Text>
           {/* Az oldalszám a tényleges renderelt oldalszámból jön (nem a
               szerkesztő komponens `pages`-becsléséből) -- egy hosszú,
-              szerkeszthető nyilatkozat átfolyhat a 3. oldalon túlra is,
-              ilyenkor a fix "3/3" hazudna. */}
+              szerkeszthető nyilatkozat átfolyhat a 4. oldalon túlra is,
+              ilyenkor a fix "4/4" hazudna. */}
           <Text
             style={s.footerTextRightDynamic}
             render={({ pageNumber, totalPages }) =>
@@ -361,6 +362,7 @@ export interface TervDocumentProps {
   offerOnly: boolean;
   nyilatkozatMd: string;
   fizetesiFeltetelekMd: string;
+  garanciaMd: string;
   /**
    * A webbel megegyező markupból (design/toothChartSvg.ts) canvason
    * előállított raszterkép (pdf/toothChartImage.ts) -- lásd PreviewPage.tsx.
@@ -377,6 +379,7 @@ export function TervDocument({
   offerOnly,
   nyilatkozatMd,
   fizetesiFeltetelekMd,
+  garanciaMd,
   toothChartPng,
 }: TervDocumentProps) {
   const L = pdfLabels(plan.nyelv);
@@ -403,6 +406,7 @@ export function TervDocument({
   const fizetesiFeltetelekBlocks = parseBlocks(
     fillPlaceholders(fizetesiFeltetelekMd, placeholderValues),
   );
+  const garanciaBlocks = parseBlocks(fillPlaceholders(garanciaMd, placeholderValues));
   const nyilatkozatBlocks = parseBlocks(fillPlaceholders(nyilatkozatMd, placeholderValues));
 
   return (
@@ -499,7 +503,15 @@ export function TervDocument({
         <Footer plan={plan} settings={settings} L={L} />
       </Page>
 
-      {/* ---------- 3. oldal -- nyilatkozat és aláírás ---------- */}
+      {/* ---------- 3. oldal -- garancia ---------- */}
+      <Page size="A4" style={s.page}>
+        <MiniHeader plan={plan} L={L} />
+        <Text style={s.h2}>{L.garanciaCim}</Text>
+        <MdBlocks blocks={garanciaBlocks} />
+        <Footer plan={plan} settings={settings} L={L} />
+      </Page>
+
+      {/* ---------- 4. oldal -- nyilatkozat és aláírás ---------- */}
       {!offerOnly && (
         <Page size="A4" style={s.page}>
           <MiniHeader plan={plan} L={L} />

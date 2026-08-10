@@ -1,7 +1,7 @@
 // Beállítások -- docs/03-funkcionalis-spec.md "7. Beállítások". A
 // gyökérmappa-kijelölés a FileSystemStorage-hoz kötött 2. fázis feladata
-// (lásd CLAUDE.md), a nyilatkozat/fizetési feltételek sablonszerkesztője
-// viszont már itt, a mockupban is elérhető.
+// (lásd CLAUDE.md), a sablonszövegek (nyilatkozat/fizetési feltételek/
+// garancia) szerkesztője viszont már itt, a mockupban is elérhető.
 
 import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -30,7 +30,7 @@ import { TEMPLATE_HEADINGS } from '../storage/seed/templates';
 import { useStorage } from '../storage/StorageContext';
 import { useAppState } from '../state/AppState';
 
-type TemplateSlotKey = 'nyilatkozat' | 'fizetesi-feltetelek';
+type TemplateSlotKey = 'nyilatkozat' | 'fizetesi-feltetelek' | 'garancia';
 
 interface TemplateDraft {
   /** A jelenleg betöltött verzió fájlneve (pl. "nyilatkozat-hu-v2.md"). */
@@ -44,6 +44,7 @@ interface TemplateDraft {
 const TEMPLATE_SLOTS: Array<{ key: TemplateSlotKey; label: string; rows: number }> = [
   { key: 'nyilatkozat', label: 'Nyilatkozat', rows: 14 },
   { key: 'fizetesi-feltetelek', label: 'Fizetési feltételek', rows: 9 },
+  { key: 'garancia', label: 'Garancia', rows: 9 },
 ];
 
 function templateBase(key: TemplateSlotKey, nyelv: Nyelv): string {

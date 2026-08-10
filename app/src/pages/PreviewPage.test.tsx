@@ -227,7 +227,7 @@ describe('PreviewPage -- hiányzó és eltérő tételnevek két külön listáb
 
 // docs/03-funkcionalis-spec.md § Sablon-placeholder őr (D23): a betöltött
 // nyilatkozat placeholder (jogilag még nincs lezárva) esetén a "Csak
-// ajánlat" mód kényszerítve/letiltva -- a 3. oldal (nyilatkozat + aláírás)
+// ajánlat" mód kényszerítve/letiltva -- a 4. oldal (nyilatkozat + aláírás)
 // garantáltan kimarad a PDF-ből.
 describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
   beforeEach(() => {

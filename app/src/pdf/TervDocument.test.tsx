@@ -74,6 +74,7 @@ function renderDoc(savos: boolean, nyelv: Nyelv = 'hu', arak: Arak = AZONOS_AR) 
       offerOnly
       nyilatkozatMd=""
       fizetesiFeltetelekMd=""
+      garanciaMd=""
       toothChartPng={null}
     />,
   );
@@ -151,6 +152,7 @@ describe('TervDocument -- backlog-9: előleg-sor', () => {
         offerOnly
         nyilatkozatMd=""
         fizetesiFeltetelekMd="- A kezelési összeg {{elolegSzazalek}}%-a fizetendő a munka megkezdésekor."
+        garanciaMd=""
         toothChartPng={null}
       />,
     );
@@ -217,6 +219,7 @@ describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmé
         offerOnly
         nyilatkozatMd=""
         fizetesiFeltetelekMd=""
+        garanciaMd=""
         toothChartPng={null}
       />,
     );
@@ -259,6 +262,7 @@ describe('TervDocument -- backlog-10: tétel-leírás a tételsor alatt', () => 
         offerOnly
         nyilatkozatMd=""
         fizetesiFeltetelekMd=""
+        garanciaMd=""
         toothChartPng={null}
       />,
     );
@@ -292,9 +296,94 @@ describe('TervDocument -- backlog-10: tétel-leírás a tételsor alatt', () => 
           offerOnly
           nyilatkozatMd=""
           fizetesiFeltetelekMd=""
+          garanciaMd=""
           toothChartPng={null}
         />,
       ),
     ).not.toThrow();
+  });
+});
+
+describe('TervDocument -- backlog-13: garancia oldal', () => {
+  function renderWithGarancia(
+    opts: {
+      nyelv?: Nyelv;
+      offerOnly?: boolean;
+      garanciaMd?: string;
+      nyilatkozatMd?: string;
+    } = {},
+  ) {
+    const {
+      nyelv = 'hu',
+      offerOnly = true,
+      garanciaMd = '[PLACEHOLDER — a garanciafeltételek még nincsenek megadva]',
+      nyilatkozatMd = '',
+    } = opts;
+    const plan = buildPlan(false, nyelv, AZONOS_AR);
+    return render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly={offerOnly}
+        nyilatkozatMd={nyilatkozatMd}
+        fizetesiFeltetelekMd=""
+        garanciaMd={garanciaMd}
+        toothChartPng={null}
+      />,
+    );
+  }
+
+  it('magyar terven a Garancia cím és a szöveg megjelenik', () => {
+    renderWithGarancia({ garanciaMd: 'Fogpótlásra 3 év garancia.' });
+    expect(screen.getByText('Garancia')).toBeInTheDocument();
+    expect(screen.getByText('Fogpótlásra 3 év garancia.')).toBeInTheDocument();
+  });
+
+  it('német terven a cím és a szöveg is németül jelenik meg', () => {
+    renderWithGarancia({ nyelv: 'de', garanciaMd: 'Garantie: 3 Jahre auf Zahnersatz.' });
+    expect(screen.getByText('Garantie')).toBeInTheDocument();
+    expect(screen.getByText('Garantie: 3 Jahre auf Zahnersatz.')).toBeInTheDocument();
+  });
+
+  // A tervdokumentum (docs/08-backlog.md korábbi 13. tétel) 3. döntése
+  // ezt kifejezetten megköveteli: a Garancia -- a nyilatkozattal
+  // ellentétben -- NEM esik a "csak ajánlat" kapcsoló alá.
+  it('"csak ajánlat" (offerOnly) módban a Garancia oldal MARAD, a nyilatkozat és aláírás oldal eltűnik', () => {
+    renderWithGarancia({ offerOnly: true, nyilatkozatMd: 'Nyilatkozat szövege.' });
+    expect(screen.getByText('Garancia')).toBeInTheDocument();
+    expect(screen.queryByText('Nyilatkozat')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nyilatkozat szövege.')).not.toBeInTheDocument();
+  });
+
+  it('teljes (nem "csak ajánlat") módban mindkét oldal jelen van', () => {
+    renderWithGarancia({ offerOnly: false, nyilatkozatMd: 'Nyilatkozat szövege.' });
+    expect(screen.getByText('Garancia')).toBeInTheDocument();
+    expect(screen.getByText('Nyilatkozat')).toBeInTheDocument();
+    expect(screen.getByText('Nyilatkozat szövege.')).toBeInTheDocument();
+  });
+
+  // A puszta szöveg-jelenlét nem bizonyítja a POZÍCIÓT (2. döntés: a
+  // fizetési feltételek UTÁN, a nyilatkozat ELŐTT) -- egy az oldal
+  // végére fűzött Garancia is átmenne a fenti tesztéken. A mock minden
+  // <Page>-et data-mock-tag="page" <div>-re képez le (lásd a fájl tetején),
+  // ez adja a tényleges renderelési sorrendet.
+  it('a Garancia a harmadik oldal: a fizetési feltételek után, a nyilatkozat előtt', () => {
+    const { container } = renderWithGarancia({
+      offerOnly: false,
+      nyilatkozatMd: 'Nyilatkozat szövege.',
+    });
+    const pages = container.querySelectorAll('[data-mock-tag="page"]');
+    expect(pages).toHaveLength(4);
+    expect(pages[2].textContent).toContain('Garancia');
+    expect(pages[2].textContent).not.toContain('Nyilatkozat szövege.');
+    expect(pages[3].textContent).toContain('Nyilatkozat');
+  });
+
+  it('"csak ajánlat" módban 3 oldal marad, a Garancia akkor is a harmadik', () => {
+    const { container } = renderWithGarancia({ offerOnly: true });
+    const pages = container.querySelectorAll('[data-mock-tag="page"]');
+    expect(pages).toHaveLength(3);
+    expect(pages[2].textContent).toContain('Garancia');
   });
 });

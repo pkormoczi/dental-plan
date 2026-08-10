@@ -49,6 +49,7 @@ export interface PdfLabels {
   savosFootnote: string;
   fizetesiFeltetelekCim: string;
   nyilatkozatCim: string;
+  garanciaCim: string;
   megbizott: string;
   megrendelo: string;
   /** JOGI SZÖVEG — lektorálandó. */
@@ -89,6 +90,7 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
       '* A csillaggal jelölt tételek ára — és a belőlük számított összegek (fizetendő, előleg, fennmaradó rész) — a kezelés során derül ki véglegesen, a megadott ár becslés.',
     fizetesiFeltetelekCim: 'Fizetési feltételek',
     nyilatkozatCim: 'Nyilatkozat',
+    garanciaCim: 'Garancia',
     megbizott: 'Megbízott:',
     megrendelo: 'Megrendelő:',
     kiskoruNote:
@@ -129,6 +131,7 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
       '* Der Preis der mit einem Sternchen markierten Leistungen — und die daraus berechneten Beträge (zu zahlen, Anzahlung, Restbetrag) — wird während der Behandlung endgültig festgelegt; der angegebene Preis ist eine Schätzung.',
     fizetesiFeltetelekCim: 'Zahlungsbedingungen',
     nyilatkozatCim: 'Erklärung',
+    garanciaCim: 'Garantie',
     megbizott: 'Auftragnehmer:',
     megrendelo: 'Auftraggeber:',
     kiskoruNote:

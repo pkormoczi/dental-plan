@@ -59,17 +59,25 @@ duplikátum inaktiválva (`aktiv: false`, id megtartva, D17).
 
 *(korábbi 13. tétel)*
 
-- **Méret:** fél nap kód (a meglévő sablon-mechanizmus harmadik
-  szakasza), **a magyar szöveg a dokitól kell** — a második kör javaslata
-  szerint az árlista-napon (1. hely) gyűjtendő be, különben ez a tétel
-  határozatlan ideig áll.
-- **Kereteket sért?** Nem.
-- **Valódi haszon:** pácienskommunikáció — a „van rá írásos garancia?"
-  kérdésre ma csak szóbeli válasz van.
-- **20%-os verzió:** ez már maga a 20%-os verzió (a kategóriánkénti
-  garanciaidő-adatmodell tudatosan kizárva, lásd a tervet).
-- **Terv:** `docs/backlog-13-garancia-terv.md` (9 döntés; a német szöveg
-  placeholder marad, a 6. tétel placeholder-őre kezeli).
+**Kódrész — KÉSZ (2026-08-10).** Új, önálló oldal a nyomtatványon (a
+fizetési feltételek után, a nyilatkozat előtt — 1–2. oldal terv és ár,
+3. oldal garancia, 4. oldal nyilatkozat és aláírás), harmadik
+sablon-szlotként (`garancia-hu`/`garancia-de`) a nyilatkozat/fizetési
+feltételek már meglévő, teljesen generikus betöltő-/mentő-/verziózó
+infrastruktúráján — a Beállításokban szerkeszthető, „csak ajánlat"
+módban is mindig megjelenik (a nyilatkozattal ellentétben nincs kemény
+placeholder-zára, a fizetési feltételekkel egyező HU-visszaesést kap).
+Megvalósítás: `docs/backlog-13-garancia-terv.md` (9 döntés).
+
+- **Még nyitva — a magyar garanciaszöveg (a doki):** kezeléstípusonkénti
+  garanciaidők, kivételek — a `GARANCIA_HU_V1` seed egyelőre
+  `[PLACEHOLDER — a garanciafeltételek még nincsenek megadva]`, a
+  nyomtatványon ez a szöveg jelenik meg, amíg a doki meg nem írja a
+  tényleges tartalmat a Beállítások → Nyomtatvány szövegei alatt (lásd
+  az 1. hely „Még nyitva" bekezdését — ugyanaz az árlista-napi ülés adja
+  ezt az inputot is). A német verzió eddig is placeholder maradt volna
+  (9. döntés) — most már azért is, mert nincs mit AI-fordítani, amíg a
+  magyar forrás maga is helykitöltő.
 
 ### 3. hely — 18. tétel: Fázis törlése megerősítéssel
 

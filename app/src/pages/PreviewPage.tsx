@@ -55,6 +55,7 @@ export default function PreviewPage() {
   // terv jelenlegi pinnelt verziója -- ha a betöltés hibázna, ez marad.
   const [nyilatkozatVerzio, setNyilatkozatVerzio] = useState(plan.sablonVerzio);
   const [fizetesiFeltetelekMd, setFizetesiFeltetelekMd] = useState('');
+  const [garanciaMd, setGaranciaMd] = useState('');
   const [sablonFallback, setSablonFallback] = useState(false);
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -79,7 +80,7 @@ export default function PreviewPage() {
   useEffect(() => {
     let cancelled = false;
 
-    // Mindkét sablon a LEGFRISSEBB verzióban jelenik meg -- a nyilatkozat
+    // Mindhárom sablon a LEGFRISSEBB verzióban jelenik meg -- a nyilatkozat
     // verzióját csak véglegesítéskor pinneljük (lásd doFinalize), hogy a
     // doki a Beállításokban időközben mentett pontosítás után is a most
     // látott szöveget írassa alá, ne egy korábbi állapotot. Ha a tervhez
@@ -90,12 +91,12 @@ export default function PreviewPage() {
     async function loadOrFallback(
       load: () => Promise<{ name: string; body: string }>,
       fallback: () => Promise<{ name: string; body: string }>,
-      // KIZÁRÓLAG a fizetési feltételek hívja ezzel -- egy sikeresen
-      // betöltött, de még placeholder törzsű sablon ugyanabba a
-      // fallback-ágba esik, mint a ténylegesen hiányzó fájl (lásd
-      // docs/03-funkcionalis-spec.md § Sablon-placeholder őr). A nyilatkozat
-      // placeholder-esetét EZ nem kezeli -- azt a kemény zár váltja ki
-      // (lásd nyilatkozatIsPlaceholder lent), nem egy HU-visszaesés.
+      // A fizetési feltételek ÉS a garancia hívja ezzel (a nyilatkozat nem)
+      // -- egy sikeresen betöltött, de még placeholder törzsű sablon
+      // ugyanabba a fallback-ágba esik, mint a ténylegesen hiányzó fájl
+      // (lásd docs/03-funkcionalis-spec.md § Sablon-placeholder őr). A
+      // nyilatkozat placeholder-esetét EZ nem kezeli -- azt a kemény zár
+      // váltja ki (lásd nyilatkozatIsPlaceholder lent), nem egy HU-visszaesés.
       extraFallbackCondition?: (result: { name: string; body: string }) => boolean,
     ) {
       try {
@@ -117,7 +118,7 @@ export default function PreviewPage() {
 
     (async () => {
       try {
-        const [nyil, fiz] = await Promise.all([
+        const [nyil, fiz, gar] = await Promise.all([
           loadOrFallback(
             () => loadLatestTemplateByBase(`nyilatkozat-${plan.nyelv}`),
             () => loadLatestTemplateByBase('nyilatkozat-hu'),
@@ -129,12 +130,21 @@ export default function PreviewPage() {
             // önmagára visszaesni félrevezető "sablonFallback" jelzést adna.
             plan.nyelv !== 'hu' ? (result) => isPlaceholderTemplate(result.body) : undefined,
           ),
+          loadOrFallback(
+            () => loadLatestTemplateByBase(`garancia-${plan.nyelv}`),
+            () => loadLatestTemplateByBase('garancia-hu'),
+            // Ugyanaz a minta, mint a fizetési feltételeknél -- a garancia
+            // sosem kap kemény zárat (docs/03-funkcionalis-spec.md §
+            // Sablon-placeholder őr), csak HU-visszaesést.
+            plan.nyelv !== 'hu' ? (result) => isPlaceholderTemplate(result.body) : undefined,
+          ),
         ]);
         if (!cancelled) {
           setNyilatkozatMd(nyil.body);
           setNyilatkozatVerzio(nyil.name.replace(/\.md$/, ''));
           setFizetesiFeltetelekMd(fiz.body);
-          setSablonFallback(nyil.fellback || fiz.fellback);
+          setGaranciaMd(gar.body);
+          setSablonFallback(nyil.fellback || fiz.fellback || gar.fellback);
           setTemplateError(null);
         }
       } catch (err) {
@@ -167,7 +177,7 @@ export default function PreviewPage() {
   }, [plan, priceList]);
 
   // Ha a MEGJELENÍTETT nyilatkozat placeholder (jogilag még nincs lezárva),
-  // a 3. oldal (nyilatkozat + aláírás) garantáltan kimarad -- a doki nem
+  // a 4. oldal (nyilatkozat + aláírás) garantáltan kimarad -- a doki nem
   // kapcsolhatja vissza, amíg a szöveg placeholder marad (D23, lásd
   // docs/03-funkcionalis-spec.md § Sablon-placeholder őr). A nyers
   // `offerOnly` state-et mindenhol ez az effektív érték váltja fel.
@@ -182,6 +192,7 @@ export default function PreviewPage() {
       offerOnly={effectiveOfferOnly}
       nyilatkozatMd={nyilatkozatMd}
       fizetesiFeltetelekMd={fizetesiFeltetelekMd}
+      garanciaMd={garanciaMd}
       toothChartPng={toothChartPng}
     />
   );
@@ -190,14 +201,23 @@ export default function PreviewPage() {
   // usePDF() saját belső effektje csak a MOUNT pillanatában lévő
   // `document`-et rendereli (a @react-pdf/renderer forrásában [] a
   // dependency array) -- utána a hívónak KELL az `update` függvénnyel
-  // újragenerálnia, különben a nyilatkozat/fizetési feltételek (amik a
-  // fenti useEffect-ben, a mount UTÁN töltődnek be) sosem kerülnek bele,
-  // és a "Csak ajánlat" kapcsoló sem hat a letöltött PDF-re. Ugyanez a
+  // újragenerálnia, különben a nyilatkozat/fizetési feltételek/garancia
+  // (amik a fenti useEffect-ben, a mount UTÁN töltődnek be) sosem kerülnek
+  // bele, és a "Csak ajánlat" kapcsoló sem hat a letöltött PDF-re. Ugyanez a
   // minta, mint a könyvtár saját `PDFViewer` komponensében.
   useEffect(() => {
     updatePdf(tervDocument);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan, settings, effectiveOfferOnly, nyilatkozatMd, fizetesiFeltetelekMd, toothChartPng, updatePdf]);
+  }, [
+    plan,
+    settings,
+    effectiveOfferOnly,
+    nyilatkozatMd,
+    fizetesiFeltetelekMd,
+    garanciaMd,
+    toothChartPng,
+    updatePdf,
+  ]);
 
   const nameMissing = !plan.paciens.nev.trim();
   const otherFieldsMissing =

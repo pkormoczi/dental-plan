@@ -4,6 +4,11 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 
 ## 2026. augusztus 10.
 
+- A nyomtatott kezelési terv kapott egy új "Garancia" oldalt, a fizetési feltételek után — ez is
+  szerkeszthető a Beállításokban, ugyanúgy, mint a nyilatkozat és a fizetési feltételek szövege,
+  és a "csak ajánlat" nyomtatásnál is mindig megjelenik (szemben a nyilatkozat és aláírás
+  oldallal, ami ilyenkor kimarad). A szövege egyelőre helykitöltő ("a garanciafeltételek még
+  nincsenek megadva"), amíg meg nem írjuk a tényleges garanciális feltételeket.
 - Mostantól bármelyik tételhez (az Árlista adminban) és bármelyik sorhoz (a Terv szerkesztőben)
   hozzáadható egy kétnyelvű leírás arról, mi van benne — hasznos egy összetett, csomagszerű
   tételnél (pl. egy fogpótlási csomag), ahol a páciens otthon is szeretné tudni, pontosan mi

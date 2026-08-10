@@ -2,11 +2,13 @@
 
 Megvalósítás: `app/src/pages/PreviewPage.tsx`
 
-A4, ~18 mm margó, három oldal. A jelenlegi Excel két dokumentumot présel
+A4, ~18 mm margó, négy oldal. A jelenlegi Excel két dokumentumot présel
 egybe („Kezelési terv" és „Egyedi szolgáltatási szerződés"), ezért itt
-élesen elválik: **1–2. oldal a terv és az ár, 3. oldal a nyilatkozat és
-az aláírás.** A szerkesztőben van egy „csak ajánlat" kapcsoló, ami a 3.
-oldalt elhagyja — így a hazavitt példány nem egy aláírandó szerződés.
+élesen elválik: **1–2. oldal a terv és az ár, 3. oldal a garancia, 4.
+oldal a nyilatkozat és az aláírás.** A szerkesztőben van egy „csak
+ajánlat" kapcsoló, ami a 4. oldalt elhagyja — így a hazavitt példány nem
+egy aláírandó szerződés (a garancia oldal ettől függetlenül mindig
+megjelenik, lásd „3. oldal — garancia" lent).
 
 ## Márka
 
@@ -67,7 +69,7 @@ a fejlécben. A cégnév a lábléc jogi blokkjába kerül.
 A `│` egy 2 px-es `#f77409` függőleges vonal — ez az egyetlen díszítő
 elem a dokumentumon.
 
-A 2–3. oldal egysoros minifejlécet kap (kis logó + „Kezelési terv ·
+A 2–4. oldal egysoros minifejlécet kap (kis logó + „Kezelési terv ·
 <páciensnév>"), hogy ne vesszen el 3 cm minden oldal tetején.
 
 ## Lábléc — minden oldalon
@@ -75,13 +77,13 @@ A 2–3. oldal egysoros minifejlécet kap (kis logó + „Kezelési terv ·
 ```
 ────────────────────────────────────────────────────────────────────────────────────────
 Mándoki Dental Kft. · 1114 Budapest, Móricz Zsigmond körtér 15. 3/8   Kovács János · a3f9c1
-Adószám: … · Cégjegyzékszám: …                                  árlista 2026.07.01. · 1 / 3
+Adószám: … · Cégjegyzékszám: …                                  árlista 2026.07.01. · 1 / 4
 ```
 
 Miért fontos:
 
 - **Oldalszám és tervazonosító minden oldalon.** Egy többoldalas aláírandó
-  dokumentumnál e nélkül nem bizonyítható, hogy a 3. oldal ehhez a
+  dokumentumnál e nélkül nem bizonyítható, hogy egy adott oldal ehhez a
   tervhez tartozott.
 - A tervazonosító **ugyanaz, mint a mappanév** — papírról vissza lehet
   keresni a JSON-t.
@@ -227,9 +229,10 @@ Ha itt még van hely, a fázisok folytatódhatnak róla — a fizetési
 feltételek a tartalom után jönnek.
 
 Ez az oldal a „csak ajánlat" módban is **mindig** nyomtatódik (szemben a
-3. oldallal) — ezért kezeli a placeholder-őr a két sablon lezáratlan
-állapotát eltérően: itt HU-visszaesés, nem zár (lásd
-`03-funkcionalis-spec.md` § Sablon-placeholder őr).
+4. oldallal) — ezért kezeli a placeholder-őr a fizetési feltételek (és a
+garancia, lásd lent) lezáratlan állapotát eltérően, mint a nyilatkozatét:
+itt HU-visszaesés, nem zár (lásd `03-funkcionalis-spec.md` § Sablon-
+placeholder őr).
 
 A sablon-markdown egyszerű: üres sorokkal elválasztott bekezdések, és
 "- " kezdetű listaelemek (lásd `app/src/pdf/markdownLite.ts`
@@ -237,7 +240,27 @@ A sablon-markdown egyszerű: üres sorokkal elválasztott bekezdések, és
 `{{orvos}}` helyőrző, amit a PDF generáláskor a terv kezelőorvosának
 neve vált fel.
 
-## 3. oldal — nyilatkozat és aláírás
+## 3. oldal — garancia
+
+A jelenlegi Excelben nincs garancia-tartalom — ez egy új szakasz. A
+szöveg forrása `sablonok/garancia-hu-vN.md`, ugyanazzal a mechanizmussal
+és markdown-formátummal, mint a fizetési feltételeké, a Beállítások
+képernyőn szerkeszthető. **A magyar szöveg ma is placeholder** (a doki
+adja meg: kezeléstípusonkénti garanciaidők, kivételek) — ez eltér a
+fizetési feltételek/nyilatkozat mai állapotától, azoknak már van valódi
+tartalma.
+
+Stílusa a fizetési feltételekével egyezik (normál, nem a nyilatkozat
+szorosabb, jogi kinézetű betűje) — a garancia tájékoztató jellegű, nem
+maga az aláírás tárgya.
+
+Ez az oldal a „csak ajánlat" módban is **mindig** nyomtatódik, ugyanúgy,
+mint a fizetési feltételek — a garancia a hazavitt példányon is
+hasznos, a páciens pont ott kérdezne rá legvalószínűbben. A
+placeholder-őr ugyanúgy HU-visszaesésként kezeli, nem zárként (lásd
+fent és `03-funkcionalis-spec.md` § Sablon-placeholder őr).
+
+## 4. oldal — nyilatkozat és aláírás
 
 A jogi szövegfal (`sablonok/nyilatkozat-hu-vN.md`) kisebb betűvel,
 1.5-es sorközzel, bekezdésekre tördelve. A szöveg szó szerint az
@@ -319,6 +342,9 @@ magyar nevet használja, jelöléssel (lásd `03-funkcionalis-spec.md` „2.
 Páciens adatlap"). A sablonok 2026-08-10 óta AI-fordítást tartalmaznak,
 jogi lektorálás nélkül (lásd `README.md` „Nyitott kérdések" #1) — ez már
 nem a korábbi placeholder szöveg, de nem is lektorált végleges szöveg.
+A `garancia-de-v1.md` **más eset**: nem AI-fordítás, hanem szándékos
+placeholder marad — a magyar forrás maga sem valódi tartalom még, nincs
+mit lefordítani (lásd „3. oldal — garancia" fent).
 
 ## Számformátum
 

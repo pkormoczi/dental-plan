@@ -50,9 +50,11 @@ gépi/AI fordítás, a nyilatkozat/fizetési feltételek esetén a doki
 kifejezett, 2026-08-10-i döntése alapján lektorálás és jelölés nélkül
 élesítve (lásd lent, „Nyitott kérdések" #1). Az EUR árak
 **véglegesítése** is nyitott (ma egyszeri árfolyam-becslés, lásd
-`docs/06-arlista-import.md`). Szintén nincs benne: automatikus
-darabszám a fogszámokból, statisztikák, többfelhasználós működés,
-szerveroldali komponens.
+`docs/06-arlista-import.md`). A nyomtatvány új garancia-szakaszának
+tényleges szövege sem kész — egyelőre helykitöltő mindkét nyelven, a
+doki adja meg (lásd lent, „Nyitott kérdések" #4). Szintén nincs benne:
+automatikus darabszám a fogszámokból, statisztikák, többfelhasználós
+működés, szerveroldali komponens.
 
 ## Nyitott kérdések, amik a dokira várnak
 
@@ -72,5 +74,9 @@ szerveroldali komponens.
 2. A cégadatok a lábléchez: adószám, cégjegyzékszám, és ha van ilyen
    kötelezettség, működési engedély szám.
 3. Az árlista takarítása — lásd `docs/06-arlista-import.md`.
+4. A nyomtatvány garancia-szakaszának tényleges tartalma —
+   kezeléstípusonkénti garanciaidők, kivételek. Egyelőre helykitöltő
+   szöveg mindkét nyelven (magyarul és németül is), amíg a doki meg nem
+   adja a Beállítások → Nyomtatvány szövegei alatt.
 
 A további, még fejlesztendő tételek listája: `docs/08-backlog.md`.
