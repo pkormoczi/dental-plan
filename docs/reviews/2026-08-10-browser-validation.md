@@ -16,17 +16,17 @@ vándorolnak, utána ez törölhető (ugyanaz az életciklus, mint a
 | Súlyosság | Darab |
 |---|---|
 | Kritikus | 0 |
-| Közepes | 5 (3 javítva: K1, K2, K3) |
+| Közepes | 5 (4 javítva: K1, K2, K3, K4) |
 | Apró | 1 (javítva: A1) |
 | Megerősített, hibátlan | 9 terület |
 
 A Közepes tételek mindegyike **rendszerszintű** (az egész appot érinti, nem egy
 komponenst) — egyik sem trivi kis javítás, ezért nem lettek autonóm módon átírva,
-K1 és K2 kivételével (lásd lent, a felhasználó explicit kérésére). K3 utólag,
-külön a felhasználó kérésére lett kivizsgálva és javítva (lásd lent) — a review
-menetében csak jelentve lett. K4 és K5 a K1 javítás utólagos böngészős
-visszaellenőrzése (2026-08-10, második menet) során derült ki — nem az eredeti
-menet találatai.
+K1 és K2 kivételével (lásd lent, a felhasználó explicit kérésére). K3 és K4
+utólag, külön a felhasználó kérésére lett kivizsgálva és javítva (lásd lent) —
+a review menetében csak jelentve lettek. K4 és K5 a K1 javítás utólagos
+böngészős visszaellenőrzése (2026-08-10, második menet) során derült ki — nem
+az eredeti menet találatai.
 
 ---
 
@@ -292,7 +292,7 @@ beépített PDF-nézőjének zoom-mező `id`/`name` figyelmeztetése) egyike sem
 kapcsolódik a K3 javításhoz, mindkettő már a korábbi menetekben is
 dokumentált és jóváhagyott.
 
-### K4 — `controlBorder` (`#8896AB`) valós felületeken 2,4–2,96:1-en fut a mondott 3,00:1 helyett
+### K4 — `controlBorder` (`#8896AB`) valós felületeken 2,4–2,96:1-en fut a mondott 3,00:1 helyett — JAVÍTVA (2026-08-10)
 
 A `tokens.ts` fejléckommentje és a `docs/07` táblázata "3,00:1 fehéren" —
 ez pontosan igaz, de **nulla tartalékkal**: `#8896AB` fehér (`#FFFFFF`) hátteret
@@ -321,6 +321,99 @@ súly-döntés, nem mechanikus patch. Backlogba javasolt — a döntés: sötét
 előforduló háttéren (`t.page`) is teljesüljön a 3:1, vagy a szabály
 újrafogalmazása háttérfüggő értékre.
 
+**Javítva.** A gyökérok a fenti méréseknél mélyebbre nyúlik: a K1 keret
+`inset` box-shadow, tehát **két szomszédja van** — kívül a szülőfelület
+(`t.page`), belül a kontroll saját kitöltése. Egy `soft` gomb saját
+`accent-a3`/`a4`/`a5` washe (nyugalmi/hover-és-`[data-state='open']`/lenyomott)
+sötétebb, mint `t.page` — pontosan ez magyarázza a mért 2,40:1-et (`#8896AB`
+vs. a `t.page` feletti nyugalmi `soft` kitöltés, `#E9E5E2`), nem a 2,74:1,
+amit `#8896AB` és a puszta `t.page` közötti (elméleti) számítás adna. A
+`docs/07` kiegészült ezzel az invariánssal (`controlBorder` sor), hogy egy
+jövőbeli érték-módosítás ne hagyja figyelmen kívül a belső szomszédot.
+
+Végleges érték: **`#64748B`** (slate-500 — véletlenül azonos a meglévő
+`uiTextFaint`-tel, két külön szerep, szándékos egyezés). Minden mért állapotban
+3:1 fölött marad:
+
+| Szomszéd | `#8896AB` (régi) | `#64748B` (új) |
+|---|---|---|
+| kívül: `t.page` | 2,74:1 | 4,34:1 |
+| belül: `soft` nyugalmi (`accent-a3`) | 2,40:1 | 3,80:1 |
+| belül: `soft` hover / `[data-state='open']` (`accent-a4`) | 2,21:1 | 3,51:1 |
+| belül: `soft` lenyomott (`accent-a5`) | 2,03:1 | **3,22:1** (legszorosabb eset) |
+
+A `[data-state='open']` állapot nem tranziens — a Radix ezt adja egy nyitott
+dropdown/popover triggerének is, tehát ez tartós, nem csak hover-pillanat.
+Egy független forrásból (kód-szintű háttér-felmérés, nem böngészős mérés) is
+megerősítve: egy szürke (nem barna) `soft` gomb saját `gray-a3` kitöltése
+`t.page` felett `#E3E7ED`-re komponálódik, ami `#8896AB`-vel szemben 2,42:1,
+`#64748B`-vel szemben 3,80:1 — ugyanabba a hibaosztályba esik, ugyanúgy javul.
+Az app egyetlen `Callout color="red"` belsejében lévő `soft` gombja
+(`PreviewPage.tsx`) a `red-a3` kitöltés miatt hasonlóan szoros eset (2,40:1
+régen, 3,+:1 újonnan), külön nem tér el az általános képtől.
+
+Az `accentWash`/`warnBg`/`dangerBg`/`okBg` hátterek nem szűkítők: egyik sem
+kerül 3,3:1 alá az új értékkel, és `warnBg`/`okBg` amúgy sincs sehol tényleges
+háttérként használva a kódban. A `Card`/`Table.Root` "majdnem fehér, de nem az"
+felülete Radix `--color-panel` transzlucens fehér (`rgba(255,255,255,.7)` a
+lap fölött, kb. `#FBFCFD`) — ez sem szűkítőbb, mint a fenti belső szomszédok.
+
+Csak a `tokens.ts`-beli `controlBorder` konstans és a hozzá tartozó
+kommentek változtak; a globális CSS-szabály (`app/src/index.css`) és a
+`main.tsx` `--control-border` bedrótozása változatlan, tehát minden meglévő
+fogyasztó (a mai CSS-szabály ÉS a kézzel bedrótozott `NumberField`/
+`ItemPicker`/`ErrorBoundary`) automatikusan örökli az új értéket. `tsc -b`,
+`oxlint` és a teljes teszt-készlet zöld a javítás után — a vitest-készlet erre
+a rétegre (nem tölti be az `index.css`-t/Radix Themes CSS-t) strukturálisan
+vak, a helyesség forrása a fenti kontraszt-számítás.
+
+**Böngészős visszaellenőrzés (2026-08-10, ötödik menet).** A `--control-border`
+CSS-változó ténylegesen `rgb(100, 116, 139)`-re állt (`#64748B`) — igazolva
+mind a Radix `box-shadow`-val rajzolt kereteken (`.rt-BaseButton`
+`soft`/`ghost` és `.rt-IconButton`, ez utóbbi is `rt-BaseButton`), mind a
+`.rt-TextFieldRoot` wrapperen (nem a nyers `<input>`-on — a keret ott ül),
+mind a `.rt-CheckboxRoot[data-state='unchecked']::before` pszeudo-elemen.
+A checklist eredeti naiv `CTRL` szelektora (`input,button,...`) ezt a három
+célpontot csak részben fedi (a nyers `<input>`-ot vizsgálja a wrapper helyett),
+ami hamis `control-no-border` találatot adott volna — a visszaellenőrzés a
+tényleges CSS-szelektorokra (`​.rt-TextFieldRoot`, `.rt-CheckboxRoot`,
+`.rt-BaseButton.rt-variant-soft`/`.rt-variant-ghost`) célzott, és a
+kompozitált kontrasztot közvetlenül a `box-shadow` színéből számolta.
+
+Mind a 7 route-on + a Home „Minden adat törlése” `AlertDialog`-jában **nulla**
+3:1 alatti előfordulás, minden mért állapotban:
+
+| Route | Ellenőrzött kontroll | Legszorosabb mért kontraszt |
+|---|---|---|
+| `#/` | 3 | 3,79:1 |
+| Home „Minden adat törlése” dialógus | 1 (`Mégse`) | 4,17:1 |
+| `#/paciens` | 7 | 4,34:1 |
+| `#/terv` (nyitott fázissal) | 11 | 3,81:1 |
+| `#/arlista` | **238** | **3,81:1** |
+| `#/tervek` | 5 | 3,81:1 |
+| `#/beallitasok` | 7 | 4,70:1 |
+| `#/elonezet` | 2 | 3,81:1 |
+
+A korábban legrosszabb route (`#/arlista`, K1 alatt 244 érintett kontroll)
+most is a legtöbb kontrollt futtatja (238 — a demó-adat különbség miatt tér
+el kicsit a K1-es 244-től), és a legszorosabb mért érték (3,81:1) jó
+tartalékkal a 3:1 fölött van. Negatív ellenőrzések: a `solid` Button
+(Home „Új terv indítása”) továbbra is kivétel marad, keret nélkül — ez
+szándékos (K1 döntés), nem regresszió. A `Törlés` (piros `solid`) gomb és a
+piros `soft` `Callout` belsejében lévő gomb sem tért el a vártól. Fókuszgyűrű
+regresszió-ellenőrzés (12 mintaelem, Home route): mind a 12 láthatóan
+változik fókuszkor. Konzol tiszta mind a 7 route-on, nulla React hiba/
+figyelmeztetés.
+
+Mellékesen, a K4-től **független**, ÚJ, nem triázsolt észrevétel: a Home
+„Minden adat törlése” gomb (`Button variant="soft" color="red"`) szövege
+`rgba(196, 0, 6, 0.827)`-t fut a ténylegesen kompozitált háttéren mérve
+4,29:1-en, a WCAG AA 4,5:1 helyett — ez a Radix beépített `--red-a11`
+szemantikus tokenje, nem a `docs/07` egyedi tokenkészlete, és nem áll
+összefüggésben a `controlBorder`-rel vagy ezzel a javítással. Nem lett
+kivizsgálva vagy javítva ebben a menetben (hatókörön kívül); ha a felhasználó
+szeretné, külön tétel.
+
 ### K5 — A `ChipGroup` (Radix `SegmentedControl`) nincs a K1 hatókörében, keret nélküli marad
 
 A `docs/07` `controlBorder` sora név szerint négy kontrolltípust sorol fel:
@@ -333,11 +426,14 @@ közös `ChipGroup.tsx`-en (Radix `SegmentedControl.Root`/`.Item`) megy át, ami
 
 Böngészőben mérve (`#/paciens`): `.rt-SegmentedControlRoot`/`.Item`
 `box-shadow: none` — nulla keret, ugyanaz a hibaosztály, mint K1 eredetileg
-volt. Rendszerszintű abban az értelemben, hogy egy új CSS-szabály (vagy a
-meglévő kiterjesztése) + a K4 alatti szín-döntés együtt dől el — ezért nem
-lett autonóm módon bővítve a mai javítás, csak jelentve. Backlogba javasolt,
-K1-hez hasonló megoldással (`.rt-SegmentedControlRoot`-ra célzó box-shadow
-override).
+volt. A színérték kérdése a K4 javításával lezárult (`controlBorder` =
+`#64748B`), tehát K5 mostantól tisztán CSS-hatókör kérdése — egy új
+`.rt-SegmentedControlRoot`-ra célzó box-shadow override, K1 mintájában.
+Ez sem lett autonóm módon bővítve a mai javítással, csak jelentve marad;
+egy független kód-szintű felmérés (a K4 javítás közben) azt is megerősítette,
+hogy a `Select.Trigger` szintén kimarad a mai globális CSS-szabály
+hatóköréből, ugyanezzel a hibaosztállyal — érdemes ezt K5 hatókörébe vonni,
+amikor az sorra kerül. Backlogba javasolt.
 
 ---
 

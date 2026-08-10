@@ -25,7 +25,10 @@
 //  - `controlBorder` (nem `uiLine`/`uiLineStrong`!) kell minden interaktiv
 //    kontroll (input, gomb, chip, dropdown) kerete -- a hajszalvonal
 //    (`uiLine`) tul halvany a WCAG 1.4.11 3:1-hez, csak diszito
-//    sorelvalasztora valo.
+//    sorelvalasztora valo. A keret `inset` box-shadow (index.css), tehat KET
+//    szomszedja van: kivul a szulofelulet, belul a kontroll sajat kitoltese
+//    (pl. egy `soft` gomb `accent-a3`/`a4`/`a5` washe) -- ez utobbi a
+//    szigorubb mertek, mert sotetebb, mint a lap hattere (K4).
 //
 // A tokennevek szandekosan szerepalapuak, nem szinnevek -- a korabbi
 // navy/sky nevek egy rebrandnel hazugsagga valtak volna.
@@ -60,7 +63,11 @@ export const t = {
   uiTextFaint: '#64748B', // slate-500 -- 4.76:1 feheren (a regi #8C8580 3.63:1 bukott)
   uiLine: '#E2E8F0', // slate-200 -- CSAK diszito sorelvalasztora (tablasor, kartyaszel)
   uiLineStrong: '#CBD5E1', // slate-300 -- diszito, erosebb hajszalvonal
-  controlBorder: '#8896AB', // 3.00:1 feheren -- WCAG 1.4.11: minden interaktiv kontroll kerete
+  controlBorder: '#64748B', // slate-500, 3:1 folött minden szomszed ellen (K4: a
+  // regi #8896AB csak feheren 3.00:1, a tenyleges belso (soft-kitoltes) es
+  // kulso (t.page) szomszedok ellen 2-3:1 volt) -- WCAG 1.4.11: minden
+  // interaktiv kontroll kerete. Azonos ertek, mint `uiTextFaint`, de kulon
+  // szerep -- szandekos egyezes, ne vond ossze a ket tokent
 
   // Szerep -- csak app, PDF nem hasznalja
   warn: '#9A5B00', // 5.43:1 feheren, 5.06:1 warnBg-n (a regi #B26A00 4.24:1/3.95:1 bukott)
