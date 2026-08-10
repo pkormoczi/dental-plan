@@ -171,7 +171,11 @@ ugyanúgy megnyitja mindkét sort, mint a kedvezmény — a `Kezelések
 indultunk"), külön felirat vagy eltérő megfogalmazás nélkül.
 
 **Kedvezmény sor nincs** (D9) — a kedvezmény *összege* sehol nem jelenik
-meg, csak a két végösszeg. A `fizetendo` a tényleges árakból számol.
+meg, csak a két végösszeg. A `fizetendo` a tényleges árakból **és** egy
+esetleges terv-szintű, kerek végösszeg kedvezményből (`kedvezmenyOsszeg`,
+D25) számol — a terv-szintű kedvezmény önmagában, sorszintű eltérés
+nélkül is megnyitja ezt a kétsoros összegzést, ugyanúgy, mint egy
+sorszintű eltérés (`tervVegosszeg()`, `domain/totals.ts`).
 
 Ha a terven be van kapcsolva az előleg (`elolegSzazalek != null`), a
 `Fizetendő` alatt még két sor áll, kisebb súllyal:

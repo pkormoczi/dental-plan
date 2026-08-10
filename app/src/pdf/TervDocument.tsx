@@ -15,7 +15,13 @@ import { formatLongDate, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
 import { formatTeethForPrint } from '../domain/teeth';
 import { buildToothVisualStates } from '../domain/toothVisual';
-import { ELOLEG_ALAP_SZAZALEK, elolegOsszegek, fazisListaOsszeg, fazisOsszeg } from '../domain/totals';
+import {
+  ELOLEG_ALAP_SZAZALEK,
+  elolegOsszegek,
+  fazisOsszeg,
+  sorokListaOsszeg,
+  tervVegosszeg,
+} from '../domain/totals';
 import type { Fazis, Plan, PriceList, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
 import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
@@ -349,8 +355,8 @@ export function TervDocument({
   toothChartPng,
 }: TervDocumentProps) {
   const L = pdfLabels(plan.nyelv);
-  const grand = plan.fazisok.reduce((sum, p) => sum + fazisOsszeg(p), 0);
-  const listTotal = plan.fazisok.reduce((sum, p) => sum + fazisListaOsszeg(p), 0);
+  const grand = tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg);
+  const listTotal = sorokListaOsszeg(plan.fazisok);
   const hasRange = plan.fazisok.some((p) => p.sorok.some((l) => l.savos));
   const fogterkep = buildToothVisualStates(plan, priceList);
   const showToothChart = toothChartPng != null && (fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0);

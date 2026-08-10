@@ -255,7 +255,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         // mentett JSON-t és a már korábban renderelt PDF-blob-ot szétcsúsztatná.
         const friss = frissDatummal(p, settings, todayIso());
         setPlanState(friss);
-        setLoadedOsszesitokDiff(osszesitokElter(p.osszesitok, p.fazisok));
+        setLoadedOsszesitokDiff(osszesitokElter(p.osszesitok, p.fazisok, p.kedvezmenyOsszeg));
         setFrissitettDatum(
           friss.keltezes !== p.keltezes || friss.ervenyesIg !== p.ervenyesIg
             ? { keltezes: friss.keltezes, ervenyesIg: friss.ervenyesIg }

@@ -65,5 +65,7 @@ export function createBlankPlan(settings: Settings, priceList: PriceList): Plan 
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
     // A doki kapcsolója a szerkesztőben -- alapból nincs előleg-sor.
     elolegSzazalek: null,
+    // A doki kapcsolója a szerkesztőben -- alapból nincs terv-szintű kedvezmény.
+    kedvezmenyOsszeg: null,
   };
 }

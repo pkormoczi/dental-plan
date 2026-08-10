@@ -4,6 +4,12 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 
 ## 2026. augusztus 10.
 
+- A Terv szerkesztőben új "Kerek végösszeg beállítása" kapcsoló jelent meg az Összesítés alatt —
+  bekapcsolva megadható a kívánt kerek végösszeg (pl. "legyen kereken 2 050 000"), a program a
+  belőle adódó kedvezményt automatikusan kiszámolja és kiírja, így ezt nem kell soronként fejben
+  vagy számológéppel visszaosztani. A Fizetendő és az esetleges Előleg is ebből az összegből
+  számol; a kedvezmény összege — a soronkénti kedvezményhez hasonlóan — a nyomtatványon nem
+  jelenik meg, csak a szerkesztőben.
 - Az Árlista adminban a "+ Új tétel" gomb mostantól a lista tetején is megjelenik (a lista alján
   is megmaradt), és felugró ablakban kérdez rá a névre és a kategóriára — eddig a kattintás
   azonnal, névtelenül és az első kategóriába emelt be egy tételt, ami hosszú listánál

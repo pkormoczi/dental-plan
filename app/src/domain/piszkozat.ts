@@ -50,6 +50,9 @@ export function piszkozatTartalmas(plan: Plan): boolean {
   // és sorok nélkül is.
   if (plan.elolegSzazalek != null) return true;
 
+  // Ugyanez a terv-szintű kedvezmény kapcsolójára (backlog-16).
+  if (plan.kedvezmenyOsszeg != null) return true;
+
   const csakEgyAlapFazis =
     plan.fazisok.length === 1 &&
     plan.fazisok[0].megnevezes === ELSO_FAZIS_NEV &&

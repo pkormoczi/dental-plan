@@ -237,6 +237,29 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
   ugyanazt a zöld színt kapja — ez semleges ténymegállapítás, nem
   hibajelzés, a doki dolgozhat felárral is (pl. sietős munka).
 
+### Kerek végösszeg
+
+A „Mindösszesen" doboz alatt, még az Előleg fölött egy kapcsoló: *„Kerek
+végösszeg beállítása"*. Bekapcsolva egy „Cél végösszeg" mező jelenik meg,
+alapértéke a sorok jelenlegi (nyers) összege — a doki ide írja be, mennyi
+legyen a végösszeg, ha az alkut kerek számra zárja. A mező commitkor
+(blur/Enter) egyszer kiszámolja és fix összegként tárolja a kedvezményt
+(`kedvezmenyOsszeg`, `domain/types.ts`) — nem magát a cél-végösszeget
+(D25). A mező alatt élőben kiírva a belőle adódó kedvezmény összege. A
+mező 0 és a sorok nyers összege közé szorított — csak kedvezményre való,
+felárra nem.
+
+Mivel a kedvezmény fix összeg, egy utólagos sortörlés a sorok összege fölé
+emelheti — ilyenkor a „Fizetendő" 0-ra padlózódik (soha nem negatív), és a
+blokk figyelmeztet, hogy a cél végösszeget újra be kell írni.
+
+A „Mindösszesen" doboz „Kedvezmény: X" alszövege (fent) ettől a ponttól
+kezdve a sorszintű ÉS a terv-szintű kedvezmény ÖSSZEGÉT mutatja,
+összevonva — a kerek végösszeg blokk saját sora adja meg külön a saját
+részét, ha a doki forrás szerint akarja látni. A kedvezmény összege a
+nyomtatványon itt sem jelenik meg (D9), csak a „Fizetendő" lesz kisebb; az
+előleg (lásd lent) ebből a csökkentett összegből számol.
+
 ### Előleg
 
 A „Mindösszesen" doboz alatt egy kapcsoló: *„Ez a terv fogtechnikai

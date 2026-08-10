@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeOsszesitok, elolegOsszegek, osszesitokElter } from './totals';
+import { computeOsszesitok, elolegOsszegek, osszesitokElter, tervVegosszeg } from './totals';
 import type { Fazis } from './types';
 
 const fazisok: Fazis[] = [
@@ -40,6 +40,47 @@ describe('osszesitokElter', () => {
     const mentettCopy = { ...mentett };
     osszesitokElter(mentett, fazisok);
     expect(mentett).toEqual(mentettCopy);
+  });
+});
+
+describe('tervVegosszeg (backlog-16)', () => {
+  it('kedvezmény nélkül a sorok nyers összege', () => {
+    expect(tervVegosszeg(fazisok)).toBe(20000);
+    expect(tervVegosszeg(fazisok, null)).toBe(20000);
+    expect(tervVegosszeg(fazisok, undefined)).toBe(20000);
+  });
+
+  it('kedvezménnyel a csökkentett összeg', () => {
+    expect(tervVegosszeg(fazisok, 5000)).toBe(15000);
+  });
+
+  it('a sorok összegét meghaladó kedvezménynél 0-ra padlóz, soha nem negatív (D25)', () => {
+    expect(tervVegosszeg(fazisok, 25000)).toBe(0);
+  });
+});
+
+describe('computeOsszesitok terv-szintű kedvezménnyel (backlog-16)', () => {
+  it('2. paraméter nélkül a mai (csak sorszintű) viselkedés', () => {
+    expect(computeOsszesitok(fazisok)).toEqual({
+      kezelesekOsszesen: 25000,
+      kedvezmeny: 5000,
+      fizetendo: 20000,
+    });
+  });
+
+  it('a fizetendő csökken, és az osszesitok.kedvezmeny a sor- ÉS terv-szintű eltérés összege', () => {
+    expect(computeOsszesitok(fazisok, 3000)).toEqual({
+      kezelesekOsszesen: 25000,
+      kedvezmeny: 8000,
+      fizetendo: 17000,
+    });
+  });
+});
+
+describe('osszesitokElter terv-szintű kedvezménnyel (backlog-16)', () => {
+  it('nem jelez hamis eltérést egy kedvezményes tervnél', () => {
+    const mentett = computeOsszesitok(fazisok, 3000);
+    expect(osszesitokElter(mentett, fazisok, 3000)).toBeNull();
   });
 });
 

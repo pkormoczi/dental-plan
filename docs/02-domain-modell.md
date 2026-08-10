@@ -142,7 +142,11 @@ kerekítési hiba az összegzésben.
 
   // Opcionális (hiányozhat egy régi fájlból, ilyenkor `null`-ként olvasandó).
   // Lásd "Előleg" lentebb.
-  "elolegSzazalek": 50
+  "elolegSzazalek": 50,
+
+  // Opcionális (hiányozhat egy régi fájlból, ilyenkor `null`-ként olvasandó).
+  // Lásd "Terv-szintű kedvezmény" lentebb.
+  "kedvezmenyOsszeg": 130000
 }
 ```
 
@@ -190,6 +194,37 @@ Ugyanez a százalék tölti ki a fizetési feltételek sablonszövegének
 szövege ne mondhasson ellent egymásnak. Kikapcsolt kapcsolónál a
 helyőrző az 50-es alapértékre esik vissza — a mondat ilyenkor szó szerint
 az eredeti, aláírt szöveggel azonos.
+
+### Terv-szintű kedvezmény (`kedvezmenyOsszeg`)
+
+Az alku lezárásakor a doki gyakran kerek végösszegben állapodik meg a
+pácienssel. A szerkesztőben a doki a kívánt **cél-végösszeget** gépeli be,
+de a `Plan`-en ez FIX kedvezmény-**összegként** (`kedvezmenyOsszeg`)
+rögzül, nem a begépelt cél-végösszegként (D25) — a sorok tiszta
+összegéből ennyi vonódik le. `null` (vagy hiányzó mező) = nincs terv-
+szintű kedvezmény, a `Fizetendő` a sorok tiszta összege (a mai
+viselkedés). Nem emelt `schemaVersion`-t, az `elolegSzazalek` precedense
+szerint.
+
+**Fix összeg tárolódik, nem a cél-végösszeg.** Ha a cél-végösszeget
+tárolnánk élőben, egy utólagos sormódosítás után a kedvezmény
+észrevétlenül változna — ez D8 szellemével (a kedvezmény mérhető,
+explicit tényállapot) ütközne, ugyanúgy, ahogy a soronkénti
+`listaEgysegar` vs `tenylegesEgysegar` sem "él" a listaár változásával. Ha
+a doki utólag módosítja a sorokat, a `Fizetendő` elcsúszhat a kerek
+számtól — ez szándékos viselkedés, a doki bármikor újra beírhatja a kerek
+számot, ami felülírja a `kedvezmenyOsszeg`-et.
+
+**`tervVegosszeg(fazisok, kedvezmenyOsszeg)` soha nem ad negatívat**
+(`domain/totals.ts`): mivel a kedvezmény fix összeg, egy utólagos
+sortörlés a sorok összege fölé emelheti — ilyenkor a `Fizetendő` 0-ra
+padlózódik, nem negatív szám kerül az aláírandó papírra (D25).
+
+Ne keverd a `plan.osszesitok.kedvezmeny` mezővel: az a KIMENET (a sor- és
+a terv-szintű eltérés összege a listaártól, véglegesítéskor számolva), a
+`kedvezmenyOsszeg` a BEMENET (a doki által beállított terv-szintű összeg).
+A kedvezmény összege — akárcsak az előlegnél — sehol nem jelenik meg a
+nyomtatványon (D9), csak a `Fizetendő` lesz kisebb.
 
 ### Miért van `osszesitok`, ha származtatható
 

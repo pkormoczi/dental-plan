@@ -6,7 +6,7 @@ teljes anyaga — a 12 kész tétel megvalósítási jegyzeteivel és az első
 doktor-nap narratívával együtt — archiválva, lásd „Honnan jönnek az
 igények" lent.
 
-A `docs/01` sérthetetlen keretei (D1–D21) egyik tételt sem sértik —
+A `docs/01` sérthetetlen keretei (D1–D25) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. A
@@ -17,12 +17,12 @@ kész tételekhez tartozókkal.
 
 **Sorrend:** a listákon belül hasznosság szerint — a napi fájdalom
 mérete × gyakorisága, holtversenynél a kisebb munka előre. A MOST
-szakasz mind a 11 tételéhez van tervdokumentum (grill-me munkamenetek
+szakasz mind a 10 tételéhez van tervdokumentum (grill-me munkamenetek
 döntési összefoglalói).
 
 ---
 
-## MOST (kb. 5,5–7 fejlesztői nap + fél nap közös munka a dokival)
+## MOST (kb. 4,5–6 fejlesztői nap + fél nap közös munka a dokival)
 
 ### 1. hely — 8. tétel: Árlista-nap: kategóriakezelés kódban + adattisztítás a dokival
 
@@ -52,28 +52,7 @@ duplikátum inaktiválva (`aktiv: false`, id megtartva, D17).
   kerüljön a 13. tétel magyar garanciaszövegének begyűjtése is** —
   egyetlen ülés adja az összes még hátralévő embermunka-inputot.
 
-### 2. hely — 16. tétel: Terv-szintű „kerek végösszeg" kedvezmény
-
-- **Méret:** ~1 nap, grill-me kötelező. Additív, opcionális `Plan`-mező
-  (az `elolegSzazalek` precedense szerint, `schemaVersion` marad 1): a
-  végösszegből levont kedvezmény. A `Fizetendő` ebből számol; a
-  nyomtatványon a meglévő feltételes kétsoros összegzés jelenik meg, a
-  kedvezmény összege továbbra sem (D9). Az előleg a csökkentett
-  fizetendőből számol.
-- **Kereteket sért?** Nem — a D8 (kedvezmény külön tárolva, mérhetően)
-  kifejezetten támogatja, az `osszesitok.kedvezmeny` ma is létező mező.
-  Grill-me kérdések: soronkénti és terv-szintű kedvezmény együttélése,
-  sávos/becsült sorok kölcsönhatása, összeg vs. cél-végösszeg tárolása.
-- **Valódi haszon:** bevétel + időmegtakarítás — az alku zárása („legyen
-  kereken 2 050 000") ma soronkénti visszaosztás számológéppel a páciens
-  előtt; az Excelben egy cella átírása volt. Ez az egyetlen pont, ahol az
-  app ma érdemben rosszabb az Excelnél egy pénzt hozó munkalépésben.
-- **20%-os verzió:** „cél végösszeg" segédmező a Summary-ban, ami csak
-  kiírja a szükséges kedvezményt (2 óra) — nem javasolt önállóan, mert a
-  kézi visszaosztás megmarad, csak a számológép esik ki.
-- **Terv:** `docs/backlog-16-kerek-vegosszeg-terv.md` (10 döntés).
-
-### 3. hely — 17. tétel: Terv másolása új tervként / új terv a páciens adataival
+### 2. hely — 17. tétel: Terv másolása új tervként / új terv a páciens adataival
 
 - **Méret:** fél–1 nap, grill-me ajánlott. Egy `loadPlanIntoDraft`-variáns,
   ami a betöltött tervből **új tervet** csinál (`tervId: ''`,
@@ -93,7 +72,7 @@ duplikátum inaktiválva (`aktiv: false`, id megtartva, D17).
   mechanizmus ugyanaz; együtt javasolt.
 - **Terv:** `docs/backlog-17-terv-masolas-terv.md` (10 döntés).
 
-### 4. hely — 10. tétel: Tétel-leírás a csomagtételekhez
+### 3. hely — 10. tétel: Tétel-leírás a csomagtételekhez
 
 *(korábbi 10. tétel — mindkét review-kör megerősítette: „mi van ebben az
 egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
@@ -109,7 +88,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   tételek listája" struktúrához képest (az a KÉSŐBB listán).
 - **Terv:** `docs/backlog-10-tetel-leiras-terv.md` (17 döntés).
 
-### 5. hely — 13. tétel: Garancia szakasz a nyomtatványon
+### 4. hely — 13. tétel: Garancia szakasz a nyomtatványon
 
 *(korábbi 13. tétel)*
 
@@ -125,7 +104,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
 - **Terv:** `docs/backlog-13-garancia-terv.md` (9 döntés; a német szöveg
   placeholder marad, a 6. tétel placeholder-őre kezeli).
 
-### 6. hely — 18. tétel: Fázis törlése megerősítéssel
+### 5. hely — 18. tétel: Fázis törlése megerősítéssel
 
 - **Méret:** 1–2 óra — a meglévő `AlertDialog`-minta a „Fázis törlése"
   gombon, csak akkor, ha a fázisban van sor (üres fázis törlése maradjon
@@ -138,7 +117,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
 - **20%-os verzió:** nincs kisebb — ez már a minimális védelem.
 - **Terv:** `docs/backlog-18-fazis-torles-terv.md` (6 döntés).
 
-### 7. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
+### 6. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
 - **Méret:** 2–3 óra — új, nem blokkoló lépés a `PreviewPage` meglévő
   `confirmStep`-láncában: a 0 Ft-os, kitöltött nevű sorok felsorolása. A
@@ -153,7 +132,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   rosszabb lenne, mert eltörné a billentyűzetes ciklust.
 - **Terv:** `docs/backlog-19-nulla-forint-terv.md` (7 döntés).
 
-### 8. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
+### 7. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
 
 - **Méret:** 1–2 óra — a `PreviewPage` és `PlanHistoryPage` letöltési
   fájlneveiben a páciensnév (a `paths.ts` meglévő
@@ -168,7 +147,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `docs/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
 
-### 9. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
+### 8. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
 - **Méret:** 1 óra + teszt — a `savePriceList` a `modositva` mellett az
   `arlistaVerzio`-t is a mentés napjára állítja tartalmi változásnál. A
@@ -183,7 +162,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
 - **Terv:** `docs/backlog-21-arlista-verzio-terv.md` (5 döntés).
 
-### 10. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
+### 8. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
 - **Méret:** 1–2 óra — a PlanHistoryPage-en a már betöltött
   PDF-bájtokból blob-URL, új fül; nincs új nézet, nincs új útvonal.
@@ -196,7 +175,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   böngésző PDF-nézője elég).
 - **Terv:** `docs/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
-### 11. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 10. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
@@ -354,8 +333,8 @@ Hasznosság szerint sorrendezve:
   aláírandó, szerződéses dokumentumon.
 - **Automatikus árfolyam-lekérés** — a D11 kifejezetten kizárja.
 - **Kedvezmény külön soron a nyomtatványon** — a D9 direkt ellenkezőjét
-  mondja ki, jó okkal. (A 16. tétel terv-szintű kedvezménye ezzel
-  összefér: az összeg ott sem kerül a papírra.)
+  mondja ki, jó okkal. (A terv-szintű „kerek végösszeg" kedvezmény ezzel
+  összefér, D25: az összeg ott sem kerül a papírra.)
 - **Többfelhasználós jogosultságkezelés** — D1: egy rendelő, belső
   eszköz.
 - **Mobilapp, felhőszinkron** — a Drive-tükrözés megoldja a hozzáférést;

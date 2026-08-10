@@ -253,6 +253,22 @@ A sablonszerkesztő + placeholder-őr tétel (`docs/03-funkcionalis-spec.md`
   string-egyezésű privát duplikátum létezett, egy harmadik hívási hely
   bevezetése volt az alkalom a konszolidálásra
 
+A terv-szintű „kerek végösszeg" kedvezmény tétel
+(`docs/02-domain-modell.md` § Terv-szintű kedvezmény, D25)
+segédfüggvényei, szintén ne írd újra őket:
+- `tervVegosszeg(fazisok, kedvezmenyOsszeg)` (`app/src/domain/totals.ts`)
+  — az EGYETLEN hely, ahol a `Fizetendő` eldől: a sorok összegéből levonja
+  a terv-szintű kedvezményt, és soha nem ad negatívat (0-ra padlóz). A
+  szerkesztő (`PlanEditorPage.tsx`), a nyomtatvány (`pdf/TervDocument.tsx`)
+  és a `computeOsszesitok()`/`osszesitokElter()` is ezt hívja — korábban a
+  sorok nyers összege három helyen, egymástól függetlenül számolódott
+  újra, egy negyedik levonás-logika szét-driftelt volna
+- `sorokOsszeg(fazisok)` / `sorokListaOsszeg(fazisok)` (ugyanitt) — a
+  `fazisOsszeg`/`fazisListaOsszeg` terv-szintű összegzői, a
+  `tervVegosszeg()` és a szerkesztő Kerek végösszeg blokkja is ezeket
+  hívja a felső határhoz (a mező alapértéke a nyers, kedvezmény előtti
+  összeg, nem a `tervVegosszeg()` eredménye)
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

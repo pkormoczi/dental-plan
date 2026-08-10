@@ -34,8 +34,10 @@ import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVi
 import {
   ELOLEG_ALAP_SZAZALEK,
   elolegOsszegek,
-  fazisListaOsszeg,
   fazisOsszeg,
+  sorokListaOsszeg,
+  sorokOsszeg,
+  tervVegosszeg,
 } from '../domain/totals';
 import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
@@ -179,8 +181,12 @@ export default function PlanEditorPage() {
     });
   }
 
-  const grand = plan.fazisok.reduce((s, p) => s + fazisOsszeg(p), 0);
-  const listTotal = plan.fazisok.reduce((s, p) => s + fazisListaOsszeg(p), 0);
+  // A sorok nyers összege -- a Kerek végösszeg blokknak erre van szüksége a
+  // felső határhoz és a mező alapértékéhez, NEM a tervVegosszeg()
+  // eredményére (backlog-16).
+  const sorszintuOsszeg = sorokOsszeg(plan.fazisok);
+  const grand = tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg);
+  const listTotal = sorokListaOsszeg(plan.fazisok);
   const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
 
   /**
@@ -345,6 +351,16 @@ export default function PlanEditorPage() {
         <Flex mt="4" justify="end">
           <Box style={{ flex: '0 1 320px' }}>
             <Summary grand={grand} listTotal={listTotal} currency={currency} />
+            <KerekVegosszegBlokk
+              sorszintuOsszeg={sorszintuOsszeg}
+              currency={currency}
+              kedvezmenyOsszeg={plan.kedvezmenyOsszeg ?? null}
+              onChange={(next) =>
+                updatePlan((draft) => {
+                  draft.kedvezmenyOsszeg = next;
+                })
+              }
+            />
             <ElolegBlokk
               grand={grand}
               currency={currency}
@@ -813,6 +829,85 @@ function Summary({
         )}
       </Box>
     </Flex>
+  );
+}
+
+/**
+ * Kerek végösszeg kedvezmény (backlog-16). A `Summary` ÉS az `ElolegBlokk`
+ * KÖZÖTT áll: az előleg a CSÖKKENTETT végösszegből számol, a vizuális
+ * sorrend kövesse a számítási sorrendet.
+ *
+ * A doki a kívánt CÉL-VÉGÖSSZEGET gépeli be, de a `Plan`-en fix
+ * `kedvezmenyOsszeg` tárolódik (D25) -- ugyanaz a "egyetlen nullázható mező
+ * hordozza a kapcsoló állapotát ÉS az értéket" minta, mint az
+ * `ElolegBlokk`-nál. A `NumberField`-nek nincs `max` propja (a `min` ott
+ * revert, nem clamp), ezért a felső határ (a cél nem lehet nagyobb a sorok
+ * összegénél) az `onCommit`-ben, ugyanúgy, ahogy az előleg 0-100 szorítása.
+ */
+function KerekVegosszegBlokk({
+  sorszintuOsszeg,
+  currency,
+  kedvezmenyOsszeg,
+  onChange,
+}: {
+  sorszintuOsszeg: number;
+  currency: Penznem;
+  kedvezmenyOsszeg: number | null;
+  onChange: (next: number | null) => void;
+}) {
+  const be = kedvezmenyOsszeg != null;
+  // A tényleges (0-ra padlózott) Fizetendő -- ez a mező kiinduló/megjelenő
+  // értéke, nem a nyers `kedvezmenyOsszeg - sorszintuOsszeg` levonás, ami
+  // negatívba fordulhatna a sorok utólagos törlésekor (backlog-16, a terv
+  // 8. döntésétől jóváhagyott eltérés).
+  const celVegosszeg = be ? Math.max(0, sorszintuOsszeg - kedvezmenyOsszeg) : sorszintuOsszeg;
+  const tulLog = be && kedvezmenyOsszeg > sorszintuOsszeg;
+
+  return (
+    <Box mt="3">
+      <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Checkbox
+          checked={be}
+          onCheckedChange={(checked) => onChange(checked === true ? 0 : null)}
+        />
+        Kerek végösszeg beállítása
+      </Text>
+
+      {be && (
+        <Box mt="2">
+          <Flex justify="between" align="center" gap="3">
+            <Text size="2" color="gray">
+              Cél végösszeg
+            </Text>
+            <Box style={{ width: 120 }}>
+              <NumberField
+                value={celVegosszeg}
+                min={0}
+                unit={currency}
+                aria-label="Cél végösszeg"
+                textAlign="right"
+                // 0 <= cél <= a sorok nyers összege -- a mező kizárólag
+                // kedvezményre való, felárra nem (a terv 5. döntése).
+                onCommit={(v) =>
+                  onChange(
+                    sorszintuOsszeg - Math.min(sorszintuOsszeg, Math.max(0, Math.round(v))),
+                  )
+                }
+              />
+            </Box>
+          </Flex>
+          <Text as="div" size="2" color="gray" mt="1" style={{ textAlign: 'right' }}>
+            → {formatMoney(kedvezmenyOsszeg, currency)} kedvezmény
+          </Text>
+          {tulLog && (
+            <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
+              A beállított kedvezmény nagyobb, mint a tételek összege — a fizetendő 0. Írd be
+              újra a kerek végösszeget.
+            </Text>
+          )}
+        </Box>
+      )}
+    </Box>
   );
 }
 

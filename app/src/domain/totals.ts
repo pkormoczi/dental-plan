@@ -21,6 +21,28 @@ export function fazisListaOsszeg(fazis: Fazis): number {
   return fazis.sorok.reduce((sum, sor) => sum + sorListaOsszeg(sor), 0);
 }
 
+export function sorokOsszeg(fazisok: Fazis[]): number {
+  return fazisok.reduce((sum, f) => sum + fazisOsszeg(f), 0);
+}
+
+export function sorokListaOsszeg(fazisok: Fazis[]): number {
+  return fazisok.reduce((sum, f) => sum + fazisListaOsszeg(f), 0);
+}
+
+/**
+ * A terv tényleges végösszege (Fizetendő): a sorok összege mínusz a
+ * terv-szintű kedvezmény (backlog-16). Ez az EGYETLEN hely, ahol a
+ * Fizetendő eldől -- a szerkesztő, a nyomtatvány és a `computeOsszesitok`
+ * is ezt hívja.
+ *
+ * SOHA nem ad negatívat: a kedvezmény fix összeg (D25), tehát utólagos
+ * sortörléskor a sorok összege fölé kerülhet -- ilyenkor 0 a fizetendő,
+ * nem negatív szám az aláírandó papíron. A szerkesztő ezt külön jelzi.
+ */
+export function tervVegosszeg(fazisok: Fazis[], kedvezmenyOsszeg?: number | null): number {
+  return Math.max(0, sorokOsszeg(fazisok) - (kedvezmenyOsszeg ?? 0));
+}
+
 /** Az előleg alapértelmezett százaléka, amikor a doki bekapcsolja a jelölőt. */
 export const ELOLEG_ALAP_SZAZALEK = 50;
 
@@ -46,9 +68,12 @@ export function elolegOsszegek(fizetendo: number, szazalek: number): ElolegOssze
   return { eloleg, fennmarado: fizetendo - eloleg };
 }
 
-export function computeOsszesitok(fazisok: Fazis[]): Osszesitok {
-  const kezelesekOsszesen = fazisok.reduce((sum, f) => sum + fazisListaOsszeg(f), 0);
-  const fizetendo = fazisok.reduce((sum, f) => sum + fazisOsszeg(f), 0);
+export function computeOsszesitok(
+  fazisok: Fazis[],
+  kedvezmenyOsszeg?: number | null,
+): Osszesitok {
+  const kezelesekOsszesen = sorokListaOsszeg(fazisok);
+  const fizetendo = tervVegosszeg(fazisok, kedvezmenyOsszeg);
   return {
     kezelesekOsszesen,
     kedvezmeny: kezelesekOsszesen - fizetendo,
@@ -64,8 +89,12 @@ export function computeOsszesitok(fazisok: Fazis[]): Osszesitok {
  * egyébként az újraszámolt érték, hogy a hívó megjeleníthesse a diffet.
  * SOHA nem írja felül a mentett `osszesitok`-ot (D7: a snapshot az igazság).
  */
-export function osszesitokElter(mentett: Osszesitok, fazisok: Fazis[]): Osszesitok | null {
-  const ujraszamolt = computeOsszesitok(fazisok);
+export function osszesitokElter(
+  mentett: Osszesitok,
+  fazisok: Fazis[],
+  kedvezmenyOsszeg?: number | null,
+): Osszesitok | null {
+  const ujraszamolt = computeOsszesitok(fazisok, kedvezmenyOsszeg);
   const egyezik =
     ujraszamolt.kezelesekOsszesen === mentett.kezelesekOsszesen &&
     ujraszamolt.kedvezmeny === mentett.kedvezmeny &&

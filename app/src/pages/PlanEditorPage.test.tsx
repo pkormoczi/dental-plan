@@ -203,6 +203,63 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(screen.getByText('17 500 Ft')).toBeInTheDocument();
   });
 
+  // backlog-16: az alku lezárásakor a doki eddig fejben osztotta vissza a
+  // sorokat, hogy a papíron kerek végösszeg jöjjön ki.
+  describe('a kerek végösszeg kapcsoló', () => {
+    async function felvesz(user: ReturnType<typeof userEvent.setup>) {
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+    }
+
+    it('alapból ki van kapcsolva, bekapcsolva a jelenlegi végösszeget mutatja, kedvezmény nélkül', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      expect(screen.queryByLabelText('Cél végösszeg')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('checkbox', { name: /Kerek végösszeg beállítása/ }));
+
+      const cel = await screen.findByLabelText('Cél végösszeg');
+      expect(cel).toHaveValue('25000');
+      expect(screen.getByText(/→ 0 Ft kedvezmény/)).toBeInTheDocument();
+    });
+
+    it('kisebb cél végösszeg beírása után a Summary "Kedvezmény" sora az összevont értéket mutatja', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /Kerek végösszeg beállítása/ }));
+      const cel = await screen.findByLabelText('Cél végösszeg');
+      await user.clear(cel);
+      await user.type(cel, '20000');
+      await user.tab();
+
+      expect(await screen.findByText(/→ 5000 Ft kedvezmény/)).toBeInTheDocument();
+      // A Summary "Kedvezmény" sora a mai (sorszintű) számítást használja --
+      // terv-szintű kedvezménnyel automatikusan az összevont értéket mutatja.
+      expect(screen.getByText(/Kedvezmény: 5000 Ft/)).toBeInTheDocument();
+    });
+
+    it('a sorok összege fölé írt cél a felső határra szorítódik (nincs felár ezen az úton)', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /Kerek végösszeg beállítása/ }));
+      const cel = await screen.findByLabelText('Cél végösszeg');
+      await user.clear(cel);
+      await user.type(cel, '30000');
+      await user.tab();
+
+      expect(cel).toHaveValue('25000');
+      expect(screen.getByText(/→ 0 Ft kedvezmény/)).toBeInTheDocument();
+    });
+  });
+
   it('shows the non-blocking tooth-count mismatch warning without preventing entry', async () => {
     const user = userEvent.setup();
     renderEditor();

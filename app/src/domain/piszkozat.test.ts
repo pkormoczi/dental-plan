@@ -125,6 +125,13 @@ describe('piszkozatTartalmas', () => {
     expect(piszkozatTartalmas({ ...plan, elolegSzazalek: 50 })).toBe(true);
   });
 
+  // backlog-16: ugyanaz a minta, mint az előlegnél -- a kapcsoló bekapcsolása
+  // (kedvezmenyOsszeg: 0) önmagában is védendő tartalom.
+  it('is true once the kerek végösszeg switch is turned on, even with nothing else filled in', () => {
+    const plan = createBlankPlan(settings, priceList);
+    expect(piszkozatTartalmas({ ...plan, kedvezmenyOsszeg: 0 })).toBe(true);
+  });
+
   it('is NOT affected by nyelv/penznem toggles alone (két kattintás, nem gépelt munka)', () => {
     const plan = createBlankPlan(settings, priceList);
     expect(piszkozatTartalmas({ ...plan, nyelv: 'de', penznem: 'EUR' })).toBe(false);

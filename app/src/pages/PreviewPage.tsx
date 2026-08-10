@@ -219,7 +219,7 @@ export default function PreviewPage() {
         // A most az előnézetben LÁTOTT (legfrissebb) nyilatkozat-verzió
         // pinnelődik -- lásd a fenti useEffect kommentjét.
         sablonVerzio: nyilatkozatVerzio,
-        osszesitok: computeOsszesitok(plan.fazisok),
+        osszesitok: computeOsszesitok(plan.fazisok, plan.kedvezmenyOsszeg),
       };
       const bytes = new Uint8Array(await pdfInstance.blob.arrayBuffer());
       const ref = await storage.savePlan(finalPlan, bytes);

@@ -114,6 +114,17 @@ export interface Plan {
    * `Fizetendő` sor is. `schemaVersion` nem emelkedett, a mező opcionális.
    */
   elolegSzazalek?: number | null;
+  /**
+   * Terv-szintű kedvezmény: a sorok összegéből LEVONT fix összeg, amivel a
+   * doki kerek végösszegre zárja az alkut. `null` (vagy hiányzó mező egy
+   * régi `terv.json`-ben) = nincs terv-szintű kedvezmény. FIX ÖSSZEG
+   * tárolódik, nem a begépelt cél-végösszeg (D25) -- különben egy utólagos
+   * sormódosítás némán átírná a kedvezményt. Ne keverd a
+   * `plan.osszesitok.kedvezmeny`-nyel: az a KIMENET (sor- és terv-szintű
+   * eltérés a listaártól együtt), ez a BEMENET. `schemaVersion` nem
+   * emelkedett, a mező opcionális.
+   */
+  kedvezmenyOsszeg?: number | null;
 }
 
 export interface Rendelo {

@@ -201,3 +201,47 @@ describe('TervDocument -- backlog-9: előleg-sor', () => {
     expect(screen.getByText('Restbetrag')).toBeInTheDocument();
   });
 });
+
+describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmény', () => {
+  function renderKerekVegosszeg(kedvezmenyOsszeg: number | null, elolegSzazalek: number | null = null) {
+    // AZONOS_AR: nincs sorszintű eltérés -- a "Kezelések összesen" sor
+    // megjelenése kizárólag a terv-szintű kedvezménynek tulajdonítható.
+    const plan = buildPlan(false, 'hu', AZONOS_AR);
+    plan.kedvezmenyOsszeg = kedvezmenyOsszeg;
+    plan.elolegSzazalek = elolegSzazalek;
+    return render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly
+        nyilatkozatMd=""
+        fizetesiFeltetelekMd=""
+        toothChartPng={null}
+      />,
+    );
+  }
+
+  it('terv-szintű kedvezmény önmagában (sorszintű eltérés nélkül) is megnyitja a kétsoros összegzést', () => {
+    renderKerekVegosszeg(5000);
+    expect(screen.getByText('Kezelések összesen')).toBeInTheDocument();
+    // A listaár (45 000 Ft) a soron, a fázisösszegzőn ÉS a referenciasoron is
+    // megjelenik (a sorszintű ár változatlan, csak a terv-szintű Fizetendő
+    // csökken) -- ezért getAllByText, a "Fizetendő" 40 000 Ft-ja viszont
+    // egyedi, csak azon az egy soron jelenik meg.
+    expect(screen.getAllByText('45 000 Ft').length).toBeGreaterThan(0);
+    expect(screen.getByText('40 000 Ft')).toBeInTheDocument();
+  });
+
+  it('kedvezmény nélkül (null) a viselkedés változatlan', () => {
+    renderKerekVegosszeg(null);
+    expect(screen.queryByText('Kezelések összesen')).not.toBeInTheDocument();
+    expect(screen.getAllByText('45 000 Ft').length).toBeGreaterThan(0);
+  });
+
+  it('az előleg a CSÖKKENTETT végösszegből számol', () => {
+    renderKerekVegosszeg(5000, 50);
+    // 40 000 Ft fizetendő -> 20 000 / 20 000, nem a 45 000-ből számolt 22 500.
+    expect(screen.getAllByText('20 000 Ft')).toHaveLength(2);
+  });
+});

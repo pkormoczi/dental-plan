@@ -533,6 +533,35 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   német tétellel rendelkező német terv csendben átugrotta a német
   figyelmeztetést. Lásd git history a részletes commitért.
 
+### 16. Terv-szintű „kerek végösszeg" kedvezmény — KÉSZ (2026-08-10)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — a D8 (kedvezmény külön tárolva, mérhetően)
+  kifejezetten támogatja.
+- **Valódi haszon:** bevétel + időmegtakarítás — az alku zárása („legyen
+  kereken 2 050 000") korábban soronkénti visszaosztás volt számológéppel
+  a páciens előtt.
+- **20%-os verzió:** nem készült önállóan — a teljes megoldás (fix
+  kedvezmény-összeg tárolása + a végösszeg soha nem negatív) egy
+  összefüggő döntéssorozat volt.
+- **Megvalósítás:** additív, opcionális `Plan.kedvezmenyOsszeg` mező (az
+  `elolegSzazalek` precedense szerint, `schemaVersion` marad 1) —
+  `docs/02-domain-modell.md` § Terv-szintű kedvezmény, D25
+  (`docs/01-attekintes-es-dontesek.md`). A doki a szerkesztőben egy
+  cél-végösszeget gépel be, az app ebből egyszer kiszámolja és FIX
+  összegként tárolja a kedvezményt — így egy utólagos sormódosítás soha
+  nem írja át némán. Új `tervVegosszeg(fazisok, kedvezmenyOsszeg)`
+  (`domain/totals.ts`) az EGYETLEN hely, ahol a Fizetendő eldől — a
+  szerkesztő, a nyomtatvány és a `computeOsszesitok()`/`osszesitokElter()`
+  mind ezt hívja; korábban a sorok nyers összege három helyen,
+  egymástól függetlenül számolódott újra. Soha nem ad negatívat (0-ra
+  padlóz egy utólagos sortörlés esetén, a szerkesztő ezt jelzi is). A
+  nyomtatványon a meglévő feltételes kétsoros összegzés
+  (`docs/04-nyomtatvany-spec.md` § Összegzés) nyílik meg a terv-szintű
+  kedvezménytől is, sorszintű eltérés nélkül; a kedvezmény összege
+  továbbra sem jelenik meg (D9), és az előleg a csökkentett összegből
+  számol.
+
 ---
 
 ## Technikai adósság (a 2026-08-06-i kódreview nyitva maradt tételei)
