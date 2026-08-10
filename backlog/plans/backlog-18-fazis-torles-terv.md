@@ -1,6 +1,6 @@
 # Backlog 18. tétel — Fázis törlése megerősítéssel — döntési összefoglaló
 
-Ez a fájl a `docs/08-backlog.md` 18. tételének („Fázis törlése
+Ez a fájl a `backlog/BACKLOG.md` 18. tételének („Fázis törlése
 megerősítéssel") megbeszélt megvalósítási döntéseit rögzíti,
 implementáció-indításhoz. Nem tartalmaz kódot vagy függvényszignatúrákat
 — az implementáció módja és a részletek kidolgozása a megvalósító
@@ -136,8 +136,8 @@ törölhető" viselkedés a refaktor után is megmaradjon.
   a fázistörlésről szól; egyetlen sor törlése nem "többsoros,
   helyreállíthatatlan adatvesztés", a meglévő egy-kattintásos viselkedés
   marad.
-- **Általános undo/visszavonás** — lásd `docs/08-backlog.md` SOHA lista;
-  ez a tétel (a piszkozat-autosave-vel együtt) töredékáron fedi a valós
+- **Általános undo/visszavonás** — lásd `backlog/BACKLOG.md` EGYÉB ötletek
+  lista; ez a tétel (a piszkozat-autosave-vel együtt) töredékáron fedi a valós
   esetet egy teljes undo-rendszer nélkül.
 - **A törölt fázis tartalmának ideiglenes megőrzése/visszaállítása**
   (pl. "visszavonás" toast a törlés után) — ugyanaz az indoklás, mint

@@ -199,7 +199,7 @@ Soha nem commitonként, soha nem automatikusan.
 
 `docs/reviews/YYYY-MM-DD-browser-validation.md`, a `code-and-architecture-review`
 skill konvenciója szerint (`Kritikus`/`Közepes`/`Apró` súlyosság). Átmeneti
-munkatermék: a valódi találatok átvándorolnak a `docs/08-backlog.md`-be, utána
+munkatermék: a valódi találatok átvándorolnak a `backlog/BACKLOG.md`-be, utána
 a jelentés törölhető.
 
 Ha egy találat **egyértelmű, kicsi, célzott** `docs/07`/`docs/04` szabálysértés

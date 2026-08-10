@@ -1,6 +1,6 @@
 # Backlog 23. tétel — Egyedi sor pontosabb megnevezése a német véglegesítés-őrben — döntési összefoglaló
 
-Ez a fájl a `docs/08-backlog.md` 23. tételének („Egyedi sor pontosabb
+Ez a fájl a `backlog/BACKLOG.md` 23. tételének („Egyedi sor pontosabb
 megnevezése a német véglegesítés-őrben") megbeszélt megvalósítási
 döntéseit rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat (a lenti aláírás-szerű részletek csak

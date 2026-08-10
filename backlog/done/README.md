@@ -1,9 +1,10 @@
-# Archívum
+# Lezárt tételek
 
 Ez a mappa lezárt, történeti anyag: a teljesen megvalósított backlog-tételek
-tömör összefoglalója (`08-backlog-closed.md`, folyamatosan bővülő napló,
+tömör összefoglalója (`BACKLOG_DONE.md`, folyamatosan bővülő napló,
 az első kör doktor-nap narratívájával és architekt-triázzsal együtt) és a
-hozzájuk tartozó döntési összefoglalók (`backlog/`).
+hozzájuk tartozó döntési összefoglalók (a lezárt `backlog-N-*-terv.md`
+fájlok, lezáráskor a `backlog/plans/`-ból idekerülve).
 
 Egy tétel akkor kerül ide, amikor a `CLAUDE.md` „Backlog-tétel lezárása"
 checklistje szerint lezárul: a tartósan érvényes döntései előtte bekerülnek

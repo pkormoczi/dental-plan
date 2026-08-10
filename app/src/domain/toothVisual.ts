@@ -9,9 +9,8 @@
 // oldódik fel -- ez szándékosan feszíti a D7 pillanatkép-elvét (lásd
 // CLAUDE.md), de csak a SZÍN kozmetikai szinten: a `nevSnapshot` és az árak
 // továbbra is a felvétel pillanatát tükrözik, változatlanul. Ha egy sor
-// `tetelId`-je nincs a mai árlistában (pl. a demó tervek hibás id-jai,
-// docs/08-backlog.md 14. tétel), a fog semleges "Egyéb" színt kap, és ezt a
-// `hianyzoTetel` jelzi -- nem tűnhet el némán.
+// `tetelId`-je nincs a mai árlistában, a fog semleges "Egyéb" színt kap, és
+// ezt a `hianyzoTetel` jelzi -- nem tűnhet el némán.
 
 import { parseTeeth } from './teeth';
 import type { Plan, PriceList, Sor } from './types';

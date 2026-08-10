@@ -1,6 +1,6 @@
 # Backlog 25. tétel — Páciens-entitás a Korábbi tervek fájában — döntési összefoglaló
 
-Ez a fájl a `docs/08-backlog.md` 25. tételének megbeszélt megvalósítási
+Ez a fájl a `backlog/BACKLOG.md` 25. tételének megbeszélt megvalósítási
 döntéseit rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek kidolgozása
 a megvalósító feladata.

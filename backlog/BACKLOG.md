@@ -1,4 +1,4 @@
-# 8. Backlog — még fejlesztendő (2. kör, 2026-08-09)
+# Backlog
 
 Ez a fájl az első kör backlogjának **nyitott** tételeit és a második
 termékreview-kör architekt-triázsának tételeit fésüli össze. Az első kör
@@ -46,7 +46,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
   az explicit páciens-azonosítás nem bontható kisebb, önmagában is
   hasznos darabra anélkül, hogy a névegyezés-heurisztika kockázatait
   (téves összevonás/szétválasztás) örökölné.
-- **Terv:** `docs/backlog-25-paciens-entitas-terv.md` (7 döntés).
+- **Terv:** `backlog/plans/backlog-25-paciens-entitas-terv.md` (7 döntés).
 
 ### 2. hely — 18. tétel: Fázis törlése megerősítéssel
 
@@ -57,9 +57,9 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
 - **Valódi haszon:** hibacsökkentés — ez az egyetlen egy-kattintásos,
   többsoros, helyreállíthatatlan adatvesztés a szerkesztőben, és a
   piszkozat-autosave azonnal rögzíti is. Az általános undo tudatosan nem
-  ez a tétel (lásd SOHA).
+  ez a tétel (lásd EGYÉB ötletek).
 - **20%-os verzió:** nincs kisebb — ez már a minimális védelem.
-- **Terv:** `docs/backlog-18-fazis-torles-terv.md` (6 döntés).
+- **Terv:** `backlog/plans/backlog-18-fazis-torles-terv.md` (6 döntés).
 
 ### 3. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
@@ -74,7 +74,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
   dokumentumra; ugyanez véd az egyedi soron elfelejtett ár ellen.
 - **20%-os verzió:** ez maga a 20% — az egyedi-sor-felvétel megerősítése
   rosszabb lenne, mert eltörné a billentyűzetes ciklust.
-- **Terv:** `docs/backlog-19-nulla-forint-terv.md` (7 döntés).
+- **Terv:** `backlog/plans/backlog-19-nulla-forint-terv.md` (7 döntés).
 
 ### 4. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
 
@@ -89,7 +89,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
   előtag egyben a „kiadott, de nem archivált PDF" audit-lyuk (KÉSŐBB:
   vízjel) olcsó első védvonala.
 - **20%-os verzió:** ez maga a 20%.
-- **Terv:** `docs/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
+- **Terv:** `backlog/plans/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
 
 ### 5. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
@@ -104,7 +104,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
   hivatkozási pont.
 - **20%-os verzió:** ez maga a 20% (egy kézi „árlista-verzió kiadása"
   fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
-- **Terv:** `docs/backlog-21-arlista-verzio-terv.md` (5 döntés).
+- **Terv:** `backlog/plans/backlog-21-arlista-verzio-terv.md` (5 döntés).
 
 ### 6. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
@@ -117,7 +117,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
   mappán át.
 - **20%-os verzió:** ez maga a 20% (beépített olvasó nézet felesleges, a
   böngésző PDF-nézője elég).
-- **Terv:** `docs/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
+- **Terv:** `backlog/plans/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
 ### 7. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
@@ -130,7 +130,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
   egyedi sorra ma az őr „farkast kiált", és a hamis riasztás pont ott
   koptatja a riasztás hitelét, ahol a valódi találat komoly.
 - **20%-os verzió:** ez maga a 20%.
-- **Terv:** `docs/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
+- **Terv:** `backlog/plans/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
 
 ### 8. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
 
@@ -209,7 +209,7 @@ Hasznosság szerint sorrendezve:
   doki-nap szerint Excelhez visszaűző fájdalma (ma egyetlen
   piszkozat-slot van, a többi munka telefonfotóra kerül). A helyes út
   **nem** a `DraftStorage` többrekeszessé tétele (az a „nem válhat system
-  of recorddá" szabályt sértené — lásd SOHA), hanem „Mentés
+  of recorddá" szabályt sértené — lásd EGYÉB ötletek), hanem „Mentés
   piszkozatként" a meglévő `savePlan` append-only útján (`statusz:
   'PISZKOZAT'` verziómappa — a mező pont erre létezik, ma soha nem
   íródik), „piszkozat" jelvénnyel a Korábbi terveknél. 1–1.5 nap +
@@ -253,7 +253,7 @@ Hasznosság szerint sorrendezve:
 
 ---
 
-## SOHA — hangzatos, de nem éri meg, vagy sérti a kereteket
+## EGYÉB ötletek — hangzatos, de nem éri meg, vagy sérti a kereteket
 
 - **Kétnyelvű dupla-dokumentum egy tervből** (német ajánlat + magyar
   aláírható) *(2. kör)* — azonos tervazonosítójú, eltérő tartalmú

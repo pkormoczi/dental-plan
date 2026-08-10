@@ -5,14 +5,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repo elrendezés
 
 ```
-docs/     8 fő dokumentum (01–08, lásd térkép alul) + nyitott backlog-tervek
-          (`backlog-N-*-terv.md`) + archive/ (lezárt anyag, nem hivatkozott)
+docs/     7 fő dokumentum (01–07, lásd térkép alul)
+backlog/  BACKLOG.md (nyitott tételek) + plans/ (nyitott tervdokumentumok) +
+          done/ (BACKLOG_DONE.md zárt-napló + lezárt tervdokumentumok, lásd
+          „Backlog-tétel lezárása")
 data/     arlista.seed.json (118 tétel), az eredeti .xls
 assets/   márkalogó, navy eredeti (PNG + eredeti PDF-ek) — az app egy átszínezett másolatot használ
 app/      a tényleges Vite + React + TypeScript alkalmazás — IDE dolgozz
 ```
 
 Az `app/`-on kívüli minden más csak referencia és dokumentáció.
+
+**A `docs/` és a `backlog/` szerepe élesen elválik.** Minden tartósan
+érvényes, élő dokumentáció és döntés a `docs/`-ban él (D-tábla,
+funkcionális/nyomtatvány/technológia szakaszok) — ez az egyetlen forrás,
+aminek self-containednek kell maradnia. A `backlog/` csak munkaközi állapot:
+nyitott tervek és a lezárási napló, folyamatosan mozgó tartalommal (egy
+nyitott tétel lezáráskor eltűnik a `BACKLOG.md`-ből és átkerül a
+`done/`-ba). **Forráskód-kommentek soha nem hivatkozhatnak a `backlog/`
+mappa semelyik fájljára** — sem a `BACKLOG.md`-re, sem a `plans/`-ra, sem a
+`done/`-ra, nyitott vagy lezárt tételtől függetlenül. Ha egy kódrészlet
+mögötti döntést dokumentálni kell, az anchor mindig egy `docs/0X` szakasz
+vagy egy D-szám; ha a döntés még nincs migrálva `docs/`-ba (a tétel még
+nyitott), a komment a WHY-t írja le közvetlenül, path-hivatkozás nélkül —
+ne mutasson előre egy még be nem zárt backlog-tételre.
 
 Parancsok (`app/package.json` scripts, mindig `cd app` után):
 `npm run dev` (Vite dev szerver), `npm run build` (`tsc -b && vite build`),
@@ -358,30 +374,35 @@ Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
 döntések (D1–D28) egy helyen, számozva élnek a
 `docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
-háttere külön fájlban, `docs/backlog-<n>-<cim>-terv.md` néven. Amikor egy
-modul vagy komponens "miért így van megcsinálva" kérdés merül fel, először
-nézd meg a `docs/` könyvtárat, mielőtt találgatnál vagy rákérdeznél.
+háttere külön fájlban, `backlog/plans/backlog-<n>-<cim>-terv.md` néven.
+Amikor egy modul vagy komponens "miért így van megcsinálva" kérdés merül
+fel, először nézd meg a `docs/` és a `backlog/` könyvtárat, mielőtt
+találgatnál vagy rákérdeznél.
 
 ## Backlog-tétel lezárása
 
-**A `docs/archive/` mappára és a benne lévő fájlokra sehonnan sem szabad
+**A `backlog/done/` mappára és a benne lévő fájlokra sehonnan sem szabad
 hivatkozni** — sem `docs/*.md`-ből, sem forráskódból, sem ebből a
-fájlból. Kivétel: a `docs/08-backlog.md` NYITOTT tételeinek `**Terv:**`
-sora a még nyitott (nem archivált) tervfájlra mutathat — ez lezárásig élő
-navigáció, és lezáráskor a 4. lépéssel együtt, magával a tétellel tűnik
-el, nem marad dangling pointerként.
+fájlból. Kivétel: a `backlog/BACKLOG.md` NYITOTT tételeinek `**Terv:**`
+sora a még nyitott (a `backlog/plans/` alatt élő) tervfájlra mutathat —
+ez lezárásig élő navigáció, és lezáráskor a 4. lépéssel együtt, magával a
+tétellel tűnik el, nem marad dangling pointerként.
 
 Egy backlog-tétel megvalósítása után ezt a sorrendet kell követni,
 ugyanabban a körben, nem később:
 
-1. **Csak teljesen kész tételnél.** Ha a tétel csak részben kész (pl.
-   kódrész kész, doktori adatmunka nyitva), a tétel a `docs/08-backlog.md`-ben
-   marad, „**Kódrész — KÉSZ (dátum).**" bekezdéssel + „Még nyitva"
-   albekezdéssel jelölve. **Nem archiválunk, nem törlünk semmit**, amíg a
-   tétel csak részben kész — ha a maradék tisztán doktori adatmunka (nincs
-   hozzá kódfeladat), az önálló, kódot nem igénylő backlog-tételként is
-   kiválhat, és a kódrész ekkor a szokásos módon lezárható.
-2. **Döntések átvezetése.** A tervdokumentum (`docs/backlog-N-*-terv.md`)
+1. **Lezárás, amint a tétel eldöntött hatóköre kész.** Amint a tétel
+   eldöntött munkája (jellemzően a kódrész) elkészült, a tétel **teljesen
+   lezárul** — a 2–5. lépés szerint, azonnal, ugyanabban a körben. Nem
+   marad nyitva „Kódrész — KÉSZ" + „Még nyitva" jelöléssel, akkor sem, ha
+   marad hátra kapcsolódó, de különálló munka (pl. tisztán doktori
+   adatmunka, kódot nem igénylő feladat). A maradék **új, önálló
+   backlog-tételként** kerül be a `backlog/BACKLOG.md`-be, saját új
+   sorszámmal és a szokásos triázs-blokkal (Méret/Kereteket sért?/Valódi
+   haszon/20%-os verzió), a leírásában egy mondattal hivatkozva arra,
+   melyik lezárt tételből vált le — ahogy a 24. tétel is a korábban lezárt
+   tételek (8., 13.) visszamaradt doktori adatmunkájából állt össze.
+2. **Döntések átvezetése.** A tervdokumentum (`backlog/plans/backlog-N-*-terv.md`)
    döntéseiből, ami tartósan érvényes (nem feladatlista, nem elvetett
    alternatíva, nem teszt-terv), az bekerül a megfelelő `docs/02`–`07`
    szakaszba prózaként; a valóban sérthetetlen invariáns új sorként a
@@ -390,20 +411,20 @@ ugyanabban a körben, nem később:
    táblába is. Ha a tétel új, újrahasznosítható segédfüggvényt vezetett
    be, egy új bekezdés kerül a „Meglévő segédfüggvények" alá, a meglévők
    mintájában (docs-anchorra/D-számra hivatkozva, SOHA a terv-fájlra).
-3. **Tervdokumentum archiválása.** `git mv docs/backlog-N-*.md
-   docs/archive/backlog/`. A tétel száma (N) ezután véglegesen
-   nyugdíjazva — soha nem osztható ki új tételnek, ugyanaz az elv, mint a
-   D17 ártétel-`id`-nél.
+3. **Tervdokumentum archiválása.** `git mv backlog/plans/backlog-N-*.md
+   backlog/done/`. A tétel száma (N) ezután véglegesen nyugdíjazva —
+   soha nem osztható ki új tételnek, ugyanaz az elv, mint a D17
+   ártétel-`id`-nél.
 4. **Backlog-bejegyzés törlése + zárt-napló bővítése.** A tétel teljes
-   szakasza törlődik a `docs/08-backlog.md`-ből (nem jelöljük KÉSZ-nek, nem
+   szakasza törlődik a `backlog/BACKLOG.md`-ből (nem jelöljük KÉSZ-nek, nem
    hagyunk stub-ot) — a maradék tételek „N. hely" rangsorát
    újraszámozzuk. Egy tömör összefoglaló (méret, a végleges megoldás 1-2
    mondatban, `docs/0X` hivatkozás a részletekhez) bekerül a
-   `docs/archive/08-backlog-closed.md` végére — ez a bejegyzés NEM
+   `backlog/done/BACKLOG_DONE.md` végére — ez a bejegyzés NEM
    hivatkozhat a most archivált terv-fájlra, csak a fő dokumentumokra és a
    git history-ra.
 5. **Referencia-seprés.** Minden helyen (forráskód-kommentek, ez a fájl,
-   `docs/*.md`), ahol a most archivált terv-fájlra vagy a `docs/archive/`
+   `docs/*.md`), ahol a most archivált terv-fájlra vagy a `backlog/done/`
    mappára mutató hivatkozás volt, át kell írni a megfelelő `docs/0X`
    szakaszra vagy D-számra.
 6. **CHANGELOG.** Ha a tétel a pácienst/dokit érintő, felhasználó-szemszögű
@@ -423,5 +444,5 @@ ugyanabban a körben, nem később:
 | `docs/05-technologia.md` | Stack, `PlanStorage` interface, PDF generálás, sémaverziózás, hosztolás |
 | `docs/06-arlista-import.md` | Az Excel-import szabályai, ismert szennyeződések, mit ne javíts az importban |
 | `docs/07-felulet-rendszer.md` | Felület- és nyomtatvány-kinézeti szabályok: márkatokenek, komponensek, billentyűzet, akadálymentesség — kötelező, nem javaslat |
-| `docs/08-backlog.md` | Még fejlesztendő tételek (priorizálva), technikai adósság, és honnan jönnek az igények |
-| `docs/backlog-N-*-terv.md` | Egy nyitott backlog-tétel részletes döntései — a `docs/08-backlog.md` tétel `**Terv:**` sora mutat rá; lezáráskor a `docs/archive/backlog/`-ba költözik és eltűnik a listából (lásd „Backlog-tétel lezárása") |
+| `backlog/BACKLOG.md` | Még fejlesztendő tételek (priorizálva), technikai adósság, és honnan jönnek az igények |
+| `backlog/plans/backlog-N-*-terv.md` | Egy nyitott backlog-tétel részletes döntései — a `backlog/BACKLOG.md` tétel `**Terv:**` sora mutat rá; lezáráskor a `backlog/done/`-ba költözik és eltűnik a listából (lásd „Backlog-tétel lezárása") |

@@ -1,6 +1,6 @@
 # Backlog 22. tétel — Régi terv megnyitása új lapon (csak megnézés) — döntési összefoglaló
 
-Ez a fájl a `docs/08-backlog.md` 22. tételének („Régi terv megnyitása új
+Ez a fájl a `backlog/BACKLOG.md` 22. tételének („Régi terv megnyitása új
 lapon (csak megnézés)") megbeszélt megvalósítási döntéseit rögzíti,
 implementáció-indításhoz. Nem tartalmaz kódot vagy függvényszignatúrákat
 (a lenti aláírás-szerű részletek csak illusztrációk) — az implementáció
@@ -89,8 +89,8 @@ a fel nem szabadított blob-ok memória-lábnyoma egy munkanapon belül
 elhanyagolható (egy teljes oldal-újratöltés/tab-bezárás úgyis
 felszabadítja). Egy követő state-map bevezetése új állapotot és
 élettartam-kezelést adna egy a gyakorlatban elhanyagolható hatásért —
-összhangban a projekt más helyein (pl. `docs/08-backlog.md` SOHA lista,
-„Általános undo") is kimondott elvvel, hogy egyszemélyes rendelőben a
+összhangban a projekt más helyein (pl. `backlog/BACKLOG.md` EGYÉB ötletek
+lista, „Általános undo") is kimondott elvvel, hogy egyszemélyes rendelőben a
 ritka, alacsony kárú éleseteket nem érdemes túl-mérnökösíteni.
 
 ### 5. Gomb szövege és helye: „Megnézés", a `⋯` menü ELSŐ eleme

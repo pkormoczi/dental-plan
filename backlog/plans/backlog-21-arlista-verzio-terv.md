@@ -1,6 +1,6 @@
 # Backlog 21. tétel — `arlistaVerzio` léptetése admin-mentéskor — döntési összefoglaló
 
-Ez a fájl a `docs/08-backlog.md` 21. tételének („`arlistaVerzio` léptetése
+Ez a fájl a `backlog/BACKLOG.md` 21. tételének („`arlistaVerzio` léptetése
 admin-mentéskor") megbeszélt megvalósítási döntéseit rögzíti,
 implementáció-indításhoz. Nem tartalmaz kódot vagy függvényszignatúrákat
 (a lenti aláírás-szerű részletek csak illusztrációk) — az implementáció

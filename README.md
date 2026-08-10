@@ -31,7 +31,7 @@ A tervezési fázis (ez a dokumentumcsomag) lezárult, az implementáció az
 | `docs/05-technologia.md` | Stack, `PlanStorage` interface, PDF generálás, deployment |
 | `docs/06-arlista-import.md` | Az Excel árlista importja, a benne lévő hibák, takarítási feladatok |
 | `docs/07-felulet-rendszer.md` | Felület- és nyomtatvány-kinézeti szabályok — kötelező, nem javaslat |
-| `docs/08-backlog.md` | Még fejlesztendő tételek, technikai adósság, honnan jönnek az igények |
+| `backlog/BACKLOG.md` | Még fejlesztendő tételek, technikai adósság, honnan jönnek az igények |
 | `data/arlista.seed.json` | **Kész seed adat** — 118 tétel, 12 kategória, az eredeti Excelből generálva |
 | `assets/mandoki-dental-logo.png` | Márkalogó, átlátszó háttér (navy eredeti — az app egy, a honlap arculatához átszínezett másolatot használ, `app/src/assets/logo.png`) |
 | `app/` | A tényleges implementáció — lásd `CLAUDE.md` |
@@ -79,4 +79,4 @@ működés, szerveroldali komponens.
    szöveg mindkét nyelven (magyarul és németül is), amíg a doki meg nem
    adja a Beállítások → Nyomtatvány szövegei alatt.
 
-A további, még fejlesztendő tételek listája: `docs/08-backlog.md`.
+A további, még fejlesztendő tételek listája: `backlog/BACKLOG.md`.

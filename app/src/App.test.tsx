@@ -156,10 +156,11 @@ describe('Végpontok közötti folyamat', () => {
     expect(saved.sablonVerzio).toBe('nyilatkozat-de-v1');
   }, 20000);
 
-  // docs/08-backlog.md 1. tétel -- ez a tétel valódi próbája: a piszkozat
-  // frissítést/összeomlást éljen túl. `unmount()` + újbóli `render(<App/>)`
-  // egy friss AppStateProvider-t (és benne friss, memóriabeli `plan` state-et)
-  // hoz létre, ugyanazon a `localStorage`-on -- ez modellezi az F5-öt.
+  // docs/03-funkcionalis-spec.md § Autosave -- ez a teszt annak valódi
+  // próbája, hogy a piszkozat frissítést/összeomlást éljen túl. `unmount()`
+  // + újbóli `render(<App/>)` egy friss AppStateProvider-t (és benne friss,
+  // memóriabeli `plan` state-et) hoz létre, ugyanazon a `localStorage`-on
+  // -- ez modellezi az F5-öt.
   it('egy félkész piszkozat túléli az "F5"-öt (unmount + újbóli render, ugyanaz a localStorage)', async () => {
     const user = userEvent.setup();
     const first = render(<App />);
@@ -195,10 +196,9 @@ describe('Végpontok közötti folyamat', () => {
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
   }, 20000);
 
-  // docs/08-backlog.md 2. tétel -- a Függelék A) napi Nagy Éva-jelenet: a
-  // demó seed szerinte v2-je 2026-07-22-i keltezésű, egy visszatérő páciens
-  // új verziója ma mégsem indulhat ezzel a (a mai naphoz képest lejárt)
-  // dátummal.
+  // D22 -- a demó seed szerinti v2 2026-07-22-i keltezésű, egy visszatérő
+  // páciens új verziója ma mégsem indulhat ezzel a (a mai naphoz képest
+  // lejárt) dátummal.
   it('egy korábbi terv megnyitása friss dátummal indítja az új verziót, az árakat érintetlenül hagyva', async () => {
     const user = userEvent.setup();
     render(<App />);

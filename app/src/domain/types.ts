@@ -25,9 +25,9 @@ export interface Kategoria {
   nev: LokalizaltSzoveg;
   sorrend: number;
   /**
-   * Fogtérkép-szín, hex (pl. `#4dabf7`). Additív mező (docs/08-backlog.md 8.
-   * tétel, 15. döntés) — nincs `schemaVersion`-emelés, tehát egy régebbi,
-   * localStorage-ban élő árlistán hiányozhat. Ilyenkor a
+   * Fogtérkép-szín, hex (pl. `#4dabf7`). Additív mező — nincs
+   * `schemaVersion`-emelés (D18), tehát egy régebbi, localStorage-ban élő
+   * árlistán hiányozhat. Ilyenkor a
    * `design/treatmentVisuals.ts` `kategoriaVizual()`-ja semleges szürkére
    * esik vissza, nem hiba — ez az EGYETLEN hely, ahol ez a visszaesés eldől.
    */

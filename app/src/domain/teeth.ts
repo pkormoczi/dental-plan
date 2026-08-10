@@ -38,8 +38,8 @@ export function invalidFdiTokens(input: string | null | undefined): string[] {
  * (pl. "jobb felső") ez a függvény nem tud biztonságosan szerkeszteni.
  *
  * Bekapcsoláskor a végére fűz, kikapcsoláskor MINDEN előfordulást töröl (a
- * `parseTeeth` nem dedupol -- docs/08-backlog.md "parseTeeth nem dedupol"),
- * a megmaradó tokenek sorrendjét megtartja. A kimeneti elválasztó mindig
+ * `parseTeeth` nem dedupol, ismert korlátozás), a megmaradó tokenek
+ * sorrendjét megtartja. A kimeneti elválasztó mindig
  * ", " -- ez a `placeholder`/seed adatban is használt alak (lásd
  * PlanEditorPage.tsx "16, 17, 26" placeholder).
  */

@@ -1,15 +1,16 @@
 # Lezárt backlog-tételek
 
 > **Folyamatosan bővülő napló**, nem egyszeri pillanatkép: ide kerül egy
-> backlog-tétel összefoglalója, amikor a `docs/08-backlog.md`-ből
+> backlog-tétel összefoglalója, amikor a `backlog/BACKLOG.md`-ből
 > „Backlog-tétel lezárása" (lásd `CLAUDE.md`) szerint törlődik, mert
 > teljesen elkészült. **Erre a fájlra sehonnan sem szabad hivatkozni** —
 > sem `docs/*.md`-ből, sem forráskódból, sem a `CLAUDE.md`-ből.
 >
 > Az alábbi, 2026-08-09 előtti szakasz az első kör lezárt anyaga —
 > változatlanul hagyva, szándékosan történeti hűséggel (a belső
-> kereszthivatkozásai a saját `docs/archive/backlog/`-beli tervfájljaira
-> mutatnak, ezek nem íródtak át).
+> kereszthivatkozásai a saját, akkori `docs/archive/backlog/`-beli
+> tervfájljaira mutatnak; 2026-08-11-től ugyanezek a tervfájlok a
+> `backlog/done/` alatt élnek, a szöveg erre nem lett átírva).
 
 Ez a fejezet a jövőbeli munka gyűjtőhelye: a 2026-08-06-i kódreview
 (P0/P1 minden tétele javítva, lásd git history — a nyers review-passzok

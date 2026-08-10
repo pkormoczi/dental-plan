@@ -1,6 +1,6 @@
 # Backlog 20. tétel — Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag — döntési összefoglaló
 
-Ez a fájl a `docs/08-backlog.md` 20. tételének („Letöltési fájlnév:
+Ez a fájl a `backlog/BACKLOG.md` 20. tételének („Letöltési fájlnév:
 páciensnév + „PISZKOZAT" előtag") megbeszélt megvalósítási döntéseit
 rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat (a lenti aláírás-szerű részletek csak
@@ -25,7 +25,7 @@ Bár kódvizsgálat kiderítette, hogy a `PlanHistoryPage`-en megjelenő
 összes mentett verzió MA mindig `statusz: 'VEGLEGES'` (a `storage.savePlan`-t
 kizárólag a `PreviewPage.tsx` `doFinalize`-ja hívja, hardcode-olt
 `statusz: 'VEGLEGES'`-szel — a PISZKOZAT-státuszú verziómappa egy külön,
-még nem épített KÉSŐBB-tétel, lásd `docs/08-backlog.md` „Több félretett
+még nem épített KÉSŐBB-tétel, lásd `backlog/BACKLOG.md` „Több félretett
 terv" pontja), a `PISZKOZAT-` előtag logikáját MOST mindkét helyen
 bevezetjük, nem csak a `PreviewPage`-en.
 
@@ -179,13 +179,13 @@ bevált mintát ugyanehhez a kategóriához.
 
 ## Kapcsolódó, de ebbe a tételbe NEM tartozó dolgok
 
-- **A PISZKOZAT-státuszú verziómappa tétele maga** (`docs/08-backlog.md`
+- **A PISZKOZAT-státuszú verziómappa tétele maga** (`backlog/BACKLOG.md`
   „Több félretett terv" KÉSŐBB-pont) — ez a tétel csak arról gondoskodik,
   hogy a `PlanHistoryPage` fájlnév-logikája már MOST helyesen viselkedjen,
   ha/amikor az a tétel megépül; a piszkozat-verziómappák listázása,
   megjelenítése stb. nem ennek a tételnek a kérdése.
 - **„NEM VÉGLEGES" vizuális jelzés magán a PDF tartalmán/vízjelként**
-  (`docs/08-backlog.md` KÉSŐBB lista) — az egy külön, a nyomtatvány
+  (`backlog/BACKLOG.md` KÉSŐBB lista) — az egy külön, a nyomtatvány
   TARTALMÁT érintő tétel; ez a tétel kizárólag a letöltéskor a
   fájlrendszerbe kerülő FÁJLNÉVről szól.
 - **Az „újranyitott, véglegesített, de még nem újramentett" terv

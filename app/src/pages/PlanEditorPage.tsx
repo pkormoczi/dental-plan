@@ -58,8 +58,9 @@ function csokkentettMozgas(): boolean {
  * Egy árlista-tétel felvételéhez/kitöltéséhez tartozó soradatok -- közös az
  * új sor felvitelénél (`addLine`) és egy a fogtérképről létrehozott, tétel
  * nélküli sor utólagos kitöltésénél (`LineRow` beágyazott `ItemPicker`-je),
- * hogy az árazási logika (SAVOS -> min) egy helyen éljen
- * (docs/08-backlog.md "basePrice() újraírva" tétel zárása).
+ * hogy az árazási logika (SAVOS -> min) egy helyen éljen -- lásd
+ * `domain/money.ts` `basePrice()`, CLAUDE.md "Meglévő segédfüggvények",
+ * ne írd újra.
  */
 function sorMezokTetelbol(
   item: Tetel,

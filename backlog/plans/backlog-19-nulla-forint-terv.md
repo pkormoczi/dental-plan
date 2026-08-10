@@ -1,6 +1,6 @@
 # Backlog 19. tétel — 0 Ft-os sorok puha figyelmeztetése véglegesítéskor — döntési összefoglaló
 
-Ez a fájl a `docs/08-backlog.md` 19. tételének („0 Ft-os sorok puha
+Ez a fájl a `backlog/BACKLOG.md` 19. tételének („0 Ft-os sorok puha
 figyelmeztetése véglegesítéskor") megbeszélt megvalósítási döntéseit
 rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek kidolgozása
