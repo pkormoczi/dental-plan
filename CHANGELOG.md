@@ -4,6 +4,13 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 
 ## 2026. augusztus 10.
 
+- Az Árlista adminban a "+ Új tétel" gomb mostantól a lista tetején is megjelenik (a lista alján
+  is megmaradt), és felugró ablakban kérdez rá a névre és a kategóriára — eddig a kattintás
+  azonnal, névtelenül és az első kategóriába emelt be egy tételt, ami hosszú listánál
+  megtalálhatatlan és zavaró volt. A felugró ablak a kategóriaválasztást kötelezővé teszi (nincs
+  alapértelmezett kitöltés), figyelmeztet, ha már van ugyanilyen nevű tétel, és a Mégse gombra
+  vagy Escapre semmi nem jön létre. Mentés után a lista a friss sorhoz görget, és a fókusz
+  rögtön az ár mezőn van.
 - Az Árlista adminban új "Kategóriák" panel jelent meg: kategória létrehozható, átnevezhető, egy
   kurált palettából színt kaphat, sorrendje fel/le nyilakkal állítható, és törölhető is, ha már
   egyetlen tétel sincs benne.

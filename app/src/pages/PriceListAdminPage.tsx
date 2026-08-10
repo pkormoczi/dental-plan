@@ -11,7 +11,7 @@
 // létrehozás/átnevezés/színezés/sorrendezés/törlés, egy helyen a
 // tétel-mozgatással, hogy a doki ne navigáljon oda-vissza a takarításkor.
 
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -41,6 +41,7 @@ import {
   StarIcon,
   TrashIcon,
 } from '@radix-ui/react-icons';
+import { Field, FieldGroup } from '../components/Field';
 import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
 import { ALAP_KATEGORIA_SZIN, KATEGORIA_PALETTA } from '../design/treatmentVisuals';
@@ -48,6 +49,7 @@ import { formatPrice } from '../domain/money';
 import { nextKategoriaId, nextTetelId } from '../domain/priceListIds';
 import { nevEgyezik, norm } from '../domain/search';
 import type { Ar, Kategoria, PriceList, Tetel } from '../domain/types';
+import UjTetelDialog from './priceListAdmin/UjTetelDialog';
 import { useAppState } from '../state/AppState';
 
 type FilterKey = 'all' | 'noeur' | 'range' | 'off' | 'fav';
@@ -67,6 +69,13 @@ export default function PriceListAdminPage() {
   const [open, setOpen] = useState<string | null>(null);
   const [catPanelOpen, setCatPanelOpen] = useState(false);
   const [openCat, setOpenCat] = useState<string | null>(null);
+  const [ujTetelOpen, setUjTetelOpen] = useState(false);
+  // Az imént mentett tétel id-je -- egyszer használatos jelző, ami a lentebbi
+  // effektnek szól (odagörget, majd nullázza magát). Az ItemEditor ebből dönti
+  // el, hogy a HUF ár mezőt `autoFocus`-szal kell-e felvennie: a doki a
+  // popupban csak nevet és kategóriát adott meg, a logikus következő lépés az
+  // ár -- lásd a fájl tetején a panasz leírását.
+  const [frissTetelId, setFrissTetelId] = useState<string | null>(null);
   // P0-8-hoz hasonlóan (SettingsPage) -- a `savePriceList` korábban `void`-olva
   // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -144,22 +153,54 @@ export default function PriceListAdminPage() {
     if (openCat === id) setOpenCat(null);
   }
 
-  function addNewItem() {
+  /**
+   * A felugró Új tétel dialógus Mentés gombja hívja -- addig semmi nem
+   * kerül a törzsadatba. `sorrend` a kategóriákéhoz hasonlóan max-alapú, nem
+   * `tetelek.length`-alapú (a régi számítás egy törölt/inaktivált tétel
+   * után visszacsúszhatott volna, ugyanaz a hiba, amit D17 miatt a
+   * `nextTetelId` már elkerül).
+   */
+  function mentUjTetel(nevHu: string, nevDe: string | null, kategoriaId: string) {
     const id = nextTetelId(priceList.tetelek);
+    const maxSorrend = priceList.tetelek.reduce((max, x) => Math.max(max, x.sorrend), 0);
     const newItem: Tetel = {
       id,
-      kategoriaId: sortedKategoriak[0]?.id ?? '',
-      sorrend: priceList.tetelek.length + 1,
+      kategoriaId,
+      sorrend: maxSorrend + 1,
       aktiv: true,
       gyakori: false,
-      nev: { hu: 'Új tétel', de: null },
+      nev: { hu: nevHu, de: nevDe },
       ar: { HUF: { tipus: 'FIX', ertek: 0 }, EUR: null },
     };
     commit({ ...priceList, tetelek: [...priceList.tetelek, newItem] });
     setFilter('all');
     setQ('');
     setOpen(id);
+    setFrissTetelId(id);
+    setUjTetelOpen(false);
   }
+
+  // Mentés után a lista a friss sorhoz görget -- a doki a popupban csak
+  // nevet és kategóriát adott meg, e nélkül a sor a lista tetszőleges
+  // pontján nyílna ki, láthatatlanul (ugyanaz a panasz, ami miatt ez az
+  // egész felugró ablak létrejött). A HUF ár mező fókuszát az ItemEditor
+  // natív `autoFocus` attribútuma adja (lásd ott).
+  //
+  // A `savePriceList` aszinkron (`storage.savePriceList` await-elt, lásd
+  // AppState.tsx) -- a `priceList` context-érték, és vele a friss sor a
+  // `grouped`-ben, csak EGY renderrel KÉSŐBB jelenik meg, mint a
+  // `setFrissTetelId(id)`. Ha itt feltétel nélkül nulláznánk, a sor még a
+  // létrejötte ELŐTT elveszítené a jelzőt, és se görgetés, se autoFocus nem
+  // sülne el -- ezért csak akkor nullázunk, ha a sor ténylegesen megtalálható
+  // (a `priceList` a függőséglistában erre a második renderre újra lefuttatja
+  // az effektet).
+  useEffect(() => {
+    if (!frissTetelId) return;
+    const el = document.getElementById(`tetel-szerkeszto-${frissTetelId}`);
+    if (!el) return;
+    el.scrollIntoView({ block: 'center' });
+    setFrissTetelId(null);
+  }, [frissTetelId, priceList]);
 
   const keep = (x: Tetel): boolean => {
     // P0-7: a nyitott sort MINDIG megtartjuk, akkor is, ha egy időközbeni
@@ -206,17 +247,31 @@ export default function PriceListAdminPage() {
         </Text>
       </Flex>
 
-      <KategoriaPanel
-        open={catPanelOpen}
-        onOpenChange={setCatPanelOpen}
+      {/* `align="start"`: a Kategóriák panel kinyílva jóval magasabb lesz
+          (lásd a teljes kategória-táblázatot), a gomb a triggerrel egy
+          magasságban marad, nem csúszik le a panel aljára. */}
+      <Flex justify="between" align="start">
+        <KategoriaPanel
+          open={catPanelOpen}
+          onOpenChange={setCatPanelOpen}
+          kategoriak={sortedKategoriak}
+          tetelek={priceList.tetelek}
+          openCat={openCat}
+          onOpenCatChange={setOpenCat}
+          onPatch={patchCategory}
+          onMove={moveCategory}
+          onDelete={deleteCategory}
+          onAdd={addCategory}
+        />
+        <Button onClick={() => setUjTetelOpen(true)}>+ Új tétel</Button>
+      </Flex>
+
+      <UjTetelDialog
+        open={ujTetelOpen}
+        onOpenChange={setUjTetelOpen}
         kategoriak={sortedKategoriak}
         tetelek={priceList.tetelek}
-        openCat={openCat}
-        onOpenCatChange={setOpenCat}
-        onPatch={patchCategory}
-        onMove={moveCategory}
-        onDelete={deleteCategory}
-        onAdd={addCategory}
+        onSave={mentUjTetel}
       />
 
       <TextField.Root
@@ -381,6 +436,7 @@ export default function PriceListAdminPage() {
                             item={it}
                             categories={sortedKategoriak}
                             onPatch={(p) => patchItem(it.id, p)}
+                            autoFocusAr={it.id === frissTetelId}
                           />
                         </Table.Cell>
                       </Table.Row>
@@ -399,7 +455,7 @@ export default function PriceListAdminPage() {
           {shown} / {priceList.tetelek.length} tétel látszik · {missingEur} tételnél hiányzik az
           EUR ár
         </Text>
-        <Button onClick={addNewItem}>+ Új tétel</Button>
+        <Button onClick={() => setUjTetelOpen(true)}>+ Új tétel</Button>
       </Flex>
     </Box>
   );
@@ -410,10 +466,15 @@ function ItemEditor({
   item,
   categories,
   onPatch,
+  autoFocusAr,
 }: {
   item: Tetel;
   categories: Kategoria[];
   onPatch: (patch: Partial<Tetel>) => void;
+  /** Az Új tétel dialógusból frissen létrejött sorra igaz -- a HUF ár mező
+   * kapja a fókuszt, mivel a doki a popupban csak nevet és kategóriát adott
+   * meg (lásd a görgető effektet a szülő komponensben). */
+  autoFocusAr?: boolean;
 }) {
   const hufAr = item.ar.HUF ?? null;
   const eurAr = item.ar.EUR ?? null;
@@ -548,6 +609,7 @@ function ItemEditor({
               value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
               min={0}
               onCommit={setFixPrice}
+              autoFocus={autoFocusAr}
             />
           </Field>
         )}
@@ -856,36 +918,6 @@ function KategoriaEditor({
       <Text as="div" size="1" color="gray" mt="3" style={{ fontFamily: t.mono }}>
         id: {kategoria.id}
       </Text>
-    </Box>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label style={{ display: 'block' }}>
-      <Text as="div" size="1" color="gray" mb="1">
-        {label}
-      </Text>
-      {children}
-    </label>
-  );
-}
-
-/**
- * `Field` <label>-alternatívája gombokhoz -- egy <label> ami egy <button>-t
- * fog körbe implicit módon "asszociálná" a gombbal, és az accessible name
- * számításnál a LABEL szövege nyerne a gomb saját szövege felett (ezt egy
- * teszt buktatta le: `getByRole('button', {name: '...'})` a label szövegét
- * találta, nem a gomb feliratát). Vizuálisan azonos a `Field`-del, csak
- * `<div>`-et használ `<label>` helyett.
- */
-function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <Box>
-      <Text as="div" size="1" color="gray" mb="1">
-        {label}
-      </Text>
-      {children}
     </Box>
   );
 }

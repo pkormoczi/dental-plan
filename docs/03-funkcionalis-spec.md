@@ -397,6 +397,37 @@ arra, hogy a találat a német névből jött.
 
 A `Nincs EUR ár` szűrő **maga a német bevezetés munkalistája**.
 
+### Új tétel felvitele
+
+A „+ Új tétel" gomb a lista TETEJÉN (a Kategóriák panel sorában) ÉS a lista
+alján is megjelenik — hosszú listánál a felső a megtalálható, az alsó a
+kéznél lévő. Mindkettő ugyanazt a felugró ablakot nyitja
+(`pages/priceListAdmin/UjTetelDialog.tsx`).
+
+A dialógus csak a névre és a kategóriára kérdez:
+
+- Megnevezés (magyar) — kötelező, nem lehet üres/csak szóköz
+- Bezeichnung (német) — opcionális
+- Kategória — kötelező, **nincs alapértelmezett kitöltés** (a doki mindig
+  tudatosan választ, nem esik némán az első kategóriába)
+
+A Mentés gomb nem tiltott: kattintásra, ha valamelyik kötelező mező
+érvénytelen, a mező alatt megjelenik a hibaszöveg, és a dialógus nyitva
+marad. Ha egy már meglévő (aktív VAGY inaktív) tétel nevével ékezetfüggetlenül
+pontosan egyezik a beírt név, egy nem blokkoló figyelmeztetés jelzi ezt — egy
+inaktív tétel bármikor visszakapcsolható (D17), ezért hasznosabb, ha a doki
+azt fontolja meg duplikálás helyett.
+
+A dialógus Mégse gombja és az Escape is nyomtalanul eldobja a piszkozatot,
+megerősítés-kérés nélkül — a törzsadatba semmi nem kerül a Mentés
+megnyomásáig, és tétel-id sem foglalódik le.
+
+Mentés után a tétel a listában, az ártípus `FIX` és a HUF ára `0` kezdőértékkel
+jön létre (`aktiv: true`, `gyakori: false`, nincs EUR ára), a lista a friss
+sorhoz görget, a sor kinyílik, és a fókusz a HUF ár mezőre kerül — a többi
+mező (ártípus, HUF/EUR ár, gyakori, aktív) az alábbi „Sor kinyitása" szerinti
+szerkesztőben állítható be.
+
 ### Sor kinyitása
 
 Kattintásra a sor lenyílik, és ott van minden mező:

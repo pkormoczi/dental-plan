@@ -199,19 +199,136 @@ describe('PriceListAdminPage', () => {
     expect(cbct.ar.EUR).toEqual({ tipus: 'SAVOS', min: 6600, max: 6600 });
   });
 
-  it('"+ Új tétel" creates a fresh FIX item with a never-before-used id and opens it for editing', async () => {
-    const user = userEvent.setup();
-    renderAdmin();
+  // "+ Új tétel" felugró dialógus: a gomb ma két helyen is megjelenik (a
+  // Kategóriák gomb sorában és a lista alján), és a mentés a Mentés gomb
+  // megnyomásáig NEM ír a törzsadatba -- se placeholder név, se némán az
+  // első kategóriába eső tétel, ahogy a korábbi azonnali-commit viselkedés
+  // tette.
+  describe('"+ Új tétel" dialógus', () => {
+    async function openUjTetelDialog(user: ReturnType<typeof userEvent.setup>) {
+      await screen.findByText(/118 \/ 118 tétel látszik/);
+      const buttons = screen.getAllByRole('button', { name: '+ Új tétel' });
+      expect(buttons).toHaveLength(2);
+      await user.click(buttons[0]);
+      return screen.getByRole('dialog', { name: 'Új tétel' });
+    }
 
-    await screen.findByText(/118 \/ 118 tétel látszik/);
-    await user.click(screen.getByRole('button', { name: '+ Új tétel' }));
+    async function pickFirstCategory(user: ReturnType<typeof userEvent.setup>, dialog: HTMLElement) {
+      await user.click(within(dialog).getByRole('combobox', { name: 'Kategória *' }));
+      const options = await screen.findAllByRole('option');
+      const label = options[0].textContent;
+      await user.click(options[0]);
+      return label;
+    }
 
-    expect(await screen.findByText(/119 \/ 119 tétel látszik/)).toBeInTheDocument();
-    const pl = readPriceList();
-    expect(pl.tetelek).toHaveLength(119);
-    const created = pl.tetelek[pl.tetelek.length - 1];
-    expect(created.id).toBe('t119');
-    expect(created.ar.HUF).toEqual({ tipus: 'FIX', ertek: 0 });
+    it('a fenti ÉS a lenti gomb is ugyanazt a dialógust nyitja', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      const dialog = await openUjTetelDialog(user);
+      expect(dialog).toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      const buttons = screen.getAllByRole('button', { name: '+ Új tétel' });
+      await user.click(buttons[1]);
+      expect(screen.getByRole('dialog', { name: 'Új tétel' })).toBeInTheDocument();
+    });
+
+    it('üres névvel a Mentés hibaszöveget mutat, és semmi nem mentődik', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      const dialog = await openUjTetelDialog(user);
+
+      await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+
+      expect(within(dialog).getByText('A megnevezés nem lehet üres.')).toBeInTheDocument();
+      expect(readPriceList().tetelek).toHaveLength(118);
+    });
+
+    it('kategória kiválasztása nélkül a Mentés hibaszöveget mutat, és semmi nem mentődik', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      const dialog = await openUjTetelDialog(user);
+
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'Teszt tétel');
+      await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+
+      expect(within(dialog).getByText('Válassz kategóriát.')).toBeInTheDocument();
+      expect(readPriceList().tetelek).toHaveLength(118);
+    });
+
+    it('kitöltve a Mentés a kiválasztott kategóriában hozza létre a tételt, és a sor a listában nyílik ki', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      const dialog = await openUjTetelDialog(user);
+
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'Teszt új tétel');
+      await user.type(within(dialog).getByLabelText('Bezeichnung (német)'), 'Testneues Element');
+      const categoryLabel = await pickFirstCategory(user, dialog);
+      await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(await screen.findByText(/119 \/ 119 tétel látszik/)).toBeInTheDocument();
+
+      const pl = readPriceList();
+      expect(pl.tetelek).toHaveLength(119);
+      const created = pl.tetelek[pl.tetelek.length - 1];
+      expect(created.id).toBe('t119');
+      expect(created.nev).toEqual({ hu: 'Teszt új tétel', de: 'Testneues Element' });
+      expect(created.aktiv).toBe(true);
+      expect(created.gyakori).toBe(false);
+      expect(created.ar.HUF).toEqual({ tipus: 'FIX', ertek: 0 });
+      expect(created.ar.EUR).toBeNull();
+      const category = pl.kategoriak.find((k) => k.nev.hu === categoryLabel)!;
+      expect(created.kategoriaId).toBe(category.id);
+
+      // A HUF ár mező kapja a fókuszt -- a doki a popupban csak nevet és
+      // kategóriát adott meg, a logikus következő lépés az ár.
+      expect(await screen.findByLabelText('HUF ár')).toHaveFocus();
+    });
+
+    it('Mégse eldob mindent, és a következő mentés még mindig a soron következő id-t kapja (D17)', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      let dialog = await openUjTetelDialog(user);
+
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'Elvetett piszkozat');
+      await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+
+      expect(readPriceList().tetelek).toHaveLength(118);
+
+      const buttons = screen.getAllByRole('button', { name: '+ Új tétel' });
+      await user.click(buttons[0]);
+      dialog = screen.getByRole('dialog', { name: 'Új tétel' });
+      // A mező üresen indul -- a Mégse nem hagyott piszkozatot a következő megnyitásra.
+      expect(within(dialog).getByLabelText('Megnevezés (magyar) *')).toHaveValue('');
+
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'Teszt tétel 2');
+      await pickFirstCategory(user, dialog);
+      await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+
+      expect(await screen.findByText(/119 \/ 119 tétel látszik/)).toBeInTheDocument();
+      const created = readPriceList().tetelek.at(-1)!;
+      expect(created.id).toBe('t119');
+    });
+
+    it('pontosan egyező névnél figyelmeztet, de a Mentés attól még végigmegy', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      const dialog = await openUjTetelDialog(user);
+
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'CBCT');
+      expect(
+        await within(dialog).findByText('Már van ilyen nevű tétel a listában.'),
+      ).toBeInTheDocument();
+
+      await pickFirstCategory(user, dialog);
+      await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+
+      expect(await screen.findByText(/119 \/ 119 tétel látszik/)).toBeInTheDocument();
+      expect(readPriceList().tetelek.filter((x) => x.nev.hu === 'CBCT')).toHaveLength(2);
+    });
   });
 
   // backlog-7: az admin szűrője eddig CSAK a magyar néven illesztett, a

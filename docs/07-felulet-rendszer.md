@@ -72,6 +72,16 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   csukott/nyitott állapotot chevron ikonnal jelzi
   (`ChevronRightIcon`/`ChevronDownIcon`), nincs nyitás/csukás-animáció
   (lásd „Amit soha ne csinálj").
+- Mezős felugró ablak (pl. az Árlista admin „Új tétel" dialógusa,
+  `pages/priceListAdmin/UjTetelDialog.tsx`): Radix Themes `Dialog`
+  (`Dialog.Root/Content/Title/Description/Close`), NEM `AlertDialog` — az
+  utóbbi megerősítésre való, nincs benne mező. Explicit Mentés + „Mégse"
+  gombpár (a „Mégse" felirat és a `variant="soft" color="gray"` stílus
+  ugyanaz a projektszintű konvenció, mint az `AlertDialog.Cancel`-nél),
+  Escape és a Mégse gomb is nyomtalanul eldobja a piszkozatot — semmi nem
+  kerül a törzsadatba a Mentés gomb megnyomása előtt. Hibaszöveg az input
+  ALATT jelenik meg (lásd „Akadálymentesség"), a Mentés gomb nem tiltott —
+  kattintásra mutatja meg a hibákat, hogy legyen mit mondania.
 
 ### Szín, forma, sűrűség
 

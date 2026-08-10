@@ -51,6 +51,7 @@ export interface NumberFieldProps {
   textAlign?: CSSProperties['textAlign'];
   style?: CSSProperties;
   'aria-label'?: string;
+  autoFocus?: boolean;
 }
 
 function formatForDisplay(value: number | null, unit: 'HUF' | 'EUR'): string {
