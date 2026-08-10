@@ -21,5 +21,11 @@ export default defineConfig({
     },
     globals: true,
     setupFiles: './src/test-setup.ts',
+    // Vitest alapértelmezett 5000ms-je néhány `userEvent.type`-tal sok
+    // karaktert begépelő tesztnél (pl. PriceListAdminPage kategória-
+    // átnevezés) a GitHub Actions runneren már szűken elfér -- lokálisan
+    // ~1.6s, CI-n mért 5131ms, tehát a timeout-on buktak el, nem a teszt
+    // logikáján.
+    testTimeout: 15000,
   },
 })
