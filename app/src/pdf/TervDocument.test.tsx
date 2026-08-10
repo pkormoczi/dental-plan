@@ -245,3 +245,56 @@ describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmé
     expect(screen.getAllByText('20 000 Ft')).toHaveLength(2);
   });
 });
+
+describe('TervDocument -- backlog-10: tétel-leírás a tételsor alatt', () => {
+  function renderWithLeiras(leirasSnapshot: string, leirasokMutatasa?: boolean) {
+    const plan = buildPlan(false, 'hu', AZONOS_AR);
+    plan.fazisok[0].sorok[0].leirasSnapshot = leirasSnapshot;
+    if (leirasokMutatasa !== undefined) plan.leirasokMutatasa = leirasokMutatasa;
+    return render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly
+        nyilatkozatMd=""
+        fizetesiFeltetelekMd=""
+        toothChartPng={null}
+      />,
+    );
+  }
+
+  it('többsoros leírás külön sorokként jelenik meg a tételsor alatt', () => {
+    renderWithLeiras('Implantátum\nFelépítmény\nKorona');
+    expect(screen.getByText('Implantátum')).toBeInTheDocument();
+    expect(screen.getByText('Felépítmény')).toBeInTheDocument();
+    expect(screen.getByText('Korona')).toBeInTheDocument();
+  });
+
+  it('leirasokMutatasa: false esetén semmi nem jelenik meg, akkor sem, ha van tartalom', () => {
+    renderWithLeiras('Implantátum\nFelépítmény', false);
+    expect(screen.queryByText('Implantátum')).not.toBeInTheDocument();
+  });
+
+  it('üres leírás nem jelenít meg semmit, a tételsor neve változatlanul renderelődik', () => {
+    renderWithLeiras('');
+    expect(screen.getByText('Csontpótló anyag')).toBeInTheDocument();
+  });
+
+  it('hiányzó (undefined) leirasSnapshot -- egy a mező bevezetése előtti sor -- nem dob hibát', () => {
+    const plan = buildPlan(false, 'hu', AZONOS_AR); // a Sor literál nem állít leirasSnapshot-ot
+    expect(() =>
+      render(
+        <TervDocument
+          plan={plan}
+          settings={seedSettings}
+          priceList={seedPriceList}
+          offerOnly
+          nyilatkozatMd=""
+          fizetesiFeltetelekMd=""
+          toothChartPng={null}
+        />,
+      ),
+    ).not.toThrow();
+  });
+});

@@ -579,6 +579,31 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   piszkozat-felülírás-őr elég. `docs/03-funkcionalis-spec.md` § Terv
   másolása új tervként, D26 (`docs/01-attekintes-es-dontesek.md`).
 
+### 10. Tétel-leírás a csomagtételekhez — KÉSZ (2026-08-10)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — a D13-határ (nincs általános sor-szintű
+  megjegyzés-oszlop) védelme a UI címkézésén múlik („Leírás (mi van
+  benne?)"), a mező szigorúan "mi van ebben a sorban" tartalomra való.
+- **Valódi haszon:** pácienskommunikáció — egy összetett tétel (pl.
+  „All-on-4 Anax csomag") ezután nemcsak egyetlen árral, hanem egy
+  kétnyelvű leírással is bekerül a tervbe, hogy a páciens otthon is el
+  tudja mondani, mi van benne.
+- **Megvalósítás:** additív, opcionális mezők — `Tetel.leiras`
+  (`LokalizaltSzoveg`, a `nev` mintáján), `Tetel.csomag` (a
+  véglegesítés-őrt vezérli), `Sor.leirasSnapshot` (pillanatkép, a
+  `nevSnapshot` mintáján), `Plan.leirasokMutatasa` (terv-szintű
+  nyomtatás-kapcsoló, alap `true`) — `docs/02-domain-modell.md` §
+  Tétel-leírás, D27 (`docs/01-attekintes-es-dontesek.md`). A leírásnak,
+  ellentétben a névvel, **nincs** HU-visszaesése: hiányzó német fordítás
+  némán elmarad a nyomtatványról, nem esik vissza magyarra. A
+  szerkesztőben összecsukható „+ leírás" trigger soronként (amber jelzés,
+  ha a sor csomag-tételre hivatkozik és üres a leírása); a nyomtatványon a
+  tételsor alatt, behúzva, a tételsorral egy oldaltörés-védett blokkban
+  (`docs/04-nyomtatvany-spec.md` § Tételtáblázat); a véglegesítés-őr egy
+  harmadik, puha megerősítő lépéssel jelzi a hiányzó csomag-leírásokat
+  (`docs/03-funkcionalis-spec.md` § 4. Előnézet és véglegesítés).
+
 ---
 
 ## Technikai adósság (a 2026-08-06-i kódreview nyitva maradt tételei)

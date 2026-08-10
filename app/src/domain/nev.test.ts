@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fallbackSorok, nevKoveti, nyelvvaltasHatasa, resolveNev, sorFallback } from './nev';
+import { fallbackSorok, leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev, sorFallback } from './nev';
 import type { Plan, PriceList, Sor, Tetel } from './types';
 
 describe('resolveNev', () => {
@@ -65,6 +65,50 @@ describe('nevKoveti', () => {
 
   it('hamis, ha a tételnek nincs neve azon a nyelven', () => {
     expect(nevKoveti(sor({ tetelId: 't2', nevSnapshot: 'Nincs DE' }), tetel2, 'de')).toBe(false);
+  });
+});
+
+const tetelLeirassal: Tetel = {
+  id: 't3',
+  kategoriaId: 'k1',
+  sorrend: 3,
+  aktiv: true,
+  gyakori: false,
+  nev: { hu: 'Csomag', de: 'Paket' },
+  ar: { HUF: { tipus: 'FIX', ertek: 5000 }, EUR: null },
+  leiras: { hu: 'Implantátum\nFelépítmény', de: null },
+};
+
+describe('leirasKoveti', () => {
+  it('igaz, ha a snapshot pontosan az árlistai leírást viseli azon a nyelven', () => {
+    expect(
+      leirasKoveti(sor({ leirasSnapshot: 'Implantátum\nFelépítmény' }), tetelLeirassal, 'hu'),
+    ).toBe(true);
+  });
+
+  it('hamis, ha a snapshot kézzel eltér', () => {
+    expect(leirasKoveti(sor({ leirasSnapshot: 'Kézzel írt szöveg' }), tetelLeirassal, 'hu')).toBe(
+      false,
+    );
+  });
+
+  it('hiányzó DE leírásnál az üres snapshot "követi"-nek számít -- nincs HU-visszaesés (D27)', () => {
+    expect(leirasKoveti(sor({ leirasSnapshot: '' }), tetelLeirassal, 'de')).toBe(true);
+  });
+
+  it('hiányzó leirasSnapshot mező (régi, a mező bevezetése előtti sor) üres stringként viselkedik', () => {
+    expect(leirasKoveti(sor(), tetelLeirassal, 'de')).toBe(true);
+  });
+
+  it('regresszió: hu->de->hu oda-vissza nem veszíti el az eredeti magyar leírást', () => {
+    // hu-n a sor a tétel hu leírását viseli -- "követi".
+    expect(
+      leirasKoveti(sor({ leirasSnapshot: 'Implantátum\nFelépítmény' }), tetelLeirassal, 'hu'),
+    ).toBe(true);
+    // hu -> de váltás után a leírás üresre áll (nincs de fordítás); a
+    // visszaváltásnál a RÉGI nyelv 'de', a snapshot ('') pontosan az (üres)
+    // de leírást viseli -- tehát "követi", visszaszinkronizálhat hu-ra.
+    expect(leirasKoveti(sor({ leirasSnapshot: '' }), tetelLeirassal, 'de')).toBe(true);
   });
 });
 

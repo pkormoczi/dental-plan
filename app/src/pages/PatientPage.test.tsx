@@ -198,3 +198,85 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     expect(screen.getByText('átírt')).toBeInTheDocument();
   });
 });
+
+describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leírást', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  function seedWithGermanLeirasItem() {
+    const custom = {
+      ...seedPriceList,
+      tetelek: seedPriceList.tetelek.map((x) =>
+        x.nev.hu === 'Fogeltávolítás'
+          ? { ...x, leiras: { hu: 'Magyar leírás szövege', de: 'Deutsche Beschreibung' } }
+          : x,
+      ),
+    };
+    localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+    localStorage.setItem(
+      'dp:beallitasok.json',
+      JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
+    );
+  }
+
+  it('szerkesztetlen leírás frissül nyelváltáskor, a tétel német leírására', async () => {
+    const user = userEvent.setup();
+    seedWithGermanLeirasItem();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.type(nameInput, 'Teszt Elek');
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // A "+ leírás" trigger már nyitva indul, mert a sornak van tartalma --
+    // nem kell rákattintani (az bezárná).
+    expect(screen.getByRole('button', { name: 'Leírás' })).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Magyar leírás szövege')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
+    await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+
+    await user.click(screen.getByRole('link', { name: 'Terv szerkesztő' }));
+    expect(await screen.findByDisplayValue('Deutsche Beschreibung')).toBeInTheDocument();
+  });
+
+  it('kézzel átírt leírás NEM frissül nyelváltáskor', async () => {
+    const user = userEvent.setup();
+    seedWithGermanLeirasItem();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.type(nameInput, 'Teszt Elek');
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // A "+ leírás" trigger már nyitva indul, mert a sornak van tartalma --
+    // nem kell rákattintani (az bezárná).
+    const leirasField = screen.getByDisplayValue('Magyar leírás szövege');
+    await user.clear(leirasField);
+    await user.type(leirasField, 'Kézzel pontosított leírás');
+
+    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
+    await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+
+    await user.click(screen.getByRole('link', { name: 'Terv szerkesztő' }));
+    expect(await screen.findByDisplayValue('Kézzel pontosított leírás')).toBeInTheDocument();
+  });
+});

@@ -14,7 +14,7 @@
 // `nevSnapshot`/ár pillanatkép D7 szerint továbbra is érvényes, csak a
 // mai árlistával nem egyeztethető), ez pedig egy SOSEM megnevezett sort.
 
-import type { Plan } from './types';
+import type { Plan, PriceList } from './types';
 
 export interface KitoltetlenSor {
   fazisIndex: number;
@@ -30,6 +30,33 @@ export function kitoltetlenSorok(plan: Plan): KitoltetlenSor[] {
     fazis.sorok.forEach((sor, sorIndex) => {
       if (!sor.nevSnapshot.trim()) {
         eredmeny.push({ fazisIndex, fazisNev: fazis.megnevezes, sorIndex, fogak: sor.fogak });
+      }
+    });
+  });
+  return eredmeny;
+}
+
+export interface HianyzoCsomagLeiras {
+  fazisIndex: number;
+  fazisNev: string;
+  sorIndex: number;
+  nev: string;
+}
+
+/**
+ * PUHA diagnosztika (docs/08-backlog.md 10. tétel, 14. döntés) -- szándékosan
+ * KÜLÖN a fenti `kitoltetlenSorok` kemény blokkjától: azon sorok, amik egy
+ * `csomag: true` tételre hivatkoznak, de a leírásuk üres. A `PreviewPage`
+ * `confirmStep`-láncába kerül (megerősíthető, átugorható), NEM ide.
+ */
+export function hianyzoCsomagLeirasok(plan: Plan, priceList: PriceList): HianyzoCsomagLeiras[] {
+  const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));
+  const eredmeny: HianyzoCsomagLeiras[] = [];
+  plan.fazisok.forEach((fazis, fazisIndex) => {
+    fazis.sorok.forEach((sor, sorIndex) => {
+      const tetel = tetelById.get(sor.tetelId);
+      if (tetel?.csomag && !(sor.leirasSnapshot ?? '').trim()) {
+        eredmeny.push({ fazisIndex, fazisNev: fazis.megnevezes, sorIndex, nev: sor.nevSnapshot });
       }
     });
   });

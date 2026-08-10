@@ -26,7 +26,7 @@ import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import ChipGroup from '../components/ChipGroup';
 import { sablonVerzioFor } from '../domain/blankPlan';
 import { lefedettseg } from '../domain/coverage';
-import { nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
+import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import type { Nyelv, Penznem } from '../domain/types';
 import { t } from '../design/tokens';
 import { useAppState } from '../state/AppState';
@@ -74,6 +74,11 @@ export default function PatientPage() {
           const tetel = priceList.tetelek.find((x) => x.id === s.tetelId);
           if (tetel && nevKoveti(s, tetel, regiNyelv)) {
             s.nevSnapshot = resolveNev(tetel.nev, nyelv).szoveg;
+          }
+          // A leírásnak nincs HU-visszaesése (D27, docs/01) -- a hiányzó
+          // fordítás itt üres stringgé normalizálódik, lásd leirasKoveti().
+          if (tetel && leirasKoveti(s, tetel, regiNyelv)) {
+            s.leirasSnapshot = (nyelv === 'hu' ? tetel.leiras?.hu : tetel.leiras?.de) ?? '';
           }
         }
       }

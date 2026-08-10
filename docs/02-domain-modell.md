@@ -70,6 +70,8 @@ Kész seed: `data/arlista.seed.json` (118 tétel, 13 kategória).
         "HUF": { "tipus": "FIX", "ertek": 25000 },
         "EUR": null                 // null = ezen a nyelven nem ajánljuk
       },
+      "leiras": { "hu": "", "de": null },  // opcionális, "mi van benne?" -- lásd lent
+      "csomag": false,              // opcionális, lásd lent
       "forrasSor": 7                // csak az importból; később elhagyható
     }
   ]
@@ -132,7 +134,8 @@ kerekítési hiba az összegzésben.
           "fogak": "16, 17, 26",
           "mennyiseg": 3,
           "listaEgysegar": 45000,
-          "tenylegesEgysegar": 45000
+          "tenylegesEgysegar": 45000,
+          "leirasSnapshot": ""      // opcionális, lásd "Tétel-leírás" lentebb
         }
       ]
     }
@@ -150,7 +153,11 @@ kerekítési hiba az összegzésben.
 
   // Opcionális (hiányozhat egy régi fájlból, ilyenkor `null`-ként olvasandó).
   // Lásd "Terv-szintű kedvezmény" lentebb.
-  "kedvezmenyOsszeg": 130000
+  "kedvezmenyOsszeg": 130000,
+
+  // Opcionális (hiányozhat egy régi fájlból, ilyenkor `true`-ként
+  // olvasandó). Lásd "Tétel-leírás" lentebb.
+  "leirasokMutatasa": true
 }
 ```
 
@@ -177,6 +184,44 @@ sort jelent — a doki a keresőben begépelt szöveget vette fel `nevSnapshot`-
 egyetlen árlistai tétel sem talált rá. Ilyen soron nincs értelmezhető
 árlistai referenciaár, ezért `listaEgysegar === tenylegesEgysegar` mindig
 (az ártétel utólagos szerkesztése mindkettőt együtt írja).
+
+### Tétel-leírás (`leiras`, `csomag`, `leirasSnapshot`, `leirasokMutatasa`)
+
+Egy összetett tétel (pl. „All-on-4 Anax csomag") egyetlen sorként megy be a
+tervbe, egyetlen árral — a `Tetel.leiras: LokalizaltSzoveg` (opcionális,
+`{ hu, de }`, a `nev` mintáján) rögzíti, mi van benne, hogy a páciens otthon
+is el tudja mondani. A `Sor.leirasSnapshot` (opcionális `string`) a
+`nevSnapshot` mintáján **pillanatkép** (D7): felvételkor a `Tetel.leiras[nyelv]`
+aktuális értékéről indul, utána szabadon átírható, és nyelvváltáskor
+`leirasKoveti()` (`app/src/domain/nev.ts`) dönti el, hogy szinkronizáljon-e
+— pontosan úgy, ahogy a `nevKoveti()` a névnél, "kézzel írt szöveg nem
+íródik felül" elven (D24).
+
+**Egy ponton szándékosan eltér a névtől: nincs HU-visszaesés (D27).** Ha a
+`Tetel.leiras.de` hiányzik egy német nyelvű terven, a leírás egyszerűen nem
+jelenik meg — nincs `HU` jelvény, nem esik vissza magyar szövegre, és nem
+számít bele a `fallbackSorok`/`lefedettseg()` diagnosztikába. A leírás
+kiegészítő, díszítő tartalom, nem a sor lényege (azt a név hordozza) — a
+névhez hasonló szigorú fallback-apparátus túlkezelés lenne egy opcionális
+mezőhöz.
+
+A `Tetel.csomag: boolean` (opcionális, alap `false`) **kizárólag** a
+véglegesítés-őr puha figyelmeztetését vezérli: ha egy `csomag: true` tételre
+hivatkozó soron üres a `leirasSnapshot`, a `PreviewPage` megerősítést kér
+(`hianyzoCsomagLeirasok()`, `app/src/domain/kitoltetlen.ts`) — nem kemény
+blokk, a doki tudatosan átugorhatja. A flag nem korlátozza, mely tételek
+kaphatnak leírást (bármelyik tétel vagy egyedi sor is kaphat), csak azt
+jelöli, melyiknél számít a hiánya jelzésre méltónak.
+
+A `Plan.leirasokMutatasa: boolean` (opcionális, alap `true`) terv-szintű
+kapcsoló: nyomtatódjanak-e a leírások. Kikapcsolva sem a nyomtatvány, sem a
+véglegesítés-őr hiányzó-leírás figyelmeztetése nem néz `leirasSnapshot`-ot.
+Ugyanúgy pillanatkép-jellegű, mint `nyelv`/`penznem` — betöltéskor és terv-
+másoláskor öröklődik, nem nullázódik.
+
+Egyik mező sem emelte a `schemaVersion`-t — mind a négy additív, a hiányzó
+mező üres string/`false`/`true` alapértékkel olvasandó (a `Kategoria.szin`
+precedense szerint).
 
 ### Előleg (`elolegSzazalek`)
 

@@ -81,6 +81,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A `DraftStorage` (piszkozat-autosave) nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez; mockupban `localStorage`, véglegesben IndexedDB |
 | `@react-pdf/renderer` esetén **Unicode fontot kell regisztrálni** (pl. Inter, Source Sans, Noto Sans) | A beépített Helvetica nem tartalmazza az `ő`/`ű` karaktereket — ez csak a végleges PDF-en látszik, a HTML előnézeten nem |
 | `#f77409` (a márka narancsa) **soha nem lehet szövegszín** | Fehéren 2,82:1, kis méretben olvashatatlan; csak díszítővonalra való. A fogtérkép saját, kezelés-kategóriánkénti palettát használ (`design/treatmentVisuals.ts`), nem ezt a színt |
+| A `Tetel.leiras` hiányzó német fordítása némán elmarad a nyomtatványról, nem esik vissza magyarra | D27 — ellentétben a `nevSnapshot`-tal: a leírás kiegészítő tartalom, egy vegyes nyelvű nyomtatvány rosszabb lenne, mint a hiánya |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -282,6 +283,24 @@ tervként, D26) segédfüggvényei, szintén ne írd újra őket:
   függvény EREDMÉNYÉT teszi be a piszkozatba a `resetPlanDraft` mintáján
   (nem a `loadPlanIntoDraft`-én): a másolat azonnal mentetlen munkának
   számít, mert még soha nincs elmentve a saját `tervId` alatt
+
+A tétel-leírás tétel (`docs/02-domain-modell.md` § Tétel-leírás, D27)
+segédfüggvényei, szintén ne írd újra őket:
+- `leirasKoveti(sor, tetel, nyelv)` (`app/src/domain/nev.ts`) — a
+  `nevKoveti` párja, de NEM ő maga: a `leirasSnapshot` nyelváltáskori
+  szinkronizálásához, a hiányzó fordítást üres stringgé normalizálva (nem
+  `!= null` őrrel kizárva, mint a névnél) — enélkül egy hu→de→hu oda-vissza
+  nyelváltás elveszítené az eredeti magyar leírást. A `PatientPage.tsx`
+  `applyNyelv`-je hívja, a RÉGI nyelvvel
+- `hianyzoCsomagLeirasok(plan, priceList)` (`app/src/domain/kitoltetlen.ts`)
+  — PUHA diagnosztika, szándékosan külön a `kitoltetlenSorok` kemény
+  blokkjától: azon sorok, amik `csomag: true` tételre hivatkoznak, de üres
+  a leírásuk. A `PreviewPage.tsx` `confirmStep`-láncának harmadik tagja
+  hívja, csak ha `plan.leirasokMutatasa` igaz
+- `leirasTulHosszu(szoveg)` / `LEIRAS_FIGYELMEZTETES_KARAKTER` /
+  `LEIRAS_FIGYELMEZTETES_SOR` (`app/src/domain/leirasHossz.ts`) — a puha
+  hosszkorlát-figyelmeztetés, mindkét hívó helyen (Árlista admin
+  `ItemEditor`, szerkesztő `LineRow`) ugyanaz a predikátum
 
 ## Domain szókincs
 

@@ -45,6 +45,18 @@ export interface Tetel {
   ar: ArByPenznem;
   /** Csak az importból; a doksi szerint az első admin-mentés után elhagyható. */
   forrasSor?: number;
+  /**
+   * Kétnyelvű "mi van benne" leírás (docs/08-backlog.md 10. tétel). Additív
+   * mező, nincs `schemaVersion`-emelés -- hiányzó mező = a doki még nem adott
+   * meg leírást ehhez a tételhez.
+   */
+  leiras?: LokalizaltSzoveg;
+  /**
+   * true esetén a véglegesítés-őr figyelmeztet, ha az erre hivatkozó soron
+   * nincs leírás (D27, docs/01-attekintes-es-dontesek.md). Additív mező,
+   * hiányzó mező = nem csomag jellegű.
+   */
+  csomag?: boolean;
 }
 
 export interface PriceList {
@@ -75,6 +87,12 @@ export interface Sor {
   mennyiseg: number;
   listaEgysegar: number;
   tenylegesEgysegar: number;
+  /**
+   * A `Tetel.leiras` pillanatképe, a `nevSnapshot` mintáján -- lásd
+   * `leirasKoveti()` (domain/nev.ts). Additív mező, hiányzó mező = a mező
+   * bevezetése előtt mentett sor, vagy nincs leírás.
+   */
+  leirasSnapshot?: string;
 }
 
 export interface Fazis {
@@ -125,6 +143,12 @@ export interface Plan {
    * emelkedett, a mező opcionális.
    */
   kedvezmenyOsszeg?: number | null;
+  /**
+   * Nyomtatásra kerüljenek-e a sorok leírásai (docs/08-backlog.md 10. tétel).
+   * Additív mező, `schemaVersion` nem emelkedett -- hiányzó mező = `true` (a
+   * mező bevezetése előtti terv.json).
+   */
+  leirasokMutatasa?: boolean;
 }
 
 export interface Rendelo {

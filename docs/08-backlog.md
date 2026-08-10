@@ -10,14 +10,14 @@ A `docs/01` sérthetetlen keretei (D1–D25) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. A
-korábbi nyitott tételek (8., 10., 13.) megtartják a régi számukat, az új
+korábbi nyitott tételek (8., 13.) megtartják a régi számukat, az új
 tételek a régi sorozatot folytatják (16–23), hogy egy jövőbeli
 tervdokumentum fájlneve (`backlog-N-*.md`) ne ütközzön a már létező,
 kész tételekhez tartozókkal.
 
 **Sorrend:** a listákon belül hasznosság szerint — a napi fájdalom
 mérete × gyakorisága, holtversenynél a kisebb munka előre. A MOST
-szakasz mind a 9 tételéhez van tervdokumentum (grill-me munkamenetek
+szakasz mind a 8 tételéhez van tervdokumentum (grill-me munkamenetek
 döntési összefoglalói).
 
 ---
@@ -49,26 +49,13 @@ duplikátum inaktiválva (`aktiv: false`, id megtartva, D17).
   „Ismert szennyeződés" táblázatában maradt, valódi ár-/kategorizálási
   döntést igénylő tételek (pl. `t072`/`t073` azonos ára, `t078` „Sín"
   kategóriája). **A második kör javaslata: az ülés napirendjére
-  kerüljön a 13. tétel magyar garanciaszövegének begyűjtése is** —
-  egyetlen ülés adja az összes még hátralévő embermunka-inputot.
+  kerüljön a 13. tétel magyar garanciaszövegének begyűjtése is**, és
+  ugyanide a tétel-leírás (docs/02-domain-modell.md § Tétel-leírás)
+  `csomag`-jelöléseinek és leírás-szövegeinek begyűjtése
+  (docs/06-arlista-import.md) — egyetlen ülés adja az összes még
+  hátralévő embermunka-inputot.
 
-### 2. hely — 10. tétel: Tétel-leírás a csomagtételekhez
-
-*(korábbi 10. tétel — mindkét review-kör megerősítette: „mi van ebben az
-egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
-
-- **Méret:** ~1 nap — kétnyelvű `Tetel.leiras` az árlistán + sor-szintű
-  pillanatkép a `nevSnapshot` mintájára, admin-mező, PDF-megjelenítés.
-- **Kereteket sért?** Nem — a D13-határ védelme a UI címkézésén múlik
-  („Leírás (mi van benne?)"), lásd a tervet.
-- **Valódi haszon:** pácienskommunikáció — a hazavitt egysoros
-  1 950 000-es ajánlat helyett a páciens otthon is el tudja mondani, mit
-  tartalmaz a csomag.
-- **20%-os verzió:** ez maga a 20%-os verzió egy valódi „csomag =
-  tételek listája" struktúrához képest (az a KÉSŐBB listán).
-- **Terv:** `docs/backlog-10-tetel-leiras-terv.md` (17 döntés).
-
-### 3. hely — 13. tétel: Garancia szakasz a nyomtatványon
+### 2. hely — 13. tétel: Garancia szakasz a nyomtatványon
 
 *(korábbi 13. tétel)*
 
@@ -84,7 +71,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
 - **Terv:** `docs/backlog-13-garancia-terv.md` (9 döntés; a német szöveg
   placeholder marad, a 6. tétel placeholder-őre kezeli).
 
-### 4. hely — 18. tétel: Fázis törlése megerősítéssel
+### 3. hely — 18. tétel: Fázis törlése megerősítéssel
 
 - **Méret:** 1–2 óra — a meglévő `AlertDialog`-minta a „Fázis törlése"
   gombon, csak akkor, ha a fázisban van sor (üres fázis törlése maradjon
@@ -97,7 +84,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
 - **20%-os verzió:** nincs kisebb — ez már a minimális védelem.
 - **Terv:** `docs/backlog-18-fazis-torles-terv.md` (6 döntés).
 
-### 5. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
+### 4. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
 - **Méret:** 2–3 óra — új, nem blokkoló lépés a `PreviewPage` meglévő
   `confirmStep`-láncában: a 0 Ft-os, kitöltött nevű sorok felsorolása. A
@@ -112,7 +99,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   rosszabb lenne, mert eltörné a billentyűzetes ciklust.
 - **Terv:** `docs/backlog-19-nulla-forint-terv.md` (7 döntés).
 
-### 6. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
+### 5. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
 
 - **Méret:** 1–2 óra — a `PreviewPage` és `PlanHistoryPage` letöltési
   fájlneveiben a páciensnév (a `paths.ts` meglévő
@@ -127,7 +114,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `docs/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
 
-### 7. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
+### 6. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
 - **Méret:** 1 óra + teszt — a `savePriceList` a `modositva` mellett az
   `arlistaVerzio`-t is a mentés napjára állítja tartalmi változásnál. A
@@ -142,7 +129,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
 - **Terv:** `docs/backlog-21-arlista-verzio-terv.md` (5 döntés).
 
-### 8. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
+### 7. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
 - **Méret:** 1–2 óra — a PlanHistoryPage-en a már betöltött
   PDF-bájtokból blob-URL, új fül; nincs új nézet, nincs új útvonal.
@@ -155,7 +142,7 @@ egy sorban?" a leggyakoribb megválaszolatlan pácienskérdés)*
   böngésző PDF-nézője elég).
 - **Terv:** `docs/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
-### 9. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 8. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
@@ -255,8 +242,9 @@ Hasznosság szerint sorrendezve:
   más adattartalom; külön funkció.
 - **Tömeges árváltoztatás az adminban** (pl. „minden implantátum +5%") —
   valódi időmegtakarítás árlistafrissítéskor, de évente egyszer kell.
-- **Valódi összetett csomag-tétel** (csomag = tételek listája) — a 10.
-  tétel leírás-mezője valószínűleg kiváltja; csak akkor, ha nem elég.
+- **Valódi összetett csomag-tétel** (csomag = tételek listája) — a
+  tétel-leírás mező (docs/02-domain-modell.md § Tétel-leírás) valószínűleg
+  kiváltja; csak akkor, ha nem elég.
 - **Séma-migrációs út** — a `schemaVersion` ma csak felfelé véd; amíg 1
   marad (a fenti tételek egyike sem emeli), nem sürgős, de a D18
   előbb-utóbb megköveteli.
@@ -323,8 +311,8 @@ Hasznosság szerint sorrendezve:
 - **Ártétel-ár historizálás az árlistában** — a D7 (soronkénti
   pillanatkép) már megoldja.
 - **Sor-szintű megjegyzés-oszlop külön mezőként** — a D13 kizárja; a
-  szerkeszthető sornév (kész) + a 10. tétel leírás-mezője lefedi a valós
-  igényt.
+  szerkeszthető sornév (kész) + a tétel-leírás mező
+  (docs/02-domain-modell.md § Tétel-leírás) lefedi a valós igényt.
 - **Kategória-böngésző a keresőben** — a D19 kizárja; a doktor-napok a
   keresés pontosságára mutattak igényt, nem a böngészésre.
 

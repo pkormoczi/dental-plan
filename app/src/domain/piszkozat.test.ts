@@ -34,6 +34,17 @@ describe('piszkozatTartalmas', () => {
     expect(piszkozatTartalmas(plan)).toBe(false);
   });
 
+  // docs/08-backlog.md 10. tétel, 12. döntés: alapból bekapcsolva.
+  it('createBlankPlan starts with leirasokMutatasa: true', () => {
+    const plan = createBlankPlan(settings, priceList);
+    expect(plan.leirasokMutatasa).toBe(true);
+  });
+
+  it('is NOT affected by the leirasokMutatasa switch alone -- csak megjelenítést vezérel, nem gépelt munka', () => {
+    const plan = createBlankPlan(settings, priceList);
+    expect(piszkozatTartalmas({ ...plan, leirasokMutatasa: false })).toBe(false);
+  });
+
   it('stays false for a blank plan built from DIFFERENT settings/priceList (dátum-/beállításfüggetlen)', () => {
     // Ha a piszkozatTartalmas() mély-egyenlőséget hasonlítana createBlankPlan()
     // egy friss hívásához, ez a teszt megbukna: egy másik `orvos`/`nyelv`/

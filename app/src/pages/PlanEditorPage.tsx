@@ -18,6 +18,7 @@ import {
   Separator,
   Table,
   Text,
+  TextArea,
   TextField,
 } from '@radix-ui/themes';
 import { Cross1Icon, InfoCircledIcon } from '@radix-ui/react-icons';
@@ -27,6 +28,7 @@ import ToothChartPanel from '../components/ToothChartPanel';
 import ToothPickerPopover from '../components/ToothPickerPopover';
 import { t } from '../design/tokens';
 import { formatLongDate } from '../domain/date';
+import { leirasTulHosszu } from '../domain/leirasHossz';
 import { basePrice, formatMoney } from '../domain/money';
 import { resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
@@ -63,7 +65,10 @@ function sorMezokTetelbol(
   item: Tetel,
   currency: Penznem,
   nyelv: Nyelv,
-): Pick<Sor, 'tetelId' | 'nevSnapshot' | 'savos' | 'listaEgysegar' | 'tenylegesEgysegar'> | null {
+): Pick<
+  Sor,
+  'tetelId' | 'nevSnapshot' | 'savos' | 'listaEgysegar' | 'tenylegesEgysegar' | 'leirasSnapshot'
+> | null {
   const ar = item.ar[currency];
   if (!ar) return null; // a hívó (available/ItemPicker) már kiszűrte, de a típusnak ez kell
   const base = basePrice(ar);
@@ -73,6 +78,8 @@ function sorMezokTetelbol(
     savos: ar.tipus === 'SAVOS',
     listaEgysegar: base,
     tenylegesEgysegar: base,
+    // D27 (docs/01): nincs HU-visszaesés a leírásra, hiányzó fordítás = üres.
+    leirasSnapshot: (nyelv === 'hu' ? item.leiras?.hu : item.leiras?.de) ?? '',
   };
 }
 
@@ -89,8 +96,18 @@ function sorMezokTetelbol(
  */
 function sorMezokEgyedibol(
   nev: string,
-): Pick<Sor, 'tetelId' | 'nevSnapshot' | 'savos' | 'listaEgysegar' | 'tenylegesEgysegar'> {
-  return { tetelId: '', nevSnapshot: nev.trim(), savos: false, listaEgysegar: 0, tenylegesEgysegar: 0 };
+): Pick<
+  Sor,
+  'tetelId' | 'nevSnapshot' | 'savos' | 'listaEgysegar' | 'tenylegesEgysegar' | 'leirasSnapshot'
+> {
+  return {
+    tetelId: '',
+    nevSnapshot: nev.trim(),
+    savos: false,
+    listaEgysegar: 0,
+    tenylegesEgysegar: 0,
+    leirasSnapshot: '',
+  };
 }
 
 export default function PlanEditorPage() {
@@ -209,6 +226,7 @@ export default function PlanEditorPage() {
           mennyiseg: 1,
           listaEgysegar: 0,
           tenylegesEgysegar: 0,
+          leirasSnapshot: '',
         });
       });
       ciklusRef.current = null;
@@ -371,6 +389,19 @@ export default function PlanEditorPage() {
                 })
               }
             />
+            <Box mt="3">
+              <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <Checkbox
+                  checked={plan.leirasokMutatasa ?? true}
+                  onCheckedChange={(checked) =>
+                    updatePlan((draft) => {
+                      draft.leirasokMutatasa = checked === true;
+                    })
+                  }
+                />
+                Tétel-leírások nyomtatása
+              </Text>
+            </Box>
           </Box>
         </Flex>
       </Box>
@@ -499,6 +530,7 @@ function PhaseSection({
                 catName={catName}
                 fogterkep={fogterkep}
                 fallback={sorFallback(l, nyelv, tetelekById)}
+                csomag={tetelekById.get(l.tetelId)?.csomag ?? false}
                 onPatch={(p) => onPatchLine(li, p)}
                 onRemove={() => {
                   onRemoveLine(li);
@@ -567,6 +599,7 @@ function LineRow({
   catName,
   fogterkep,
   fallback,
+  csomag,
   onPatch,
   onRemove,
 }: {
@@ -579,6 +612,8 @@ function LineRow({
   catName: (id: string) => string;
   fogterkep: FogterkepAllapot;
   fallback: SorFallbackOk | null;
+  /** true, ha a sor egy `csomag: true` tételre hivatkozik (docs/08-backlog.md 10. tétel, 15. döntés). */
+  csomag: boolean;
   onPatch: (patch: Partial<Sor>) => void;
   onRemove: () => void;
 }) {
@@ -618,7 +653,18 @@ function LineRow({
       ? Math.round((1 - line.tenylegesEgysegar / line.listaEgysegar) * 100)
       : 0;
 
+  // "+ leírás" összecsukható trigger (docs/08-backlog.md 10. tétel, 8.
+  // döntés) -- ha már van tartalom, nyitva induljon; nincs "csak
+  // kikapcsolni szabad" korlátozás, mert itt (a keresőmódtól eltérően)
+  // nincs auto-collapse kockázat.
+  const leirasTartalom = (line.leirasSnapshot ?? '').trim();
+  const [leirasNyitva, setLeirasNyitva] = useState(Boolean(leirasTartalom));
+  // Korai vizuális jelzés (15. döntés): a trigger maga jelez amber színnel,
+  // hogy ne szaporodjon egy külön jelvény a már amúgy is sűrű jelvénysorban.
+  const hianyzoCsomagLeiras = csomag && !leirasTartalom;
+
   return (
+    <>
     <Table.Row>
       <Table.Cell>
         {keresoMod ? (
@@ -674,6 +720,21 @@ function LineRow({
                 −{discount}%
               </Badge>
             )}
+            <Button
+              type="button"
+              size="1"
+              variant="ghost"
+              color={hianyzoCsomagLeiras ? 'amber' : 'gray'}
+              aria-expanded={leirasNyitva}
+              title={
+                hianyzoCsomagLeiras
+                  ? 'Csomagtétel — hiányzik a leírás'
+                  : 'Leírás (mi van benne?)'
+              }
+              onClick={() => setLeirasNyitva((v) => !v)}
+            >
+              {leirasTartalom ? 'Leírás' : '+ leírás'}
+            </Button>
           </Flex>
         )}
       </Table.Cell>
@@ -782,6 +843,25 @@ function LineRow({
         </IconButton>
       </Table.Cell>
     </Table.Row>
+    {leirasNyitva && (
+      <Table.Row>
+        <Table.Cell colSpan={7}>
+          <TextArea
+            value={line.leirasSnapshot ?? ''}
+            onChange={(e) => onPatch({ leirasSnapshot: e.target.value })}
+            placeholder="pl. Implantátum, felépítmény, korona"
+            rows={2}
+            aria-label="Leírás (mi van benne?)"
+          />
+          {leirasTulHosszu(line.leirasSnapshot ?? '') && (
+            <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
+              Hosszú leírás — ellenőrizd a nyomtatási képet.
+            </Text>
+          )}
+        </Table.Cell>
+      </Table.Row>
+    )}
+    </>
   );
 }
 

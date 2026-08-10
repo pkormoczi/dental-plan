@@ -120,6 +120,12 @@ const s = {
   phaseTotalValue: { fontSize: 9.5, fontWeight: 600 },
   phaseNote: { fontSize: 8.5, color: t.textMuted, marginTop: 3 },
 
+  // Tétel-leírás sorai (docs/08-backlog.md 10. tétel, 9. döntés) -- a
+  // `savosFootnote`/`phaseNote` mintáján, behúzva, hogy alrészletnek
+  // olvasódjon, ne új tételsornak.
+  leirasBlock: { marginBottom: 2 },
+  leirasSor: { fontSize: 8, color: t.textMuted, marginLeft: 14, lineHeight: 1.4 },
+
   savosFootnote: { fontSize: 8, color: t.textMuted, marginBottom: 14, lineHeight: 1.5 },
 
   bottomRow: {
@@ -227,10 +233,13 @@ function MiniHeader({ plan, L }: { plan: Plan; L: PdfLabels }) {
 function PhaseTable({
   fazis,
   currency,
+  leirasokMutatasa,
   L,
 }: {
   fazis: Fazis;
   currency: Plan['penznem'];
+  /** docs/08-backlog.md 10. tétel, 12. döntés -- `plan.leirasokMutatasa`. */
+  leirasokMutatasa: boolean;
   L: PdfLabels;
 }) {
   return (
@@ -243,20 +252,36 @@ function PhaseTable({
         <Text style={[s.th, s.colEgysegar]}>{L.thEgysegar}</Text>
         <Text style={[s.th, s.colOsszeg]}>{L.thOsszeg}</Text>
       </View>
-      {fazis.sorok.map((sor, i) => (
-        <View key={i} style={s.tableRow}>
-          <Text style={[s.td, s.colBeavatkozas]}>
-            {sor.nevSnapshot}
-            {sor.savos ? ' *' : ''}
-          </Text>
-          <Text style={[s.td, s.colFog]}>{formatTeethForPrint(sor.fogak)}</Text>
-          <Text style={[s.td, s.colDb]}>{sor.mennyiseg}</Text>
-          <Text style={[s.td, s.colEgysegar]}>{formatMoney(sor.tenylegesEgysegar, currency)}</Text>
-          <Text style={[s.td, s.colOsszeg]}>
-            {formatMoney(sor.tenylegesEgysegar * sor.mennyiseg, currency)}
-          </Text>
-        </View>
-      ))}
+      {fazis.sorok.map((sor, i) => {
+        const leiras = leirasokMutatasa ? (sor.leirasSnapshot ?? '').trim() : '';
+        return (
+          // wrap={false}: a tételsor és a leírása soha nem szakadhat szét
+          // oldaltörésnél -- a leírás alrészlet, árva állapotban félreérthető.
+          <View key={i} wrap={false}>
+            <View style={s.tableRow}>
+              <Text style={[s.td, s.colBeavatkozas]}>
+                {sor.nevSnapshot}
+                {sor.savos ? ' *' : ''}
+              </Text>
+              <Text style={[s.td, s.colFog]}>{formatTeethForPrint(sor.fogak)}</Text>
+              <Text style={[s.td, s.colDb]}>{sor.mennyiseg}</Text>
+              <Text style={[s.td, s.colEgysegar]}>{formatMoney(sor.tenylegesEgysegar, currency)}</Text>
+              <Text style={[s.td, s.colOsszeg]}>
+                {formatMoney(sor.tenylegesEgysegar * sor.mennyiseg, currency)}
+              </Text>
+            </View>
+            {leiras && (
+              <View style={s.leirasBlock}>
+                {leiras.split('\n').map((leirasSor, j) => (
+                  <Text key={j} style={s.leirasSor}>
+                    {leirasSor}
+                  </Text>
+                ))}
+              </View>
+            )}
+          </View>
+        );
+      })}
       <View style={s.phaseTotalRow}>
         <Text style={s.phaseTotalLabel}>{L.fazisOsszesen}</Text>
         <Text style={s.phaseTotalValue}>{formatMoney(fazisOsszeg(fazis), currency)}</Text>
@@ -358,6 +383,7 @@ export function TervDocument({
   const grand = tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg);
   const listTotal = sorokListaOsszeg(plan.fazisok);
   const hasRange = plan.fazisok.some((p) => p.sorok.some((l) => l.savos));
+  const leirasokMutatasa = plan.leirasokMutatasa ?? true;
   const fogterkep = buildToothVisualStates(plan, priceList);
   const showToothChart = toothChartPng != null && (fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0);
   // A sablonszövegben álló {{orvos}}/{{paciens}} helyőrzőket a tényleges
@@ -395,7 +421,13 @@ export function TervDocument({
         </View>
 
         {plan.fazisok.map((fazis, i) => (
-          <PhaseTable key={i} fazis={fazis} currency={plan.penznem} L={L} />
+          <PhaseTable
+            key={i}
+            fazis={fazis}
+            currency={plan.penznem}
+            leirasokMutatasa={leirasokMutatasa}
+            L={L}
+          />
         ))}
 
         {hasRange && <Text style={s.savosFootnote}>{L.savosFootnote}</Text>}

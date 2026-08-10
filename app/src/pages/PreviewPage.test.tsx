@@ -347,3 +347,97 @@ describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
     20000,
   );
 });
+
+/** Ugyanaz a minta, mint `PlanEditorPage.test.tsx` `seedWithCsomagItem`-je. */
+function seedWithCsomagItem() {
+  const custom = {
+    ...seedPriceList,
+    tetelek: seedPriceList.tetelek.map((x) =>
+      x.nev.hu === 'Fogeltávolítás' ? { ...x, csomag: true } : x,
+    ),
+  };
+  localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+  localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+}
+
+// docs/08-backlog.md 10. tétel, 14. döntés: PUHA megerősítő lépés, nem kemény
+// blokk -- a doki tudatosan átugorhatja és véglegesíthet leírás nélkül is.
+describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lépés', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'csomag tételre hivatkozó, üres leírású sor a láncban harmadik lépésként jelenik meg, majd folytatható',
+    async () => {
+      const user = userEvent.setup();
+      seedWithCsomagItem();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Teszt Csomag');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+
+      // A páciens hiányos (csak a név kitöltött) -- előbb a "Hiányzó
+      // páciensadatok" dialógus jön, a "Folytatás" a KÖVETKEZŐ lépésre visz.
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+
+      const dialog = await screen.findByRole('alertdialog');
+      expect(within(dialog).getByText('Hiányzó tétel-leírások')).toBeInTheDocument();
+      expect(within(dialog).getByText(/Fogeltávolítás/)).toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Folytatás' }));
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
+    },
+    20000,
+  );
+
+  it(
+    '"Tétel-leírások nyomtatása" kikapcsolva a lépés kimarad, akkor is, ha van csomag-hiány',
+    async () => {
+      const user = userEvent.setup();
+      seedWithCsomagItem();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Teszt Kikapcsolva');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('checkbox', { name: 'Tétel-leírások nyomtatása' }));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+
+      // Csak a hiányos páciensadat-dialógus jön -- nincs "missing-leiras" lépés.
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
+    },
+    20000,
+  );
+});

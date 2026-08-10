@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { kitoltetlenSorok } from './kitoltetlen';
-import type { Plan, Sor } from './types';
+import { hianyzoCsomagLeirasok, kitoltetlenSorok } from './kitoltetlen';
+import type { Plan, PriceList, Sor } from './types';
 
 function sor(partial: Partial<Sor>): Sor {
   return {
@@ -99,5 +99,66 @@ describe('kitoltetlenSorok', () => {
     // Egy nem-létező (törölt) tetelId-jű, de KITÖLTÖTT (megnevezett) sor nem kitöltetlen.
     const plan = makePlan([[sor({ tetelId: 't-torolve' })]]);
     expect(kitoltetlenSorok(plan)).toEqual([]);
+  });
+});
+
+const priceList: PriceList = {
+  schemaVersion: 1,
+  arlistaVerzio: '2026-07-01',
+  modositva: '2026-07-01',
+  kategoriak: [],
+  tetelek: [
+    {
+      id: 't-csomag',
+      kategoriaId: 'k1',
+      sorrend: 1,
+      aktiv: true,
+      gyakori: false,
+      nev: { hu: 'All-on-4 csomag', de: null },
+      ar: { HUF: { tipus: 'FIX', ertek: 1950000 }, EUR: null },
+      csomag: true,
+    },
+    {
+      id: 't-nem-csomag',
+      kategoriaId: 'k1',
+      sorrend: 2,
+      aktiv: true,
+      gyakori: false,
+      nev: { hu: 'Fognyaki tömés', de: null },
+      ar: { HUF: { tipus: 'FIX', ertek: 25000 }, EUR: null },
+      csomag: false,
+    },
+  ],
+};
+
+describe('hianyzoCsomagLeirasok', () => {
+  it('csomag tételre hivatkozó, üres leírású sort jelez', () => {
+    const plan = makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: 'All-on-4 csomag' })]]);
+    expect(hianyzoCsomagLeirasok(plan, priceList)).toEqual([
+      { fazisIndex: 0, fazisNev: '1. kezelés', sorIndex: 0, nev: 'All-on-4 csomag' },
+    ]);
+  });
+
+  it('csomag tételre hivatkozó, kitöltött leírású sort nem jelez', () => {
+    const plan = makePlan([
+      [
+        sor({
+          tetelId: 't-csomag',
+          nevSnapshot: 'All-on-4 csomag',
+          leirasSnapshot: 'Implantátum\nFelépítmény',
+        }),
+      ],
+    ]);
+    expect(hianyzoCsomagLeirasok(plan, priceList)).toEqual([]);
+  });
+
+  it('nem csomag tételre hivatkozó, üres leírású sort nem jelez', () => {
+    const plan = makePlan([[sor({ tetelId: 't-nem-csomag', nevSnapshot: 'Fognyaki tömés' })]]);
+    expect(hianyzoCsomagLeirasok(plan, priceList)).toEqual([]);
+  });
+
+  it('egyedi (tetelId nélküli) sort nem jelez -- nincs mihez viszonyítani', () => {
+    const plan = makePlan([[sor({ tetelId: '', nevSnapshot: 'Egyedi sor' })]]);
+    expect(hianyzoCsomagLeirasok(plan, priceList)).toEqual([]);
   });
 });

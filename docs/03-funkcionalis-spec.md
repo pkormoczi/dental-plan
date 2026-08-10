@@ -159,6 +159,7 @@ megjelennek a kereső alatt. Egy kattintás = hozzáadás.
 | Ajánlati ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`). EUR pénznemű tervnél a mező **euróban** fogad be és jelenít meg szöveget (pl. `35,50`), a tárolás változatlanul centben történik — ugyanaz a `NumberField` `unit` mechanizmus, ami az árlista adminban már véd az euró/cent tévesztéstől. Ez tisztán UI-réteg felirat, nem pénzösszeg-formázás, ezért nem indokol közös `domain/money.ts` segédfüggvényt |
 | Becsült ár (≈) | Soronkénti, szabad és kétirányú kapcsoló az Ajánlati ár mező mellett (ghost ikongomb, `≈` szövegglyph) — bármelyik soron be- és kikapcsolható, függetlenül attól, hogy a sor árlistai FIX, SAVOS, fogtérkép-kattintásos vagy egyedi eredetű. Bekapcsolva a nyomtatványon `*` + lábjegyzetet kap (D15). Csak megjelenítést vezérel, az összegzésbe nem szól bele; nincs eredet-nyilvántartás, a sor nem jegyzi meg, honnan jött, és az aktuális árlistából sem kérdezzük vissza (D7) |
 | Összeg | `tenylegesEgysegar * mennyiseg` |
+| Leírás | Összecsukható, a Beavatkozás mező melletti „+ leírás"/„Leírás" jelvényre kattintva nyílik ki, teljes szélességben, a sor alatt (docs/02-domain-modell.md § Tétel-leírás). Bármelyik sor kaphat leírást, árlistai vagy egyedi is. Ha a sor egy `csomag: true` tételre hivatkozik és üres a leírás, a trigger amber jelzést kap — korai figyelmeztetés, mielőtt a véglegesítés-őr megerősítést kérne |
 
 A „Listaár"/„Ajánlati"/„Összeg" oszlopfejléc a terv pénznemét is jelzi
 (`(Ft)` / `(€)`), hogy egyetlen oszlop se tűnjön „biztonságosnak" a
@@ -197,6 +198,9 @@ sorként vehető fel — lásd fent, „Tételkereső". Az egyedi sor:
   még névtelen sor is ugyanezt a mechanizmust használja (lásd fent,
   „Fogtérkép"), csak addig kereső módban marad, amíg a doki tételt nem
   választ vagy egyedi nevet nem ad neki.
+- **Leírást is kaphat**, ugyanúgy, mint egy árlistai sor (docs/02-domain-modell.md
+  § Tétel-leírás) — mivel nincs háttér-tétel, mindig szabadon beírt szöveg,
+  nyelváltás nem érinti, „átírt"/`HU` jelvénynek nincs értelme rajta.
 
 ### Kitöltetlen sor
 
@@ -274,6 +278,17 @@ egymásnak ellentmondó állapotba. Bekapcsolva a nyomtatvány 1. oldala két
 új sort kap, és a 2. oldal fizetési feltételeinek szövege is ugyanezt a
 százalékot mondja (lásd `docs/04-nyomtatvany-spec.md`).
 
+### Tétel-leírások nyomtatása
+
+Az Előleg blokk alatt egy kapcsoló: *„Tétel-leírások nyomtatása"* —
+alapból bekapcsolva. Kikapcsolva egyetlen sor `leirasSnapshot`-ja sem
+kerül a nyomtatványra (`docs/04-nyomtatvany-spec.md` § Tételtáblázat), és a
+véglegesítés-őr hiányzó csomag-leírás figyelmeztetése (lásd lent) sem fut
+le — ha úgysem nyomtatódik, a hiánya sem érdemel figyelmeztetést. Ugyanúgy
+pillanatkép-jellegű, mint `nyelv`/`penznem` (docs/02-domain-modell.md §
+Tétel-leírás): betöltéskor és terv-másoláskor öröklődik, nem áll vissza
+alapértékre.
+
 ### Autosave
 
 A piszkozat egy `DraftStorage` interface mögött mentődik folyamatosan,
@@ -329,6 +344,14 @@ folytatható — ez nem figyelmeztetés, hanem blokk, hogy névtelen, 0 Ft-os
 sor sose kerülhessen az aláírandó dokumentumra. A hibaüzenet megnevezi a
 fázist és a fogszámot; „Vissza a szerkesztőbe" gomb visz a hiányzó sorhoz.
 Az Előnézet maga nem blokkolódik, csak a véglegesítés.
+
+**Hiányzó csomag-leírás (puha megerősítés):** ha a tervben `csomag: true`
+tételre hivatkozó, üres leírású sor van, a véglegesítés egy harmadik
+megerősítő lépést kér — a lánc sorrendje: hiányzó páciensadat → hiányzó/
+eltérő német tételnevek → hiányzó csomag-leírás. A dialógus felsorolja az
+érintett sorokat, „Folytatás" gombbal átugorható (docs/02-domain-modell.md
+§ Tétel-leírás). Ez a lépés kimarad, ha a terv `leirasokMutatasa` kapcsolója
+ki van kapcsolva — ilyenkor a leírás úgysem kerül a nyomtatványra.
 
 ### Sablon-placeholder őr
 
@@ -503,6 +526,10 @@ szerkesztőben állítható be.
 Kattintásra a sor lenyílik, és ott van minden mező:
 
 - magyar név, német név
+- leírás (magyar, német) — „mi van benne?" (docs/02-domain-modell.md §
+  Tétel-leírás), többsoros szövegmező
+- csomagtétel jelölő — a véglegesítés-őr csak ennél a jelölésnél
+  figyelmeztet hiányzó leírásra
 - kategória (legördülő — **ezzel mozgatható át a tétel**, ez a takarítás
   fő eszköze)
 - ártípus váltó: `FIX` / `SAVOS`

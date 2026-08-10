@@ -718,3 +718,78 @@ describe('PlanEditorPage -- backlog-4: becsült ár (≈ ikon) kapcsoló', () =>
     expect(chip).toHaveAttribute('aria-pressed', 'true');
   });
 });
+
+describe('PlanEditorPage -- backlog-10: tétel-leírás', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  function seedWithCsomagItem() {
+    const custom = {
+      ...seedPriceList,
+      tetelek: seedPriceList.tetelek.map((x) =>
+        x.nev.hu === 'Fogeltávolítás' ? { ...x, csomag: true } : x,
+      ),
+    };
+    localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+  }
+
+  it('a "+ leírás" trigger nyitja a textareát, a gépelés a leirasSnapshot-ba perzisztál', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.click(screen.getByRole('button', { name: '+ leírás' }));
+    const textarea = screen.getByLabelText('Leírás (mi van benne?)');
+    await user.type(textarea, 'Implantátum, felépítmény, korona');
+    expect(textarea).toHaveValue('Implantátum, felépítmény, korona');
+  });
+
+  it('csomag: true tételre hivatkozó, üres leírású sor amber jelzést kap a triggeren, kitöltés után eltűnik', async () => {
+    seedWithCsomagItem();
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(screen.getByTitle('Csomagtétel — hiányzik a leírás')).toBeInTheDocument();
+
+    await user.click(screen.getByTitle('Csomagtétel — hiányzik a leírás'));
+    await user.type(screen.getByLabelText('Leírás (mi van benne?)'), 'Kihúzás');
+
+    expect(screen.queryByTitle('Csomagtétel — hiányzik a leírás')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Leírás' })).toBeInTheDocument();
+  });
+
+  it('nem csomag tételen nincs amber jelzés, akkor sem, ha üres a leírás', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(screen.queryByTitle('Csomagtétel — hiányzik a leírás')).not.toBeInTheDocument();
+    expect(screen.getByTitle('Leírás (mi van benne?)')).toBeInTheDocument();
+  });
+
+  it('a terv-szintű "Tétel-leírások nyomtatása" kapcsoló alapból be van kapcsolva, és kikapcsolható', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const kapcsolo = await screen.findByRole('checkbox', { name: 'Tétel-leírások nyomtatása' });
+    expect(kapcsolo).toBeChecked();
+
+    await user.click(kapcsolo);
+    expect(kapcsolo).not.toBeChecked();
+  });
+});

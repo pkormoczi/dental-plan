@@ -96,6 +96,22 @@ export function fallbackSorok(plan: Plan, priceList: PriceList): FallbackSorokEr
   return eredmeny;
 }
 
+/**
+ * Igaz, ha a `Sor.leirasSnapshot` pontosan azt a leírást viseli, amit a
+ * `Tetel.leiras` adna az adott nyelven -- a `nevKoveti` párja, de NEM ő maga:
+ * a leírásnak nincs HU-visszaesése (D27, docs/01-attekintes-es-dontesek.md),
+ * ezért a hiányzó fordítást itt -- a `nevKoveti`-től eltérően -- üres stringgé normalizáljuk
+ * az összehasonlítás előtt, nem `!= null` őrrel zárjuk ki. Enélkül egy
+ * hu->de->hu oda-vissza nyelváltás elveszítené az eredeti magyar leírást: a
+ * de oldalon `leirasSnapshot` legitim módon üresre áll (nincs német
+ * fordítás), és egy `!= null` őr a visszaváltásnál ezt "kézzel eltérőnek"
+ * látná, nem szinkronizálna vissza.
+ */
+export function leirasKoveti(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
+  const arlistaiLeiras = (nyelv === 'hu' ? tetel.leiras?.hu : tetel.leiras?.de) ?? '';
+  return (sor.leirasSnapshot ?? '') === arlistaiLeiras;
+}
+
 export interface NyelvvaltasHatas {
   /** Hány `tetelId`-hez kötött sor neve frissülne automatikusan az új nyelvre. */
   frissul: number;

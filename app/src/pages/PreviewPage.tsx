@@ -8,7 +8,7 @@ import { usePDF } from '@react-pdf/renderer';
 import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
-import { kitoltetlenSorok } from '../domain/kitoltetlen';
+import { hianyzoCsomagLeirasok, kitoltetlenSorok } from '../domain/kitoltetlen';
 import { fallbackSorok } from '../domain/nev';
 import { isPlaceholderTemplate } from '../domain/templates';
 import { computeOsszesitok } from '../domain/totals';
@@ -19,7 +19,18 @@ import { renderToothChartPng } from '../pdf/toothChartImage';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
-type ConfirmStep = 'missing-fields' | 'de-fallback-names' | null;
+type ConfirmStep = 'missing-fields' | 'de-fallback-names' | 'missing-leiras' | null;
+
+// Rendezett lánc -- `attemptFinalize` az elején kezdi, `confirmStepContinue`
+// a JELENLEGI lépés utáni első alkalmazható lépésre ugrik (lásd lent). A
+// sorrend implementációs döntés: a páciensadat és a nyelvi/jogi probléma
+// megelőzi a kommunikációs jellegű leírás-hiányt (docs/03-funkcionalis-spec.md
+// § 4. Előnézet és véglegesítés).
+const CONFIRM_STEPS: Exclude<ConfirmStep, null>[] = [
+  'missing-fields',
+  'de-fallback-names',
+  'missing-leiras',
+];
 
 /** Egy névlista szöveges blokkja a "Hiányzó/eltérő tételnevek" dialógushoz, üres listánál `''`. */
 function nevListaSzoveg(cim: string, nevek: string[]): string {
@@ -205,6 +216,26 @@ export default function PreviewPage() {
   // attemptFinalize: ez KEMÉNY blokk, nem a confirmStep-lánc egy tagja,
   // mert egy névtelen, 0 Ft-os sor sosem kerülhet az aláírandó PDF-re.
   const uresSorok = kitoltetlenSorok(plan);
+  // PUHA figyelmeztetés (docs/08-backlog.md 10. tétel, 14. döntés) -- csak
+  // akkor releváns, ha a leírások ténylegesen nyomtatódnak; kikapcsolt
+  // `leirasokMutatasa` mellett a hiányuk nem érinti a nyomtatványt.
+  const hianyzoLeirasok = (plan.leirasokMutatasa ?? true)
+    ? hianyzoCsomagLeirasok(plan, priceList)
+    : [];
+
+  const confirmStepApplicable: Record<Exclude<ConfirmStep, null>, boolean> = {
+    'missing-fields': otherFieldsMissing,
+    'de-fallback-names': nevProblemaSzama > 0,
+    'missing-leiras': hianyzoLeirasok.length > 0,
+  };
+
+  /** A CONFIRM_STEPS láncban `fromIndex`-től kezdve az első alkalmazható lépés, vagy `null`. */
+  function nextConfirmStep(fromIndex: number): ConfirmStep {
+    for (let i = fromIndex; i < CONFIRM_STEPS.length; i++) {
+      if (confirmStepApplicable[CONFIRM_STEPS[i]]) return CONFIRM_STEPS[i];
+    }
+    return null;
+  }
 
   async function doFinalize() {
     if (!pdfInstance.blob) return;
@@ -261,22 +292,21 @@ export default function PreviewPage() {
       return;
     }
     setUresSorokNotice(false);
-    if (otherFieldsMissing) {
-      setConfirmStep('missing-fields');
-      return;
-    }
-    if (nevProblemaSzama > 0) {
-      setConfirmStep('de-fallback-names');
+    const step = nextConfirmStep(0);
+    if (step) {
+      setConfirmStep(step);
       return;
     }
     void doFinalize();
   }
 
   function confirmStepContinue() {
-    // A hiányzó-mezők megerősítés után -- ha német nevek is hiányoznak --
-    // a láncban a KÖVETKEZŐ dialógus nyílik meg, nem a mentés fut le rögtön.
-    if (confirmStep === 'missing-fields' && nevProblemaSzama > 0) {
-      setConfirmStep('de-fallback-names');
+    // A jelenlegi lépés UTÁN a láncban a következő ALKALMAZHATÓ dialógus
+    // nyílik meg (ha van), nem a mentés fut le rögtön.
+    const idx = confirmStep ? CONFIRM_STEPS.indexOf(confirmStep) : -1;
+    const step = nextConfirmStep(idx + 1);
+    if (step) {
+      setConfirmStep(step);
       return;
     }
     setConfirmStep(null);
@@ -443,19 +473,31 @@ export default function PreviewPage() {
       >
         <AlertDialog.Content maxWidth="480px">
           <AlertDialog.Title>
-            {confirmStep === 'missing-fields' ? 'Hiányzó páciensadatok' : 'Tételnevek nem németül'}
+            {confirmStep === 'missing-fields'
+              ? 'Hiányzó páciensadatok'
+              : confirmStep === 'de-fallback-names'
+                ? 'Tételnevek nem németül'
+                : 'Hiányzó tétel-leírások'}
           </AlertDialog.Title>
           <AlertDialog.Description size="2" style={{ whiteSpace: 'pre-line' }}>
             {confirmStep === 'missing-fields'
               ? 'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad). Folytatod a véglegesítést?'
-              : 'Ez egy német nyelvű ajánlat, de néhány sor neve nem németül kerül a nyomtatványra.\n\n' +
-                [
-                  nevListaSzoveg('Nincs német nevük az árlistában', nincsForditas),
-                  nevListaSzoveg('Kézzel átírt, eltér az árlistától', elterAzArlistatol),
-                ]
-                  .filter(Boolean)
-                  .join('\n\n') +
-                '\n\nA páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?'}
+              : confirmStep === 'de-fallback-names'
+                ? 'Ez egy német nyelvű ajánlat, de néhány sor neve nem németül kerül a nyomtatványra.\n\n' +
+                  [
+                    nevListaSzoveg('Nincs német nevük az árlistában', nincsForditas),
+                    nevListaSzoveg('Kézzel átírt, eltér az árlistától', elterAzArlistatol),
+                  ]
+                    .filter(Boolean)
+                    .join('\n\n') +
+                  '\n\nA páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?'
+                : 'Néhány csomagtételre hivatkozó soron nincs leírás -- a páciens nem fogja tudni ' +
+                  'otthon visszaolvasni, mi van benne.\n\n' +
+                  nevListaSzoveg(
+                    'Nincs leírás',
+                    hianyzoLeirasok.map((h) => h.nev),
+                  ) +
+                  '\n\nFolytatod a véglegesítést leírás nélkül?'}
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>

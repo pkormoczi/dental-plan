@@ -158,3 +158,6 @@ ami a dokira tartozik, az adminban egy-egy szerkesztés:
   kategória→szín "vödör"-tábla (`design/treatmentVisuals.ts`) helyett a
   fogtérkép színe innen olvas. Additív mező, nincs `schemaVersion`-emelés
   (D18 ettől függetlenül érvényben marad).
+- **`Tetel.leiras`/`Tetel.csomag`**: egyik 118 tételen sincs kitöltve
+  (docs/02-domain-modell.md § Tétel-leírás) — a dokinak kell megjelölnie,
+  mely tételek csomag jellegűek, és megírnia a leírásukat.

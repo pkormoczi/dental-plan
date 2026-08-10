@@ -117,6 +117,15 @@ Sávos árú tétel neve után `*`, és a táblázat alatt egyszer:
 Ez jogi védelem: sávos árat fix számként nyomtatni annyi, mint kötelező
 érvényű ajánlatot adni olyasmire, aminek a mennyisége még nem ismert.
 
+**Tétel-leírás** (docs/02-domain-modell.md § Tétel-leírás,
+docs/08-backlog.md 10. tétel): ha a `Plan.leirasokMutatasa` igaz és a
+sornak van `leirasSnapshot`-ja, a leírás a tételsor alatt jelenik meg,
+soronként tördelve (a beírt `\n` sortörések megtartva) — behúzva, szürke
+színnel, kisebb betűmérettel, hogy alrészletnek olvasódjon, ne új
+tételsornak. A tételsor és a leírása egy `wrap={false}` csoportban
+renderelődik: a kettő soha nem szakadhat szét oldaltörésnél, az egész
+blokk együtt ugrik a következő oldalra, ha nem fér ki.
+
 ### Fogtérkép
 
 Anatómiai rajz mind a 32 maradó fogról (`app/src/assets/dental-chart-fdi-32.svg`,

@@ -4,6 +4,15 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 
 ## 2026. augusztus 10.
 
+- Mostantól bármelyik tételhez (az Árlista adminban) és bármelyik sorhoz (a Terv szerkesztőben)
+  hozzáadható egy kétnyelvű leírás arról, mi van benne — hasznos egy összetett, csomagszerű
+  tételnél (pl. egy fogpótlási csomag), ahol a páciens otthon is szeretné tudni, pontosan mi
+  tartozik az árhoz. Egy tétel megjelölhető "csomagtételnek" is: ha egy ilyen tételre hivatkozó
+  soron nincs leírás, a szerkesztőben sárga jelzés figyelmeztet rá, véglegesítéskor pedig a
+  program megkérdezi, biztos folytatható-e leírás nélkül (ez nem blokkolja a mentést). A leírás
+  a nyomtatott terven a tétel neve alatt, kisebb, szürke betűvel jelenik meg — ez tervenként egy
+  kapcsolóval ("Tétel-leírások nyomtatása") ki is kapcsolható, ha egy adott ajánlaton nem
+  szeretnénk megjeleníteni.
 - A Korábbi tervek listán két új gomb jelent meg: "Új terv a páciens adataival" (a páciensnév
   mellett — új, üres tervet indít, csak a személyes adatokat véve át, hogy visszatérő
   pácienshez ne kelljen újragépelni azokat) és "Másolás új tervként" (minden verziósoron — a

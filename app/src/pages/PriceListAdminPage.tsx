@@ -16,6 +16,7 @@ import {
   Box,
   Button,
   Callout,
+  Checkbox,
   Flex,
   Grid,
   Heading,
@@ -26,6 +27,7 @@ import {
   Separator,
   Table,
   Text,
+  TextArea,
   TextField,
 } from '@radix-ui/themes';
 import {
@@ -45,6 +47,7 @@ import { Field, FieldGroup } from '../components/Field';
 import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
 import { ALAP_KATEGORIA_SZIN, KATEGORIA_PALETTA } from '../design/treatmentVisuals';
+import { leirasTulHosszu } from '../domain/leirasHossz';
 import { formatPrice } from '../domain/money';
 import { nextKategoriaId, nextTetelId } from '../domain/priceListIds';
 import { nevEgyezik, norm } from '../domain/search';
@@ -97,6 +100,38 @@ function BufferedTextField({
     <TextField.Root
       value={draft}
       placeholder={placeholder}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      onChange={(e) => {
+        setDraft(e.target.value);
+        onChange(e.target.value);
+      }}
+    />
+  );
+}
+
+/** `BufferedTextField` többsoros párja -- a tétel-leírás mezőkhöz (docs/08-backlog.md 10. tétel). Ugyanaz a draft/focused minta, lásd fent. */
+function BufferedTextArea({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  placeholder?: string;
+}) {
+  const [focused, setFocused] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    if (!focused) setDraft(value);
+  }, [value, focused]);
+
+  return (
+    <TextArea
+      value={draft}
+      placeholder={placeholder}
+      rows={3}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       onChange={(e) => {
@@ -216,6 +251,8 @@ export default function PriceListAdminPage() {
       gyakori: false,
       nev: { hu: nevHu, de: nevDe },
       ar: { HUF: { tipus: 'FIX', ertek: 0 }, EUR: null },
+      leiras: { hu: '', de: null },
+      csomag: false,
     };
     commit({ ...priceList, tetelek: [...priceList.tetelek, newItem] });
     setFilter('all');
@@ -596,6 +633,43 @@ function ItemEditor({
           />
         </Field>
       </Grid>
+
+      <Grid columns="2" gap="3" mb="3">
+        <Field label="Leírás (mi van benne?)">
+          <BufferedTextArea
+            value={item.leiras?.hu ?? ''}
+            placeholder="pl. Implantátum, felépítmény, korona"
+            onChange={(v) => onPatch({ leiras: { hu: v, de: item.leiras?.de ?? null } })}
+          />
+          {leirasTulHosszu(item.leiras?.hu ?? '') && (
+            <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
+              Hosszú leírás — ellenőrizd a nyomtatási képet.
+            </Text>
+          )}
+        </Field>
+        <Field label="Beschreibung (mi van benne, németül)">
+          <BufferedTextArea
+            value={item.leiras?.de ?? ''}
+            placeholder="még nincs megadva"
+            onChange={(v) => onPatch({ leiras: { hu: item.leiras?.hu ?? '', de: v || null } })}
+          />
+          {leirasTulHosszu(item.leiras?.de ?? '') && (
+            <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
+              Hosszú leírás — ellenőrizd a nyomtatási képet.
+            </Text>
+          )}
+        </Field>
+      </Grid>
+
+      <Flex mb="3">
+        <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Checkbox
+            checked={item.csomag ?? false}
+            onCheckedChange={(checked) => onPatch({ csomag: checked === true })}
+          />
+          Csomagtétel — a véglegesítés figyelmeztet, ha az erre hivatkozó soron nincs leírás
+        </Text>
+      </Flex>
 
       <Grid columns="2" gap="3">
         <Field label="Kategória">
