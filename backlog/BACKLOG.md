@@ -12,9 +12,66 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ---
 
-## MOST
+## KIDOLGOZOTT
 
-### 1. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
+### 27. tétel — Automatikus darabszám a fogszámokból  
+  (D14 részleges újranyitása) — a mennyiség automatikusan kövesse a fogak mezőt, kézi
+  felülbírálással; az egységtípus explicit besorolása továbbra sem
+  történik meg, heurisztika váltja ki.  
+  **Terv:** `backlog/plans/backlog-27-automatikus-darabszam-terv.md`
+
+### 28. tétel — Páciens-szintű, terveken átívelő törzsadat-nyilvántartó
+  (paciens-adatok.json, a paciens.json-tól külön fájl, a teljes Paciens
+  mezőkör — telefon, email, lakcím, taj, születési idő, kiskorú/törvényes
+  képviselő — élő, terv-mentéstől független szerkesztésére; új „Páciensek”
+  képernyő) — a döntéseket lásd a tervdokumentumban.  
+  **Terv:** `backlog/plans/backlog-28-paciens-torzsadat-terv.md`
+
+## KIDOLGOZÁSRA VÁR
+
+- **Ajánlat-állapot és visszahívás-jelzés** (pl. `allapot.json` a
+  páciensmappában, a verziómappákon kívül) — valódi haszon (kit kell
+  visszahívni, melyik ajánlat jár le), de új fájltípus és állapotgép;
+  alaposabb tervezést igényel, hogy ne csússzon system of recorddá.
+
+- **Storage-írási minta nincs kikényszerítve** (méret: **L**,
+architektúra-szintű). A `PlanStorage` interfész csak a *hogyan*-t rögzíti
+(D5), a *mikor*-t minden oldal maga dönti el: a tervszerkesztő pufferelt,
+egyszeri mentést használ, az Árlista admin és a Beállítások azonnali,
+mezőnkénti mentést. Ma ártalmatlan (`localStorage`), de a tervezett
+`FileSystemStorage`-váltásnál (`docs/05` 2. fázis) teljesítmény- és
+megbízhatósági kockázattá válik — pont ott, ahol a D16 takarítás miatt a
+legtöbb jövőbeli admin-szerkesztés várható.
+
+- **`storage/seed/priceList.ts:7` határsértés** (méret: **S**). Négy
+`../`-vel importál a repo gyökerén lévő `data/`-ból, át a CLAUDE.md
+szerint „csak referencia" mappaként leírt határon. A kockázat kisebb, mint
+korábban itt szerepelt: az elmozdítás/átnevezés nem csendben törik el,
+hanem `tsc -b`/Vite resolve hibaként azonnal jelentkezik build- és
+dev-időben egyaránt — a valódi ár az olvashatóság (négy `../` nehezen
+követhető) és az, hogy a `vite.config.ts` `server.fs.allow: ['..']`
+kommentje ma csak a `CHANGELOG.md`/`FEATURES.md` `?raw` importokat
+nevezi meg indoklásként, nem ezt.
+
+- **Titkosítatlan `localStorage` páciensadattal** (méret: **L**, tervezési
+döntés a mockup-fázisban — szándékos, lásd CLAUDE.md). Az architekturális
+megoldás a `FileSystemStorage`-váltás (2. fázis), nem a mockup feladata.
+
+**Cím szintű, kisebb tételek:** 
+- a három legnagyobb fájl (`PlanEditorPage.tsx`, `PriceListAdminPage.tsx`, `pdf/TervDocument.tsx`)
+bontása; 
+- háromféle gombstílus; 
+- `SettingsPage.tsx:28` közvetlenül
+importálja a `DemoStorage.ts` `PREFIX` konstansát a sablon-piszkozat
+cache kulcsához — tudatos, a fájl saját kommentje indokolja (hogy a
+"Minden adat törlése" prefix-seprése ezt is elvigye), de ez a
+cache-mechanizmus explicit localStorage-specifikus, a
+`FileSystemStorage`-váltás (2. fázis) tervezésekor újragondolandó, nem a
+mockup feladata most.
+
+## NEM FEJLESZTÉS
+
+### 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
 
 **Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
 Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
@@ -36,109 +93,7 @@ Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
   és leírás-szövegeinek begyűjtése (docs/06-arlista-import.md)
 
 ---
-
-## Technikai adósság
-
-A review P0-jai (8/8) és P1-jei (9/9) mind javítva — lásd git history.
-Az alábbiak maradtak nyitva (változatlanul az első körből):
-
-**Storage-írási minta nincs kikényszerítve** (méret: **L**,
-architektúra-szintű). A `PlanStorage` interfész csak a *hogyan*-t rögzíti
-(D5), a *mikor*-t minden oldal maga dönti el: a tervszerkesztő pufferelt,
-egyszeri mentést használ, az Árlista admin és a Beállítások azonnali,
-mezőnkénti mentést. Ma ártalmatlan (`localStorage`), de a tervezett
-`FileSystemStorage`-váltásnál (`docs/05` 2. fázis) teljesítmény- és
-megbízhatósági kockázattá válik — pont ott, ahol a D16 takarítás miatt a
-legtöbb jövőbeli admin-szerkesztés várható.
-
-**`storage/seed/priceList.ts:7` határsértés** (méret: **S**). Négy
-`../`-vel importál a repo gyökerén lévő `data/`-ból, át a CLAUDE.md
-szerint „csak referencia" mappaként leírt határon. A kockázat kisebb, mint
-korábban itt szerepelt: az elmozdítás/átnevezés nem csendben törik el,
-hanem `tsc -b`/Vite resolve hibaként azonnal jelentkezik build- és
-dev-időben egyaránt — a valódi ár az olvashatóság (négy `../` nehezen
-követhető) és az, hogy a `vite.config.ts` `server.fs.allow: ['..']`
-kommentje ma csak a `CHANGELOG.md`/`FEATURES.md` `?raw` importokat
-nevezi meg indoklásként, nem ezt.
-
-**Titkosítatlan `localStorage` páciensadattal** (méret: **L**, tervezési
-döntés a mockup-fázisban — szándékos, lásd CLAUDE.md). Az architekturális
-megoldás a `FileSystemStorage`-váltás (2. fázis), nem a mockup feladata.
-
-**Cím szintű, kisebb tételek:** a három legnagyobb fájl
-(`PlanEditorPage.tsx`, `PriceListAdminPage.tsx`, `pdf/TervDocument.tsx`)
-bontása; háromféle gombstílus; `SettingsPage.tsx:28` közvetlenül
-importálja a `DemoStorage.ts` `PREFIX` konstansát a sablon-piszkozat
-cache kulcsához — tudatos, a fájl saját kommentje indokolja (hogy a
-"Minden adat törlése" prefix-seprése ezt is elvigye), de ez a
-cache-mechanizmus explicit localStorage-specifikus, a
-`FileSystemStorage`-váltás (2. fázis) tervezésekor újragondolandó, nem a
-mockup feladata most.
-
----
-
-## KÉSŐBB — valódi érték, de nagy vagy kockázatos
-
-Hasznosság szerint sorrendezve:
-
-- **Több félretett terv (parkolópálya), `PISZKOZAT`-státuszú
-  verziómappaként** *(2. kör)* — a megszakításos délelőtt valós, a
-  doki-nap szerint Excelhez visszaűző fájdalma (ma egyetlen
-  piszkozat-slot van, a többi munka telefonfotóra kerül). A helyes út
-  **nem** a `DraftStorage` többrekeszessé tétele (az a „nem válhat system
-  of recorddá" szabályt sértené — lásd EGYÉB ötletek), hanem „Mentés
-  piszkozatként" a meglévő `savePlan` append-only útján (`statusz:
-  'PISZKOZAT'` verziómappa — a mező pont erre létezik, ma soha nem
-  íródik), „piszkozat" jelvénnyel a Korábbi terveknél. 1–1.5 nap +
-  grill-me: listázás, szemét-felhalmozódás, a kitöltetlen-sor blokk
-  lazítása piszkozat-mentésnél, kell-e PDF a piszkozat-mappába.
-- **A német jogi szövegek tényleges lektorálása/fordítása** — nem
-  fejlesztési feladat, hanem jogászi munka, de a C-nap teljes zárját
-  (német páciens nem tud aláírni) egyedül ez oldja fel; a 6. tétel
-  placeholder-őre csak addig védi ki a kockázatot.
-- **„NEM VÉGLEGES" vizuális jelzés a nem véglegesített PDF-en** *(2.
-  kör)* — csak ha a 20. tétel fájlnév-előtagja után is előfordul a
-  nyomtalanul kiadott dokumentum. Fél–1 nap, és van benne egy csapda: az
-  archivált PDF ma a piszkozat-státuszú tervből renderelt
-  `pdfInstance`-ból jön, tehát a véglegesítésnek külön, végleges státuszú
-  újra-renderelés kellene.
-- **Sávos tétel felső határa a nyomtatványon** *(2. kör)* — fél nap kód,
-  de előbb a doki kommunikációs döntése kell (átláthatóság a
-  „legrosszabb esetben mennyi?" kérdésre vs. horgony-/ijesztés-hatás), a
-  12. tétel döntési mintája szerint. Csak árlistai SAVOS eredetű soron értelmes, a
-  kézzel becsültre billentett sornak nincs sávja.
-- **Ajánlat-állapot és visszahívás-jelzés** (pl. `allapot.json` a
-  páciensmappában, a verziómappákon kívül) — valódi haszon (kit kell
-  visszahívni, melyik ajánlat jár le), de új fájltípus és állapotgép;
-  alaposabb tervezést igényel, hogy ne csússzon system of recorddá.
-- **Páciens-szintű, terveken átívelő kontaktnyilvántartó** (telefonszám,
-  email élő szerkesztése a `paciens.json`-ban, a terv-mentéstől
-  függetlenül) — a doki csak jövőbeli lehetőségként említette, nem
-  konkrét igényként (a páciens-entitás tétel, 2026-08-11, tudatosan ennyi
-  nélkül zárult: a `paciens.json` ma csak `paciensId` + `nev`, kizárólag
-  keresési index). Ma a `terv.json` `paciens` blokkja tervenként tárolja
-  ezeket az adatokat — ez a tétel egy önálló, azok fölé emelt, élő
-  nyilvántartást vezetne be.
-- **Teljes verzió-diff nézet** (mi változott sorszinten v1 és v2 között)
-  — a 11. tétel összeg-kiírása után derül ki, mennyire hiányzik.
-- **Fogtechnikusi munkalap generálása** — más célközönség (a technikus),
-  más adattartalom; külön funkció.
-- **Tömeges árváltoztatás az adminban** (pl. „minden implantátum +5%") —
-  valódi időmegtakarítás árlistafrissítéskor, de évente egyszer kell.
-- **Valódi összetett csomag-tétel** (csomag = tételek listája) — a
-  tétel-leírás mező (docs/02-domain-modell.md § Tétel-leírás) valószínűleg
-  kiváltja; csak akkor, ha nem elég.
-- **Séma-migrációs út** — a `schemaVersion` ma csak felfelé véd; amíg 1
-  marad (a fenti tételek egyike sem emeli), nem sürgős, de a D18
-  előbb-utóbb megköveteli.
-- **`terv.json` beágyazása a PDF-be** (D5) — a `docs/05` explicit a 2.
-  fázisra (fájlrendszeres verzió, `pdf-lib`) ütemezi.
-- **Automatikus darabszám a fogszámokból (D14 újranyitása)** — a mai
-  figyelmeztető sáv elég, amíg nincs konkrét panasz.
-
----
-
-## EGYÉB ötletek — hangzatos, de nem éri meg, vagy sérti a kereteket
+## EGYÉB ötletek
 
 - **Kétnyelvű dupla-dokumentum egy tervből** (német ajánlat + magyar
   aláírható) *(2. kör)* — azonos tervazonosítójú, eltérő tartalmú
@@ -198,17 +153,48 @@ Hasznosság szerint sorrendezve:
   (docs/02-domain-modell.md § Tétel-leírás) lefedi a valós igényt.
 - **Kategória-böngésző a keresőben** — a D19 kizárja; a doktor-napok a
   keresés pontosságára mutattak igényt, nem a böngészésre.
+- **Több félretett terv (parkolópálya), `PISZKOZAT`-státuszú
+  verziómappaként** *(2. kör)* — a megszakításos délelőtt valós, a
+  doki-nap szerint Excelhez visszaűző fájdalma (ma egyetlen
+  piszkozat-slot van, a többi munka telefonfotóra kerül). A helyes út
+  **nem** a `DraftStorage` többrekeszessé tétele (az a „nem válhat system
+  of recorddá" szabályt sértené — lásd EGYÉB ötletek), hanem „Mentés
+  piszkozatként" a meglévő `savePlan` append-only útján (`statusz:
+  'PISZKOZAT'` verziómappa — a mező pont erre létezik, ma soha nem
+  íródik), „piszkozat" jelvénnyel a Korábbi terveknél. 1–1.5 nap +
+  grill-me: listázás, szemét-felhalmozódás, a kitöltetlen-sor blokk
+  lazítása piszkozat-mentésnél, kell-e PDF a piszkozat-mappába.
+- **A német jogi szövegek tényleges lektorálása/fordítása** — nem
+  fejlesztési feladat, hanem jogászi munka, de a C-nap teljes zárját
+  (német páciens nem tud aláírni) egyedül ez oldja fel; a 6. tétel
+  placeholder-őre csak addig védi ki a kockázatot.
+- **„NEM VÉGLEGES" vizuális jelzés a nem véglegesített PDF-en** *(2.
+  kör)* — csak ha a 20. tétel fájlnév-előtagja után is előfordul a
+  nyomtalanul kiadott dokumentum. Fél–1 nap, és van benne egy csapda: az
+  archivált PDF ma a piszkozat-státuszú tervből renderelt
+  `pdfInstance`-ból jön, tehát a véglegesítésnek külön, végleges státuszú
+  újra-renderelés kellene.
+- **Sávos tétel felső határa a nyomtatványon** *(2. kör)* — fél nap kód,
+  de előbb a doki kommunikációs döntése kell (átláthatóság a
+  „legrosszabb esetben mennyi?" kérdésre vs. horgony-/ijesztés-hatás), a
+  12. tétel döntési mintája szerint. Csak árlistai SAVOS eredetű soron értelmes, a
+  kézzel becsültre billentett sornak nincs sávja.
+
+- **Teljes verzió-diff nézet** (mi változott sorszinten v1 és v2 között)
+  — a 11. tétel összeg-kiírása után derül ki, mennyire hiányzik.
+- **Fogtechnikusi munkalap generálása** — más célközönség (a technikus),
+  más adattartalom; külön funkció.
+- **Tömeges árváltoztatás az adminban** (pl. „minden implantátum +5%") —
+  valódi időmegtakarítás árlistafrissítéskor, de évente egyszer kell.
+- **Valódi összetett csomag-tétel** (csomag = tételek listája) — a
+  tétel-leírás mező (docs/02-domain-modell.md § Tétel-leírás) valószínűleg
+  kiváltja; csak akkor, ha nem elég.
+- **Séma-migrációs út** — a `schemaVersion` ma csak felfelé véd; amíg 1
+  marad (a fenti tételek egyike sem emeli), nem sürgős, de a D18
+  előbb-utóbb megköveteli.
+- **`terv.json` beágyazása a PDF-be** (D5) — a `docs/05` explicit a 2.
+  fázisra (fájlrendszeres verzió, `pdf-lib`) ütemezi.
+
 
 ---
 
-## Honnan jönnek az igények
-
-- **1. kör:** doktor-nap narratíva + architekt-triázs, a teljes anyag (a
-  kész tételek megvalósítási jegyzeteivel) archiválva a git history-ban.
-- **2. kör (2026-08-09, a 12 kész tétel utáni állapotra):** ugyanilyen
-  szerkezetű doktor-nap narratíva és architekt-triázs (a 15 igény teljes
-  értékelése — méret, keretsértés, haszon, 20%-os változat tételenként),
-  szintén a git history-ban.
-- **A doki közvetlen visszajelzése** a Korábbi tervek képernyőn
-  (grill-me munkamenet, 2026-08-11) — nem a fenti két kör része; innen
-  jött a lenti páciens-kontaktnyilvántartó ötlet is.
