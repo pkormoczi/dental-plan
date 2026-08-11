@@ -8,37 +8,28 @@ import { usePDF } from '@react-pdf/renderer';
 import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
-import { hianyzoCsomagLeirasok, kitoltetlenSorok, nullaOsszeguSorok } from '../domain/kitoltetlen';
 import { formatMoney } from '../domain/money';
-import { fallbackSorok } from '../domain/nev';
 import { isPlaceholderTemplate } from '../domain/templates';
 import { computeOsszesitok } from '../domain/totals';
 import { buildToothVisualStates } from '../domain/toothVisual';
 import type { PlanRef } from '../domain/types';
+import {
+  kovetkezoLepes,
+  veglegesitesDiagnozis,
+  VEGLEGESITES_LEPESEK,
+  type VeglegesitesLepes,
+} from '../domain/veglegesitesOr';
 import { TervDocument } from '../pdf/TervDocument';
 import { renderToothChartPng } from '../pdf/toothChartImage';
 import { useAppState } from '../state/AppState';
 import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
 
-type ConfirmStep =
-  | 'missing-fields'
-  | 'de-fallback-names'
-  | 'zero-price-rows'
-  | 'missing-leiras'
-  | null;
-
-// Rendezett lánc -- `attemptFinalize` az elején kezdi, `confirmStepContinue`
-// a JELENLEGI lépés utáni első alkalmazható lépésre ugrik (lásd lent). A
-// sorrend implementációs döntés: a páciensadat és a nyelvi/jogi/pénzügyi
-// probléma megelőzi a kommunikációs jellegű leírás-hiányt
-// (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés).
-const CONFIRM_STEPS: Exclude<ConfirmStep, null>[] = [
-  'missing-fields',
-  'de-fallback-names',
-  'zero-price-rows',
-  'missing-leiras',
-];
+// `attemptFinalize` a lánc elején kezdi, `confirmStepContinue` a JELENLEGI
+// lépés utáni első alkalmazható lépésre ugrik (lásd lent) -- a lánc maga
+// (sorrend, kemény/puha megkülönböztetés) a `domain/veglegesitesOr.ts`-ben
+// él, tiszta függvényként.
+type ConfirmStep = VeglegesitesLepes | null;
 
 /** Egy névlista szöveges blokkja a "Hiányzó/eltérő tételnevek" dialógushoz, üres listánál `''`. */
 function nevListaSzoveg(cim: string, nevek: string[]): string {
@@ -227,49 +218,14 @@ export default function PreviewPage() {
     updatePdf,
   ]);
 
-  const nameMissing = !plan.paciens.nev.trim();
-  const otherFieldsMissing =
-    !plan.paciens.szuletesiIdo ||
-    !plan.paciens.lakcim ||
-    !plan.paciens.telefon ||
-    !plan.paciens.email ||
-    !plan.paciens.taj;
-  // D21/D24: a hiányzó VAGY kézzel eltérített német tételnevek soha nem
-  // eshetnek/maradhatnak néma módon a terven -- a doki itt látja, mely
-  // nevek érintettek, mielőtt a páciens aláírja a dokumentumot. Három külön
-  // ok (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés).
-  const { nincsForditas, elterAzArlistatol, egyedi } = fallbackSorok(plan, priceList);
-  const nevProblemaSzama = nincsForditas.length + elterAzArlistatol.length + egyedi.length;
-  // A fogtérkép-kattintással felvett, de be nem azonosított sorok -- lásd
-  // attemptFinalize: ez KEMÉNY blokk, nem a confirmStep-lánc egy tagja,
-  // mert egy névtelen, 0 Ft-os sor sosem kerülhet az aláírandó PDF-re.
-  const uresSorok = kitoltetlenSorok(plan);
-  // PUHA figyelmeztetés (backlog-19) -- névvel ellátott, de 0 összegű sorok
-  // (elgépelés + reflexes Enter az egyedi-sor-felvétel útján, vagy
-  // elfelejtett ár). Szándékosan nem kemény blokk: a 0 ár legitim is lehet
-  // (pl. ingyenes kontroll).
-  const nullaSorok = nullaOsszeguSorok(plan);
-  // PUHA figyelmeztetés (docs/02-domain-modell.md § Tétel-leírás) -- csak
-  // akkor releváns, ha a leírások ténylegesen nyomtatódnak; kikapcsolt
-  // `leirasokMutatasa` mellett a hiányuk nem érinti a nyomtatványt.
-  const hianyzoLeirasok = (plan.leirasokMutatasa ?? true)
-    ? hianyzoCsomagLeirasok(plan, priceList)
-    : [];
-
-  const confirmStepApplicable: Record<Exclude<ConfirmStep, null>, boolean> = {
-    'missing-fields': otherFieldsMissing,
-    'de-fallback-names': nevProblemaSzama > 0,
-    'zero-price-rows': nullaSorok.length > 0,
-    'missing-leiras': hianyzoLeirasok.length > 0,
-  };
-
-  /** A CONFIRM_STEPS láncban `fromIndex`-től kezdve az első alkalmazható lépés, vagy `null`. */
-  function nextConfirmStep(fromIndex: number): ConfirmStep {
-    for (let i = fromIndex; i < CONFIRM_STEPS.length; i++) {
-      if (confirmStepApplicable[CONFIRM_STEPS[i]]) return CONFIRM_STEPS[i];
-    }
-    return null;
-  }
+  const {
+    nameMissing,
+    uresSorok,
+    nevProblemak: { nincsForditas, elterAzArlistatol, egyedi },
+    nullaSorok,
+    hianyzoLeirasok,
+    alkalmazhato,
+  } = veglegesitesDiagnozis(plan, priceList, plan.leirasokMutatasa ?? true);
 
   /**
    * A `confirmStep`-dialógus cím/leírás szövege -- négy lépésnél a korábbi,
@@ -381,7 +337,7 @@ export default function PreviewPage() {
       return;
     }
     setUresSorokNotice(false);
-    const step = nextConfirmStep(0);
+    const step = kovetkezoLepes(alkalmazhato, 0);
     if (step) {
       setConfirmStep(step);
       return;
@@ -392,8 +348,8 @@ export default function PreviewPage() {
   function confirmStepContinue() {
     // A jelenlegi lépés UTÁN a láncban a következő ALKALMAZHATÓ dialógus
     // nyílik meg (ha van), nem a mentés fut le rögtön.
-    const idx = confirmStep ? CONFIRM_STEPS.indexOf(confirmStep) : -1;
-    const step = nextConfirmStep(idx + 1);
+    const idx = confirmStep ? VEGLEGESITES_LEPESEK.indexOf(confirmStep) : -1;
+    const step = kovetkezoLepes(alkalmazhato, idx + 1);
     if (step) {
       setConfirmStep(step);
       return;
