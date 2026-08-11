@@ -17,7 +17,7 @@ ahol a legutóbb kiosztott szám állt.
 **Sorrend:** a listákon belül hasznosság szerint — a napi fájdalom
 mérete × gyakorisága, holtversenynél a kisebb munka előre. A 24. tétel a
 lista végén áll, mert nem fejlesztői munka, tehát nem esik a
-haszon-rangsorba. A MOST szakasz hét fejlesztői tételéhez van
+haszon-rangsorba. A MOST szakasz hat fejlesztői tételéhez van
 tervdokumentum (grill-me munkamenetek döntési összefoglalói); a 24.
 tételnek nincs, és nem is lesz — tisztán adattisztítás és
 információkérés a dokitól.
@@ -26,20 +26,7 @@ információkérés a dokitól.
 
 ## MOST (kb. 1–1,5 fejlesztői nap + fél nap közös munka a dokival)
 
-### 1. hely — 18. tétel: Fázis törlése megerősítéssel
-
-- **Méret:** 1–2 óra — a meglévő `AlertDialog`-minta a „Fázis törlése"
-  gombon, csak akkor, ha a fázisban van sor (üres fázis törlése maradjon
-  egy kattintás).
-- **Kereteket sért?** Nem.
-- **Valódi haszon:** hibacsökkentés — ez az egyetlen egy-kattintásos,
-  többsoros, helyreállíthatatlan adatvesztés a szerkesztőben, és a
-  piszkozat-autosave azonnal rögzíti is. Az általános undo tudatosan nem
-  ez a tétel (lásd EGYÉB ötletek).
-- **20%-os verzió:** nincs kisebb — ez már a minimális védelem.
-- **Terv:** `backlog/plans/backlog-18-fazis-torles-terv.md` (6 döntés).
-
-### 2. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
+### 1. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
 - **Méret:** 2–3 óra — új, nem blokkoló lépés a `PreviewPage` meglévő
   `confirmStep`-láncában: a 0 Ft-os, kitöltött nevű sorok felsorolása. A
@@ -54,7 +41,7 @@ információkérés a dokitól.
   rosszabb lenne, mert eltörné a billentyűzetes ciklust.
 - **Terv:** `backlog/plans/backlog-19-nulla-forint-terv.md` (7 döntés).
 
-### 3. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
+### 2. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
 
 - **Méret:** 1–2 óra — a `PreviewPage` és `PlanHistoryPage` letöltési
   fájlneveiben a páciensnév (a `paths.ts` meglévő
@@ -69,7 +56,7 @@ információkérés a dokitól.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `backlog/plans/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
 
-### 4. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
+### 3. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
 - **Méret:** 1 óra + teszt — a `savePriceList` a `modositva` mellett az
   `arlistaVerzio`-t is a mentés napjára állítja tartalmi változásnál. A
@@ -84,7 +71,7 @@ információkérés a dokitól.
   fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
 - **Terv:** `backlog/plans/backlog-21-arlista-verzio-terv.md` (5 döntés).
 
-### 5. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
+### 4. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
 - **Méret:** 1–2 óra — a PlanHistoryPage-en a már betöltött
   PDF-bájtokból blob-URL, új fül; nincs új nézet, nincs új útvonal.
@@ -97,7 +84,7 @@ információkérés a dokitól.
   böngésző PDF-nézője elég).
 - **Terv:** `backlog/plans/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
-### 6. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 5. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
@@ -110,7 +97,7 @@ információkérés a dokitól.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `backlog/plans/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
 
-### 7. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
+### 6. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
 
 **Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
 Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:

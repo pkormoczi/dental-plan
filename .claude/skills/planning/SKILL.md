@@ -13,7 +13,7 @@ sorolt ötletről) áganként végigmenni minden döntésen, amíg a felhasznál
 a fejlesztő között nincs félreértés — mielőtt egyetlen sor kód is íródna. A
 kimenet egy `backlog/plans/backlog-N-<cím>-terv.md` döntési összefoglaló, a
 meglévő, nyitott tervdokumentumok (pl.
-`backlog/plans/backlog-18-fazis-torles-terv.md`) mintájára.
+`backlog/plans/backlog-19-nulla-forint-terv.md`) mintájára.
 
 **Ez a skill soha nem ír és nem módosít alkalmazáskódot** (`app/`, `data/`,
 `assets/` alatt semmit). Amit ír:

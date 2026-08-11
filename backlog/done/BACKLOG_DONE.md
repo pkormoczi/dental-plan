@@ -657,4 +657,18 @@
   A fa-nézet és a tartalom-panel a `ToothChartPanel` diszklózúra-mintáját
   követi.
 
+### 18. Fázis törlése megerősítéssel — KÉSZ (2026-08-11)
+
+- **Méret:** 1–2 óra.
+- **Kereteket sért?** Nem.
+- **Valódi haszon:** hibacsökkentés — a szerkesztő egyetlen
+  egy-kattintásos, többsoros, helyreállíthatatlan adatvesztési útját zárta
+  le, amit a piszkozat-autosave azonnal rögzített is.
+- **Megvalósítás:** `docs/03-funkcionalis-spec.md` § Fázisok,
+  `docs/07-felulet-rendszer.md` § Komponensek. `PlanEditorPage.tsx`-ben a
+  fázistörlés megerősítő döntése felkerült a szülőbe: sorral rendelkező
+  fázis törlése egy `AlertDialog`-ot nyit, üres fázisé egy kattintás marad.
+  A dialógus `Action` gombja szándékosan nem a trigger feliratát ismétli
+  (accessible-name-ütközés a DOM-ban maradó többi soronkénti triggerrel).
+
 ---

@@ -231,7 +231,12 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
 
 ### Fázisok
 
-- Tetszőleges számú fázis, átnevezhető, sorrendezhető, törölhető.
+- Tetszőleges számú fázis, átnevezhető, sorrendezhető, törölhető. A „Fázis
+  törlése" gomb csak akkor jelenik meg, ha 1-nél több fázis van. Sorral
+  rendelkező fázis törlése megerősítő dialógust kér (a fázis összes sora
+  vele törlődik, ez a szerkesztő egyetlen egy-kattintásos, többsoros,
+  helyreállíthatatlan adatvesztési útja); üres fázis törlése egy kattintás
+  marad, dialógus nélkül — újralétrehozása két kattintás.
 - Fázisonként egy szabad szöveges **megjegyzés** sor, ami a nyomtatványon
   is megjelenik. Ide megy az időzítés: *„az implantáció beépülési ideje
   után, kb. 3 hónappal"*.

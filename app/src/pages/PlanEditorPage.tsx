@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  AlertDialog,
   Badge,
   Box,
   Button,
@@ -123,6 +124,10 @@ export default function PlanEditorPage() {
   // állapotát: a gépelt szöveget) tartaná meg egy MÁSIK fázison. A token
   // növelése törléskor mindent remountol, a keresőmező sosem "vándorol" át.
   const [fazisResetToken, setFazisResetToken] = useState(0);
+  // Csak a sorral rendelkező fázis törlése kérdez vissza (lásd lent,
+  // AlertDialog) -- egy üres fázis újralétrehozása két kattintás, egy
+  // 8 sorosé nem.
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
   // Melyik fázisba kerüljön az új sor, ha a doki kezeletlen fogra kattint a
   // fogtérképen -- csak akkor látszik a választó, ha >1 fázis van (lásd
   // lent). Renderléskor mindig `Math.min`-nel szorítva a fázisok
@@ -177,6 +182,13 @@ export default function PlanEditorPage() {
       fn(next);
       return next;
     });
+  }
+
+  function deletePhase(pi: number) {
+    updatePlan((draft) => {
+      draft.fazisok.splice(pi, 1);
+    });
+    setFazisResetToken((n) => n + 1);
   }
 
   function addLine(phaseIdx: number, item: Tetel) {
@@ -339,10 +351,8 @@ export default function PlanEditorPage() {
               })
             }
             onDelete={() => {
-              updatePlan((draft) => {
-                draft.fazisok.splice(pi, 1);
-              });
-              setFazisResetToken((n) => n + 1);
+              if (p.sorok.length > 0) setPendingDeleteIndex(pi);
+              else deletePhase(pi);
             }}
           />
         </Box>
@@ -406,6 +416,40 @@ export default function PlanEditorPage() {
           </Box>
         </Flex>
       </Box>
+
+      <AlertDialog.Root
+        open={pendingDeleteIndex !== null}
+        onOpenChange={(open) => !open && setPendingDeleteIndex(null)}
+      >
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Fázis törlése</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            A fázis összes sora törlődik, ez nem vonható vissza. Folytatod?
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                color="red"
+                onClick={() => {
+                  if (pendingDeleteIndex !== null) deletePhase(pendingDeleteIndex);
+                  setPendingDeleteIndex(null);
+                }}
+              >
+                {/* Szándékosan NEM „Fázis törlése" -- a canDelete gate
+                    (>=2 fázis) miatt minden fázis trigger-gombja a DOM-ban
+                    marad, amíg a dialógus nyitva van (ugyanaz a helyzet,
+                    mint PlanHistoryPage.tsx-ben). */}
+                Törlés
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Box>
   );
 }

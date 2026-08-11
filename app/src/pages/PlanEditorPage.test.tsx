@@ -795,3 +795,57 @@ describe('PlanEditorPage -- backlog-10: tétel-leírás', () => {
     expect(kapcsolo).not.toBeChecked();
   });
 });
+
+describe('PlanEditorPage -- backlog-18: fázis törlése megerősítéssel', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('sorral rendelkező fázis törlése megerősítést kér -- a Mégse nem töröl, a Törlés töröl', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // A canDelete gate (>1 fázis) miatt csak a második fázis felvétele után
+    // jelenik meg a "Fázis törlése" gomb.
+    await user.click(screen.getByRole('button', { name: '+ Új kezelési fázis' }));
+
+    const torlesGombok = screen.getAllByRole('button', { name: 'Fázis törlése' });
+    expect(torlesGombok).toHaveLength(2);
+    await user.click(torlesGombok[0]);
+
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
+
+    // Mégse -- a fázis és a sora megmarad.
+    await user.click(screen.getByRole('button', { name: 'Mégse' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+
+    // Törlés -- a fázis (és a sora) eltűnik, a canDelete gomb is eltűnik.
+    await user.click(screen.getAllByRole('button', { name: 'Fázis törlése' })[0]);
+    await user.click(screen.getByRole('button', { name: 'Törlés' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+
+    expect(screen.queryByDisplayValue('Fogeltávolítás')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Fázis törlése' })).not.toBeInTheDocument();
+  });
+
+  it('üres fázis törlése egy kattintás, dialógus nélkül -- a mai viselkedés regressziós védelme', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.click(screen.getByRole('button', { name: '+ Új kezelési fázis' }));
+
+    const torlesGombok = screen.getAllByRole('button', { name: 'Fázis törlése' });
+    expect(torlesGombok).toHaveLength(2);
+    await user.click(torlesGombok[0]);
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Fázis törlése' })).not.toBeInTheDocument();
+  });
+});

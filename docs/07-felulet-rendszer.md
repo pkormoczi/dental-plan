@@ -98,6 +98,15 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   kerül a törzsadatba a Mentés gomb megnyomása előtt. Hibaszöveg az input
   ALATT jelenik meg (lásd „Akadálymentesség"), a Mentés gomb nem tiltott —
   kattintásra mutatja meg a hibákat, hogy legyen mit mondania.
+- Megerősítő dialógus (Radix Themes `AlertDialog`): `Cancel` mindig
+  „Mégse" (`variant="soft" color="gray"`). Ha a törlést/felülírást kérő
+  trigger-gomb listázott elemenként ismétlődik (pl. soronkénti „Fázis
+  törlése"), és a dialógus nyitva léte alatt is a DOM-ban marad a többi
+  sor triggere, az `Action` gombnak **nem szabad** a trigger feliratát
+  megismételnie — accessible name-mel megkülönböztethetetlen lenne a még
+  látható triggerektől. Rövidebb, egyértelmű felirat (pl. „Törlés") elég,
+  ha a dialógus címe már egyértelművé teszi, mi történik
+  (`pages/PlanHistoryPage.tsx`, `pages/PlanEditorPage.tsx`).
 
 ### Szín, forma, sűrűség
 
