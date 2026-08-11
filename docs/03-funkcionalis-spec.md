@@ -379,6 +379,12 @@ felsorolja az érintett sorokat, „Folytatás" gombbal átugorható
 `leirasokMutatasa` kapcsolója ki van kapcsolva — ilyenkor a leírás úgysem
 kerül a nyomtatványra.
 
+A fenti négy lépés sorrendje és a kemény/puha megkülönböztetés tiszta,
+React-mentes függvényként él (`veglegesitesDiagnozis`/`kovetkezoLepes`,
+`app/src/domain/veglegesitesOr.ts`) — a `PreviewPage.tsx` csak a React
+state-et, a dialógus-szövegeket és a fenti Sablon-placeholder őr D23-zárát
+tartja meg, a lánc bejárását innen kapja.
+
 ### Sablon-placeholder őr
 
 Egy sablon (nyilatkozat, fizetési feltételek vagy garancia) akkor számít
@@ -716,6 +722,19 @@ Kattintásra a sor lenyílik, és ott van minden mező:
 - HUF ár (vagy min/max), EUR ár (vagy min/max)
 - aktív, gyakori
 
+A `min`/`max` mezőpárra nincs betöltési szintű validáció (`validate.ts`
+csak azt nézi, véges szám-e mindkettő) — ha a doki a „tól" mezőbe nagyobb
+számot ír, mint az „ig"-be, a mezőpár alatt puha, amber figyelmeztetés
+jelenik meg (`savosHatarForditott()`, `domain/money.ts`), de a mentés
+ettől még lefut. Kemény tiltás azért nincs, mert gépelés közben (a „tól"
+mező kitöltve, az „ig" még nem) a fordított állapot átmeneti.
+
+Minden mezőszerkesztés (a szöveges mezők minden leütésre, a szám- és
+egyéb mezők commit-onként) a `priceList`-et updateren át, a mentés ELŐTT
+szinkron frissíti (D31, `docs/05-technologia.md`) — két, gyorsan egymást
+követő szerkesztés (akár két különböző sor, akár ugyanannak a sornak két
+mezője) emiatt nem üti ki egymást.
+
 ### Törlés helyett inaktiválás
 
 A szem ikon inaktivál. Törölni nem lehet, és az `id`-t **soha nem
@@ -744,7 +763,12 @@ hossz-alapú, soha nem újrahasznosított).
 ## 7. Beállítások
 
 - Gyökérmappa kijelölése / váltása
-- Rendelő adatai (a nyomtatvány fejlécéhez és láblécéhez)
+- Rendelő adatai (a nyomtatvány fejlécéhez és láblécéhez) — a mezők
+  (Név/Cím/Telefon/E-mail/Adószám/Cégjegyzékszám) minden leütésre mentenek,
+  updateren át, a mentés ELŐTT szinkron frissülő állapottal (D31,
+  `docs/05-technologia.md`) — két mező gyors, egymást követő szerkesztése
+  emiatt nem üti ki egymást, és draft-pufferelés (mint az Árlista admin
+  szöveges mezőin) sem kell hozzá.
 - Orvosok listája
 - Logó fájl
 - Ajánlat érvényessége napokban (alapérték 90)

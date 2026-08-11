@@ -100,6 +100,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A `Tetel.leiras` hiányzó német fordítása némán elmarad a nyomtatványról, nem esik vissza magyarra | D27 — ellentétben a `nevSnapshot`-tal: a leírás kiegészítő tartalom, egy vegyes nyelvű nyomtatvány rosszabb lenne, mint a hiánya |
 | A `paciens.json` és a `terv-cimke.json` kizárólag azonosító-/kereső-index és szervezési metaadat — soha nem system of record, sosem írhatja felül a `terv.json` `paciens` blokkját | D29 — a terv tartalmi igazsága marad a pillanatkép (D7); a `paciens.json` `nev`-je minden mentéskor frissül, de ez csak a legutóbb mentett terv `paciens.nev`-jének tükre |
 | Az árlista `arlistaVerzio` mezője az Árlista admin MINDEN mentésekor a mai napra áll, mezőnkénti különbségtevés nélkül | D30 — a nyomtatvány lábléce ebből mondja, „melyik árlistából készült"; egy befagyott érték hamis audit-adat lenne vitánál. A már mentett terveken lévő érték ettől függetlenül pillanatkép marad (D7) |
+| A `PlanStorage`-t fogyasztó `savePriceList`/`saveSettings` kizárólag updatert fogad, sosem kész objektumot; a memóriabeli állapot a mentés előtt, szinkron frissül, és hibára nem gördül vissza | D31 — a render-idejű closure-be zárt régi állapot két gyors egymás utáni szerkesztésnél némán eldobja az egyiket a doki törzsadatában (árlista, rendelő-adat); a `FileSystemStorage`-váltás alatt a ma kicsi versenyablak nagyságrendekkel tágul |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -379,6 +380,25 @@ véglegesítés „Letöltési fájlnév") segédfüggvényei, szintén ne írd 
   (mi számít piszkozatnak — a nyers `plan.statusz !== 'VEGLEGES'`) a hívó
   (`PreviewPage.tsx`, `PlanHistoryPage.tsx`) dolga
 
+A véglegesítés-őr kiemelése (`docs/03-funkcionalis-spec.md` § 4. Előnézet
+és véglegesítés) segédfüggvénye, szintén ne írd újra:
+- `veglegesitesDiagnozis(plan, priceList, leirasokMutatasa)` /
+  `kovetkezoLepes(alkalmazhato, fromIndex)` / `VEGLEGESITES_LEPESEK`
+  (`app/src/domain/veglegesitesOr.ts`) — a kemény blokk (névhiány,
+  kitöltetlen sorok) és a puha `confirmStep`-lánc (hiányzó adatok → német
+  névprobléma → 0 Ft-os sor → hiányzó leírás) tiszta magja, a meglévő
+  `kitoltetlenSorok`/`nullaOsszeguSorok`/`hianyzoCsomagLeirasok`/
+  `fallbackSorok` hívásával. A `PreviewPage.tsx`-ben marad a React state, a
+  dialógus-szövegek és az `isPlaceholderTemplate`-re épülő D23-zár — ez
+  utóbbi a 4. oldal renderjéhez tartozik, nem a lánchoz
+
+A D31 (`docs/01-attekintes-es-dontesek.md`) segédfüggvénye:
+- `savosHatarForditott(ar)` (`app/src/domain/money.ts`) — igaz, ha egy
+  SAVOS ár `min`-je nagyobb, mint a `max`-a; puha figyelmeztetés az Árlista
+  admin `ItemEditor`-jában (`docs/03-funkcionalis-spec.md` § 6. Árlista
+  admin), nem betöltési hiba — a `basePrice()`/`formatPrice()` mellett él,
+  ugyanabban a fájlban, ahol a `SAVOS` szemantika a többi helye is van
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
@@ -429,7 +449,7 @@ Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
-döntések (D1–D29) egy helyen, számozva élnek a
+döntések (D1–D31) egy helyen, számozva élnek a
 `docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
 háttere külön fájlban, `backlog/plans/backlog-<n>-<cim>-terv.md` néven.
 Amikor egy modul vagy komponens "miért így van megcsinálva" kérdés merül
@@ -494,7 +514,7 @@ ugyanabban a körben, nem később:
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D29 döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D31 döntések és indoklásuk; adatvédelmi keret; kockázatok |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, árlista admin, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |

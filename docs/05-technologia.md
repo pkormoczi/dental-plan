@@ -39,6 +39,26 @@ interface PlanStorage {
 }
 ```
 
+### `savePriceList`/`saveSettings` szerializációs szerződés (D31)
+
+A `PlanStorage` szignatúrája kész objektumot kap (fent), de a hívó
+(`AppState.tsx` `savePriceList`/`saveSettings` context-metódusa) SOHA nem
+ad tovább render-idejű closure-be zárt régi állapotot: mindkettő
+`(updater: (prev) => next) => Promise<void>` alakú, az updatert a mentés
+ELŐTT, szinkron futtatja le, és a memóriabeli állapotot (state + egy
+`ref`-tükör) optimistán, MÉG A TÁROLÓ-ÍRÁS ELŐTT frissíti. Sikertelen
+mentésre nem gördül vissza (D31) — a hibaszöveg megjelenik, de a doki
+begépelt szövege nem tűnik el.
+
+Ha az implementáció írása nem atomi (mint a tervezett
+`FileSystemStorage`-nál: `createWritable`/`write`/`close`), neki kell
+sorosítania az egymást gyorsan követő írásokat egy közös láncon, hogy két
+párhuzamos writable ne írjon egymásra, és a végeredmény sorrendje a hívási
+sorrendet kövesse — lásd `DemoStorage` `enqueue`/`savingChain`, ami ma
+(szinkron `localStorage.setItem` mellett) önmagában no-op, de a
+`savePlan`/`savePriceList`/`saveSettings` mindhárom útját egy közös láncba
+fűzi.
+
 `PlanRef` a `{ patientDir, planDir, versionDir }` hármas (D29) — a köztes
 `planDir` szint miatt bővült a korábbi kettősről.
 

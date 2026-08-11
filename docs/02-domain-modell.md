@@ -370,6 +370,12 @@ kell:
 - Ha **minden** token érvényes és a darabszám ettől eltér → halvány
   figyelmeztetés a szerkesztőben (`X fog van felsorolva, a darabszám Y`).
   Nem blokkolás, és a nyomtatványon nem jelenik meg. (`parseTeeth()`.)
+  A `parseTeeth()` az ismételt FDI kódot (pl. „16, 17, 16") egyszer
+  számítja — a fogtérképen is csak egy kiemelést kap, és a darabszám-
+  eltérés fenti számítása sem duplán számol vele. A nyomtatványra kerülő
+  NYERS szöveg (`formatTeethForPrint()`) ettől függetlenül változatlan
+  marad — a duplikátum-mentesítés csak a leszármaztatott (fogtérkép,
+  darabszám) oldalon hat, a doki által begépelt szöveget nem írja át.
 - **FDI-formátum figyelmeztetés** (D-döntés, 2026-08-09): a mező
   validálja a beírt *számokat*, de a folyószöveges jegyzetet
   továbbra is engedi — a kettő megkülönböztetése azon múlik, hogy egy

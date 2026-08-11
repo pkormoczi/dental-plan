@@ -749,4 +749,32 @@
   emiatt már három külön felsorolást mutat, a szerkesztő pedig egyedi
   soron csak a szürke „egyedi" jelvényt jeleníti meg, amber `HU`-t nem.
 
+### Technikai adósság kör — KÉSZ (2026-08-12)
+
+A `backlog/BACKLOG.md` „Technikai adósság" szakaszának négy, nem
+számozott tétele — nem egyetlen tervezett funkció, hanem egy önálló
+karbantartási kör négy önálló javítása.
+
+- **`parseTeeth` dedupolása** (XS). A fogszám-parser mostantól
+  sorrendtartóan dedupolja az ismételt FDI kódot (`domain/teeth.ts`) — egy
+  „16, 17, 16" mező korábban két kiemelést adott a fogtérképen és hamis
+  darabszám-eltérés figyelmeztetést. A nyomtatványra kerülő nyers szöveg
+  változatlan marad (`docs/02-domain-modell.md` § Fogszám kezelés).
+- **SAVOS fordított sáv puha figyelmeztetése** (S). Ha a `min` nagyobb,
+  mint a `max`, az Árlista admin amber jelzést ad a mezőpár alatt, a
+  mentés attól még lefut (`savosHatarForditott()`, `domain/money.ts`,
+  `docs/03-funkcionalis-spec.md` § 6. Árlista admin).
+- **`commit()`/`patch()` functional updater** (M, a kör magja). A
+  `savePriceList`/`saveSettings` (`AppState.tsx`) mostantól kizárólag
+  updatert fogad, a memóriabeli állapot a mentés előtt optimistán frissül,
+  és az író réteg (`DemoStorage`) egy közös láncon sorosítja az
+  egymást gyorsan követő írásokat — új D31 (`docs/01-attekintes-es-dontesek.md`),
+  részletek `docs/05-technologia.md`-ben.
+- **Véglegesítés-őr kiemelése** (M). A `PreviewPage.tsx` kemény
+  blokkjának és puha `confirmStep`-láncának magja tiszta domain modulba
+  költözött (`veglegesitesDiagnozis()`/`kovetkezoLepes()`,
+  `domain/veglegesitesOr.ts`), unit tesztekkel — a React state és a
+  dialógus-szövegek a `PreviewPage.tsx`-ben maradtak
+  (`docs/03-funkcionalis-spec.md` § 4. Előnézet és véglegesítés).
+
 ---

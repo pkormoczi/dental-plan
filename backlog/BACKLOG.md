@@ -1,6 +1,6 @@
 # Backlog
 
-A `docs/01` sérthetetlen keretei (D1–D29) egyik tételt sem sértik —
+A `docs/01` sérthetetlen keretei (D1–D31) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. Lezárt
@@ -51,32 +51,27 @@ mezőnkénti mentést. Ma ártalmatlan (`localStorage`), de a tervezett
 megbízhatósági kockázattá válik — pont ott, ahol a D16 takarítás miatt a
 legtöbb jövőbeli admin-szerkesztés várható.
 
-**`storage/seed/priceList.ts:6` határsértés** (méret: **S**). Négy
+**`storage/seed/priceList.ts:7` határsértés** (méret: **S**). Négy
 `../`-vel importál a repo gyökerén lévő `data/`-ból, át a CLAUDE.md
-szerint „csak referencia" mappaként leírt határon — ha valaki
-átmozgatja/átnevezi a fájlt, a build csendben eltörik.
-
-**`commit()`/`patch()` functional updater nélkül** (méret: **M**, félig
-kész). `PriceListAdminPage.tsx` és `SettingsPage.tsx` render-idejű
-closure-t zár be egy async mentéshez — gyors egymás utáni módosítás
-versenyben felülírhatja egymást. A `NumberField` blur-commitja után a
-versenyablak a gyakorlatban minimálisra szűkült, de nincs strukturálisan
-kizárva.
+szerint „csak referencia" mappaként leírt határon. A kockázat kisebb, mint
+korábban itt szerepelt: az elmozdítás/átnevezés nem csendben törik el,
+hanem `tsc -b`/Vite resolve hibaként azonnal jelentkezik build- és
+dev-időben egyaránt — a valódi ár az olvashatóság (négy `../` nehezen
+követhető) és az, hogy a `vite.config.ts` `server.fs.allow: ['..']`
+kommentje ma csak a `CHANGELOG.md`/`FEATURES.md` `?raw` importokat
+nevezi meg indoklásként, nem ezt.
 
 **Titkosítatlan `localStorage` páciensadattal** (méret: **L**, tervezési
 döntés a mockup-fázisban — szándékos, lásd CLAUDE.md). Az architekturális
 megoldás a `FileSystemStorage`-váltás (2. fázis), nem a mockup feladata.
 
-**Cím szintű, kisebb tételek:** `basePrice()` újraírva a
-`PlanEditorPage`-ben a `domain/money.ts` export helyett; `SAVOS` min/max
-mezőkre nincs `min > max` validáció; `parseTeeth` nem dedupol; a három
-legnagyobb fájl (`PlanEditorPage.tsx`, `PriceListAdminPage.tsx`,
-`pdf/TervDocument.tsx`) bontása; háromféle gombstílus;
-`PreviewPage.finalize()` őrlogikája nem tesztelhető pure functionként;
-`SettingsPage.tsx:28` közvetlenül importálja a `DemoStorage.ts` `PREFIX`
-konstansát a sablon-piszkozat cache kulcsához — tudatos, a fájl saját
-kommentje indokolja (hogy a "Minden adat törlése" prefix-seprése ezt is
-elvigye), de ez a cache-mechanizmus explicit localStorage-specifikus, a
+**Cím szintű, kisebb tételek:** a három legnagyobb fájl
+(`PlanEditorPage.tsx`, `PriceListAdminPage.tsx`, `pdf/TervDocument.tsx`)
+bontása; háromféle gombstílus; `SettingsPage.tsx:28` közvetlenül
+importálja a `DemoStorage.ts` `PREFIX` konstansát a sablon-piszkozat
+cache kulcsához — tudatos, a fájl saját kommentje indokolja (hogy a
+"Minden adat törlése" prefix-seprése ezt is elvigye), de ez a
+cache-mechanizmus explicit localStorage-specifikus, a
 `FileSystemStorage`-váltás (2. fázis) tervezésekor újragondolandó, nem a
 mockup feladata most.
 
