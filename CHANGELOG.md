@@ -2,6 +2,22 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. augusztus 11.
+
+- A Korábbi tervek lista mostantól páciensenként akár több, egymástól független tervet is meg
+  tud különböztetni — eddig egy páciens neve alatt csak egyetlen tervsorozat verziói fértek el,
+  mostantól többféle önálló ajánlat (pl. egy fogpótlás és egy külön fogszabályozási terv) is
+  elkülönítve, saját — a benne szereplő kezelések alapján magától javasolt, de bármikor szabadon
+  átírható — címmel jelenik meg ugyanannál a páciensnél. Ha egy páciensnek több önálló terve is
+  van, a lista alapból összecsukva mutatja őket, egy kattintással nyílnak ki; egyetlen terv
+  esetén, ami a legtöbb páciensnél igaz, nincs ilyen plusz lépés. A lista gombjai is
+  áttekinthetőbbek lettek: a páciens neve mellett egy rövid "Új terv" gomb áll, az egyes mentett
+  verziók melletti műveletek (letöltés, új verzió mentése, másolás új tervbe) pedig egy közös
+  menü mögé kerültek soronként.
+- A Kezdőlap "Új terv indítása" gombja mostantól előbb megkérdezi, kinek indul a terv: kereshető
+  a már meglévő páciensek között (ekkor a korábban megadott adatai előre kitöltődnek), vagy
+  indítható egy teljesen új, még sosem szereplő páciens tervezésével.
+
 ## 2026. augusztus 10.
 
 - A nyomtatott kezelési terv kapott egy új "Garancia" oldalt, a fizetési feltételek után — ez is

@@ -23,9 +23,10 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 
 ## Korábbi tervek
 
-- Egy visszatérő páciens korábbi ajánlatainak/terveinek keresése, megnyitása és PDF-letöltése, verziónkénti végösszeggel.
+- Egy visszatérő páciens korábbi ajánlatainak/terveinek keresése, megnyitása és PDF-letöltése, verziónkénti végösszeggel; egy páciensnek akár több, egymástól független terve is lehet, ezek külön, saját — magától javasolt, de szabadon átírható — címmel jelennek meg egymás alatt (több terv esetén összecsukva, egy kattintással kinyithatóan).
 - Régi verzió sosem íródik felül — módosításkor mindig új verzió készül a meglévő tervhez, a korábbi (aláírt) állapot változatlan marad.
 - Egy korábbi terv alapján önálló új terv is indítható: vagy csak a páciens adataival (visszatérő páciensnél nem kell újragépelni), vagy a teljes tartalom átvételével, például egy árváltozat elkészítéséhez.
+- Új terv indításakor is kereshető, hogy a páciens szerepel-e már korábban — ha igen, az adatai előre kitöltődnek, ha nem, egy teljesen új, üres terv indul.
 
 ## Árlista
 
@@ -38,4 +39,4 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 
 - Rendelő adatai és az orvosok listája a nyomtatvány fejlécéhez/lábléchez.
 - Nyilatkozat, fizetési feltételek és garancia szövegének szerkesztése — mentéskor mindig új verzió jön létre, a korábban aláírt tervek a saját, aláírt szövegükkel maradnak.
-- Német nyelvű ajánlat engedélyezése, és annak áttekintése, mennyi tartalom (tételnevek, euró árak, nyilatkozat) áll már készen németül.
+- Német nyelv engedélyezése, és annak áttekintése, mennyi tartalom (tételnevek, euró árak, nyilatkozat) áll már készen németül.
