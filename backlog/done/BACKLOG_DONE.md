@@ -687,4 +687,19 @@
   német tételnevek után és a hiányzó csomag-leírás elé sorolva. A
   dialógus címe/szövege a terv pénznemét követi.
 
+### 20. Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag — KÉSZ (2026-08-11)
+
+- **Méret:** 1–2 óra.
+- **Kereteket sért?** Nem.
+- **Valódi haszon:** hibacsökkentés (rossz PDF csatolása e-mailhez a sok
+  egyforma `kezelesi-terv-*.pdf` közül) + időmegtakarítás; a
+  `PISZKOZAT-` előtag a „kiadott, de nem archivált PDF" audit-lyuk olcsó
+  első védvonala.
+- **Megvalósítás:** `docs/03-funkcionalis-spec.md` § 4. Előnézet és
+  véglegesítés „Letöltési fájlnév" és § 5. Korábbi tervek. Új
+  `buildPatientNameSlug`/`buildDownloadFileName` export
+  (`app/src/storage/paths.ts`) — az Előnézet „Letöltés" linkje és a
+  Korábbi tervek verziósorának „⋯" → „Letöltés" menüpontja egyaránt
+  ezeket hívja, a `PISZKOZAT-` előtag a nyers `plan.statusz`-ból.
+
 ---

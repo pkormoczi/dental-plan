@@ -547,3 +547,43 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
     20000,
   );
 });
+
+// backlog-20: a lényegi sanitizálás/előtag-logika a
+// storage/paths.test.ts `buildDownloadFileName`-jét fedi -- itt csak azt,
+// hogy a "Letöltés" link ténylegesen az ő kimenetét használja.
+describe('PreviewPage -- letöltési fájlnév', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'a "Letöltés" link download attribútuma a páciensnévvel és PISZKOZAT- előtaggal épül, "Csak ajánlat"-tal -ajanlat végződéssel',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Teszt Ilona');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+
+      // A terv még nincs véglegesítve -- PISZKOZAT- előtag, "uj" tervId.
+      const link = await screen.findByRole('link', { name: 'Letöltés' });
+      expect(link).toHaveAttribute('download', 'PISZKOZAT-kezelesi-terv-Teszt-Ilona-uj.pdf');
+
+      await user.click(screen.getByRole('checkbox'));
+      expect(link).toHaveAttribute('download', 'PISZKOZAT-kezelesi-terv-Teszt-Ilona-uj-ajanlat.pdf');
+    },
+    10000,
+  );
+});

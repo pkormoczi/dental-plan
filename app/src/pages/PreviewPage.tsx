@@ -18,6 +18,7 @@ import type { PlanRef } from '../domain/types';
 import { TervDocument } from '../pdf/TervDocument';
 import { renderToothChartPng } from '../pdf/toothChartImage';
 import { useAppState } from '../state/AppState';
+import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
 
 type ConfirmStep =
@@ -517,7 +518,11 @@ export default function PreviewPage() {
               <Button asChild variant="soft" color="gray">
                 <a
                   href={pdfInstance.url}
-                  download={`kezelesi-terv-${plan.tervId || 'uj'}${effectiveOfferOnly ? '-ajanlat' : ''}.pdf`}
+                  download={buildDownloadFileName(plan.paciens.nev, {
+                    tervId: plan.tervId || 'uj',
+                    isDraft: plan.statusz !== 'VEGLEGES',
+                    suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
+                  })}
                 >
                   Letöltés
                 </a>

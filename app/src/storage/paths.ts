@@ -42,11 +42,20 @@ export function splitHungarianName(fullName: string): {
   return { vezeteknev: trimmed.slice(0, idx), keresztnev: trimmed.slice(idx + 1) };
 }
 
-/** `Vezeteknev-Keresztnev_<id6>` -- lásd docs/02-domain-modell.md. */
-export function buildPatientDirName(fullName: string, patientId: string): string {
+/**
+ * `Vezeteknev-Keresztnev` -- a páciensmappa-név és a letöltési fájlnév
+ * (`buildDownloadFileName`) közös névrésze, hogy a doki a Fájlkezelőben a
+ * kettőt egymás mellé tudja tenni (docs/03-funkcionalis-spec.md § 4/5).
+ */
+export function buildPatientNameSlug(fullName: string): string {
   const { vezeteknev, keresztnev } = splitHungarianName(fullName);
   const parts = [sanitizeNamePart(vezeteknev), sanitizeNamePart(keresztnev)].filter(Boolean);
-  return `${parts.join('-')}_${patientId}`;
+  return parts.join('-');
+}
+
+/** `Vezeteknev-Keresztnev_<id6>` -- lásd docs/02-domain-modell.md. */
+export function buildPatientDirName(fullName: string, patientId: string): string {
+  return `${buildPatientNameSlug(fullName)}_${patientId}`;
 }
 
 /** Közös `<...>_<id6>` alak -- páciens- és terv-mappanevek is ezt követik. */
@@ -136,4 +145,20 @@ export function assertVersionDirAvailable(
   if (existingVersionDirNames.includes(dirName)) {
     throw new VersionConflictError(dirName);
   }
+}
+
+/**
+ * Letöltött PDF fájlneve -- `[PISZKOZAT-]kezelesi-terv-<névrész>-<tervId>
+ * [-<suffix>].pdf`, lásd docs/03-funkcionalis-spec.md § 4. Előnézet és
+ * véglegesítés. Primitív paraméterekkel, `Plan` típus nélkül -- a `paths.ts`
+ * a domain-rétegtől függetlenül marad, az `isDraft` eldöntése (mi számít
+ * piszkozatnak) a hívó dolga.
+ */
+export function buildDownloadFileName(
+  nev: string,
+  opts: { tervId: string; isDraft: boolean; suffix?: string },
+): string {
+  const prefix = opts.isDraft ? 'PISZKOZAT-' : '';
+  const suffixPart = opts.suffix ? `-${opts.suffix}` : '';
+  return `${prefix}kezelesi-terv-${buildPatientNameSlug(nev)}-${opts.tervId}${suffixPart}.pdf`;
 }

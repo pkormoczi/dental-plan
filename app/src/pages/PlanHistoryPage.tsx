@@ -42,6 +42,7 @@ import { norm } from '../domain/search';
 import { ALAPERTELMEZETT_TERV_CIM, megjelenitettTervCim } from '../domain/tervCim';
 import type { PatientFolder, Penznem, Plan, PlanFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
+import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
 
 interface VersionRef {
@@ -330,7 +331,7 @@ export default function PlanHistoryPage() {
     },
   };
 
-  async function downloadVersion(ref: VersionRef, tervId: string) {
+  async function downloadVersion(ref: VersionRef, tervId: string, patientNev: string) {
     setActionError(null);
     try {
       const bytes = await loadPlanPdf(ref);
@@ -338,11 +339,20 @@ export default function PlanHistoryPage() {
         setActionError({ ...ref, message: 'Ehhez a verzióhoz nincs mentett PDF.' });
         return;
       }
+      // A verzió saját, MÁR betöltött terv.json-ja adja a nevet/statuszt --
+      // olvashatatlan verziónál (nincs a plansByVersion-ben, csak a PDF
+      // tölthető be külön) a páciens-szintű névre és `isDraft: false`-ra
+      // esünk vissza, hogy a letöltés emiatt ne váljon szigorúbbá, mint ma.
+      const versionPlan = plansByVersion[versionKey(ref)];
       const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `kezelesi-terv-${tervId}-${ref.versionDir}.pdf`;
+      a.download = buildDownloadFileName(versionPlan?.paciens.nev || patientNev, {
+        tervId,
+        isDraft: versionPlan ? versionPlan.statusz !== 'VEGLEGES' : false,
+        suffix: ref.versionDir,
+      });
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -691,7 +701,7 @@ export default function PlanHistoryPage() {
                                           terv-létrehozóktól; azon belül a gyakoribb (Új
                                           verzió) áll elöl. */}
                                       <DropdownMenu.Item
-                                        onSelect={() => downloadVersion(ref, plan.tervId)}
+                                        onSelect={() => downloadVersion(ref, plan.tervId, p.nev)}
                                       >
                                         Letöltés
                                       </DropdownMenu.Item>

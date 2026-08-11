@@ -1,13 +1,14 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PlanHistoryPage from './PlanHistoryPage';
 import { TestProviders } from '../testUtils';
 import { patientCard, verzioMenupont } from '../testQueries';
 import { DemoStorage } from '../storage/DemoStorage';
 import { seedPlans } from '../storage/seed/plans';
 import { formatMoney } from '../domain/money';
+import { buildDownloadFileName } from '../storage/paths';
 import { useAppState } from '../state/AppState';
 import type { Plan } from '../domain/types';
 
@@ -67,6 +68,38 @@ function seedPersistedDraft(overrides: Partial<Plan> = {}) {
 // normalizálja, az elvárt stringet viszont nem -- ezért itt kell átváltani.
 function penz(osszeg: number): string {
   return formatMoney(osszeg, 'HUF').replace(/ /g, ' ');
+}
+
+// backlog-20: egy ténylegesen elmentett (nem seed) verzió a Letöltés
+// fájlnév-drótozottság teszthez -- fix tervId, hogy a várt fájlnevet a
+// teszt maga is összeállíthassa.
+function makeVeglegesPlan(overrides: Partial<Plan> = {}): Plan {
+  return {
+    schemaVersion: 1,
+    tervId: 'lt0001',
+    verzio: 0,
+    statusz: 'VEGLEGES',
+    nyelv: 'hu',
+    penznem: 'HUF',
+    keltezes: '2026-08-05',
+    ervenyesIg: '2026-11-03',
+    arlistaVerzio: '2026-07-01',
+    sablonVerzio: 'nyilatkozat-hu-v1',
+    orvos: 'Dr. Mándoki István',
+    paciens: {
+      nev: 'Letöltés Teszt',
+      szuletesiIdo: '',
+      lakcim: '',
+      telefon: '',
+      email: '',
+      taj: '',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+    },
+    fazisok: [],
+    osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+    ...overrides,
+  };
 }
 
 // D29: Nagy Éva a seedben KÉT önálló terv-lánccal szerepel (fogpótlás: v1+v2,
@@ -343,6 +376,41 @@ describe('PlanHistoryPage', () => {
     // jelenik meg, nem alert()-tel (P1-2).
     await user.click(await verzioMenupont(user, card, 'Letöltés'));
     expect(await within(card).findByText('Ehhez a verzióhoz nincs mentett PDF.')).toBeInTheDocument();
+  });
+
+  // backlog-20: a sanitizálás/előtag lényegi lefedettsége a
+  // storage/paths.test.ts `buildDownloadFileName`-jét fedi -- itt csak azt,
+  // hogy a "Letöltés" menüpont ténylegesen az ő kimenetét adja az <a> elem
+  // download attribútumaként.
+  it('a "⋯" menü Letöltés pontja a verzió páciensnevével és a verziómappa-suffixszel nevezi el a fájlt', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const ref = await seeder.savePlan(makeVeglegesPlan(), new Uint8Array([1, 2, 3]));
+
+    URL.createObjectURL = vi.fn(() => 'blob:mock-download-url') as unknown as typeof URL.createObjectURL;
+    URL.revokeObjectURL = vi.fn();
+    let capturedDownload: string | null = null;
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      capturedDownload = this.download;
+    });
+
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Letöltés Teszt');
+    const card = patientCard('Letöltés Teszt');
+    await user.click(await verzioMenupont(user, card, 'Letöltés'));
+
+    await waitFor(() => expect(capturedDownload).not.toBeNull());
+    expect(capturedDownload).toBe(
+      buildDownloadFileName('Letöltés Teszt', {
+        tervId: 'lt0001',
+        isDraft: false,
+        suffix: ref.versionDir,
+      }),
+    );
   });
 
   // D29: az új harmadik szint -- a Korábbi tervek fő új viselkedése.

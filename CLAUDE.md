@@ -365,6 +365,19 @@ segédfüggvénye, szintén ne írd újra:
   mintájára a `StorageContext`-en kitéve) mezőin keresztül — ne hozz létre
   második útvonalat a `dp:` kulcsok fává alakítására
 
+A letöltési fájlnév (`docs/03-funkcionalis-spec.md` § 4. Előnézet és
+véglegesítés „Letöltési fájlnév") segédfüggvényei, szintén ne írd újra
+őket:
+- `buildPatientNameSlug(fullName)` (`app/src/storage/paths.ts`) — a
+  `buildPatientDirName`-ből kiemelt névrész (split + sanitizálás +
+  kötőjeles összefűzés); a `buildPatientDirName` és a
+  `buildDownloadFileName` közös alapja, hogy a letöltött fájl neve
+  vizuálisan párosítható legyen a páciensmappa nevével
+- `buildDownloadFileName(nev, opts)` (ugyanitt) — primitív
+  paraméterekkel (nincs `Plan` a `paths.ts`-ben): az `isDraft` eldöntése
+  (mi számít piszkozatnak — a nyers `plan.statusz !== 'VEGLEGES'`) a hívó
+  (`PreviewPage.tsx`, `PlanHistoryPage.tsx`) dolga
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

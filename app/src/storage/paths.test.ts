@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   assertVersionDirAvailable,
+  buildDownloadFileName,
   buildPatientDirName,
+  buildPatientNameSlug,
   buildPlanDirName,
   buildVersionDirName,
   nextVersionNumber,
@@ -68,6 +70,70 @@ describe('buildPatientDirName / parsePatientDirName', () => {
 
   it('returns null for a name with no id suffix', () => {
     expect(parsePatientDirName('Kovács-János')).toBeNull();
+  });
+});
+
+describe('buildPatientNameSlug', () => {
+  // A letöltési fájlnév (buildDownloadFileName) ugyanezt a névrészt
+  // használja, mint a páciensmappa neve -- ezt az invariánst őrzi a teszt,
+  // nem magát az egyszavas-név "-Nevtelen" toldalékát.
+  it('matches the name part of buildPatientDirName, for a two-word name', () => {
+    const id = 'a3f9c1';
+    expect(buildPatientDirName('Kovács János', id)).toBe(`${buildPatientNameSlug('Kovács János')}_${id}`);
+  });
+
+  it('matches the name part of buildPatientDirName, for a one-word name', () => {
+    const id = 'a3f9c1';
+    expect(buildPatientDirName('Madonna', id)).toBe(`${buildPatientNameSlug('Madonna')}_${id}`);
+  });
+
+  it('matches the name part of buildPatientDirName, with forbidden characters', () => {
+    const id = 'a3f9c1';
+    const nev = 'Kovács/János';
+    expect(buildPatientDirName(nev, id)).toBe(`${buildPatientNameSlug(nev)}_${id}`);
+  });
+});
+
+describe('buildDownloadFileName', () => {
+  it('builds the base pattern for a finalized plan, no suffix', () => {
+    expect(buildDownloadFileName('Kovács János', { tervId: 'a3f9k2', isDraft: false })).toBe(
+      'kezelesi-terv-Kovács-János-a3f9k2.pdf',
+    );
+  });
+
+  it('prepends PISZKOZAT- for a draft plan', () => {
+    expect(buildDownloadFileName('Kovács János', { tervId: 'uj', isDraft: true })).toBe(
+      'PISZKOZAT-kezelesi-terv-Kovács-János-uj.pdf',
+    );
+  });
+
+  it('appends the suffix before .pdf', () => {
+    expect(
+      buildDownloadFileName('Kovács János', { tervId: 'a3f9k2', isDraft: false, suffix: 'ajanlat' }),
+    ).toBe('kezelesi-terv-Kovács-János-a3f9k2-ajanlat.pdf');
+    expect(
+      buildDownloadFileName('Kovács János', {
+        tervId: 'a3f9k2',
+        isDraft: false,
+        suffix: '2026-08-01_v1',
+      }),
+    ).toBe('kezelesi-terv-Kovács-János-a3f9k2-2026-08-01_v1.pdf');
+  });
+
+  // Egyszavas/üres név a splitHungarianName+sanitizeNamePart mai
+  // viselkedése miatt "-Nevtelen"-nel egészül ki (lásd buildPatientNameSlug
+  // fenti tesztjét) -- ugyanaz az artefaktum, mint a páciensmappa nevében,
+  // szándékosan nem külön kezelt itt.
+  it('falls back to Nevtelen(-Nevtelen) for an empty name', () => {
+    expect(buildDownloadFileName('   ', { tervId: 'a3f9k2', isDraft: false })).toBe(
+      'kezelesi-terv-Nevtelen-Nevtelen-a3f9k2.pdf',
+    );
+  });
+
+  it('replaces forbidden filename characters in the name', () => {
+    expect(buildDownloadFileName('Kovács/János Pál', { tervId: 'a3f9k2', isDraft: false })).toBe(
+      'kezelesi-terv-Kovács-János-Pál-a3f9k2.pdf',
+    );
   });
 });
 

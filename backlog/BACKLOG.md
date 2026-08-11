@@ -14,22 +14,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ## MOST
 
-### 1. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
-
-- **Méret:** 1–2 óra — a `PreviewPage` és `PlanHistoryPage` letöltési
-  fájlneveiben a páciensnév (a `paths.ts` meglévő
-  tiltottkarakter-cseréjével), és `PISZKOZAT-` előtag, ha a letöltés nem
-  véglegesített tervről készül.
-- **Kereteket sért?** Nem — a név a páciensmappa nevében ma is szerepel,
-  a fájl a doki gépén marad, nem új adatfelület.
-- **Valódi haszon:** hibacsökkentés (rossz PDF csatolása e-mailhez a
-  négy egyforma `kezelesi-terv-*.pdf` közül) + időmegtakarítás; az
-  előtag egyben a „kiadott, de nem archivált PDF" audit-lyuk (KÉSŐBB:
-  vízjel) olcsó első védvonala.
-- **20%-os verzió:** ez maga a 20%.
-- **Terv:** `backlog/plans/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
-
-### 2. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
+### 1. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
 - **Méret:** 1 óra + teszt — a `savePriceList` a `modositva` mellett az
   `arlistaVerzio`-t is a mentés napjára állítja tartalmi változásnál. A
@@ -44,7 +29,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
 - **Terv:** `backlog/plans/backlog-21-arlista-verzio-terv.md` (5 döntés).
 
-### 3. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
+### 2. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
 - **Méret:** 1–2 óra — a PlanHistoryPage-en a már betöltött
   PDF-bájtokból blob-URL, új fül; nincs új nézet, nincs új útvonal.
@@ -57,7 +42,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   böngésző PDF-nézője elég).
 - **Terv:** `backlog/plans/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
-### 4. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 3. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
@@ -70,7 +55,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `backlog/plans/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
 
-### 5. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
+### 4. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
 
 **Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
 Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:

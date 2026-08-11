@@ -405,6 +405,30 @@ seed-feltöltés és a véglegesítés-őr mind ezt hívja.
   le (a placeholder szöveg magyarul nyomtatódik, sárga figyelmeztetés
   nélkül — nincs mire visszaesni), csak német nyelvű tervnél jelez.
 
+### Letöltési fájlnév
+
+A „Letöltés" gomb (ez a képernyő) és a Korábbi tervek verziósorának „⋯"
+menüje egyaránt a `buildDownloadFileName(nev, opts)`
+(`app/src/storage/paths.ts`) kimenetét adja fájlnévnek, hogy egy
+Letöltések mappában sok páciens sok fájlja között a doki a fájlnévről
+lássa, kié:
+
+```
+[PISZKOZAT-]kezelesi-terv-<Vezetéknév-Keresztnév>-<tervId>[-<suffix>].pdf
+```
+
+A névrész a `buildPatientNameSlug` kimenete — ugyanaz a szlugosítás, mint
+a páciensmappa nevéé (`docs/02-domain-modell.md` „Mappanév szabályok"),
+hogy a fájl és a mappa neve vizuálisan párosítható legyen. A
+`PISZKOZAT-` előtag a nyers `plan.statusz !== 'VEGLEGES'`-ből jön —
+ugyanaz a jelzés, mint a szerkesztő fejlécének „véglegesítve"/„piszkozat"
+jelvényéé. Tudatos korlát: ha egy már véglegesített tervet a doki
+újranyit és módosít, de még nem véglegesíti újra, a `plan.statusz`
+`'VEGLEGES'` marad, tehát a letöltés emiatt NEM kap `PISZKOZAT-`
+előtagot, holott a tartalom már eltér a lemezen archivált változattól —
+ugyanez a hiányosság, mint a fejléc jelvényéé, nem egy második,
+pontosabb jelzés.
+
 ---
 
 ## 5. Korábbi tervek
@@ -436,6 +460,15 @@ ténylegesen kockázatos (szerkesztőbe töltéskor). Ha egy verzió
 `terv.json`-ja nem olvasható, csak annál a sornál „—” áll az összeg
 helyén, és a páciens megkapja a meglévő „⚠ néhány verziója nem
 olvasható” jelzést.
+
+A verziósor „⋯" menüjének „Letöltés" pontja ugyanazt a
+`buildDownloadFileName`-et hívja, mint az Előnézet (§ 4. Előnézet és
+véglegesítés „Letöltési fájlnév") — a névhez és a `PISZKOZAT-`
+előtag-döntéshez a verzió saját, már betöltött `terv.json`-ját használja,
+a suffix a verziómappa neve. Olvashatatlan `terv.json`-nál a letöltés nem
+hasal el emiatt: a névhez a páciens-szintű nevet, előtaghoz
+`isDraft: false`-t használja — a letöltés nem válik szigorúbbá, mint a
+puszta PDF-betöltés.
 
 Ez a legerősebb indoka a fájlrendszer-hozzáférésnek — nem a mentés, hanem
 a betöltés. Egy visszatérő pácienshez ne kelljen újragépelni 12 tételt.
