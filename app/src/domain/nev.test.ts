@@ -137,10 +137,10 @@ describe('sorFallback', () => {
     expect(sorFallback(sor({ tetelId: 'torolve' }), 'de', tetelById)).toBeNull();
   });
 
-  it('backlog-3: egyedi (üres tetelId-jű), kitöltött nevű sor de terven "nincsForditas"', () => {
+  it('backlog-23: egyedi (üres tetelId-jű), kitöltött nevű sor de terven "egyedi"', () => {
     expect(
       sorFallback(sor({ tetelId: '', nevSnapshot: 'Egyedi tétel' }), 'de', tetelById),
-    ).toBe('nincsForditas');
+    ).toBe('egyedi');
   });
 
   it('backlog-3: egyedi, üres nevű sort nem jelez -- azt a kitoltetlenSorok kapja el', () => {
@@ -192,7 +192,7 @@ describe('fallbackSorok', () => {
         },
       ],
     });
-    expect(fallbackSorok(plan, priceList)).toEqual({ nincsForditas: [], elterAzArlistatol: [] });
+    expect(fallbackSorok(plan, priceList)).toEqual({ nincsForditas: [], elterAzArlistatol: [], egyedi: [] });
   });
 
   it('lists snapshot names whose item has no de name under nincsForditas', () => {
@@ -212,6 +212,7 @@ describe('fallbackSorok', () => {
     expect(fallbackSorok(plan, priceList)).toEqual({
       nincsForditas: ['Nincs DE'],
       elterAzArlistatol: [],
+      egyedi: [],
     });
   });
 
@@ -231,6 +232,7 @@ describe('fallbackSorok', () => {
     expect(fallbackSorok(plan, priceList)).toEqual({
       nincsForditas: [],
       elterAzArlistatol: ['Kézzel átírt szöveg'],
+      egyedi: [],
     });
   });
 
@@ -247,10 +249,10 @@ describe('fallbackSorok', () => {
         },
       ],
     });
-    expect(fallbackSorok(plan, priceList)).toEqual({ nincsForditas: [], elterAzArlistatol: [] });
+    expect(fallbackSorok(plan, priceList)).toEqual({ nincsForditas: [], elterAzArlistatol: [], egyedi: [] });
   });
 
-  it('backlog-3: kitöltött egyedi (tetelId nélküli) sor is bekerül de terven, nincsForditas alá', () => {
+  it('backlog-3: kitöltött egyedi (tetelId nélküli) sor is bekerül de terven, egyedi alá', () => {
     const plan = makePlan({
       fazisok: [
         {
@@ -264,8 +266,9 @@ describe('fallbackSorok', () => {
       ],
     });
     expect(fallbackSorok(plan, priceList)).toEqual({
-      nincsForditas: ['Egyedi anyagköltség'],
+      nincsForditas: [],
       elterAzArlistatol: [],
+      egyedi: ['Egyedi anyagköltség'],
     });
   });
 
@@ -282,7 +285,7 @@ describe('fallbackSorok', () => {
         },
       ],
     });
-    expect(fallbackSorok(plan, priceList)).toEqual({ nincsForditas: [], elterAzArlistatol: [] });
+    expect(fallbackSorok(plan, priceList)).toEqual({ nincsForditas: [], elterAzArlistatol: [], egyedi: [] });
   });
 });
 

@@ -733,4 +733,20 @@
   szinkron, még a PDF-lekérés előtt fut; hiányzó PDF esetén az üres lap
   bezárul, és ugyanaz az inline hiba jelenik meg, mint a `Letöltés`-nél.
 
+### 23. Egyedi sor pontosabb megnevezése a német véglegesítés-őrben — KÉSZ (2026-08-11)
+
+- **Méret:** fél óra + teszt.
+- **Kereteket sért?** Nem — a D21-őr szigora (soha nem néma) változatlan
+  maradt, a tétel csak a kategorizálást pontosította.
+- **Valódi haszon:** kicsi, de valós hibacsökkentés — egy németül beírt
+  egyedi sorra korábban az őr „farkast kiáltott" (a „nincs német nevük az
+  árlistában" lista alá sorolta, holott nincs is mögötte árlistai tétel),
+  ami pont ott koptatta a riasztás hitelét, ahol a valódi találat komoly.
+- **Megvalósítás:** `docs/03-funkcionalis-spec.md` § Egyedi sor és § 4.
+  Előnézet és véglegesítés. A `sorFallback()`/`fallbackSorok()`
+  (`app/src/domain/nev.ts`) egy harmadik `'egyedi'` okot különböztet meg a
+  korábbi `'nincsForditas'`-tól — a véglegesítés megerősítő dialógusa
+  emiatt már három külön felsorolást mutat, a szerkesztő pedig egyedi
+  soron csak a szürke „egyedi" jelvényt jeleníti meg, amber `HU`-t nem.
+
 ---

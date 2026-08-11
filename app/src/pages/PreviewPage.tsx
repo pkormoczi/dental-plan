@@ -236,10 +236,10 @@ export default function PreviewPage() {
     !plan.paciens.taj;
   // D21/D24: a hiányzó VAGY kézzel eltérített német tételnevek soha nem
   // eshetnek/maradhatnak néma módon a terven -- a doki itt látja, mely
-  // nevek érintettek, mielőtt a páciens aláírja a dokumentumot. Két külön
+  // nevek érintettek, mielőtt a páciens aláírja a dokumentumot. Három külön
   // ok (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés).
-  const { nincsForditas, elterAzArlistatol } = fallbackSorok(plan, priceList);
-  const nevProblemaSzama = nincsForditas.length + elterAzArlistatol.length;
+  const { nincsForditas, elterAzArlistatol, egyedi } = fallbackSorok(plan, priceList);
+  const nevProblemaSzama = nincsForditas.length + elterAzArlistatol.length + egyedi.length;
   // A fogtérkép-kattintással felvett, de be nem azonosított sorok -- lásd
   // attemptFinalize: ez KEMÉNY blokk, nem a confirmStep-lánc egy tagja,
   // mert egy névtelen, 0 Ft-os sor sosem kerülhet az aláírandó PDF-re.
@@ -292,6 +292,7 @@ export default function PreviewPage() {
           [
             nevListaSzoveg('Nincs német nevük az árlistában', nincsForditas),
             nevListaSzoveg('Kézzel átírt, eltér az árlistától', elterAzArlistatol),
+            nevListaSzoveg('Egyedi, szabad szöveges sor — a nyelvét te írtad', egyedi),
           ]
             .filter(Boolean)
             .join('\n\n') +

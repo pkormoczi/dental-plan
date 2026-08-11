@@ -34,10 +34,12 @@ export function nevKoveti(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
 
 /** A `sorFallback` visszaadott oka: miért nem a terv nyelvén szerepel a sor neve. */
 export type SorFallbackOk =
-  /** A tételnek nincs neve ezen a nyelven (vagy a sor egyedi, azaz sosem lehetne). */
+  /** A tételnek nincs neve ezen a nyelven. */
   | 'nincsForditas'
   /** Van neve a tételnek ezen a nyelven, de a sor mást mond -- kézzel szerkesztve. */
-  | 'elterAzArlistatol';
+  | 'elterAzArlistatol'
+  /** A sor egyedi (nincs árlistai tétele) -- nem tudni, milyen nyelven íródott. */
+  | 'egyedi';
 
 /**
  * Egy sor neve miért nem a terv nyelvén szerepel -- az EGYETLEN hely, ahol
@@ -46,9 +48,10 @@ export type SorFallbackOk =
  * `null`, ha a sor rendben van (követi az árlistát, vagy hu terven vagyunk).
  *
  * Egyedi (üres `tetelId`-jű) sornál nincs mit a `priceList`-ben megkeresni --
- * szabad szöveghez sosem volt/lesz fordítás, tehát ez a sor mindig
- * `'nincsForditas'`-t ad, amíg van kitöltött neve. Üres nevű egyedi sort nem
- * jelez -- azt a `kitoltetlenSorok` kemény blokkja úgyis elkapja.
+ * ez a sor mindig `'egyedi'`-t ad, amíg van kitöltött neve (backlog-23: nem
+ * `'nincsForditas'`, mert nem árlistai fordítás hiányzik, hanem nem
+ * ellenőrizhető, milyen nyelven íródott). Üres nevű egyedi sort nem jelez --
+ * azt a `kitoltetlenSorok` kemény blokkja úgyis elkapja.
  *
  * `tetelId`-hez kötött sornál a `nevKoveti` dönt: ha a tételnek nincs neve
  * ezen a nyelven, `'nincsForditas'`; ha van, de a sor mást mond (a doki
@@ -61,7 +64,7 @@ export function sorFallback(
   tetelById: ReadonlyMap<string, Tetel>,
 ): SorFallbackOk | null {
   if (nyelv === 'hu') return null;
-  if (!sor.tetelId.trim()) return sor.nevSnapshot.trim() !== '' ? 'nincsForditas' : null;
+  if (!sor.tetelId.trim()) return sor.nevSnapshot.trim() !== '' ? 'egyedi' : null;
   const tetel = tetelById.get(sor.tetelId);
   if (!tetel) return null;
   if (tetel.nev.de == null) return 'nincsForditas';
@@ -73,17 +76,19 @@ export interface FallbackSorokEredmeny {
   nincsForditas: string[];
   /** Azon sorok neve, amik kézzel eltérnek az árlistai (lefordított) névtől. */
   elterAzArlistatol: string[];
+  /** Azon egyedi (árlistai tétel nélküli), kitöltött nevű sorok neve. */
+  egyedi: string[];
 }
 
 /**
  * A tervben lévő sorok közül azoknak a `nevSnapshot`-ja, amik a terv
- * nyelvén nem a várt (árlistai) formában szerepelnek -- két okra bontva
+ * nyelvén nem a várt (árlistai) formában szerepelnek -- három okra bontva
  * (lásd `SorFallbackOk`). NEM rajzolja újra a snapshotot (D7), csak
  * diagnosztikát számol a szerkesztés alatt álló piszkozatra, a
  * véglegesítés-őr (PreviewPage) és a Páciens adatlap figyelmeztetéséhez.
  */
 export function fallbackSorok(plan: Plan, priceList: PriceList): FallbackSorokEredmeny {
-  const eredmeny: FallbackSorokEredmeny = { nincsForditas: [], elterAzArlistatol: [] };
+  const eredmeny: FallbackSorokEredmeny = { nincsForditas: [], elterAzArlistatol: [], egyedi: [] };
   if (plan.nyelv === 'hu') return eredmeny;
   const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));
   for (const fazis of plan.fazisok) {
@@ -91,6 +96,7 @@ export function fallbackSorok(plan: Plan, priceList: PriceList): FallbackSorokEr
       const ok = sorFallback(sor, plan.nyelv, tetelById);
       if (ok === 'nincsForditas') eredmeny.nincsForditas.push(sor.nevSnapshot);
       else if (ok === 'elterAzArlistatol') eredmeny.elterAzArlistatol.push(sor.nevSnapshot);
+      else if (ok === 'egyedi') eredmeny.egyedi.push(sor.nevSnapshot);
     }
   }
   return eredmeny;

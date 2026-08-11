@@ -153,8 +153,8 @@ Ezek (eredetileg a törölt `ui/tokens.js` prototípusból portolva) már megvan
 D21 (nyelv/pénznem szétválasztás) hozott néhány újat, ezeket se írd újra:
 - `resolveNev(nev, nyelv)` / `fallbackSorok(plan, priceList)` (`app/src/domain/nev.ts`)
   — a tétel nevének nyelvfüggő feloldása magyar visszaeséssel + a
-  véglegesítés-őr diagnosztikája (két listára bontva: `nincsForditas` /
-  `elterAzArlistatol`, lásd alább, backlog-3b). `sorFallback(sor, nyelv,
+  véglegesítés-őr diagnosztikája (három listára bontva: `nincsForditas` /
+  `elterAzArlistatol` / `egyedi`, lásd alább, backlog-3b). `sorFallback(sor, nyelv,
   tetelById)` (ugyanitt) az EGYETLEN hely, ahol eldől, hogy egy SOR neve
   miért nem a terv nyelvén szerepel — a `fallbackSorok` és a szerkesztő
   `HU`/„átírt" jelvénye is ezt hívja. `nevKoveti(sor, tetel, nyelv)`

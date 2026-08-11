@@ -172,12 +172,13 @@ jelölés. **Ez csak a szerkesztőben látszik, a nyomtatványon nem** (D9).
 Sávos tételnél a listaár helyén a sáv látszik, és az ajánlati ár mező ki
 van emelve — jelzi, hogy itt dönteni kell.
 
-Német nyelvű terven a Beavatkozás mező mellett két, egymást kizáró jelvény
-jelenhet meg: `HU`, ha a tételnek nincs német neve az árlistában, vagy
-„átírt", ha van német neve, de a sor szövege attól eltér (kézzel
-pontosítva). Csak `tetelId`-hez kötött soron jelenhet meg az „átírt" —
-egyedi sor sosem kaphatja, hiszen nincs mihez viszonyítani. Magyar terven
-egyik sem jelenik meg (a doki magyarul gépel, ott nincs mit jelezni, D21).
+Német nyelvű terven, `tetelId`-hez kötött soron a Beavatkozás mező mellett
+két, egymást kizáró jelvény jelenhet meg: `HU`, ha a tételnek nincs német
+neve az árlistában, vagy „átírt", ha van német neve, de a sor szövege attól
+eltér (kézzel pontosítva). Egyedi sor egyiket sem kaphatja, hiszen nincs
+árlistai tétel, amihez viszonyítani lehetne (lásd lent, „Egyedi sor").
+Magyar terven egyik sem jelenik meg (a doki magyarul gépel, ott nincs mit
+jelezni, D21).
 
 ### Egyedi sor
 
@@ -192,9 +193,11 @@ sorként vehető fel — lásd fent, „Tételkereső". Az egyedi sor:
 - **A „becsült ár" jelölő ugyanúgy működik rajta**, mint bármelyik más
   soron — bekapcsolva a nyomtatványon csillagot és lábjegyzetet kap.
 - Német nyelvű ajánlaton egy **kitöltött** egyedi sor is bekerül a
-  „hiányzó német tételnevek" figyelmeztetésbe (a szerkesztőben `HU`
-  jelvénnyel, véglegesítéskor a megerősítő listában) — szabad szöveghez
-  nincs német változat.
+  véglegesítés megerősítő listájába, de **saját, harmadik felsorolás**
+  alá („Egyedi, szabad szöveges sor — a nyelvét te írtad"), nem a „nincs
+  német nevük az árlistában" alá — nem hiányzó fordításról van szó, hanem
+  arról, hogy szabad szöveghez nincs mihez viszonyítani, a doki bármelyik
+  nyelven írhatta. A szerkesztőben nem kap `HU` jelvényt.
 - Nem kötelező kitölteni azonnal: a fogtérkép-kattintással létrehozott,
   még névtelen sor is ugyanezt a mechanizmust használja (lásd fent,
   „Fogtérkép"), csak addig kereső módban marad, amíg a doki tételt nem
@@ -340,13 +343,15 @@ szerkesztőben is látszik, nem csak a Kezdőlapon — ott dolgozik a doki.
 Meglévő terv szerkesztése **soha nem írja felül** a korábbi verziómappát
 (D4).
 
-**Német terv, hiányzó/eltérő tételnevekkel:** ha a tervben olyan sor van,
-amihez nem tartozik német tétel név, vagy amelynek neve kézzel eltér az
-árlistától (lásd D21, D24), a véglegesítés megerősítést kér — a páciens
-ezt a dokumentumot írja alá, ezért ez a figyelmeztetés soha nem néma. A
-megerősítő dialógus **két külön felsorolást** mutat: „N tételnek nincs
-német neve" és „M sor neve eltér az árlistától (kézzel szerkesztve)" — a
-két ok különböző dokitennivalót jelent, nem szabad egy lista mögé
+**Német terv, hiányzó/eltérő/egyedi tételnevekkel:** ha a tervben olyan sor
+van, amihez nem tartozik német tétel név, amelynek neve kézzel eltér az
+árlistától (lásd D21, D24), vagy amelyik egyedi (nincs mögötte árlistai
+tétel), a véglegesítés megerősítést kér — a páciens ezt a dokumentumot
+írja alá, ezért ez a figyelmeztetés soha nem néma. A megerősítő dialógus
+**három külön felsorolást** mutat: „N tételnek nincs német neve", „M sor
+neve eltér az árlistától (kézzel szerkesztve)" és „K egyedi, szabad
+szöveges sor — a nyelvét te írtad" — a három ok különböző dokitennivalót
+jelent, nem szabad egy lista mögé
 bújtatni.
 
 **Kitöltetlen sor (kemény blokk):** ha a fogtérképről kattintással felvett

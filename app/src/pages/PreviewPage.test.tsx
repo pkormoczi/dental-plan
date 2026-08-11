@@ -226,6 +226,48 @@ describe('PreviewPage -- hiányzó és eltérő tételnevek két külön listáb
     },
     20000,
   );
+
+  it(
+    'backlog-23: egy valódi egyedi sor a "nyelvét te írtad" cím alatt szerepel, nem a "nincs német nevük" alatt',
+    async () => {
+      const user = userEvent.setup();
+      seedGermanPlanWithOneTranslatedItem();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Teszt Egyedi');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'Érzéstelenítés');
+      await screen.findByText(/Egyedi tétel felvétele/);
+      await user.keyboard('{Enter}');
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+      // A páciens hiányos, ezért előbb a "Hiányzó páciensadatok" dialógus
+      // jön -- a "Folytatás" a láncban a KÖVETKEZŐ dialógust nyitja meg.
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+
+      const dialog = await screen.findByRole('alertdialog');
+      expect(within(dialog).getByText('Tételnevek nem németül')).toBeInTheDocument();
+      expect(
+        within(dialog).getByText(/Egyedi, szabad szöveges sor — a nyelvét te írtad \(1\)/),
+      ).toBeInTheDocument();
+      expect(
+        within(dialog).queryByText(/Nincs német nevük az árlistában/),
+      ).not.toBeInTheDocument();
+    },
+    20000,
+  );
 });
 
 // docs/03-funkcionalis-spec.md § Sablon-placeholder őr (D23): a betöltött

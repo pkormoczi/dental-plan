@@ -664,6 +664,22 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
 
     expect(screen.queryByText(/−\d+%/)).not.toBeInTheDocument();
   });
+
+  it('backlog-23: egyedi sor német terven csak "egyedi" jelvényt kap, "HU"-t nem', async () => {
+    const user = userEvent.setup();
+    seedGermanPlanWithOneTranslatedItem();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'Érzéstelenítés');
+    await screen.findByText(/Egyedi tétel felvétele/);
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(search).toHaveValue(''));
+    expect(screen.getByDisplayValue('Érzéstelenítés')).toBeInTheDocument();
+    expect(screen.getByText('egyedi')).toBeInTheDocument();
+    expect(screen.queryByText('HU')).not.toBeInTheDocument();
+  });
 });
 
 describe('PlanEditorPage -- backlog-4: becsült ár (≈ ikon) kapcsoló', () => {

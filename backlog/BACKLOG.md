@@ -14,20 +14,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ## MOST
 
-### 1. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
-
-- **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
-  jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
-  szöveggel sorolja („Egyedi, szabad szöveges sor — a nyelvét te
-  írtad"), ne a „nincs német nevük az árlistában" cím alatt.
-- **Kereteket sért?** Nem — a D21-őr szigora (soha nem néma) marad.
-- **Valódi haszon:** kicsi, de valós hibacsökkentés — a németül beírt
-  egyedi sorra ma az őr „farkast kiált", és a hamis riasztás pont ott
-  koptatja a riasztás hitelét, ahol a valódi találat komoly.
-- **20%-os verzió:** ez maga a 20%.
-- **Terv:** `backlog/plans/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
-
-### 2. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
+### 1. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
 
 **Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
 Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
