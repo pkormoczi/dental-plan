@@ -671,4 +671,20 @@
   A dialógus `Action` gombja szándékosan nem a trigger feliratát ismétli
   (accessible-name-ütközés a DOM-ban maradó többi soronkénti triggerrel).
 
+### 19. 0 Ft-os sorok puha figyelmeztetése véglegesítéskor — KÉSZ (2026-08-11)
+
+- **Méret:** 2–3 óra.
+- **Kereteket sért?** Nem.
+- **Valódi haszon:** hibacsökkentés — a gépel→Enter ciklus nulla
+  találatnál egyedi sort vesz fel 0 Ft kezdőértékkel, tehát egy elgépelés
+  + reflexes Enter eddig némán tehetett egy fantomsort az aláírandó
+  dokumentumra; ugyanez véd az egyedi soron elfelejtett ár ellen.
+- **Megvalósítás:** `docs/03-funkcionalis-spec.md` § 4. Előnézet és
+  véglegesítés. Új `nullaOsszeguSorok(plan)` export
+  (`app/src/domain/kitoltetlen.ts`) a névvel ellátott, de 0 összegű
+  sorokra; a `PreviewPage` meglévő, négylépésessé bővült
+  `confirmStep`-láncában PUHA (átugorható) lépésként, a hiányzó/eltérő
+  német tételnevek után és a hiányzó csomag-leírás elé sorolva. A
+  dialógus címe/szövege a terv pénznemét követi.
+
 ---

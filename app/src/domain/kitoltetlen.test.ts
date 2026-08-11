@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hianyzoCsomagLeirasok, kitoltetlenSorok } from './kitoltetlen';
+import { hianyzoCsomagLeirasok, kitoltetlenSorok, nullaOsszeguSorok } from './kitoltetlen';
 import type { Plan, PriceList, Sor } from './types';
 
 function sor(partial: Partial<Sor>): Sor {
@@ -99,6 +99,42 @@ describe('kitoltetlenSorok', () => {
     // Egy nem-létező (törölt) tetelId-jű, de KITÖLTÖTT (megnevezett) sor nem kitöltetlen.
     const plan = makePlan([[sor({ tetelId: 't-torolve' })]]);
     expect(kitoltetlenSorok(plan)).toEqual([]);
+  });
+});
+
+describe('nullaOsszeguSorok', () => {
+  it('névvel ellátott, 0 Ft-os sort jelez', () => {
+    const plan = makePlan([
+      [sor({ nevSnapshot: 'Egyedi anyagköltség', listaEgysegar: 0, tenylegesEgysegar: 0 })],
+    ]);
+    expect(nullaOsszeguSorok(plan)).toEqual(['Egyedi anyagköltség']);
+  });
+
+  it('névtelen 0 Ft-os sort NEM jelez -- azt a kitoltetlenSorok fedi', () => {
+    const plan = makePlan([
+      [sor({ nevSnapshot: '', listaEgysegar: 0, tenylegesEgysegar: 0 })],
+    ]);
+    expect(nullaOsszeguSorok(plan)).toEqual([]);
+  });
+
+  it('nem-0 összegű sort nem jelez', () => {
+    const plan = makePlan([[sor({ nevSnapshot: 'Fogeltávolítás' })]]);
+    expect(nullaOsszeguSorok(plan)).toEqual([]);
+  });
+
+  it('a sorOsszeg-et (mennyiseg * egységár) nézi, nem csak az egységárat', () => {
+    const plan = makePlan([
+      [sor({ nevSnapshot: 'Nulla darab', mennyiseg: 0, tenylegesEgysegar: 5000, listaEgysegar: 5000 })],
+    ]);
+    expect(nullaOsszeguSorok(plan)).toEqual(['Nulla darab']);
+  });
+
+  it('több fázison át a terv-sorrendet követi', () => {
+    const plan = makePlan([
+      [sor({ nevSnapshot: 'Első' }), sor({ nevSnapshot: 'Nulla A', tenylegesEgysegar: 0 })],
+      [sor({ nevSnapshot: 'Nulla B', tenylegesEgysegar: 0 }), sor({ nevSnapshot: 'Utolsó' })],
+    ]);
+    expect(nullaOsszeguSorok(plan)).toEqual(['Nulla A', 'Nulla B']);
   });
 });
 

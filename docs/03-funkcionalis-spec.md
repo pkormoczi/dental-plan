@@ -356,13 +356,23 @@ sor sose kerülhessen az aláírandó dokumentumra. A hibaüzenet megnevezi a
 fázist és a fogszámot; „Vissza a szerkesztőbe" gomb visz a hiányzó sorhoz.
 Az Előnézet maga nem blokkolódik, csak a véglegesítés.
 
+**0 összegű sor (puha megerősítés):** ha a tervben van névvel ellátott, de
+0 összegű sor (`tenylegesEgysegar * mennyiseg === 0`), a véglegesítés egy
+megerősítő lépést kér — jellemzően egy elgépelés + reflexes Enter terméke a
+gépel→↑/↓→Enter cikluson (nulla találatra a kereső egyedi sort vesz fel, 0 Ft
+kezdőértékkel), de lehet szándékos is (pl. ingyenes kontroll), ezért nem
+kemény blokk. A dialógus felsorolja az érintett sorok nevét, „Folytatás"
+gombbal átugorható; a címe és a szövege a terv pénznemét követi (HUF: „0
+Ft-os tételek", EUR: „0,00 €-s tételek").
+
 **Hiányzó csomag-leírás (puha megerősítés):** ha a tervben `csomag: true`
-tételre hivatkozó, üres leírású sor van, a véglegesítés egy harmadik
-megerősítő lépést kér — a lánc sorrendje: hiányzó páciensadat → hiányzó/
-eltérő német tételnevek → hiányzó csomag-leírás. A dialógus felsorolja az
-érintett sorokat, „Folytatás" gombbal átugorható (docs/02-domain-modell.md
-§ Tétel-leírás). Ez a lépés kimarad, ha a terv `leirasokMutatasa` kapcsolója
-ki van kapcsolva — ilyenkor a leírás úgysem kerül a nyomtatványra.
+tételre hivatkozó, üres leírású sor van, a véglegesítés egy megerősítő
+lépést kér — a teljes lánc sorrendje: hiányzó páciensadat → hiányzó/eltérő
+német tételnevek → 0 összegű sorok → hiányzó csomag-leírás. A dialógus
+felsorolja az érintett sorokat, „Folytatás" gombbal átugorható
+(docs/02-domain-modell.md § Tétel-leírás). Ez a lépés kimarad, ha a terv
+`leirasokMutatasa` kapcsolója ki van kapcsolva — ilyenkor a leírás úgysem
+kerül a nyomtatványra.
 
 ### Sablon-placeholder őr
 

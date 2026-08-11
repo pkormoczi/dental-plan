@@ -14,6 +14,7 @@
 // `nevSnapshot`/ár pillanatkép D7 szerint továbbra is érvényes, csak a
 // mai árlistával nem egyeztethető), ez pedig egy SOSEM megnevezett sort.
 
+import { sorOsszeg } from './totals';
 import type { Plan, PriceList } from './types';
 
 export interface KitoltetlenSor {
@@ -30,6 +31,30 @@ export function kitoltetlenSorok(plan: Plan): KitoltetlenSor[] {
     fazis.sorok.forEach((sor, sorIndex) => {
       if (!sor.nevSnapshot.trim()) {
         eredmeny.push({ fazisIndex, fazisNev: fazis.megnevezes, sorIndex, fogak: sor.fogak });
+      }
+    });
+  });
+  return eredmeny;
+}
+
+/**
+ * PUHA figyelmeztetés (backlog-19): névvel ellátott, de 0 összegű sorok, terv
+ * sorrendben. A névtelen sorokat a fenti `kitoltetlenSorok` kemény blokkja
+ * fedi -- ez itt csak a MEGNEVEZETT, de elgépelés vagy elfelejtett ár miatt
+ * 0 Ft-on maradt sorokat kapja el (pl. a gépel->Enter ciklus nulla
+ * találatnál egyedi sort vesz fel 0 Ft kezdőértékkel). Nincs sortípus
+ * szerinti kivétel -- egy SAVOS eredetű, épp 0 egységárú sor is bekerül,
+ * ez puha figyelmeztetésnél elhanyagolható súrlódás. `string[]`-et ad
+ * vissza (a `nevSnapshot`-okat), mert ezeknek a soroknak VAN nevük -- lásd
+ * `nev.ts` `fallbackSorok` `nincsForditas`/`elterAzArlistatol` mezőit,
+ * ugyanez a minta.
+ */
+export function nullaOsszeguSorok(plan: Plan): string[] {
+  const eredmeny: string[] = [];
+  plan.fazisok.forEach((fazis) => {
+    fazis.sorok.forEach((sor) => {
+      if (sor.nevSnapshot.trim() && sorOsszeg(sor) === 0) {
+        eredmeny.push(sor.nevSnapshot);
       }
     });
   });

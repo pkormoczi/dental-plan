@@ -208,6 +208,12 @@ A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne ír
   de be nem azonosított) sorokat sorolja fel; a `PreviewPage`
   véglegesítés-őre KEMÉNY blokként hívja, ne írj hozzá második
   ellenőrzést máshol
+- `nullaOsszeguSorok(plan)` (`app/src/domain/kitoltetlen.ts`) — a névvel
+  ellátott, de 0 összegű (`sorOsszeg(sor) === 0`) sorokat sorolja fel
+  (`docs/03-funkcionalis-spec.md` § 4. Előnézet és véglegesítés); a
+  `PreviewPage` véglegesítés-őrének PUHA (átugorható) lépéseként hívja,
+  szándékosan nem a `kitoltetlenSorok`-kal egybevonva, mert az a névtelen,
+  ez a névvel ellátott sorokat fedi
 
 A piszkozat-perzisztencia (`docs/03-funkcionalis-spec.md` § Autosave,
 `docs/05-technologia.md` § Piszkozat-autosave) segédfüggvényei és rétege,

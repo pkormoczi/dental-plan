@@ -4,7 +4,7 @@
 // @react-pdf/renderer usePDF()-jét ugyanúgy mockoljuk, mint App.test.tsx-ben
 // (lásd ott a header-kommentet az indoklásért).
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
@@ -443,6 +443,105 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
 
       // Csak a hiányos páciensadat-dialógus jön -- nincs "missing-leiras" lépés.
       await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
+    },
+    20000,
+  );
+});
+
+// backlog-19: névvel ellátott, de 0 Ft-os sor -- PUHA megerősítő lépés, a
+// doki egy "Folytatás" kattintással túljut rajta (a 0 ár lehet szándékos,
+// pl. ingyenes kontroll). A gépel->0 találat->Enter úton felvett egyedi sor
+// ("Érzéstelenítés", ugyanaz a minta, mint PlanEditorPage.test.tsx backlog-3
+// tesztje) 0 Ft kezdőértékkel jön létre -- ez a fantomsor-eset, amit a tétel
+// megfog.
+describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'teljesen kitöltött páciensadattal a 0 Ft-os dialógus jön egyenesen, majd folytatható',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+
+      // Minden páciensmező kitöltve -- a "Hiányzó páciensadatok" lépés
+      // kimarad, hogy a 0 Ft-os dialógus jöjjön elsőként.
+      await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Nulla');
+      fireEvent.change(screen.getByLabelText('Született'), { target: { value: '1990-01-01' } });
+      await user.type(screen.getByLabelText('TAJ'), '123 456 789');
+      await user.type(
+        screen.getByLabelText('Lakcím'),
+        '1113 Budapest, Bartók Béla út 42. 2/5',
+      );
+      await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
+      await user.type(screen.getByLabelText('E-mail'), 'teszt.nulla@example.hu');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'Érzéstelenítés');
+      await screen.findByText(/Egyedi tétel felvétele/);
+      await user.keyboard('{Enter}');
+      await waitFor(() => expect(search).toHaveValue(''));
+      expect(screen.getByDisplayValue('Érzéstelenítés')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+
+      const dialog = await screen.findByRole('alertdialog');
+      expect(within(dialog).getByText('0 Ft-os tételek')).toBeInTheDocument();
+      expect(within(dialog).getByText(/Érintett sorok \(1\)/)).toBeInTheDocument();
+      expect(within(dialog).getByText(/Érzéstelenítés/)).toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Folytatás' }));
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
+    },
+    20000,
+  );
+
+  it(
+    'hiányos páciensadattal a lánc előbb a hiányzó adatokat, majd a 0 Ft-os sorokat kéri megerősíteni',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Lánc');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'Érzéstelenítés');
+      await screen.findByText(/Egyedi tétel felvétele/);
+      await user.keyboard('{Enter}');
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+
+      const missingFieldsDialog = await screen.findByRole('alertdialog');
+      expect(within(missingFieldsDialog).getByText('Hiányzó páciensadatok')).toBeInTheDocument();
+      await user.click(within(missingFieldsDialog).getByRole('button', { name: 'Folytatás' }));
+
+      const zeroPriceDialog = await screen.findByRole('alertdialog');
+      expect(within(zeroPriceDialog).getByText('0 Ft-os tételek')).toBeInTheDocument();
+      await user.click(within(zeroPriceDialog).getByRole('button', { name: 'Folytatás' }));
+
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
     20000,

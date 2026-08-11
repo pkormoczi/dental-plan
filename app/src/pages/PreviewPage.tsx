@@ -8,7 +8,8 @@ import { usePDF } from '@react-pdf/renderer';
 import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
-import { hianyzoCsomagLeirasok, kitoltetlenSorok } from '../domain/kitoltetlen';
+import { hianyzoCsomagLeirasok, kitoltetlenSorok, nullaOsszeguSorok } from '../domain/kitoltetlen';
+import { formatMoney } from '../domain/money';
 import { fallbackSorok } from '../domain/nev';
 import { isPlaceholderTemplate } from '../domain/templates';
 import { computeOsszesitok } from '../domain/totals';
@@ -19,16 +20,22 @@ import { renderToothChartPng } from '../pdf/toothChartImage';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
-type ConfirmStep = 'missing-fields' | 'de-fallback-names' | 'missing-leiras' | null;
+type ConfirmStep =
+  | 'missing-fields'
+  | 'de-fallback-names'
+  | 'zero-price-rows'
+  | 'missing-leiras'
+  | null;
 
 // Rendezett lánc -- `attemptFinalize` az elején kezdi, `confirmStepContinue`
 // a JELENLEGI lépés utáni első alkalmazható lépésre ugrik (lásd lent). A
-// sorrend implementációs döntés: a páciensadat és a nyelvi/jogi probléma
-// megelőzi a kommunikációs jellegű leírás-hiányt (docs/03-funkcionalis-spec.md
-// § 4. Előnézet és véglegesítés).
+// sorrend implementációs döntés: a páciensadat és a nyelvi/jogi/pénzügyi
+// probléma megelőzi a kommunikációs jellegű leírás-hiányt
+// (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés).
 const CONFIRM_STEPS: Exclude<ConfirmStep, null>[] = [
   'missing-fields',
   'de-fallback-names',
+  'zero-price-rows',
   'missing-leiras',
 ];
 
@@ -236,6 +243,11 @@ export default function PreviewPage() {
   // attemptFinalize: ez KEMÉNY blokk, nem a confirmStep-lánc egy tagja,
   // mert egy névtelen, 0 Ft-os sor sosem kerülhet az aláírandó PDF-re.
   const uresSorok = kitoltetlenSorok(plan);
+  // PUHA figyelmeztetés (backlog-19) -- névvel ellátott, de 0 összegű sorok
+  // (elgépelés + reflexes Enter az egyedi-sor-felvétel útján, vagy
+  // elfelejtett ár). Szándékosan nem kemény blokk: a 0 ár legitim is lehet
+  // (pl. ingyenes kontroll).
+  const nullaSorok = nullaOsszeguSorok(plan);
   // PUHA figyelmeztetés (docs/02-domain-modell.md § Tétel-leírás) -- csak
   // akkor releváns, ha a leírások ténylegesen nyomtatódnak; kikapcsolt
   // `leirasokMutatasa` mellett a hiányuk nem érinti a nyomtatványt.
@@ -246,6 +258,7 @@ export default function PreviewPage() {
   const confirmStepApplicable: Record<Exclude<ConfirmStep, null>, boolean> = {
     'missing-fields': otherFieldsMissing,
     'de-fallback-names': nevProblemaSzama > 0,
+    'zero-price-rows': nullaSorok.length > 0,
     'missing-leiras': hianyzoLeirasok.length > 0,
   };
 
@@ -255,6 +268,60 @@ export default function PreviewPage() {
       if (confirmStepApplicable[CONFIRM_STEPS[i]]) return CONFIRM_STEPS[i];
     }
     return null;
+  }
+
+  /**
+   * A `confirmStep`-dialógus cím/leírás szövege -- négy lépésnél a korábbi,
+   * egymásba ágyazott ternár-lánc olvashatatlanná vált volna. `null` lépésnél
+   * (dialógus zárva) a `missing-leiras` szöveg ágára esik, ez sosem látszik.
+   */
+  function confirmStepTartalom(step: ConfirmStep): { cim: string; leiras: string } {
+    if (step === 'missing-fields') {
+      return {
+        cim: 'Hiányzó páciensadatok',
+        leiras:
+          'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad). Folytatod a véglegesítést?',
+      };
+    }
+    if (step === 'de-fallback-names') {
+      return {
+        cim: 'Tételnevek nem németül',
+        leiras:
+          'Ez egy német nyelvű ajánlat, de néhány sor neve nem németül kerül a nyomtatványra.\n\n' +
+          [
+            nevListaSzoveg('Nincs német nevük az árlistában', nincsForditas),
+            nevListaSzoveg('Kézzel átírt, eltér az árlistától', elterAzArlistatol),
+          ]
+            .filter(Boolean)
+            .join('\n\n') +
+          '\n\nA páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?',
+      };
+    }
+    if (step === 'zero-price-rows') {
+      const nullaOsszeg = formatMoney(0, plan.penznem);
+      // A toldalék pénznemenként eltér ("Ft" -> "-os", "€" -> "-s") -- a
+      // cím a terv pénznemét követi, hogy EUR-ban árazott tervnél ne "0
+      // Ft-os" felirat jelenjen meg (backlog-19).
+      const toldalek = plan.penznem === 'EUR' ? '-s' : '-os';
+      return {
+        cim: `${nullaOsszeg}${toldalek} tételek`,
+        leiras:
+          `A következő, névvel ellátott sorok ${nullaOsszeg} értékkel szerepelnek a tervben. ` +
+          'Ha ez szándékos (pl. ingyenes kontroll), folytathatod a véglegesítést.\n\n' +
+          nevListaSzoveg('Érintett sorok', nullaSorok),
+      };
+    }
+    return {
+      cim: 'Hiányzó tétel-leírások',
+      leiras:
+        'Néhány csomagtételre hivatkozó soron nincs leírás -- a páciens nem fogja tudni ' +
+        'otthon visszaolvasni, mi van benne.\n\n' +
+        nevListaSzoveg(
+          'Nincs leírás',
+          hianyzoLeirasok.map((h) => h.nev),
+        ) +
+        '\n\nFolytatod a véglegesítést leírás nélkül?',
+    };
   }
 
   async function doFinalize() {
@@ -367,6 +434,7 @@ export default function PreviewPage() {
   // esetén a gomb élőnek látszott, kattintásra némán nem történt semmi.
   const pdfError = pdfInstance.error;
   const busy = saving || pdfStale;
+  const { cim: confirmCim, leiras: confirmLeiras } = confirmStepTartalom(confirmStep);
 
   return (
     <Box style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -494,32 +562,9 @@ export default function PreviewPage() {
         onOpenChange={(open) => !open && setConfirmStep(null)}
       >
         <AlertDialog.Content maxWidth="480px">
-          <AlertDialog.Title>
-            {confirmStep === 'missing-fields'
-              ? 'Hiányzó páciensadatok'
-              : confirmStep === 'de-fallback-names'
-                ? 'Tételnevek nem németül'
-                : 'Hiányzó tétel-leírások'}
-          </AlertDialog.Title>
+          <AlertDialog.Title>{confirmCim}</AlertDialog.Title>
           <AlertDialog.Description size="2" style={{ whiteSpace: 'pre-line' }}>
-            {confirmStep === 'missing-fields'
-              ? 'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad). Folytatod a véglegesítést?'
-              : confirmStep === 'de-fallback-names'
-                ? 'Ez egy német nyelvű ajánlat, de néhány sor neve nem németül kerül a nyomtatványra.\n\n' +
-                  [
-                    nevListaSzoveg('Nincs német nevük az árlistában', nincsForditas),
-                    nevListaSzoveg('Kézzel átírt, eltér az árlistától', elterAzArlistatol),
-                  ]
-                    .filter(Boolean)
-                    .join('\n\n') +
-                  '\n\nA páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?'
-                : 'Néhány csomagtételre hivatkozó soron nincs leírás -- a páciens nem fogja tudni ' +
-                  'otthon visszaolvasni, mi van benne.\n\n' +
-                  nevListaSzoveg(
-                    'Nincs leírás',
-                    hianyzoLeirasok.map((h) => h.nev),
-                  ) +
-                  '\n\nFolytatod a véglegesítést leírás nélkül?'}
+            {confirmLeiras}
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
