@@ -27,6 +27,14 @@ describe('parseTeeth', () => {
     expect(parseTeeth('')).toEqual({ valid: false, teeth: [] });
     expect(parseTeeth(null)).toEqual({ valid: false, teeth: [] });
   });
+
+  it('dedupolja az ismételt FDI kódot, sorrendtartóan', () => {
+    expect(parseTeeth('16, 17, 16')).toEqual({ valid: true, teeth: ['16', '17'] });
+  });
+
+  it('egy érvénytelen token melletti duplikátum az egész mezőt érvénytelenné teszi', () => {
+    expect(parseTeeth('16, 19, 16')).toEqual({ valid: false, teeth: [] });
+  });
 });
 
 describe('invalidFdiTokens', () => {

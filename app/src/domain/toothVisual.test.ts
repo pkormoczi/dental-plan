@@ -220,6 +220,12 @@ describe('buildToothVisualStates', () => {
     expect(fog16?.vizual).toEqual(K_KORONA); // KORONA (sorrend 1) megelőzi a GYOKERKEZELES-t (sorrend 2)
   });
 
+  it('ismételt FDI kód egyetlen sor `fogak` mezőjében egyetlen FogKezelest ad (parseTeeth dedup)', () => {
+    const plan = makePlan([sor({ tetelId: 't-tomes', fogak: '16, 17, 16' })]);
+    const allapot = buildToothVisualStates(plan, pl);
+    expect(allapot.fogak.get('16')?.kezelesek).toHaveLength(1);
+  });
+
   it('kezeletlen fog nincs a fogak Mapben (a rajzon fehér marad)', () => {
     const plan = makePlan([sor({ tetelId: 't-tomes', fogak: '16' })]);
     const allapot = buildToothVisualStates(plan, pl);

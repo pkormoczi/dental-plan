@@ -13,7 +13,10 @@ export function parseTeeth(input: string | null | undefined): ParsedTeeth {
   const tokens = (input || '').split(/[\s,;]+/).filter(Boolean);
   if (!tokens.length) return { valid: false, teeth: [] };
   const ok = tokens.every((x) => FDI.test(x));
-  return { valid: ok, teeth: ok ? tokens : [] };
+  // A `Set` sorrendtartó -- egy kézzel duplázott fogszám (pl. "16, 17, 16")
+  // ne adjon két FogKezelest ugyanarra a fogra a fogtérképen, és ne torzítsa
+  // a soronkénti mennyiség-eltérés figyelmeztetést.
+  return { valid: ok, teeth: ok ? [...new Set(tokens)] : [] };
 }
 
 /**
@@ -37,8 +40,9 @@ export function invalidFdiTokens(input: string | null | undefined): string[] {
  * mezőn hívható, a hívó felelőssége ezt ellenőrizni -- szabadszöveges mezőt
  * (pl. "jobb felső") ez a függvény nem tud biztonságosan szerkeszteni.
  *
- * Bekapcsoláskor a végére fűz, kikapcsoláskor MINDEN előfordulást töröl (a
- * `parseTeeth` nem dedupol, ismert korlátozás), a megmaradó tokenek
+ * Bekapcsoláskor a végére fűz, kikapcsoláskor MINDEN előfordulást töröl (ha a
+ * mező kézzel gépelt duplikátumot tartalmaz -- a `parseTeeth` ezeket
+ * dedupolja, de ez a függvény a nyers szöveget kapja), a megmaradó tokenek
  * sorrendjét megtartja. A kimeneti elválasztó mindig
  * ", " -- ez a `placeholder`/seed adatban is használt alak (lásd
  * PlanEditorPage.tsx "16, 17, 26" placeholder).
