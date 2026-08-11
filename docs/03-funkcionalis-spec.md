@@ -633,6 +633,15 @@ megnevezés, HUF ár, EUR ár, aktív jelölő (szem ikon).
 **Egy tábla, két ár oszlop** — nem külön magyar és német nézet. Így egy
 pillantás megmutatja, hol hiányzik az EUR ár.
 
+### Árlista-verzió
+
+A fejlécben („verzió …") megjelenő `arlistaVerzio` MINDEN mentéskor a mai
+napra áll, tartalmi megkülönböztetés nélkül (D30) — ez a forrása a
+nyomtatvány láblécén megjelenő „árlista …" audit-adatnak
+(`docs/04-nyomtatvany-spec.md`). Egy már mentett terven lévő
+`arlistaVerzio` ettől függetlenül pillanatkép (D7): a terv a saját
+létrehozásakori értékét viseli, nem frissül utólag.
+
 ### Keresés és szűrők
 
 A keresőmező **mindkét nyelven illeszt** (`nev.hu` és `nev.de`), ugyanazzal

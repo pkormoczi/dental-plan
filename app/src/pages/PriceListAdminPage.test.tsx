@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import PriceListAdminPage from './PriceListAdminPage';
 import { TestProviders } from '../testUtils';
+import { todayIso } from '../domain/date';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 import type { PriceList, Tetel } from '../domain/types';
@@ -346,6 +347,19 @@ describe('PriceListAdminPage', () => {
 
     expect(await screen.findByText('Fognyaki tömés')).toBeInTheDocument();
     expect(screen.queryByText('Zahnhalsfüllung')).not.toBeInTheDocument();
+  });
+
+  it('backlog-21: bármelyik szerkesztés a mai napra állítja az arlistaVerziót (a lábléc audit-adatának forrása)', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    const rowDiv = nameCell.parentElement!;
+    await user.click(within(rowDiv).getByLabelText('Gyakori tétel'));
+
+    const ma = todayIso();
+    expect(readPriceList().arlistaVerzio).toBe(ma);
+    expect(await screen.findByText(`verzió ${ma}`)).toBeInTheDocument();
   });
 
   describe('Kategóriák panel', () => {

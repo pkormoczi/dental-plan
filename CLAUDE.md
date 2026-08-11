@@ -99,6 +99,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | `#f77409` (a márka narancsa) **soha nem lehet szövegszín** | Fehéren 2,82:1, kis méretben olvashatatlan; csak díszítővonalra való. A fogtérkép saját, kezelés-kategóriánkénti palettát használ (`design/treatmentVisuals.ts`), nem ezt a színt |
 | A `Tetel.leiras` hiányzó német fordítása némán elmarad a nyomtatványról, nem esik vissza magyarra | D27 — ellentétben a `nevSnapshot`-tal: a leírás kiegészítő tartalom, egy vegyes nyelvű nyomtatvány rosszabb lenne, mint a hiánya |
 | A `paciens.json` és a `terv-cimke.json` kizárólag azonosító-/kereső-index és szervezési metaadat — soha nem system of record, sosem írhatja felül a `terv.json` `paciens` blokkját | D29 — a terv tartalmi igazsága marad a pillanatkép (D7); a `paciens.json` `nev`-je minden mentéskor frissül, de ez csak a legutóbb mentett terv `paciens.nev`-jének tükre |
+| Az árlista `arlistaVerzio` mezője az Árlista admin MINDEN mentésekor a mai napra áll, mezőnkénti különbségtevés nélkül | D30 — a nyomtatvány lábléce ebből mondja, „melyik árlistából készült"; egy befagyott érték hamis audit-adat lenne vitánál. A már mentett terveken lévő érték ettől függetlenül pillanatkép marad (D7) |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,

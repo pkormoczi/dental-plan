@@ -702,4 +702,20 @@
   Korábbi tervek verziósorának „⋯" → „Letöltés" menüpontja egyaránt
   ezeket hívja, a `PISZKOZAT-` előtag a nyers `plan.statusz`-ból.
 
+### 21. `arlistaVerzio` léptetése admin-mentéskor — KÉSZ (2026-08-11)
+
+- **Méret:** ~1 óra + teszt.
+- **Kereteket sért?** Nem — a keret betartását javítja: a nyomtatvány
+  láblécének „melyik árlistából készült" audit-ígérete
+  (`docs/04-nyomtatvany-spec.md`) az első admin-árszerkesztés után hamis
+  volt, mert az `arlistaVerzio` a seed-értéken fagyva maradt.
+- **Valódi haszon:** hibacsökkentés/jogi — vitánál a lábléc a
+  hivatkozási pont.
+- **Megvalósítás:** az Árlista admin `commit()`-je (`PriceListAdminPage.tsx`)
+  minden mentéskor, tartalmi megkülönböztetés nélkül a mai napra állítja
+  az `arlistaVerzio`-t a `modositva` mellett, egyetlen közös `todayIso()`
+  hívással — `docs/03-funkcionalis-spec.md` § 6. Árlista admin, D30
+  (`docs/01-attekintes-es-dontesek.md`). A már mentett terveken lévő
+  érték ettől függetlenül pillanatkép marad (D7).
+
 ---

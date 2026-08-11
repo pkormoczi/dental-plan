@@ -48,6 +48,7 @@ import { Field, FieldGroup } from '../components/Field';
 import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
 import { ALAP_KATEGORIA_SZIN, KATEGORIA_PALETTA } from '../design/treatmentVisuals';
+import { todayIso } from '../domain/date';
 import { leirasTulHosszu } from '../domain/leirasHossz';
 import { formatPrice } from '../domain/money';
 import { nextKategoriaId, nextTetelId } from '../domain/priceListIds';
@@ -161,8 +162,12 @@ export default function PriceListAdminPage() {
   // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // D30: minden mentés tartalmi változásnak számít, feltétel nélkül -- a
+  // lábléc "melyik árlistából készült" audit-ígérete addig hazudik, amíg
+  // az arlistaVerzio a seed-értéken fagyva marad.
   function commit(next: PriceList) {
-    savePriceList({ ...next, modositva: new Date().toISOString().slice(0, 10) })
+    const ma = todayIso();
+    savePriceList({ ...next, modositva: ma, arlistaVerzio: ma })
       .then(() => setSaveError(null))
       .catch((err: unknown) => {
         setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');

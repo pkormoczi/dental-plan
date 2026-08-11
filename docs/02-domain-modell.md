@@ -101,7 +101,7 @@ Kész seed: `data/arlista.seed.json` (118 tétel, 13 kategória).
 ```jsonc
 {
   "schemaVersion": 1,
-  "arlistaVerzio": "2026-07-01",   // ez kerül a nyomtatvány láblécére
+  "arlistaVerzio": "2026-07-01",   // ez kerül a nyomtatvány láblécére; minden admin-mentéskor a mai napra áll (D30)
   "modositva": "2026-08-05",
   "kategoriak": [
     {

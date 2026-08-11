@@ -14,22 +14,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ## MOST
 
-### 1. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
-
-- **Méret:** 1 óra + teszt — a `savePriceList` a `modositva` mellett az
-  `arlistaVerzio`-t is a mentés napjára állítja tartalmi változásnál. A
-  terveken lévő `arlistaVerzio` pillanatkép (D7) érintetlen.
-- **Kereteket sért?** Nem — épp a keret betartását javítja: a lábléc
-  „melyik árlistából készült" audit-ígérete (`docs/04`) ma az első
-  admin-árszerkesztés után hamis, minden nyomtatvány a 2026-07-01-es
-  verziót mondja.
-- **Valódi haszon:** hibacsökkentés/jogi — vitánál a lábléc a
-  hivatkozási pont.
-- **20%-os verzió:** ez maga a 20% (egy kézi „árlista-verzió kiadása"
-  fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
-- **Terv:** `backlog/plans/backlog-21-arlista-verzio-terv.md` (5 döntés).
-
-### 2. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
+### 1. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
 - **Méret:** 1–2 óra — a PlanHistoryPage-en a már betöltött
   PDF-bájtokból blob-URL, új fül; nincs új nézet, nincs új útvonal.
@@ -42,7 +27,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   böngésző PDF-nézője elég).
 - **Terv:** `backlog/plans/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
-### 3. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 2. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
@@ -55,7 +40,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `backlog/plans/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
 
-### 4. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
+### 3. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
 
 **Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
 Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
