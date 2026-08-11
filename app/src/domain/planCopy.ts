@@ -10,16 +10,18 @@ import { frissDatummal } from './ujVerzioDatum';
 import type { Plan, PriceList, Settings } from './types';
 
 /**
- * "Új terv" (páciensszintű) -- csak a `paciens` blokk jön a forrásból,
- * minden más a mai `createBlankPlan()` friss alapértéke (nyelv/pénznem is),
- * ugyanúgy, mintha a doki a Kezdőlap "Új terv indítása" gombját nyomta volna.
+ * "Új terv" (páciensszintű) -- csak a `paciens` blokk és a `paciensId` jön a
+ * forrásból (D29: ez tartja a másolatot ugyanabban a páciens-mappában, új
+ * terv-láncként -- lásd `planMasolatKent` kommentjét), minden más a mai
+ * `createBlankPlan()` friss alapértéke (nyelv/pénznem is), ugyanúgy, mintha
+ * a doki a Kezdőlap "Új terv indítása" gombját nyomta volna.
  */
 export function planUjPaciensselTervhez(
   plan: Plan,
   settings: Settings,
   priceList: PriceList,
 ): Plan {
-  return { ...createBlankPlan(settings, priceList), paciens: plan.paciens };
+  return { ...createBlankPlan(settings, priceList), paciens: plan.paciens, paciensId: plan.paciensId };
 }
 
 /**

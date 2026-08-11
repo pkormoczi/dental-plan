@@ -142,6 +142,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Elek');
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
@@ -170,6 +171,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Elek');
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
@@ -226,6 +228,7 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Elek');
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
@@ -255,6 +258,7 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Elek');
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));

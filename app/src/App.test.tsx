@@ -48,6 +48,7 @@ describe('Végpontok közötti folyamat', () => {
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Aladár');
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
@@ -116,6 +117,7 @@ describe('Végpontok közötti folyamat', () => {
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Németh Éva');
 
@@ -143,12 +145,12 @@ describe('Végpontok közötti folyamat', () => {
     await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
     await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
-    // A mentett terv.json-t a "patientDir / versionDir" kijelzőből
+    // A mentett terv.json-t a "patientDir / planDir / versionDir" kijelzőből
     // rekonstruált localStorage-kulccsal olvassuk vissza -- ez a
     // rendszer-of-record, nem a memóriabeli state.
     const refEl = screen.getByText(/_v1$/);
-    const [patientDir, versionDir] = (refEl.textContent ?? '').split(' / ');
-    const raw = localStorage.getItem(`dp:paciensek/${patientDir}/${versionDir}/terv.json`);
+    const [patientDir, planDir, versionDir] = (refEl.textContent ?? '').split(' / ');
+    const raw = localStorage.getItem(`dp:paciensek/${patientDir}/${planDir}/${versionDir}/terv.json`);
     expect(raw).toBeTruthy();
     const saved = JSON.parse(raw!);
     expect(saved.nyelv).toBe('de');
@@ -166,6 +168,7 @@ describe('Végpontok közötti folyamat', () => {
     const first = render(<App />);
 
     await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Piszkozat Ilona');
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
@@ -206,8 +209,11 @@ describe('Végpontok közötti folyamat', () => {
     await user.click(await screen.findByRole('button', { name: 'Korábbi tervek' }));
     const nagyEva = await screen.findByText('Nagy Éva');
     const card = nagyEva.closest('[data-patient]') as HTMLElement;
-    // A legfrissebb verzió (v2, 2026-07-22) van legfelül -- lásd
-    // PlanHistoryPage.tsx `.slice().reverse()`.
+    // Nagy Évának két önálló terv-lánca is van (D29) -- a páciens-blokk
+    // emiatt alapból csukva nyílik, ki kell bontani a verziósorok eléréséhez.
+    await user.click(within(card).getByRole('button', { name: /^\d+ terv$/ }));
+    // A legfrissebb verzió (v2, 2026-07-22) az ELSŐ (fogpótlás) terv-láncban
+    // van legfelül -- lásd PlanHistoryPage.tsx `.slice().reverse()`.
     await user.click(await verzioMenupont(user, card, 'Új verzió'));
 
     // A visszatérő páciensnek két fázisa is van (1. kezelés + 2. kezelés —

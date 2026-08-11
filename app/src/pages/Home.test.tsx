@@ -91,34 +91,20 @@ describe('Home -- piszkozat-perzisztencia', () => {
     expect(screen.getByText('Névtelen piszkozat')).toBeInTheDocument();
   });
 
-  it('"Új terv indítása" azonnal indul, megerősítés nélkül, ha nincs mentetlen piszkozat', async () => {
-    const user = userEvent.setup();
-    renderHome();
-
-    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-  });
-
-  it('"Új terv indítása" megerősítést kér mentetlen piszkozatnál -- Mégse megtartja, a megerősítés eldobja', async () => {
+  // D29: a piszkozat-felülírás-őr innentől az /uj-terv köztes
+  // páciens-választón fut le (lásd NewPlanPage.test.tsx) -- a Home gombja
+  // feltétel nélkül odanavigál, itt csak ennyi ellenőrizhető izoláltan
+  // (a `TestProviders` bare `MemoryRouter`-je nem vált route-ot).
+  it('"Új terv indítása" nem nyit megerősítő dialógust -- feltétel nélkül az /uj-terv köztes lépésre navigál', async () => {
     seedPersistedDraft(makeDirtyPlan());
     const user = userEvent.setup();
     renderHome();
     await screen.findByText('Piszkozat folytatása');
 
     await user.click(screen.getByRole('button', { name: 'Új terv indítása' }));
-    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
-
-    // Mégse -- a piszkozat megmarad.
-    await user.click(screen.getByRole('button', { name: 'Mégse' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    // A piszkozat itt még nem veszett el -- az őr a NewPlanPage-en dől el.
     expect(screen.getByText('Piszkozat folytatása')).toBeInTheDocument();
-
-    // Megerősítés -- a piszkozat kártya eltűnik (a plan egy friss, üres
-    // tervre vált, ami már nem "tartalmas").
-    await user.click(screen.getByRole('button', { name: 'Új terv indítása' }));
-    await user.click(await screen.findByRole('button', { name: 'Elvetés és új terv' }));
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(screen.queryByText('Piszkozat folytatása')).not.toBeInTheDocument();
   });
 
   it('sérült perzisztált piszkozatnál látható hibaüzenet jelenik meg, ami az "Piszkozat elvetése" gombra eltűnik', async () => {

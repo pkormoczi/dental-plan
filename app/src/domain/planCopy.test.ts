@@ -32,6 +32,7 @@ function makePlan(overrides: Partial<Plan> = {}): Plan {
   return {
     schemaVersion: 1,
     tervId: 'p1',
+    paciensId: 'pac1',
     verzio: 2,
     statusz: 'VEGLEGES',
     nyelv: 'de',
@@ -85,7 +86,7 @@ describe('planUjPaciensselTervhez', () => {
     const blank = createBlankPlan(settings, priceList);
 
     expect(uj.paciens).toEqual(plan.paciens);
-    expect(uj).toEqual({ ...blank, paciens: plan.paciens });
+    expect(uj).toEqual({ ...blank, paciens: plan.paciens, paciensId: plan.paciensId });
   });
 
   it('nem a forrás nyelvét/pénznemét/soraiat viszi -- a mai alapérték áll be', () => {
@@ -106,6 +107,14 @@ describe('planUjPaciensselTervhez', () => {
     planUjPaciensselTervhez(plan, settings, priceList);
     expect(plan.paciens).toBe(eredetiPaciens);
   });
+
+  // D29: a paciensId a másolatot UGYANABBAN a páciens-mappában tartja --
+  // enélkül a storage.savePlan() tévesen egy MÁSIK páciens-mappát nyitna.
+  it('a forrás paciensId-jét viszi tovább, hogy a másolat ugyanabban a páciens-mappában maradjon', () => {
+    const plan = makePlan();
+    const uj = planUjPaciensselTervhez(plan, settings, priceList);
+    expect(uj.paciensId).toBe('pac1');
+  });
 });
 
 describe('planMasolatKent', () => {
@@ -114,6 +123,9 @@ describe('planMasolatKent', () => {
     const masolat = planMasolatKent(plan, settings, '2026-08-10');
 
     expect(masolat.paciens).toEqual(plan.paciens);
+    // D29: paciensId is átjön -- a másolat ugyanabban a páciens-mappában
+    // nyit új terv-láncot (D26 érintetlen: nem verzióként csúszik be).
+    expect(masolat.paciensId).toBe(plan.paciensId);
     expect(masolat.nyelv).toBe(plan.nyelv);
     expect(masolat.penznem).toBe(plan.penznem);
     expect(masolat.orvos).toBe(plan.orvos);

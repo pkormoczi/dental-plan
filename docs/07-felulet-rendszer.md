@@ -66,9 +66,12 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
 - Soronkénti akciók: **legfeljebb két látható gomb egy adatsoron** (nulla
   is rendben van), a többi Radix Themes `DropdownMenu`-ba. A trigger `⋯`
   (`DotsHorizontalIcon`) `IconButton`, és az `aria-label`-jének
-  tartalmaznia kell a SOR azonosítóját (pl. `v2 — további műveletek`),
-  nem lehet csupasz „További műveletek" — egy listában több sor is van,
-  azonos accessible name-mel képernyőolvasóval megkülönböztethetetlenek.
+  tartalmaznia kell a SOR azonosítóját (pl. `Fogpótlás — v2 — további
+  műveletek` — a Korábbi tervek verziósorán a terv-lánc címkéje IS kell,
+  mert egy páciensnek több lánca is lehet, mindegyik saját `v1`-gyel
+  indulva, D29), nem lehet csupasz „További műveletek" — egy listában
+  több sor is van, azonos accessible name-mel képernyőolvasóval
+  megkülönböztethetetlenek.
   A menü első eleme a kockázatmentes/olvasó művelet, utána — elválasztóval
   — a többi, gyakoriság szerint. Hosszú, didaktikus feliratot csak menüben
   használj (ott egymás alatt állnak); egy sorban egymás mellett rövidnek

@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NavBar from './components/NavBar';
 import { t } from './design/tokens';
 import Home from './pages/Home';
+import NewPlanPage from './pages/NewPlanPage';
 import PatientPage from './pages/PatientPage';
 import PlanEditorPage from './pages/PlanEditorPage';
 import PlanHistoryPage from './pages/PlanHistoryPage';
@@ -44,6 +45,7 @@ export default function App() {
                   <ErrorBoundary title="Hiba történt ezen az oldalon">
                     <Routes>
                       <Route path="/" element={<Home />} />
+                      <Route path="/uj-terv" element={<NewPlanPage />} />
                       <Route path="/paciens" element={<PatientPage />} />
                       <Route path="/terv" element={<PlanEditorPage />} />
                       <Route

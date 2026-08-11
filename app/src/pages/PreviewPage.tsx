@@ -42,7 +42,7 @@ function nevListaSzoveg(cim: string, nevek: string[]): string {
 }
 
 export default function PreviewPage() {
-  const { plan, settings, priceList, resetPlanDraft, markPlanSaved } = useAppState();
+  const { plan, settings, priceList, markPlanSaved } = useAppState();
   const { storage, loadLatestTemplateByBase } = useStorage();
   const navigate = useNavigate();
 
@@ -334,8 +334,10 @@ export default function PreviewPage() {
   }
 
   function startNewPlan() {
-    resetPlanDraft();
-    navigate('/paciens');
+    // A piszkozat itt már úgyis üres/mentett (a véglegesítés törölte, lásd
+    // doFinalize) -- az /uj-terv köztes lépés (D29) mégis a szokásos utat
+    // futtatja, hogy a Home gombjával egységes maradjon.
+    navigate('/uj-terv');
   }
 
   if (savedRef) {
@@ -345,7 +347,7 @@ export default function PreviewPage() {
           A terv elmentve ✓
         </Text>
         <Text as="p" size="2" color="gray" mb="5" style={{ fontFamily: t.mono }}>
-          {savedRef.patientDir} / {savedRef.versionDir}
+          {savedRef.patientDir} / {savedRef.planDir} / {savedRef.versionDir}
         </Text>
         <Flex gap="3" justify="center">
           <Button onClick={startNewPlan}>Új terv indítása</Button>

@@ -11,6 +11,7 @@ import { DemoDraftStorage } from './DemoDraftStorage';
 import { DemoStorage } from './DemoStorage';
 import type { DraftStorage } from './DraftStorage';
 import type { PlanStorage } from './PlanStorage';
+import type { PlanRef } from '../domain/types';
 
 export interface StorageContextValue {
   storage: PlanStorage;
@@ -25,7 +26,7 @@ export interface StorageContextValue {
   /** P1-9: valódi kiút, ha a doki véletlenül valódi páciensadatot vitt be -- a
    *  "Demó adat visszaállítása" csak újraseedel, ez ténylegesen kiürít. */
   clearAll: () => void;
-  loadPlanPdf: (ref: { patientDir: string; versionDir: string }) => Promise<Uint8Array | null>;
+  loadPlanPdf: (ref: PlanRef) => Promise<Uint8Array | null>;
   loadLatestTemplateByBase: (base: string) => Promise<{ name: string; body: string }>;
   /**
    * docs/05-technologia.md § Piszkozat-autosave: a PlanStorage MELLETTI,

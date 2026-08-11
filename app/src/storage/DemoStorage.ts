@@ -8,12 +8,16 @@
 // séma-migráció (a mockup csak az 1-es schemaVersion-t ismeri), és a
 // terv.json PDF-be ágyazása (pdf-lib) is a 2. fázisra marad.
 
+import { javasoltTervCim } from '../domain/tervCim';
 import { assertKnownSchemaVersion } from '../domain/schema';
 import { isPlaceholderTemplate } from '../domain/templates';
 import { assertPlanShape, assertPriceListShape, assertSettingsShape } from '../domain/validate';
 import type {
   PatientFolder,
+  PatientRecord,
   Plan,
+  PlanFolder,
+  PlanLabel,
   PlanRef,
   PlanVersion,
   PriceList,
@@ -24,15 +28,17 @@ import type { PlanStorage } from './PlanStorage';
 import {
   assertVersionDirAvailable,
   buildPatientDirName,
+  buildPlanDirName,
   buildVersionDirName,
-  generatePatientId,
+  generateId,
   nextVersionNumber,
   parsePatientDirName,
+  parsePlanDirName,
   parseVersionDirName,
 } from './paths';
 import { seedPriceList } from './seed/priceList';
 import { seedSettings } from './seed/settings';
-import { seedPlans } from './seed/plans';
+import { seedPatients, seedPlans } from './seed/plans';
 import {
   FIZETESI_FELTETELEK_DE_V1,
   FIZETESI_FELTETELEK_HU_V1,
@@ -65,12 +71,20 @@ const SETTINGS_KEY = `${PREFIX}beallitasok.json`;
 const PATIENTS_PREFIX = `${PREFIX}paciensek/`;
 const TEMPLATES_PREFIX = `${PREFIX}sablonok/`;
 
-function planKey(patientDir: string, versionDir: string): string {
-  return `${PATIENTS_PREFIX}${patientDir}/${versionDir}/terv.json`;
+function patientRecordKey(patientDir: string): string {
+  return `${PATIENTS_PREFIX}${patientDir}/paciens.json`;
 }
 
-function pdfKey(patientDir: string, versionDir: string): string {
-  return `${PATIENTS_PREFIX}${patientDir}/${versionDir}/pdf`;
+function planLabelKey(patientDir: string, planDir: string): string {
+  return `${PATIENTS_PREFIX}${patientDir}/${planDir}/terv-cimke.json`;
+}
+
+function planKey(patientDir: string, planDir: string, versionDir: string): string {
+  return `${PATIENTS_PREFIX}${patientDir}/${planDir}/${versionDir}/terv.json`;
+}
+
+function pdfKey(patientDir: string, planDir: string, versionDir: string): string {
+  return `${PATIENTS_PREFIX}${patientDir}/${planDir}/${versionDir}/pdf`;
 }
 
 function templateKey(fileName: string): string {
@@ -114,6 +128,12 @@ export class DemoStorage implements PlanStorage {
       this.resetDemoData();
       return;
     }
+    // D29: aki a páciens-entitás bevezetése előtt már használta a demót,
+    // annak a régi (páciens → verzió) 2 szintű mappaszerkezete megvan a
+    // localStorage-ban -- ezt egyszeri migrációval alakítjuk át a mostani
+    // (páciens → terv → verzió) 3 szintűre, hogy a korábban felvitt saját
+    // teszttervei ne vesszenek el.
+    this.migrateLegacyLayout();
     // D21: aki a német sablonok bevezetése előtt már használta a demót,
     // annak az árlistája megvan, tehát resetDemoData() itt nem futna le
     // újra -- enélkül a nyilatkozat-de-v1.md sosem jönne létre neki, és a
@@ -132,9 +152,102 @@ export class DemoStorage implements PlanStorage {
     localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(seedPriceList));
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(seedSettings));
     this.ensureSeedTemplates();
-    for (const { patientDir, versionDir, plan } of seedPlans) {
-      localStorage.setItem(planKey(patientDir, versionDir), JSON.stringify(plan));
+    for (const { patientDir, record } of seedPatients) {
+      localStorage.setItem(patientRecordKey(patientDir), JSON.stringify(record));
     }
+    for (const { patientDir, planDir, versionDir, plan } of seedPlans) {
+      localStorage.setItem(planKey(patientDir, planDir, versionDir), JSON.stringify(plan));
+    }
+  }
+
+  private currentPriceListOrSeed(): PriceList {
+    const raw = localStorage.getItem(PRICE_LIST_KEY);
+    if (raw == null) return seedPriceList;
+    try {
+      return parseJson<PriceList>(raw, 'arlista.json');
+    } catch {
+      return seedPriceList;
+    }
+  }
+
+  /**
+   * D29 egyszeri migrációja: a régi `<patientDir>/<ISO>_v<n>/…` alakú
+   * kulcsokat páciensenként egy új terv-mappa alá tereli (minden régi
+   * verzió UGYANABBA az egy terv-láncba kerül -- a régi szerkezet ezt úgyis
+   * feltételezte), és felveszi a hiányzó `paciens.json` indexet. A
+   * legacy-jelenlétet onnan ismerjük fel, hogy a páciensmappa alatti
+   * második útvonalszegmens verzió-mintázatú (`<ISO>_v<n>`) -- az új
+   * szerkezetben ez a szegmens mindig egy terv-mappa neve, sosem az.
+   * Eldobható mockup-kód: a FileSystemStorage-váltás (2. fázis) ezt nem
+   * örökli.
+   */
+  private migrateLegacyLayout(): void {
+    const legacyPatientDirs = new Set<string>();
+    this.eachKey((key) => {
+      if (!key.startsWith(PATIENTS_PREFIX)) return;
+      const segments = key.slice(PATIENTS_PREFIX.length).split('/');
+      if (segments.length >= 2 && parseVersionDirName(segments[1])) {
+        legacyPatientDirs.add(segments[0]);
+      }
+    });
+    if (legacyPatientDirs.size === 0) return;
+
+    try {
+      const priceList = this.currentPriceListOrSeed();
+      for (const patientDir of legacyPatientDirs) {
+        this.migratePatientLegacyLayout(patientDir, priceList);
+      }
+    } catch {
+      // Félmigrált állapotot nem hagyunk a localStorage-ban -- inkább a
+      // teljes demó-adat áll vissza a friss seedre.
+      this.resetDemoData();
+    }
+  }
+
+  private migratePatientLegacyLayout(patientDir: string, priceList: PriceList): void {
+    const prefix = `${PATIENTS_PREFIX}${patientDir}/`;
+    const legacyVersionDirs = new Set<string>();
+    this.eachKey((key) => {
+      if (!key.startsWith(prefix)) return;
+      const versionDir = key.slice(prefix.length).split('/')[0];
+      if (parseVersionDirName(versionDir)) legacyVersionDirs.add(versionDir);
+    });
+    const sorted = [...legacyVersionDirs].sort(
+      (a, b) => parseVersionDirName(a)!.verzio - parseVersionDirName(b)!.verzio,
+    );
+    if (sorted.length === 0) return;
+
+    const versions = sorted.map((versionDir) => {
+      const raw = localStorage.getItem(`${prefix}${versionDir}/terv.json`);
+      if (raw == null) throw new Error(`Migráció: hiányzó terv.json (${patientDir}/${versionDir})`);
+      const plan = parseJson<Plan>(raw, 'terv.json');
+      assertKnownSchemaVersion(plan, 'terv.json');
+      assertPlanShape(plan, 'terv.json');
+      return { versionDir, plan };
+    });
+
+    const paciensId = parsePatientDirName(patientDir)?.patientId || generateId();
+    // A terv-mappa neve a lánc LEGKORÁBBI verziójának tartalmából számolt
+    // javaslatból képződik -- ugyanaz az elv, mint a `doSavePlan`-ban.
+    const planDir = buildPlanDirName(javasoltTervCim(versions[0].plan, priceList), generateId());
+
+    for (const { versionDir, plan } of versions) {
+      const migratedPlan: Plan = { ...plan, paciensId };
+      localStorage.setItem(planKey(patientDir, planDir, versionDir), JSON.stringify(migratedPlan));
+      const rawPdf = localStorage.getItem(`${prefix}${versionDir}/pdf`);
+      if (rawPdf != null) {
+        localStorage.setItem(pdfKey(patientDir, planDir, versionDir), rawPdf);
+      }
+      localStorage.removeItem(`${prefix}${versionDir}/terv.json`);
+      localStorage.removeItem(`${prefix}${versionDir}/pdf`);
+    }
+
+    const record: PatientRecord = {
+      schemaVersion: 1,
+      paciensId,
+      nev: versions[versions.length - 1].plan.paciens.nev,
+    };
+    localStorage.setItem(patientRecordKey(patientDir), JSON.stringify(record));
   }
 
   /**
@@ -184,23 +297,54 @@ export class DemoStorage implements PlanStorage {
       if (dir) dirs.add(dir);
     });
     return [...dirs].map((dirName) => {
+      const raw = localStorage.getItem(patientRecordKey(dirName));
+      if (raw != null) {
+        try {
+          const record = parseJson<PatientRecord>(raw, 'paciens.json');
+          return { dirName, paciensId: record.paciensId, nev: record.nev };
+        } catch {
+          // esik át a mappanév-visszafejtésre lent
+        }
+      }
       const parsed = parsePatientDirName(dirName);
       return {
         dirName,
-        vezeteknev: parsed?.vezeteknev ?? dirName,
-        keresztnev: parsed?.keresztnev ?? '',
-        patientId: parsed?.patientId ?? '',
+        paciensId: parsed?.patientId ?? '',
+        nev: (parsed ? `${parsed.vezeteknev} ${parsed.keresztnev}`.trim() : '') || dirName,
       };
     });
   }
 
-  async listVersions(patientDir: string): Promise<PlanVersion[]> {
+  async listPlans(patientDir: string): Promise<PlanFolder[]> {
     const prefix = `${PATIENTS_PREFIX}${patientDir}/`;
     const dirs = new Set<string>();
     this.eachKey((key) => {
       if (!key.startsWith(prefix)) return;
       const dir = key.slice(prefix.length).split('/')[0];
-      if (dir) dirs.add(dir);
+      if (dir && dir !== 'paciens.json') dirs.add(dir);
+    });
+    return [...dirs].map((dirName) => {
+      const parsed = parsePlanDirName(dirName);
+      const labelRaw = localStorage.getItem(planLabelKey(patientDir, dirName));
+      let tervCim: string | null = null;
+      if (labelRaw != null) {
+        try {
+          tervCim = parseJson<PlanLabel>(labelRaw, 'terv-cimke.json').tervCim;
+        } catch {
+          tervCim = null; // sérült terv-cimke.json -- vissza az élő auto-javaslatra
+        }
+      }
+      return { dirName, tervId: parsed?.planId ?? '', tervCim };
+    });
+  }
+
+  async listVersions(patientDir: string, planDir: string): Promise<PlanVersion[]> {
+    const prefix = `${PATIENTS_PREFIX}${patientDir}/${planDir}/`;
+    const dirs = new Set<string>();
+    this.eachKey((key) => {
+      if (!key.startsWith(prefix)) return;
+      const dir = key.slice(prefix.length).split('/')[0];
+      if (dir && dir !== 'terv-cimke.json') dirs.add(dir);
     });
     const versions: PlanVersion[] = [];
     for (const dirName of dirs) {
@@ -211,9 +355,9 @@ export class DemoStorage implements PlanStorage {
   }
 
   async loadPlan(ref: PlanRef): Promise<Plan> {
-    const raw = localStorage.getItem(planKey(ref.patientDir, ref.versionDir));
+    const raw = localStorage.getItem(planKey(ref.patientDir, ref.planDir, ref.versionDir));
     if (raw == null) {
-      throw new Error(`Nincs terv itt: ${ref.patientDir}/${ref.versionDir}`);
+      throw new Error(`Nincs terv itt: ${ref.patientDir}/${ref.planDir}/${ref.versionDir}`);
     }
     const plan = parseJson<Plan>(raw, 'terv.json');
     assertKnownSchemaVersion(plan, 'terv.json');
@@ -221,13 +365,29 @@ export class DemoStorage implements PlanStorage {
     return plan;
   }
 
+  async savePlanLabel(patientDir: string, planDir: string, tervCim: string): Promise<void> {
+    const key = planLabelKey(patientDir, planDir);
+    const trimmed = tervCim.trim();
+    if (!trimmed) {
+      // Üres címke = vissza az élő auto-javaslatra (domain/tervCim.ts), nem
+      // egy tárolt üres string.
+      localStorage.removeItem(key);
+      return;
+    }
+    const label: PlanLabel = { schemaVersion: 1, tervCim: trimmed };
+    localStorage.setItem(key, JSON.stringify(label));
+  }
+
   /**
-   * D4: mindig új verziómappát hoz létre. Ha a `plan.tervId` egy már
-   * létező páciensmappához tartozik, oda kerül az új verzió; egyébként új
-   * páciensmappa jön létre. A verziószámot a storage számolja ki -- a
-   * hívó nem adhat meg tetszőlegeset (ez a D4 kikényszerítése).
+   * D4: mindig új verziómappát hoz létre. Ha a `plan.paciensId` egy már
+   * létező páciensmappához tartozik, oda kerül az új terv/verzió;
+   * egyébként új páciensmappa jön létre. Ugyanígy a `plan.tervId`-hoz
+   * tartozó terv-mappa: ha létezik, oda kerül az új verzió, egyébként új
+   * terv-mappa nyílik a páciensen belül (D29). A verziószámot a storage
+   * számolja ki -- a hívó nem adhat meg tetszőlegeset (ez a D4
+   * kikényszerítése).
    *
-   * P0-1/P1-5: soros végrehajtás (`savingChain`) + a két `setItem` egy
+   * P0-1/P1-5: soros végrehajtás (`savingChain`) + a három `setItem` egy
    * try/catch-ben -- ha bármelyik írás elhasal (pl. kvótahiba), egyik kulcs
    * sem marad félkész állapotban (D4: verziómappát soha nem hagyunk
    * csonkán), és két gyors egymás utáni hívás nem számolhatja ki ugyanazt a
@@ -245,31 +405,50 @@ export class DemoStorage implements PlanStorage {
 
   private async doSavePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef> {
     const patients = await this.listPatients();
-    let tervId = plan.tervId;
-    let patientDir = patients.find((p) => p.patientId === tervId)?.dirName;
+    let paciensId = plan.paciensId;
+    let patientDir = paciensId ? patients.find((p) => p.paciensId === paciensId)?.dirName : undefined;
 
-    if (!tervId || !patientDir) {
-      tervId = tervId || generatePatientId();
-      patientDir = buildPatientDirName(plan.paciens.nev, tervId);
+    if (!paciensId || !patientDir) {
+      paciensId = paciensId || generateId();
+      patientDir = buildPatientDirName(plan.paciens.nev, paciensId);
     }
 
-    const existingVersions = await this.listVersions(patientDir);
+    let tervId = plan.tervId;
+    const existingPlans = await this.listPlans(patientDir);
+    let planDir = tervId ? existingPlans.find((p) => p.tervId === tervId)?.dirName : undefined;
+
+    if (!tervId || !planDir) {
+      tervId = tervId || generateId();
+      const priceList = this.currentPriceListOrSeed();
+      planDir = buildPlanDirName(javasoltTervCim(plan, priceList), tervId);
+    }
+
+    const existingVersions = await this.listVersions(patientDir, planDir);
     const existingDirNames = existingVersions.map((v) => v.dirName);
     const verzio = nextVersionNumber(existingDirNames);
     const versionDir = buildVersionDirName(plan.keltezes, verzio);
     assertVersionDirAvailable(existingDirNames, versionDir);
 
-    const finalPlan: Plan = { ...plan, schemaVersion: 1, tervId, verzio };
-    const planKeyStr = planKey(patientDir, versionDir);
-    const pdfKeyStr = pdfKey(patientDir, versionDir);
+    const finalPlan: Plan = { ...plan, schemaVersion: 1, tervId, verzio, paciensId };
+    const planKeyStr = planKey(patientDir, planDir, versionDir);
+    const pdfKeyStr = pdfKey(patientDir, planDir, versionDir);
+    // paciens.json index -- kereséshez/előtöltéshez, sosem system of record
+    // (D29): mindig a most mentett plan.paciens.nev-re frissül, akkor is,
+    // ha a mappa már létezett.
+    const patientRecord: PatientRecord = { schemaVersion: 1, paciensId, nev: plan.paciens.nev };
+    const patientRecordKeyStr = patientRecordKey(patientDir);
 
     try {
       localStorage.setItem(planKeyStr, JSON.stringify(finalPlan));
       localStorage.setItem(pdfKeyStr, uint8ToBase64(pdf));
+      localStorage.setItem(patientRecordKeyStr, JSON.stringify(patientRecord));
     } catch {
-      // Mindkét kulcs frissen létrehozott ebben a hívásban
+      // A plan/pdf kulcs frissen létrehozott ebben a hívásban
       // (assertVersionDirAvailable fentebb ezt garantálja) -- a rollback
-      // biztonságos, nem törölhet egy korábbi verziót.
+      // biztonságos, nem törölhet egy korábbi verziót. A paciens.json-t
+      // NEM töröljük: `localStorage.setItem` szinkron és atomi kulcsonként,
+      // tehát ha az ő írása hasalt el, korábbi tartalma (ha volt)
+      // változatlan maradt.
       localStorage.removeItem(planKeyStr);
       localStorage.removeItem(pdfKeyStr);
       throw new Error(
@@ -278,11 +457,11 @@ export class DemoStorage implements PlanStorage {
       );
     }
 
-    return { patientDir, versionDir };
+    return { patientDir, planDir, versionDir };
   }
 
   async loadPlanPdf(ref: PlanRef): Promise<Uint8Array | null> {
-    const raw = localStorage.getItem(pdfKey(ref.patientDir, ref.versionDir));
+    const raw = localStorage.getItem(pdfKey(ref.patientDir, ref.planDir, ref.versionDir));
     return raw == null ? null : base64ToUint8(raw);
   }
 

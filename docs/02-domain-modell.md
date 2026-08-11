@@ -18,30 +18,81 @@ nincs szerver.
     fizetesi-feltetelek-de-v1.md    ; AI-fordítás, jogi lektorálás nélkül -- lásd README "Nyitott kérdések" #1
     garancia-de-v1.md                ; placeholder -- nincs mit fordítani, amíg a HU is az
   paciensek/
-    Kovacs-Janos_a3f9c1/
-      2026-08-05_v1/
-        kezelesi-terv.pdf
-        terv.json
-      2026-08-19_v2/
-        kezelesi-terv.pdf
-        terv.json
+    Kovacs-Janos_k9m2r4/
+      paciens.json
+      Fogpotlas_a3f9c1/
+        terv-cimke.json               ; csak kézi átírás után létezik -- lásd "Páciens- és terv-mappa" lentebb
+        2026-08-05_v1/
+          kezelesi-terv.pdf
+          terv.json
+        2026-08-19_v2/
+          kezelesi-terv.pdf
+          terv.json
+      Sebeszet_c1b5e7/
+        2026-09-01_v1/
+          kezelesi-terv.pdf
+          terv.json
 ```
 
 ### Mappanév szabályok
 
 - Páciensmappa: `Vezeteknev-Keresztnev_<6 karakteres id>`
+- Terv-mappa (a páciensmappán belül, D29): `<szlugosított terv-cím>_<6
+  karakteres id>` — a cím a mappa LÉTREHOZÁSAKORI (a doki által átírt vagy
+  automatikusan javasolt) terv-címkéből képződik, ugyanazokkal a
+  szabályokkal, mint a páciensnév. A mappanév ezután **fix**, a
+  megjelenített címke ettől függetlenül szabadon változik — lásd "Páciens-
+  és terv-mappa" lentebb.
 - **Az ékezeteket meg kell tartani** — a doki a Fájlkezelőben fog rájuk
   keresni. Ne transzliterálj.
 - Tiltott karakterek cseréje: `/ \ : * ? " < > |` és a záró pont/szóköz.
 - A `_<id>` azért kell, mert két Kovács János is lehet, és a név
-  változhat. Ugyanez teszi lehetővé, hogy egy terv másolása (D26,
-  `docs/03-funkcionalis-spec.md` § Terv másolása új tervként) ugyanahhoz a
-  névhez egy MÁSIK páciensmappát nyisson — a doki a Korábbi tervek listán
-  a névismétlésről ismeri fel, hogy összetartoznak, nincs köztük külön
-  hivatkozó mező.
+  változhat. A páciens felismerése mostantól explicit `paciensId`-vel
+  történik, nem névismétléssel (D29) — egy terv másolása (D26,
+  `docs/03-funkcionalis-spec.md` § Terv másolása új tervként) a MEGLÉVŐ
+  páciensmappában nyit egy újabb terv-mappát.
 - Verziómappa: `<ISO dátum>_v<n>`. **Soha nem írunk felül** meglévőt.
 - Az útvonal a Drive mount alatt hosszú lesz — tartsd a neveket rövidre
   (Windows 260 karakter).
+
+### Páciens- és terv-mappa (`paciens.json`, `terv-cimke.json`, D29)
+
+Két új, kis fájl a fenti fába — mindkettő kizárólag azonosító-/kereső-index
+és szervezési metaadat, **soha nem system of record**: a terv tartalmi
+igazsága változatlanul a `terv.json` (D7).
+
+```jsonc
+// paciensek/Kovacs-Janos_k9m2r4/paciens.json
+{
+  "schemaVersion": 1,
+  "paciensId": "k9m2r4",
+  "nev": "Kovács János"    // csak kereséshez/előtöltéshez -- SOHA nem írja felül egy már mentett terv.json paciens blokkját
+}
+```
+
+```jsonc
+// paciensek/Kovacs-Janos_k9m2r4/Fogpotlas_a3f9c1/terv-cimke.json
+{
+  "schemaVersion": 1,
+  "tervCim": "Fogpótlás"
+}
+```
+
+- A `terv-cimke.json` a terv-mappa gyökerén, a verziómappákon **kívül**
+  él — D4 (verziómappát soha nem írunk felül) rá nem vonatkozik: bármikor
+  szabadon átírható, egy már véglegesített tervnél is, új verzió nyitása
+  nélkül.
+- Ha a fájl nem létezik (a doki még nem írta át kézzel), a Korábbi tervek
+  fája élő auto-javaslatot mutat helyette: a terv legnagyobb ÖSSZEGŰ
+  kategóriájának neve, holtversenynél a kisebb `sorrend`-ű kategória
+  (`javasoltTervCim()`, `app/src/domain/tervCim.ts` — ugyanaz a
+  precedencia-elv, mint a fogtérkép ütközésfeloldásában, D28). A javaslat
+  a terv-lánc LEGFRISSEBB verziójának tartalmából számol, tehát friss tétel
+  hozzáadása frissíti; kézi átírás után a mező megragad, üresen mentve
+  visszaáll a javaslatra.
+- A `paciens.json` `nev`-je minden mentéskor frissül a legutóbb mentett
+  `plan.paciens.nev`-re — ez index, nem pillanatkép, ellentétben a
+  `terv.json` `paciens` blokkjával (D7).
 
 ## `arlista.json`
 
@@ -102,6 +153,7 @@ kerekítési hiba az összegzésben.
 {
   "schemaVersion": 1,
   "tervId": "a3f9c1",
+  "paciensId": "k9m2r4",            // opcionális -- lásd "Páciens- és terv-mappa" fent (D29); hiányzó/üres = a terv még nincs elmentve
   "verzio": 1,
   "statusz": "VEGLEGES",           // PISZKOZAT | VEGLEGES
   "nyelv": "hu",                   // a nyomtatvány szövege, dátumformátuma, sablonja

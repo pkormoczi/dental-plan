@@ -25,9 +25,11 @@ Két implementáció, **egy interface mögött**:
 interface PlanStorage {
   init(): Promise<void>
   listPatients(): Promise<PatientFolder[]>
-  listVersions(patientDir: string): Promise<PlanVersion[]>
+  listPlans(patientDir: string): Promise<PlanFolder[]>        // D29: köztes szint a verziók felett
+  listVersions(patientDir: string, planDir: string): Promise<PlanVersion[]>
   loadPlan(ref: PlanRef): Promise<Plan>
   savePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef>
+  savePlanLabel(patientDir: string, planDir: string, tervCim: string): Promise<void>  // üres = törlés, vissza az auto-javaslatra
   loadPriceList(): Promise<PriceList>
   savePriceList(pl: PriceList): Promise<void>
   loadSettings(): Promise<Settings>
@@ -36,6 +38,9 @@ interface PlanStorage {
   saveTemplate(name: string, body: string): Promise<string>  // új verziófájlt ad vissza
 }
 ```
+
+`PlanRef` a `{ patientDir, planDir, versionDir }` hármas (D29) — a köztes
+`planDir` szint miatt bővült a korábbi kettősről.
 
 ### Piszkozat-autosave: `DraftStorage`, a `PlanStorage` MELLETT
 

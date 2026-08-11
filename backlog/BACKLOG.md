@@ -6,7 +6,7 @@ teljes anyaga — a 12 kész tétel megvalósítási jegyzeteivel és az első
 doktor-nap narratívával együtt — archiválva, lásd „Honnan jönnek az
 igények" lent.
 
-A `docs/01` sérthetetlen keretei (D1–D28) egyik tételt sem sértik —
+A `docs/01` sérthetetlen keretei (D1–D29) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. Lezárt
@@ -20,35 +20,13 @@ lista végén áll, mert nem fejlesztői munka, tehát nem esik a
 haszon-rangsorba. A MOST szakasz hét fejlesztői tételéhez van
 tervdokumentum (grill-me munkamenetek döntési összefoglalói); a 24.
 tételnek nincs, és nem is lesz — tisztán adattisztítás és
-információkérés a dokitól. A 25. tétel kivétel a hasznosság szerinti
-sorrend alól: a doki kifejezett kérésére az élen áll, mert megelőzi (és
-megkönnyíti) a Korábbi tervek listát érintő további munkát.
+információkérés a dokitól.
 
 ---
 
-## MOST (kb. 1–1,5 fejlesztői nap + fél nap közös munka a dokival, a 25. tétel ennél nagyobb — lásd ott)
+## MOST (kb. 1–1,5 fejlesztői nap + fél nap közös munka a dokival)
 
-### 1. hely — 25. tétel: Páciens-entitás a Korábbi tervek fájában
-
-- **Méret:** 2–4 fejlesztői nap — új adatszint (páciens-mappa,
-  `paciens.json`, `terv-cimke.json`), a `PlanStorage` interfész és a
-  `DemoStorage`/seed-adat átalakítása, három érintett képernyő (Home,
-  Páciens adatlap, Korábbi tervek) és egy új domain-segédfüggvény
-  (domináns-kategória auto-javaslat).
-- **Kereteket sért?** D26-ot pontosítja (nem törli el) — lásd a terv 1.
-  döntését.
-- **Valódi haszon:** a lista ma páciensmappánként csoportosít, de egy
-  páciensmappa = egy terv-lánc (D26); egy visszatérő páciensnél, akinek
-  több terve is van, mindegyik 2-3 verzióval, ugyanaz a név
-  csoportosítás nélkül ismétlődik — a lista sok páciens/terv esetén
-  áttekinthetetlenné válik.
-- **20%-os verzió:** nincs — a 3 szintű fa (páciens → terv → verzió) és
-  az explicit páciens-azonosítás nem bontható kisebb, önmagában is
-  hasznos darabra anélkül, hogy a névegyezés-heurisztika kockázatait
-  (téves összevonás/szétválasztás) örökölné.
-- **Terv:** `backlog/plans/backlog-25-paciens-entitas-terv.md` (7 döntés).
-
-### 2. hely — 18. tétel: Fázis törlése megerősítéssel
+### 1. hely — 18. tétel: Fázis törlése megerősítéssel
 
 - **Méret:** 1–2 óra — a meglévő `AlertDialog`-minta a „Fázis törlése"
   gombon, csak akkor, ha a fázisban van sor (üres fázis törlése maradjon
@@ -61,7 +39,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
 - **20%-os verzió:** nincs kisebb — ez már a minimális védelem.
 - **Terv:** `backlog/plans/backlog-18-fazis-torles-terv.md` (6 döntés).
 
-### 3. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
+### 2. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
 - **Méret:** 2–3 óra — új, nem blokkoló lépés a `PreviewPage` meglévő
   `confirmStep`-láncában: a 0 Ft-os, kitöltött nevű sorok felsorolása. A
@@ -76,7 +54,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
   rosszabb lenne, mert eltörné a billentyűzetes ciklust.
 - **Terv:** `backlog/plans/backlog-19-nulla-forint-terv.md` (7 döntés).
 
-### 4. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
+### 3. hely — 20. tétel: Letöltési fájlnév: páciensnév + „PISZKOZAT" előtag
 
 - **Méret:** 1–2 óra — a `PreviewPage` és `PlanHistoryPage` letöltési
   fájlneveiben a páciensnév (a `paths.ts` meglévő
@@ -91,7 +69,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `backlog/plans/backlog-20-letoltesi-fajlnev-terv.md` (8 döntés).
 
-### 5. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
+### 4. hely — 21. tétel: `arlistaVerzio` léptetése admin-mentéskor
 
 - **Méret:** 1 óra + teszt — a `savePriceList` a `modositva` mellett az
   `arlistaVerzio`-t is a mentés napjára állítja tartalmi változásnál. A
@@ -106,7 +84,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
   fogalom felesleges szertartás lenne egy egyszemélyes rendelőben).
 - **Terv:** `backlog/plans/backlog-21-arlista-verzio-terv.md` (5 döntés).
 
-### 6. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
+### 5. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
 
 - **Méret:** 1–2 óra — a PlanHistoryPage-en a már betöltött
   PDF-bájtokból blob-URL, új fül; nincs új nézet, nincs új útvonal.
@@ -119,7 +97,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
   böngésző PDF-nézője elég).
 - **Terv:** `backlog/plans/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
 
-### 7. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 6. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
@@ -132,7 +110,7 @@ megkönnyíti) a Korábbi tervek listát érintő további munkát.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `backlog/plans/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
 
-### 8. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
+### 7. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
 
 **Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
 Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
@@ -234,6 +212,14 @@ Hasznosság szerint sorrendezve:
   páciensmappában, a verziómappákon kívül) — valódi haszon (kit kell
   visszahívni, melyik ajánlat jár le), de új fájltípus és állapotgép;
   alaposabb tervezést igényel, hogy ne csússzon system of recorddá.
+- **Páciens-szintű, terveken átívelő kontaktnyilvántartó** (telefonszám,
+  email élő szerkesztése a `paciens.json`-ban, a terv-mentéstől
+  függetlenül) — a doki csak jövőbeli lehetőségként említette, nem
+  konkrét igényként (a páciens-entitás tétel, 2026-08-11, tudatosan ennyi
+  nélkül zárult: a `paciens.json` ma csak `paciensId` + `nev`, kizárólag
+  keresési index). Ma a `terv.json` `paciens` blokkja tervenként tárolja
+  ezeket az adatokat — ez a tétel egy önálló, azok fölé emelt, élő
+  nyilvántartást vezetne be.
 - **Teljes verzió-diff nézet** (mi változott sorszinten v1 és v2 között)
   — a 11. tétel összeg-kiírása után derül ki, mennyire hiányzik.
 - **Fogtechnikusi munkalap generálása** — más célközönség (a technikus),
@@ -324,5 +310,6 @@ Hasznosság szerint sorrendezve:
   szerkezetű doktor-nap narratíva és architekt-triázs (a 15 igény teljes
   értékelése — méret, keretsértés, haszon, 20%-os változat tételenként),
   szintén a git history-ban.
-- **25. tétel (2026-08-11):** a doki közvetlen visszajelzése a Korábbi
-  tervek képernyőn (grill-me munkamenet), nem a fenti két kör része.
+- **A doki közvetlen visszajelzése** a Korábbi tervek képernyőn
+  (grill-me munkamenet, 2026-08-11) — nem a fenti két kör része; innen
+  jött a lenti páciens-kontaktnyilvántartó ötlet is.

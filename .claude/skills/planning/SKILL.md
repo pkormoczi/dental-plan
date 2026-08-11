@@ -12,8 +12,8 @@ Egy még kidolgozatlan backlog-tételről (vagy egy most felmerülő, még be ne
 sorolt ötletről) áganként végigmenni minden döntésen, amíg a felhasználó és
 a fejlesztő között nincs félreértés — mielőtt egyetlen sor kód is íródna. A
 kimenet egy `backlog/plans/backlog-N-<cím>-terv.md` döntési összefoglaló, a
-meglévő tervdokumentumok (pl. `backlog/plans/backlog-25-paciens-entitas-terv.md`)
-mintájára.
+meglévő, nyitott tervdokumentumok (pl.
+`backlog/plans/backlog-18-fazis-torles-terv.md`) mintájára.
 
 **Ez a skill soha nem ír és nem módosít alkalmazáskódot** (`app/`, `data/`,
 `assets/` alatt semmit). Amit ír:

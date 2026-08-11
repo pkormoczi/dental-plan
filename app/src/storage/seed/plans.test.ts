@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { basePrice } from '../../domain/money';
-import { seedPlans } from './plans';
+import { seedPatients, seedPlans } from './plans';
 import { seedPriceList } from './priceList';
 
 // A demó tervek tetelId-hivatkozásainak integritása. A hiba, amit ez a teszt
@@ -59,4 +59,48 @@ describe('seedPlans tetelId-integritás', () => {
       expect(basePrice(tetel!.ar[penznem])).toBe(listaEgysegar);
     },
   );
+});
+
+// D29: a páciens-entitás bevezetése óta minden seed tervnek explicit
+// paciensId-vel kell a saját páciens-mappájához tartoznia -- ez a teszt
+// fogná meg, ha egy új seed terv paciensId nélkül vagy egy `seedPatients`-be
+// fel nem vett azonosítóval kerülne be.
+describe('seedPlans paciensId-integritás (D29)', () => {
+  const patientDirsByPaciensId = new Map(
+    seedPatients.map(({ patientDir, record }) => [record.paciensId, patientDir]),
+  );
+
+  it.each(
+    seedPlans.map(({ patientDir, planDir, plan }) => ({
+      cimke: `${plan.paciens.nev} v${plan.verzio} (${planDir})`,
+      patientDir,
+      paciensId: plan.paciensId,
+    })),
+  )('$cimke -> paciensId egy seedPatients-beli rekordra mutat, a saját mappájával', ({
+    patientDir,
+    paciensId,
+  }) => {
+    expect(paciensId).toBeTruthy();
+    expect(patientDirsByPaciensId.get(paciensId!)).toBe(patientDir);
+  });
+
+  it('ugyanahhoz a tervId-hez tartozó verziók ugyanabban a planDir-ben vannak (D4)', () => {
+    const planDirByTervId = new Map<string, string>();
+    for (const { planDir, plan } of seedPlans) {
+      const existing = planDirByTervId.get(plan.tervId);
+      if (existing == null) {
+        planDirByTervId.set(plan.tervId, planDir);
+      } else {
+        expect(planDir).toBe(existing);
+      }
+    }
+  });
+
+  it('Nagy Éva két önálló terv-láncot kap ugyanabban a páciens-mappában', () => {
+    const nagyEntries = seedPlans.filter(({ plan }) => plan.paciens.nev === 'Nagy Éva');
+    const distinctPatientDirs = new Set(nagyEntries.map((e) => e.patientDir));
+    const distinctPlanDirs = new Set(nagyEntries.map((e) => e.planDir));
+    expect(distinctPatientDirs.size).toBe(1);
+    expect(distinctPlanDirs.size).toBe(2);
+  });
 });

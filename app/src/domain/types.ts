@@ -149,6 +149,37 @@ export interface Plan {
    * mező bevezetése előtti terv.json).
    */
   leirasokMutatasa?: boolean;
+  /**
+   * A páciens-mappa azonosítója (docs/02-domain-modell.md § Páciens- és
+   * terv-mappa, D29). Hiányzó/üres = a terv még nincs elmentve, a storage
+   * savePlan()-kor tölti ki. NE keverd a `tervId`-vel: egy páciens-mappa
+   * (egy `paciensId`) több terv-láncot (több `tervId`-t) is tartalmazhat.
+   * Additív mező, `schemaVersion` nem emelkedett.
+   */
+  paciensId?: string;
+}
+
+/**
+ * paciens.json -- egy páciens-mappa azonosító-/kereső-indexe (D29). SOHA
+ * nem system of record: a `nev` kizárólag kereséshez és előtöltéshez való
+ * gyorsítótár, a `terv.json` `paciens` blokkja marad a pillanatkép (D7,
+ * docs/02-domain-modell.md § Páciens- és terv-mappa).
+ */
+export interface PatientRecord {
+  schemaVersion: 1;
+  paciensId: string;
+  nev: string;
+}
+
+/**
+ * terv-cimke.json -- a terv-mappa gyökerén, a verziómappákon KÍVÜL, ezért a
+ * D4 (verziómappát soha nem írunk felül) rá nem vonatkozik: bármikor
+ * szabadon átírható, akár egy már véglegesített terven is, új verzió
+ * nyitása nélkül (D29, docs/02-domain-modell.md § Páciens- és terv-mappa).
+ */
+export interface PlanLabel {
+  schemaVersion: 1;
+  tervCim: string;
 }
 
 export interface Rendelo {
@@ -170,15 +201,29 @@ export interface Settings {
   nemetEngedelyezve: boolean;
 }
 
-/** Egy páciensmappa a paciensek/ fában (lásd storage/paths.ts). */
+/**
+ * Egy páciensmappa a paciensek/ fában (lásd storage/paths.ts). A `nev` a
+ * `paciens.json`-ből jön -- nem a mappanév visszafejtése és nem egy
+ * betöltött `terv.json`-é (D29).
+ */
 export interface PatientFolder {
   dirName: string;
-  vezeteknev: string;
-  keresztnev: string;
-  patientId: string;
+  paciensId: string;
+  nev: string;
 }
 
-/** Egy verziómappa egy páciensen belül. */
+/**
+ * Egy terv-mappa (terv-lánc) egy páciensen belül (D29). `tervCim: null` =
+ * nincs kézzel átírt `terv-cimke.json` -- a UI ilyenkor élő auto-javaslatot
+ * mutat (`domain/tervCim.ts` `megjelenitettTervCim`), nem `null`-t.
+ */
+export interface PlanFolder {
+  dirName: string;
+  tervId: string;
+  tervCim: string | null;
+}
+
+/** Egy verziómappa egy terven belül. */
 export interface PlanVersion {
   dirName: string;
   isoDate: string;
@@ -187,5 +232,6 @@ export interface PlanVersion {
 
 export interface PlanRef {
   patientDir: string;
+  planDir: string;
   versionDir: string;
 }

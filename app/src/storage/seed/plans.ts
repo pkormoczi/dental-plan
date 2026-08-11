@@ -1,6 +1,9 @@
-// Demó tervek -- 3 páciens, az egyiknél két verzió, hogy a "Korábbi tervek"
-// képernyő és a D4 append-only viselkedés (mindkét verzió megmarad, egymás
-// mellett) már a mockupban is látszódjon valódi adaton.
+// Demó tervek -- 3 páciens; Kovács János és Tóth Zoltán egy-egy terv-lánccal,
+// Nagy Éva KÉT terv-lánccal (az egyik két verzióval), hogy a "Korábbi
+// tervek" 3 szintű fája (páciens → terv → verzió), az összecsukás (2+ lánc)
+// és a D4 append-only viselkedés (mindkét verzió megmarad, egymás mellett)
+// már a mockupban is látszódjon valódi adaton -- D29,
+// docs/02-domain-modell.md § Páciens- és terv-mappa.
 //
 // A tetelId-k egyetlen hiteles forrása a data/arlista.seed.json (a
 // seedPriceList-en át) -- NE egy prototípus vagy minta-konstans ellen
@@ -11,9 +14,11 @@
 // A plans.test.ts mostantól kikényszeríti az egyezést.
 
 import { addDaysIso } from '../../domain/date';
+import { javasoltTervCim } from '../../domain/tervCim';
 import { computeOsszesitok } from '../../domain/totals';
-import type { Fazis, Plan } from '../../domain/types';
-import { buildPatientDirName, buildVersionDirName } from '../paths';
+import type { Fazis, PatientRecord, Plan } from '../../domain/types';
+import { buildPatientDirName, buildPlanDirName, buildVersionDirName } from '../paths';
+import { seedPriceList } from './priceList';
 
 const ARLISTA_VERZIO = '2026-07-01';
 const ERVENYESSEG_NAP = 90;
@@ -27,7 +32,9 @@ function buildPlan(base: Omit<Plan, 'schemaVersion' | 'osszesitok' | 'ervenyesIg
   };
 }
 
-// ---------- Kovács János -- egy verzió, sávos tétel + kedvezmény példa ----------
+// ---------- Kovács János -- egy lánc, sávos tétel + kedvezmény példa ----------
+
+const KOVACS_PACIENS_ID = 'k7x2p9';
 
 const kovacsFazisok: Fazis[] = [
   {
@@ -93,6 +100,7 @@ const kovacsFazisok: Fazis[] = [
 
 const kovacsJanos = buildPlan({
   tervId: 'a3f9c1',
+  paciensId: KOVACS_PACIENS_ID,
   verzio: 1,
   statusz: 'VEGLEGES',
   nyelv: 'hu',
@@ -114,7 +122,9 @@ const kovacsJanos = buildPlan({
   fazisok: kovacsFazisok,
 });
 
-// ---------- Nagy Éva -- két verzió, a visszatérő páciens / append-only eset ----------
+// ---------- Nagy Éva -- két terv-lánc, az egyik két verzióval (visszatérő páciens / append-only eset) ----------
+
+const NAGY_PACIENS_ID = 'n4e8w1';
 
 const nagyEvaPaciens = {
   nev: 'Nagy Éva',
@@ -157,6 +167,7 @@ const nagyEvaV1Fazisok: Fazis[] = [
 
 const nagyEvaV1 = buildPlan({
   tervId: 'b7d2e4',
+  paciensId: NAGY_PACIENS_ID,
   verzio: 1,
   statusz: 'VEGLEGES',
   nyelv: 'hu',
@@ -171,6 +182,7 @@ const nagyEvaV1 = buildPlan({
 
 const nagyEvaV2 = buildPlan({
   tervId: 'b7d2e4',
+  paciensId: NAGY_PACIENS_ID,
   verzio: 2,
   statusz: 'VEGLEGES',
   nyelv: 'hu',
@@ -203,10 +215,46 @@ const nagyEvaV2 = buildPlan({
   ],
 });
 
+// Második, önálló terv-lánc UGYANAHHOZ a pácienshez (D29) -- ez mutatja meg
+// a Korábbi tervek fáján, hogy egy páciens-mappa több terv-láncot is
+// tartalmazhat, és hogy 2+ lánc esetén a páciens-blokk alapból csukva nyílik.
+const nagyEvaSzures = buildPlan({
+  tervId: 'e6f0y3',
+  paciensId: NAGY_PACIENS_ID,
+  verzio: 1,
+  statusz: 'VEGLEGES',
+  nyelv: 'hu',
+  penznem: 'HUF',
+  keltezes: '2026-08-01',
+  arlistaVerzio: ARLISTA_VERZIO,
+  sablonVerzio: 'nyilatkozat-hu-v1',
+  orvos: 'Dr. Mándoki István',
+  paciens: nagyEvaPaciens,
+  fazisok: [
+    {
+      sorszam: 1,
+      megnevezes: '1. kezelés — szájhigiénia',
+      megjegyzes: '',
+      sorok: [
+        {
+          tetelId: 't017',
+          nevSnapshot: 'Komplett kezelés: ultrahang, sófúvás, kézi műszeres kez., polírozás',
+          savos: false,
+          fogak: '',
+          mennyiseg: 1,
+          listaEgysegar: 24000,
+          tenylegesEgysegar: 24000,
+        },
+      ],
+    },
+  ],
+});
+
 // ---------- Tóth Zoltán -- kiskorú, tejfog eset ----------
 
 const tothZoltan = buildPlan({
   tervId: 'd4e8a2',
+  paciensId: 't5q3z8',
   verzio: 1,
   statusz: 'VEGLEGES',
   nyelv: 'hu',
@@ -256,21 +304,48 @@ const tothZoltan = buildPlan({
 
 export interface SeedPlanEntry {
   patientDir: string;
+  planDir: string;
   versionDir: string;
   plan: Plan;
 }
 
-function toEntry(plan: Plan): SeedPlanEntry {
-  return {
-    patientDir: buildPatientDirName(plan.paciens.nev, plan.tervId),
+/**
+ * Egy terv-lánc mappaneve a lánc ELSŐ (legkorábbi) verziójának tartalmából
+ * számolt javaslatból képződik, és utána minden későbbi verzióra
+ * változatlanul érvényes -- pontosan úgy, ahogy éles használatban is a
+ * `storage.savePlan()` csak a lánc létrehozásakor dönti el a mappanevet
+ * (D29). Ha egy chain-hez tartozó `versions` tömb 2+ elemű, csak az [0]
+ * indexű (legkorábbi keltezésű) alapján számol.
+ */
+function toEntries(patientDir: string, versions: Plan[]): SeedPlanEntry[] {
+  const elsoVerzio = versions[0];
+  const tervCim = javasoltTervCim(elsoVerzio, seedPriceList);
+  const planDir = buildPlanDirName(tervCim, elsoVerzio.tervId);
+  return versions.map((plan) => ({
+    patientDir,
+    planDir,
     versionDir: buildVersionDirName(plan.keltezes, plan.verzio),
     plan,
-  };
+  }));
 }
 
+const kovacsDir = buildPatientDirName(kovacsJanos.paciens.nev, KOVACS_PACIENS_ID);
+const nagyDir = buildPatientDirName(nagyEvaPaciens.nev, NAGY_PACIENS_ID);
+const tothDir = buildPatientDirName(tothZoltan.paciens.nev, tothZoltan.paciensId!);
+
 export const seedPlans: SeedPlanEntry[] = [
-  toEntry(kovacsJanos),
-  toEntry(nagyEvaV1),
-  toEntry(nagyEvaV2),
-  toEntry(tothZoltan),
+  ...toEntries(kovacsDir, [kovacsJanos]),
+  ...toEntries(nagyDir, [nagyEvaV1, nagyEvaV2]),
+  ...toEntries(nagyDir, [nagyEvaSzures]),
+  ...toEntries(tothDir, [tothZoltan]),
+];
+
+/** A `paciens.json` indexrekordok -- lásd docs/02-domain-modell.md § Páciens- és terv-mappa. */
+export const seedPatients: Array<{ patientDir: string; record: PatientRecord }> = [
+  { patientDir: kovacsDir, record: { schemaVersion: 1, paciensId: KOVACS_PACIENS_ID, nev: kovacsJanos.paciens.nev } },
+  { patientDir: nagyDir, record: { schemaVersion: 1, paciensId: NAGY_PACIENS_ID, nev: nagyEvaPaciens.nev } },
+  {
+    patientDir: tothDir,
+    record: { schemaVersion: 1, paciensId: tothZoltan.paciensId!, nev: tothZoltan.paciens.nev },
+  },
 ];

@@ -651,6 +651,34 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   placeholder; ez külön, kódot nem igénylő tételként él tovább a
   `docs/08-backlog.md`-ben.
 
+### 25. Páciens-entitás a Korábbi tervek fájában — KÉSZ (2026-08-11)
+
+- **Méret:** 2–4 fejlesztői nap.
+- **Kereteket sért?** D26-ot pontosította, nem törölte el — az új D29
+  rögzíti a páciens explicit entitásként (`paciensId`) való kezelését.
+- **Valódi haszon:** a Korábbi tervek lista ezután páciens → terv → verzió
+  háromszintű fát mutat, nem csak páciens → verzió kettőt — egy visszatérő
+  páciens több terv-lánca (nem csak több verziója) is elkülönítve, saját
+  címkével jelenik meg, csoportosítva, összecsukhatóan.
+- **Megvalósítás:** új `paciens.json` (páciens-mappa index, `paciensId` +
+  `nev`) és `terv-cimke.json` (terv-mappánként, a verziómappákon kívül,
+  D4-en kívül eső, bármikor szabadon átírható címke) fájlszint —
+  `docs/02-domain-modell.md` § Páciens- és terv-mappa, D29
+  (`docs/01-attekintes-es-dontesek.md`). A `PlanStorage` interfész
+  (`docs/05-technologia.md`) `listPlans`/`savePlanLabel`-lel bővült, a
+  `PlanRef` hármas (`patientDir`/`planDir`/`versionDir`) lett. A Kezdőlap
+  „Új terv indítása” gombja egy köztes páciens-választó lépésre navigál
+  (`/uj-terv`) — „Meglévő páciens keresése” vagy „Vadonatúj páciens” —,
+  csak itt kétértelmű a célpáciens; a Korábbi tervek saját terv-indító
+  gombjai változatlanul a forrás tervből ismert páciensre mennek. A
+  háromszintű fa a Korábbi tervek listán 2+ terv-lánccal rendelkező
+  páciensnél alapból csukva nyílik, kattintásra bomlik ki; egyetlen lánc
+  esetén (a tipikus eset) nincs plusz kattintás —
+  `docs/03-funkcionalis-spec.md` § 5. Korábbi tervek. Új
+  `javasoltTervCim()`/`megjelenitettTervCim()` (`app/src/domain/tervCim.ts`)
+  — a terv-lánc élő címke-javaslata a legnagyobb összegű kategória nevéből,
+  ugyanazzal a precedencia-elvvel, mint a fogtérkép ütközésfeloldása (D28).
+
 ---
 
 ## Technikai adósság (a 2026-08-06-i kódreview nyitva maradt tételei)

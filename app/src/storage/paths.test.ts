@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   assertVersionDirAvailable,
   buildPatientDirName,
+  buildPlanDirName,
   buildVersionDirName,
   nextVersionNumber,
   parsePatientDirName,
+  parsePlanDirName,
   parseVersionDirName,
   sanitizeNamePart,
   splitHungarianName,
@@ -66,6 +68,30 @@ describe('buildPatientDirName / parsePatientDirName', () => {
 
   it('returns null for a name with no id suffix', () => {
     expect(parsePatientDirName('Kovács-János')).toBeNull();
+  });
+});
+
+describe('buildPlanDirName / parsePlanDirName (D29)', () => {
+  it('builds <szlugosított cím>_id6', () => {
+    expect(buildPlanDirName('Fogpótlás', 'a3f9c1')).toBe('Fogpótlás_a3f9c1');
+  });
+
+  it('round-trips through parsePlanDirName', () => {
+    const dir = buildPlanDirName('Fogpótlás', 'a3f9c1');
+    expect(parsePlanDirName(dir)).toEqual({ tervCim: 'Fogpótlás', planId: 'a3f9c1' });
+  });
+
+  it('falls back to "Terv" for an empty/whitespace címke -- not "Nevtelen"', () => {
+    expect(buildPlanDirName('', 'a3f9c1')).toBe('Terv_a3f9c1');
+    expect(buildPlanDirName('   ', 'a3f9c1')).toBe('Terv_a3f9c1');
+  });
+
+  it('sanitizes forbidden characters in the címke', () => {
+    expect(buildPlanDirName('Korona/Híd', 'a3f9c1')).toBe('Korona-Híd_a3f9c1');
+  });
+
+  it('returns null for a name with no id suffix', () => {
+    expect(parsePlanDirName('Fogpótlás')).toBeNull();
   });
 });
 

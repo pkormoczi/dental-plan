@@ -7,6 +7,7 @@
 import type {
   PatientFolder,
   Plan,
+  PlanFolder,
   PlanRef,
   PlanVersion,
   PriceList,
@@ -16,10 +17,18 @@ import type {
 export interface PlanStorage {
   init(): Promise<void>;
   listPatients(): Promise<PatientFolder[]>;
-  listVersions(patientDir: string): Promise<PlanVersion[]>;
+  /** Egy páciens terv-láncai (D29) -- a köztes szint a verziók felett. */
+  listPlans(patientDir: string): Promise<PlanFolder[]>;
+  listVersions(patientDir: string, planDir: string): Promise<PlanVersion[]>;
   loadPlan(ref: PlanRef): Promise<Plan>;
   /** Mindig új verziómappát hoz létre (D4) -- soha nem ír felül meglévőt. */
   savePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef>;
+  /**
+   * A terv-cimke.json-t írja/törli -- a verziómappákon KÍVÜL él, D4 rá nem
+   * vonatkozik. Üres/whitespace `tervCim` törli a fájlt (vissza az élő
+   * auto-javaslatra, `domain/tervCim.ts`).
+   */
+  savePlanLabel(patientDir: string, planDir: string, tervCim: string): Promise<void>;
   loadPriceList(): Promise<PriceList>;
   savePriceList(pl: PriceList): Promise<void>;
   loadSettings(): Promise<Settings>;

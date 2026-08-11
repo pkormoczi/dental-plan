@@ -1,10 +1,11 @@
 // Korábbi tervek -- docs/03-funkcionalis-spec.md "5. Korábbi tervek".
 //
 // Ez a legerősebb indoka a fájlrendszer-hozzáférésnek: egy visszatérő
-// pácienshez ne kelljen újragépelni a tételeket. A megnyitott verzió a
-// szerkesztő piszkozatába töltődik; egy újabb véglegesítés a meglévő
-// tervId mellé ÚJ verziót ír (D4) -- ezt a storage.savePlan már tudja,
-// itt nincs külön logika hozzá.
+// pácienshez ne kelljen újragépelni a tételeket. Háromszintű fa (páciens →
+// terv → verzió, D29) -- egy páciensnek több terv-lánca is lehet. A
+// megnyitott verzió a szerkesztő piszkozatába töltődik; egy újabb
+// véglegesítés a meglévő tervId mellé ÚJ verziót ír (D4) -- ezt a
+// storage.savePlan már tudja, itt nincs külön logika hozzá.
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -22,27 +23,40 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes';
-import { CrossCircledIcon, DotsHorizontalIcon, InfoCircledIcon } from '@radix-ui/react-icons';
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  CrossCircledIcon,
+  Cross2Icon,
+  DotsHorizontalIcon,
+  InfoCircledIcon,
+  Pencil1Icon,
+} from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
 import { todayIso } from '../domain/date';
 import { formatMoney } from '../domain/money';
+import { latestVersionAcrossPlans } from '../domain/planFolders';
 import { planMasolatKent, planUjPaciensselTervhez } from '../domain/planCopy';
 import { norm } from '../domain/search';
-import type { PatientFolder, Penznem, Plan, PlanVersion } from '../domain/types';
+import { ALAPERTELMEZETT_TERV_CIM, megjelenitettTervCim } from '../domain/tervCim';
+import type { PatientFolder, Penznem, Plan, PlanFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
+
+interface VersionRef {
+  patientDir: string;
+  planDir: string;
+  versionDir: string;
+}
 
 interface ActionError {
   patientDir: string;
   // `null` = páciensszintű hiba (a névfejléc melletti "Új terv"), nem egy
-  // konkrét verzió-sorhoz kötött.
+  // konkrét terv/verzió-sorhoz kötött.
+  planDir: string | null;
   versionDir: string | null;
   message: string;
-}
-
-interface VersionRef {
-  patientDir: string;
-  versionDir: string;
 }
 
 // A piszkozat-felülírás-őr (backlog-17) mindhárom terv-létrehozó belépési
@@ -59,7 +73,7 @@ interface VersionRef {
 //
 // A verziósoron egyetlen látható gomb sincs, minden művelet a "⋯" menüben
 // van; a páciensszintű "Új terv" viszont látható marad, a névfejléc mellett,
-// mert az nem egy verzióhoz tartozik.
+// mert az nem egy konkrét verzióhoz tartozik.
 type PendingKind = 'open' | 'copy' | 'ujTerv';
 type PendingAction = VersionRef & { kind: PendingKind };
 
@@ -71,8 +85,12 @@ interface VersionTotal {
   penznem: Penznem;
 }
 
-function versionKey({ patientDir, versionDir }: VersionRef): string {
-  return `${patientDir}/${versionDir}`;
+function planKey(patientDir: string, planDir: string): string {
+  return `${patientDir}/${planDir}`;
+}
+
+function versionKey({ patientDir, planDir, versionDir }: VersionRef): string {
+  return `${patientDir}/${planDir}/${versionDir}`;
 }
 
 export default function PlanHistoryPage() {
@@ -86,8 +104,9 @@ export default function PlanHistoryPage() {
   const [pending, setPending] = useState<PendingAction | null>(null);
 
   const [patients, setPatients] = useState<PatientFolder[]>([]);
-  const [versionsByPatient, setVersionsByPatient] = useState<Record<string, PlanVersion[]>>({});
-  const [namesByPatient, setNamesByPatient] = useState<Record<string, string>>({});
+  const [plansByPatient, setPlansByPatient] = useState<Record<string, PlanFolder[]>>({});
+  const [versionsByPlan, setVersionsByPlan] = useState<Record<string, PlanVersion[]>>({});
+  const [plansByVersion, setPlansByVersion] = useState<Record<string, Plan>>({});
   const [totalsByVersion, setTotalsByVersion] = useState<Record<string, VersionTotal>>({});
   // P1-2: eddig egyetlen sérült/inkompatibilis terv (`Promise.all`,
   // all-or-nothing) az EGÉSZ listát megbénította -- egy páciens sem
@@ -95,14 +114,25 @@ export default function PlanHistoryPage() {
   // hibás páciens sora "⚠ nem olvasható" jelöléssel jelenik meg, a többi
   // rendben betölt.
   const [unreadable, setUnreadable] = useState<Set<string>>(new Set());
+  const [expandedOverride, setExpandedOverride] = useState<Record<string, boolean>>({});
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
   // P1-2: a megnyitás/letöltés hibája korábban `alert()`-tel jelent meg --
-  // egy adott verzió-sorhoz kötött hiba, ezért annak a sornak a szövegeként
+  // egy adott sorhoz kötött hiba, ezért annak a sornak a szövegeként
   // jelenik meg (docs/07-felulet-rendszer.md: "Nem toast, ha a hiba egy
   // mezőhöz tartozik").
   const [actionError, setActionError] = useState<ActionError | null>(null);
+
+  const [editingLabel, setEditingLabel] = useState<{ patientDir: string; planDir: string } | null>(
+    null,
+  );
+  const [labelDraft, setLabelDraft] = useState('');
+  const [labelError, setLabelError] = useState<{
+    patientDir: string;
+    planDir: string;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,37 +143,45 @@ export default function PlanHistoryPage() {
         const list = await storage.listPatients();
         const failed = new Set<string>();
 
-        const versionResults = await Promise.allSettled(
-          list.map((p) => storage.listVersions(p.dirName)),
-        );
-        const versionsMap: Record<string, PlanVersion[]> = {};
-        versionResults.forEach((res, i) => {
+        const plansResults = await Promise.allSettled(list.map((p) => storage.listPlans(p.dirName)));
+        const plansMap: Record<string, PlanFolder[]> = {};
+        plansResults.forEach((res, i) => {
           const dirName = list[i].dirName;
-          if (res.status === 'fulfilled') {
-            versionsMap[dirName] = res.value;
-          } else {
-            failed.add(dirName);
-          }
+          if (res.status === 'fulfilled') plansMap[dirName] = res.value;
+          else failed.add(dirName);
         });
 
-        // Korábban itt páciensenként CSAK a legfrissebb verzió terv.json-ja
-        // töltődött be, a megjelenített névhez. A verziónkénti végösszeghez
-        // (backlog-11) minden verzió kell -- ugyanabban az egy körben, és a
-        // név is ebből a batch-ből olvasható ki, nem kell rá külön hívás.
-        const refs = list.flatMap((p) =>
-          (versionsMap[p.dirName] ?? []).map((v) => ({
-            patientDir: p.dirName,
+        const planRefs = list.flatMap((p) =>
+          (plansMap[p.dirName] ?? []).map((plan) => ({ patientDir: p.dirName, planDir: plan.dirName })),
+        );
+        const versionsResults = await Promise.allSettled(
+          planRefs.map((ref) => storage.listVersions(ref.patientDir, ref.planDir)),
+        );
+        const versionsMap: Record<string, PlanVersion[]> = {};
+        versionsResults.forEach((res, i) => {
+          const ref = planRefs[i];
+          if (res.status === 'fulfilled') versionsMap[planKey(ref.patientDir, ref.planDir)] = res.value;
+          else failed.add(ref.patientDir);
+        });
+
+        // Minden verzió terv.json-ja kell -- a verzió-végösszeghez
+        // (backlog-11) ÉS a terv-lánc élő címke-javaslatához (D29)
+        // egyaránt, ugyanabban az egy körben.
+        const versionRefs: VersionRef[] = planRefs.flatMap((ref) =>
+          (versionsMap[planKey(ref.patientDir, ref.planDir)] ?? []).map((v) => ({
+            patientDir: ref.patientDir,
+            planDir: ref.planDir,
             versionDir: v.dirName,
           })),
         );
-        const planResults = await Promise.allSettled(refs.map((ref) => storage.loadPlan(ref)));
+        const planResults = await Promise.allSettled(versionRefs.map((ref) => storage.loadPlan(ref)));
 
         const totalsMap: Record<string, VersionTotal> = {};
-        const plansByKey: Record<string, Plan> = {};
+        const plansByVersionMap: Record<string, Plan> = {};
         planResults.forEach((res, i) => {
-          const ref = refs[i];
+          const ref = versionRefs[i];
           if (res.status === 'fulfilled') {
-            plansByKey[versionKey(ref)] = res.value;
+            plansByVersionMap[versionKey(ref)] = res.value;
             // A mentett osszesitok az igazság, nincs újraszámolás -- az
             // eltérés-őr (osszesitokElter) ott fut, ahol ténylegesen
             // kockázatos: szerkesztőbe töltéskor (AppState.tsx).
@@ -159,23 +197,11 @@ export default function PlanHistoryPage() {
           }
         });
 
-        // A megjelenített név a terv.json paciens.nev mezőjéből jön -- a
-        // mappanév-visszafejtés (parsePatientDirName) csak best-effort.
-        const namesMap: Record<string, string> = {};
-        list.forEach((p) => {
-          const versions = versionsMap[p.dirName] ?? [];
-          const latest = versions[versions.length - 1];
-          const plan = latest
-            ? plansByKey[versionKey({ patientDir: p.dirName, versionDir: latest.dirName })]
-            : undefined;
-          namesMap[p.dirName] =
-            plan?.paciens.nev ?? (`${p.vezeteknev} ${p.keresztnev}`.trim() || p.dirName);
-        });
-
         if (cancelled) return;
         setPatients(list);
-        setVersionsByPatient(versionsMap);
-        setNamesByPatient(namesMap);
+        setPlansByPatient(plansMap);
+        setVersionsByPlan(versionsMap);
+        setPlansByVersion(plansByVersionMap);
         setTotalsByVersion(totalsMap);
         setUnreadable(failed);
       } catch (err) {
@@ -194,21 +220,20 @@ export default function PlanHistoryPage() {
   }, [storage]);
 
   const filtered = patients
-    .filter((p) => !q.trim() || norm(namesByPatient[p.dirName] ?? '').includes(norm(q)))
-    .sort((a, b) => (namesByPatient[a.dirName] ?? '').localeCompare(namesByPatient[b.dirName] ?? ''));
+    .filter((p) => !q.trim() || norm(p.nev).includes(norm(q)))
+    .sort((a, b) => a.nev.localeCompare(b.nev));
 
-  async function openVersion(patientDir: string, versionDir: string) {
+  async function openVersion(ref: VersionRef) {
     setActionError(null);
     try {
-      const plan = await storage.loadPlan({ patientDir, versionDir });
+      const plan = await storage.loadPlan(ref);
       loadPlanIntoDraft(plan);
       navigate('/terv');
     } catch (err) {
       // P1-2: korábban nem volt catch -- hibázó betöltésre a gomb némán
       // nem csinált semmit, a doki nem tudta, próbálkozzon-e újra.
       setActionError({
-        patientDir,
-        versionDir,
+        ...ref,
         message:
           err instanceof Error
             ? `A terv megnyitása nem sikerült: ${err.message}`
@@ -222,16 +247,15 @@ export default function PlanHistoryPage() {
   // összesítőt tartja készenlétben). D6: a Páciens adatlapra navigál, nem
   // egyenesen a szerkesztőbe -- ez maga is jelzi, hogy ez egy ÚJ terv, nem
   // egy meglévő verzió folytatása.
-  async function copyVersion(patientDir: string, versionDir: string) {
+  async function copyVersion(ref: VersionRef) {
     setActionError(null);
     try {
-      const plan = await storage.loadPlan({ patientDir, versionDir });
+      const plan = await storage.loadPlan(ref);
       copyPlanIntoDraft(planMasolatKent(plan, settings, todayIso()));
       navigate('/paciens');
     } catch (err) {
       setActionError({
-        patientDir,
-        versionDir,
+        ...ref,
         message:
           err instanceof Error
             ? `A másolás nem sikerült: ${err.message}`
@@ -242,16 +266,18 @@ export default function PlanHistoryPage() {
 
   // backlog-17: "Új terv" (páciensszintű) -- mindig a
   // doki által látott LEGFRISSEBB verzió `paciens` adatát viszi tovább,
-  // sorok nélkül.
-  async function ujTervPaciensAdataival(patientDir: string, versionDir: string) {
+  // sorok nélkül. A hiba a páciens-fejlécnél jelenik meg, nem egy konkrét
+  // sornál -- a forrás csak a legfrissebb adat forrása, nem a cél.
+  async function ujTervPaciensAdataival(ref: VersionRef) {
     setActionError(null);
     try {
-      const plan = await storage.loadPlan({ patientDir, versionDir });
+      const plan = await storage.loadPlan(ref);
       copyPlanIntoDraft(planUjPaciensselTervhez(plan, settings, priceList));
       navigate('/paciens');
     } catch (err) {
       setActionError({
-        patientDir,
+        patientDir: ref.patientDir,
+        planDir: null,
         versionDir: null,
         message:
           err instanceof Error
@@ -272,18 +298,15 @@ export default function PlanHistoryPage() {
   function dispatchPending(action: PendingAction): Promise<void> {
     switch (action.kind) {
       case 'open':
-        return openVersion(action.patientDir, action.versionDir);
+        return openVersion(action);
       case 'copy':
-        return copyVersion(action.patientDir, action.versionDir);
+        return copyVersion(action);
       case 'ujTerv':
-        return ujTervPaciensAdataival(action.patientDir, action.versionDir);
+        return ujTervPaciensAdataival(action);
     }
   }
 
-  const pendingSpecs: Record<
-    PendingKind,
-    { description: string; actionLabel: string }
-  > = {
+  const pendingSpecs: Record<PendingKind, { description: string; actionLabel: string }> = {
     open: {
       description:
         'Van mentetlen piszkozatod. Ha ebből a verzióból újat készítesz, a jelenlegi ' +
@@ -307,31 +330,76 @@ export default function PlanHistoryPage() {
     },
   };
 
-  async function downloadVersion(patientDir: string, versionDir: string, tervId: string) {
+  async function downloadVersion(ref: VersionRef, tervId: string) {
     setActionError(null);
     try {
-      const bytes = await loadPlanPdf({ patientDir, versionDir });
+      const bytes = await loadPlanPdf(ref);
       if (!bytes) {
-        setActionError({ patientDir, versionDir, message: 'Ehhez a verzióhoz nincs mentett PDF.' });
+        setActionError({ ...ref, message: 'Ehhez a verzióhoz nincs mentett PDF.' });
         return;
       }
       const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `kezelesi-terv-${tervId}-${versionDir}.pdf`;
+      a.download = `kezelesi-terv-${tervId}-${ref.versionDir}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
       setActionError({
-        patientDir,
-        versionDir,
+        ...ref,
         message:
           err instanceof Error
             ? `A letöltés nem sikerült: ${err.message}`
             : 'A letöltés váratlanul meghiúsult.',
       });
     }
+  }
+
+  function startEditLabel(patientDir: string, planDir: string, current: string) {
+    setLabelError(null);
+    setEditingLabel({ patientDir, planDir });
+    setLabelDraft(current);
+  }
+
+  function cancelEditLabel() {
+    setEditingLabel(null);
+  }
+
+  async function saveLabel(patientDir: string, planDir: string, value: string) {
+    setLabelError(null);
+    try {
+      await storage.savePlanLabel(patientDir, planDir, value);
+      const trimmed = value.trim();
+      setPlansByPatient((prev) => ({
+        ...prev,
+        [patientDir]: (prev[patientDir] ?? []).map((plan) =>
+          plan.dirName === planDir ? { ...plan, tervCim: trimmed || null } : plan,
+        ),
+      }));
+      setEditingLabel(null);
+    } catch (err) {
+      setLabelError({
+        patientDir,
+        planDir,
+        message:
+          err instanceof Error
+            ? `A címke mentése nem sikerült: ${err.message}`
+            : 'A címke mentése váratlanul meghiúsult.',
+      });
+    }
+  }
+
+  /** A ténylegesen megjelenített címke -- kézi vagy élő javaslat (D29). */
+  function displayedLabel(patientDir: string, plan: PlanFolder): string {
+    const versions = versionsByPlan[planKey(patientDir, plan.dirName)] ?? [];
+    const latest = versions[versions.length - 1];
+    const latestPlan = latest
+      ? plansByVersion[versionKey({ patientDir, planDir: plan.dirName, versionDir: latest.dirName })]
+      : undefined;
+    return latestPlan
+      ? megjelenitettTervCim(plan.tervCim, latestPlan, priceList)
+      : (plan.tervCim ?? ALAPERTELMEZETT_TERV_CIM);
   }
 
   return (
@@ -384,153 +452,280 @@ export default function PlanHistoryPage() {
       )}
 
       {filtered.map((p, pi) => {
-        const versions = versionsByPatient[p.dirName] ?? [];
-        const latest = versions[versions.length - 1];
+        const plans = plansByPatient[p.dirName] ?? [];
+        // 1 (vagy 0) terv-lánc: nincs plusz kattintás, mindig kibontva (a
+        // tipikus eset). 2+ lánc: alapból csukva, kattintásra nyílik.
+        const expanded = plans.length > 1 ? (expandedOverride[p.dirName] ?? false) : true;
+        const latestOverall = latestVersionAcrossPlans(
+          plans,
+          (planDir) => versionsByPlan[planKey(p.dirName, planDir)] ?? [],
+        );
+        const latestOverallTotal = latestOverall
+          ? totalsByVersion[
+              versionKey({
+                patientDir: p.dirName,
+                planDir: latestOverall.planDir,
+                versionDir: latestOverall.version.dirName,
+              })
+            ]
+          : undefined;
         // `data-patient` a páciensblokk stabil horgonya -- a névfejléc DOM-beli
         // mélysége az akciógomb kiemelése óta nem alkalmas erre (lásd
         // PlanHistoryPage.test.tsx).
         return (
-        <Box key={p.dirName} mb="5" data-patient={p.dirName}>
-          {/* Az akciógomb a névfejléc MELLETT van, nem benne: a páciensnév
-              címke, a gomb akció -- egy Text-en belül a kettő összeolvad.
-              Balra zárva, közvetlenül a név után: a rövid "Új terv" felirat
-              nem mondja ki, hogy a páciensadatot átviszi -- ezt az
-              elhelyezés hordozza. Accent (nem szürke), a páciensnév
-              `t.brand` színével egy családban. */}
-          <Flex align="baseline" gap="3" mb="2">
-            <Text as="div" size="3" weight="bold" style={{ color: t.brand }}>
-              {namesByPatient[p.dirName] ?? p.dirName}
-              {unreadable.has(p.dirName) && (
-                <Text size="1" weight="regular" ml="2" style={{ color: t.warn }}>
-                  ⚠ néhány verziója nem olvasható
-                </Text>
-              )}
-            </Text>
-            {latest && (
-              <Button
-                size="1"
-                variant="soft"
-                onClick={() =>
-                  runOrConfirm({ kind: 'ujTerv', patientDir: p.dirName, versionDir: latest.dirName })
-                }
-              >
-                Új terv
-              </Button>
-            )}
-          </Flex>
-          {actionError?.patientDir === p.dirName && actionError.versionDir === null && (
-            <Callout.Root color="red" size="1" mb="2">
-              <Callout.Icon>
-                <CrossCircledIcon />
-              </Callout.Icon>
-              <Callout.Text>{actionError.message}</Callout.Text>
-            </Callout.Root>
-          )}
-
-          {versions
-            .slice()
-            .reverse()
-            .map((v, vi) => {
-              const total = totalsByVersion[
-                versionKey({ patientDir: p.dirName, versionDir: v.dirName })
-              ];
-              return (
-              <Box key={v.dirName}>
-                {vi > 0 && <Separator size="4" />}
-                <Flex justify="between" align="center" py="2">
-                  <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                    v{v.verzio} · {v.isoDate}
+          <Box key={p.dirName} mb="5" data-patient={p.dirName}>
+            {/* Az akciógomb a névfejléc MELLETT van, nem benne: a páciensnév
+                címke, a gomb akció -- egy Text-en belül a kettő összeolvad.
+                Balra zárva, közvetlenül a név után: a rövid "Új terv" felirat
+                nem mondja ki, hogy a páciensadatot átviszi -- ezt az
+                elhelyezés hordozza. Accent (nem szürke), a páciensnév
+                `t.brand` színével egy családban. */}
+            <Flex align="baseline" gap="3" mb="2" wrap="wrap">
+              <Text as="div" size="3" weight="bold" style={{ color: t.brand }}>
+                {p.nev}
+                {unreadable.has(p.dirName) && (
+                  <Text size="1" weight="regular" ml="2" style={{ color: t.warn }}>
+                    ⚠ néhány verziója nem olvasható
                   </Text>
-                  <Flex align="center" gap="4">
-                    {/* A verzió végösszege (osszesitok.fizetendo) a saját
-                        terv.json-jából, a saját pénznemében -- külön, jobbra
-                        igazított elem, nem a bal oldali szöveghez fűzve
-                        (docs/07-felulet-rendszer.md: pénzérték jobbra,
-                        tabular-nums). Olvashatatlan verziónál "—". */}
-                    <Text
-                      size="2"
-                      weight="medium"
-                      style={{
-                        fontVariantNumeric: 'tabular-nums',
-                        textAlign: 'right',
-                        minWidth: '7rem',
-                      }}
-                    >
-                      {formatMoney(total?.fizetendo ?? null, total?.penznem ?? 'HUF')}
-                    </Text>
-                    <DropdownMenu.Root>
-                      <DropdownMenu.Trigger>
-                        {/* Az aria-label verziószámmal képzett: egy
-                            páciensblokkban több sor is van, csupasz "További
-                            műveletek"-kel a képernyőolvasó (és a teszt) nem
-                            tudná megkülönböztetni őket. */}
-                        <IconButton
-                          size="1"
-                          variant="soft"
-                          color="gray"
-                          aria-label={`v${v.verzio} — további műveletek`}
-                        >
-                          <DotsHorizontalIcon />
-                        </IconButton>
-                      </DropdownMenu.Trigger>
-                      {/* onCloseAutoFocus: a menü záráskor visszavenné a
-                          fókuszt a triggerre, és ezzel elhalászná azt a
-                          piszkozat-őr AlertDialog-ja elől, ami ugyanabban a
-                          tickben nyílik (runOrConfirm). Ne cseréld
-                          setTimeout-os késleltetésre. */}
-                      <DropdownMenu.Content
-                        size="1"
-                        onCloseAutoFocus={(e) => e.preventDefault()}
-                      >
-                        {/* Az elválasztó a csak-olvasó műveletet választja el a
-                            terv-létrehozóktól; azon belül a gyakoribb (Új
-                            verzió) áll elöl. */}
-                        <DropdownMenu.Item
-                          onSelect={() => downloadVersion(p.dirName, v.dirName, p.patientId)}
-                        >
-                          Letöltés
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Separator />
-                        <DropdownMenu.Item
-                          onSelect={() =>
-                            runOrConfirm({
-                              kind: 'open',
-                              patientDir: p.dirName,
-                              versionDir: v.dirName,
-                            })
-                          }
-                        >
-                          Új verzió
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item
-                          onSelect={() =>
-                            runOrConfirm({
-                              kind: 'copy',
-                              patientDir: p.dirName,
-                              versionDir: v.dirName,
-                            })
-                          }
-                        >
-                          Másolás új tervbe
-                        </DropdownMenu.Item>
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Root>
-                  </Flex>
-                </Flex>
-                {actionError?.patientDir === p.dirName && actionError.versionDir === v.dirName && (
-                  <Callout.Root color="red" size="1" mb="2">
-                    <Callout.Icon>
-                      <CrossCircledIcon />
-                    </Callout.Icon>
-                    <Callout.Text>{actionError.message}</Callout.Text>
-                  </Callout.Root>
                 )}
-              </Box>
-              );
-            })}
+              </Text>
+              {plans.length > 1 && (
+                <Button
+                  type="button"
+                  size="1"
+                  variant="ghost"
+                  color="gray"
+                  aria-expanded={expanded}
+                  aria-controls={`patient-plans-${pi}`}
+                  onClick={() =>
+                    setExpandedOverride((prev) => ({ ...prev, [p.dirName]: !expanded }))
+                  }
+                >
+                  {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                  {plans.length} terv
+                </Button>
+              )}
+              {latestOverall && (
+                <Button
+                  size="1"
+                  variant="soft"
+                  onClick={() =>
+                    runOrConfirm({
+                      kind: 'ujTerv',
+                      patientDir: p.dirName,
+                      planDir: latestOverall.planDir,
+                      versionDir: latestOverall.version.dirName,
+                    })
+                  }
+                >
+                  Új terv
+                </Button>
+              )}
+            </Flex>
+            {actionError?.patientDir === p.dirName &&
+              actionError.planDir === null &&
+              actionError.versionDir === null && (
+                <Callout.Root color="red" size="1" mb="2">
+                  <Callout.Icon>
+                    <CrossCircledIcon />
+                  </Callout.Icon>
+                  <Callout.Text>{actionError.message}</Callout.Text>
+                </Callout.Root>
+              )}
 
-          {pi < filtered.length - 1 && <Separator size="4" mt="3" color="gray" />}
-        </Box>
+            {!expanded && (
+              <Text as="p" size="2" color="gray" mt="0" mb="2">
+                {plans.length} terv · legutóbb:{' '}
+                {latestOverall
+                  ? `${latestOverall.version.isoDate} · ${formatMoney(
+                      latestOverallTotal?.fizetendo ?? null,
+                      latestOverallTotal?.penznem ?? 'HUF',
+                    )}`
+                  : '—'}
+              </Text>
+            )}
+
+            {expanded && (
+              <Box id={`patient-plans-${pi}`}>
+                {plans.map((plan, planIdx) => {
+                  const versions = versionsByPlan[planKey(p.dirName, plan.dirName)] ?? [];
+                  const isEditing =
+                    editingLabel?.patientDir === p.dirName && editingLabel.planDir === plan.dirName;
+                  const label = displayedLabel(p.dirName, plan);
+                  return (
+                    <Box key={plan.dirName} mb="3" data-plan={plan.dirName}>
+                      <Flex align="center" gap="1" mb="1">
+                        {isEditing ? (
+                          <>
+                            <TextField.Root
+                              size="1"
+                              autoFocus
+                              value={labelDraft}
+                              onChange={(e) => setLabelDraft(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  void saveLabel(p.dirName, plan.dirName, labelDraft);
+                                } else if (e.key === 'Escape') {
+                                  cancelEditLabel();
+                                }
+                              }}
+                              placeholder="Terv címe"
+                              aria-label="Terv címe"
+                              style={{ maxWidth: 260 }}
+                            />
+                            <IconButton
+                              size="1"
+                              variant="soft"
+                              aria-label="Címke mentése"
+                              onClick={() => void saveLabel(p.dirName, plan.dirName, labelDraft)}
+                            >
+                              <CheckIcon />
+                            </IconButton>
+                            <IconButton
+                              size="1"
+                              variant="soft"
+                              color="gray"
+                              aria-label="Címke szerkesztésének elvetése"
+                              onClick={cancelEditLabel}
+                            >
+                              <Cross2Icon />
+                            </IconButton>
+                          </>
+                        ) : (
+                          <>
+                            <Text size="2" weight="medium">
+                              {label} · {versions[0]?.isoDate ?? '—'}
+                            </Text>
+                            <IconButton
+                              size="1"
+                              variant="ghost"
+                              color="gray"
+                              aria-label="Terv címének szerkesztése"
+                              onClick={() => startEditLabel(p.dirName, plan.dirName, label)}
+                            >
+                              <Pencil1Icon />
+                            </IconButton>
+                          </>
+                        )}
+                      </Flex>
+                      {isEditing && (
+                        <Text as="p" size="1" color="gray" mt="0" mb="2">
+                          Üresen mentve visszaáll az automatikus javaslatra.
+                        </Text>
+                      )}
+                      {labelError?.patientDir === p.dirName && labelError.planDir === plan.dirName && (
+                        <Callout.Root color="red" size="1" mb="2">
+                          <Callout.Icon>
+                            <CrossCircledIcon />
+                          </Callout.Icon>
+                          <Callout.Text>{labelError.message}</Callout.Text>
+                        </Callout.Root>
+                      )}
+
+                      {versions
+                        .slice()
+                        .reverse()
+                        .map((v, vi) => {
+                          const ref: VersionRef = {
+                            patientDir: p.dirName,
+                            planDir: plan.dirName,
+                            versionDir: v.dirName,
+                          };
+                          const total = totalsByVersion[versionKey(ref)];
+                          return (
+                            <Box key={v.dirName}>
+                              {vi > 0 && <Separator size="4" />}
+                              <Flex justify="between" align="center" py="2">
+                                <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                  v{v.verzio} · {v.isoDate}
+                                </Text>
+                                <Flex align="center" gap="4">
+                                  {/* A verzió végösszege (osszesitok.fizetendo) a saját
+                                      terv.json-jából, a saját pénznemében -- külön, jobbra
+                                      igazított elem, nem a bal oldali szöveghez fűzve
+                                      (docs/07-felulet-rendszer.md: pénzérték jobbra,
+                                      tabular-nums). Olvashatatlan verziónál "—". */}
+                                  <Text
+                                    size="2"
+                                    weight="medium"
+                                    style={{
+                                      fontVariantNumeric: 'tabular-nums',
+                                      textAlign: 'right',
+                                      minWidth: '7rem',
+                                    }}
+                                  >
+                                    {formatMoney(total?.fizetendo ?? null, total?.penznem ?? 'HUF')}
+                                  </Text>
+                                  <DropdownMenu.Root>
+                                    <DropdownMenu.Trigger>
+                                      {/* Az aria-label a terv-címkével ÉS a verziószámmal
+                                          képzett: csupasz "v1 — további műveletek" két
+                                          különböző terv-lánc esetén (mindkettő saját v1-gyel
+                                          indul, D29) ütközne -- a képernyőolvasó (és a teszt)
+                                          nem tudná megkülönböztetni őket. */}
+                                      <IconButton
+                                        size="1"
+                                        variant="soft"
+                                        color="gray"
+                                        aria-label={`${label} — v${v.verzio} — további műveletek`}
+                                      >
+                                        <DotsHorizontalIcon />
+                                      </IconButton>
+                                    </DropdownMenu.Trigger>
+                                    {/* onCloseAutoFocus: a menü záráskor visszavenné a
+                                        fókuszt a triggerre, és ezzel elhalászná azt a
+                                        piszkozat-őr AlertDialog-ja elől, ami ugyanabban a
+                                        tickben nyílik (runOrConfirm). Ne cseréld
+                                        setTimeout-os késleltetésre. */}
+                                    <DropdownMenu.Content
+                                      size="1"
+                                      onCloseAutoFocus={(e) => e.preventDefault()}
+                                    >
+                                      {/* Az elválasztó a csak-olvasó műveletet választja el a
+                                          terv-létrehozóktól; azon belül a gyakoribb (Új
+                                          verzió) áll elöl. */}
+                                      <DropdownMenu.Item
+                                        onSelect={() => downloadVersion(ref, plan.tervId)}
+                                      >
+                                        Letöltés
+                                      </DropdownMenu.Item>
+                                      <DropdownMenu.Separator />
+                                      <DropdownMenu.Item
+                                        onSelect={() => runOrConfirm({ kind: 'open', ...ref })}
+                                      >
+                                        Új verzió
+                                      </DropdownMenu.Item>
+                                      <DropdownMenu.Item
+                                        onSelect={() => runOrConfirm({ kind: 'copy', ...ref })}
+                                      >
+                                        Másolás új tervbe
+                                      </DropdownMenu.Item>
+                                    </DropdownMenu.Content>
+                                  </DropdownMenu.Root>
+                                </Flex>
+                              </Flex>
+                              {actionError?.patientDir === p.dirName &&
+                                actionError.planDir === plan.dirName &&
+                                actionError.versionDir === v.dirName && (
+                                  <Callout.Root color="red" size="1" mb="2">
+                                    <Callout.Icon>
+                                      <CrossCircledIcon />
+                                    </Callout.Icon>
+                                    <Callout.Text>{actionError.message}</Callout.Text>
+                                  </Callout.Root>
+                                )}
+                            </Box>
+                          );
+                        })}
+                      {planIdx < plans.length - 1 && <Separator size="4" mt="2" mb="1" />}
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+
+            {pi < filtered.length - 1 && <Separator size="4" mt="3" color="gray" />}
+          </Box>
         );
       })}
 

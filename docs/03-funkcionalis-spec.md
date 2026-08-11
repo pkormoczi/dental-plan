@@ -305,10 +305,13 @@ szerkesztésre vonatkozik — egy visszatérő páciens régi, `VEGLEGES` tervé
 üres piszkozatot (ami megegyezik egy friss tervvel) nem perzisztálja, csak
 az első tartalmi módosítás után kezd írni. A visszaállítás csendes és
 memóriabeli — a Kezdőlap „Piszkozat folytatása” kártyája a belépési pont
-hozzá; a Kezdőlap „Új terv indítása” és a „Korábbi tervek” **mindhárom**
-terv-létrehozó akciója („Új verzió”, „Másolás új tervbe”, „Új terv”)
-megerősítést kér, mielőtt felülírná — egyik út sem kivétel. A megerősített
-felülírás pillanatában a perzisztált piszkozat **azonnal** törlődik, nem a
+hozzá; a Kezdőlap „Új terv indítása” gombja maga feltétel nélkül navigál
+(a köztes `/uj-terv` választóra, D29 — lásd § Korábbi tervek), de MINDEN
+tényleges terv-létrehozó akció megerősítést kér, mielőtt felülírná: az
+`/uj-terv` mindkét ága („Meglévő páciens keresése…”, „Vadonatúj páciens”)
+és a „Korábbi tervek” mindhárom akciója („Új verzió”, „Másolás új
+tervbe”, „Új terv”) — egyik sem kivétel. A megerősített felülírás
+pillanatában a perzisztált piszkozat **azonnal** törlődik, nem a
 következő írási triggerre vár.
 
 Ha az automatikus mentés elhasal (pl. localStorage-kvóta), a hiba a Terv
@@ -391,7 +394,22 @@ seed-feltöltés és a véglegesítés-őr mind ezt hívja.
 ## 5. Korábbi tervek
 
 A `paciensek/` fa beolvasása, kereshető listával. Páciensnév szerint
-csoportosítva, alatta a verziók dátummal és **végösszeggel**.
+csoportosítva, alatta a terv-láncok (D29), azon belül a verziók dátummal
+és **végösszeggel**.
+
+Egy páciensnek **1 terv-lánca** esetén (a tipikus eset) a blokk alapból
+kibontva jelenik meg — nincs plusz kattintás. **2+ lánc** esetén alapból
+csukva nyílik (csak a páciensnév, a láncok száma és a legutóbb módosított
+lánc legfrissebb dátuma/összege látszik), kattintásra bomlik ki. A
+verzió-szint egy kibontott terven belül mindig látszik, nincs harmadik
+szintű összecsukás.
+
+Minden terv-lánc fejlécén egy **címke** áll: `<tervCim> · <a lánc
+legkorábbi verziójának dátuma>`. A címke a doki által bármikor szabadon
+átírható (`terv-cimke.json`, `docs/02-domain-modell.md` § Páciens- és
+terv-mappa) — egy már véglegesített terv címkéjének átírása NEM hoz létre
+új verziót. Amíg a doki nem ír át semmit, a mező egy élő auto-javaslatot
+mutat (a terv domináns kategóriájának neve, `javasoltTervCim()`).
 
 A verziósoron megjelenő összeg a verzió saját `terv.json`-jából jött
 `osszesitok.fizetendo` (a ténylegesen fizetendő, nem a listaáras
@@ -409,26 +427,28 @@ a betöltés. Egy visszatérő pácienshez ne kelljen újragépelni 12 tételt.
 Betöltés a `terv.json`-ból. Ha csak PDF van (kézzel átmozgatott fájl),
 a beágyazott JSON-ból is menjen.
 
-#### A három terv-létrehozási út és a gombfeliratok rendszere
+#### A négy terv-létrehozási út és a gombfeliratok rendszere
 
-A képernyőről három úton indul terv, és a köztük lévő különbség nem
-kényelmi kérdés, hanem az, hogy az eredmény **melyik tervláncba** kerül:
+A képernyőkről négy úton indul terv, és a köztük lévő különbség nem
+kényelmi kérdés, hanem az, hogy az eredmény **melyik terv-láncba (és
+melyik páciens-mappába, D29)** kerül:
 
 | Gomb | Hol | Mit visz át | Mentéskor |
 |---|---|---|---|
-| **„Új verzió"** | verziósor `⋯` menüjében | mindent, a `tervId`-t is | ugyanabba a páciensmappába `<ma>_v<n+1>` (D4) |
-| **„Másolás új tervbe"** | verziósor `⋯` menüjében | mindent az azonosító/állapot/dátum kivételével | **új** páciensmappa, `<ma>_v1` (D26) |
-| **„Új terv"** | a páciensnév mellett, balra | csak a `paciens` blokkot | **új** páciensmappa, `<ma>_v1` (D26) |
+| **„Új verzió"** | verziósor `⋯` menüjében | mindent, a `tervId`-t is | ugyanabba a terv-mappába `<ma>_v<n+1>` (D4) |
+| **„Másolás új tervbe"** | verziósor `⋯` menüjében | mindent az azonosító/állapot/dátum kivételével | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
+| **„Új terv"** | a páciensnév mellett, balra | csak a `paciens` blokkot | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
+| **„Új terv indítása"** | Kezdőlap, az `/uj-terv` köztes választón át (lásd „Új terv indítása — a köztes páciens-választó" lentebb) | „Meglévő páciens keresése": a kiválasztott páciens `paciens` blokkja; „Vadonatúj páciens": semmi | **új** terv-mappa — a kiválasztott MEGLÉVŐ vagy egy vadonatúj páciens-mappában, `<ma>_v1` (D26/D29) |
 
 Ebből következik a feliratok kötelező rendszere: **minden új tervláncot
 indító akció felirata tartalmazza az „új terv" kifejezést („Új terv",
-„Másolás új tervbe"), és egyedül a meglévő láncot folytató akció
-feliratában szerepel a „verzió" szó („Új verzió").** Egy „Megnyitás…"
-típusú, a mechanizmust (és nem az eredményt) megnevező felirat elrejtené
-azt az egyetlen különbséget, amit a dokinak kattintás előtt látnia kell —
-lásd `docs/07-felulet-rendszer.md` („a gombfelirat azt mondja, mi
-történik"). Ugyanezt mondja ki egy rövid, szürke magyarázó sor a lista
-tetején, a kereső alatt.
+„Másolás új tervbe", „Új terv indítása", „Vadonatúj páciens"), és egyedül
+a meglévő láncot folytató akció feliratában szerepel a „verzió" szó („Új
+verzió").** Egy „Megnyitás…" típusú, a mechanizmust (és nem az eredményt)
+megnevező felirat elrejtené azt az egyetlen különbséget, amit a dokinak
+kattintás előtt látnia kell — lásd `docs/07-felulet-rendszer.md` („a
+gombfelirat azt mondja, mi történik"). Ugyanezt mondja ki egy rövid,
+szürke magyarázó sor a lista tetején, a kereső alatt.
 
 **A verziósoron nincs látható akciógomb** — mind a három verzió-szintű
 művelet a sor végi `⋯` menüben van, ebben a sorrendben: `Letöltés`,
@@ -437,9 +457,11 @@ elválasztó, `Új verzió`, `Másolás új tervbe`. Elöl a csak-olvasó művel
 hosszú feliratú gomb zsúfolt és összetéveszthető volt; a menüben egymás
 ALATT állnak, ezért rövid feliratot is elbírnak.
 
-A `⋯` `IconButton` `aria-label`-jében benne van a verziószám (`v2 —
-további műveletek`): egy páciensblokkban több sor is van, csupasz „További
-műveletek" felirattal megkülönböztethetetlenek lennének.
+A `⋯` `IconButton` `aria-label`-jében benne van a terv címkéje ÉS a
+verziószám (`Fogpótlás — v2 — további műveletek`): egy páciensblokkban
+több terv-lánc is lehet (D29), és mindegyik saját `v1`-gyel indul — a
+puszta verziószám önmagában nem lenne egyedi, sem a szemnek, sem a
+képernyőolvasónak.
 
 A páciensszintű `Új terv` az egyetlen látható gomb, **balra, közvetlenül
 a páciensnév mellett** — de a névfejlécen KÍVÜL, mert a páciensnév címke,
@@ -467,53 +489,86 @@ eltérése) van fenntartva — ugyanaz a szín itt félrevezető lenne.
 
 ### Terv másolása új tervként
 
-Két belépési pont, más-más adatkörrel — a gombok elhelyezése ezt a
-különbséget követi, nem kényszeríti egy szintre:
+Két transzformáció, három belépési ponton — a gombok/útvonalak elhelyezése
+az adatkör-különbséget követi, nem kényszeríti egy szintre:
 
-- **„Új terv"** — a páciensnév mellett, balra, páciensszinten (nem egy
-  konkrét verzióhoz kötve). Mindig a doki által
-  látott LEGFRISSEBB verzió `paciens` adatát viszi tovább. Minden más mező
-  (`nyelv`, `penznem`, `orvos`, `fazisok`, `elolegSzazalek`,
-  `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss alapértéke — pontosan
-  úgy, mintha a doki a Kezdőlap „Új terv indítása" gombját nyomta volna
-  meg, csak a páciens mezők már ki vannak töltve.
-- **„Másolás új tervbe"** — minden verzió-sor `⋯` menüjében, mert
+- **`planUjPaciensselTervhez` — csak a páciensadat.** Két belépési pontja
+  van, ugyanazzal az eredménnyel:
+  - **„Új terv"** — a Korábbi tervek listán, a páciensnév mellett balra,
+    páciensszinten (nem egy konkrét verzióhoz kötve). A doki által látott
+    LEGUTÓBB MÓDOSÍTOTT terv-lánc legfrissebb verziójának `paciens`
+    adatát viszi tovább (`latestVersionAcrossPlans()`,
+    `app/src/domain/planFolders.ts`).
+  - **„Meglévő páciens keresése…"** — a Kezdőlap „Új terv indítása"
+    gombja utáni `/uj-terv` köztes választón (lásd lentebb), a kiválasztott
+    páciens ugyanígy meghatározott legfrissebb verziójának `paciens`
+    adatával.
+
+  Mindkét esetben minden más mező (`nyelv`, `penznem`, `orvos`, `fazisok`,
+  `elolegSzazalek`, `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss
+  alapértéke — pontosan úgy, mintha a doki egy „Vadonatúj páciens" tervet
+  indítana, csak a páciens mezők (és a `paciensId`) már ki vannak töltve.
+- **`planMasolatKent` — minden átjön.** Egyetlen belépési pontja a
+  **„Másolás új tervbe"**, minden verzió-sor `⋯` menüjében, mert
   konkrétan AZT a verziót másolja, sorokkal együtt (egy régebbi verzió
   sorai eltérhetnek a legfrissebbtől). A
-  `paciens`, `nyelv`, `penznem`, `orvos`, `fazisok`, `elolegSzazalek`,
-  `kedvezmenyOsszeg` és az `arlistaVerzio` is változatlanul átjön — ugyanaz
-  a snapshot-elv, mint egy meglévő terv új verzióra nyitásakor. Ez a
-  valódi A/B alku-változat használati eset: a doki utána csak azt
-  módosítja, ami eltér a két ajánlat között, nem gépeli be újra az
-  egészet.
+  `paciens`, `paciensId`, `nyelv`, `penznem`, `orvos`, `fazisok`,
+  `elolegSzazalek`, `kedvezmenyOsszeg` és az `arlistaVerzio` is
+  változatlanul átjön — ugyanaz a snapshot-elv, mint egy meglévő terv új
+  verzióra nyitásakor. Ez a valódi A/B alku-változat használati eset: a
+  doki utána csak azt módosítja, ami eltér a két ajánlat között, nem
+  gépeli be újra az egészet.
 
-Mindkét út a meglévő `frissDatummal` (D22) hívásával bélyegzi a
+Mindhárom út a meglévő `frissDatummal` (D22) hívásával bélyegzi a
 `keltezes`/`ervenyesIg`-et a mai napra, és a másolat `osszesitok`-ja a
 saját (átvett) soraiból újraszámolva indul, nem a forrás mentett
 értékének másolata (D26) — a forrás `osszesitok`-ja az EREDETI, már
 mentett terv fájl-igazsága (D7), nem a most keletkező piszkozaté. A
-`tervId`/`verzio`/`statusz` mindkét esetben nullázódik/`PISZKOZAT`-ra áll
-— a másolat sosem csúszhat be verzióként egy meglévő láncba (D4).
+`tervId`/`verzio`/`statusz` mindhárom esetben nullázódik/`PISZKOZAT`-ra
+áll — a másolat sosem csúszhat be verzióként egy meglévő láncba (D4).
 
-Mindkét gomb a **Páciens adatlapra** navigál, nem egyenesen a
+Mindhárom út a **Páciens adatlapra** navigál, nem egyenesen a
 szerkesztőbe — ugyanúgy, mint egy teljesen új terv indításakor. A doki itt
 látja és pontosíthatja az átvett páciensadatot (pl. időközbeni
 címváltozás), és ez a tranzitív lépés önmagában is jelzi, hogy ez egy ÚJ
 terv indítása, nem egy meglévő verzió folytatása — nincs hozzá külön,
 tisztázó megerősítő dialógus, csak a meglévő piszkozat-felülírás-őr fut le
-mindkettőnél, ha van mentetlen munka. A megkülönböztetés másik fele a
-feliratokban van (lásd § Korábbi tervek, „A három terv-létrehozási út"):
-mindkettő tartalmazza az „új terv" kifejezést, a láncot folytató akció
+mindegyiknél, ha van mentetlen munka. A megkülönböztetés másik fele a
+feliratokban van (lásd § Korábbi tervek, „A négy terv-létrehozási út"):
+mindegyik tartalmazza az „új terv" kifejezést, a láncot folytató akció
 pedig az egyetlen, amiben a „verzió" szó szerepel.
 
 A másolat rögtön MENTETLEN piszkozatnak számít (a „Piszkozat folytatása"
 kártya azonnal megjelenik a Kezdőlapon), mert még soha nincs elmentve a
 saját `tervId` alatt — más, mint egy `loadPlanIntoDraft`-tal betöltött,
-már mentett terv. Mentéskor az új, üres `tervId` miatt a
-`storage.savePlan` automatikusan ÚJ páciensmappát nyit — nincs látható
-forrás-hivatkozás a másolat és az eredeti között, a doki a „Korábbi
-tervek" listában megjelenő névismétlésről ismeri fel, hogy összetartoznak
-(lásd `docs/02-domain-modell.md` § Mappanév szabályok).
+már mentett terv. Mentéskor az átvitt `paciensId` miatt (D29) a
+`storage.savePlan` a MEGLÉVŐ páciens-mappában nyit új terv-mappát — nem
+egy másikban. A „Vadonatúj páciens" ág (lásd lentebb) ettől eltérően:
+üres `paciensId`-vel indul, tehát ott új páciens-mappa nyílik.
+
+### „Új terv indítása" — a köztes páciens-választó (D29)
+
+A Kezdőlap „Új terv indítása" gombja nem egyenesen a Páciens adatlapra
+navigál, hanem egy köztes kereső/választó lépésre (`/uj-terv`,
+`app/src/pages/NewPlanPage.tsx`) — a teljesen friss, Home-ról induló útnál
+a doki még nem gépelt be semmit, tehát itt (és csak itt) van
+kétértelműség, hogy melyik páciensről van szó:
+
+- **„Meglévő páciens keresése…"** — névre kereső mező a páciens-index
+  (`storage.listPatients()`) alapján, ékezetfüggetlenül (`norm()`).
+  Kiválasztás után a `planUjPaciensselTervhez` úton (lásd fent) előtöltve
+  nyílik a Páciens adatlap.
+- **„Vadonatúj páciens"** — a Páciens adatlap üresen nyílik (a mai
+  `resetPlanDraft()` úton), pontosan úgy, mint korábban a Kezdőlap
+  gombja közvetlenül.
+
+A piszkozat-felülírás-őr innentől ezen a köztes lépésen fut le (mindkét
+ágon), NEM a Kezdőlap gombján — a Kezdőlap gombja feltétel nélkül
+navigál ide, mert a piszkozat itt még nem veszik el.
+
+A Korábbi tervek saját „Új terv"/„Másolás új tervbe" gombjai (lásd fent)
+**nem** ide navigálnak — azoknál a célpáciens már adott a forrás tervből,
+nincs kétértelműség.
 
 ---
 

@@ -7,7 +7,7 @@ import { t } from '../design/tokens';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
-type PendingAction = 'reset' | 'clearAll' | 'newPlan' | null;
+type PendingAction = 'reset' | 'clearAll' | null;
 
 /**
  * Csak a Home "Piszkozat folytatása" kártyájának időbélyege -- nem a
@@ -28,7 +28,6 @@ export default function Home() {
   const { resetDemoData, clearAll } = useStorage();
   const {
     plan,
-    resetPlanDraft,
     reloadFromStorage,
     vanMentetlenPiszkozat,
     piszkozatMentve,
@@ -72,12 +71,6 @@ export default function Home() {
     }
   }
 
-  function startNewPlan() {
-    setPendingAction(null);
-    resetPlanDraft();
-    navigate('/paciens');
-  }
-
   async function handleDiscardDraft() {
     setError(null);
     try {
@@ -110,18 +103,6 @@ export default function Home() {
         'gombbal tudsz újra a seedből kiindulni.',
       actionLabel: 'Törlés',
       onConfirm: () => void performClearAll(),
-    },
-    newPlan: {
-      title: 'Piszkozat elvetése',
-      description:
-        'Van mentetlen piszkozatod. Ha új tervet indítasz, ez elvész -- nem került ' +
-        'fájlba, csak ebben a böngészőben volt meg. Biztosan új tervvel kezded?',
-      // Szándékosan NEM ugyanaz a felirat, mint a triggerelő gombé ("Új
-      // terv indítása") -- amíg a dialógus nyitva van, mindkét gomb a
-      // DOM-ban marad, azonos accessible name-mel megkülönböztethetetlen
-      // lenne (lásd Home.test.tsx).
-      actionLabel: 'Elvetés és új terv',
-      onConfirm: startNewPlan,
     },
   };
   const activeSpec = pendingAction ? confirmSpecs[pendingAction] : null;
@@ -185,11 +166,11 @@ export default function Home() {
           mappába ír majd — itt egyelőre a böngésző tárolja az adatot.
         </Text>
         <Flex gap="3" mt="4" wrap="wrap">
-          <Button
-            onClick={() => (vanMentetlenPiszkozat ? setPendingAction('newPlan') : startNewPlan())}
-          >
-            Új terv indítása
-          </Button>
+          {/* A piszkozat-felülírás-őr innentől az /uj-terv köztes
+              páciens-választón fut le (csak ott dől el ténylegesen, hogy a
+              doki egy meglévő pácienshez vagy egy vadonatújhoz indul-e) --
+              ez a gomb feltétel nélkül odanavigál. */}
+          <Button onClick={() => navigate('/uj-terv')}>Új terv indítása</Button>
           <Button variant="soft" color="gray" onClick={() => navigate('/tervek')}>
             Korábbi tervek
           </Button>

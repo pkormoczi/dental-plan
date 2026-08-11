@@ -98,6 +98,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | `@react-pdf/renderer` esetén **Unicode fontot kell regisztrálni** (pl. Inter, Source Sans, Noto Sans) | A beépített Helvetica nem tartalmazza az `ő`/`ű` karaktereket — ez csak a végleges PDF-en látszik, a HTML előnézeten nem |
 | `#f77409` (a márka narancsa) **soha nem lehet szövegszín** | Fehéren 2,82:1, kis méretben olvashatatlan; csak díszítővonalra való. A fogtérkép saját, kezelés-kategóriánkénti palettát használ (`design/treatmentVisuals.ts`), nem ezt a színt |
 | A `Tetel.leiras` hiányzó német fordítása némán elmarad a nyomtatványról, nem esik vissza magyarra | D27 — ellentétben a `nevSnapshot`-tal: a leírás kiegészítő tartalom, egy vegyes nyelvű nyomtatvány rosszabb lenne, mint a hiánya |
+| A `paciens.json` és a `terv-cimke.json` kizárólag azonosító-/kereső-index és szervezési metaadat — soha nem system of record, sosem írhatja felül a `terv.json` `paciens` blokkját | D29 — a terv tartalmi igazsága marad a pillanatkép (D7); a `paciens.json` `nev`-je minden mentéskor frissül, de ez csak a legutóbb mentett terv `paciens.nev`-jének tükre |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -322,12 +323,35 @@ segédfüggvényei, szintén ne írd újra őket:
   hosszkorlát-figyelmeztetés, mindkét hívó helyen (Árlista admin
   `ItemEditor`, szerkesztő `LineRow`) ugyanaz a predikátum
 
+A páciens-entitás tétel (`docs/02-domain-modell.md` § Páciens- és
+terv-mappa, D29) segédfüggvényei, szintén ne írd újra őket:
+- `javasoltTervCim(plan, priceList)` (`app/src/domain/tervCim.ts`) — a
+  terv-lánc élő címke-javaslata: a legnagyobb ÖSSZEGŰ kategória neve
+  (`totals.ts` `sorOsszeg()`-gel súlyozva), holtversenynél a kisebb
+  `sorrend`-ű kategória — ugyanaz a precedencia-elv, mint a fogtérkép
+  ütközésfeloldásában (D28, `resolveToothVisual`). `megjelenitettTervCim(
+  tervCim, plan, priceList)` (ugyanitt) az EGYETLEN hely, ahol eldől, hogy
+  a kézi (`terv-cimke.json`-beli) vagy az élő javaslat látszik —
+  `PlanHistoryPage.tsx` és a `storage.savePlan()` induló terv-mappanév-
+  javaslata is ezt hívja
+- `buildPlanDirName(tervCim, planId)` / `parsePlanDirName(dirName)`
+  (`app/src/storage/paths.ts`) — a `buildPatientDirName`/
+  `parsePatientDirName` terv-mappa párja; a mappanév a LÉTREHOZÁSKORI
+  címkéből képződik és utána fix marad, a megjelenített címke ettől
+  függetlenül szabadon változik
+- `latestVersionAcrossPlans(plans, versionsFor)`
+  (`app/src/domain/planFolders.ts`) — egy páciens összes terv-láncának
+  összes verziója közül a legfrissebb (`isoDate`, holtversenynél nagyobb
+  `verzio`); a `PlanHistoryPage.tsx` páciensszintű „Új terv” gombja és az
+  `/uj-terv` „Meglévő páciens keresése” előtöltése is ezt hívja, hogy a
+  két hely ne térjen el egymástól
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
 fordítsd le őket kódban: `fazisok`, `sorok`, `tetelek`, `kategoriak`, `nevSnapshot`,
 `listaEgysegar`, `tenylegesEgysegar`, `mennyiseg`, `fogak`, `osszesitok`,
-`arlistaVerzio`, `sablonVerzio`, `aktiv`, `gyakori`, ártípus `FIX`/`SAVOS`, tervstátusz
+`arlistaVerzio`, `sablonVerzio`, `aktiv`, `gyakori`, `paciensId`, `tervCim`, ártípus `FIX`/`SAVOS`, tervstátusz
 `PISZKOZAT`/`VEGLEGES`.
 
 ## A UX kritikus pontja
@@ -372,7 +396,7 @@ Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
-döntések (D1–D28) egy helyen, számozva élnek a
+döntések (D1–D29) egy helyen, számozva élnek a
 `docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
 háttere külön fájlban, `backlog/plans/backlog-<n>-<cim>-terv.md` néven.
 Amikor egy modul vagy komponens "miért így van megcsinálva" kérdés merül
@@ -437,7 +461,7 @@ ugyanabban a körben, nem később:
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D28 döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D29 döntések és indoklásuk; adatvédelmi keret; kockázatok |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, árlista admin, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |
