@@ -259,6 +259,34 @@ describe('DemoStorage', () => {
     expect(versions.map((v) => v.verzio).sort()).toEqual([1, 2, 3]);
   });
 
+  // D31: a `savePriceList`/`saveSettings` a `savePlan`-nal KÖZÖS
+  // `savingChain`-en fut (`enqueue`) -- ma a `localStorage.setItem` szinkron,
+  // tehát ez a lánc önmagában no-op, de a `savePlan` BELSŐ útja (`listPatients`/
+  // `listPlans`/`listVersions`) több valódi `await`-en megy át, mielőtt a
+  // tényleges `setItem`-ekhez érne. Ha a `savePriceList` NEM ugyanabba a
+  // láncba futna, a saját (awaitok nélküli) írása jóval előbb landolna, mint
+  // a vele egy tickben induló `savePlan` írásai -- ez a teszt pont ezt zárja ki.
+  it('a savePriceList egy vele egy tickben induló savePlan MÖGÉ sorosodik, nem előzi meg (D31)', async () => {
+    const order: string[] = [];
+    const originalSetItem = localStorage.setItem.bind(localStorage);
+    vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+      if (key.endsWith('/terv.json')) order.push('terv.json');
+      if (key === 'dp:arlista.json') order.push('arlista.json');
+      originalSetItem(key, value);
+    });
+
+    const plan = makeBlankPlan();
+    const pl = await storage.loadPriceList();
+
+    await Promise.all([
+      storage.savePlan(plan, new Uint8Array([1])),
+      storage.savePriceList({ ...pl, arlistaVerzio: 'utana' }),
+    ]);
+
+    expect(order).toEqual(['terv.json', 'arlista.json']);
+    vi.restoreAllMocks();
+  });
+
   it('surfaces a Hungarian, non-crashing error for corrupted (non-JSON) terv.json (P1-6)', async () => {
     const plan = makeBlankPlan();
     const ref = await storage.savePlan(plan, new Uint8Array());

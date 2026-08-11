@@ -114,15 +114,31 @@ function escapeRegExp(s: string): string {
 
 export class DemoStorage implements PlanStorage {
   /**
-   * P0-1/P1-5: `savePlan` privát futási sorba fűzve -- két egymást gyorsan
-   * követő hívás (pl. dupla kattintás a "Véglegesítés és mentés" gombon)
-   * enélkül ugyanazt a verziószámot számolná ki egymástól függetlenül
-   * (`nextVersionNumber` mindkettőnél a még-nem-írt állapotot olvasná), és a
-   * második némán felülírná az első verziómappáját (D4 sérülne). A lánc
-   * mindig `undefined`-re fut ki, sikeres vagy hibás hívás után is, hogy egy
-   * korábbi hiba ne akassza meg a rákövetkező mentéseket.
+   * D31: minden író (`savePlan`, `savePriceList`, `saveSettings`) EGYETLEN
+   * közös láncba fut be -- két egymást gyorsan követő hívás (pl. dupla
+   * kattintás, vagy egy admin-mezőn gyors egymás utáni szerkesztés)
+   * enélkül egymással versenyezve írna, és fordított sorrendben landolhatna
+   * (`savePlan`-nál ráadásul ugyanazt a verziószámot is kiszámolhatná --
+   * P0-1/P1-5, D4 sérülne). A lánc mindig `undefined`-re fut ki, sikeres
+   * vagy hibás hívás után is, hogy egy korábbi hiba ne akassza meg a
+   * rákövetkező mentéseket. Ma a `localStorage.setItem` szinkron, tehát ez
+   * a lánc önmagában no-op -- a `FileSystemStorage`-váltásnál
+   * (`docs/05-technologia.md`, 2. fázis) válik éles védelemmé, ahol egy
+   * `createWritable`/`write`/`close` írás nem atomi, és két párhuzamos
+   * writable ugyanarra a fájlra csonka tartalmat is okozhatna, nem csak
+   * fordított sorrendet.
    */
   private savingChain: Promise<unknown> = Promise.resolve();
+
+  /** A `savingChain`-re fűz egy írást -- lásd a mező doc-kommentjét. */
+  private enqueue<T>(run: () => Promise<T>): Promise<T> {
+    const result = this.savingChain.then(run, run);
+    this.savingChain = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
 
   async init(): Promise<void> {
     if (localStorage.getItem(PRICE_LIST_KEY) == null) {
@@ -418,13 +434,7 @@ export class DemoStorage implements PlanStorage {
    * verziószámot.
    */
   async savePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef> {
-    const run = () => this.doSavePlan(plan, pdf);
-    const result = this.savingChain.then(run, run);
-    this.savingChain = result.then(
-      () => undefined,
-      () => undefined,
-    );
-    return result;
+    return this.enqueue(() => this.doSavePlan(plan, pdf));
   }
 
   private async doSavePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef> {
@@ -499,7 +509,9 @@ export class DemoStorage implements PlanStorage {
   }
 
   async savePriceList(pl: PriceList): Promise<void> {
-    localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(pl));
+    return this.enqueue(async () => {
+      localStorage.setItem(PRICE_LIST_KEY, JSON.stringify(pl));
+    });
   }
 
   async loadSettings(): Promise<Settings> {
@@ -512,7 +524,9 @@ export class DemoStorage implements PlanStorage {
   }
 
   async saveSettings(s: Settings): Promise<void> {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    return this.enqueue(async () => {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    });
   }
 
   async loadTemplate(name: string): Promise<string> {

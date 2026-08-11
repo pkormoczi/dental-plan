@@ -226,9 +226,20 @@ export default function SettingsPage() {
   // némán elveszett, a "Mentve ✓" pedig a tényleges eredménytől függetlenül
   // jelent meg. `patch` most a siker/hiba tényét adja vissza, hogy a hívó
   // (pl. `handleSave`) el tudja dönteni, mutassa-e a visszajelzést.
-  async function patch(fields: Partial<typeof settings>): Promise<boolean> {
+  //
+  // D31: a `fields` lehet függvény is -- a merge a friss `prev`-re megy
+  // (`AppState.tsx` `saveSettings` updater-szerződése). Csak a beágyazott
+  // `rendelo` objektumot író hat mező (lásd lent) él ezzel: két rendelő-mező
+  // gyors, egymást követő szerkesztése enélkül a `...settings.rendelo`
+  // render-idejű closure-je miatt kiütné egymást.
+  async function patch(
+    fields: Partial<typeof settings> | ((prev: typeof settings) => Partial<typeof settings>),
+  ): Promise<boolean> {
     try {
-      await saveSettings({ ...settings, ...fields });
+      await saveSettings((prev) => ({
+        ...prev,
+        ...(typeof fields === 'function' ? fields(prev) : fields),
+      }));
       setSaveError(null);
       return true;
     } catch (err) {
@@ -266,26 +277,28 @@ export default function SettingsPage() {
         <Field label="Név">
           <TextField.Root
             value={settings.rendelo.nev}
-            onChange={(e) => patch({ rendelo: { ...settings.rendelo, nev: e.target.value } })}
+            onChange={(e) => patch((prev) => ({ rendelo: { ...prev.rendelo, nev: e.target.value } }))}
           />
         </Field>
         <Field label="Cím">
           <TextField.Root
             value={settings.rendelo.cim}
-            onChange={(e) => patch({ rendelo: { ...settings.rendelo, cim: e.target.value } })}
+            onChange={(e) => patch((prev) => ({ rendelo: { ...prev.rendelo, cim: e.target.value } }))}
           />
         </Field>
         <Grid columns="2" gap="3">
           <Field label="Telefon">
             <TextField.Root
               value={settings.rendelo.telefon}
-              onChange={(e) => patch({ rendelo: { ...settings.rendelo, telefon: e.target.value } })}
+              onChange={(e) =>
+                patch((prev) => ({ rendelo: { ...prev.rendelo, telefon: e.target.value } }))
+              }
             />
           </Field>
           <Field label="E-mail">
             <TextField.Root
               value={settings.rendelo.email}
-              onChange={(e) => patch({ rendelo: { ...settings.rendelo, email: e.target.value } })}
+              onChange={(e) => patch((prev) => ({ rendelo: { ...prev.rendelo, email: e.target.value } }))}
             />
           </Field>
         </Grid>
@@ -293,7 +306,9 @@ export default function SettingsPage() {
           <Field label="Adószám">
             <TextField.Root
               value={settings.rendelo.adoszam}
-              onChange={(e) => patch({ rendelo: { ...settings.rendelo, adoszam: e.target.value } })}
+              onChange={(e) =>
+                patch((prev) => ({ rendelo: { ...prev.rendelo, adoszam: e.target.value } }))
+              }
               placeholder="kitöltendő"
             />
           </Field>
@@ -301,7 +316,7 @@ export default function SettingsPage() {
             <TextField.Root
               value={settings.rendelo.cegjegyzekszam}
               onChange={(e) =>
-                patch({ rendelo: { ...settings.rendelo, cegjegyzekszam: e.target.value } })
+                patch((prev) => ({ rendelo: { ...prev.rendelo, cegjegyzekszam: e.target.value } }))
               }
               placeholder="kitöltendő"
             />

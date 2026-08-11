@@ -77,7 +77,14 @@ export default function UjTetelDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content maxWidth="440px">
+      {/* onCloseAutoFocus: Mentéskor a szülő (PriceListAdminPage `mentUjTetel`)
+          a `priceList`-et D31 óta SZINKRON, ugyanabban a renderben frissíti,
+          amiben a dialógust is zárja -- a friss sor `autoFocus` HUF ár mezője
+          tehát ugyanabban a commitban mountol, amiben a Dialog bezárna. Radix
+          alapból ilyenkor visszaadná a fókuszt a triggerre (ugyanaz a
+          minta, mint a `DropdownMenu.Content`-nél, lásd PlanHistoryPage.tsx),
+          és elhalászná azt a friss mező elől. */}
+      <Dialog.Content maxWidth="440px" onCloseAutoFocus={(e) => e.preventDefault()}>
         <Dialog.Title>Új tétel</Dialog.Title>
         <Dialog.Description size="2" color="gray">
           A további adatok (ár, ártípus, EUR ár, gyakori, aktív) a mentés után a

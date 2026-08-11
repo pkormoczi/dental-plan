@@ -72,15 +72,14 @@ const FILTERS: Array<[FilterKey, string]> = [
  * változatlan), de a `NumberField` mintájára egy lokális `draft`-ból
  * jelenít meg, nem közvetlenül a `value` propból, amíg fókuszban van.
  *
- * Ok: az `Árlista admin` `commit()`-je (`ItemEditor`/`KategoriaEditor`
- * névmezői) a mentést a `priceList` context-en át, egy async
- * kör-fordulóval perzisztálja (`AppState.tsx` `savePriceList`). Ha a
- * mező közvetlenül a `value` propot jelenítené meg, egy gyors
- * billentyűleütés-sorozat közben React a kör-forduló átfutási idejére
- * visszaugratná a mezőt a RÉGI (még nem mentett) értékre, és a következő
- * leütés erre a régi, rövidebb szövegre épülne -- némán elnyelt
- * karaktert okozva. A `draft` ettől függetlenül mindig a ténylegesen
- * begépelt szöveget mutatja.
+ * D31 óta a `priceList` context-érték a mentés ELŐTT, szinkron frissül
+ * (`AppState.tsx` `savePriceList` -- optimista `apply*`), tehát a korábbi
+ * async kör-forduló, ami ezt a mezőt visszaugratta volna a régi értékre,
+ * megszűnt. A `draft` mégis marad: bármely MÁSIK mező/tétel commitja új
+ * `priceList`/`item` objektum-identitást ad ennek a mezőnek is gépelés
+ * közben, és fókuszban a `draft` ettől függetlenül mindig a ténylegesen
+ * begépelt szöveget mutatja, nem a props újraszámolt (tartalmilag
+ * ugyanolyan, de más referenciájú) értékét.
  */
 function BufferedTextField({
   value,
@@ -162,23 +161,35 @@ export default function PriceListAdminPage() {
   // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // D30: minden mentés tartalmi változásnak számít, feltétel nélkül -- a
-  // lábléc "melyik árlistából készült" audit-ígérete addig hazudik, amíg
-  // az arlistaVerzio a seed-értéken fagyva marad.
-  function commit(next: PriceList) {
+  /**
+   * D30: minden TÉNYLEGES tartalmi változás a mai napra bélyegzi a
+   * `modositva`/`arlistaVerzio`-t, feltétel nélkül -- a lábléc "melyik
+   * árlistából készült" audit-ígérete addig hazudik, amíg az
+   * `arlistaVerzio` a seed-értéken fagyva marad. A `recept` a MENTÉS
+   * PILLANATÁBAN, a friss `prev`-re fut (D31, `AppState.tsx` `savePriceList`
+   * updater-szerződése) -- ha mégis változatlanul adja vissza a bemenetet
+   * (pl. `moveCategory` a lista szélén, ahol a határellenőrzés csak itt, a
+   * friss listára végezhető el), az nem "mentés": nincs mit bélyegezni.
+   */
+  function commit(recept: (prev: PriceList) => PriceList) {
     const ma = todayIso();
-    savePriceList({ ...next, modositva: ma, arlistaVerzio: ma })
+    savePriceList((prev) => {
+      const next = recept(prev);
+      return next === prev ? prev : { ...next, modositva: ma, arlistaVerzio: ma };
+    })
       .then(() => setSaveError(null))
       .catch((err: unknown) => {
         setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
       });
   }
 
-  function patchItem(id: string, patch: Partial<Tetel>) {
-    commit({
-      ...priceList,
-      tetelek: priceList.tetelek.map((x) => (x.id === id ? { ...x, ...patch } : x)),
-    });
+  function patchItem(id: string, patch: Partial<Tetel> | ((prev: Tetel) => Partial<Tetel>)) {
+    commit((prev) => ({
+      ...prev,
+      tetelek: prev.tetelek.map((x) =>
+        x.id === id ? { ...x, ...(typeof patch === 'function' ? patch(x) : patch) } : x,
+      ),
+    }));
   }
 
   const sortedKategoriak = useMemo(
@@ -186,43 +197,60 @@ export default function PriceListAdminPage() {
     [priceList.kategoriak],
   );
 
-  function patchCategory(id: string, patch: Partial<Kategoria>) {
-    commit({
-      ...priceList,
-      kategoriak: priceList.kategoriak.map((k) => (k.id === id ? { ...k, ...patch } : k)),
-    });
+  function patchCategory(
+    id: string,
+    patch: Partial<Kategoria> | ((prev: Kategoria) => Partial<Kategoria>),
+  ) {
+    commit((prev) => ({
+      ...prev,
+      kategoriak: prev.kategoriak.map((k) =>
+        k.id === id ? { ...k, ...(typeof patch === 'function' ? patch(k) : patch) } : k,
+      ),
+    }));
   }
 
   function addCategory() {
-    const id = nextKategoriaId(priceList.kategoriak);
-    const maxSorrend = priceList.kategoriak.reduce((max, k) => Math.max(max, k.sorrend), 0);
-    const newCategory: Kategoria = {
-      id,
-      nev: { hu: 'Új kategória', de: null },
-      sorrend: maxSorrend + 1,
-      szin: ALAP_KATEGORIA_SZIN,
-    };
-    commit({ ...priceList, kategoriak: [...priceList.kategoriak, newCategory] });
+    // A `commit`-nek átadott recept a friss `prev`-re fut, tehát az id- és
+    // sorrend-számítás is ide kerül -- D17 (soha nem újrahasznosított id):
+    // két gyors egymás utáni kattintás enélkül ugyanazt az id-t számolná ki
+    // egymástól függetlenül. A `newId` egy külső `let`-en át jut vissza a
+    // hívóhoz -- a `commit` a receptet SZINKRON, még a visszatérése előtt
+    // lefuttatja (D31), tehát ez itt lent már biztosan ki van töltve.
+    let newId = '';
+    commit((prev) => {
+      const id = nextKategoriaId(prev.kategoriak);
+      const maxSorrend = prev.kategoriak.reduce((max, k) => Math.max(max, k.sorrend), 0);
+      const newCategory: Kategoria = {
+        id,
+        nev: { hu: 'Új kategória', de: null },
+        sorrend: maxSorrend + 1,
+        szin: ALAP_KATEGORIA_SZIN,
+      };
+      newId = id;
+      return { ...prev, kategoriak: [...prev.kategoriak, newCategory] };
+    });
     setCatPanelOpen(true);
-    setOpenCat(id);
+    setOpenCat(newId);
   }
 
   /**
-   * Fel/le mozgatás: a `sortedKategoriak`-beli szomszéddal cserél, majd a
+   * Fel/le mozgatás: a rendezett listában a szomszéddal cserél, majd a
    * teljes listát 1..n-re újraszámozza -- így a tömbsorrend és a `sorrend`
    * mező soha nem csúszik szét. Ez nemcsak a lista-/PDF-sorrendet, hanem a
    * fogszín-ütközés kimenetelét is befolyásolja (D28,
-   * domain/toothVisual.ts `resolveToothVisual`).
+   * domain/toothVisual.ts `resolveToothVisual`). A rendezés és a
+   * határellenőrzés a friss `prev.kategoriak`-ból történik (nem a
+   * render-idejű `sortedKategoriak`-ból) -- a szélen `prev`-et változatlanul
+   * adja vissza, ami a `commit`-ban a D30-bélyeg elmaradását jelenti.
    */
   function moveCategory(id: string, irany: -1 | 1) {
-    const idx = sortedKategoriak.findIndex((k) => k.id === id);
-    const cel = idx + irany;
-    if (idx < 0 || cel < 0 || cel >= sortedKategoriak.length) return;
-    const atrendezve = sortedKategoriak.slice();
-    [atrendezve[idx], atrendezve[cel]] = [atrendezve[cel], atrendezve[idx]];
-    commit({
-      ...priceList,
-      kategoriak: atrendezve.map((k, i) => ({ ...k, sorrend: i + 1 })),
+    commit((prev) => {
+      const sorted = prev.kategoriak.slice().sort((a, b) => a.sorrend - b.sorrend);
+      const idx = sorted.findIndex((k) => k.id === id);
+      const cel = idx + irany;
+      if (idx < 0 || cel < 0 || cel >= sorted.length) return prev;
+      [sorted[idx], sorted[cel]] = [sorted[cel], sorted[idx]];
+      return { ...prev, kategoriak: sorted.map((k, i) => ({ ...k, sorrend: i + 1 })) };
     });
   }
 
@@ -234,7 +262,7 @@ export default function PriceListAdminPage() {
    * `Kategoria` típuson) -- semmi más nem hivatkozik rá tartalmilag.
    */
   function deleteCategory(id: string) {
-    commit({ ...priceList, kategoriak: priceList.kategoriak.filter((k) => k.id !== id) });
+    commit((prev) => ({ ...prev, kategoriak: prev.kategoriak.filter((k) => k.id !== id) }));
     if (openCat === id) setOpenCat(null);
   }
 
@@ -243,28 +271,42 @@ export default function PriceListAdminPage() {
    * kerül a törzsadatba. `sorrend` a kategóriákéhoz hasonlóan max-alapú, nem
    * `tetelek.length`-alapú (a régi számítás egy törölt/inaktivált tétel
    * után visszacsúszhatott volna, ugyanaz a hiba, amit D17 miatt a
-   * `nextTetelId` már elkerül).
+   * `nextTetelId` már elkerül). Az id-számítás a friss `prev`-ből, a
+   * `newId`-n át visszakapva -- lásd `addCategory` kommentjét.
    */
   function mentUjTetel(nevHu: string, nevDe: string | null, kategoriaId: string) {
-    const id = nextTetelId(priceList.tetelek);
-    const maxSorrend = priceList.tetelek.reduce((max, x) => Math.max(max, x.sorrend), 0);
-    const newItem: Tetel = {
-      id,
-      kategoriaId,
-      sorrend: maxSorrend + 1,
-      aktiv: true,
-      gyakori: false,
-      nev: { hu: nevHu, de: nevDe },
-      ar: { HUF: { tipus: 'FIX', ertek: 0 }, EUR: null },
-      leiras: { hu: '', de: null },
-      csomag: false,
-    };
-    commit({ ...priceList, tetelek: [...priceList.tetelek, newItem] });
+    let newId = '';
+    commit((prev) => {
+      const id = nextTetelId(prev.tetelek);
+      const maxSorrend = prev.tetelek.reduce((max, x) => Math.max(max, x.sorrend), 0);
+      const newItem: Tetel = {
+        id,
+        kategoriaId,
+        sorrend: maxSorrend + 1,
+        aktiv: true,
+        gyakori: false,
+        nev: { hu: nevHu, de: nevDe },
+        ar: { HUF: { tipus: 'FIX', ertek: 0 }, EUR: null },
+        leiras: { hu: '', de: null },
+        csomag: false,
+      };
+      newId = id;
+      return { ...prev, tetelek: [...prev.tetelek, newItem] };
+    });
     setFilter('all');
     setQ('');
-    setOpen(id);
-    setFrissTetelId(id);
     setUjTetelOpen(false);
+    // A sor kinyitása/autoFocus-a KÜLÖN mikrotaszkban -- D31 óta a `priceList`
+    // (a fenti `commit`) szinkron frissül, tehát ha `open`/`frissTetelId`
+    // is EBBEN a renderben állna be, a friss sor `autoFocus` NumberField-je
+    // ugyanabban a commitban mountolna, amiben a Dialog `open=false`-ra
+    // vált -- a Radix Dialog FocusScope-ja (még aktív, amíg a Presence le
+    // nem bontja) elkapná és a body-ra dobná a fókuszkérést. Egy renderrel
+    // később, a Dialog tényleges bezárása UTÁN, ez a verseny már nem áll fenn.
+    queueMicrotask(() => {
+      setOpen(newId);
+      setFrissTetelId(newId);
+    });
   }
 
   // Mentés után a lista a friss sorhoz görget -- a doki a popupban csak
@@ -273,14 +315,14 @@ export default function PriceListAdminPage() {
   // egész felugró ablak létrejött). A HUF ár mező fókuszát az ItemEditor
   // natív `autoFocus` attribútuma adja (lásd ott).
   //
-  // A `savePriceList` aszinkron (`storage.savePriceList` await-elt, lásd
-  // AppState.tsx) -- a `priceList` context-érték, és vele a friss sor a
-  // `grouped`-ben, csak EGY renderrel KÉSŐBB jelenik meg, mint a
-  // `setFrissTetelId(id)`. Ha itt feltétel nélkül nulláznánk, a sor még a
-  // létrejötte ELŐTT elveszítené a jelzőt, és se görgetés, se autoFocus nem
-  // sülne el -- ezért csak akkor nullázunk, ha a sor ténylegesen megtalálható
-  // (a `priceList` a függőséglistában erre a második renderre újra lefuttatja
-  // az effektet).
+  // D31 óta a `commit()` a `priceList` context-értéket SZINKRON frissíti
+  // (`AppState.tsx` `savePriceList` -- optimista `apply*`, a
+  // `storage.savePriceList` await-je csak ez UTÁN fut), tehát a friss sor
+  // már ugyanabban a renderben megjelenik a `grouped`-ben, mint amiben a
+  // `setFrissTetelId(id)` hívódott. A `!el` őr mégis marad -- olcsó védelem
+  // arra az esetre, ha egy jövőbeli szűrő/keresés éppen kirekesztené a friss
+  // sort, és a `priceList` a függőséglistában így is csak a ténylegesen
+  // megtalált sornál nullázza a jelzőt.
   useEffect(() => {
     if (!frissTetelId) return;
     const el = document.getElementById(`tetel-szerkeszto-${frissTetelId}`);
@@ -440,7 +482,7 @@ export default function PriceListAdminPage() {
                           size="1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            patchItem(it.id, { gyakori: !it.gyakori });
+                            patchItem(it.id, (prev) => ({ gyakori: !prev.gyakori }));
                           }}
                           style={{ color: it.gyakori ? t.warn : t.uiTextFaint }}
                         >
@@ -508,7 +550,7 @@ export default function PriceListAdminPage() {
                           size="1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            patchItem(it.id, { aktiv: !it.aktiv });
+                            patchItem(it.id, (prev) => ({ aktiv: !prev.aktiv }));
                           }}
                         >
                           {it.aktiv ? <EyeOpenIcon /> : <EyeClosedIcon />}
@@ -557,7 +599,7 @@ function ItemEditor({
 }: {
   item: Tetel;
   categories: Kategoria[];
-  onPatch: (patch: Partial<Tetel>) => void;
+  onPatch: (patch: Partial<Tetel> | ((prev: Tetel) => Partial<Tetel>)) => void;
   /** Az Új tétel dialógusból frissen létrejött sorra igaz -- a HUF ár mező
    * kapja a fókuszt, mivel a doki a popupban csak nevet és kategóriát adott
    * meg (lásd a görgető effektet a szülő komponensben). */
@@ -574,51 +616,67 @@ function ItemEditor({
    * két pénznem együtt vált, hogy a szerkezetük soha ne csússzon szét. Ha a
    * tételnek nincs EUR ára (`eurAr == null`), az marad -- a váltás nem hoz
    * létre új EUR árat a semmiből.
+   *
+   * D31: az `ar` objektumot a friss `prev`-ből építi, nem a renderelt
+   * `item`-ből -- ez a valós versenyhelyzet: egy HUF-ár blur-commit után
+   * azonnal jövő EUR-stepper kattintás (vagy fordítva) enélkül eldobná az
+   * időben korábbi írást, mert mindkettő az `ar` objektumot cseréli
+   * egészben.
    */
   function toggleType() {
-    const toSavos = !savos;
-    const nextHuf: Ar = toSavos
-      ? {
-          tipus: 'SAVOS',
-          min: hufAr?.tipus === 'FIX' ? hufAr.ertek : 0,
-          max: hufAr?.tipus === 'FIX' ? hufAr.ertek : 0,
-        }
-      : { tipus: 'FIX', ertek: hufAr?.tipus === 'SAVOS' ? hufAr.min : 0 };
+    onPatch((prev) => {
+      const prevHuf = prev.ar.HUF ?? null;
+      const prevEur = prev.ar.EUR ?? null;
+      const toSavos = prevHuf?.tipus !== 'SAVOS';
+      const nextHuf: Ar = toSavos
+        ? {
+            tipus: 'SAVOS',
+            min: prevHuf?.tipus === 'FIX' ? prevHuf.ertek : 0,
+            max: prevHuf?.tipus === 'FIX' ? prevHuf.ertek : 0,
+          }
+        : { tipus: 'FIX', ertek: prevHuf?.tipus === 'SAVOS' ? prevHuf.min : 0 };
 
-    const nextEur: Ar | null =
-      eurAr == null
-        ? null
-        : toSavos
-          ? {
-              tipus: 'SAVOS',
-              min: eurAr.tipus === 'FIX' ? eurAr.ertek : eurAr.min,
-              max: eurAr.tipus === 'FIX' ? eurAr.ertek : eurAr.max,
-            }
-          : { tipus: 'FIX', ertek: eurAr.tipus === 'SAVOS' ? eurAr.min : eurAr.ertek };
+      const nextEur: Ar | null =
+        prevEur == null
+          ? null
+          : toSavos
+            ? {
+                tipus: 'SAVOS',
+                min: prevEur.tipus === 'FIX' ? prevEur.ertek : prevEur.min,
+                max: prevEur.tipus === 'FIX' ? prevEur.ertek : prevEur.max,
+              }
+            : { tipus: 'FIX', ertek: prevEur.tipus === 'SAVOS' ? prevEur.min : prevEur.ertek };
 
-    onPatch({ ar: { ...item.ar, HUF: nextHuf, EUR: nextEur } });
+      return { ar: { ...prev.ar, HUF: nextHuf, EUR: nextEur } };
+    });
   }
 
   function setFixPrice(ertek: number) {
-    onPatch({ ar: { ...item.ar, HUF: { tipus: 'FIX', ertek } } });
+    onPatch((prev) => ({ ar: { ...prev.ar, HUF: { tipus: 'FIX', ertek } } }));
   }
 
   function setSavosPrice(patch: Partial<{ min: number; max: number }>) {
-    const base = hufAr?.tipus === 'SAVOS' ? hufAr : { tipus: 'SAVOS' as const, min: 0, max: 0 };
-    onPatch({ ar: { ...item.ar, HUF: { ...base, ...patch } } });
+    onPatch((prev) => {
+      const prevHuf = prev.ar.HUF ?? null;
+      const base = prevHuf?.tipus === 'SAVOS' ? prevHuf : { tipus: 'SAVOS' as const, min: 0, max: 0 };
+      return { ar: { ...prev.ar, HUF: { ...base, ...patch } } };
+    });
   }
 
   function setEurFix(ertek: number) {
-    onPatch({ ar: { ...item.ar, EUR: { tipus: 'FIX', ertek } } });
+    onPatch((prev) => ({ ar: { ...prev.ar, EUR: { tipus: 'FIX', ertek } } }));
   }
 
   function setEurSavos(patch: Partial<{ min: number; max: number }>) {
-    const base = eurAr?.tipus === 'SAVOS' ? eurAr : { tipus: 'SAVOS' as const, min: 0, max: 0 };
-    onPatch({ ar: { ...item.ar, EUR: { ...base, ...patch } } });
+    onPatch((prev) => {
+      const prevEur = prev.ar.EUR ?? null;
+      const base = prevEur?.tipus === 'SAVOS' ? prevEur : { tipus: 'SAVOS' as const, min: 0, max: 0 };
+      return { ar: { ...prev.ar, EUR: { ...base, ...patch } } };
+    });
   }
 
   function clearEur() {
-    onPatch({ ar: { ...item.ar, EUR: null } });
+    onPatch((prev) => ({ ar: { ...prev.ar, EUR: null } }));
   }
 
   return (
@@ -627,14 +685,14 @@ function ItemEditor({
         <Field label="Megnevezés (magyar)">
           <BufferedTextField
             value={item.nev.hu}
-            onChange={(v) => onPatch({ nev: { ...item.nev, hu: v } })}
+            onChange={(v) => onPatch((prev) => ({ nev: { ...prev.nev, hu: v } }))}
           />
         </Field>
         <Field label="Bezeichnung (német)">
           <BufferedTextField
             value={item.nev.de || ''}
             placeholder="még nincs megadva"
-            onChange={(v) => onPatch({ nev: { ...item.nev, de: v || null } })}
+            onChange={(v) => onPatch((prev) => ({ nev: { ...prev.nev, de: v || null } }))}
           />
         </Field>
       </Grid>
@@ -644,7 +702,7 @@ function ItemEditor({
           <BufferedTextArea
             value={item.leiras?.hu ?? ''}
             placeholder="pl. Implantátum, felépítmény, korona"
-            onChange={(v) => onPatch({ leiras: { hu: v, de: item.leiras?.de ?? null } })}
+            onChange={(v) => onPatch((prev) => ({ leiras: { hu: v, de: prev.leiras?.de ?? null } }))}
           />
           {leirasTulHosszu(item.leiras?.hu ?? '') && (
             <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
@@ -656,7 +714,7 @@ function ItemEditor({
           <BufferedTextArea
             value={item.leiras?.de ?? ''}
             placeholder="még nincs megadva"
-            onChange={(v) => onPatch({ leiras: { hu: item.leiras?.hu ?? '', de: v || null } })}
+            onChange={(v) => onPatch((prev) => ({ leiras: { hu: prev.leiras?.hu ?? '', de: v || null } }))}
           />
           {leirasTulHosszu(item.leiras?.de ?? '') && (
             <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
@@ -845,7 +903,7 @@ function KategoriaPanel({
   tetelek: Tetel[];
   openCat: string | null;
   onOpenCatChange: (id: string | null) => void;
-  onPatch: (id: string, patch: Partial<Kategoria>) => void;
+  onPatch: (id: string, patch: Partial<Kategoria> | ((prev: Kategoria) => Partial<Kategoria>)) => void;
   onMove: (id: string, irany: -1 | 1) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
@@ -1008,7 +1066,7 @@ function KategoriaEditor({
   onPatch,
 }: {
   kategoria: Kategoria;
-  onPatch: (patch: Partial<Kategoria>) => void;
+  onPatch: (patch: Partial<Kategoria> | ((prev: Kategoria) => Partial<Kategoria>)) => void;
 }) {
   return (
     <Box py="2">
@@ -1016,14 +1074,14 @@ function KategoriaEditor({
         <Field label="Megnevezés (magyar)">
           <BufferedTextField
             value={kategoria.nev.hu}
-            onChange={(v) => onPatch({ nev: { ...kategoria.nev, hu: v } })}
+            onChange={(v) => onPatch((prev) => ({ nev: { ...prev.nev, hu: v } }))}
           />
         </Field>
         <Field label="Bezeichnung (német)">
           <BufferedTextField
             value={kategoria.nev.de || ''}
             placeholder="még nincs megadva"
-            onChange={(v) => onPatch({ nev: { ...kategoria.nev, de: v || null } })}
+            onChange={(v) => onPatch((prev) => ({ nev: { ...prev.nev, de: v || null } }))}
           />
         </Field>
       </Grid>

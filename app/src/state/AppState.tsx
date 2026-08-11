@@ -96,8 +96,18 @@ interface AppStateValue {
    * (nincs tényleges változás, nincs mit jelezni).
    */
   frissitettDatum: UjVerzioDatum | null;
-  saveSettings: (s: Settings) => Promise<void>;
-  savePriceList: (pl: PriceList) => Promise<void>;
+  /**
+   * D31: KIZÁRÓLAG updatert fogad, sosem kész objektumot -- a hívó a
+   * JELENLEGI (a legutóbbi mentés óta esetleg már megváltozott) állapotra
+   * épít, nem egy render-idejű closure-re zárt régi értékre. Az updater
+   * PONTOSAN EGYSZER, SZINKRON fut le, még az írás előtt (lásd lent a
+   * `settingsRef`/`applySettings` kommentjét) -- ez szerződés: pl. egy
+   * azonosító-számítást (D17) az updateren BELÜL kell elvégezni, különben
+   * két gyors egymás utáni hívás ugyanazt az id-t generálná.
+   */
+  saveSettings: (updater: (prev: Settings) => Settings) => Promise<void>;
+  /** Lásd a `saveSettings` doc-kommentjét -- ugyanaz a szerződés. */
+  savePriceList: (updater: (prev: PriceList) => PriceList) => Promise<void>;
   /**
    * P0-6: "Demó adat visszaállítása" korábban csak a localStorage-ot írta
    * felül -- az AppState memóriabeli settings/priceList/plan state-je
@@ -131,6 +141,24 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   // felhasználói állapot.
   const irtPiszkozatRef = useRef<Plan | null>(null);
 
+  // D31: a `settings`/`priceList` state MELLETT vezetett tükör -- a
+  // `saveSettings`/`savePriceList` updaternek a MENTÉS ELŐTT, SZINKRON kell
+  // elérnie a legfrissebb értéket (a `useState` closure csak a következő
+  // renderben frissülne, ami a mentés await-je alatt már elavult lenne két,
+  // egy tickben indított hívásnál). A `setSettings`/`setPriceList` nyers
+  // settereket ezután SEHOL nem hívjuk közvetlenül, csak az `apply*`-on át --
+  // különben a ref és a state szétcsúszna.
+  const settingsRef = useRef<Settings | null>(null);
+  const priceListRef = useRef<PriceList | null>(null);
+  const applySettings = useCallback((s: Settings) => {
+    settingsRef.current = s;
+    setSettings(s);
+  }, []);
+  const applyPriceList = useCallback((pl: PriceList) => {
+    priceListRef.current = pl;
+    setPriceList(pl);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     setLoadError(null);
@@ -143,8 +171,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         await ready;
         const [s, pl] = await Promise.all([storage.loadSettings(), storage.loadPriceList()]);
         if (cancelled) return;
-        setSettings(s);
-        setPriceList(pl);
+        applySettings(s);
+        applyPriceList(pl);
 
         // Csendes, memóriabeli restore -- a láthatóságot a Home "Piszkozat
         // folytatása" kártyája adja, itt nincs semmilyen felhasználó felé
@@ -185,7 +213,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // adat) -- a `loadToken` a kézi "Újrapróbálás" triggere egy sikertelen
     // betöltés után.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, storage, drafts, loadToken]);
+  }, [ready, storage, drafts, loadToken, applySettings, applyPriceList]);
 
   // Írási trigger: minden tartalmi plan-változásra azonnal ír, debounce
   // nélkül (3. döntés) -- a terv-objektum kicsi, egy JSON.stringify +
@@ -220,8 +248,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const reloadFromStorage = useCallback(async () => {
     const [s, pl] = await Promise.all([storage.loadSettings(), storage.loadPriceList()]);
-    setSettings(s);
-    setPriceList(pl);
+    applySettings(s);
+    applyPriceList(pl);
     setPlanState(createBlankPlan(s, pl));
     setLoadedOsszesitokDiff(null);
     setFrissitettDatum(null);
@@ -231,7 +259,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setPiszkozatMentve(null);
     setPiszkozatHiba(null);
     irtPiszkozatRef.current = null;
-  }, [storage]);
+  }, [storage, applySettings, applyPriceList]);
 
   const value = useMemo<AppStateValue | null>(() => {
     if (!settings || !priceList || !plan) return null;
@@ -308,13 +336,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       },
       loadedOsszesitokDiff,
       frissitettDatum,
-      saveSettings: async (s) => {
-        await storage.saveSettings(s);
-        setSettings(s);
+      // D31: optimista -- a memóriabeli állapot (ref + state) a mentés
+      // ELŐTT frissül, hogy egy második, ugyanabban a tickben induló hívás
+      // updatere már ezt lássa. Hibára SZÁNDÉKOSAN nem gördül vissza: a
+      // begépelt érték a képernyőn marad (a hibasáv emellett jelenik meg,
+      // lásd SettingsPage/PriceListAdminPage `saveError`), és egy esetleges
+      // A-hiba utáni sikeres B mentés a következő körben úgyis magával viszi
+      // A tartalmát is -- a visszaállítás pont ezt a kumulált szerkesztést
+      // dobná el.
+      saveSettings: async (updater) => {
+        const next = updater(settingsRef.current ?? settings);
+        applySettings(next);
+        await storage.saveSettings(next);
       },
-      savePriceList: async (pl2) => {
-        await storage.savePriceList(pl2);
-        setPriceList(pl2);
+      savePriceList: async (updater) => {
+        const next = updater(priceListRef.current ?? priceList);
+        applyPriceList(next);
+        await storage.savePriceList(next);
       },
       reloadFromStorage,
     };
@@ -330,6 +368,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     storage,
     drafts,
     reloadFromStorage,
+    applySettings,
+    applyPriceList,
   ]);
 
   if (loadError) {

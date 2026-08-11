@@ -30,8 +30,18 @@ export interface PlanStorage {
    */
   savePlanLabel(patientDir: string, planDir: string, tervCim: string): Promise<void>;
   loadPriceList(): Promise<PriceList>;
+  /**
+   * D31: az implementáció felelős azért, hogy egymást gyorsan követő
+   * hívások sorrendhelyesen landoljanak -- ha az írás nem atomi (pl.
+   * `FileSystemDirectoryHandle.createWritable`), sorosítania kell (lásd
+   * `DemoStorage` `enqueue`/`savingChain`). A hívó (`AppState.tsx`) mindig a
+   * legfrissebb, `apply*`-on át frissülő állapotra épített objektumot adja
+   * át -- lásd ott a `savePriceList`/`saveSettings` context-metódus
+   * doc-kommentjét.
+   */
   savePriceList(pl: PriceList): Promise<void>;
   loadSettings(): Promise<Settings>;
+  /** Lásd a `savePriceList` doc-kommentjét -- ugyanaz a sorosítási szerződés. */
   saveSettings(s: Settings): Promise<void>;
   loadTemplate(name: string): Promise<string>;
   /** Mindig új verziófájlt hoz létre, ennek a nevét adja vissza. */

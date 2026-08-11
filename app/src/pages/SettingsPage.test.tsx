@@ -51,6 +51,42 @@ describe('SettingsPage', () => {
     vi.restoreAllMocks();
   });
 
+  // D31: a `patch()` a friss `prev`-re merge-el (AppState.tsx `saveSettings`
+  // updater-szerződése) -- két rendelő-mező gyors, ugyanabban a tickben
+  // történő szerkesztése korábban a render-idejű `settings` closure-ből
+  // épített `{ ...settings, ...fields }` miatt kiütötte volna egymást
+  // (ugyanaz a mintázat, mint a fenti dupla-kattintásos teszt, csak itt két
+  // KÜLÖNBÖZŐ mezőn, `await` nélkül a két `fireEvent.change` között).
+  it('két rendelő-mező gyors, egymást követő szerkesztése (egy tickben) mindkettőt megőrzi', async () => {
+    renderSettings();
+    await screen.findByText('Beállítások');
+
+    fireEvent.change(screen.getByLabelText('Név'), {
+      target: { value: 'Dr. Mándoki Fogászat Kft.' },
+    });
+    fireEvent.change(screen.getByLabelText('Telefon'), { target: { value: '+36 1 234 5678' } });
+
+    await waitFor(() => {
+      const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+        rendelo: { nev: string; telefon: string };
+      };
+      expect(s.rendelo.nev).toBe('Dr. Mándoki Fogászat Kft.');
+      expect(s.rendelo.telefon).toBe('+36 1 234 5678');
+    });
+  });
+
+  it('a rendelő-mezőkbe gyors gépeléskor nem esik ki karakter (D31: optimista, szinkron állapotfrissítés)', async () => {
+    const user = userEvent.setup();
+    renderSettings();
+    await screen.findByText('Beállítások');
+
+    const nev = screen.getByLabelText('Név');
+    await user.clear(nev);
+    await user.type(nev, 'Mándoki Dental Kft.');
+
+    expect(nev).toHaveValue('Mándoki Dental Kft.');
+  });
+
   describe('Nyomtatvány szövegei', () => {
     it('shows the real seed text (without the "# " heading) in both boxes', async () => {
       renderSettings();

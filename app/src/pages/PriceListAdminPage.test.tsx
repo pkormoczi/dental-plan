@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import PriceListAdminPage from './PriceListAdminPage';
@@ -221,6 +221,55 @@ describe('PriceListAdminPage', () => {
     expect(cbct.ar.HUF).toEqual({ tipus: 'SAVOS', min: 65000, max: 24000 });
   });
 
+  // D31: a `patchItem` a friss `prev`-re merge-el (`PriceListAdminPage.tsx`
+  // `commit`/`onPatch` union-szerződése) -- két KÜLÖNBÖZŐ sor gyors,
+  // ugyanabban a tickben történő szerkesztése korábban a render-idejű
+  // `priceList` closure-ből épített `{ ...priceList, tetelek: ... }` miatt
+  // kiütötte volna egymást.
+  it('egy tickben két különböző sor csillaga/aktív jelölője is megmarad (D31 konkurencia)', async () => {
+    renderAdmin();
+
+    const aRow = (await screen.findByText('CBCT')).parentElement!;
+    const bRow = (await screen.findByText('Fognyaki tömés')).parentElement!;
+
+    fireEvent.click(within(aRow).getByLabelText('Gyakori tétel'));
+    fireEvent.click(within(bRow).getByLabelText('Aktív'));
+
+    await waitFor(() => {
+      const pl = readPriceList();
+      expect(findItem(pl, 'CBCT').gyakori).toBe(true);
+      expect(findItem(pl, 'Fognyaki tömés').aktiv).toBe(false);
+    });
+  });
+
+  // Ugyanaz a D31-konkurencia, de az `ar` objektumot EGÉSZBEN cserélő írások
+  // (toggleType/setFixPrice/setEurFix stb.) között: egy HUF-ár blur-commit
+  // közben induló EUR-stepper kattintás korábban a stale `item.ar`-t
+  // spread-elte volna vissza, elveszítve a másik pénznem közben committált
+  // értékét.
+  it('HUF ár blur-commit után azonnali EUR-stepper kattintás mindkét árat megőrzi (D31 konkurencia)', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    await user.click(nameCell);
+    await user.click(screen.getByRole('button', { name: '+ EUR ár hozzáadása' }));
+
+    const hufInput = screen.getByLabelText('HUF ár');
+    const eurInput = screen.getByLabelText('EUR ár (€)');
+    const eurStepper = within(eurInput.parentElement!).getByRole('button', { name: 'Növelés' });
+
+    fireEvent.change(hufInput, { target: { value: '55000' } });
+    fireEvent.blur(hufInput);
+    fireEvent.click(eurStepper);
+
+    await waitFor(() => {
+      const cbct = findItem(readPriceList(), 'CBCT');
+      expect(cbct.ar.HUF).toEqual({ tipus: 'FIX', ertek: 55000 });
+      expect(cbct.ar.EUR).toEqual({ tipus: 'FIX', ertek: 1 });
+    });
+  });
+
   // "+ Új tétel" felugró dialógus: a gomb ma két helyen is megjelenik (a
   // Kategóriák gomb sorában és a lista alján), és a mentés a Mentés gomb
   // megnyomásáig NEM ír a törzsadatba -- se placeholder név, se némán az
@@ -425,6 +474,29 @@ describe('PriceListAdminPage', () => {
 
       // Rögtön szerkesztésre nyílik -- a HU név mező a jelenlegi értékkel látszik.
       expect(within(catPanel()).getByDisplayValue('Új kategória')).toBeInTheDocument();
+    });
+
+    // D31: az id-/sorrend-számítás a `commit`-nek átadott recept BELSEJÉBEN,
+    // a friss `prev`-ből történik (`addCategory`, `PriceListAdminPage.tsx`) --
+    // enélkül két gyors kattintás ugyanazt az id-t számolná ki egymástól
+    // függetlenül, D17-et sértve (tétel-id/kategória-id soha nem
+    // hasznosítható újra).
+    it('"+ Új kategória" gyors, egymást követő kétszeri megnyomása két KÜLÖNBÖZŐ id-t hoz létre (D31 konkurencia, D17)', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      const before = readPriceList().kategoriak.length;
+      const addBtn = within(catPanel()).getByRole('button', { name: '+ Új kategória' });
+      fireEvent.click(addBtn);
+      fireEvent.click(addBtn);
+
+      await waitFor(() => {
+        const pl = readPriceList();
+        expect(pl.kategoriak).toHaveLength(before + 2);
+        const created = pl.kategoriak.slice(-2);
+        expect(created[0].id).not.toBe(created[1].id);
+      });
     });
 
     it('kategória átnevezése (HU/DE) perzisztálódik', async () => {
