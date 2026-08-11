@@ -499,12 +499,23 @@ kattintás előtt látnia kell — lásd `docs/07-felulet-rendszer.md` („a
 gombfelirat azt mondja, mi történik"). Ugyanezt mondja ki egy rövid,
 szürke magyarázó sor a lista tetején, a kereső alatt.
 
-**A verziósoron nincs látható akciógomb** — mind a három verzió-szintű
-művelet a sor végi `⋯` menüben van, ebben a sorrendben: `Letöltés`,
-elválasztó, `Új verzió`, `Másolás új tervbe`. Elöl a csak-olvasó művelet
-áll, utána a terv-létrehozók gyakoriság szerint. Egymás mellett három
-hosszú feliratú gomb zsúfolt és összetéveszthető volt; a menüben egymás
-ALATT állnak, ezért rövid feliratot is elbírnak.
+**A verziósoron nincs látható akciógomb** — mind a négy verzió-szintű
+művelet a sor végi `⋯` menüben van, ebben a sorrendben: `Megnézés`,
+`Letöltés`, elválasztó, `Új verzió`, `Másolás új tervbe`. Elöl a két
+csak-olvasó művelet áll (a könnyebb, fájlt sem hagyó `Megnézés` a
+`Letöltés` előtt), utána a terv-létrehozók gyakoriság szerint. Egymás
+mellett több hosszú feliratú gomb zsúfolt és összetéveszthető volt; a
+menüben egymás ALATT állnak, ezért rövid feliratot is elbírnak.
+
+A `Megnézés` a verzió mentett PDF-jét nyitja meg új böngészőlapon (a
+böngésző natív PDF-nézőjében, nincs beépített olvasó nézet) — ugyanazt a
+`loadPlanPdf`-et hívja, mint a `Letöltés`, de nem ír fájlt a Letöltések
+mappába, és a piszkozatot egyáltalán nem érinti (nincs `loadPlanIntoDraft`,
+nincs navigáció, nincs piszkozat-felülírás-őr). A `window.open('',
+'_blank')` a kattintás pillanatában, még a PDF-lekérés előtt, szinkron fut
+— ha a lekérés után futna, a böngésző popup-blokkolója a legtöbb esetben
+elnyelné. Hiányzó mentett PDF esetén a megnyitott üres lap bezárul, és
+ugyanaz az inline hiba jelenik meg a soron, mint a `Letöltés`-nél.
 
 A `⋯` `IconButton` `aria-label`-jében benne van a terv címkéje ÉS a
 verziószám (`Fogpótlás — v2 — további műveletek`): egy páciensblokkban

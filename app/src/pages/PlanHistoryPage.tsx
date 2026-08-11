@@ -331,6 +331,45 @@ export default function PlanHistoryPage() {
     },
   };
 
+  // backlog-22: "Megnézés" -- a verzió mentett PDF-jét nyitja meg új lapon,
+  // a piszkozatot egyáltalán nem érinti (nincs loadPlanIntoDraft, nincs
+  // navigáció). A window.open() a KATTINTÁS pillanatában, szinkron fut,
+  // még a loadPlanPdf await előtt -- ha ez az await után történne, a
+  // legtöbb böngésző popup-blokkolóként elnyelné, mert megszakadna a
+  // "valódi felhasználói gesztus" lánc, amit a blokkoló megkövetel.
+  async function viewVersion(ref: VersionRef) {
+    setActionError(null);
+    const win = window.open('', '_blank');
+    if (!win) {
+      setActionError({
+        ...ref,
+        message:
+          'A böngésző letiltotta az új lap megnyitását -- engedélyezd a felugró ablakokat ehhez ' +
+          'az oldalhoz, vagy használd a Letöltést.',
+      });
+      return;
+    }
+    try {
+      const bytes = await loadPlanPdf(ref);
+      if (!bytes) {
+        win.close();
+        setActionError({ ...ref, message: 'Ehhez a verzióhoz nincs mentett PDF.' });
+        return;
+      }
+      const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+      win.location.href = URL.createObjectURL(blob);
+    } catch (err) {
+      win.close();
+      setActionError({
+        ...ref,
+        message:
+          err instanceof Error
+            ? `A megnyitás nem sikerült: ${err.message}`
+            : 'A megnyitás váratlanul meghiúsult.',
+      });
+    }
+  }
+
   async function downloadVersion(ref: VersionRef, tervId: string, patientNev: string) {
     setActionError(null);
     try {
@@ -697,9 +736,13 @@ export default function PlanHistoryPage() {
                                       size="1"
                                       onCloseAutoFocus={(e) => e.preventDefault()}
                                     >
-                                      {/* Az elválasztó a csak-olvasó műveletet választja el a
-                                          terv-létrehozóktól; azon belül a gyakoribb (Új
-                                          verzió) áll elöl. */}
+                                      {/* Az elválasztó a csak-olvasó műveleteket választja el a
+                                          terv-létrehozóktól; a kettő közül a Megnézés áll elöl
+                                          (backlog-22), mert nem hagy fájlt a Letöltések mappában,
+                                          utána a gyakoribb terv-létrehozó (Új verzió). */}
+                                      <DropdownMenu.Item onSelect={() => void viewVersion(ref)}>
+                                        Megnézés
+                                      </DropdownMenu.Item>
                                       <DropdownMenu.Item
                                         onSelect={() => downloadVersion(ref, plan.tervId, p.nev)}
                                       >

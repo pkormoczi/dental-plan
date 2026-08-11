@@ -718,4 +718,19 @@
   (`docs/01-attekintes-es-dontesek.md`). A már mentett terveken lévő
   érték ettől függetlenül pillanatkép marad (D7).
 
+### 22. Régi terv megnyitása új lapon (csak megnézés) — KÉSZ (2026-08-11)
+
+- **Méret:** 1–2 óra.
+- **Kereteket sért?** Nem.
+- **Valódi haszon:** időmegtakarítás + kockázatcsökkentés — a „csak
+  ránézek" út eddig a szerkesztésre nyitáson (piszkozatot veszélyeztet,
+  véletlen új verziót hozhat létre) vagy a Letöltések mappán át vezetett.
+- **Megvalósítás:** `docs/03-funkcionalis-spec.md` § 5. Korábbi tervek. A
+  verziósor „⋯" menüjének új, legelső eleme („Megnézés") a `Letöltés`-sel
+  azonos `loadPlanPdf`-et hívja, de a mentett PDF-et új böngészőlapon
+  nyitja meg (`blob:` URL) a Letöltések mappa helyett, és a piszkozatot
+  egyáltalán nem érinti. A popup-blokkolás elkerülésére a `window.open`
+  szinkron, még a PDF-lekérés előtt fut; hiányzó PDF esetén az üres lap
+  bezárul, és ugyanaz az inline hiba jelenik meg, mint a `Letöltés`-nél.
+
 ---

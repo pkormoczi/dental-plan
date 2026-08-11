@@ -14,20 +14,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ## MOST
 
-### 1. hely — 22. tétel: Régi terv megnyitása új lapon (csak megnézés)
-
-- **Méret:** 1–2 óra — a PlanHistoryPage-en a már betöltött
-  PDF-bájtokból blob-URL, új fül; nincs új nézet, nincs új útvonal.
-- **Kereteket sért?** Nem.
-- **Valódi haszon:** időmegtakarítás + kockázatcsökkentés — a „csak
-  ránézek" út ma a szerkesztésre nyitáson át vezet, ami a piszkozatot
-  fenyegeti és egy véletlen új verzió felé visz, vagy a Letöltések
-  mappán át.
-- **20%-os verzió:** ez maga a 20% (beépített olvasó nézet felesleges, a
-  böngésző PDF-nézője elég).
-- **Terv:** `backlog/plans/backlog-22-regi-terv-megtekintese-terv.md` (7 döntés).
-
-### 2. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
+### 1. hely — 23. tétel: Egyedi sor pontosabb megnevezése a német véglegesítés-őrben
 
 - **Méret:** fél óra — a véglegesítés-dialógus (és a szerkesztő
   jelvénye) az egyedi (`tetelId === ''`) sorokat külön, pontosabb
@@ -40,7 +27,7 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 - **20%-os verzió:** ez maga a 20%.
 - **Terv:** `backlog/plans/backlog-23-egyedi-sor-nemet-or-terv.md` (5 döntés).
 
-### 3. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
+### 2. hely — 24. tétel: Árlista-nap: közös ülés a dokival (adattisztítás és hiányzó szövegek)
 
 **Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
 Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:

@@ -292,6 +292,7 @@ describe('PlanHistoryPage', () => {
 
     const items = await screen.findAllByRole('menuitem');
     expect(items.map((el) => el.textContent)).toEqual([
+      'Megnézés',
       'Letöltés',
       'Új verzió',
       'Másolás új tervbe',
@@ -411,6 +412,65 @@ describe('PlanHistoryPage', () => {
         suffix: ref.versionDir,
       }),
     );
+  });
+
+  // backlog-22: "Megnézés" -- a verzió mentett PDF-jét nyitja meg új lapon,
+  // a piszkozatot egyáltalán nem érinti. A jsdom window.open()-je nincs
+  // implementálva, mockolás nélkül a teszt el sem indulna.
+  describe('"Megnézés" -- a verzió PDF-je új lapon', () => {
+    it('szinkron nyitja meg az üres lapot, majd -- csak a PDF megérkezése UTÁN -- a blob URL-re navigál', async () => {
+      const seeder = new DemoStorage();
+      await seeder.init();
+      await seeder.savePlan(makeVeglegesPlan(), new Uint8Array([1, 2, 3]));
+
+      // A hívási sorrend igazolja a popup-blokkoló-védelmet: a window.open
+      // a KATTINTÁS pillanatában fut, a blob URL csak ezután, a loadPlanPdf
+      // megérkezésekor készül el -- nem elég, hogy mindkettő VALAMIKOR
+      // meghívódik, a sorrend maga a lényeg (2. döntés).
+      const callOrder: string[] = [];
+      const mockWin = { location: { href: '' }, close: vi.fn() };
+      const openMock = vi.fn(() => {
+        callOrder.push('open');
+        return mockWin as unknown as Window;
+      });
+      window.open = openMock as unknown as typeof window.open;
+      URL.createObjectURL = vi.fn(() => {
+        callOrder.push('createObjectURL');
+        return 'blob:teszt';
+      }) as unknown as typeof URL.createObjectURL;
+
+      const user = userEvent.setup();
+      renderHistory();
+
+      await screen.findByText('Letöltés Teszt');
+      const card = patientCard('Letöltés Teszt');
+      await user.click(await verzioMenupont(user, card, 'Megnézés'));
+
+      expect(openMock).toHaveBeenCalledWith('', '_blank');
+      await waitFor(() => expect(mockWin.location.href).toBe('blob:teszt'));
+      expect(callOrder).toEqual(['open', 'createObjectURL']);
+    });
+
+    it('hiányzó PDF esetén bezárja az üres lapot, az inline hiba pedig ugyanaz, mint a Letöltésnél', async () => {
+      const mockWin = { location: { href: '' }, close: vi.fn() };
+      window.open = vi.fn(() => mockWin as unknown as Window) as unknown as typeof window.open;
+
+      const user = userEvent.setup();
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const card = patientCard('Nagy Éva');
+      await expandPatientBlock(user, card);
+
+      // A seed-verziókhoz nincs mentett PDF -- ugyanaz az eset, mint a
+      // "Letöltés" hibaágánál (3. döntés: nincs második hiba-minta).
+      await user.click(await verzioMenupont(user, card, 'Megnézés'));
+
+      await waitFor(() => expect(mockWin.close).toHaveBeenCalled());
+      expect(
+        await within(card).findByText('Ehhez a verzióhoz nincs mentett PDF.'),
+      ).toBeInTheDocument();
+    });
   });
 
   // D29: az új harmadik szint -- a Korábbi tervek fő új viselkedése.
