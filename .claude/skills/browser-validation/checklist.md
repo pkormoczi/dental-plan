@@ -81,7 +81,7 @@ egymáson) — rendes alfa-kompozitálás kell.
   let noBorderCount = 0;
   const noBorderSample = [];
   for (const el of document.querySelectorAll(CTRL)) {
-    if (el.classList.contains('rt-IconButton')) continue; // docs/07 controlBorder "Kivétel 2" -- tudatosan kivétel, nem hiányzó keret
+    if (el.classList.contains('rt-IconButton') || el.classList.contains('rt-variant-ghost')) continue; // docs/07 controlBorder "Kivétel 2"/"Kivétel 3" -- tudatosan kivétel, nem hiányzó keret
     const cs = getComputedStyle(el);
     const bc = parseColor(cs.borderTopColor), bw = parseFloat(cs.borderTopWidth);
     const sh = cs.boxShadow;

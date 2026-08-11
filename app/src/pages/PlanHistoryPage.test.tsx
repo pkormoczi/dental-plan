@@ -364,8 +364,9 @@ describe('PlanHistoryPage', () => {
       expect(within(card).getByRole('button', { name: '2 terv' })).toBeInTheDocument();
       // Csukott állapotban a verziósorok NEM láthatók.
       expect(within(card).queryByRole('button', { name: /további műveletek$/ })).not.toBeInTheDocument();
-      // ...de a "2 terv" összefoglaló és a legutóbbi lánc dátuma/összege igen.
-      expect(within(card).getByText(/2 terv · legutóbb:/)).toBeInTheDocument();
+      // ...de a "2 terv" kapcsoló melletti legutóbbi lánc dátuma/összege igen,
+      // sima (nem kattintható) szövegként.
+      expect(within(card).getByText(/^· legutóbb:/)).toBeInTheDocument();
     });
 
     it('kattintásra kinyílik, mindkét terv-lánc látszik a saját címkéjével', async () => {

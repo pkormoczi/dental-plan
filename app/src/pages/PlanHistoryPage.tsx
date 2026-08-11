@@ -489,22 +489,6 @@ export default function PlanHistoryPage() {
                   </Text>
                 )}
               </Text>
-              {plans.length > 1 && (
-                <Button
-                  type="button"
-                  size="1"
-                  variant="ghost"
-                  color="gray"
-                  aria-expanded={expanded}
-                  aria-controls={`patient-plans-${pi}`}
-                  onClick={() =>
-                    setExpandedOverride((prev) => ({ ...prev, [p.dirName]: !expanded }))
-                  }
-                >
-                  {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
-                  {plans.length} terv
-                </Button>
-              )}
               {latestOverall && (
                 <Button
                   size="1"
@@ -533,16 +517,38 @@ export default function PlanHistoryPage() {
                 </Callout.Root>
               )}
 
-            {!expanded && (
-              <Text as="p" size="2" color="gray" mt="0" mb="2">
-                {plans.length} terv · legutóbb:{' '}
-                {latestOverall
-                  ? `${latestOverall.version.isoDate} · ${formatMoney(
-                      latestOverallTotal?.fizetendo ?? null,
-                      latestOverallTotal?.penznem ?? 'HUF',
-                    )}`
-                  : '—'}
-              </Text>
+            {/* A "N terv" kapcsoló a névfejléc ALATTI sorba került (nem a
+                fejléc mellé, mint korábban) -- csak ez a szó kattintható,
+                a "· legutóbb: …" szöveg mellette sima, nem interaktív
+                marad. Kinyitva a dátum/összeg elmarad, mert a lista alatta
+                úgyis részletesen látszik. */}
+            {plans.length > 1 && (
+              <Flex align="center" gap="1" mb="2" wrap="wrap">
+                <Button
+                  type="button"
+                  size="1"
+                  variant="ghost"
+                  aria-expanded={expanded}
+                  aria-controls={`patient-plans-${pi}`}
+                  onClick={() =>
+                    setExpandedOverride((prev) => ({ ...prev, [p.dirName]: !expanded }))
+                  }
+                >
+                  {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                  {plans.length} terv
+                </Button>
+                {!expanded && (
+                  <Text size="2" color="gray">
+                    · legutóbb:{' '}
+                    {latestOverall
+                      ? `${latestOverall.version.isoDate} · ${formatMoney(
+                          latestOverallTotal?.fizetendo ?? null,
+                          latestOverallTotal?.penznem ?? 'HUF',
+                        )}`
+                      : '—'}
+                  </Text>
+                )}
+              </Flex>
             )}
 
             {expanded && (
