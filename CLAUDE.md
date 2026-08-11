@@ -346,6 +346,19 @@ terv-mappa, D29) segédfüggvényei, szintén ne írd újra őket:
   `/uj-terv` „Meglévő páciens keresése” előtöltése is ezt hívja, hogy a
   két hely ne térjen el egymástól
 
+A Filerendszer nézet (`docs/03-funkcionalis-spec.md` § 8. Filerendszer)
+segédfüggvénye, szintén ne írd újra:
+- `buildDemoFileTree(keys, prefix)` (`app/src/storage/demoFileTree.ts`) —
+  tiszta függvény, `dp:` localStorage-kulcsok tömbjéből épít egy rendezett
+  fát; `DemoStorage`-tól független (nem ismeri a `localStorage`-ot), ezért
+  `localStorage` nélkül tesztelhető. Allowlist-alapú: csak a
+  `docs/02-domain-modell.md` "Mappastruktúra" szerinti kulcsalakok kerülnek
+  be, minden más (a piszkozat-cache-ek is) némán kimarad. A `DemoStorage`
+  ezt hívja a `listFileTree()`/`readRawFile()` demó-only (nem a
+  `PlanStorage` interfész része, a `resetDemoData`/`clearAll`/`loadPlanPdf`
+  mintájára a `StorageContext`-en kitéve) mezőin keresztül — ne hozz létre
+  második útvonalat a `dp:` kulcsok fává alakítására
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

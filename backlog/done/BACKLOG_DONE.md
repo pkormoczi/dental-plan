@@ -11,52 +11,9 @@
 > kereszthivatkozásai a saját, akkori `docs/archive/backlog/`-beli
 > tervfájljaira mutatnak; 2026-08-11-től ugyanezek a tervfájlok a
 > `backlog/done/` alatt élnek, a szöveg erre nem lett átírva).
-
-Ez a fejezet a jövőbeli munka gyűjtőhelye: a 2026-08-06-i kódreview
-(P0/P1 minden tétele javítva, lásd git history — a nyers review-passzok
-nem élnek tovább a repóban) nyitva maradt P2-jei, és az azt követő
-termékreview (`06-doktor-harom-nap` munkanév alatt készült anyag)
-felvetései, szoftverarchitekt-triázzsal együtt. A `docs/01`
-sérthetetlen keretei (D1–D21) egyik tételt sem sértik — ahol ez nem
-nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
-
-**Sorrend, ha priorizálni kell:** ~~1 (piszkozat-perzisztencia)~~ → ~~5
-(EUR-mező)~~ → ~~2 (friss dátum)~~ → ~~3 (sornév + egyedi sor)~~ → ~~6
-(placeholder-őr)~~ → 8 (árlista-nap) → ~~4~~, 9 → a többi.
-(Az eredeti triázs-sorrend tévesen kihagyta az 1. tételt és duplán
-hivatkozott a 3.-ra — itt javítva. Az 1. tétel a doktor-nap narratívában
-háromszor is felmerül ugyanazon a délelőttön, és fél nap a mérete —
-ez indokolta az élen; 2026-08-09-én elkészült, lásd alább. A 2. tétel a
-javasolt sorrendtől eltérően, az 5. előtt készült el — szintén
-2026-08-09-én. A 3. tétel a javasolt sorrendtől eltérően, az 5. előtt
-készült el — szintén 2026-08-09-én, és menet közben felfedte a 15. tételt
-(nyelváltás névmegőrzése), ami rögtön utána, ugyanaznap el is készült. A
-4. tétel a javasolt sorrendtől eltérően, az 5. és a 8. előtt készült el —
-szintén 2026-08-09-én, mert a 3. tétel menet közben nyitva hagyott egy
-záratlan szálat — lásd alább. Az 5. tétel a javasolt pozíciójában,
-szintén 2026-08-09-én készült el. A 6. tétel a javasolt pozíciójában,
-szintén 2026-08-09-én készült el — kutatással kiderült, hogy a benne
-leírt sablonszerkesztő rész már korábban, a `119ab74` commit óta kész
-volt, a ténylegesen hátralévő munka a placeholder-őr volt. A 14. tétel a
-sorrenden kívül, a mérete miatt készült el — szintén 2026-08-09-én, mert
-15 perc volt, és a publikus demón látható hibát javított.)
-
-**A MOST lista minden tételének van tervdokumentuma.** A kész tételeknél
-(1–7, 9, 11, 12, 14, 15) a saját „Megvalósítás" blokkjuk hivatkozik rá; a
-még nyitott tételeknél (8, 10, 13) a tétel végén álló **Terv:** sor. Ezek `grill-me`
-munkamenetek döntési összefoglalói — a nyitott tételek tehát **meg vannak
-tervezve, de nincsenek implementálva**: a tervek nem tartalmaznak kódot,
-az implementáció módja a megvalósító feladata. Ahol a tervezés
-felülírta a tétel eredeti méretbecslését vagy hatókörét, azt a **Terv:**
-sor jelzi.
-
 ---
 
-## MOST (eredetileg kb. 6–7 fejlesztői nap + fél nap közös munka a dokival; a 12 kész tétel után kb. 3,5 nap van hátra, a 8. tétel megnőtt becslésével együtt)
-
-Mindegyik kicsi, és egy konkrét, a `06-doktor-harom-nap` munkanapjain
-ténylegesen felmerült fájdalmat szüntet meg (lásd a Függelékben). Egyik
-sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
+## MOST
 
 ### 1. Piszkozat-perzisztencia (frissítés/összeomlás ne törölje a félkész tervet) — KÉSZ (2026-08-09)
 
@@ -679,206 +636,25 @@ sem sérti a D1–D21 kereteket, egyik sem visz adatot szerverre.
   — a terv-lánc élő címke-javaslata a legnagyobb összegű kategória nevéből,
   ugyanazzal a precedencia-elvvel, mint a fogtérkép ütközésfeloldása (D28).
 
----
+### 26. Filerendszer nézet (mockup fájlfa-vizualizáció) — KÉSZ (2026-08-11)
 
-## Technikai adósság (a 2026-08-06-i kódreview nyitva maradt tételei)
-
-A review P0-jai (8/8) és P1-jei (9/9) mind javítva lettek — lásd git
-history a `4aed289`, `65f8f91`, `a0d4a08` commitok környékén. Az alábbi
-tételek maradtak nyitva:
-
-**Storage-írási minta nincs kikényszerítve** (méret: **L**, architektúra-
-szintű). A `PlanStorage` interfész csak a *hogyan*-t rögzíti (D5), a
-*mikor*-t minden oldal maga dönti el: a tervszerkesztő pufferelt,
-egyszeri mentést használ, az Árlista admin és a Beállítások azonnali,
-mezőnkénti mentést. Ma ártalmatlan (`localStorage`), de a tervezett
-`FileSystemStorage`-váltásnál (`docs/05` 2. fázis) teljesítmény- és
-megbízhatósági kockázattá válik — pont ott, ahol a D16 takarítás miatt a
-legtöbb jövőbeli admin-szerkesztés várható. Helyszín: architektúra-szintű,
-nem egy file:line.
-
-**`storage/seed/priceList.ts:6` határsértés** (méret: **S**). Négy
-`../`-vel importál a repo gyökerén lévő `data/`-ból, át a CLAUDE.md
-szerint „csak referencia" mappaként leírt határon — ha valaki
-átmozgatja/átnevezi a fájlt, a build csendben eltörik. Nincs
-másolási/validációs lépés a határon.
-
-**`commit()`/`patch()` functional updater nélkül** (méret: **M**, félig
-kész). `PriceListAdminPage.tsx` és `SettingsPage.tsx` render-idejű
-closure-t zár be egy async mentéshez — gyors egymás utáni módosítás
-versenyben felülírhatja egymást. A vizuális visszajelzés fele elkészült a
-mentési-siker jelzéssel; a functional-updater átírás maradt nyitva. A
-`NumberField` blur-commitja után a versenyablak a gyakorlatban minimálisra
-szűkült, de nincs strukturálisan kizárva.
-
-**Titkosítatlan `localStorage` páciensadattal** (méret: **L**, tervezési
-döntés a mockup-fázisban — a CLAUDE.md szerint szándékos, a mockup a
-system of record helyett demonstráció). A véglegesített `Plan` (név,
-születési dátum, lakcím, telefon, email, TAJ, kiskorú esetén törvényes
-képviselő) titkosítás és lejárat nélkül landol a publikus origin
-`localStorage`-ában. Kockázatcsökkentve: `DemoBanner` figyelmeztet, „Minden
-adat törlése" gomb elérhető a Kezdőlapon. Az architekturális megoldás a
-`FileSystemStorage`-váltás (2. fázis), nem a mockup feladata.
-
-**Cím szintű, kisebb tételek** (nem vitt tovább külön leírással, ha később
-kellenének):
-- `basePrice()` újraírva a `PlanEditorPage`-ben a `domain/money.ts` export
-  helyett, holott a CLAUDE.md ezt név szerint a „használd, ne írd újra"
-  listában sorolja fel.
-- `SAVOS` min/max mezők függetlenül szerkeszthetők, `min > max`-ra nincs
-  validáció.
-- `parseTeeth` nem dedupol — egy elgépelt duplikált fogszám átmegy a
-  validáción.
-- Három legnagyobb/legvalószínűbben ütköző fájl: `PlanEditorPage.tsx`
-  (628 sor — page shell, `PhaseCard`, `LineRow`, `ItemPicker` mind egy
-  fájlban), `PriceListAdminPage.tsx` (441 sor — saját, driftelt
-  stílus-másolatot cipel a `design/ui.ts` helyett), `pdf/TervDocument.tsx`
-  (422 sor — közös `s` style-objektum, saját kommentje szerint már most
-  „német layout-törés" kockázatot jelez).
-- Háromféle gombstílus (`design/ui.ts` `btn()`, `PriceListAdminPage`
-  helyi `btn()`, `Home.tsx` `btnPrimary`/`btnSecondary`) — vizuálisan
-  eltérő gombméret képernyőnként.
-- `PreviewPage.finalize()` tesztelhetetlen — a véglegesítés teljes
-  őrlogikája (kötelező mező, hiányzó fordítás megerősítése, jogi
-  fallback-ellenőrzés) egyetlen komponens-függvényben van, nincs belőle
-  kiszedhető pure function.
+- **Méret:** ~1 fejlesztői nap.
+- **Kereteket sért?** Nem — demó-only, olvasás-only vizualizációs réteg; a
+  `PlanStorage` interfészt nem bővíti és a valódi mentési útvonalakat nem
+  kerüli meg.
+- **Valódi haszon:** a doki és a fejlesztő közös mentális modellje a leendő
+  fájlrendszeres (FileSystemStorage, 2. fázis) architektúráról — egy új
+  „Filerendszer” képernyő konkrétan megmutatja, mit ment az app, hová,
+  milyen néven, milyen tartalommal, ahelyett hogy csak dokumentációból
+  kellene elképzelni.
+- **Megvalósítás:** `docs/03-funkcionalis-spec.md` § 8. Filerendszer. Új,
+  `DemoStorage`-tól független tiszta függvény
+  (`app/src/storage/demoFileTree.ts` `buildDemoFileTree()`) a `dp:`
+  localStorage-kulcsokból épít rendezett fát, allowlist-alapon (a
+  piszkozat-cache-ek némán kimaradnak); a `DemoStorage`
+  `listFileTree()`/`readRawFile()` demó-only mezőin (a `resetDemoData`/
+  `clearAll`/`loadPlanPdf` mintájára) át érhető el a `StorageContext`-ből.
+  A fa-nézet és a tartalom-panel a `ToothChartPanel` diszklózúra-mintáját
+  követi.
 
 ---
-
-## KÉSŐBB — valódi érték, de nagy vagy kockázatos
-
-- **Ajánlat-állapot és visszahívás-jelzés** (pl. `allapot.json` a
-  páciensmappában, a verziómappákon kívül) — valódi haszon
-  (időmegtakarítás, hogy tudni lehessen, kit kell visszahívni), de új
-  fájltípus és állapotgép, ami a D4 append-only szemléletéhez képest más
-  jellegű adat; alaposabb tervezést igényel, hogy ne csússzon system of
-  recorddá olyasmi, ami nem terv.
-- **Teljes verzió-diff nézet** (mi változott sorszinten v1 és v2 között) —
-  a 11. tétel egyszerű összeg-kiírása után derül ki, mennyire hiányzik ez
-  ténylegesen; ha igen, külön kör.
-- **Valódi összetett csomag-tétel** (csomag = tételek listája, nem szabad
-  szöveg) — a 10. tétel (leírás-sor) valószínűleg kiváltja a szükségletet;
-  csak akkor térjünk vissza rá, ha a leírás-sor nem elég.
-- **Tömeges árváltoztatás az adminban** (pl. „minden implantátum ára +5%")
-  — valódi időmegtakarítás egy árlistafrissítéskor, de nem sürgős, évente
-  egyszer kell.
-- **Fogtechnikusi munkalap generálása** — más célközönség (a technikus, nem
-  a páciens), más adattartalom; külön funkció, nem ennek a nyomtatványnak a
-  bővítése.
-- **Séma-migrációs út** — ma a `schemaVersion` csak felfelé véd (magasabb
-  verziót elutasít), lefelé nem migrál; amíg `schemaVersion` marad 1 (a
-  fenti 14 tétel egyike sem emeli), nem sürgős, de a D18 előbb-utóbb
-  megköveteli.
-- **`terv.json` beágyazása a PDF-be** (D5) — a `docs/05` explicit a 2.
-  fázisra (fájlrendszeres verzió, `pdf-lib`) ütemezi; a mockupban nincs
-  értelme siettetni.
-- **A német jogi szövegek tényleges lektorálása** — ez nem fejlesztési
-  feladat, hanem jogászi munka; a 6. tétel (placeholder-őr) csak addig
-  védi ki a kockázatot, amíg ez meg nem történik.
-- **Automatikus darabszám a fogszámokból (D14 újranyitása)** — a `docs/01`
-  szerint ez hetekre elakasztotta volna az eredeti projektet; a mai
-  figyelmeztető sáv elég, amíg nincs konkrét panasz rá.
-
-## SOHA — hangzatos, de nem éri meg, vagy sérti a kereteket
-
-- **Számlázás, egészségpénztári igazolás, NAV-integráció** — külön
-  szoftver dolga, nem ennek az eszköznek a felelőssége; összekötésük
-  fölöslegesen bonyolítaná és kockáztatná a jelenlegi tiszta határt (nincs
-  szerveroldali adat).
-- **Betegdokumentáció, EESZT-kapcsolat** — teljesen más adatkezelési és
-  jogi kategória, más szoftver.
-- **E-mail küldés az appból** — akárhogy nézzük, ez páciensadatot mozgatna
-  a rendelő gépén kívülre egy harmadik fél (levelezőszerver)
-  szolgáltatásán át; ez ütközik a D2–D3 kerettel.
-- **Páciensportál, online elfogadás, e-aláírás** — szerveroldali
-  komponenst és páciensadat-tárolást igényelne a rendelőn kívül; kizárt a
-  D2 miatt.
-- **Statisztika-dashboard** — nem merült fel a doktor-napokból, és
-  bármilyen fogászati szoftverre igaz lenne, nem erre a valós munkanapra
-  épül.
-- **Bármilyen AI ebben az appban** — nincs olyan konkrét munkalépés, amit
-  egy AI kiváltana úgy, hogy a hibázás következménye elfogadható lenne egy
-  aláírandó, szerződéses dokumentumon. (A meglévő gépi fordítás is épp
-  azért van jelölve és lektorálásra várva, mert ez a kockázat már most is
-  fennáll — nem szabad növelni.)
-- **Automatikus árfolyam-lekérés** — a D11 kifejezetten kizárja, és
-  jogosan: egy külső API-hívás egy szerződéses árat tenne függővé egy
-  harmadik féltől.
-- **Kedvezmény külön soron a nyomtatványon** — a D9 direkt ellenkezőjét
-  mondja ki, jó okkal (a kedvezmény ne váljon a papíron vitatható ténnyé).
-- **Többfelhasználós jogosultságkezelés** — a D1 szerint egy rendelő,
-  belső eszköz; ez sosem lesz több felhasználós termék.
-- **Mobilapp, felhőszinkron** — a Google Drive-tükrözés már megoldja a
-  hozzáférést a doki gépéről; egy natív mobilapp új adatvédelmi felületet
-  nyitna a GDPR 9. cikk szerinti adaton, feleslegesen.
-- **Ártétel-ár historizálás az árlistában** — a D7 (soronkénti pillanatkép)
-  már megoldja, amire ez kellene; egy párhuzamos történeti napló csak
-  duplikálná ugyanazt az információt.
-- **Sor-szintű megjegyzés-oszlop külön mezőként** — a D13 ezt kifejezetten
-  kizárja, és a fenti 3. tétel (szerkeszthető sornév) + 10. tétel
-  (leírás-sor) együtt lefedi, amire ténylegesen szükség volt.
-- **Kategória-böngésző a keresőben** — a D19 kifejezetten kizárja; a
-  doktor-napok egyike sem mutatott rá valós igényt a böngészésre, csak a
-  keresés pontosságára.
-
----
-
-## Függelék: honnan jönnek az igények (Dr. Mándoki István három munkanapja)
-
-Termékreview a doki szemszögéből, a valódi kódra és a valódi árlistára
-építve (`data/arlista.seed.json`, 118 tétel) — ebből fakad a fenti MOST
-lista minden tétele.
-
-**A) Egy hétköznap délelőtt.** Az első három beteg rutin, de nincs
-gyorsgomb egyetlen tételen sem (senki nem jelölte be a `gyakori`
-csillagot), így minden alkalommal karakterről karakterre gépelni kell
-konzultáció/panoráma/CBCT-t. Egy sornevet (`"Bölcsességfog mütéti
-eljárással (seb.gond.,varrat szedés)"`) nem lehet a soron javítani, csak
-elfogadni ékezethibásan. Egy visszatérő páciens (Nagy Éva) új verziója a
-régi, júniusi keltezéssel nyomtat — csak este derül ki a PDF-et
-ellenőrizve, hogy egy lejárt ajánlatot nyomtatott ki, amit majdnem
-aláírattak volna. Egy sürgős hívás közben elveszik a piszkozat, mert csak
-memóriában él — harmadszori újragépelés aznap.
-
-**B) Egy nagy All-on-X konzultáció.** Az „All-on-4 Anax csomag" egyetlen
-sorként megy be 1 950 000 forinttal — a páciens megkérdezi, mi van benne,
-nincs mit mutatni, csak amit a doki szóban mond. Nincs tétel az
-érzéstelenítésre, kontrollvizsgálatra, hagyományos implantáció sebészi
-díjára. A csontpótló anyagot fix áron viszi fel, pedig a mennyiség csak a
-műtőben derül ki — a csillagos „becslés" jelölés ma csak két
-gyökérkezelési tételen működik, itt nem. Az 50%-os fogtechnikai előleget
-fejben osztja ki és kézzel írja a papír aljára. A „Kezelések összesen" és
-a „Fizetendő" sor kedvezmény nélkül pontosan ugyanazt a számot mutatja,
-amire nincs jó válasza, ha a páciens rákérdez.
-
-**C) Egy német páciens.** A nyelvet bekapcsolja, a pénznemet forinton
-hagyja — ezt az app jól kezeli. A keresőben nem találja a Neodent
-implantátumot, mert az árlistában elgépelve szerepel („Neodetn"). Az
-euró/cent tévesztés majdnem megtörténik nála is (606 helyett 60600
-kellett volna) — az admin felületen ez már jól működik, a szerkesztőben
-még nem (5. tétel). Véglegesítéskor a nyilatkozat helyén ott áll: „ez a
-szöveg jogilag még nincs lezárva" — ezt a páciens elé nem lehet tenni, a
-doki csak a „csak ajánlat" változatot tudja kinyomtatni, aláírás nélkül
-(6. tétel).
-
-**A négy kérdés, amit a review feltett:**
-
-1. *Mi az a három dolog, ami miatt egy hét után visszatérne az
-   Excelhez?* A piszkozat elvesztése minden frissítésnél (1. tétel), egy
-   visszatérő páciens régi dátummal nyomtató új verziója (2. tétel), és
-   hogy senki nem jelölte be a gyakori tételeket (8. tétel).
-2. *Mit csinál a mai munkájában, amit az app egyáltalán nem érint?*
-   Visszahívás/emlékeztető (Zsófi vezeti füzetben), fogtechnikussal való
-   egyeztetés, garancia-nyilvántartás (fejben), egészségpénztári
-   igazolás/számlázás (külön szoftver, szándékosan nem itt), utánkövetés.
-   Ezekhez az app szándékosan nem nyúl.
-3. *Mit kérdezne a páciens, amire ma nem tud jól válaszolni?* „Mi van
-   benne ebben az egy sorban?" (10. tétel), „Miért van két összeg, ha
-   ugyanaz a szám?" (12. tétel), „Mennyi az előleg?" (9. tétel), „Van rá
-   garancia?" (13. tétel).
-4. *Hol tévedtünk abban, ahogy elképzeltük a munkáját?* A billentyűzetes
-   felviteli ciklus, a verziózás elve, a kétnyelvűség váza jó irányban
-   vannak. De alábecsültük, hogy egy All-on-X ajánlat nem egy tömés-lista,
-   hanem tárgyalási eszköz — a sorokat tökéletesre csiszoltuk, a sorok
-   mögötti tartalmat (mi van benne, mennyi bizonytalan, mennyit kell most
-   letenni) kihagytuk.

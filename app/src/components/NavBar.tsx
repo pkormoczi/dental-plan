@@ -10,6 +10,7 @@ const LINKS: Array<{ to: string; label: string }> = [
   { to: '/tervek', label: 'Korábbi tervek' },
   { to: '/arlista', label: 'Árlista' },
   { to: '/beallitasok', label: 'Beállítások' },
+  { to: '/filerendszer', label: 'Filerendszer' },
 ];
 
 export default function NavBar() {

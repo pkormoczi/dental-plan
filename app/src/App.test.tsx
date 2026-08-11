@@ -72,6 +72,11 @@ describe('Végpontok közötti folyamat', () => {
     await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
     expect(await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 })).toBeInTheDocument();
 
+    // A patientDir/planDir/versionDir hármas leolvasása a mentés-visszaigazolásból --
+    // a Filerendszer nézet ellenőrzéséhez kell a teszt végén.
+    const savedRefEl = screen.getByText(/_v1$/);
+    const [savedPatientDir, savedPlanDir, savedVersionDir] = (savedRefEl.textContent ?? '').split(' / ');
+
     // Korábbi tervek -- a demó seed miatt több páciens is szerepel, ezért a
     // saját tervünket a kártyáján (nevén) belül keressük, nem globálisan.
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
@@ -101,6 +106,22 @@ describe('Végpontok közötti folyamat', () => {
     const patientCard2 = patientNameEl2.closest('[data-patient]') as HTMLElement;
     expect(within(patientCard2).getByText(/^v2 ·/)).toBeInTheDocument();
     expect(within(patientCard2).getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- D4
+
+    // Filerendszer -- ugyanennek a mentésnek látszania kell a fa-nézetben is:
+    // az első verzió mappája (v1) D4 miatt érintetlen maradt.
+    await user.click(screen.getByRole('link', { name: 'Filerendszer' }));
+    await user.click(screen.getByRole('button', { name: `paciensek/${savedPatientDir}` }));
+    await user.click(screen.getByRole('button', { name: `paciensek/${savedPatientDir}/${savedPlanDir}` }));
+    await user.click(
+      screen.getByRole('button', {
+        name: `paciensek/${savedPatientDir}/${savedPlanDir}/${savedVersionDir}`,
+      }),
+    );
+    expect(
+      screen.getByRole('button', {
+        name: `paciensek/${savedPatientDir}/${savedPlanDir}/${savedVersionDir}/kezelesi-terv.pdf`,
+      }),
+    ).toBeInTheDocument();
   }, 20000);
 
   it('a nyelv és a pénznem egymástól függetlenül választható és marad meg mentés után (D21: német nyelv, HUF pénznem)', async () => {

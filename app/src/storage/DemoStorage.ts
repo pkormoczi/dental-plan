@@ -12,6 +12,7 @@ import { javasoltTervCim } from '../domain/tervCim';
 import { assertKnownSchemaVersion } from '../domain/schema';
 import { isPlaceholderTemplate } from '../domain/templates';
 import { assertPlanShape, assertPriceListShape, assertSettingsShape } from '../domain/validate';
+import { buildDemoFileTree, type DemoNode } from './demoFileTree';
 import type {
   PatientFolder,
   PatientRecord,
@@ -287,6 +288,29 @@ export class DemoStorage implements PlanStorage {
       if (k && k.startsWith(PREFIX)) keys.push(k);
     }
     keys.forEach(fn);
+  }
+
+  /**
+   * Filerendszer nézet: a `dp:` kulcsokat fává alakítja (`demoFileTree.ts`).
+   * NEM a `PlanStorage` interfész része -- demó-only vizualizáció, a
+   * `resetDemoData`/`clearAll` mintájára (lásd StorageContext.tsx fejléce).
+   * Szinkron, mert egy `localStorage`-bejárás, nem I/O.
+   */
+  listFileTree(): DemoNode[] {
+    const keys: string[] = [];
+    this.eachKey((key) => keys.push(key));
+    return buildDemoFileTree(keys, PREFIX);
+  }
+
+  /**
+   * Egy fa-csomópont `storageKey`-éhez tartozó nyers tartalom (JSON string,
+   * markdown, vagy a PDF base64-kódolt bájtjai -- a hívó dönti el a
+   * `format` mező alapján, mit kezd vele). A `PREFIX`-őr megakadályozza,
+   * hogy ez általános localStorage-olvasóvá váljon.
+   */
+  readRawFile(storageKey: string): string | null {
+    if (!storageKey.startsWith(PREFIX)) return null;
+    return localStorage.getItem(storageKey);
   }
 
   async listPatients(): Promise<PatientFolder[]> {

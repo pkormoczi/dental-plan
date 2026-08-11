@@ -5,6 +5,7 @@ import DemoBanner from './components/DemoBanner';
 import ErrorBoundary from './components/ErrorBoundary';
 import NavBar from './components/NavBar';
 import { t } from './design/tokens';
+import FileTreePage from './pages/FileTreePage';
 import Home from './pages/Home';
 import NewPlanPage from './pages/NewPlanPage';
 import PatientPage from './pages/PatientPage';
@@ -59,6 +60,7 @@ export default function App() {
                       <Route path="/tervek" element={<PlanHistoryPage />} />
                       <Route path="/arlista" element={<PriceListAdminPage />} />
                       <Route path="/beallitasok" element={<SettingsPage />} />
+                      <Route path="/filerendszer" element={<FileTreePage />} />
                     </Routes>
                   </ErrorBoundary>
                 </main>

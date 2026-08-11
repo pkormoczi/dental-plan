@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DemoStorage } from './DemoStorage';
+import type { DemoNode } from './demoFileTree';
 import { VersionConflictError } from './paths';
 import type { Plan } from '../domain/types';
 
@@ -278,6 +279,88 @@ describe('DemoStorage', () => {
     raw.fazisok = [{ sorszam: 1, megnevezes: 'x', megjegyzes: '', sorok: [{ mennyiseg: 'sok' }] }];
     localStorage.setItem(key, JSON.stringify(raw));
     await expect(storage.loadPlan(ref)).rejects.toThrow(/szerkezete nem érvényes/);
+  });
+
+  describe('listFileTree / readRawFile', () => {
+    it('a friss seed gyökere csak a két JSON-t, a sablonok/-at és a paciensek/-et tartalmazza, PDF nélkül', async () => {
+      const tree = storage.listFileTree();
+      expect(tree.map((n) => n.name)).toEqual(['arlista.json', 'beallitasok.json', 'paciensek', 'sablonok']);
+
+      const sablonok = tree.find((n) => n.name === 'sablonok');
+      expect(sablonok?.type).toBe('dir');
+      if (sablonok?.type !== 'dir') throw new Error('unreachable');
+      expect(sablonok.children).toHaveLength(6);
+
+      const paciensek = tree.find((n) => n.name === 'paciensek');
+      if (paciensek?.type !== 'dir') throw new Error('unreachable');
+      expect(paciensek.children.length).toBeGreaterThanOrEqual(3);
+
+      function flatten(nodes: DemoNode[]): DemoNode[] {
+        return nodes.flatMap((n) => (n.type === 'dir' ? [n, ...flatten(n.children)] : [n]));
+      }
+      expect(flatten(tree).some((n) => n.name === 'kezelesi-terv.pdf')).toBe(false);
+    });
+
+    it('savePlan után a mentett verziómappa terv.json-t ÉS kezelesi-terv.pdf-et is tartalmaz', async () => {
+      const plan = makeBlankPlan();
+      const ref = await storage.savePlan(plan, new Uint8Array([1, 2, 3]));
+
+      const tree = storage.listFileTree();
+      const paciensek = tree.find((n) => n.name === 'paciensek');
+      if (paciensek?.type !== 'dir') throw new Error('unreachable');
+      const patient = paciensek.children.find((n) => n.name === ref.patientDir);
+      if (patient?.type !== 'dir') throw new Error('unreachable');
+      const planNode = patient.children.find((n) => n.name === ref.planDir);
+      if (planNode?.type !== 'dir') throw new Error('unreachable');
+      const versionNode = planNode.children.find((n) => n.name === ref.versionDir);
+      if (versionNode?.type !== 'dir') throw new Error('unreachable');
+
+      expect(versionNode.children.map((n) => n.name).sort()).toEqual(['kezelesi-terv.pdf', 'terv.json']);
+    });
+
+    it('a dp:piszkozat közvetlen írása nem változtatja meg a fát', async () => {
+      const before = storage.listFileTree();
+      localStorage.setItem(
+        'dp:piszkozat',
+        JSON.stringify({ schemaVersion: 1, mentve: '2026-08-11T10:00:00.000Z', plan: makeBlankPlan() }),
+      );
+      expect(storage.listFileTree()).toEqual(before);
+    });
+
+    it('savePlanLabel után terv-cimke.json megjelenik a fában', async () => {
+      const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
+      await storage.savePlanLabel(ref.patientDir, ref.planDir, 'Fogpótlás');
+
+      const tree = storage.listFileTree();
+      const paciensek = tree.find((n) => n.name === 'paciensek');
+      if (paciensek?.type !== 'dir') throw new Error('unreachable');
+      const patient = paciensek.children.find((n) => n.name === ref.patientDir);
+      if (patient?.type !== 'dir') throw new Error('unreachable');
+      const planNode = patient.children.find((n) => n.name === ref.planDir);
+      if (planNode?.type !== 'dir') throw new Error('unreachable');
+
+      expect(planNode.children.some((n) => n.name === 'terv-cimke.json')).toBe(true);
+    });
+
+    it('saveTemplate után a régi ÉS az új verziójú sablonfájl is látszik a fában (D4)', async () => {
+      await storage.saveTemplate('garancia-hu', 'új szöveg');
+
+      const tree = storage.listFileTree();
+      const sablonok = tree.find((n) => n.name === 'sablonok');
+      if (sablonok?.type !== 'dir') throw new Error('unreachable');
+      const names = sablonok.children.map((n) => n.name);
+      expect(names).toContain('garancia-hu-v1.md');
+      expect(names).toContain('garancia-hu-v2.md');
+    });
+
+    it('readRawFile a pontos tárolt stringet adja vissza, ismeretlen/prefix nélküli kulcsra null-t', async () => {
+      const raw = storage.readRawFile('dp:arlista.json');
+      expect(raw).not.toBeNull();
+      expect(JSON.parse(raw!).schemaVersion).toBe(1);
+
+      expect(storage.readRawFile('dp:nincs-ilyen')).toBeNull();
+      expect(storage.readRawFile('nincs-prefix')).toBeNull();
+    });
   });
 
   // D29 -- egyszeri migráció a régi (páciens → verzió) 2 szintű

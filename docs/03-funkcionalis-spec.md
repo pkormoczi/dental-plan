@@ -9,6 +9,7 @@
 5. Korábbi tervek
 6. Árlista admin
 7. Beállítások
+8. Filerendszer — demó-only, a leendő fájlrendszeres architektúra vizualizációja
 
 ---
 
@@ -696,3 +697,37 @@ hossz-alapú, soha nem újrahasznosított).
   `nyilatkozat-de-v1.md`/`fizetesi-feltetelek-de-v1.md` státusza
   (placeholder, amíg a jogi fordítás el nem készül) — link az Árlistára,
   ahol a „Nincs EUR ár" szűrő a munkalista.
+
+---
+
+## 8. Filerendszer
+
+**Kizárólag a mockup-fázisra való, demó-only nézet** — a végleges asztali
+alkalmazásban a doki a valódi Fájlkezelőt használná erre, ez a képernyő
+nem feltétlenül él tovább a `FileSystemStorage`-váltás (2. fázis) után.
+Célja, hogy a doki és a fejlesztő közösen lássa, mit írna az app a
+gyökérmappába — a `docs/02-domain-modell.md` "Mappastruktúra" élő,
+kattintható vetülete a mockup `localStorage`-adatából.
+
+- **Read-only fa**: mappa/fájl diszklózúra, a gyökér és az első szint
+  (`sablonok/`, `paciensek/`, a két root JSON) alapból nyitva, mélyebb
+  szintek (páciens-/terv-/verziómappák) csukva. Semmilyen törlés/
+  átnevezés/írás nincs ezen a képernyőn — a meglévő útvonalak (Korábbi
+  tervek, Árlista admin, Beállítások) változatlanok.
+- **Egy fájlra kattintva** a ténylegesen tárolt tartalom jelenik meg alatta:
+  JSON fájloknál pretty-printelve, sablon-`.md` fájloknál nyers szöveggel
+  (a `[PLACEHOLDER`/`[PLATZHALTER` jelöléssel együtt), a `kezelesi-terv.pdf`-nél
+  egy "Megnyitás új lapon" linkkel a ténylegesen elmentett PDF-bájtokból
+  épített ideiglenes URL-re.
+- **Csak az valóban ott van, ami ténylegesen mentve lett** — a demó seed
+  tervekhez (a „Demó adat visszaállítása" gomb után) egyelőre nincs PDF,
+  az csak egy tényleges véglegesítés-és-mentés után jelenik meg a
+  verziómappában; a fa nem mutat kitalált tartalmat.
+- **A piszkozat-cache-ek (`dp:piszkozat`, a terv-autosave; és a
+  sablonszerkesztő `dp:sablon-piszkozat`-ja, lásd fent § 7. Beállítások)
+  soha nem jelennek meg** — a végleges architektúrában ezek IndexedDB,
+  nem fájl, tehát a fa nem róluk szól.
+- Üres tároló esetén ("Minden adat törlése" — bár ez a gombsorrend miatt
+  ma mindig újra-seedel is, lásd Kezdőlap) semleges üres állapot, hiba
+  esetén a hiba szövege — a `docs/07-felulet-rendszer.md` "Kötelező
+  állapotok" szabálya szerint.
