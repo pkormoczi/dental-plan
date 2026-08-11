@@ -40,3 +40,9 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 - Rendelő adatai és az orvosok listája a nyomtatvány fejlécéhez/lábléchez.
 - Nyilatkozat, fizetési feltételek és garancia szövegének szerkesztése — mentéskor mindig új verzió jön létre, a korábban aláírt tervek a saját, aláírt szövegükkel maradnak.
 - Német nyelv engedélyezése, és annak áttekintése, mennyi tartalom (tételnevek, euró árak, nyilatkozat) áll már készen németül.
+
+## Filerendszer
+
+- Böngészhető mappa- és fájlszerkezet mutatja meg, hogy a végleges programban pontosan hová, milyen néven kerülnek majd a mentett kezelési tervek, az árlista és a nyomtatvány-szövegek.
+- Egy fájlra kattintva megnézhető a tényleges tartalma is — egy már elmentett tervnél akár a ténylegesen legenerált nyomtatvány is megnyitható innen, új lapon.
+- Csak megtekintésre való: innen semmi nem törölhető vagy módosítható, a meglévő mentési és letöltési lehetőségek (pl. a Korábbi tervek oldalon) változatlanok maradnak.

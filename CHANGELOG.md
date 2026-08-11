@@ -17,6 +17,11 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 - A Kezdőlap "Új terv indítása" gombja mostantól előbb megkérdezi, kinek indul a terv: kereshető
   a már meglévő páciensek között (ekkor a korábban megadott adatai előre kitöltődnek), vagy
   indítható egy teljesen új, még sosem szereplő páciens tervezésével.
+- Megjelent egy új „Filerendszer” menüpont: itt előre megnézhető, hogy a program végleges
+  változata pontosan hová, milyen mappákba és fájlnevekbe fogja majd menteni a kezelési
+  terveket, az árlistát és a nyomtatvány szövegeit. Egy fájlra kattintva a tartalma is
+  megtekinthető, egy már elmentett tervnél pedig akár a ténylegesen legenerált nyomtatvány is
+  megnyitható innen, új lapon.
 
 ## 2026. augusztus 10.
 
