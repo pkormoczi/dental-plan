@@ -1,30 +1,18 @@
 # Backlog
 
-Ez a fájl az első kör backlogjának **nyitott** tételeit és a második
-termékreview-kör architekt-triázsának tételeit fésüli össze. Az első kör
-teljes anyaga — a 12 kész tétel megvalósítási jegyzeteivel és az első
-doktor-nap narratívával együtt — archiválva, lásd „Honnan jönnek az
-igények" lent.
-
 A `docs/01` sérthetetlen keretei (D1–D29) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. Lezárt
-tétel száma véglegesen nyugdíjazva, soha nem osztható ki újra (ahogy a
-D17 az ártétel-`id`-nél) — az új tételek a sorozatot onnan folytatják,
+tétel száma véglegesen nyugdíjazva, soha nem osztható ki újra — az új tételek a sorozatot onnan folytatják,
 ahol a legutóbb kiosztott szám állt.
 
 **Sorrend:** a listákon belül hasznosság szerint — a napi fájdalom
-mérete × gyakorisága, holtversenynél a kisebb munka előre. A 24. tétel a
-lista végén áll, mert nem fejlesztői munka, tehát nem esik a
-haszon-rangsorba. A MOST szakasz hat fejlesztői tételéhez van
-tervdokumentum (grill-me munkamenetek döntési összefoglalói); a 24.
-tételnek nincs, és nem is lesz — tisztán adattisztítás és
-információkérés a dokitól.
+mérete × gyakorisága, holtversenynél a kisebb munka előre. 
 
 ---
 
-## MOST (kb. 1–1,5 fejlesztői nap + fél nap közös munka a dokival)
+## MOST
 
 ### 1. hely — 19. tétel: 0 Ft-os sorok puha figyelmeztetése véglegesítéskor
 
@@ -120,7 +108,7 @@ Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
 
 ---
 
-## Technikai adósság (a 2026-08-06-i kódreview nyitva maradt tételei)
+## Technikai adósság
 
 A review P0-jai (8/8) és P1-jei (9/9) mind javítva — lásd git history.
 Az alábbiak maradtak nyitva (változatlanul az első körből):
