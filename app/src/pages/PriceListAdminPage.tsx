@@ -50,7 +50,7 @@ import { t } from '../design/tokens';
 import { ALAP_KATEGORIA_SZIN, KATEGORIA_PALETTA } from '../design/treatmentVisuals';
 import { todayIso } from '../domain/date';
 import { leirasTulHosszu } from '../domain/leirasHossz';
-import { formatPrice } from '../domain/money';
+import { formatPrice, savosHatarForditott } from '../domain/money';
 import { nextKategoriaId, nextTetelId } from '../domain/priceListIds';
 import { nevEgyezik, norm } from '../domain/search';
 import type { Ar, Kategoria, PriceList, Tetel } from '../domain/types';
@@ -726,6 +726,11 @@ function ItemEditor({
             <Field label="HUF ár — ig">
               <NumberField value={hufAr.max} min={0} onCommit={(v) => setSavosPrice({ max: v })} />
             </Field>
+            {savosHatarForditott(hufAr) && (
+              <Text as="div" size="1" mt="1" style={{ color: t.warn, gridColumn: '1 / -1' }}>
+                A „tól" nagyobb, mint az „ig" — fordított sáv, ellenőrizd.
+              </Text>
+            )}
           </>
         ) : (
           <Field label="HUF ár">
@@ -770,6 +775,11 @@ function ItemEditor({
                 onCommit={(v) => setEurSavos({ max: v })}
               />
             </Field>
+            {savosHatarForditott(eurAr) && (
+              <Text as="div" size="1" mt="1" style={{ color: t.warn, gridColumn: '1 / -1' }}>
+                A „tól" nagyobb, mint az „ig" — fordított sáv, ellenőrizd.
+              </Text>
+            )}
           </>
         ) : (
           <Flex gap="2" align="end">

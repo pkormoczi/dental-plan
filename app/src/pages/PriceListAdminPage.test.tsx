@@ -200,6 +200,27 @@ describe('PriceListAdminPage', () => {
     expect(cbct.ar.EUR).toEqual({ tipus: 'SAVOS', min: 6600, max: 6600 });
   });
 
+  it('a "tól" mezőbe a "ig"-nél nagyobb értéket írva fordított-sáv figyelmeztetés jelenik meg, de a mentés lefut', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    await user.click(nameCell);
+    await user.click(screen.getByRole('button', { name: 'Fix → sávos' }));
+
+    const tol = screen.getByLabelText('HUF ár — tól');
+    await user.clear(tol);
+    await user.type(tol, '65000');
+    await user.tab();
+
+    expect(
+      await screen.findByText('A „tól" nagyobb, mint az „ig" — fordított sáv, ellenőrizd.'),
+    ).toBeInTheDocument();
+
+    const cbct = findItem(readPriceList(), 'CBCT');
+    expect(cbct.ar.HUF).toEqual({ tipus: 'SAVOS', min: 65000, max: 24000 });
+  });
+
   // "+ Új tétel" felugró dialógus: a gomb ma két helyen is megjelenik (a
   // Kategóriák gomb sorában és a lista alján), és a mentés a Mentés gomb
   // megnyomásáig NEM ír a törzsadatba -- se placeholder név, se némán az

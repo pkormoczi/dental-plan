@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { basePrice, formatMoney, formatPrice } from './money';
+import { basePrice, formatMoney, formatPrice, savosHatarForditott } from './money';
 
 describe('formatMoney', () => {
   it('formats HUF as thousands-separated integer with Ft suffix', () => {
@@ -69,5 +69,25 @@ describe('basePrice', () => {
 
   it('returns 0 for a missing price', () => {
     expect(basePrice(null)).toBe(0);
+  });
+});
+
+describe('savosHatarForditott', () => {
+  it('false, ha a SAVOS sáv helyes irányú (min <= max)', () => {
+    expect(savosHatarForditott({ tipus: 'SAVOS', min: 35000, max: 55000 })).toBe(false);
+  });
+
+  it('true, ha a min nagyobb, mint a max', () => {
+    expect(savosHatarForditott({ tipus: 'SAVOS', min: 65000, max: 38000 })).toBe(true);
+  });
+
+  it('false egyenlő min/max esetén (nem fordított, csak fix sávnyi)', () => {
+    expect(savosHatarForditott({ tipus: 'SAVOS', min: 40000, max: 40000 })).toBe(false);
+  });
+
+  it('false FIX ártípusra és hiányzó árra', () => {
+    expect(savosHatarForditott({ tipus: 'FIX', ertek: 25000 })).toBe(false);
+    expect(savosHatarForditott(null)).toBe(false);
+    expect(savosHatarForditott(undefined)).toBe(false);
   });
 });

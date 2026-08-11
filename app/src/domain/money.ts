@@ -38,6 +38,17 @@ export function basePrice(ar: Ar | null | undefined): number {
 }
 
 /**
+ * Fordított SAVOS sáv (`min` nagyobb, mint `max`) -- puha jelzés, nem
+ * betöltési hiba (a `validate.ts` guard csak azt nézi, véges szám-e mindkét
+ * mező). Fordított sávnál a `formatPrice` "nagy–kicsi" tartományt írna ki, a
+ * `basePrice` pedig a NAGYOBB számot (a `min`-t) vinné be a tervbe
+ * egységárként -- ez a predikátum ad rá figyelmeztetést az Árlista adminban.
+ */
+export function savosHatarForditott(ar: Ar | null | undefined): boolean {
+  return !!ar && ar.tipus === 'SAVOS' && ar.min > ar.max;
+}
+
+/**
  * Az EUR ár admin-mezőit euróban (nem centben) jelenítjük meg -- a
  * P0-5 találat pont az volt, hogy a doki centet gépel euró helyett.
  * `parseEuroInput`/`formatCentForInput` a `NumberField` `unit="EUR"`
