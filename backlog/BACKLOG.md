@@ -11,7 +11,9 @@ ahol a legutóbb kiosztott szám állt.
 mérete × gyakorisága, holtversenynél a kisebb munka előre. 
 
 ---
+## KIDOLGOZOTT
 
+---
 ## KIDOLGOZÁSRA VÁR
 
 - **Ajánlat-állapot és visszahívás-jelzés** (pl. `allapot.json` a
@@ -53,6 +55,7 @@ cache kulcsához — tudatos, a fájl saját kommentje indokolja (hogy a
 cache-mechanizmus explicit localStorage-specifikus, a
 `FileSystemStorage`-váltás (2. fázis) tervezésekor újragondolandó, nem a
 mockup feladata most.
+---
 
 ## NEM FEJLESZTÉS
 

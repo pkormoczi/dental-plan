@@ -12,21 +12,29 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 
 - A kezelési terv összeállítása fázisokra bontva, gyors kereséssel az árlistából — gépeléssel, nyilakkal és Enterrel is, egérhasználat nélkül.
 - Kattintható fogtérkép: egy fogra kattintva közvetlenül onnan is felvehető egy kezelés, és látszik, mely fogakon milyen kezelés szerepel.
-- Tételenként megadható a fog, a mennyiség, az ajánlati ár (kedvezménnyel vagy felárral), és jelölhető, hogy az ár csak becsült-e; hozzáadható egy leírás is arról, mi tartozik a tételhez.
+- Tételenként megadható a fog, a mennyiség (a felsorolt fogak számából automatikusan kitöltve, de bármikor kézzel felülírható), az ajánlati ár (kedvezménnyel vagy felárral), és jelölhető, hogy az ár csak becsült-e; hozzáadható egy leírás is arról, mi tartozik a tételhez.
 - Kerek végösszeg is beállítható a tervhez — a hozzá tartozó kedvezményt a program automatikusan kiszámolja —, és ha a kezelés fogtechnikai munkát tartalmaz, előleg is feltüntethető.
 
 ## Előnézet
 
 - A végleges nyomtatvány megtekintése véglegesítés előtt, akár „csak ajánlat” (nyilatkozat és aláírás nélküli) változatban is.
 - Innen indul a véglegesítés: ekkor készül el a letölthető PDF, és ekkor mentődik a terv új verzióként.
-- Véglegesítés előtt a program figyelmeztet, ha hiányoznak páciensadatok, ha egy tétel neve nem a terv nyelvén szerepel, vagy ha egy csomagtételhez nincs megadva leírás.
+- Véglegesítés előtt a program figyelmeztet, ha hiányoznak páciensadatok, ha egy tétel neve nem a terv nyelvén szerepel, ha egy csomagtételhez nincs megadva leírás, vagy ha egy tétel díjmentesen (0 Ft-tal) szerepel a tervben.
+- Ha a nyilatkozat szövege még jogi lektorálásra vár, a program automatikusan „csak ajánlat” módra kényszerít, mert enélkül nem generálható aláírásra alkalmas nyomtatvány.
 
 ## Korábbi tervek
 
-- Egy visszatérő páciens korábbi ajánlatainak/terveinek keresése, megnyitása és PDF-letöltése, verziónkénti végösszeggel; egy páciensnek akár több, egymástól független terve is lehet, ezek külön, saját — magától javasolt, de szabadon átírható — címmel jelennek meg egymás alatt (több terv esetén összecsukva, egy kattintással kinyithatóan).
+- Egy visszatérő páciens korábbi ajánlatainak/terveinek keresése; egy verzió közvetlenül megtekinthető böngészőben (letöltés nélkül) vagy letölthető PDF-ként, verziónkénti végösszeggel; egy páciensnek akár több, egymástól független terve is lehet, ezek külön, saját — magától javasolt, de szabadon átírható — címmel jelennek meg egymás alatt (több terv esetén összecsukva, egy kattintással kinyithatóan).
 - Régi verzió sosem íródik felül — módosításkor mindig új verzió készül a meglévő tervhez, a korábbi (aláírt) állapot változatlan marad.
 - Egy korábbi terv alapján önálló új terv is indítható: vagy csak a páciens adataival (visszatérő páciensnél nem kell újragépelni), vagy a teljes tartalom átvételével, például egy árváltozat elkészítéséhez.
-- Új terv indításakor is kereshető, hogy a páciens szerepel-e már korábban — ha igen, az adatai előre kitöltődnek, ha nem, egy teljesen új, üres terv indul.
+- Új terv indításakor is kereshető, hogy a páciens szerepel-e már korábban — akár egy korábbi tervben, akár csak a saját adatlapján —, ha igen, az adatai előre kitöltődnek, ha nem, egy teljesen új, üres terv indul.
+
+## Páciensek
+
+- A páciensek saját, minden konkrét ajánlattól független adatlapja: telefon, e-mail, lakcím, TAJ, születési dátum és a kiskorú páciensek törvényes képviselőjének adatai — bármikor szerkeszthető, nem csak egy adott terv mentésekor.
+- Kereshető lista, ami jelzi, hogy egy páciensnek van-e már ilyen önálló, elmentett adatlapja, vagy egyelőre csak a legutóbbi tervében megadott adatai látszanak.
+- Új páciens felvehető terv nélkül is, csak a névvel — a többi adat utólag, bármikor kitölthető.
+- Egy kattintással átválthat a doki a páciens adatlapja és a korábbi tervei között, oda-vissza.
 
 ## Árlista
 
@@ -43,6 +51,6 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 
 ## Filerendszer
 
-- Böngészhető mappa- és fájlszerkezet mutatja meg, hogy a végleges programban pontosan hová, milyen néven kerülnek majd a mentett kezelési tervek, az árlista és a nyomtatvány-szövegek.
+- Böngészhető mappa- és fájlszerkezet mutatja meg, hogy a végleges programban pontosan hová, milyen néven kerülnek majd a mentett kezelési tervek, az árlista és a nyomtatvány-szövegei.
 - Egy fájlra kattintva megnézhető a tényleges tartalma is — egy már elmentett tervnél akár a ténylegesen legenerált nyomtatvány is megnyitható innen, új lapon.
 - Csak megtekintésre való: innen semmi nem törölhető vagy módosítható, a meglévő mentési és letöltési lehetőségek (pl. a Korábbi tervek oldalon) változatlanok maradnak.

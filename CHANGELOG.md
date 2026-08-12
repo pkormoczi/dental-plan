@@ -2,8 +2,46 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. augusztus 12.
+
+- Megjelent egy új „Páciensek” menüpont: itt a páciens elérhetőségei (telefon, e-mail, lakcím,
+  TAJ, születési dátum, kiskorú esetén a törvényes képviselő adatai) egy önálló, minden
+  konkrét ajánlattól független adatlapon tárolhatók és bármikor szerkeszthetők — nem kell
+  minden új tervhez újra begépelni őket. Innen terv nélkül is felvehető egy új páciens, és egy
+  kattintással át lehet váltani a páciens adatlapja és a korábbi tervei között.
+- A Terv szerkesztőben a Db (darabszám) mező mostantól automatikusan követi a Fog mezőben
+  felsorolt fogak számát, amíg kézzel felül nem írjuk — ekkor egy ⟳ gombbal bármikor
+  visszaállítható az automatikus követésre.
+- Javítottunk egy ritka hibát, amely miatt két, nagyon gyorsan egymás után elvégzett mentés
+  (pl. az Árlistán vagy a Beállításokban) néha elveszíthette az egyik módosítást.
+- Az Árlista adminban sávos ár megadásakor a program mostantól figyelmeztet, ha a „-tól” érték
+  nagyobb, mint a „-ig” érték — korábban ez észrevétlenül átment, és a nagyobb (helytelen) szám
+  került be egységárként a tervekbe.
+- Javítottuk, hogy ha egy fogszám véletlenül kétszer szerepel a Fog mezőben (pl. „16, 17, 16”),
+  a fogtérkép ne jelölje meg duplán, és ne jelenjen meg emiatt hamis „a darabszám nem egyezik”
+  figyelmeztetés.
+
 ## 2026. augusztus 11.
 
+- A Korábbi tervek egy régebbi verziójának menüjében megjelent egy „Megnézés” lehetőség: ezzel
+  a mentett nyomtatvány közvetlenül, új böngészőlapon megtekinthető, anélkül hogy a
+  szerkesztőbe töltődne (és ezzel veszélyeztetné a folyamatban lévő piszkozatot) vagy fájlt
+  hagyna a Letöltések mappában.
+- A német nyelvű ajánlat véglegesítésekor megjelenő figyelmeztető lista mostantól külön
+  sorolja fel az egyedi (kézzel beírt, árlistán kívüli) tételeket a ténylegesen hiányzó német
+  fordítású tételektől — pontosabb kép arról, mit érdemes ellenőrizni.
+- Az árlista admin bármilyen mentése (akár csak egyetlen tétel „gyakori”-jelölése is)
+  mostantól frissíti a nyomtatványon feltüntetett árlista-dátumot — eddig ez a dátum a
+  legelső feltöltés óta változatlan maradt, holott az árlista azóta sokszor módosult.
+- A letöltött kezelési terv PDF fájlneve mostantól tartalmazza a páciens nevét is (eddig csak
+  egy azonosítót), piszkozat esetén pedig egy „PISZKOZAT-” előtaggal kezdődik — így a
+  Letöltések mappában is könnyen megtalálható és megkülönböztethető.
+- Véglegesítéskor a program mostantól figyelmeztet, ha egy megnevezett tétel 0 forintos/eurós
+  áron szerepel a tervben — ez korábban észrevétlenül a nyomtatott dokumentumra kerülhetett,
+  például egy elgépelés és egy reflexből megnyomott Enter miatt.
+- Egy sorokat tartalmazó kezelési fázis törlése mostantól visszakérdez, mert ez korábban
+  egyetlen kattintással, visszavonhatatlanul törölte az összes benne lévő tételt is. Üres
+  fázis törlése változatlanul egy kattintás.
 - A Korábbi tervek lista mostantól páciensenként akár több, egymástól független tervet is meg
   tud különböztetni — eddig egy páciens neve alatt csak egyetlen tervsorozat verziói fértek el,
   mostantól többféle önálló ajánlat (pl. egy fogpótlás és egy külön fogszabályozási terv) is
