@@ -260,7 +260,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     });
   });
 
-  it('shows the non-blocking tooth-count mismatch warning without preventing entry', async () => {
+  it('backlog-27: a darabszám automatikusan követi a fogak mezőt, kézi felülbírálásig', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -270,11 +270,38 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await user.click(result);
 
     const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    const quantityInput = screen.getByRole('textbox', { name: 'Darabszám' });
     await user.type(teethInput, '16, 17');
+
+    await waitFor(() => expect(quantityInput).toHaveValue('2'));
+    expect(screen.queryByText(/fog van felsorolva/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Darabszám igazítása a fogakhoz' }),
+    ).not.toBeInTheDocument();
+
+    // A doki kézzel felülbírálja -- a sor leválik: megjelenik a figyelmeztetés
+    // és a visszakapcsoló ⟳ gomb.
+    await user.clear(quantityInput);
+    await user.type(quantityInput, '1');
+    await user.tab();
 
     expect(
       await screen.findByText(/2 fog van felsorolva, a darabszám 1\. Szándékos\?/),
     ).toBeInTheDocument();
+    const visszakapcsolo = screen.getByRole('button', {
+      name: 'Darabszám igazítása a fogakhoz',
+    });
+    expect(visszakapcsolo).toBeInTheDocument();
+
+    // Visszakapcsolásra azonnal szinkronizál, és a sor újra követ.
+    await user.click(visszakapcsolo);
+    await waitFor(() => expect(quantityInput).toHaveValue('2'));
+    expect(
+      screen.queryByRole('button', { name: 'Darabszám igazítása a fogakhoz' }),
+    ).not.toBeInTheDocument();
+
+    await user.type(teethInput, ', 26');
+    await waitFor(() => expect(quantityInput).toHaveValue('3'));
   });
 
   it('updates the mismatch warning live while the quantity is typed, before the blur-commit fires', async () => {
@@ -288,20 +315,21 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await waitFor(() => expect(search).toHaveValue(''));
 
     const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    const quantityInput = screen.getByRole('textbox', { name: 'Darabszám' });
     await user.type(teethInput, '16, 17, 26');
-    await screen.findByText(/3 fog van felsorolva, a darabszám 1\. Szándékos\?/);
+    // A fogak-követés miatt a darabszám már gépelés közben 3-ra áll -- nincs
+    // eltérés, amíg a doki nem ír a Db mezőbe.
+    await waitFor(() => expect(quantityInput).toHaveValue('3'));
+    expect(screen.queryByText(/fog van felsorolva/)).not.toBeInTheDocument();
 
     // A darabszám NumberField csak blur/Enterre committál a törzsadatba
     // (P1-4), de ennek a pusztán UI-visszajelzésnek élőben kell követnie a
     // gépelést, nem várhat a blurre.
-    const quantityInput = screen.getByDisplayValue('1');
     await user.clear(quantityInput);
-    await user.type(quantityInput, '3');
+    await user.type(quantityInput, '1');
 
-    await waitFor(() =>
-      expect(screen.queryByText(/fog van felsorolva/)).not.toBeInTheDocument(),
-    );
-    expect(quantityInput).toHaveValue('3');
+    await screen.findByText(/3 fog van felsorolva, a darabszám 1\. Szándékos\?/);
+    expect(quantityInput).toHaveValue('1');
   });
 
   it('a Fog mezőbe írt szabadszöveges jegyzetet (pl. "jobb felső") nem jelöli hibásnak -- docs/02-domain-modell.md', async () => {
@@ -482,6 +510,9 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     await user.click(tooth24);
 
     expect(screen.getByDisplayValue('24')).toBeInTheDocument();
+    // backlog-27: a fogtérkép-popover írási útja is a fogak-követésen megy
+    // át -- egy kijelölt fog a darabszámot is frissíti.
+    expect(screen.getByRole('textbox', { name: 'Darabszám' })).toHaveValue('1');
   });
 });
 

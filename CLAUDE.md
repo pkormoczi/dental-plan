@@ -399,6 +399,17 @@ A D31 (`docs/01-attekintes-es-dontesek.md`) segédfüggvénye:
   admin), nem betöltési hiba — a `basePrice()`/`formatPrice()` mellett él,
   ugyanabban a fájlban, ahol a `SAVOS` szemantika a többi helye is van
 
+Az automatikus darabszám tétel (`docs/02-domain-modell.md` § Fogszám
+kezelés, D32) segédfüggvényei, szintén ne írd újra őket:
+- `kovetettMennyiseg(fogak)` / `sorPatchKovetessel(sor, patch)`
+  (`app/src/domain/mennyiseg.ts`) — az EGYETLEN hely, ahol eldől, hogy egy
+  `Sor`-patch leválasztja-e a darabszámot a fogak-követéstől, vagy
+  szinkronizálja azt; a `PlanEditorPage.tsx` `patchLine`-ja hívja minden
+  `LineRow`-patchre, a hívónak nem kell ismernie a szabályokat. A
+  `Sor.mennyisegKezi` hiányzó mezője (egy, a funkció bevezetése előtti sor)
+  kézinek számít, nem követőnek — a `nevKoveti()`-nél alkalmazott D24
+  mintáján
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
@@ -449,7 +460,7 @@ Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
-döntések (D1–D31) egy helyen, számozva élnek a
+döntések (D1–D32) egy helyen, számozva élnek a
 `docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
 háttere külön fájlban, `backlog/plans/backlog-<n>-<cim>-terv.md` néven.
 Amikor egy modul vagy komponens "miért így van megcsinálva" kérdés merül
@@ -514,7 +525,7 @@ ugyanabban a körben, nem később:
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D31 döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D32 döntések és indoklásuk; adatvédelmi keret; kockázatok |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, árlista admin, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |

@@ -93,6 +93,14 @@ export interface Sor {
    * bevezetése előtt mentett sor, vagy nincs leírás.
    */
   leirasSnapshot?: string;
+  /**
+   * `false` = a darabszám automatikusan követi a `fogak` mezőt; `true` = a
+   * doki kézzel felülbírálta, a sor levált -- lásd `sorPatchKovetessel()`
+   * (domain/mennyiseg.ts). Additív mező, hiányzó mező = a mező bevezetése
+   * előtt mentett sor, ami KÉZINEK számít -- egy régi terven a fogak-alapú
+   * felülírás némán átírná a doki szándékos darabszámát (D24 mintája).
+   */
+  mennyisegKezi?: boolean;
 }
 
 export interface Fazis {

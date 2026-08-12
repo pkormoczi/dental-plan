@@ -1,6 +1,6 @@
 # Backlog
 
-A `docs/01` sérthetetlen keretei (D1–D31) egyik tételt sem sértik —
+A `docs/01` sérthetetlen keretei (D1–D32) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. Lezárt
@@ -13,12 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 
 ## KIDOLGOZOTT
-
-### 27. tétel — Automatikus darabszám a fogszámokból  
-  (D14 részleges újranyitása) — a mennyiség automatikusan kövesse a fogak mezőt, kézi
-  felülbírálással; az egységtípus explicit besorolása továbbra sem
-  történik meg, heurisztika váltja ki.  
-  **Terv:** `backlog/plans/backlog-27-automatikus-darabszam-terv.md`
 
 ### 28. tétel — Páciens-szintű, terveken átívelő törzsadat-nyilvántartó
   (paciens-adatok.json, a paciens.json-tól külön fájl, a teljes Paciens

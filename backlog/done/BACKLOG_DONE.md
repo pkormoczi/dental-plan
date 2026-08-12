@@ -777,4 +777,27 @@ karbantartási kör négy önálló javítása.
   dialógus-szövegek a `PreviewPage.tsx`-ben maradtak
   (`docs/03-funkcionalis-spec.md` § 4. Előnézet és véglegesítés).
 
+### 27. Automatikus darabszám a fogszámokból — KÉSZ (2026-08-12)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — D14 részleges újranyitása (az egységtípus
+  explicit tétel-/kategória-szintű besorolása változatlanul kimarad,
+  heurisztika váltja ki); az új D32 a kézi felülbírálás védelmét mondja ki,
+  a D24 mintáján.
+- **Valódi haszon:** időmegtakarítás — a doki eddig minden sorban kézzel
+  gépelte be a darabszámot is, miután már felsorolta a fogakat.
+- **Megvalósítás:** additív, opcionális `Sor.mennyisegKezi` mező
+  (`schemaVersion` marad 1) — `docs/02-domain-modell.md` § Fogszám kezelés,
+  D32 (`docs/01-attekintes-es-dontesek.md`). Új
+  `kovetettMennyiseg()`/`sorPatchKovetessel()` (`app/src/domain/mennyiseg.ts`)
+  — az EGYETLEN hely, ahol egy `Sor`-patch fogak→darabszám hatása eldől; a
+  `PlanEditorPage.tsx` `patchLine`-ja hívja minden sorpatchre. Hiányzó
+  `mennyisegKezi` (egy, a funkció bevezetése előtt mentett sor) kézinek
+  számít, nem automatikusan követőnek. A szerkesztőben a Db mező mellett egy
+  ghost ⟳ ikongomb jelenik meg levált (kézzel felülbírált), de érvényes
+  fogszám-listájú soron — egy kattintásra szinkronizál és a sor újra követővé
+  válik; a meglévő „X fog van felsorolva…” szöveges figyelmeztetés is
+  megmarad, második jelzésként. A nyomtatvány nem változott — a `mennyiseg`
+  végső, elmentett értéke kerül papírra, forrástól függetlenül.
+
 ---

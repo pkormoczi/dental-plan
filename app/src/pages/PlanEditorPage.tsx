@@ -22,7 +22,7 @@ import {
   TextArea,
   TextField,
 } from '@radix-ui/themes';
-import { Cross1Icon, InfoCircledIcon } from '@radix-ui/react-icons';
+import { Cross1Icon, InfoCircledIcon, UpdateIcon } from '@radix-ui/react-icons';
 import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
 import ToothChartPanel from '../components/ToothChartPanel';
@@ -30,6 +30,7 @@ import ToothPickerPopover from '../components/ToothPickerPopover';
 import { t } from '../design/tokens';
 import { formatLongDate } from '../domain/date';
 import { leirasTulHosszu } from '../domain/leirasHossz';
+import { sorPatchKovetessel } from '../domain/mennyiseg';
 import { basePrice, formatMoney } from '../domain/money';
 import { resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
@@ -195,19 +196,30 @@ export default function PlanEditorPage() {
     const mezok = sorMezokTetelbol(item, currency, nyelv);
     if (!mezok) return; // available már kiszűrte, de a típusnak ez kell
     updatePlan((draft) => {
-      draft.fazisok[phaseIdx].sorok.push({ ...mezok, fogak: '', mennyiseg: 1 });
+      draft.fazisok[phaseIdx].sorok.push({
+        ...mezok,
+        fogak: '',
+        mennyiseg: 1,
+        mennyisegKezi: false,
+      });
     });
   }
 
   function addEgyediLine(phaseIdx: number, nev: string) {
     updatePlan((draft) => {
-      draft.fazisok[phaseIdx].sorok.push({ ...sorMezokEgyedibol(nev), fogak: '', mennyiseg: 1 });
+      draft.fazisok[phaseIdx].sorok.push({
+        ...sorMezokEgyedibol(nev),
+        fogak: '',
+        mennyiseg: 1,
+        mennyisegKezi: false,
+      });
     });
   }
 
   function patchLine(pi: number, li: number, patch: Partial<Sor>) {
     updatePlan((draft) => {
-      Object.assign(draft.fazisok[pi].sorok[li], patch);
+      const sor = draft.fazisok[pi].sorok[li];
+      Object.assign(sor, sorPatchKovetessel(sor, patch));
     });
   }
 
@@ -240,6 +252,7 @@ export default function PlanEditorPage() {
           listaEgysegar: 0,
           tenylegesEgysegar: 0,
           leirasSnapshot: '',
+          mennyisegKezi: false,
         });
       });
       ciklusRef.current = null;
@@ -547,7 +560,7 @@ function PhaseSection({
             <Table.Row>
               <Table.ColumnHeaderCell>Beavatkozás</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="132px">Fog</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="56px" justify="center">
+              <Table.ColumnHeaderCell width="88px" justify="center">
                 Db
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="104px" justify="end">
@@ -688,6 +701,10 @@ function LineRow({
   const [mennyisegDraft, setMennyisegDraft] = useState(line.mennyiseg);
   useEffect(() => setMennyisegDraft(line.mennyiseg), [line.mennyiseg]);
   const mismatch = teeth.valid && teeth.teeth.length !== mennyisegDraft;
+  // A visszakapcsoló ⟳ gomb (a Db cellában) akkor jelenik meg, ha a sor
+  // levált a fogak-követéstől, ÉS van mihez visszakapcsolni -- lásd
+  // `sorPatchKovetessel` (domain/mennyiseg.ts) 1. szabálya.
+  const visszakapcsolhato = line.mennyisegKezi !== false && teeth.valid;
   // P2-4: `listaEgysegar === 0` (vagy egy jövőbeli NaN/Infinity) esetén ez a
   // képlet korábban "−Infinity%"-ot adott -- most ha az osztó nem egy
   // pozitív véges szám, nincs kedvezmény-jelvény.
@@ -821,14 +838,33 @@ function LineRow({
       </Table.Cell>
 
       <Table.Cell>
-        <NumberField
-          value={line.mennyiseg}
-          min={1}
-          onCommit={(v) => onPatch({ mennyiseg: v })}
-          onDraftChange={(v) => setMennyisegDraft(v ?? line.mennyiseg)}
-          textAlign="center"
-          aria-label="Darabszám"
-        />
+        <Flex align="center" gap="1">
+          <Box flexGrow="1">
+            <NumberField
+              value={line.mennyiseg}
+              min={1}
+              onCommit={(v) => onPatch({ mennyiseg: v })}
+              onDraftChange={(v) => setMennyisegDraft(v ?? line.mennyiseg)}
+              textAlign="center"
+              aria-label="Darabszám"
+            />
+          </Box>
+          {visszakapcsolhato && (
+            <IconButton
+              type="button"
+              variant="ghost"
+              color="gray"
+              size="1"
+              aria-label="Darabszám igazítása a fogakhoz"
+              title="Darabszám igazítása a fogakhoz – innentől a fogak számát követi"
+              // A tényleges szinkronizálást a `sorPatchKovetessel` 1. szabálya
+              // végzi (domain/mennyiseg.ts) -- a hívó csak a szándékot jelzi.
+              onClick={() => onPatch({ mennyisegKezi: false })}
+            >
+              <UpdateIcon />
+            </IconButton>
+          )}
+        </Flex>
       </Table.Cell>
 
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums', color: t.uiTextFaint }}>

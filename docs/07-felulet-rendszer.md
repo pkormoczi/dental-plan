@@ -71,7 +71,13 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   mert egy páciensnek több lánca is lehet, mindegyik saját `v1`-gyel
   indulva, D29), nem lehet csupasz „További műveletek" — egy listában
   több sor is van, azonos accessible name-mel képernyőolvasóval
-  megkülönböztethetetlenek.
+  megkülönböztethetetlenek. Ez a lista-jellegű sorokra vonatkozik (pl.
+  `PlanHistoryPage` verziósora), ahol a gombok a TELJES sorra ható
+  akciók. A szerkesztő `LineRow`-jának saját mezőjéhez kötött vezérlői
+  (a Fog mező melletti fogválasztó, az Ajánlati ár melletti `≈` becsült-ár
+  kapcsoló, a Db mező melletti ⟳ visszakapcsoló, D32) nem esnek e szabály
+  alá — mindegyik a saját cellájának mezőjét szerkeszti, nem a sorra ható
+  akció.
   A menü első eleme a kockázatmentes/olvasó művelet, utána — elválasztóval
   — a többi, gyakoriság szerint. Hosszú, didaktikus feliratot csak menüben
   használj (ott egymás alatt állnak); egy sorban egymás mellett rövidnek

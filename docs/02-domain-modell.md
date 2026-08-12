@@ -189,7 +189,8 @@ kerekítési hiba az összegzésben.
           "mennyiseg": 3,
           "listaEgysegar": 45000,
           "tenylegesEgysegar": 45000,
-          "leirasSnapshot": ""      // opcionális, lásd "Tétel-leírás" lentebb
+          "leirasSnapshot": "",     // opcionális, lásd "Tétel-leírás" lentebb
+          "mennyisegKezi": false    // opcionális, lásd "Fogszám kezelés" lentebb
         }
       ]
     }
@@ -359,21 +360,26 @@ a fájlban lévő érték az igazság — és érdemes figyelmeztetni.
 
 ## Fogszám kezelés
 
-A `fogak` mező **szabad szöveg**. Az MVP nem számol belőle darabszámot
-(D14), de a parsert érdemes megírni, mert két különálló figyelmeztetéshez
-kell:
+A `fogak` mező **szabad szöveg**. Az egységtípus (fogankénti/alkalmankénti)
+explicit, tétel- vagy kategória-szintű besorolása kimarad (D14 fele
+változatlan) — helyette heurisztika dönt: egy sor „fogankéntinek" számít, ha
+a `fogak` mező `parseTeeth()` szerint tiszta, érvényes FDI-felsorolás. A
+parsert emellett két különálló figyelmeztetéshez is használjuk:
 
 - Érvényes FDI tokenek: maradó `11–18, 21–28, 31–38, 41–48`,
   tejfog `51–55, 61–65, 71–75, 81–85`.
 - Regex: `/^(?:[1-4][1-8]|[5-8][1-5])$/`
 - Elválasztók: vessző, pontosvessző, szóköz.
-- Ha **minden** token érvényes és a darabszám ettől eltér → halvány
-  figyelmeztetés a szerkesztőben (`X fog van felsorolva, a darabszám Y`).
-  Nem blokkolás, és a nyomtatványon nem jelenik meg. (`parseTeeth()`.)
+- Ha **minden** token érvényes, a `mennyiseg` automatikusan követi a fogak
+  (dedupolt) számát — lásd „Automatikus darabszám (`mennyisegKezi`)" lentebb
+  (D32, D14 részleges újranyitása). A `Fog` mező alatti halvány szöveges
+  figyelmeztetés (`X fog van felsorolva, a darabszám Y. Szándékos?`) emellett
+  megmarad, második jelzésként a doki kézi felülbírálása után — nem
+  blokkolás, és a nyomtatványon nem jelenik meg (`parseTeeth()`).
   A `parseTeeth()` az ismételt FDI kódot (pl. „16, 17, 16") egyszer
   számítja — a fogtérképen is csak egy kiemelést kap, és a darabszám-
-  eltérés fenti számítása sem duplán számol vele. A nyomtatványra kerülő
-  NYERS szöveg (`formatTeethForPrint()`) ettől függetlenül változatlan
+  követés/eltérés fenti számítása sem duplán számol vele. A nyomtatványra
+  kerülő NYERS szöveg (`formatTeethForPrint()`) ettől függetlenül változatlan
   marad — a duplikátum-mentesítés csak a leszármaztatott (fogtérkép,
   darabszám) oldalon hat, a doki által begépelt szöveget nem írja át.
 - **FDI-formátum figyelmeztetés** (D-döntés, 2026-08-09): a mező
@@ -402,3 +408,26 @@ nélkül**, csak kiemeléssel. A fogtérkép-vizualizáció (`buildToothVisualSt
 `parseTeeth()` mindent-vagy-semmit logikáját használják — a fenti
 FDI-formátum figyelmeztetés ettől független, csak a szerkesztő mezője
 alatti szöveges visszajelzésre vonatkozik.
+
+### Automatikus darabszám (`mennyisegKezi`)
+
+A `Sor.mennyisegKezi` (opcionális `boolean`) dönti el, hogy a `mennyiseg`
+mezőt a fogak-követés írhatja-e: `false` = automatikusan követi a `fogak`
+mezőt (a sorban felsorolt, dedupolt fogszámra áll minden érvényes
+FDI-módosításnál), `true` = a doki kézzel felülbírálta, a sor levált — onnantól
+a `fogak` módosítása többé nem írja felül némán. Hiányzó mező (egy, a
+funkció bevezetése előtt mentett sor) **kézinek** számít, nem automatikusan
+követőnek — egy régi terv szándékosan eltérő darabszáma így soha nem íródik
+felül csendben (D32, a `nevKoveti()`-nél alkalmazott D24 mintáján). A
+szerkesztő a levált soron egy visszakapcsoló vezérlőt ad, amire kattintva a
+sor egy lépésben szinkronizálódik és újra követővé válik
+(`app/src/domain/mennyiseg.ts` `sorPatchKovetessel()` — ez az EGYETLEN hely,
+ahol ez a döntés eldől). Nem emelt `schemaVersion`-t, a `leirasSnapshot`
+precedense szerint.
+
+Nincs kivétel a heurisztika alól: a `csomag: true` tételre hivatkozó és az
+egyedi (tétel nélküli) sorok is egységesen követnek, ha a `fogak` mezőjük
+érvényes FDI-lista — a kézi leállás ugyanúgy védi őket, mint bármelyik más
+sort. A nyomtatvány nem változik: a `mennyiseg` végső, elmentett értéke kerül
+papírra, forrástól (automatikus vagy kézi) függetlenül; a `mennyisegKezi` mező
+soha nem jelenik meg a nyomtatványon.
