@@ -20,6 +20,7 @@ function DraftProbe() {
     <div>
       <div data-testid="draft-oldal">PACIENS-OLDAL</div>
       <div data-testid="draft-nev">{plan.paciens.nev}</div>
+      <div data-testid="draft-telefon">{plan.paciens.telefon}</div>
       <div data-testid="draft-tervid">„{plan.tervId}”</div>
       <div data-testid="draft-sorcount">{sorCount}</div>
     </div>
@@ -174,5 +175,51 @@ describe('NewPlanPage', () => {
       await screen.findByRole('button', { name: 'Folytatás, piszkozat elvetésével' }),
     );
     expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Kovács János');
+  });
+
+  // backlog-28 (D33): a törzsadat előnyben részesül a legutóbbi terv
+  // pillanatképéhez képest, ha van lezárt paciens-adatok.json.
+  describe('paciens-adatok.json (D33) hatása', () => {
+    it('lezárt törzsadat esetén onnan tölt elő, nem a legutóbbi terv paciens pillanatképéből', async () => {
+      const seeder = new DemoStorage();
+      await seeder.init();
+      const patients = await seeder.listPatients();
+      const kovacs = patients.find((p) => p.nev === 'Kovács János')!;
+      await seeder.savePatientData(kovacs.dirName, {
+        schemaVersion: 1,
+        paciensId: kovacs.paciensId,
+        nev: 'Kovács János',
+        szuletesiIdo: '',
+        lakcim: '',
+        telefon: '+36 99 999 9999', // eltér a seed terv telefonjától
+        email: '',
+        taj: '',
+        kiskoru: false,
+        torvenyesKepviselo: null,
+      });
+
+      const user = userEvent.setup();
+      renderNewPlan();
+
+      await user.click(await screen.findByRole('button', { name: 'Kovács János' }));
+
+      expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Kovács János');
+      expect(screen.getByTestId('draft-telefon')).toHaveTextContent('+36 99 999 9999');
+    });
+
+    it('egy terv nélküli, csak törzsadattal rendelkező páciens is kereshető és előtölthető', async () => {
+      const seeder = new DemoStorage();
+      await seeder.init();
+      await seeder.createPatient('Terv Nélküli Panni');
+
+      const user = userEvent.setup();
+      renderNewPlan();
+
+      await user.click(await screen.findByRole('button', { name: 'Terv Nélküli Panni' }));
+
+      expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
+      expect(screen.getByTestId('draft-nev')).toHaveTextContent('Terv Nélküli Panni');
+      expect(screen.queryByText(/Ehhez a pácienshez nincs/)).not.toBeInTheDocument();
+    });
   });
 });

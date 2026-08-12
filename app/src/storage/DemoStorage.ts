@@ -9,12 +9,19 @@
 // terv.json PDF-be ágyazása (pdf-lib) is a 2. fázisra marad.
 
 import { javasoltTervCim } from '../domain/tervCim';
+import { paciensIndexNev, uresTorzsadat } from '../domain/paciensAdatok';
 import { assertKnownSchemaVersion } from '../domain/schema';
 import { isPlaceholderTemplate } from '../domain/templates';
-import { assertPlanShape, assertPriceListShape, assertSettingsShape } from '../domain/validate';
+import {
+  assertPatientMasterDataShape,
+  assertPlanShape,
+  assertPriceListShape,
+  assertSettingsShape,
+} from '../domain/validate';
 import { buildDemoFileTree, type DemoNode } from './demoFileTree';
 import type {
   PatientFolder,
+  PatientMasterData,
   PatientRecord,
   Plan,
   PlanFolder,
@@ -39,7 +46,7 @@ import {
 } from './paths';
 import { seedPriceList } from './seed/priceList';
 import { seedSettings } from './seed/settings';
-import { seedPatients, seedPlans } from './seed/plans';
+import { seedPatientData, seedPatients, seedPlans } from './seed/plans';
 import {
   FIZETESI_FELTETELEK_DE_V1,
   FIZETESI_FELTETELEK_HU_V1,
@@ -75,6 +82,18 @@ const TEMPLATES_PREFIX = `${PREFIX}sablonok/`;
 function patientRecordKey(patientDir: string): string {
   return `${PATIENTS_PREFIX}${patientDir}/paciens.json`;
 }
+
+function patientDataKey(patientDir: string): string {
+  return `${PATIENTS_PREFIX}${patientDir}/paciens-adatok.json`;
+}
+
+/**
+ * A páciens-mappa gyökerén élő fájlok neve -- a `listPlans` ezekkel szűri
+ * ki a terv-mappák közül (különben egy új gyökér-fájl hamis terv-láncként
+ * jelenne meg). Egy `Set`, hogy egy jövőbeli harmadik gyökér-fájl (pl. egy
+ * D33-hoz hasonló újabb tétel) egyetlen helyen bővítse a listát.
+ */
+const PATIENT_ROOT_FILES = new Set(['paciens.json', 'paciens-adatok.json']);
 
 function planLabelKey(patientDir: string, planDir: string): string {
   return `${PATIENTS_PREFIX}${patientDir}/${planDir}/terv-cimke.json`;
@@ -171,6 +190,12 @@ export class DemoStorage implements PlanStorage {
     this.ensureSeedTemplates();
     for (const { patientDir, record } of seedPatients) {
       localStorage.setItem(patientRecordKey(patientDir), JSON.stringify(record));
+    }
+    // D33: csak EGY seed pácienshez -- a demónak mindkét állapotot mutatnia
+    // kell (lezárt törzsadat vs. élő fallback a legutóbbi tervből), lásd
+    // seed/plans.ts.
+    for (const { patientDir, data } of seedPatientData) {
+      localStorage.setItem(patientDataKey(patientDir), JSON.stringify(data));
     }
     for (const { patientDir, planDir, versionDir, plan } of seedPlans) {
       localStorage.setItem(planKey(patientDir, planDir, versionDir), JSON.stringify(plan));
@@ -361,7 +386,7 @@ export class DemoStorage implements PlanStorage {
     this.eachKey((key) => {
       if (!key.startsWith(prefix)) return;
       const dir = key.slice(prefix.length).split('/')[0];
-      if (dir && dir !== 'paciens.json') dirs.add(dir);
+      if (dir && !PATIENT_ROOT_FILES.has(dir)) dirs.add(dir);
     });
     return [...dirs].map((dirName) => {
       const parsed = parsePlanDirName(dirName);
@@ -467,9 +492,15 @@ export class DemoStorage implements PlanStorage {
     const planKeyStr = planKey(patientDir, planDir, versionDir);
     const pdfKeyStr = pdfKey(patientDir, planDir, versionDir);
     // paciens.json index -- kereséshez/előtöltéshez, sosem system of record
-    // (D29): mindig a most mentett plan.paciens.nev-re frissül, akkor is,
-    // ha a mappa már létezett.
-    const patientRecord: PatientRecord = { schemaVersion: 1, paciensId, nev: plan.paciens.nev };
+    // (D29): a most mentett plan.paciens.nev-re frissül, HACSAK nincs lezárt
+    // paciens-adatok.json (D33) -- akkor az a törzsadat marad az igazság a
+    // névre is, a terv-mentés nem írhatja felül némán (paciensIndexNev).
+    const existingPatientData = await this.loadPatientData(patientDir);
+    const patientRecord: PatientRecord = {
+      schemaVersion: 1,
+      paciensId,
+      nev: paciensIndexNev(existingPatientData, plan.paciens.nev),
+    };
     const patientRecordKeyStr = patientRecordKey(patientDir);
 
     try {
@@ -580,5 +611,48 @@ export class DemoStorage implements PlanStorage {
       if (m) maxV = Math.max(maxV, Number(m[1]));
     });
     return maxV + 1;
+  }
+
+  /**
+   * D33: `null`, ha még nincs `paciens-adatok.json` -- ez a hívónak az élő
+   * fallbackre lépés jele (`domain/paciensAdatok.ts`
+   * `megjelenitettTorzsadat`), NEM hiba. Ellentétben a `paciens.json`/
+   * `terv-cimke.json` index-fájlokkal, egy SÉRÜLT törzsadat itt betöltési
+   * hibaként dobódik -- ez valódi system of record, egy néma visszaesés
+   * adatvesztést takarna el.
+   */
+  async loadPatientData(patientDir: string): Promise<PatientMasterData | null> {
+    const raw = localStorage.getItem(patientDataKey(patientDir));
+    if (raw == null) return null;
+    const data = parseJson<PatientMasterData>(raw, 'paciens-adatok.json');
+    assertKnownSchemaVersion(data, 'paciens-adatok.json');
+    assertPatientMasterDataShape(data, 'paciens-adatok.json');
+    return data;
+  }
+
+  /**
+   * A `paciens.json` index `nev`-jét is frissíti a törzsadatéra -- enélkül a
+   * Páciensek/Korábbi tervek listákban a régi név látszana a következő
+   * terv-mentésig (D33).
+   */
+  async savePatientData(patientDir: string, data: PatientMasterData): Promise<void> {
+    return this.enqueue(async () => {
+      localStorage.setItem(patientDataKey(patientDir), JSON.stringify(data));
+      const record: PatientRecord = { schemaVersion: 1, paciensId: data.paciensId, nev: data.nev };
+      localStorage.setItem(patientRecordKey(patientDir), JSON.stringify(record));
+    });
+  }
+
+  /** Vadonatúj, terv nélküli páciens (backlog-28, 6. döntés) -- mindkét gyökér-fájlt megírja. */
+  async createPatient(nev: string): Promise<PatientFolder> {
+    return this.enqueue(async () => {
+      const paciensId = generateId();
+      const patientDir = buildPatientDirName(nev, paciensId);
+      const record: PatientRecord = { schemaVersion: 1, paciensId, nev };
+      const data = uresTorzsadat(nev, paciensId);
+      localStorage.setItem(patientRecordKey(patientDir), JSON.stringify(record));
+      localStorage.setItem(patientDataKey(patientDir), JSON.stringify(data));
+      return { dirName: patientDir, paciensId, nev };
+    });
   }
 }

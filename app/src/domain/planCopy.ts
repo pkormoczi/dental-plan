@@ -5,9 +5,10 @@
 // egy meglévő láncba.
 
 import { createBlankPlan } from './blankPlan';
+import { paciensTorzsadatbol } from './paciensAdatok';
 import { computeOsszesitok } from './totals';
 import { frissDatummal } from './ujVerzioDatum';
-import type { Plan, PriceList, Settings } from './types';
+import type { PatientMasterData, Plan, PriceList, Settings } from './types';
 
 /**
  * "Új terv" (páciensszintű) -- csak a `paciens` blokk és a `paciensId` jön a
@@ -22,6 +23,25 @@ export function planUjPaciensselTervhez(
   priceList: PriceList,
 ): Plan {
   return { ...createBlankPlan(settings, priceList), paciens: plan.paciens, paciensId: plan.paciensId };
+}
+
+/**
+ * "Új terv" (páciensszintű), a lezárt páciens-adatok.json-ból (backlog-28)
+ * -- a `planUjPaciensselTervhez` párja, de a forrás nem egy korábbi
+ * `Plan.paciens` pillanatkép, hanem az élő törzsadat. A hívó dönti el,
+ * melyiket használja (`domain/paciensAdatok.ts` `megjelenitettTorzsadat`
+ * mondja ki, van-e lezárt fájl).
+ */
+export function planUjTorzsadattal(
+  adatok: PatientMasterData,
+  settings: Settings,
+  priceList: PriceList,
+): Plan {
+  return {
+    ...createBlankPlan(settings, priceList),
+    paciens: paciensTorzsadatbol(adatok),
+    paciensId: adatok.paciensId,
+  };
 }
 
 /**

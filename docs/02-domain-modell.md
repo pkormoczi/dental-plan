@@ -20,6 +20,7 @@ nincs szerver.
   paciensek/
     Kovacs-Janos_k9m2r4/
       paciens.json
+      paciens-adatok.json               ; csak az első törzsadat-mentés után létezik -- lásd "Páciens- és terv-mappa" lentebb
       Fogpotlas_a3f9c1/
         terv-cimke.json               ; csak kézi átírás után létezik -- lásd "Páciens- és terv-mappa" lentebb
         2026-08-05_v1/
@@ -90,9 +91,65 @@ igazsága változatlanul a `terv.json` (D7).
   a terv-lánc LEGFRISSEBB verziójának tartalmából számol, tehát friss tétel
   hozzáadása frissíti; kézi átírás után a mező megragad, üresen mentve
   visszaáll a javaslatra.
-- A `paciens.json` `nev`-je minden mentéskor frissül a legutóbb mentett
-  `plan.paciens.nev`-re — ez index, nem pillanatkép, ellentétben a
-  `terv.json` `paciens` blokkjával (D7).
+- A `paciens.json` `nev`-je minden terv-mentéskor frissül a legutóbb
+  mentett `plan.paciens.nev`-re — ez index, nem pillanatkép, ellentétben a
+  `terv.json` `paciens` blokkjával (D7) —, **kivéve, ha a pácienshez már
+  létezik lezárt `paciens-adatok.json`** (lásd lent, D33): ilyenkor a
+  törzsadat neve az igazság, a terv-mentés nem írhatja felül némán.
+
+### Páciens-szintű törzsadat (`paciens-adatok.json`, D33)
+
+A `paciens.json`-tól és a `terv-cimke.json`-tól eltérően ez a fájl **valódi
+system of record** a saját mezőire: a doki itt tartja a páciens JELENLEG
+érvényes elérhetőségét/adatait, teljesen függetlenül attól, mit tartalmaz
+bármelyik korábbi `terv.json` `paciens` blokkja. A `Paciens`
+(`app/src/domain/types.ts`) teljes mezőköre benne van, a `nev`-et is
+beleértve:
+
+```jsonc
+// paciensek/Kovacs-Janos_k9m2r4/paciens-adatok.json
+{
+  "schemaVersion": 1,
+  "paciensId": "k9m2r4",
+  "nev": "Kovács János",
+  "szuletesiIdo": "1978-03-14",
+  "lakcim": "1113 Budapest, Bartók Béla út 42. 2/5",
+  "telefon": "+36 30 123 4567",
+  "email": "kovacs.janos@example.hu",
+  "taj": "123 456 789",
+  "kiskoru": false,
+  "torvenyesKepviselo": null
+}
+```
+
+- **Nincs automatikus szinkron egyik irányban sem** a `terv.json` `paciens`
+  blokkjával: egy konkrét terv Páciens adatlapján tett módosítás soha nem
+  írja át ezt a fájlt, és fordítva, ennek szerkesztése soha nem nyúl vissza
+  egy már mentett `terv.json`-hoz. A `terv.json` `paciens` blokkja
+  változatlanul pillanatkép marad (D7); ez a fájl egy PÁRHUZAMOS, önálló
+  adatforrás.
+- A terv-mappákon (és a verziómappákon) **kívül**, a páciens-mappa
+  gyökerén él, mint a `paciens.json`, ezért D4 rá nem vonatkozik. De —
+  ellentétben a `terv-cimke.json`-nal — **nincs "üres = törlés vissza az
+  élő fallbackre" szemantikája**: a fájl létrejötte után a törzsadat
+  lezárt, nincs visszaút.
+- Amíg a fájl nem létezik, a Páciensek képernyő élő fallbacket mutat: a
+  páciens legutóbb módosított terv-láncának legfrissebb `paciens`
+  pillanatképét (`megjelenitettTorzsadat()`, `app/src/domain/paciensAdatok.ts`
+  — ugyanaz a minta, mint a `megjelenitettTervCim()` a terv-címkénél). Ha a
+  páciensnek egyetlen terve sincs (terv nélkül, a Páciensek képernyőn
+  felvéve), egy a `paciens.json` nevéből épült üres rekordra esik vissza.
+  Első mentéskor a teljes fájl egyszerre zár: minden mező (nem csak a
+  ténylegesen módosított) bekerül a pillanatnyi értékén, onnantól a teljes
+  fájl a forrás.
+- A Páciensek képernyőn terv nélkül is felvihető páciens (minimálisan a
+  `nev` kötelező mezővel) — ilyenkor is mindkét gyökér-fájl (`paciens.json`
+  + `paciens-adatok.json`) létrejön egyszerre. A Korábbi tervek lista
+  változatlanul csak a legalább 1 terv-lánccal rendelkező pácienseket
+  listázza.
+- A nyomtatvány (PDF) nem változik: a `paciens-adatok.json` SOHA nem
+  forrása a PDF-nek, kizárólag a `terv.json` saját `paciens` blokkja kerül
+  nyomtatásra (D7).
 
 ## `arlista.json`
 

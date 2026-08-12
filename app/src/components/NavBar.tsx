@@ -8,6 +8,7 @@ const LINKS: Array<{ to: string; label: string }> = [
   { to: '/terv', label: 'Terv szerkesztő' },
   { to: '/elonezet', label: 'Előnézet' },
   { to: '/tervek', label: 'Korábbi tervek' },
+  { to: '/paciensek', label: 'Páciensek' },
   { to: '/arlista', label: 'Árlista' },
   { to: '/beallitasok', label: 'Beállítások' },
   { to: '/filerendszer', label: 'Filerendszer' },

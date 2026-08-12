@@ -309,6 +309,103 @@ describe('DemoStorage', () => {
     await expect(storage.loadPlan(ref)).rejects.toThrow(/szerkezete nem érvényes/);
   });
 
+  // D33 (backlog-28): a paciens-adatok.json -- élő, terv-mentéstől független
+  // törzsadat, ellentétben a puszta index-fájlokkal (paciens.json,
+  // terv-cimke.json).
+  describe('paciens-adatok.json (D33)', () => {
+    it('loadPatientData null-t ad, ha még nincs törzsadat -- ez a fallbackre lépés jele, nem hiba', async () => {
+      const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
+      expect(await storage.loadPatientData(ref.patientDir)).toBeNull();
+    });
+
+    it('createPatient mindkét gyökér-fájlt megírja, terv nélkül', async () => {
+      const folder = await storage.createPatient('Vadonatúj Páciens');
+      expect(folder.nev).toBe('Vadonatúj Páciens');
+      expect(folder.paciensId).toHaveLength(6);
+
+      const patients = await storage.listPatients();
+      expect(patients.some((p) => p.dirName === folder.dirName)).toBe(true);
+
+      const adatok = await storage.loadPatientData(folder.dirName);
+      expect(adatok).toEqual({
+        schemaVersion: 1,
+        paciensId: folder.paciensId,
+        nev: 'Vadonatúj Páciens',
+        szuletesiIdo: '',
+        lakcim: '',
+        telefon: '',
+        email: '',
+        taj: '',
+        kiskoru: false,
+        torvenyesKepviselo: null,
+      });
+
+      // Terv nélküli páciens -- a listPlans üres, és a paciens-adatok.json
+      // NEM jelenik meg hamis terv-mappaként (a PATIENT_ROOT_FILES szűrő).
+      expect(await storage.listPlans(folder.dirName)).toEqual([]);
+    });
+
+    it('savePatientData a paciens.json index nev-jét is frissíti', async () => {
+      const folder = await storage.createPatient('Régi Név');
+      await storage.savePatientData(folder.dirName, {
+        schemaVersion: 1,
+        paciensId: folder.paciensId,
+        nev: 'Új Név',
+        szuletesiIdo: '',
+        lakcim: '',
+        telefon: '',
+        email: '',
+        taj: '',
+        kiskoru: false,
+        torvenyesKepviselo: null,
+      });
+
+      const patients = await storage.listPatients();
+      const record = patients.find((p) => p.dirName === folder.dirName);
+      expect(record?.nev).toBe('Új Név');
+    });
+
+    // A törzsadat az igazság a névre is, ha van -- egy terv mentése a
+    // benne begépelt (esetleg eltérő) névvel NEM írhatja felül némán a
+    // paciens.json indexet, ha már van lezárt paciens-adatok.json.
+    it('savePlan a törzsadat nevét írja a paciens.json indexbe, ha van lezárt törzsadat -- nem a terv paciens.nev-jét', async () => {
+      const folder = await storage.createPatient('Törzsadat Neve');
+      const plan = makeBlankPlan({ paciensId: folder.paciensId, paciens: { ...makeBlankPlan().paciens, nev: 'Terv Alatt Beírt Név' } });
+
+      await storage.savePlan(plan, new Uint8Array([1]));
+
+      const patients = await storage.listPatients();
+      const record = patients.find((p) => p.dirName === folder.dirName);
+      expect(record?.nev).toBe('Törzsadat Neve');
+      // A paciens-adatok.json maga is érintetlen -- a terv-mentés soha nem
+      // írja (3. döntés, backlog-28).
+      expect((await storage.loadPatientData(folder.dirName))?.nev).toBe('Törzsadat Neve');
+    });
+
+    it('savePlan a terv paciens.nev-jét írja az indexbe, ha nincs törzsadat (a meglévő D29 viselkedés változatlan)', async () => {
+      const plan = makeBlankPlan();
+      const ref = await storage.savePlan(plan, new Uint8Array([1]));
+      const patients = await storage.listPatients();
+      expect(patients.find((p) => p.dirName === ref.patientDir)?.nev).toBe('Teszt Elek');
+    });
+
+    it('rejects loading a paciens-adatok.json with a newer-than-known schemaVersion (D18)', async () => {
+      const folder = await storage.createPatient('Séma Teszt');
+      const key = `dp:paciensek/${folder.dirName}/paciens-adatok.json`;
+      const raw = JSON.parse(localStorage.getItem(key)!);
+      raw.schemaVersion = 2;
+      localStorage.setItem(key, JSON.stringify(raw));
+      await expect(storage.loadPatientData(folder.dirName)).rejects.toThrow(/újabb verziójával/);
+    });
+
+    it('rejects a structurally invalid paciens-adatok.json (P1-6 mintája) -- ez valódi system of record, nem eshet néma fallbackre', async () => {
+      const folder = await storage.createPatient('Sérült Teszt');
+      const key = `dp:paciensek/${folder.dirName}/paciens-adatok.json`;
+      localStorage.setItem(key, 'not valid json {{{');
+      await expect(storage.loadPatientData(folder.dirName)).rejects.toThrow(/nem érvényes JSON/);
+    });
+  });
+
   describe('listFileTree / readRawFile', () => {
     it('a friss seed gyökere csak a két JSON-t, a sablonok/-at és a paciensek/-et tartalmazza, PDF nélkül', async () => {
       const tree = storage.listFileTree();
@@ -368,6 +465,21 @@ describe('DemoStorage', () => {
       if (planNode?.type !== 'dir') throw new Error('unreachable');
 
       expect(planNode.children.some((n) => n.name === 'terv-cimke.json')).toBe(true);
+    });
+
+    // D33: a paciens-adatok.json mappa-gyökéri fájl -- se hamis terv-
+    // mappaként (listPlans), se láthatatlanul (demoFileTree allowlist) nem
+    // szabad megjelennie.
+    it('createPatient után a paciens-adatok.json megjelenik a páciens-mappa gyökerén, terv-mappa nélkül', async () => {
+      const folder = await storage.createPatient('Fa Teszt');
+
+      const tree = storage.listFileTree();
+      const paciensek = tree.find((n) => n.name === 'paciensek');
+      if (paciensek?.type !== 'dir') throw new Error('unreachable');
+      const patient = paciensek.children.find((n) => n.name === folder.dirName);
+      if (patient?.type !== 'dir') throw new Error('unreachable');
+
+      expect(patient.children.map((n) => n.name).sort()).toEqual(['paciens-adatok.json', 'paciens.json']);
     });
 
     it('saveTemplate után a régi ÉS az új verziójú sablonfájl is látszik a fában (D4)', async () => {

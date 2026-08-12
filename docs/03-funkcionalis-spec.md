@@ -10,6 +10,7 @@
 6. Árlista admin
 7. Beállítások
 8. Filerendszer — demó-only, a leendő fájlrendszeres architektúra vizualizációja
+9. Páciensek — élő, terv-mentéstől független törzsadat (D33)
 
 ---
 
@@ -450,7 +451,12 @@ pontosabb jelzés.
 
 A `paciensek/` fa beolvasása, kereshető listával. Páciensnév szerint
 csoportosítva, alatta a terv-láncok (D29), azon belül a verziók dátummal
-és **végösszeggel**.
+és **végösszeggel**. Egy terv nélküli, csak `paciens-adatok.json`-nal
+rendelkező páciens (a Páciensek képernyőn, § 9, terv nélkül felvéve) itt
+NEM jelenik meg — ez a képernyő a kezelési előzményekről szól, nem a
+törzsadatról. Minden páciensnév mellett egy „Páciens adatai” kereszt-link
+navigál a Páciensek képernyőre, ugyanahhoz a pácienshez (§ 9) — fordítva a
+Páciensek szerkesztője linkel ide.
 
 Egy páciensnek **1 terv-lánca** esetén (a tipikus eset) a blokk alapból
 kibontva jelenik meg — nincs plusz kattintás. **2+ lánc** esetén alapból
@@ -567,17 +573,23 @@ eltérése) van fenntartva — ugyanaz a szín itt félrevezető lenne.
 Két transzformáció, három belépési ponton — a gombok/útvonalak elhelyezése
 az adatkör-különbséget követi, nem kényszeríti egy szintre:
 
-- **`planUjPaciensselTervhez` — csak a páciensadat.** Két belépési pontja
-  van, ugyanazzal az eredménnyel:
+- **A páciens ELÉRHETŐ legjobb adataiból — csak a páciensadat.** Két
+  belépési pontja van, ugyanazzal az eredménnyel, közös forráskiválasztással
+  (`ujTervForrasPaciensbol()`, `app/src/state/planIndulas.ts`, D33):
   - **„Új terv"** — a Korábbi tervek listán, a páciensnév mellett balra,
-    páciensszinten (nem egy konkrét verzióhoz kötve). A doki által látott
-    LEGUTÓBB MÓDOSÍTOTT terv-lánc legfrissebb verziójának `paciens`
-    adatát viszi tovább (`latestVersionAcrossPlans()`,
-    `app/src/domain/planFolders.ts`).
+    páciensszinten (nem egy konkrét verzióhoz kötve).
   - **„Meglévő páciens keresése…"** — a Kezdőlap „Új terv indítása"
-    gombja utáni `/uj-terv` köztes választón (lásd lentebb), a kiválasztott
-    páciens ugyanígy meghatározott legfrissebb verziójának `paciens`
-    adatával.
+    gombja utáni `/uj-terv` köztes választón (lásd lentebb).
+
+  Mindkét belépési pont ugyanazt a sorrendet követi: ha a pácienshez van
+  lezárt törzsadat (`paciens-adatok.json`, § 9. Páciensek), onnan indul
+  (`planUjTorzsadattal`); egyébként a doki által látott LEGUTÓBB MÓDOSÍTOTT
+  terv-lánc legfrissebb verziójának `paciens` adatából
+  (`latestVersionAcrossPlans()`, `app/src/domain/planFolders.ts` +
+  `planUjPaciensselTervhez`). Ez utóbbi forrás híján (terv nélküli, de
+  törzsadattal rendelkező páciensnél a törzsadat pótolja) korábban hibát
+  adott — a törzsadat bevezetése óta egy csak törzsadattal rendelkező
+  páciens is választható itt.
 
   Mindkét esetben minden más mező (`nyelv`, `penznem`, `orvos`, `fazisok`,
   `elolegSzazalek`, `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss
@@ -631,7 +643,7 @@ kétértelműség, hogy melyik páciensről van szó:
 
 - **„Meglévő páciens keresése…"** — névre kereső mező a páciens-index
   (`storage.listPatients()`) alapján, ékezetfüggetlenül (`norm()`).
-  Kiválasztás után a `planUjPaciensselTervhez` úton (lásd fent) előtöltve
+  Kiválasztás után a közös forráskiválasztáson (lásd fent, D33) előtöltve
   nyílik a Páciens adatlap.
 - **„Vadonatúj páciens"** — a Páciens adatlap üresen nyílik (a mai
   `resetPlanDraft()` úton), pontosan úgy, mint korábban a Kezdőlap
@@ -832,3 +844,44 @@ kattintható vetülete a mockup `localStorage`-adatából.
   ma mindig újra-seedel is, lásd Kezdőlap) semleges üres állapot, hiba
   esetén a hiba szövege — a `docs/07-felulet-rendszer.md` "Kötelező
   állapotok" szabálya szerint.
+
+---
+
+## 9. Páciensek
+
+A páciens ÉLŐ, terv-mentéstől független törzsadatának (`paciens-adatok.json`,
+D33, `docs/02-domain-modell.md` § Páciens-szintű törzsadat) karbantartó
+képernyője — funkcionálisan külön a Korábbi tervektől (§ 5): az a kezelési
+előzmény/verziók képernyője, ez a törzsadaté. A kettő kölcsönösen linkel
+egymásra ugyanahhoz a pácienshez.
+
+- **Lista**: `storage.listPatients()` alapján, kereshető
+  (`Keresés páciensnévre…`, ékezetfüggetlen). Soronként egy állapotjelvény
+  mutatja, van-e már lezárt törzsadata a páciensnek ("Rögzített törzsadat")
+  vagy egyelőre csak a legutóbbi terve alapján látszik-e élőben
+  ("Élő adat a legutóbbi tervből") — ez a lista-szintű eldöntéshez elég
+  csak azt tudni, létezik-e a `paciens-adatok.json`, nem kell minden
+  terv-láncot bejárni.
+- **Sor kinyitása**: inline szerkesztő nyílik (a Páciens adatlap
+  mezőelrendezése: Név / Született+TAJ / Lakcím / Telefon+E-mail / Kiskorú
+  + feltételes Törvényes képviselő). Ha a páciensnek nincs még
+  `paciens-adatok.json`-ja, a mezők a legutóbb módosított terv-láncának
+  legfrissebb `paciens` pillanatképéből előre kitöltve nyílnak (ez a
+  fallback-adat csak a sor KINYITÁSAKOR, lustán töltődik be), egy rövid
+  sor jelzi, hogy ez az adat még nem önálló — mentéssel válik azzá.
+- **Mentés**: explicit „Mentés”/„Mégse” gombpár, NEM leütésenkénti autosave
+  (ellentétben pl. a Beállítások rendelő-mezőivel) — az első mentés
+  szemantikus állapotváltás (fallback → lezárt törzsadat), ezt a dokinak
+  szándékosan kell kiváltania. Sor váltásakor/csukásakor, ha van nem
+  mentett módosítás, megerősítést kér.
+- **Új páciens**: „+ Új páciens” gomb, mezős dialógus (csak a kötelező
+  Név mezővel — a többi adat a mentés után, a kinyíló sorban adható meg,
+  az `UjTetelDialog.tsx` mintájára). `storage.createPatient(nev)` mindkét
+  gyökér-fájlt (`paciens.json` + `paciens-adatok.json`) létrehozza, terv
+  nélkül. Az így felvitt páciens a Korábbi tervek listán NEM jelenik meg
+  (§ 5) — csak akkor kerül oda, ha legalább egy terve is lesz.
+- **Kereszt-link**: a szerkesztőben egy „Korábbi tervek” link a Korábbi
+  tervekre navigál, ugyanahhoz a pácienshez; a Korábbi tervek minden
+  páciensnév mellett egy „Páciens adatai” link ide navigál vissza.
+- A nyomtatvány (PDF) nem változik: ez a képernyő SOHA nem forrása a
+  PDF-nek (D7, D33).

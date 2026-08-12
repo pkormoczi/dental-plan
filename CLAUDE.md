@@ -99,6 +99,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | `#f77409` (a márka narancsa) **soha nem lehet szövegszín** | Fehéren 2,82:1, kis méretben olvashatatlan; csak díszítővonalra való. A fogtérkép saját, kezelés-kategóriánkénti palettát használ (`design/treatmentVisuals.ts`), nem ezt a színt |
 | A `Tetel.leiras` hiányzó német fordítása némán elmarad a nyomtatványról, nem esik vissza magyarra | D27 — ellentétben a `nevSnapshot`-tal: a leírás kiegészítő tartalom, egy vegyes nyelvű nyomtatvány rosszabb lenne, mint a hiánya |
 | A `paciens.json` és a `terv-cimke.json` kizárólag azonosító-/kereső-index és szervezési metaadat — soha nem system of record, sosem írhatja felül a `terv.json` `paciens` blokkját | D29 — a terv tartalmi igazsága marad a pillanatkép (D7); a `paciens.json` `nev`-je minden mentéskor frissül, de ez csak a legutóbb mentett terv `paciens.nev`-jének tükre |
+| A `paciens-adatok.json` (ELLENTÉTBEN a `paciens.json`/`terv-cimke.json`-nal) valódi system of record a saját mezőire — nincs automatikus szinkron a `terv.json` `paciens` blokkjával egyik irányban sem, egy konkrét terv adatlapján tett módosítás soha nem írja át, és fordítva | D33 — a `terv.json` `paciens` blokkja pillanatkép marad (D7); egy automatikus szinkron összemosná "mit tartalmazott ez a konkrét, esetleg aláírt ajánlat" és "mi a páciens jelenleg ismert adata" fogalmát |
 | Az árlista `arlistaVerzio` mezője az Árlista admin MINDEN mentésekor a mai napra áll, mezőnkénti különbségtevés nélkül | D30 — a nyomtatvány lábléce ebből mondja, „melyik árlistából készült"; egy befagyott érték hamis audit-adat lenne vitánál. A már mentett terveken lévő érték ettől függetlenül pillanatkép marad (D7) |
 | A `PlanStorage`-t fogyasztó `savePriceList`/`saveSettings` kizárólag updatert fogad, sosem kész objektumot; a memóriabeli állapot a mentés előtt, szinkron frissül, és hibára nem gördül vissza | D31 — a render-idejű closure-be zárt régi állapot két gyors egymás utáni szerkesztésnél némán eldobja az egyiket a doki törzsadatában (árlista, rendelő-adat); a `FileSystemStorage`-váltás alatt a ma kicsi versenyablak nagyságrendekkel tágul |
 
@@ -409,6 +410,28 @@ kezelés, D32) segédfüggvényei, szintén ne írd újra őket:
   `Sor.mennyisegKezi` hiányzó mezője (egy, a funkció bevezetése előtti sor)
   kézinek számít, nem követőnek — a `nevKoveti()`-nél alkalmazott D24
   mintáján
+
+A páciens-szintű törzsadat tétel (`docs/02-domain-modell.md` § Páciens-
+szintű törzsadat, D33) segédfüggvényei, szintén ne írd újra őket:
+- `megjelenitettTorzsadat(adatok, utolsoTerv, patient)`
+  (`app/src/domain/paciensAdatok.ts`) — az EGYETLEN hely, ahol eldől, a
+  lezárt `paciens-adatok.json` vagy egy élő fallback látszik-e, a
+  `megjelenitettTervCim()` (D29) mintáján. `torzsadatTervbol(paciens,
+  paciensId)` / `uresTorzsadat(nev, paciensId)` (ugyanitt) a fallback két
+  forrása (egy korábbi terv pillanatképe, illetve egy vadonatúj, terv
+  nélküli páciens); `paciensIndexNev(adatok, planNev)` (ugyanitt) dönti el
+  terv-mentéskor, hogy a `paciens.json` index nev-je a törzsadatból vagy a
+  terv `paciens.nev`-jéből jön-e; `paciensTorzsadatbol(adatok)` (ugyanitt)
+  emeli ki belőle a `Paciens` részhalmazt terv-előtöltéshez.
+- `planUjTorzsadattal(adatok, settings, priceList)`
+  (`app/src/domain/planCopy.ts`) — a `planUjPaciensselTervhez` (backlog-17)
+  törzsadat-alapú párja. `ujTervForrasPaciensbol(storage, settings,
+  priceList, patientDir)` (`app/src/state/planIndulas.ts`) a közös
+  forráskiválasztás: törzsadat, ha van, egyébként a legutóbb módosított
+  terv-lánc legfrissebb `paciens` pillanatképe — a PlanHistoryPage.tsx
+  páciensszintű "Új terv" gombja és a NewPlanPage.tsx "Meglévő páciens
+  keresése" előtöltése is ezt hívja, hogy a két hely ne térjen el
+  egymástól.
 
 ## Domain szókincs
 

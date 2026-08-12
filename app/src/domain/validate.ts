@@ -104,3 +104,16 @@ export function assertSettingsShape(data: unknown, fileKind = 'beallitasok.json'
   if (!isArray(s.orvosok)) fail(fileKind, 'hiányzik vagy nem tömb az "orvosok" mező');
   if (!isFiniteNumber(s.ervenyessegNap)) fail(fileKind, '"ervenyessegNap" nem véges szám');
 }
+
+// D33: a paciens-adatok.json -- ellentétben a puszta index-fájlokkal
+// (paciens.json, terv-cimke.json, amik `parseJson` után némán a mappanévre/
+// élő javaslatra esnek vissza sérülés esetén) -- valódi system of record,
+// tehát egy sérült fájl itt betöltési hibaként kell felszínre kerüljön, nem
+// néma adatvesztésként.
+export function assertPatientMasterDataShape(data: unknown, fileKind = 'paciens-adatok.json'): void {
+  if (data == null || typeof data !== 'object') fail(fileKind, 'nem objektum');
+  const d = data as Record<string, unknown>;
+  if (typeof d.paciensId !== 'string' || !d.paciensId) fail(fileKind, 'hiányzik a "paciensId" mező');
+  if (typeof d.nev !== 'string') fail(fileKind, 'hiányzik a "nev" mező');
+  if (typeof d.kiskoru !== 'boolean') fail(fileKind, '"kiskoru" nem logikai érték');
+}

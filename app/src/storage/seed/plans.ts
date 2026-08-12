@@ -16,7 +16,7 @@
 import { addDaysIso } from '../../domain/date';
 import { javasoltTervCim } from '../../domain/tervCim';
 import { computeOsszesitok } from '../../domain/totals';
-import type { Fazis, PatientRecord, Plan } from '../../domain/types';
+import type { Fazis, PatientMasterData, PatientRecord, Plan } from '../../domain/types';
 import { buildPatientDirName, buildPlanDirName, buildVersionDirName } from '../paths';
 import { seedPriceList } from './priceList';
 
@@ -348,4 +348,15 @@ export const seedPatients: Array<{ patientDir: string; record: PatientRecord }> 
     patientDir: tothDir,
     record: { schemaVersion: 1, paciensId: tothZoltan.paciensId!, nev: tothZoltan.paciens.nev },
   },
+];
+
+/**
+ * A `paciens-adatok.json` törzsadatok (D33) -- SZÁNDÉKOSAN csak Nagy Évának,
+ * hogy a demó mindkét állapotot mutassa: Nagy Éva "rögzített törzsadat",
+ * Kovács János és Tóth Zoltán "élő adat a legutóbbi tervből" (nincs saját
+ * fájljuk, a Páciensek képernyő a legfrissebb `terv.json` `paciens`
+ * blokkjából mutat élő fallbacket).
+ */
+export const seedPatientData: Array<{ patientDir: string; data: PatientMasterData }> = [
+  { patientDir: nagyDir, data: { schemaVersion: 1, paciensId: NAGY_PACIENS_ID, ...nagyEvaPaciens } },
 ];

@@ -18,11 +18,10 @@ import {
 } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
-import { latestVersionAcrossPlans } from '../domain/planFolders';
-import { planUjPaciensselTervhez } from '../domain/planCopy';
 import { norm } from '../domain/search';
-import type { PatientFolder, PlanVersion } from '../domain/types';
+import type { PatientFolder } from '../domain/types';
 import { useAppState } from '../state/AppState';
+import { ujTervForrasPaciensbol } from '../state/planIndulas';
 import { useStorage } from '../storage/StorageContext';
 
 type PendingAction = { kind: 'existing'; patient: PatientFolder } | { kind: 'new' };
@@ -68,30 +67,17 @@ export default function NewPlanPage() {
     .filter((p) => !q.trim() || norm(p.nev).includes(norm(q)))
     .sort((a, b) => a.nev.localeCompare(b.nev));
 
-  // A páciens LEGUTÓBB MÓDOSÍTOTT terv-láncának legfrissebb verziójából
-  // tölti elő a Páciens adatlapot -- ugyanaz a kiválasztás, mint a
-  // PlanHistoryPage páciensszintű "Új terv" gombjáé (latestVersionAcrossPlans).
+  // A páciens ELÉRHETŐ legjobb adataiból tölti elő a Páciens adatlapot: a
+  // lezárt törzsadatból (paciens-adatok.json, D33), ha van, egyébként a
+  // LEGUTÓBB MÓDOSÍTOTT terv-lánc legfrissebb verziójából -- ugyanaz a
+  // közös kiválasztás, mint a PlanHistoryPage páciensszintű "Új terv"
+  // gombjáé (state/planIndulas.ts).
   async function selectExistingPatient(patient: PatientFolder) {
     setSelectError(null);
     setSelectingDir(patient.dirName);
     try {
-      const plans = await storage.listPlans(patient.dirName);
-      const versionsByPlanDir: Record<string, PlanVersion[]> = {};
-      await Promise.all(
-        plans.map(async (plan) => {
-          versionsByPlanDir[plan.dirName] = await storage.listVersions(patient.dirName, plan.dirName);
-        }),
-      );
-      const latest = latestVersionAcrossPlans(plans, (planDir) => versionsByPlanDir[planDir] ?? []);
-      if (!latest) {
-        throw new Error('Ehhez a pácienshez nincs olvasható korábbi terv.');
-      }
-      const plan = await storage.loadPlan({
-        patientDir: patient.dirName,
-        planDir: latest.planDir,
-        versionDir: latest.version.dirName,
-      });
-      copyPlanIntoDraft(planUjPaciensselTervhez(plan, settings, priceList));
+      const next = await ujTervForrasPaciensbol(storage, settings, priceList, patient.dirName);
+      copyPlanIntoDraft(next);
       navigate('/paciens');
     } catch (err) {
       setSelectError(

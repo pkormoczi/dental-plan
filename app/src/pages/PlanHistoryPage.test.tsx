@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PlanHistoryPage from './PlanHistoryPage';
 import { TestProviders } from '../testUtils';
@@ -11,6 +11,15 @@ import { formatMoney } from '../domain/money';
 import { buildDownloadFileName } from '../storage/paths';
 import { useAppState } from '../state/AppState';
 import type { Plan } from '../domain/types';
+
+// backlog-28: a kereszt-link a Páciensek képernyőre navigál, a patientDir-t
+// a route state-ben átadva -- ezt a probe-ot olvassuk vissza, a valódi
+// PaciensekPage.tsx-et nem kell ehhez a teszthez felhúzni.
+function PaciensekProbe() {
+  const location = useLocation();
+  const patientDir = (location.state as { patientDir?: string } | null)?.patientDir;
+  return <div data-testid="paciensek-oldal">{patientDir}</div>;
+}
 
 // backlog-17: a két "Új terv…" gomb a Páciens adatlapra navigál
 // (6. döntés) -- a navigáció TÉNYÉT és a
@@ -126,6 +135,7 @@ function renderHistory() {
         <Route path="/" element={<PlanHistoryPage />} />
         <Route path="/paciens" element={<DraftProbe />} />
         <Route path="/terv" element={<div>TERV-OLDAL</div>} />
+        <Route path="/paciensek" element={<PaciensekProbe />} />
       </Routes>
     </TestProviders>,
   );
@@ -558,6 +568,34 @@ describe('PlanHistoryPage', () => {
 
       expect(within(card).queryByRole('textbox', { name: 'Terv címe' })).not.toBeInTheDocument();
       expect(within(card).getByText(/^Tömések ·/)).toBeInTheDocument();
+    });
+  });
+
+  // backlog-28 (D33): a Páciensek képernyőn terv nélkül felvihető páciens
+  // (csak paciens-adatok.json-nal) itt NEM jelenik meg -- ez a képernyő a
+  // kezelési előzményekről szól.
+  describe('paciens-adatok.json (D33) hatása', () => {
+    it('egy terv nélküli, csak törzsadattal rendelkező páciens nem jelenik meg a listán', async () => {
+      const seeder = new DemoStorage();
+      await seeder.init();
+      await seeder.createPatient('Terv Nélküli Panni');
+
+      renderHistory();
+
+      await screen.findByText('Nagy Éva'); // megvárjuk, hogy a lista betöltsön
+      expect(screen.queryByText('Terv Nélküli Panni')).not.toBeInTheDocument();
+    });
+
+    it('a "Páciens adatai" kereszt-link a Páciensek képernyőre navigál, a patientDir-t átadva', async () => {
+      const user = userEvent.setup();
+      renderHistory();
+
+      await screen.findByText('Kovács János');
+      const card = patientCard('Kovács János');
+      await user.click(within(card).getByRole('button', { name: 'Páciens adatai' }));
+
+      const probe = await screen.findByTestId('paciensek-oldal');
+      expect(probe.textContent).toBeTruthy();
     });
   });
 });

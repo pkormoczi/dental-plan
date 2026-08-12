@@ -12,15 +12,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ---
 
-## KIDOLGOZOTT
-
-### 28. tétel — Páciens-szintű, terveken átívelő törzsadat-nyilvántartó
-  (paciens-adatok.json, a paciens.json-tól külön fájl, a teljes Paciens
-  mezőkör — telefon, email, lakcím, taj, születési idő, kiskorú/törvényes
-  képviselő — élő, terv-mentéstől független szerkesztésére; új „Páciensek”
-  képernyő) — a döntéseket lásd a tervdokumentumban.  
-  **Terv:** `backlog/plans/backlog-28-paciens-torzsadat-terv.md`
-
 ## KIDOLGOZÁSRA VÁR
 
 - **Ajánlat-állapot és visszahívás-jelzés** (pl. `allapot.json` a

@@ -190,6 +190,24 @@ export interface PlanLabel {
   tervCim: string;
 }
 
+/**
+ * paciens-adatok.json -- egy páciens-mappa ÉLŐ, terv-mentéstől független
+ * törzsadata (D33, docs/02-domain-modell.md § Páciens- és terv-mappa).
+ * Ellentétben a `PatientRecord`-dal és a `PlanLabel`-lel, ez VALÓDI system
+ * of record a saját mezőire: a doki itt tartja a páciens jelenleg érvényes
+ * elérhetőségét/adatait, akár terv nélkül is. A `terv.json` `paciens`
+ * blokkja ettől függetlenül marad pillanatkép (D7) -- nincs automatikus
+ * szinkron egyik irányban sem, lásd `domain/paciensAdatok.ts`. A
+ * verziómappákon KÍVÜL, a páciens-mappa gyökerén él, ezért D4 rá nem
+ * vonatkozik, de -- a `terv-cimke.json`-tól eltérően -- nincs "üres =
+ * törlés vissza az élő fallbackre" szemantikája: a fájl létrejötte után a
+ * törzsadat lezárt.
+ */
+export interface PatientMasterData extends Paciens {
+  schemaVersion: 1;
+  paciensId: string;
+}
+
 export interface Rendelo {
   nev: string;
   cim: string;

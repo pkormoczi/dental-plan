@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createBlankPlan } from './blankPlan';
-import { planMasolatKent, planUjPaciensselTervhez } from './planCopy';
-import type { Plan, PriceList, Settings } from './types';
+import { planMasolatKent, planUjPaciensselTervhez, planUjTorzsadattal } from './planCopy';
+import type { Paciens, PatientMasterData, Plan, PriceList, Settings } from './types';
 
 const settings: Settings = {
   schemaVersion: 1,
@@ -114,6 +114,49 @@ describe('planUjPaciensselTervhez', () => {
     const plan = makePlan();
     const uj = planUjPaciensselTervhez(plan, settings, priceList);
     expect(uj.paciensId).toBe('pac1');
+  });
+});
+
+function makeTorzsadat(overrides: Partial<PatientMasterData> = {}): PatientMasterData {
+  const paciens: Paciens = {
+    nev: 'Tóth Márta',
+    szuletesiIdo: '1975-05-05',
+    lakcim: 'Szeged',
+    telefon: '+36 20 111 2222',
+    email: 'marta@example.hu',
+    taj: '111 222 333',
+    kiskoru: false,
+    torvenyesKepviselo: null,
+  };
+  return { schemaVersion: 1, paciensId: 'pacT', ...paciens, ...overrides };
+}
+
+// D33 (backlog-28): planUjTorzsadattal a törzsadatból indít -- a
+// planUjPaciensselTervhez párja, csak más forrásból.
+describe('planUjTorzsadattal', () => {
+  it('a törzsadatból épített paciens blokkot és a paciensId-t viszi át, minden más a friss createBlankPlan() alapértéke', () => {
+    const adatok = makeTorzsadat();
+    const uj = planUjTorzsadattal(adatok, settings, priceList);
+    const blank = createBlankPlan(settings, priceList);
+
+    expect(uj.paciens).toEqual({
+      nev: adatok.nev,
+      szuletesiIdo: adatok.szuletesiIdo,
+      lakcim: adatok.lakcim,
+      telefon: adatok.telefon,
+      email: adatok.email,
+      taj: adatok.taj,
+      kiskoru: adatok.kiskoru,
+      torvenyesKepviselo: adatok.torvenyesKepviselo,
+    });
+    expect(uj).toEqual({ ...blank, paciens: uj.paciens, paciensId: adatok.paciensId });
+  });
+
+  it('nem mutálja a törzsadatot', () => {
+    const adatok = makeTorzsadat();
+    const eredetiNev = adatok.nev;
+    planUjTorzsadattal(adatok, settings, priceList);
+    expect(adatok.nev).toBe(eredetiNev);
   });
 });
 

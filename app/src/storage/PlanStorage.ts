@@ -6,6 +6,7 @@
 
 import type {
   PatientFolder,
+  PatientMasterData,
   Plan,
   PlanFolder,
   PlanRef,
@@ -46,4 +47,25 @@ export interface PlanStorage {
   loadTemplate(name: string): Promise<string>;
   /** Mindig új verziófájlt hoz létre, ennek a nevét adja vissza. */
   saveTemplate(name: string, body: string): Promise<string>;
+  /**
+   * D33: a paciens-adatok.json -- `null`, ha még nem létezik (a hívó ekkor
+   * élő fallbackre esik vissza, `domain/paciensAdatok.ts`
+   * `megjelenitettTorzsadat`), NEM üres/hiba.
+   */
+  loadPatientData(patientDir: string): Promise<PatientMasterData | null>;
+  /**
+   * A törzsadat mentése. Ellentétben a `savePlanLabel`-lel, nincs "üres =
+   * törlés" szemantika -- a fájl létrejötte után a törzsadat lezárt, nincs
+   * visszaút az élő fallbackre. A `paciens.json` index `nev`-jét is
+   * frissíti (`domain/paciensAdatok.ts` `paciensIndexNev`), különben a
+   * páciens-listákban a régi név látszana a következő terv-mentésig.
+   */
+  savePatientData(patientDir: string, data: PatientMasterData): Promise<void>;
+  /**
+   * Vadonatúj, terv nélküli páciens felvitele (backlog-28, 6. döntés) --
+   * generálja a `paciensId`-t és a mappanevet, és mindkét fájlt megírja
+   * (`paciens.json` + `paciens-adatok.json`, utóbbi csak a `nev`-vel
+   * kitöltve).
+   */
+  createPatient(nev: string): Promise<PatientFolder>;
 }

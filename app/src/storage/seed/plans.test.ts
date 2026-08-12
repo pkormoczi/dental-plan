@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { basePrice } from '../../domain/money';
-import { seedPatients, seedPlans } from './plans';
+import { seedPatientData, seedPatients, seedPlans } from './plans';
 import { seedPriceList } from './priceList';
 
 // A demó tervek tetelId-hivatkozásainak integritása. A hiba, amit ez a teszt
@@ -102,5 +102,23 @@ describe('seedPlans paciensId-integritás (D29)', () => {
     const distinctPlanDirs = new Set(nagyEntries.map((e) => e.planDir));
     expect(distinctPatientDirs.size).toBe(1);
     expect(distinctPlanDirs.size).toBe(2);
+  });
+});
+
+// D33 (backlog-28): a seedPatientData SZÁNDÉKOSAN csak egy páciensnek
+// (Nagy Éva) ad paciens-adatok.json-t -- a demónak mindkét állapotot
+// (rögzített törzsadat vs. élő fallback) mutatnia kell.
+describe('seedPatientData (D33)', () => {
+  it('minden bejegyzés egy seedPatients-beli patientDir-re és a hozzá tartozó paciensId-re mutat', () => {
+    const patientDirsByRecord = new Map(seedPatients.map(({ patientDir, record }) => [patientDir, record]));
+    for (const { patientDir, data } of seedPatientData) {
+      const record = patientDirsByRecord.get(patientDir);
+      expect(record).toBeDefined();
+      expect(data.paciensId).toBe(record!.paciensId);
+    }
+  });
+
+  it('szándékosan nem minden seed páciensnek van törzsadata', () => {
+    expect(seedPatientData.length).toBeLessThan(seedPatients.length);
   });
 });

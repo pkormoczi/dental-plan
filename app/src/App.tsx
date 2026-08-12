@@ -8,6 +8,7 @@ import { t } from './design/tokens';
 import FileTreePage from './pages/FileTreePage';
 import Home from './pages/Home';
 import NewPlanPage from './pages/NewPlanPage';
+import PaciensekPage from './pages/PaciensekPage';
 import PatientPage from './pages/PatientPage';
 import PlanEditorPage from './pages/PlanEditorPage';
 import PlanHistoryPage from './pages/PlanHistoryPage';
@@ -58,6 +59,7 @@ export default function App() {
                         }
                       />
                       <Route path="/tervek" element={<PlanHistoryPage />} />
+                      <Route path="/paciensek" element={<PaciensekPage />} />
                       <Route path="/arlista" element={<PriceListAdminPage />} />
                       <Route path="/beallitasok" element={<SettingsPage />} />
                       <Route path="/filerendszer" element={<FileTreePage />} />

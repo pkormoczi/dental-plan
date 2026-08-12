@@ -801,3 +801,28 @@ karbantartási kör négy önálló javítása.
   végső, elmentett értéke kerül papírra, forrástól függetlenül.
 
 ---
+
+### 28. Páciens-szintű, terveken átívelő törzsadat-nyilvántartó — KÉSZ (2026-08-12)
+
+- **Méret:** ~2-3 nap.
+- **Kereteket sért?** Nem — új, önálló D33 (`docs/01-attekintes-es-dontesek.md`),
+  D29 szövege és a `paciens.json` szerepe változatlan.
+- **Valódi haszon:** a doki eddig egy visszatérő páciens telefonját/címét
+  minden egyes tervben újra begépelte, mert a `terv.json` `paciens` blokkja
+  tervenkénti pillanatkép (D7) — nem volt hely, ahol a páciens jelenleg
+  érvényes adatait terv-mentéstől függetlenül tartaná.
+- **Megvalósítás:** új `paciens-adatok.json` a páciens-mappa gyökerén
+  (`docs/02-domain-modell.md` § Páciens-szintű törzsadat) — a `paciens.json`/
+  `terv-cimke.json`-tól eltérően VALÓDI system of record a saját mezőire, a
+  `nev`-et is beleértve; nincs automatikus szinkron a `terv.json` `paciens`
+  blokkjával egyik irányban sem. Amíg nem létezik, élő fallback mutatja a
+  legutóbb módosított terv-lánc legfrissebb `paciens` pillanatképét
+  (`megjelenitettTorzsadat()`, `app/src/domain/paciensAdatok.ts`), első
+  mentéskor a teljes fájl egyszerre zár. Új „Páciensek” képernyő
+  (`docs/03-funkcionalis-spec.md` § 9), ahol terv nélkül is felvihető
+  páciens; a Korábbi tervek és a Páciensek kölcsönösen linkelnek egymásra.
+  A terv nélküli páciens a Korábbi tervek listáján nem jelenik meg. A
+  „Meglévő páciens keresése”/páciensszintű „Új terv” közös
+  forráskiválasztása (`ujTervForrasPaciensbol()`, `app/src/state/planIndulas.ts`)
+  a törzsadatot preferálja, ha van — enélkül korábban hibát adott egy csak
+  törzsadattal (terv nélkül) rendelkező páciens kiválasztása.

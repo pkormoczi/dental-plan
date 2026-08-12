@@ -83,6 +83,35 @@ describe('buildDemoFileTree', () => {
     expect(flat.some((n) => n.name === 'nincs-dp-prefix.json')).toBe(false);
   });
 
+  // D33 (backlog-28): a paciens-adatok.json a paciens.json mellett, a
+  // páciens-mappa gyökerén él -- mindkettőnek látszania kell, egy terv-
+  // mappával azonos mélységű, de attól eltérő nevű hasonló alak (pl. egy
+  // páciens-mappa alatti, terv-cimke.json-hoz hasonló mélységű, de rossz
+  // fájlnevű kulcs) viszont ne csússzon be tévedésből.
+  it('surfaces paciens-adatok.json alongside paciens.json, at the same depth', () => {
+    const keys = [
+      ...SAMPLE_KEYS,
+      `${PREFIX}paciensek/Kovacs-Janos_k9m2r4/paciens-adatok.json`,
+    ];
+    const tree = buildDemoFileTree(keys, PREFIX);
+    const paciensek = tree.find((n) => n.name === 'paciensek');
+    if (paciensek?.type !== 'dir') throw new Error('unreachable');
+    const patient = paciensek.children[0];
+    if (patient.type !== 'dir') throw new Error('unreachable');
+
+    expect(patient.children.map((n) => n.name).sort()).toEqual([
+      'Fogpotlas_a3f9c1',
+      'paciens-adatok.json',
+      'paciens.json',
+    ]);
+  });
+
+  it('drops a mistyped root file at the wrong depth (rest.length mismatch)', () => {
+    const keys = [`${PREFIX}paciensek/Kovacs-Janos_k9m2r4/almappa/paciens-adatok.json`];
+    const flat = flatten(buildDemoFileTree(keys, PREFIX));
+    expect(flat.some((n) => n.name === 'paciens-adatok.json')).toBe(false);
+  });
+
   it('maps the pdf key segment to the display filename while keeping the raw storage key and a PlanRef', () => {
     const tree = buildDemoFileTree(SAMPLE_KEYS, PREFIX);
     const pdfNode = flatten(tree).find(

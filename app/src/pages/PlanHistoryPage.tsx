@@ -7,8 +7,8 @@
 // véglegesítés a meglévő tervId mellé ÚJ verziót ír (D4) -- ezt a
 // storage.savePlan már tudja, itt nincs külön logika hozzá.
 
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
   Box,
@@ -37,11 +37,12 @@ import { t } from '../design/tokens';
 import { todayIso } from '../domain/date';
 import { formatMoney } from '../domain/money';
 import { latestVersionAcrossPlans } from '../domain/planFolders';
-import { planMasolatKent, planUjPaciensselTervhez } from '../domain/planCopy';
+import { planMasolatKent } from '../domain/planCopy';
 import { norm } from '../domain/search';
 import { ALAPERTELMEZETT_TERV_CIM, megjelenitettTervCim } from '../domain/tervCim';
 import type { PatientFolder, Penznem, Plan, PlanFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
+import { ujTervForrasPaciensbol } from '../state/planIndulas';
 import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
 
@@ -222,7 +223,34 @@ export default function PlanHistoryPage() {
 
   const filtered = patients
     .filter((p) => !q.trim() || norm(p.nev).includes(norm(q)))
+    // backlog-28, 6. döntés: egy terv nélküli páciens (csak
+    // paciens-adatok.json-nal, a Páciensek képernyőn felvéve) itt NEM
+    // jelenik meg -- ez a képernyő a kezelési előzményekről szól, nem a
+    // törzsadatról. Egy olvashatatlan tervű páciens változatlanul látszik,
+    // a ⚠ jelzéssel -- neki VAN terve, csak épp nem tudjuk beolvasni.
+    .filter((p) => (plansByPatient[p.dirName]?.length ?? 0) > 0 || unreadable.has(p.dirName))
     .sort((a, b) => a.nev.localeCompare(b.nev));
+
+  // A Páciensek képernyőről érkező kereszt-link (backlog-28) a névfejléchez
+  // görget és -- ha a lánc 2+ elemű -- kinyitja azt, EGYSZER, amint a lista
+  // betöltött. A `location.state`-et csak a mountkor olvassuk (nincs
+  // "history.replace" a mockupban), ezért egy `ref` védi a visszatérő
+  // renderek elleni ismételt görgetést.
+  const location = useLocation();
+  const incomingPatientDir = (location.state as { patientDir?: string } | null)?.patientDir ?? null;
+  const appliedIncomingRef = useRef(false);
+  useEffect(() => {
+    if (appliedIncomingRef.current || loading || !incomingPatientDir) return;
+    if (!patients.some((p) => p.dirName === incomingPatientDir)) return;
+    appliedIncomingRef.current = true;
+    setExpandedOverride((prev) => ({ ...prev, [incomingPatientDir]: true }));
+    for (const el of document.querySelectorAll<HTMLElement>('[data-patient]')) {
+      if (el.dataset.patient === incomingPatientDir) {
+        el.scrollIntoView({ block: 'center' });
+        break;
+      }
+    }
+  }, [loading, patients, incomingPatientDir]);
 
   async function openVersion(ref: VersionRef) {
     setActionError(null);
@@ -265,15 +293,17 @@ export default function PlanHistoryPage() {
     }
   }
 
-  // backlog-17: "Új terv" (páciensszintű) -- mindig a
-  // doki által látott LEGFRISSEBB verzió `paciens` adatát viszi tovább,
-  // sorok nélkül. A hiba a páciens-fejlécnél jelenik meg, nem egy konkrét
-  // sornál -- a forrás csak a legfrissebb adat forrása, nem a cél.
+  // backlog-17/backlog-28: "Új terv" (páciensszintű) -- a páciens ELÉRHETŐ
+  // legjobb adataiból (törzsadat, ha van, egyébként a legfrissebb verzió
+  // `paciens` pillanatképéből -- state/planIndulas.ts), sorok nélkül. A
+  // hiba a páciens-fejlécnél jelenik meg, nem egy konkrét sornál -- a `ref`
+  // csak azt jelzi, MELYIK páciensről van szó, a tényleges forrást a közös
+  // helper dönti el.
   async function ujTervPaciensAdataival(ref: VersionRef) {
     setActionError(null);
     try {
-      const plan = await storage.loadPlan(ref);
-      copyPlanIntoDraft(planUjPaciensselTervhez(plan, settings, priceList));
+      const next = await ujTervForrasPaciensbol(storage, settings, priceList, ref.patientDir);
+      copyPlanIntoDraft(next);
       navigate('/paciens');
     } catch (err) {
       setActionError({
@@ -554,6 +584,17 @@ export default function PlanHistoryPage() {
                   Új terv
                 </Button>
               )}
+              {/* Kereszt-link a Páciensek képernyőre (backlog-28, D33) --
+                  gray/ghost, hogy a hangsúly az "Új terv" akción maradjon:
+                  ez csak navigáció, nem terv-létrehozó. */}
+              <Button
+                size="1"
+                variant="ghost"
+                color="gray"
+                onClick={() => navigate('/paciensek', { state: { patientDir: p.dirName } })}
+              >
+                Páciens adatai
+              </Button>
             </Flex>
             {actionError?.patientDir === p.dirName &&
               actionError.planDir === null &&
