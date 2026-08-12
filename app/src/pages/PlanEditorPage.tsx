@@ -849,21 +849,28 @@ function LineRow({
               aria-label="Darabszám"
             />
           </Box>
-          {visszakapcsolhato && (
-            <IconButton
-              type="button"
-              variant="ghost"
-              color="gray"
-              size="1"
-              aria-label="Darabszám igazítása a fogakhoz"
-              title="Darabszám igazítása a fogakhoz – innentől a fogak számát követi"
-              // A tényleges szinkronizálást a `sorPatchKovetessel` 1. szabálya
-              // végzi (domain/mennyiseg.ts) -- a hívó csak a szándékot jelzi.
-              onClick={() => onPatch({ mennyisegKezi: false })}
-            >
-              <UpdateIcon />
-            </IconButton>
-          )}
+          <IconButton
+            type="button"
+            variant="ghost"
+            color="gray"
+            size="1"
+            aria-label="Darabszám igazítása a fogakhoz"
+            title="Darabszám igazítása a fogakhoz – innentől a fogak számát követi"
+            // A tényleges szinkronizálást a `sorPatchKovetessel` 1. szabálya
+            // végzi (domain/mennyiseg.ts) -- a hívó csak a szándékot jelzi.
+            onClick={() => onPatch({ mennyisegKezi: false })}
+            // A gomb MINDIG a DOM-ban marad, csak `visibility: hidden`-nel
+            // tűnik el -- ha feltételesen renderelnénk, a mellette lévő
+            // flexGrow-os NumberField szélessége soronként ugrálna aszerint,
+            // hogy a sor levált-e. A tabIndex/aria-hidden kizárja a
+            // fókuszsorból és a képernyőolvasóból, amíg nincs mit
+            // visszakapcsolni.
+            tabIndex={visszakapcsolhato ? 0 : -1}
+            aria-hidden={visszakapcsolhato ? undefined : true}
+            style={{ visibility: visszakapcsolhato ? 'visible' : 'hidden' }}
+          >
+            <UpdateIcon />
+          </IconButton>
         </Flex>
       </Table.Cell>
 
