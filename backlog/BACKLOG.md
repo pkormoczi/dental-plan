@@ -69,6 +69,93 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   tervdokumentumban.
   **Terv:** `backlog/plans/backlog-33-save-cancel-dirty-guard-terv.md`
 
+### 34. tétel — Kezdőlap új struktúrája
+  (a `backlog/redesign/` redesign-döntéssorozat DP-010 tétele) — a mai
+  Home NEM minimalista (5 kártya, demó-only gombok); ez a tétel egy új,
+  megosztott páciensenkénti "utolsó jelentős aktivitás" időbélyeget vezet
+  be (nincs sehol wall-clock időbélyeg páciensre ma), ebből épít egy
+  max-5-ös recent-páciens listát, a fő CTA-t D7 szövegére igazítja, és a
+  demó-only gombokat (Demó adat visszaállítása, Minden adat törlése) a
+  29. tételben már elkészült `/demo` oldalra mozgatja. Az aktív draft
+  blokk viselkedése (Continue/discard) a 32. tétel (DP-004) már lezárt
+  munkája, ide csak beépül. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-34-kezdolap-terv.md`
+
+### 35. tétel — Új terv páciensválasztó
+  (a `backlog/redesign/` redesign-döntéssorozat DP-011 tétele) — a mai
+  `/uj-terv` kereső nem autofókuszos, 0 karakternél a TELJES listát
+  mutatja (nem recenst), mindig alfabetikus (nem relevancia szerinti),
+  és nincs billentyűzet-navigáció. Ez a tétel autofókuszt, a 34. tétel
+  megosztott recent-helperét, relevancia-rendezést és az `ItemPicker.tsx`
+  bevált gépel→nyíl→Enter/Esc mintáját vezeti be. Függ a 34. tételtől.
+  A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-35-uj-terv-paciensvalaszto-terv.md`
+
+### 36. tétel — Quick Patient létrehozás
+  (a `backlog/redesign/` redesign-döntéssorozat DP-012 tétele) — feltárás
+  szerint az `/uj-terv` "Vadonatúj páciens" ága MA NEM hoz létre valódi
+  Patient-rekordot a terv előtt (csak mentéskor materializálódik) — ez
+  direkt ellentmond a cél-viselkedésnek. Ez a tétel a MEGLÉVŐ
+  `UjPaciensDialog.tsx`-et (ami a Páciensek listáról már ezt csinálja)
+  DOB+telefon mezővel bővíti és mindkét belépési ponton futtatja, plusz
+  bekötteti a friss `patientDir`-t a 32. tétel `DraftRecord`-jába. A
+  döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-36-quick-patient-terv.md`
+
+### 37. tétel — Páciens-duplikáció felismerés és feloldás
+  (a `backlog/redesign/` redesign-döntéssorozat DP-013 tétele) — a mai
+  duplikáció-jelzés egyetlen helyen, tisztán név-egyezésen alapul,
+  cselekvés nélkül; a DOB/telefon NEM elérhető olcsón minden páciensre
+  (`listPatients()` csak nevet ad). Ez a tétel egy kétfázisú (olcsó
+  név-szűrés, majd szűk körű DOB/telefon-megerősítés) detektálást épít,
+  max 3 javaslattal, save-time ellenőrzéssel és "Mégis új páciens"
+  explicit megerősítéssel, a 36. tétel dialógusába kötve. A döntéseket
+  lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-37-paciens-duplikacio-terv.md`
+
+### 38. tétel — Pácienslista és keresés
+  (a `backlog/redesign/` redesign-döntéssorozat DP-014 tétele) — a lista
+  ma már alfabetikus és névre keres (ez már megfelel), de a sorok
+  helyben nyílnak ki (nem navigálnak), nincs DOB/telefon a sorban, és
+  nincs search/scroll-state megőrzés. Ez a tétel a sorokat a 30. tétel
+  páciens-részletoldalára navigáló linkekre váltja, DOB/telefont ad a
+  kompakt sorhoz (eager betöltéssel, a `PlanHistoryPage` végösszeg-
+  mintájára), és általános state-megőrzést épít. Függ a 30. tételtől.
+  A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-38-pacienslista-terv.md`
+
+### 39. tétel — Páciens adatok read-only / edit / full create
+  (a `backlog/redesign/` redesign-döntéssorozat DP-015 tétele) — a
+  `PatientEditor` ma kinyitáskor rögtön szerkeszthető, nincs read-only
+  alapállapot/Edit-gomb, nincs "Nincs megadva" szöveg, nincs email-/DOB-
+  validáció. A Save/Cancel, a dirty-guard és a mentési-hiba-megőrzés MÁR
+  MA IS jól működik (a 33. tétel/DP-005 feltárása szerint), ez a tétel
+  csak a hiányzó read-only/Edit módot és validációkat adja hozzá. A
+  döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-39-paciens-adatok-terv.md`
+
+### 40. tétel — Páciens master ↔ terv snapshot compare/sync
+  (a `backlog/redesign/` redesign-döntéssorozat DP-016 tétele) — a D33
+  (backlog-28) már kimondta, hogy a `paciens-adatok.json` és a
+  `terv.json` `paciens` blokkja között nincs automatikus szinkron, de
+  SEMMILYEN UI nem létezik, ami ezt az eltérést megmutatná vagy
+  kezelhetővé tenné — ez teljesen új felület. Két külön irányú (master→
+  draft, draft→master) explicit művelet, mezőszintű diff alapból
+  kijelöletlen checkboxokkal, fallback-állapot infó-blokk, író-hiba
+  Retry/Continue. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-40-master-snapshot-sync-terv.md`
+
+### 41. tétel — Páciens törlése
+  (a `backlog/redesign/` redesign-döntéssorozat DP-017 tétele) — törlési
+  képesség SEHOL nem létezik ma (a `PlanStorage` interfésznek nincs
+  törlő metódusa). Ez a tétel egy `deletePatient` storage-metódust, egy
+  "van véglegesített terve" ellenőrzést és egy `Plan.paciensId`-alapú
+  "van rá mutató aktív draft" ellenőrzést épít, a törlést kizárólag a
+  30. tétel páciens-részletoldalának overflow menüjébe kötve, megerősítő
+  dialóggal, merge nélkül. Függ a 30. tételtől. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-41-paciens-torles-terv.md`
+
 ---
 ## KIDOLGOZÁSRA VÁR
 
