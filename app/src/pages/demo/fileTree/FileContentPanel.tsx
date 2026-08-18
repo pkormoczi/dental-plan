@@ -12,9 +12,9 @@
 import { useEffect, useState } from 'react';
 import { Box, Button, Callout, Skeleton, Text } from '@radix-ui/themes';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
-import { t } from '../../design/tokens';
-import type { DemoFileNode } from '../../storage/demoFileTree';
-import { useStorage } from '../../storage/StorageContext';
+import { t } from '../../../design/tokens';
+import type { DemoFileNode } from '../../../storage/demoFileTree';
+import { useStorage } from '../../../storage/StorageContext';
 
 export interface FileContentPanelProps {
   node: DemoFileNode | null;
@@ -28,7 +28,7 @@ function prettyJson(raw: string): { text: string; invalid: boolean } {
   }
 }
 
-// Nincs saját maxHeight/overflow -- a FileTreePage jobb oszlopa (a "szerkesztő
+// Nincs saját maxHeight/overflow -- a FileTreeSection jobb oszlopa (a "szerkesztő
 // panel") már ad egyetlen görgethető keretet; egy második, beágyazott görgetés
 // dupla scrollbart adna.
 const CONTENT_BOX_STYLE = {

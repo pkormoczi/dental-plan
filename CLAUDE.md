@@ -483,7 +483,7 @@ Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
-döntések (D1–D32) egy helyen, számozva élnek a
+döntések (DXXX) egy helyen, számozva élnek a
 `docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
 háttere külön fájlban, `backlog/plans/backlog-<n>-<cim>-terv.md` néven.
 Amikor egy modul vagy komponens "miért így van megcsinálva" kérdés merül
@@ -542,15 +542,18 @@ ugyanabban a körben, nem később:
    változás, a `/update-changelog` továbbra is külön, explicit lépés — ez
    a checklist nem helyettesíti. Ha a tétel megváltoztatta, mit lehet egy
    képernyőn csinálni, a `/update-features` (`FEATURES.md` frissítése)
-   ugyanígy külön, explicit lépés.
+   ugyanígy külön, explicit lépés. **Mindkét skill kizárólag kézi hívásra
+   fut** (`disable-model-invocation`) — a lezárás végén ne próbáld
+   automatikusan meghívni egyiket sem, csak írj emlékeztetőt a dokinak,
+   hogy futtassa le a `/update-changelog`-ot és/vagy a `/update-features`-t.
 
 ## Dokumentáció-térkép
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D32 döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D34 döntések és indoklásuk; adatvédelmi keret; kockázatok |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
-| `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, árlista admin, korábbi tervek stb.) |
+| `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, kezelések és árak, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |
 | `docs/05-technologia.md` | Stack, `PlanStorage` interface, PDF generálás, sémaverziózás, hosztolás |
 | `docs/06-arlista-import.md` | Az Excel-import szabályai, ismert szennyeződések, mit ne javíts az importban |

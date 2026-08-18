@@ -386,7 +386,7 @@ export default function SettingsPage() {
               {deNyilatkozatKesz ? ' — kész' : ' — placeholder, jogi lektorálás szükséges'}
               <br />
               <RadixLink asChild>
-                <RouterLink to="/arlista">Árlista megnyitása</RouterLink>
+                <RouterLink to="/arlista">Kezelések és árak megnyitása</RouterLink>
               </RadixLink>{' '}
               — a „Nincs EUR ár” szűrő a munkalista.
             </Text>

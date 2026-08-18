@@ -36,7 +36,7 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 - Új páciens felvehető terv nélkül is, csak a névvel — a többi adat utólag, bármikor kitölthető.
 - Egy kattintással átválthat a doki a páciens adatlapja és a korábbi tervei között, oda-vissza.
 
-## Árlista
+## Kezelések és árak
 
 - A kínált kezelések, áraik (forint és euró) és kategóriáik karbantartása, kereséssel és szűrőkkel (pl. hiányzó euró ár, sávos ár, inaktív vagy gyakori tétel).
 - Egy tétel törlés helyett inaktiválható, hogy a rá hivatkozó régi tervek később is értelmezhetők maradjanak — bármikor visszakapcsolható.
@@ -49,8 +49,9 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 - Nyilatkozat, fizetési feltételek és garancia szövegének szerkesztése — mentéskor mindig új verzió jön létre, a korábban aláírt tervek a saját, aláírt szövegükkel maradnak.
 - Német nyelv engedélyezése, és annak áttekintése, mennyi tartalom (tételnevek, euró árak, nyilatkozat) áll már készen németül.
 
-## Filerendszer
+## DEMO
 
-- Böngészhető mappa- és fájlszerkezet mutatja meg, hogy a végleges programban pontosan hová, milyen néven kerülnek majd a mentett kezelési tervek, az árlista és a nyomtatvány-szövegei.
-- Egy fájlra kattintva megnézhető a tényleges tartalma is — egy már elmentett tervnél akár a ténylegesen legenerált nyomtatvány is megnyitható innen, új lapon.
+- Fejlesztési/demonstrációs felület, elkülönítve az üzleti munkafolyamattól, három füllel: Funkciók, Filerendszer, Változásnapló.
+- A Funkciók fül ez az összefoglaló, a Változásnapló fül a program eddigi változásainak naplója.
+- A Filerendszer fül böngészhető mappa- és fájlszerkezetet mutat: hová, milyen néven kerülnek majd a mentett kezelési tervek, az árlista és a nyomtatvány-szövegei a végleges programban. Egy fájlra kattintva megnézhető a tényleges tartalma is — egy már elmentett tervnél akár a ténylegesen legenerált nyomtatvány is megnyitható innen, új lapon.
 - Csak megtekintésre való: innen semmi nem törölhető vagy módosítható, a meglévő mentési és letöltési lehetőségek (pl. a Korábbi tervek oldalon) változatlanok maradnak.

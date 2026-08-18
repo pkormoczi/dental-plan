@@ -1,23 +1,23 @@
-// Filerendszer nézet -- docs/03-funkcionalis-spec.md § 8. Filerendszer.
-// Demó-only, read-only vizualizáció: megmutatja, mit írna a végleges
-// (FileSystemStorage, 2. fázis) alkalmazás a doki gépére, a mockup `dp:`
-// localStorage-kulcsaiból fává építve (storage/demoFileTree.ts).
+// Filerendszer szekció a DEMO oldalon -- docs/03-funkcionalis-spec.md § 8.
+// Filerendszer. Demó-only, read-only vizualizáció: megmutatja, mit írna a
+// végleges (FileSystemStorage, 2. fázis) alkalmazás a doki gépére, a mockup
+// `dp:` localStorage-kulcsaiból fává építve (storage/demoFileTree.ts).
 //
 // `useMemo`, NEM async-effekt-plusz-loading-skeleton (mint a
 // PlanHistoryPage): a `listFileTree()` szinkron `localStorage`-bejárás, nem
 // egy `PlanStorage`-hívás, egy mesterséges betöltés-villanás docs/07 "Nincs
 // kitalált adat a felületen" szellemével ütközne. Az `AppStateProvider`
 // már ma is megvárja a `ready` promise-t a gyerek-oldalak renderelése
-// előtt (state/AppState.tsx), ezért ez az oldal sem várja meg külön.
+// előtt (state/AppState.tsx), ezért ez a szekció sem várja meg külön.
 
 import { useMemo, useState } from 'react';
-import { Box, Callout, Flex, Heading, Text } from '@radix-ui/themes';
+import { Box, Callout, Flex, Text } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import FileContentPanel from './fileTree/FileContentPanel';
 import FileTreeNode from './fileTree/FileTreeNode';
-import { t } from '../design/tokens';
-import type { DemoFileNode, DemoNode } from '../storage/demoFileTree';
-import { useStorage } from '../storage/StorageContext';
+import { t } from '../../design/tokens';
+import type { DemoFileNode, DemoNode } from '../../storage/demoFileTree';
+import { useStorage } from '../../storage/StorageContext';
 
 function loadTree(listFileTree: () => DemoNode[]): { tree: DemoNode[]; error: string | null } {
   try {
@@ -30,17 +30,13 @@ function loadTree(listFileTree: () => DemoNode[]): { tree: DemoNode[]; error: st
   }
 }
 
-export default function FileTreePage() {
+export default function FileTreeSection() {
   const { listFileTree } = useStorage();
   const { tree, error } = useMemo(() => loadTree(listFileTree), [listFileTree]);
   const [selected, setSelected] = useState<DemoFileNode | null>(null);
 
   return (
-    <Box style={{ maxWidth: 1100, margin: '0 auto' }}>
-      <Heading size="5" mb="4" style={{ color: t.brand }}>
-        Filerendszer
-      </Heading>
-
+    <Box>
       <Text as="p" size="2" color="gray" mb="1">
         Ez a nézet azt mutatja meg, mit írna a végleges asztali alkalmazás a
         doki gépén kijelölt gyökérmappába — hová, milyen néven, milyen

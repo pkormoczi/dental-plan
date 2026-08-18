@@ -107,9 +107,13 @@ describe('Végpontok közötti folyamat', () => {
     expect(within(patientCard2).getByText(/^v2 ·/)).toBeInTheDocument();
     expect(within(patientCard2).getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- D4
 
-    // Filerendszer -- ugyanennek a mentésnek látszania kell a fa-nézetben is:
-    // az első verzió mappája (v1) D4 miatt érintetlen maradt.
-    await user.click(screen.getByRole('link', { name: 'Filerendszer' }));
+    // DEMO -> Filerendszer fül -- ugyanennek a mentésnek látszania kell a
+    // fa-nézetben is: az első verzió mappája (v1) D4 miatt érintetlen maradt.
+    await user.click(screen.getByRole('link', { name: 'DEMO' }));
+    // A Radix Tabs.Trigger két span-ban duplázza a feliratot (CSS-alapú
+    // szélesség-tartalék, lásd DemoPage.test.tsx fejlécét) -- jsdom alatt,
+    // CSS nélkül az accessible name emiatt "FilerendszerFilerendszer".
+    await user.click(screen.getByRole('tab', { name: /Filerendszer/ }));
     await user.click(screen.getByRole('button', { name: `paciensek/${savedPatientDir}` }));
     await user.click(screen.getByRole('button', { name: `paciensek/${savedPatientDir}/${savedPlanDir}` }));
     await user.click(

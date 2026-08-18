@@ -826,3 +826,25 @@ karbantartási kör négy önálló javítása.
   forráskiválasztása (`ujTervForrasPaciensbol()`, `app/src/state/planIndulas.ts`)
   a törzsadatot preferálja, ha van — enélkül korábban hibát adott egy csak
   törzsadattal (terv nélkül) rendelkező páciens kiválasztása.
+
+---
+
+### 29. Fő navigáció és végleges IA — KÉSZ (2026-08-18)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új, önálló D34 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a redesign-döntéssorozat patient-first, öt tételes
+  fő navigációjának (`Kezdőlap | Páciensek | Kezelések és árak |
+  Beállítások | DEMO`) meghonosítása, hogy a doki-validáció a végleges
+  IA-t lássa, ne a mai kilenc egyenrangú, lapos linket.
+- **Megvalósítás:** a NavBar két csoportra bomlik — elöl a végleges öt
+  link, egy függőleges elválasztó után az egyelőre megtartott négy
+  átmeneti workflow-link (`Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi
+  tervek`, halványabb stílussal), amíg a páciens-részletoldal és a
+  terv-workflow shell át nem veszi a szerepüket (`docs/03-funkcionalis-
+  spec.md` § Fő navigáció). Új `/demo` oldal (`DemoPage.tsx`) Radix
+  `Tabs`-szal fogja össze a korábban önálló Filerendszer nézetet és a
+  Kezdőlapról levett Funkciólista/Változásnapló kártyát. Az `Árlista`
+  admin felhasználói neve `Kezelések és árak`-ra változott
+  (`docs/03-funkcionalis-spec.md` § 6) — a modul/route belső neve
+  (`PriceListAdminPage`, `/arlista`) változatlan maradt.

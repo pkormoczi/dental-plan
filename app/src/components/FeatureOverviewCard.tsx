@@ -1,8 +1,8 @@
-// Kezdőlap: rövid, képernyőnkénti áttekintés egy új felhasználónak, mielőtt
-// belevágna. A gyökér FEATURES.md nyers tartalma épül be build-időben (Vite
-// `?raw` import, a ChangelogCard mintájára) -- a listát a `/update-features`
-// skill tartja karban, szakaszcímei a NavBar linkjeivel egyeznek, ugyanabban
-// a sorrendben, hogy a felsorolás és a fenti navigáció fedje egymást.
+// A DEMO oldal Funkciók füle: rövid, képernyőnkénti áttekintés egy új
+// felhasználónak, mielőtt belevágna. A gyökér FEATURES.md nyers tartalma
+// épül be build-időben (Vite `?raw` import, a ChangelogCard mintájára) -- a
+// listát a `/update-features` skill tartja karban, szakaszonként a mögöttük
+// álló képernyő funkcióit csoportosítva.
 
 import { Box, Card, Heading, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';

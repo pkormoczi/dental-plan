@@ -121,7 +121,7 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   információt hordoz (melyik fogat milyen kezelés érinti), nem díszítés.
   A tényleges szín az árlista `Kategoria.szin` mezőjén él (a Kategóriák
   panelen szerkeszthető, kurált palettából, `docs/03-funkcionalis-spec.md`
-  § 6. Árlista admin); a *választható* paletta (`KATEGORIA_PALETTA`) és az
+  § 6. Kezelések és árak); a *választható* paletta (`KATEGORIA_PALETTA`) és az
   eltévedt hivatkozás fix tartalék-színe (`ISMERETLEN_KATEGORIA`) viszont
   EGYETLEN helyen, `app/src/design/treatmentVisuals.ts`-ben él — a
   szerkesztő és a nyomtatvány is innen (illetve az árlista-adatból) olvas,

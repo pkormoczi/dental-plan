@@ -7,10 +7,28 @@
 3. **Terv szerkesztő** — a legfontosabb
 4. Előnézet és véglegesítés
 5. Korábbi tervek
-6. Árlista admin
+6. Kezelések és árak (árlista admin)
 7. Beállítások
-8. Filerendszer — demó-only, a leendő fájlrendszeres architektúra vizualizációja
+8. Filerendszer — demó-only, a leendő fájlrendszeres architektúra vizualizációja, a DEMO oldal egyik füle
 9. Páciensek — élő, terv-mentéstől független törzsadat (D33)
+
+### Fő navigáció (D34)
+
+A fenti számozott lista a képernyők tartalmát írja le, nem a navigációs
+sávot. A végleges, öt tételes fő navigáció:
+`Kezdőlap | Páciensek | Kezelések és árak | Beállítások | DEMO`.
+
+A `DEMO` menüpont három fület fog össze: **Funkciók** (ez a dokumentum
+felhasználó-szemszögű megfelelője, `FEATURES.md`), **Filerendszer** (a
+fenti 8. képernyő) és **Változásnapló** (`CHANGELOG.md`) — mindhárom
+fejlesztési/demonstrációs tartalom, elkülönítve az üzleti workflow-tól.
+
+**Átmenet:** a `Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi tervek`
+képernyők (2–5.) egyelőre saját nav-linkkel is elérhetők, halványabb
+stílussal, a végleges öt link mögött — ez az EGYETLEN belépési pontjuk,
+amíg a páciens-részletoldal (`Kezelési tervek` tab) és a terv-workflow
+shell (breadcrumb + stepper) át nem veszi a szerepüket, és a linkek
+törlődnek.
 
 ---
 
@@ -659,7 +677,7 @@ nincs kétértelműség.
 
 ---
 
-## 6. Árlista admin
+## 6. Kezelések és árak (árlista admin)
 
 Megvalósítás: `app/src/pages/PriceListAdminPage.tsx`.
 
@@ -783,8 +801,8 @@ hossz-alapú, soha nem újrahasznosított).
   (Név/Cím/Telefon/E-mail/Adószám/Cégjegyzékszám) minden leütésre mentenek,
   updateren át, a mentés ELŐTT szinkron frissülő állapottal (D31,
   `docs/05-technologia.md`) — két mező gyors, egymást követő szerkesztése
-  emiatt nem üti ki egymást, és draft-pufferelés (mint az Árlista admin
-  szöveges mezőin) sem kell hozzá.
+  emiatt nem üti ki egymást, és draft-pufferelés (mint a Kezelések és
+  árak szöveges mezőin) sem kell hozzá.
 - Orvosok listája
 - Logó fájl
 - Ajánlat érvényessége napokban (alapérték 90)
@@ -808,25 +826,26 @@ hossz-alapú, soha nem újrahasznosított).
   az új tervek nyelve), alatta a **német tartalom készültsége**:
   hány aktív tételnek van már német neve, hány tételnek van EUR ára, és a
   `nyilatkozat-de-v1.md`/`fizetesi-feltetelek-de-v1.md` státusza
-  (placeholder, amíg a jogi fordítás el nem készül) — link az Árlistára,
-  ahol a „Nincs EUR ár" szűrő a munkalista.
+  (placeholder, amíg a jogi fordítás el nem készül) — link a Kezelések
+  és árak oldalra, ahol a „Nincs EUR ár" szűrő a munkalista.
 
 ---
 
 ## 8. Filerendszer
 
-**Kizárólag a mockup-fázisra való, demó-only nézet** — a végleges asztali
-alkalmazásban a doki a valódi Fájlkezelőt használná erre, ez a képernyő
-nem feltétlenül él tovább a `FileSystemStorage`-váltás (2. fázis) után.
-Célja, hogy a doki és a fejlesztő közösen lássa, mit írna az app a
-gyökérmappába — a `docs/02-domain-modell.md` "Mappastruktúra" élő,
-kattintható vetülete a mockup `localStorage`-adatából.
+**Kizárólag a mockup-fázisra való, demó-only nézet, a `DEMO` oldal
+Filerendszer füle** — a végleges asztali alkalmazásban a doki a valódi
+Fájlkezelőt használná erre, ez a képernyő nem feltétlenül él tovább a
+`FileSystemStorage`-váltás (2. fázis) után. Célja, hogy a doki és a
+fejlesztő közösen lássa, mit írna az app a gyökérmappába — a
+`docs/02-domain-modell.md` "Mappastruktúra" élő, kattintható vetülete a
+mockup `localStorage`-adatából.
 
 - **Read-only fa**: mappa/fájl diszklózúra, a gyökér és az első szint
   (`sablonok/`, `paciensek/`, a két root JSON) alapból nyitva, mélyebb
   szintek (páciens-/terv-/verziómappák) csukva. Semmilyen törlés/
   átnevezés/írás nincs ezen a képernyőn — a meglévő útvonalak (Korábbi
-  tervek, Árlista admin, Beállítások) változatlanok.
+  tervek, Kezelések és árak, Beállítások) változatlanok.
 - **Egy fájlra kattintva** a ténylegesen tárolt tartalom jelenik meg alatta:
   JSON fájloknál pretty-printelve, sablon-`.md` fájloknál nyers szöveggel
   (a `[PLACEHOLDER`/`[PLATZHALTER` jelöléssel együtt), a `kezelesi-terv.pdf`-nél

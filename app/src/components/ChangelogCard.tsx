@@ -1,6 +1,7 @@
-// Kezdőlap alja: a gyökér CHANGELOG.md nyers tartalma épül be build-időben
-// (Vite `?raw` import), hogy ne kelljen kézzel duplikálni a szöveget -- a
-// napló mindig azzal szinkronban marad, amit a repo gyökerében szerkesztünk.
+// A DEMO oldal Változásnapló füle: a gyökér CHANGELOG.md nyers tartalma
+// épül be build-időben (Vite `?raw` import), hogy ne kelljen kézzel
+// duplikálni a szöveget -- a napló mindig azzal szinkronban marad, amit a
+// repo gyökerében szerkesztünk.
 
 import { Box, Card, Heading, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';

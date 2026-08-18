@@ -369,7 +369,7 @@ export default function PriceListAdminPage() {
     <Box style={{ maxWidth: 940, margin: '0 auto' }}>
       <Flex justify="between" align="baseline" mb="4">
         <Heading size="5" style={{ color: t.brand }}>
-          Árlista
+          Kezelések és árak
         </Heading>
         <Text size="2" color="gray" style={{ fontFamily: t.mono }}>
           verzió {priceList.arlistaVerzio}

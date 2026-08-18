@@ -15,8 +15,8 @@
 import { useId, useState } from 'react';
 import { Box, Button } from '@radix-ui/themes';
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
-import { t } from '../../design/tokens';
-import type { DemoFileNode, DemoNode } from '../../storage/demoFileTree';
+import { t } from '../../../design/tokens';
+import type { DemoFileNode, DemoNode } from '../../../storage/demoFileTree';
 
 export interface FileTreeNodeProps {
   node: DemoNode;

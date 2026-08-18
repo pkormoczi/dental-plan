@@ -1,10 +1,10 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import FileTreePage from './FileTreePage';
-import { DemoStorage } from '../storage/DemoStorage';
-import type { Plan } from '../domain/types';
-import { TestProviders } from '../testUtils';
+import FileTreeSection from './FileTreeSection';
+import { DemoStorage } from '../../storage/DemoStorage';
+import type { Plan } from '../../domain/types';
+import { TestProviders } from '../../testUtils';
 
 function makeBlankPlan(overrides: Partial<Plan> = {}): Plan {
   return {
@@ -38,12 +38,12 @@ function makeBlankPlan(overrides: Partial<Plan> = {}): Plan {
 function renderFileTree() {
   return render(
     <TestProviders>
-      <FileTreePage />
+      <FileTreeSection />
     </TestProviders>,
   );
 }
 
-describe('FileTreePage', () => {
+describe('FileTreeSection', () => {
   let seeder: DemoStorage;
 
   beforeEach(async () => {
@@ -54,7 +54,7 @@ describe('FileTreePage', () => {
 
   it('a gyökér és az első szint alapból nyitva van -- a 6 sablon-fájl kattintás nélkül látszik', async () => {
     renderFileTree();
-    await screen.findByText('Filerendszer');
+    await screen.findByText(/Ez a nézet azt mutatja meg/);
 
     expect(screen.getByRole('button', { name: 'sablonok' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('button', { name: 'paciensek' })).toHaveAttribute('aria-expanded', 'true');
@@ -66,7 +66,7 @@ describe('FileTreePage', () => {
   it('egy páciensmappa alapból csukva van -- kibontásig nincs paciens.json a DOM-ban', async () => {
     const ref = await seeder.savePlan(makeBlankPlan(), new Uint8Array([1, 2, 3]));
     renderFileTree();
-    await screen.findByText('Filerendszer');
+    await screen.findByText(/Ez a nézet azt mutatja meg/);
 
     const patientToggle = screen.getByRole('button', { name: `paciensek/${ref.patientDir}` });
     expect(patientToggle).toHaveAttribute('aria-expanded', 'false');
@@ -96,7 +96,7 @@ describe('FileTreePage', () => {
   it('arlista.json-ra kattintva a panel pretty-printelt tartalmat mutat, a nyers dp: kulccsal együtt', async () => {
     const user = userEvent.setup();
     renderFileTree();
-    await screen.findByText('Filerendszer');
+    await screen.findByText(/Ez a nézet azt mutatja meg/);
 
     await user.click(screen.getByRole('button', { name: 'arlista.json' }));
 
@@ -108,7 +108,7 @@ describe('FileTreePage', () => {
   it('garancia-hu-v1.md-re kattintva a panel a placeholder-jelölést mutatja', async () => {
     const user = userEvent.setup();
     renderFileTree();
-    await screen.findByText('Filerendszer');
+    await screen.findByText(/Ez a nézet azt mutatja meg/);
 
     await user.click(screen.getByRole('button', { name: 'sablonok/garancia-hu-v1.md' }));
 
@@ -125,7 +125,7 @@ describe('FileTreePage', () => {
     const ref = await seeder.savePlan(makeBlankPlan(), new Uint8Array([1, 2, 3]));
     const user = userEvent.setup();
     renderFileTree();
-    await screen.findByText('Filerendszer');
+    await screen.findByText(/Ez a nézet azt mutatja meg/);
 
     await user.click(screen.getByRole('button', { name: `paciensek/${ref.patientDir}` }));
     await user.click(screen.getByRole('button', { name: `paciensek/${ref.patientDir}/${ref.planDir}` }));
@@ -154,7 +154,7 @@ describe('FileTreePage', () => {
     );
 
     renderFileTree();
-    await screen.findByText('Filerendszer');
+    await screen.findByText(/Ez a nézet azt mutatja meg/);
 
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: `paciensek/${ref.patientDir}` }));

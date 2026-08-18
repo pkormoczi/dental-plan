@@ -13,16 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 29. tétel — Fő navigáció és végleges IA
-  (a `backlog/redesign/` redesign-döntéssorozat DP-001 tétele) —
-  végleges öt tételes fő navigáció `Kezdőlap | Páciensek | Kezelések és
-  árak | Beállítások | DEMO`; a Filerendszer és a Kezdőlap
-  changelog/funkciólista kártyáinak DEMO alá költöztetése, az Árlista
-  átnevezése. A Páciens/Terv szerkesztő/Előnézet/Korábbi tervek linkek
-  szándékosan változatlanul maradnak — ez a DP-002/DP-003 előfeltétele,
-  nem ennek a tételnek a hatóköre. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-29-fonavigacio-terv.md`
-
 ### 30. tétel — Páciens detail shell és tab-navigáció
   (a `backlog/redesign/` redesign-döntéssorozat DP-002 tétele) — új,
   URL-lel címezhető páciens-részletoldal két tabbal (`Páciens adatai |
