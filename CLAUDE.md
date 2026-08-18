@@ -513,7 +513,7 @@ Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
-döntések (D1–D35) egy helyen, számozva élnek a
+döntések (`D<szám>` formátumban) egy helyen, számozva élnek a
 `docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
 háttere külön fájlban, `backlog/plans/backlog-<n>-<cim>-terv.md` néven.
 Amikor egy modul vagy komponens "miért így van megcsinálva" kérdés merül
@@ -581,7 +581,7 @@ ugyanabban a körben, nem később:
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D35 döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a `D<szám>` döntések és indoklásuk; adatvédelmi keret; kockázatok |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, kezelések és árak, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |
