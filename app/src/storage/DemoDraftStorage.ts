@@ -13,11 +13,16 @@
 import { assertKnownSchemaVersion } from '../domain/schema';
 import { assertPlanShape } from '../domain/validate';
 import type { Plan } from '../domain/types';
-import type { DraftRecord, DraftStorage } from './DraftStorage';
+import type { DraftMeta, DraftRecord, DraftStorage, WorkflowRoute } from './DraftStorage';
 import { PREFIX } from './DemoStorage';
 import { parseJson } from './json';
 
 const DRAFT_KEY = `${PREFIX}piszkozat`;
+const ISMERT_ROUTEOK: ReadonlySet<string> = new Set<WorkflowRoute>([
+  '/paciens',
+  '/terv',
+  '/elonezet',
+]);
 
 export class DemoDraftStorage implements DraftStorage {
   async load(): Promise<DraftRecord | null> {
@@ -29,11 +34,25 @@ export class DemoDraftStorage implements DraftStorage {
     assertKnownSchemaVersion(rec, 'piszkozat');
     assertKnownSchemaVersion(rec.plan, 'piszkozat');
     assertPlanShape(rec.plan, 'piszkozat');
+    // A patientDir/lastRoute PUHA (nem `plan`-tartalom, csak navigációs tipp,
+    // D37) -- egy szemetes/idegen érték némán elmarad, nem dobja el az egész
+    // piszkozatot. Régi (a mező bevezetése előtti) rekordnál mindkettő
+    // hiányzik, ami ugyanezt az ágat futtatja.
+    if (typeof rec.patientDir !== 'string') delete rec.patientDir;
+    if (typeof rec.lastRoute !== 'string' || !ISMERT_ROUTEOK.has(rec.lastRoute)) {
+      delete rec.lastRoute;
+    }
     return rec;
   }
 
-  async save(plan: Plan): Promise<DraftRecord> {
-    const rec: DraftRecord = { schemaVersion: 1, mentve: new Date().toISOString(), plan };
+  async save(plan: Plan, meta?: DraftMeta): Promise<DraftRecord> {
+    const rec: DraftRecord = {
+      schemaVersion: 1,
+      mentve: new Date().toISOString(),
+      plan,
+      ...(meta?.patientDir != null ? { patientDir: meta.patientDir } : {}),
+      ...(meta?.lastRoute != null ? { lastRoute: meta.lastRoute } : {}),
+    };
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(rec));
     } catch {

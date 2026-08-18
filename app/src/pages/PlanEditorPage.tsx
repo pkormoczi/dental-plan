@@ -22,13 +22,13 @@ import {
   TextArea,
   TextField,
 } from '@radix-ui/themes';
-import { Cross1Icon, InfoCircledIcon, UpdateIcon } from '@radix-ui/react-icons';
+import { Cross1Icon, InfoCircledIcon, TrashIcon, UpdateIcon } from '@radix-ui/react-icons';
 import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
 import ToothChartPanel from '../components/ToothChartPanel';
 import ToothPickerPopover from '../components/ToothPickerPopover';
 import { t } from '../design/tokens';
-import { formatLongDate } from '../domain/date';
+import { formatLongDate, formatPiszkozatIdo } from '../domain/date';
 import { leirasTulHosszu } from '../domain/leirasHossz';
 import { sorPatchKovetessel } from '../domain/mennyiseg';
 import { basePrice, formatMoney } from '../domain/money';
@@ -114,11 +114,24 @@ function sorMezokEgyedibol(
 }
 
 export default function PlanEditorPage() {
-  const { plan, setPlan, priceList, loadedOsszesitokDiff, frissitettDatum, piszkozatHiba } =
-    useAppState();
+  const {
+    plan,
+    setPlan,
+    priceList,
+    loadedOsszesitokDiff,
+    frissitettDatum,
+    piszkozatHiba,
+    piszkozatMentve,
+    piszkozatPatientDir,
+    resetPlanDraft,
+  } = useAppState();
   const navigate = useNavigate();
   const currency = plan.penznem;
   const nyelv = plan.nyelv;
+  // A teljes piszkozat eldobása (nem sor-/fázisszintű) -- lásd a fázistörlés
+  // AlertDialog-ját lent: két külön Root, mert egyszerre csak az egyik
+  // vonatkozó `open`-állapot kell.
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   // P1-7: index-kulcs helyett -- fázistörléskor a maradék PhaseSection-ok
   // pozíciója (pi) eltolódik, és egy sima `key={pi}` React-remount nélkül
   // ugyanazt a DOM-csomópontot (és benne az ItemPicker lokális kereső-
@@ -190,6 +203,16 @@ export default function PlanEditorPage() {
       draft.fazisok.splice(pi, 1);
     });
     setFazisResetToken((n) => n + 1);
+  }
+
+  // A teljes piszkozat eldobása (6. döntés) -- a `patientDir`-t a
+  // `resetPlanDraft()` HÍVÁS ELŐTT kell kiolvasni, mert az nullázza a
+  // piszkozat-metaadatot (D37).
+  function handleDiscardDraft() {
+    const dir = piszkozatPatientDir;
+    resetPlanDraft();
+    setConfirmDiscard(false);
+    navigate(dir ? `/paciensek/${encodeURIComponent(dir)}` : '/paciensek');
   }
 
   function addLine(phaseIdx: number, item: Tetel) {
@@ -276,6 +299,9 @@ export default function PlanEditorPage() {
         patientName={plan.paciens.nev}
         statusz={plan.statusz}
         onPreview={() => navigate('/elonezet')}
+        piszkozatMentve={piszkozatMentve}
+        piszkozatHiba={piszkozatHiba}
+        onDiscard={() => setConfirmDiscard(true)}
       />
 
       {/* docs/03-funkcionalis-spec.md § Korábbi terv új verzióra nyitása:
@@ -463,6 +489,33 @@ export default function PlanEditorPage() {
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
+
+      <AlertDialog.Root
+        open={confirmDiscard}
+        onOpenChange={(open) => !open && setConfirmDiscard(false)}
+      >
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Piszkozat eldobása</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            A teljes piszkozat elvész, ez nem vonható vissza. Folytatod?
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              {/* Szándékosan NEM „Piszkozat eldobása" -- lásd a fázistörlés
+                  dialógusának kommentjét fent: a trigger-IconButton a DOM-ban
+                  marad, amíg a dialógus nyitva van. */}
+              <Button color="red" onClick={handleDiscardDraft}>
+                Eldobás
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Box>
   );
 }
@@ -471,10 +524,16 @@ function Header({
   patientName,
   statusz,
   onPreview,
+  piszkozatMentve,
+  piszkozatHiba,
+  onDiscard,
 }: {
   patientName: string;
   statusz: Plan['statusz'];
   onPreview: () => void;
+  piszkozatMentve: string | null;
+  piszkozatHiba: string | null;
+  onDiscard: () => void;
 }) {
   return (
     <Flex justify="between" align="center" mb="4">
@@ -485,8 +544,28 @@ function Header({
         <Text as="div" size="2" color="gray">
           {patientName || 'Új páciens'} · {statusz === 'VEGLEGES' ? 'véglegesítve' : 'piszkozat'}
         </Text>
+        {/* A meglévő piros Callout (hiba esetén) alatta marad, kikapcsolhatatlanul --
+            ez csak a SIKERES mentés pozitív visszajelzése, hiba mellett nem
+            látszik, hogy ne mondjon ellent egymásnak a két jelzés. */}
+        {piszkozatMentve && !piszkozatHiba && (
+          <Text as="div" size="1" color="gray" mt="1">
+            Piszkozat mentve {formatPiszkozatIdo(piszkozatMentve)}
+          </Text>
+        )}
       </Box>
-      <Button onClick={onPreview}>Előnézet</Button>
+      <Flex gap="3" align="center">
+        <IconButton
+          type="button"
+          aria-label="Piszkozat eldobása"
+          variant="ghost"
+          color="gray"
+          size="2"
+          onClick={onDiscard}
+        >
+          <TrashIcon />
+        </IconButton>
+        <Button onClick={onPreview}>Előnézet</Button>
+      </Flex>
     </Flex>
   );
 }

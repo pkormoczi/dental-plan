@@ -35,17 +35,21 @@ képernyő) közös héjban él (`app/src/components/TervWorkflowShell.tsx`),
 ami mindhárom oldal fölött állandó:
 
 - **Breadcrumb** — `Páciensek > [páciens neve]`. A `Páciensek` szegmens a
-  pácienslistára (9. képernyő) linkel. A páciens-név szegmens ma **csak
-  szöveg**, nem link — a draftra kötött stabil `patientDir`/`paciensId`
-  ma nincs nyilvántartva, egy `buildPatientDirName()`-ből találgatott link
-  nem garantáltan a valódi forrásmappára mutatna (pl. kézzel átírt
-  névnél). Üres névnél a "Új páciens" tartalék-címke látszik.
+  pácienslistára (9. képernyő) linkel. A páciens-név szegmens a piszkozat
+  ismert `patientDir`-je (D37) esetén a páciens-részletoldalára (10.
+  képernyő) linkel, egyébként csak szöveg — a `patientDir` nem minden
+  belépési ponton ismert (pl. "Vadonatúj páciens" ág, vagy egy funkció
+  előtti perzisztált piszkozat). Üres névnél a "Új páciens" tartalék-címke
+  látszik.
 - **Stepper** — szabadon kattintható, 3 lépés: `Terv adatai → Kezelések →
   Előnézet és véglegesítés`. Az aktuális lépés a route-ból dől el
   (`/paciens`/`/terv`/`/elonezet`), nincs hozzá külön `Plan`/state-mező.
   Validáció és blokkolás nélkül bármelyik lépésre át lehet ugrani — ez a
   meglévő, laponkénti "Tovább a terv szerkesztőhöz"/"Előnézet" gombok
-  MELLETT él, nem helyettük.
+  MELLETT él, nem helyettük. Minden route-váltáskor a héj a piszkozat
+  `lastRoute` metaadatát (D37) is frissíti — ebből tudja a Kezdőlap
+  "Piszkozat folytatása" kártyája, melyik lépésre navigáljon vissza (lásd
+  lent, § Autosave).
 
 A sikeres véglegesítés utáni "A terv elmentve ✓" sikerpanel (lásd § 4)
 felett a héj továbbra is látszik.
@@ -368,6 +372,32 @@ következő írási triggerre vár.
 
 Ha az automatikus mentés elhasal (pl. localStorage-kvóta), a hiba a Terv
 szerkesztőben is látszik, nem csak a Kezdőlapon — ott dolgozik a doki.
+Sikeres mentésnél a Terv szerkesztő fejlécében egy semleges „Piszkozat
+mentve HH:MM” szöveg jelenik meg (a hiba-Callout MELLETT, nem helyette) —
+a Kezdőlap ugyanezt az időbélyeget „Utolsó módosítás” címkével mutatja.
+
+A perzisztált piszkozat két, a `Plan`-től független UI-workflow metaadatot
+hordoz (D37): melyik páciens-mappához tartozik (`patientDir`, ahol ismert)
+és melyik workflow-lépést látta utoljára a doki (`lastRoute`, a
+terv-workflow héj írja route-váltáskor, lásd fent). A Kezdőlap „Piszkozat
+folytatása” kártyájának „Megnyitás” gombja ismert `lastRoute` esetén oda
+navigál; ha nem ismert (funkció előtti piszkozat), a régi
+névkitöltés-heurisztika a fallback (üres név → Páciens adatlap, egyébként
+Terv szerkesztő).
+
+A piszkozat két helyről dobható el:
+- A Terv szerkesztő fejlécében egy kuka-ikon a TELJES piszkozatra
+  vonatkozik (nem sor-/fázisszintű) — megerősítést kér, elfogadás után a
+  doki a piszkozat `patientDir`-je szerinti páciens-részletoldalára (10.
+  képernyő) navigál, ismert `patientDir` nélkül a pácienslistára.
+- A Kezdőlap egészséges „Piszkozat folytatása” kártyáján egy „Piszkozat
+  elvetése” gomb, szintén megerősítéssel — elfogadás után a doki a
+  Kezdőlapon marad, a kártya eltűnik.
+
+Ez a két megerősítéssel védett út különbözik a Kezdőlap SÉRÜLT
+(olvashatatlan) piszkozat-kártyájának „Piszkozat elvetése” gombjától, ami
+megerősítés NÉLKÜL fut — egy olvashatatlan piszkozatnál nincs mit érdemben
+mérlegelni, mert a doki úgysem látja a tartalmát.
 
 ---
 

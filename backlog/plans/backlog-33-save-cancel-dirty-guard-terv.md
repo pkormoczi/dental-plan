@@ -148,8 +148,9 @@ A `PlanHistoryPage.tsx`/`NewPlanPage.tsx`/`Home.tsx` MEGLÉVŐ "piszkozat
 felülírása" `AlertDialog`-jai vizuálisan hasonló mintát követnek, de MÁS
 DOMAINT védenek: nem egy KONKRÉT FORM (páciens mezők, sablon szöveg)
 el-nem-mentett állapotát, hanem az AKTÍV TERV-DRAFT identitását/
-életciklusát — ez a 32. tétel (DP-004, `backlog/plans/backlog-32-aktiv-draft-lifecycle-terv.md`)
-már lezárt/formalizált D22 döntésének területe. Ez a tétel NEM nyúl
+életciklusát — ez a (lezárt) 32. tétel (DP-004,
+`docs/03-funkcionalis-spec.md` § Autosave) már formalizált D22
+döntésének területe. Ez a tétel NEM nyúl
 hozzájuk — a 2. döntés szerinti megosztott dialógus-komponens
 STÍLUSMINTÁKÉNT rendelkezésre áll, ha egy jövőbeli módosítás úgy dönt,
 hogy átállítja őket rá, de ez nem ennek a tételnek a feladata.

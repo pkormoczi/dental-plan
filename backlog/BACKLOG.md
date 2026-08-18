@@ -13,19 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 32. tétel — Aktív draft lifecycle és autosave
-  (a `backlog/redesign/` redesign-döntéssorozat DP-004 tétele) — feltárás
-  szerint a hatókör nagy része (egy aktív draft, felülírás-guard, szabad
-  kilépés, quick-páciens túlélése, atomikus véglegesítés) MÁR MEGVAN;
-  a valódi hiányzó rész: a "Piszkozat folytatása" az utolsó tényleges
-  workflow-lépésre navigáljon (ma csak találgat, sosem céloz Előnézetre),
-  pozitív ("mentve HH:MM") jelzés a szerkesztőben (ma csak hiba látszik),
-  trash-ikon a szerkesztőben a teljes draft eldobására megerősítéssel, és
-  ugyanez a Home egészséges piszkozat-kártyáján (ma csak a sérült
-  piszkozat kártyáján van eldobás, megerősítés nélkül). A döntéseket lásd
-  a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-32-aktiv-draft-lifecycle-terv.md`
-
 ### 33. tétel — Közös Save/Cancel és dirty-navigation guard
   (a `backlog/redesign/` redesign-döntéssorozat DP-005 tétele) — feltárás
   szerint MA három egymástól független dirty-detektálás és ötszörösen

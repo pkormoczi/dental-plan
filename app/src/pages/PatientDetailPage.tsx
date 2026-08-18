@@ -94,7 +94,7 @@ export default function PatientDetailPage() {
     setStartError(null);
     try {
       const next = await ujTervForrasPaciensbol(storage, settings, priceList, patient.dirName);
-      copyPlanIntoDraft(next);
+      copyPlanIntoDraft(next, patient.dirName);
       navigate('/paciens');
     } catch (err) {
       setStartError(err instanceof Error ? err.message : 'Az új terv indítása váratlanul meghiúsult.');

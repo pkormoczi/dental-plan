@@ -72,9 +72,18 @@ Külön, kicsi interfész — nem a `PlanStorage` bővítése, mert az IndexedDB
 a fájlrendszeres tárolás része:
 
 ```ts
+interface DraftMeta {
+  patientDir?: string
+  lastRoute?: '/paciens' | '/terv' | '/elonezet'
+}
+interface DraftRecord extends DraftMeta {
+  schemaVersion: 1
+  mentve: string
+  plan: Plan
+}
 interface DraftStorage {
-  load(): Promise<{ schemaVersion: 1; mentve: string; plan: Plan } | null>
-  save(plan: Plan): Promise<{ schemaVersion: 1; mentve: string; plan: Plan }>
+  load(): Promise<DraftRecord | null>
+  save(plan: Plan, meta?: DraftMeta): Promise<DraftRecord>
   clear(): Promise<void>
 }
 ```
@@ -86,7 +95,10 @@ prefix-seprése emiatt a piszkozatot is elsöpri, külön kód nélkül). A
 véglegesben ugyanezt az interfészt egy IndexedDB-alapú implementáció váltja.
 Az olvasás ugyanazt a sémaverzió- és alak-ellenőrzést követi, mint a
 `PlanStorage.loadPlan()` (D18) — egy sérült/inkompatibilis piszkozatot a
-betöltés megtagad, érthető üzenettel, nem néma eldobással.
+betöltés megtagad, érthető üzenettel, nem néma eldobással. A `DraftMeta`
+két mezője (D37, `docs/01-attekintes-es-dontesek.md`) PUHÁN validált — nem
+a `Plan` tartalma, csak UI-workflow navigációs tipp, ezért egy szemetes
+vagy ismeretlen érték némán elmarad, nem dobja el az egész piszkozatot.
 
 Egyetlen `dp:piszkozat` kulcs, egyetlen memóriabeli `plan` slot — több
 böngészőfül esetén last-write-wins, ütközésfeloldás nélkül. **Elfogadott

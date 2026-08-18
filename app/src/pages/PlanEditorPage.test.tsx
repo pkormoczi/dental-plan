@@ -896,3 +896,41 @@ describe('PlanEditorPage -- backlog-18: fázis törlése megerősítéssel', () 
     expect(screen.queryByRole('button', { name: 'Fázis törlése' })).not.toBeInTheDocument();
   });
 });
+
+describe('PlanEditorPage -- backlog-32: piszkozat-mentés jelzés és eldobás', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('sikeres autosave után "Piszkozat mentve …" jelenik meg a fejlécben', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(await screen.findByText(/^Piszkozat mentve /)).toBeInTheDocument();
+  });
+
+  it('a trash-ikon megerősítést kér, elfogadás után a piszkozat kiürül és törlődik a localStorage-ból', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+
+    await user.click(screen.getByRole('button', { name: 'Piszkozat eldobása' }));
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Eldobás' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+
+    expect(screen.queryByDisplayValue('Fogeltávolítás')).not.toBeInTheDocument();
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).toBeNull());
+  });
+});

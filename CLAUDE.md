@@ -473,6 +473,21 @@ héj, D36) komponense, szintén ne írd újra:
   `AppState` mező. A meglévő, laponkénti "Tovább" gombok ettől
   függetlenül, változatlanul megmaradnak.
 
+A piszkozat UI-workflow metaadata (`docs/01-attekintes-es-dontesek.md`
+D37, `docs/03-funkcionalis-spec.md` § Autosave) segédfüggvényei, szintén
+ne írd újra őket:
+- `formatPiszkozatIdo(iso)` (`app/src/domain/date.ts`) — a piszkozat
+  "mentve"/"utolsó módosítás" időbélyege (dátum + óra:perc, böngésző-
+  időzónában, mindig magyar) — NEM a nyomtatvány `formatLongDate`/
+  `formatShortDate`-je (azok naptári dátumot formáznak, UTC-re
+  rögzítve); a Kezdőlap és a Terv szerkesztő fejléce is ezt hívja
+- `jelezWorkflowLepes(route)` (`state/AppState.tsx`, a `useAppState()`
+  API-ja) — az EGYETLEN hely, ahol a piszkozat `lastRoute` metaadata
+  íródik; a `TervWorkflowShell.tsx` hívja route-váltáskor. A
+  `piszkozatPatientDir`/`piszkozatLastRoute` (ugyanott) a `DraftMeta`
+  olvasó oldala — a `loadPlanIntoDraft`/`copyPlanIntoDraft` opcionális
+  második (`patientDir`) paramétere tölti fel, ahol a hívó már ismeri
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

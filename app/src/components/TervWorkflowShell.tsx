@@ -8,25 +8,32 @@
 // megmaradnak -- a stepper a szabad ugrálást adja hozzá, nem irányított
 // útvonalat vált ki.
 
+import { useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Badge, Box, Separator, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import { useAppState } from '../state/AppState';
+import type { WorkflowRoute } from '../storage/DraftStorage';
 
-const LEPESEK: ReadonlyArray<{ to: string; label: string }> = [
+const LEPESEK: ReadonlyArray<{ to: WorkflowRoute; label: string }> = [
   { to: '/paciens', label: 'Terv adatai' },
   { to: '/terv', label: 'Kezelések' },
   { to: '/elonezet', label: 'Előnézet és véglegesítés' },
 ];
 
 export default function TervWorkflowShell() {
-  const { plan } = useAppState();
+  const { plan, piszkozatPatientDir, jelezWorkflowLepes } = useAppState();
   const { pathname } = useLocation();
-  // A draftra kötött stabil patientDir/paciensId (DP-004) hiányában a
-  // páciens-szegmens ma NEM link -- lásd backlog-31 döntés #3: a
-  // `buildPatientDirName(plan.paciens.nev, ...)`-ból találgatott link nem
-  // garantáltan a valódi forrásmappára mutatna (pl. kézzel átírt név).
   const paciensNev = plan.paciens.nev.trim() || 'Új páciens';
+
+  // D37: a piszkozat "utolsó workflow-lépése" -- a héj tudja MA IS, melyik
+  // route-on áll a doki (route-alapú stepper), ezért ez az egyetlen hely,
+  // ahol ez a metaadat íródik, nem mindhárom oldalon külön.
+  useEffect(() => {
+    if (LEPESEK.some((lepes) => lepes.to === pathname)) {
+      jelezWorkflowLepes(pathname as WorkflowRoute);
+    }
+  }, [pathname, jelezWorkflowLepes]);
 
   return (
     <Box style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -43,9 +50,22 @@ export default function TervWorkflowShell() {
         <Text size="1" color="gray" aria-hidden="true">
           ›
         </Text>
-        <Text size="2" weight="medium">
-          {paciensNev}
-        </Text>
+        {/* D37: a piszkozat patientDir-je best-effort ismert (lásd
+            state/AppState.tsx) -- ha van, a páciens-szegmens a
+            részletoldalára linkel; ha nem (pl. "Vadonatúj páciens" ág,
+            vagy egy funkció előtti perzisztált draft), sima szöveg marad. */}
+        {piszkozatPatientDir ? (
+          <Link
+            to={`/paciensek/${encodeURIComponent(piszkozatPatientDir)}`}
+            style={{ fontSize: 14, fontWeight: 500, color: t.text, textDecoration: 'none' }}
+          >
+            {paciensNev}
+          </Link>
+        ) : (
+          <Text size="2" weight="medium">
+            {paciensNev}
+          </Text>
+        )}
       </nav>
 
       <nav

@@ -5,7 +5,7 @@
 // helyén, hogy a szerkesztő/előnézet saját betöltési logikája ne zajítsa
 // a tesztet).
 
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
@@ -14,6 +14,50 @@ import TervWorkflowShell from './TervWorkflowShell';
 import PatientPage from '../pages/PatientPage';
 import { AppStateProvider } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
+import { DemoStorage } from '../storage/DemoStorage';
+import type { Plan } from '../domain/types';
+
+// D37: egy aktív, tartalmas piszkozat, opcionális patientDir/lastRoute
+// metaadattal -- a `dp:piszkozat` kulcsba előre beírva, MIELŐTT a
+// StorageProvider renderelne (lásd Home.test.tsx azonos mintáját: a
+// DemoStorage.init() resetDemoData()-t futtatna hiányzó árlistánál, ami a
+// clearAll() miatt a piszkozatot is elsöpörné).
+function makeDirtyPlan(): Plan {
+  return {
+    schemaVersion: 1,
+    tervId: 'meglevo123',
+    verzio: 0,
+    statusz: 'PISZKOZAT',
+    nyelv: 'hu',
+    penznem: 'HUF',
+    keltezes: '2026-08-05',
+    ervenyesIg: '2026-11-03',
+    arlistaVerzio: '2026-07-01',
+    sablonVerzio: 'nyilatkozat-hu-v1',
+    orvos: 'Dr. Mándoki István',
+    paciens: {
+      nev: 'Teszt Piroska',
+      szuletesiIdo: '',
+      lakcim: '',
+      telefon: '',
+      email: '',
+      taj: '',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+    },
+    fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+    osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+  };
+}
+
+async function seedActiveDraft(meta: { patientDir?: string; lastRoute?: string } = {}) {
+  const seeder = new DemoStorage();
+  await seeder.init();
+  localStorage.setItem(
+    'dp:piszkozat',
+    JSON.stringify({ schemaVersion: 1, mentve: '2026-08-09T10:15:00.000Z', plan: makeDirtyPlan(), ...meta }),
+  );
+}
 
 function Probe({ label }: { label: string }) {
   return <div>{label}</div>;
@@ -88,5 +132,30 @@ describe('TervWorkflowShell', () => {
 
     const breadcrumb = await screen.findByRole('navigation', { name: 'Hol vagyok' });
     expect(within(breadcrumb).getByText('Teszt Elek')).toBeInTheDocument();
+  });
+
+  // D37: a korábban dangling (D36 "leendő aktív draft lifecycle tétel
+  // hatóköre") előre-hivatkozás ezzel zárul le.
+  it('ismert patientDir esetén a páciens-szegmens linkké válik a részletoldalára', async () => {
+    await seedActiveDraft({ patientDir: 'Teszt-Piroska_abc123' });
+    renderShell('/terv');
+
+    const breadcrumb = await screen.findByRole('navigation', { name: 'Hol vagyok' });
+    const link = within(breadcrumb).getByRole('link', { name: 'Teszt Piroska' });
+    expect(link).toHaveAttribute('href', '/paciensek/Teszt-Piroska_abc123');
+  });
+
+  it('route-váltásra a lastRoute perzisztálódik a dp:piszkozat rekordba, ha van aktív draft', async () => {
+    await seedActiveDraft();
+    const user = userEvent.setup();
+    renderShell('/paciens');
+
+    await user.click(await screen.findByRole('link', { name: /Előnézet és véglegesítés/ }));
+    await screen.findByText('Előnézet-oldal');
+
+    await waitFor(() => {
+      const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+      expect(rec.lastRoute).toBe('/elonezet');
+    });
   });
 });

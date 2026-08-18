@@ -900,3 +900,34 @@ karbantartási kör négy önálló javítása.
   globális listára. Utolsó lépésként megszűnt a D34-ben átmenetileg
   megtartott négy NavBar-link (`Páciens`/`Terv szerkesztő`/`Előnézet`/
   `Korábbi tervek`) — a fő navigáció ezzel véglegesen ötelemű.
+
+---
+
+### 32. Aktív draft lifecycle és autosave — KÉSZ (2026-08-19)
+
+- **Méret:** ~1 nap. Feltárás alapján a hatókör nagy része (egy aktív
+  draft, felülírás-guard, szabad kilépés, quick-páciens túlélése,
+  atomikus véglegesítés) már megvolt — a tétel négy konkrét hiányt zárt
+  le.
+- **Kereteket sért?** Nem — új, önálló D37 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a Kezdőlap "Piszkozat folytatása" gombja korábban egy
+  névkitöltés-heurisztikával találgatta a célt, sosem az Előnézetre; a
+  szerkesztőben sikeres mentésnél semmilyen visszajelzés nem volt; a
+  teljes piszkozat eldobására sem a szerkesztőben, sem a Kezdőlap
+  egészséges piszkozat-kártyáján nem volt út.
+- **Megvalósítás:** a perzisztált `DraftRecord` (`storage/DraftStorage.ts`)
+  két opcionális UI-workflow metaadatot kapott a `Plan` mellett:
+  `patientDir` (a draft best-effort ismert páciens-mappája, a MEGLÉVŐ
+  draft-indító helyeken átadva) és `lastRoute` (a terv-workflow héj írja
+  route-váltáskor). A Kezdőlap "Megnyitás" gombja ismert `lastRoute`
+  esetén oda navigál, a régi heurisztika fallbackként megmarad; a
+  breadcrumb páciens-szegmense (D36) ismert `patientDir` esetén linkké
+  vált a páciens-részletoldalára. A Terv szerkesztő fejléce pozitív
+  "Piszkozat mentve HH:MM" jelzést kapott sikeres mentésnél, plusz egy
+  kuka-ikont a teljes piszkozat megerősítéssel védett eldobására; a
+  Kezdőlap egészséges piszkozat-kártyája ugyanilyen megerősítéssel védett
+  eldobást kapott (a SÉRÜLT piszkozat kártyájának megerősítés nélküli
+  eldobása szándékosan változatlan maradt). Egy `piszkozatKiirvaRef` őr
+  védi ki, hogy egy véglegesítés/eldobás utáni puszta workflow-navigáció
+  ne támasszon fel egy már törölt piszkozatot (`docs/03-funkcionalis-spec.md`
+  § Autosave).

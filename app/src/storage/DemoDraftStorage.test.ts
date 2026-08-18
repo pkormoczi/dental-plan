@@ -107,4 +107,45 @@ describe('DemoDraftStorage', () => {
     await expect(drafts.save(makeBlankPlan())).rejects.toThrow(/nem sikerült automatikusan elmenteni/);
     vi.restoreAllMocks();
   });
+
+  // D37: patientDir/lastRoute -- UI-workflow metaadat, nem a Plan tartalma.
+  describe('meta (patientDir/lastRoute, D37)', () => {
+    it('roundtrips patientDir and lastRoute when save() is called with meta', async () => {
+      const rec = await drafts.save(makeBlankPlan(), {
+        patientDir: 'Teszt-Elek_abc123',
+        lastRoute: '/elonezet',
+      });
+      expect(rec.patientDir).toBe('Teszt-Elek_abc123');
+      expect(rec.lastRoute).toBe('/elonezet');
+
+      const loaded = await drafts.load();
+      expect(loaded!.patientDir).toBe('Teszt-Elek_abc123');
+      expect(loaded!.lastRoute).toBe('/elonezet');
+    });
+
+    it('a régi (funkció előtti) rekordnál mindkét mező hiányzik, a load() nem dob', async () => {
+      await drafts.save(makeBlankPlan());
+      const raw = JSON.parse(localStorage.getItem('dp:piszkozat')!);
+      expect(raw.patientDir).toBeUndefined();
+      expect(raw.lastRoute).toBeUndefined();
+
+      const loaded = await drafts.load();
+      expect(loaded!.patientDir).toBeUndefined();
+      expect(loaded!.lastRoute).toBeUndefined();
+    });
+
+    it('egy szemetes lastRoute némán elmarad, a plan és a mentve időbélyeg érintetlen marad', async () => {
+      await drafts.save(makeBlankPlan());
+      const raw = JSON.parse(localStorage.getItem('dp:piszkozat')!);
+      raw.lastRoute = '/nincs-ilyen-route';
+      raw.patientDir = 42; // szemetes típus is
+      localStorage.setItem('dp:piszkozat', JSON.stringify(raw));
+
+      const loaded = await drafts.load();
+      expect(loaded).not.toBeNull();
+      expect(loaded!.lastRoute).toBeUndefined();
+      expect(loaded!.patientDir).toBeUndefined();
+      expect(loaded!.plan).toEqual(makeBlankPlan());
+    });
+  });
 });

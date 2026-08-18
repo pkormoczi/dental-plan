@@ -45,3 +45,19 @@ export function formatShortDate(isoDate: string, nyelv: Nyelv): string {
   const [y, m, d] = isoDate.split('-');
   return nyelv === 'de' ? `${d}.${m}.${y}` : `${y}.${m}.${d}.`;
 }
+
+/**
+ * A piszkozat-autosave "Piszkozat mentve"/"Utolsó módosítás" időbélyege
+ * (Home.tsx, PlanEditorPage.tsx) -- NEM a nyomtatvány
+ * (docs/04-nyomtatvany-spec.md) formátuma, ezért nem `formatLongDate`/
+ * `formatShortDate`: azok tisztán naptári dátumot (nap felbontás, UTC-re
+ * rögzítve) formáznak, ide viszont egy tényleges időpillanat (dátum +
+ * óra:perc, a böngésző időzónájában) kell. Mindig magyar (`hu-HU`) --
+ * belső, doki felé szóló szöveg, nem a terv nyelvét követi.
+ */
+export function formatPiszkozatIdo(iso: string): string {
+  const d = new Date(iso);
+  const datum = d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const ido = d.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
+  return `${datum} ${ido}`;
+}

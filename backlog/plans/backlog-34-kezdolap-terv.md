@@ -23,13 +23,13 @@ indítása", "Korábbi tervek", **"Demó adat visszaállítása"**), és egy
 (`Home.tsx:110–216`). **Nincs sehol recent-páciens lista.**
 
 Az aktív-draft blokk (D149) és a "Continue az utolsó lépésre"/"Discard"
-viselkedés (D150–D152) **MÁR TELJES EGÉSZÉBEN a 32. tételben (DP-004,
-`backlog/plans/backlog-32-aktiv-draft-lifecycle-terv.md`) kerül
-megoldásra** — az ottani feltárás pontosan ezt a hármat (last-step
-navigáció, trash-ikon a Home egészséges kártyáján megerősítéssel, Home-on
-maradás discard után) azonosította hiányzó munkaként. Ez a tétel ezt a
-munkát NEM ismétli meg, csak BEÉPÍTI a 32. tétel eredményét a Kezdőlap új
-elrendezésébe, változatlanul.
+viselkedés (D150–D152) **MÁR TELJES EGÉSZÉBEN megoldva a (lezárt) 32.
+tételben** (DP-004, `docs/01-attekintes-es-dontesek.md` D37,
+`docs/03-funkcionalis-spec.md` § Autosave) — az ottani feltárás pontosan
+ezt a hármat (last-step navigáció, trash-ikon a Home egészséges kártyáján
+megerősítéssel, Home-on maradás discard után) azonosította hiányzó
+munkaként. Ez a tétel ezt a munkát NEM ismétli meg, csak BEÉPÍTI a 32.
+tétel eredményét a Kezdőlap új elrendezésébe, változatlanul.
 
 **A valódi új hatókör ehhez a tételhez:**
 - **D13** (fő CTA a páciensválasztóra visz) — MÁR MA IS így működik

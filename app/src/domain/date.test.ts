@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDaysIso, formatLongDate, formatShortDate, todayIso } from './date';
+import { addDaysIso, formatLongDate, formatPiszkozatIdo, formatShortDate, todayIso } from './date';
 
 describe('todayIso', () => {
   it('returns an ISO (YYYY-MM-DD) date', () => {
@@ -24,6 +24,14 @@ describe('formatShortDate', () => {
 
   it('formats de as "05.08.2026" -- leading zero, not Intl (which would drop it)', () => {
     expect(formatShortDate('2026-08-05', 'de')).toBe('05.08.2026');
+  });
+});
+
+describe('formatPiszkozatIdo', () => {
+  it('formats an ISO instant as "YYYY.MM.DD. HH:MM" in Hungarian, browser-local time', () => {
+    expect(formatPiszkozatIdo('2026-08-09T10:15:00.000Z')).toMatch(
+      /^\d{4}\. \d{2}\. \d{2}\. \d{2}:\d{2}$/,
+    );
   });
 });
 

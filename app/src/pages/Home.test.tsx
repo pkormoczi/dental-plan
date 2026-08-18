@@ -10,9 +10,13 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Theme } from '@radix-ui/themes';
 import { beforeEach, describe, expect, it } from 'vitest';
 import Home from './Home';
 import { TestProviders } from '../testUtils';
+import { AppStateProvider } from '../state/AppState';
+import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
 import type { Plan } from '../domain/types';
 
@@ -45,8 +49,12 @@ function makeDirtyPlan(overrides: Partial<Plan> = {}): Plan {
   };
 }
 
-function seedPersistedDraft(plan: Plan, mentve = '2026-08-09T10:15:00.000Z') {
-  localStorage.setItem('dp:piszkozat', JSON.stringify({ schemaVersion: 1, mentve, plan }));
+function seedPersistedDraft(
+  plan: Plan,
+  mentve = '2026-08-09T10:15:00.000Z',
+  meta: { patientDir?: string; lastRoute?: string } = {},
+) {
+  localStorage.setItem('dp:piszkozat', JSON.stringify({ schemaVersion: 1, mentve, plan, ...meta }));
 }
 
 function renderHome() {
@@ -54,6 +62,33 @@ function renderHome() {
     <TestProviders>
       <Home />
     </TestProviders>,
+  );
+}
+
+function Probe({ label }: { label: string }) {
+  return <div>{label}</div>;
+}
+
+// A `TestProviders` bare MemoryRouter-je nem vált route-ot (lásd fenti
+// D29-komment) -- ahol a "Megnyitás" TÉNYLEGES célja számít (D37
+// lastRoute), valódi Routes/probe-oldalak kellenek, a
+// TervWorkflowShell.test.tsx mintáján.
+function renderHomeWithRoutes() {
+  return render(
+    <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
+      <MemoryRouter initialEntries={['/']}>
+        <StorageProvider>
+          <AppStateProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/paciens" element={<Probe label="Páciens-oldal" />} />
+              <Route path="/terv" element={<Probe label="Kezelések-oldal" />} />
+              <Route path="/elonezet" element={<Probe label="Előnézet-oldal" />} />
+            </Routes>
+          </AppStateProvider>
+        </StorageProvider>
+      </MemoryRouter>
+    </Theme>,
   );
 }
 
@@ -123,5 +158,42 @@ describe('Home -- piszkozat-perzisztencia', () => {
     expect(
       screen.queryByText(/A mentett piszkozatot nem sikerült visszaállítani/),
     ).not.toBeInTheDocument();
+  });
+
+  // D37: a "Megnyitás" a perzisztált lastRoute-ra navigál, nem a
+  // névkitöltés-heurisztikára.
+  it('"Megnyitás" a piszkozat lastRoute-jára navigál, ha az ismert', async () => {
+    seedPersistedDraft(makeDirtyPlan(), undefined, { lastRoute: '/elonezet' });
+    const user = userEvent.setup();
+    renderHomeWithRoutes();
+    await user.click(await screen.findByRole('button', { name: 'Megnyitás' }));
+
+    expect(await screen.findByText('Előnézet-oldal')).toBeInTheDocument();
+  });
+
+  it('lastRoute nélküli (funkció előtti) piszkozatnál a mai névkitöltés-heurisztika dönt', async () => {
+    seedPersistedDraft(makeDirtyPlan());
+    const user = userEvent.setup();
+    renderHomeWithRoutes();
+    await user.click(await screen.findByRole('button', { name: 'Megnyitás' }));
+
+    // makeDirtyPlan() nem-üres nevet ad -> a heurisztika a /terv-re visz.
+    expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
+  });
+
+  // D37/7. döntés: a Home EGÉSZSÉGES kártyáján az eldobás megerősítést kér
+  // (ellentétben a fenti, sérült-kártya megerősítés NÉLKÜLI gombjával).
+  it('az egészséges kártya "Piszkozat elvetése" gombja megerősítést kér, elfogadás után a kártya eltűnik', async () => {
+    seedPersistedDraft(makeDirtyPlan());
+    const user = userEvent.setup();
+    renderHome();
+    await screen.findByText('Piszkozat folytatása');
+
+    await user.click(screen.getByRole('button', { name: 'Piszkozat elvetése' }));
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
+    expect(screen.getByText('Piszkozat folytatása')).toBeInTheDocument(); // még nem tűnt el
+
+    await user.click(screen.getByRole('button', { name: 'Elvetés' }));
+    expect(screen.queryByText('Piszkozat folytatása')).not.toBeInTheDocument();
   });
 });

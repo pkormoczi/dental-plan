@@ -124,7 +124,7 @@ export default function PatientPlanChains({
         planDir: ref.planDir,
         versionDir: ref.versionDir,
       });
-      loadPlanIntoDraft(plan);
+      loadPlanIntoDraft(plan, patient.dirName);
       navigate('/terv');
     } catch (err) {
       setActionError({
@@ -145,7 +145,7 @@ export default function PatientPlanChains({
         planDir: ref.planDir,
         versionDir: ref.versionDir,
       });
-      copyPlanIntoDraft(planMasolatKent(plan, settings, todayIso()));
+      copyPlanIntoDraft(planMasolatKent(plan, settings, todayIso()), patient.dirName);
       navigate('/paciens');
     } catch (err) {
       setActionError({
@@ -162,7 +162,7 @@ export default function PatientPlanChains({
     setActionError(null);
     try {
       const next = await ujTervForrasPaciensbol(storage, settings, priceList, patient.dirName);
-      copyPlanIntoDraft(next);
+      copyPlanIntoDraft(next, patient.dirName);
       navigate('/paciens');
     } catch (err) {
       setActionError({

@@ -223,6 +223,118 @@ function FailingPriceListProbe() {
   );
 }
 
+// D37: patientDir/lastRoute -- a piszkozat UI-workflow metaadata, a
+// DraftRecord-ban perzisztálva, de NEM a Plan tartalma.
+function MetaProbe() {
+  const {
+    settings,
+    copyPlanIntoDraft,
+    resetPlanDraft,
+    jelezWorkflowLepes,
+    markPlanSaved,
+    piszkozatPatientDir,
+    piszkozatLastRoute,
+  } = useAppState();
+  return (
+    <div>
+      <div data-testid="patientDir">{piszkozatPatientDir ?? 'null'}</div>
+      <div data-testid="lastRoute">{piszkozatLastRoute ?? 'null'}</div>
+      <button
+        onClick={() =>
+          copyPlanIntoDraft(
+            planMasolatKent(makeLoadedPlan(), settings, '2026-08-10'),
+            'Teszt-Elek_abc123',
+          )
+        }
+      >
+        copy-with-patient
+      </button>
+      <button onClick={() => resetPlanDraft()}>reset</button>
+      <button onClick={() => jelezWorkflowLepes('/elonezet')}>signal-elonezet</button>
+      <button onClick={() => void markPlanSaved(makeLoadedPlan({ tervId: 'saved1' }))}>
+        mark-saved
+      </button>
+    </div>
+  );
+}
+
+function renderMetaProbe() {
+  return render(
+    <TestProviders>
+      <MetaProbe />
+    </TestProviders>,
+  );
+}
+
+describe('D37: piszkozat-metaadat (patientDir/lastRoute)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('copyPlanIntoDraft(next, patientDir) perzisztálja a patientDir-t a dp:piszkozat rekordba', async () => {
+    const user = userEvent.setup();
+    renderMetaProbe();
+    await screen.findByTestId('patientDir');
+
+    await user.click(screen.getByRole('button', { name: 'copy-with-patient' }));
+
+    expect(await screen.findByTestId('patientDir')).toHaveTextContent('Teszt-Elek_abc123');
+    await waitFor(() => {
+      const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+      expect(rec.patientDir).toBe('Teszt-Elek_abc123');
+    });
+  });
+
+  it('resetPlanDraft() után a patientDir eltűnik és a dp:piszkozat kulcs törlődik', async () => {
+    const user = userEvent.setup();
+    renderMetaProbe();
+    await screen.findByTestId('patientDir');
+    await user.click(screen.getByRole('button', { name: 'copy-with-patient' }));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+
+    await user.click(screen.getByRole('button', { name: 'reset' }));
+
+    expect(screen.getByTestId('patientDir')).toHaveTextContent('null');
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).toBeNull());
+  });
+
+  it('jelezWorkflowLepes a piszkozatLastRoute-ot írja, aktív draft mellett a dp:piszkozat kulcsba is', async () => {
+    const user = userEvent.setup();
+    renderMetaProbe();
+    await screen.findByTestId('lastRoute');
+    await user.click(screen.getByRole('button', { name: 'copy-with-patient' }));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+
+    await user.click(screen.getByRole('button', { name: 'signal-elonezet' }));
+
+    expect(await screen.findByTestId('lastRoute')).toHaveTextContent('/elonezet');
+    await waitFor(() => {
+      const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+      expect(rec.lastRoute).toBe('/elonezet');
+    });
+  });
+
+  // Regresszió: enélkül egy véglegesítés utáni stepper-navigáció (a héj
+  // jelezWorkflowLepes-e) feltámasztana egy már törölt piszkozatot a
+  // memóriában maradt, immár MENTETT plan-ből (lásd AppState.tsx
+  // `piszkozatKiirvaRef`).
+  it('markPlanSaved() UTÁN egy jelezWorkflowLepes() nem hoz létre új piszkozatot', async () => {
+    const user = userEvent.setup();
+    renderMetaProbe();
+    await screen.findByTestId('lastRoute');
+    await user.click(screen.getByRole('button', { name: 'copy-with-patient' }));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+
+    await user.click(screen.getByRole('button', { name: 'mark-saved' }));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).toBeNull());
+
+    await user.click(screen.getByRole('button', { name: 'signal-elonezet' }));
+    await waitFor(() => expect(screen.getByTestId('lastRoute')).toHaveTextContent('/elonezet'));
+
+    expect(localStorage.getItem('dp:piszkozat')).toBeNull();
+  });
+});
+
 // D31: a savePriceList/saveSettings context-metódus KIZÁRÓLAG updatert fogad,
 // és a `priceList`/`settings` állapot a mentés ELŐTT, szinkron frissül
 // (`settingsRef`/`priceListRef` + `apply*`, AppState.tsx) -- ezek a tesztek

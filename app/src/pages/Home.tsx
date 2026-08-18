@@ -2,25 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertDialog, Box, Button, Callout, Card, Flex, Heading, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
+import { formatPiszkozatIdo } from '../domain/date';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
-type PendingAction = 'reset' | 'clearAll' | null;
-
-/**
- * Csak a Home "Piszkozat folytatása" kártyájának időbélyege -- nem a
- * nyomtatvány (docs/04-nyomtatvany-spec.md) formátuma, ezért nem
- * `domain/date.ts` `formatLongDate`/`formatShortDate`-je: azok tisztán
- * naptári dátumot (nap felbontás, UTC-re rögzítve) formáznak, ide viszont
- * egy tényleges időpillanat (dátum + óra:perc, a böngésző időzónájában)
- * kell.
- */
-function formatPiszkozatIdo(iso: string): string {
-  const d = new Date(iso);
-  const datum = d.toLocaleDateString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit' });
-  const ido = d.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
-  return `${datum} ${ido}`;
-}
+type PendingAction = 'reset' | 'clearAll' | 'discardDraft' | null;
 
 export default function Home() {
   const { resetDemoData, clearAll } = useStorage();
@@ -30,7 +16,9 @@ export default function Home() {
     vanMentetlenPiszkozat,
     piszkozatMentve,
     piszkozatHiba,
+    piszkozatLastRoute,
     discardPersistedDraft,
+    resetPlanDraft,
   } = useAppState();
   const navigate = useNavigate();
   const [justReset, setJustReset] = useState(false);
@@ -78,6 +66,17 @@ export default function Home() {
     }
   }
 
+  // Az egészséges "Piszkozat folytatása" kártya eldobása -- ellentétben a
+  // fenti `handleDiscardDraft`-tal (sérült draft, `discardPersistedDraft`),
+  // itt VAN memóriabeli terv, amit el kell tüntetni: a `resetPlanDraft()`
+  // ezt is elvégzi (a `dp:piszkozat` kulcsot is törli), a
+  // `discardPersistedDraft` önmagában NEM nullázná a `plan`/`mentettPlan`
+  // state-et, tehát a kártya nem tűnne el.
+  function performDiscardDraft() {
+    setPendingAction(null);
+    resetPlanDraft();
+  }
+
   // docs/03-funkcionalis-spec.md § Autosave: ugyanaz a felülírás-kockázat,
   // mint a "Demó adat visszaállítása"/"Minden adat törlése" gomboknál -- a
   // doki figyelmetlenül eldobná a folyamatban lévő munkáját. Egyetlen
@@ -101,6 +100,12 @@ export default function Home() {
         'gombbal tudsz újra a seedből kiindulni.',
       actionLabel: 'Törlés',
       onConfirm: () => void performClearAll(),
+    },
+    discardDraft: {
+      title: 'Piszkozat eldobása',
+      description: 'Biztosan eldobod a folyamatban lévő piszkozatot? Ez nem vonható vissza.',
+      actionLabel: 'Elvetés',
+      onConfirm: performDiscardDraft,
     },
   };
   const activeSpec = pendingAction ? confirmSpecs[pendingAction] : null;
@@ -151,9 +156,18 @@ export default function Home() {
               Utolsó módosítás: {formatPiszkozatIdo(piszkozatMentve)}
             </Text>
           )}
-          <Button onClick={() => navigate(plan.paciens.nev.trim() ? '/terv' : '/paciens')}>
-            Megnyitás
-          </Button>
+          <Flex gap="3">
+            <Button
+              onClick={() =>
+                navigate(piszkozatLastRoute ?? (plan.paciens.nev.trim() ? '/terv' : '/paciens'))
+              }
+            >
+              Megnyitás
+            </Button>
+            <Button variant="soft" color="gray" onClick={() => setPendingAction('discardDraft')}>
+              Piszkozat elvetése
+            </Button>
+          </Flex>
         </Card>
       )}
 

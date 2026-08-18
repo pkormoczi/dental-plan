@@ -77,7 +77,7 @@ export default function NewPlanPage() {
     setSelectingDir(patient.dirName);
     try {
       const next = await ujTervForrasPaciensbol(storage, settings, priceList, patient.dirName);
-      copyPlanIntoDraft(next);
+      copyPlanIntoDraft(next, patient.dirName);
       navigate('/paciens');
     } catch (err) {
       setSelectError(
