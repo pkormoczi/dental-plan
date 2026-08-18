@@ -13,6 +13,72 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
+### 29. tétel — Fő navigáció és végleges IA
+  (a `backlog/redesign/` redesign-döntéssorozat DP-001 tétele) —
+  végleges öt tételes fő navigáció `Kezdőlap | Páciensek | Kezelések és
+  árak | Beállítások | DEMO`; a Filerendszer és a Kezdőlap
+  changelog/funkciólista kártyáinak DEMO alá költöztetése, az Árlista
+  átnevezése. A Páciens/Terv szerkesztő/Előnézet/Korábbi tervek linkek
+  szándékosan változatlanul maradnak — ez a DP-002/DP-003 előfeltétele,
+  nem ennek a tételnek a hatóköre. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-29-fonavigacio-terv.md`
+
+### 30. tétel — Páciens detail shell és tab-navigáció
+  (a `backlog/redesign/` redesign-döntéssorozat DP-002 tétele) — új,
+  URL-lel címezhető páciens-részletoldal két tabbal (`Páciens adatai |
+  Kezelési tervek`), sticky compact fejléc, alapértelmezett tab-szabály,
+  first-plan CTA üres tervlistánál. A mai `PaciensekPage`/`PlanHistoryPage`
+  tartalma átköltözik (nem újratervezve) a két tabba, a mai kereszt-linkek
+  (ma `location.state`-alapú, duplikált boilerplate) az új oldalra
+  mutatnak át. A `PatientEditor` mélyebb viselkedése (valódi
+  read-only/Edit-mód), a master↔snapshot szinkron és a chain/version lista
+  finomítása szándékosan KÍVÜL marad — külön tételek (DP-015/DP-016/DP-020)
+  dolga. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-30-paciens-detail-shell-terv.md`
+
+### 31. tétel — Terv workflow shell, breadcrumb és stepper
+  (a `backlog/redesign/` redesign-döntéssorozat DP-003 tétele) — állandó,
+  kattintható breadcrumb (`Páciensek > [páciens neve]`) + 3-lépéses,
+  szabadon kattintható stepper (`Terv adatai → Kezelések → Előnézet és
+  véglegesítés`) a három workflow-oldal köré. A véglegesítés utáni
+  sikerpanel változatlan marad (a `Terv részletei` nézet még nem létezik,
+  DP-060 dolga), csak a "Korábbi tervek" gomb célja frissül a 30. tétel
+  páciens-részletoldalára. Utolsó lépésként eltávolítja a 29. tételben
+  (DP-001) átmenetileg megtartott négy NavBar-linket
+  (`Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi tervek`), lezárva azt a
+  függőséget. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-31-terv-workflow-shell-terv.md`
+
+### 32. tétel — Aktív draft lifecycle és autosave
+  (a `backlog/redesign/` redesign-döntéssorozat DP-004 tétele) — feltárás
+  szerint a hatókör nagy része (egy aktív draft, felülírás-guard, szabad
+  kilépés, quick-páciens túlélése, atomikus véglegesítés) MÁR MEGVAN;
+  a valódi hiányzó rész: a "Piszkozat folytatása" az utolsó tényleges
+  workflow-lépésre navigáljon (ma csak találgat, sosem céloz Előnézetre),
+  pozitív ("mentve HH:MM") jelzés a szerkesztőben (ma csak hiba látszik),
+  trash-ikon a szerkesztőben a teljes draft eldobására megerősítéssel, és
+  ugyanez a Home egészséges piszkozat-kártyáján (ma csak a sérült
+  piszkozat kártyáján van eldobás, megerősítés nélkül). A döntéseket lásd
+  a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-32-aktiv-draft-lifecycle-terv.md`
+
+### 33. tétel — Közös Save/Cancel és dirty-navigation guard
+  (a `backlog/redesign/` redesign-döntéssorozat DP-005 tétele) — feltárás
+  szerint MA három egymástól független dirty-detektálás és ötszörösen
+  másolt `AlertDialog`-minta él egymás mellett (Árlista admin és a
+  Beállítások legtöbb szekciója tisztán autosave, csak a Páciens-
+  szerkesztő és a Beállítások "Nyomtatvány szövegei" szekció közelít a
+  cél-mintához). Ez a tétel egy közös dirty-tracking hookot és egy közös
+  "elvetnéd a módosításokat?" dialógus-komponenst épít, a Páciens-
+  szerkesztőt (bájtra változatlan viselkedéssel) és a Sablonok szekció
+  hiányzó Cancel gombját/guardját ráállítja. Az Árlista admin és a
+  Beállítások többi szekciójának autosave→explicit átállítása
+  SZÁNDÉKOSAN kívül marad — a saját tételeik (DP-080/081, DP-082–087)
+  dolga. A "piszkozat felülírása" (aktív draft) guardok a 32. tétel
+  (DP-004) már lezárt területe, ehhez nem nyúl. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-33-save-cancel-dirty-guard-terv.md`
+
 ---
 ## KIDOLGOZÁSRA VÁR
 
