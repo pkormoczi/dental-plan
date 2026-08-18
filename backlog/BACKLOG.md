@@ -1,6 +1,6 @@
 # Backlog
 
-A `docs/01` sérthetetlen keretei (D1–D32) egyik tételt sem sértik —
+A `docs/01` sérthetetlen keretei (D1–D35) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. Lezárt
@@ -12,19 +12,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ---
 ## KIDOLGOZOTT
-
-### 30. tétel — Páciens detail shell és tab-navigáció
-  (a `backlog/redesign/` redesign-döntéssorozat DP-002 tétele) — új,
-  URL-lel címezhető páciens-részletoldal két tabbal (`Páciens adatai |
-  Kezelési tervek`), sticky compact fejléc, alapértelmezett tab-szabály,
-  first-plan CTA üres tervlistánál. A mai `PaciensekPage`/`PlanHistoryPage`
-  tartalma átköltözik (nem újratervezve) a két tabba, a mai kereszt-linkek
-  (ma `location.state`-alapú, duplikált boilerplate) az új oldalra
-  mutatnak át. A `PatientEditor` mélyebb viselkedése (valódi
-  read-only/Edit-mód), a master↔snapshot szinkron és a chain/version lista
-  finomítása szándékosan KÍVÜL marad — külön tételek (DP-015/DP-016/DP-020)
-  dolga. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-30-paciens-detail-shell-terv.md`
 
 ### 31. tétel — Terv workflow shell, breadcrumb és stepper
   (a `backlog/redesign/` redesign-döntéssorozat DP-003 tétele) — állandó,

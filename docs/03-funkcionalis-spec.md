@@ -11,6 +11,7 @@
 7. Beállítások
 8. Filerendszer — demó-only, a leendő fájlrendszeres architektúra vizualizációja, a DEMO oldal egyik füle
 9. Páciensek — élő, terv-mentéstől független törzsadat (D33)
+10. Páciens részletei — URL-lel címezhető, két tabbal (D35)
 
 ### Fő navigáció (D34)
 
@@ -23,12 +24,13 @@ felhasználó-szemszögű megfelelője, `FEATURES.md`), **Filerendszer** (a
 fenti 8. képernyő) és **Változásnapló** (`CHANGELOG.md`) — mindhárom
 fejlesztési/demonstrációs tartalom, elkülönítve az üzleti workflow-tól.
 
-**Átmenet:** a `Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi tervek`
-képernyők (2–5.) egyelőre saját nav-linkkel is elérhetők, halványabb
-stílussal, a végleges öt link mögött — ez az EGYETLEN belépési pontjuk,
-amíg a páciens-részletoldal (`Kezelési tervek` tab) és a terv-workflow
+**Átmenet:** a `Páciens`/`Terv szerkesztő`/`Előnézet` képernyők (2–4.)
+egyelőre saját nav-linkkel is elérhetők, halványabb stílussal, a végleges
+öt link mögött — ez az EGYETLEN belépési pontjuk, amíg a terv-workflow
 shell (breadcrumb + stepper) át nem veszi a szerepüket, és a linkek
-törlődnek.
+törlődnek. A `Korábbi tervek` (5.) linkje ugyanide tartozik, de már csak
+átmeneti belépési pontként él — a páciens-részletoldal (10., `Kezelési
+tervek` tab) elkészült, a kereszt-linkek onnantól oda mutatnak.
 
 ---
 
@@ -473,8 +475,9 @@ csoportosítva, alatta a terv-láncok (D29), azon belül a verziók dátummal
 rendelkező páciens (a Páciensek képernyőn, § 9, terv nélkül felvéve) itt
 NEM jelenik meg — ez a képernyő a kezelési előzményekről szól, nem a
 törzsadatról. Minden páciensnév mellett egy „Páciens adatai” kereszt-link
-navigál a Páciensek képernyőre, ugyanahhoz a pácienshez (§ 9) — fordítva a
-Páciensek szerkesztője linkel ide.
+navigál a páciens-részletoldalra (§ 10), ugyanahhoz a pácienshez, a
+`Páciens adatai` tabbal előválasztva — fordítva a részletoldal `Kezelési
+tervek` tabjának saját, ugyanezt a fát renderelő blokkja linkel ide.
 
 Egy páciensnek **1 terv-lánca** esetén (a tipikus eset) a blokk alapból
 kibontva jelenik meg — nincs plusz kattintás. **2+ lánc** esetén alapból
@@ -899,8 +902,44 @@ egymásra ugyanahhoz a pácienshez.
   gyökér-fájlt (`paciens.json` + `paciens-adatok.json`) létrehozza, terv
   nélkül. Az így felvitt páciens a Korábbi tervek listán NEM jelenik meg
   (§ 5) — csak akkor kerül oda, ha legalább egy terve is lesz.
-- **Kereszt-link**: a szerkesztőben egy „Korábbi tervek” link a Korábbi
-  tervekre navigál, ugyanahhoz a pácienshez; a Korábbi tervek minden
-  páciensnév mellett egy „Páciens adatai” link ide navigál vissza.
+- **Kereszt-link**: a szerkesztőben egy „Korábbi tervek” link a páciens-
+  részletoldalra navigál (§ 10), a `Kezelési tervek` tabbal előválasztva;
+  a részletoldal `Kezelési tervek` tabja fordítva, egy „Páciens adatai”
+  linkkel vált vissza erre a tabra.
 - A nyomtatvány (PDF) nem változik: ez a képernyő SOHA nem forrása a
   PDF-nek (D7, D33).
+
+---
+
+## 10. Páciens részletei
+
+URL-lel címezhető (`/paciensek/:patientDir`, D35), két tabbal: `Páciens
+adatai | Kezelési tervek`. Megvalósítás: `app/src/pages/PatientDetailPage.tsx`.
+Ez a képernyő a `Páciensek` (§ 9) és a `Korábbi tervek` (§ 5) tartalmát
+FOGADJA BE két tabként — egyik oldal tartalma sem duplikálva, közös
+komponensekbe (`components/PatientEditorPanel.tsx`,
+`components/PatientPlanChains.tsx`) emelve, amiket mindkét régi lista-
+oldal sora ÉS ez az oldal is használ. A `Páciensek`/`Korábbi tervek`
+listák önmagukban változatlanul elérhetők maradnak — csak a bennük lévő
+kereszt-linkek mutatnak ide.
+
+- **Sticky fejléc**: név + születési dátum + telefon, görgetéskor a lap
+  tetején marad. Adatforrása a `megjelenitettTorzsadat()` (§ 9-cel azonos
+  logika: lezárt törzsadat, vagy ha nincs, élő fallback a legutóbb
+  módosított terv-lánc legfrissebb `paciens` pillanatképéből).
+- **Alapértelmezett tab**: `Kezelési tervek` — a hívó (a két lista
+  kereszt-linkje) `location.state`-ben jelezheti, hogy helyette a
+  `Páciens adatai` tabbal nyisson (pl. teljes pácienslétrehozás után).
+- **`Páciens adatai` tab**: a `PatientEditorPanel` (§ 9 „Sor kinyitása”/
+  „Mentés” szabályai szerint) — nincs rajta „Új terv” gomb, az kizárólag a
+  `Kezelési tervek` tabhoz tartozik.
+- **`Kezelési tervek` tab**: a `PatientPlanChains` (§ 5 fa/verzió/akció
+  szabályai szerint). Ha a páciensnek még nincs egyetlen olvasható
+  terv-verziója sem, a fa helyett egy „Új terv” CTA jelenik meg — ez az
+  EGYETLEN eset, ahol ez a képernyő ilyen üres állapotot mutat, mert a
+  Korábbi tervek listája (§ 5) egy ilyen pácienst eleve ki sem listáz.
+- A két tab közti „Korábbi tervek”/„Páciens adatai” gombja (a
+  `PatientEditorPanel`, illetve a `PatientPlanChains` saját kereszt-linkje)
+  ezen az oldalon EGYSZERŰ TAB-VÁLTÁS, nem route-navigáció — a komponensek
+  nem ismerik a különbséget, a hívó (ez az oldal vs. a két régi lista)
+  dönti el, mit jelent a callback.

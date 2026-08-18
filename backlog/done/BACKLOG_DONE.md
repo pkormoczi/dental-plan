@@ -848,3 +848,32 @@ karbantartási kör négy önálló javítása.
   admin felhasználói neve `Kezelések és árak`-ra változott
   (`docs/03-funkcionalis-spec.md` § 6) — a modul/route belső neve
   (`PriceListAdminPage`, `/arlista`) változatlan maradt.
+
+---
+
+### 30. Páciens detail shell és tab-navigáció — KÉSZ (2026-08-18)
+
+- **Méret:** ~2 nap.
+- **Kereteket sért?** Nem — új, önálló D35 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a páciens-vonatkozású funkciók három, egymástól
+  független oldalon éltek, egyik sem URL-lel címezhető egyetlen
+  pácienshez — a két lista tranziens `location.state`-tel kereszt-linkelt
+  egymásra, ami frissítésnél (F5) elvesztette, melyik pácienst nézte a
+  doki, és mindkét fájlban duplikált "görgess a sorra és nyisd ki"
+  boilerplate-et igényelt.
+- **Megvalósítás:** új, URL-lel címezhető `/paciensek/:patientDir` oldal
+  (`PatientDetailPage.tsx`) két tabbal: `Páciens adatai | Kezelési
+  tervek` (`docs/03-funkcionalis-spec.md` § 10). A mai `PaciensekPage.tsx`
+  törzsadat-szerkesztője és a `PlanHistoryPage.tsx` terv-lánc/verzió fája
+  két közös komponensbe emelve (`components/PatientEditorPanel.tsx`,
+  `components/PatientPlanChains.tsx`), amiket mindkét régi lista-oldal ÉS
+  az új oldal is használ — a régi oldalak tartalma és nav-elérhetősége
+  változatlan, csak a bennük lévő kereszt-linkek célja vált az új
+  oldalra, a megfelelő tabbal előválasztva. Közös adatbetöltő
+  (`loadPlanChainData`, `domain/planChainData.ts`) egy páciens terv-lánc/
+  verzió adatainak 3-lépéses betöltésére, amit a `PlanHistoryPage.tsx`
+  (minden páciensre egyszerre) és az új oldal (egyetlen páciensre) is
+  hív. Sticky, kompakt fejléc (név/születési dátum/telefon) — az app első
+  `position: sticky` használata; controlled Radix `Tabs` — az app második
+  Tabs-használata a `DemoPage.tsx` (backlog-29) uncontrolled mintája
+  után, `docs/07-felulet-rendszer.md`-ben rögzített stílus-szabállyal.

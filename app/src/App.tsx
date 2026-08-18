@@ -9,6 +9,7 @@ import DemoPage from './pages/DemoPage';
 import Home from './pages/Home';
 import NewPlanPage from './pages/NewPlanPage';
 import PaciensekPage from './pages/PaciensekPage';
+import PatientDetailPage from './pages/PatientDetailPage';
 import PatientPage from './pages/PatientPage';
 import PlanEditorPage from './pages/PlanEditorPage';
 import PlanHistoryPage from './pages/PlanHistoryPage';
@@ -60,6 +61,7 @@ export default function App() {
                       />
                       <Route path="/tervek" element={<PlanHistoryPage />} />
                       <Route path="/paciensek" element={<PaciensekPage />} />
+                      <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
                       <Route path="/arlista" element={<PriceListAdminPage />} />
                       <Route path="/beallitasok" element={<SettingsPage />} />
                       <Route path="/demo" element={<DemoPage />} />

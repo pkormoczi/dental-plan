@@ -21,8 +21,8 @@ gombokkal lehet előre haladni, programozott guard nélkül:
 `navigate('/terv')`), `PlanEditorPage.tsx:278,489` ("Előnézet", feltétel
 nélküli `navigate('/elonezet')`). Visszafelé csak egyetlen, feltételes gomb
 van (`PreviewPage.tsx:452`, csak kitöltetlen-sor hiba esetén jelenik meg).
-Emellett a `NavBar.tsx:5–15` lapos linkjei ma is bármikor elérhetővé
-teszik mindhárom oldalt, kontextus nélkül — a "szabad ugrálás" ma
+Emellett a `NavBar.tsx` `ATMENETI_LINKS` tömbjének linkjei (`:21–26`) ma is
+bármikor elérhetővé teszik mindhárom oldalt, kontextus nélkül — a "szabad ugrálás" ma
 véletlenszerű mellékhatás, nem szándékos UX. Nincs sehol breadcrumb, nincs
 stepper, nincs "melyik lépésnél tartok" jelzés (sem a `NavBar`-on, sem az
 oldalakon, sem a `Plan`/`AppState`-en — grep-pel megerősítve nulla
@@ -119,14 +119,17 @@ célpontként, amit DP-060 majd kitölt — elvetve, mert egy üres/félkész
 oldalra navigálás rosszabb UX-et adna a mai működő sikerpanelnél, minden
 előny nélkül.
 
-### 5. A 29. tétel (DP-001) függőben hagyott nav-tisztítása LEZÁRUL
+### 5. A 29. tétel (DP-001, már lezárva D34-ként) függőben hagyott nav-tisztítása LEZÁRUL
 
-A 29. tétel (`backlog/plans/backlog-29-fonavigacio-terv.md`, 2. döntés)
-kifejezetten a 30. ÉS a 31. tétel (DP-002 és DP-003) elkészültéig
-halasztotta a `Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi tervek`
-NavBar-linkek (`NavBar.tsx:5–15`) végleges eltávolítását. Mivel a 30.
-tétel már kész, és ez a tétel a második, hiányzó előfeltétel, ez a tétel
-végzi el a négy link eltávolítását, MINT UTOLSÓ LÉPÉS.
+A 29. tétel (`docs/01-attekintes-es-dontesek.md` D34,
+`docs/03-funkcionalis-spec.md` § Fő navigáció) kifejezetten a 30. ÉS a
+31. tétel (DP-002 és DP-003) elkészültéig halasztotta a `Páciens`/`Terv
+szerkesztő`/`Előnézet`/`Korábbi tervek` NavBar-linkek (a lezárt
+implementáció szerint `NavBar.tsx` `ATMENETI_LINKS` tömbje) végleges
+eltávolítását. Mivel a 30. tétel már kész, és ez a tétel a második,
+hiányzó előfeltétel, ez a tétel végzi el a négy link eltávolítását
+(a `FO_LINKS`/`ATMENETI_LINKS` kettéválasztás megszüntetésével), MINT
+UTOLSÓ LÉPÉS.
 
 **Miért:** ez zárja le a 29. tételben nyitva hagyott függőséget — a
 sorrend miatt logikusan az utolsó (időben másodikként elkészülő) tételnek
@@ -174,8 +177,10 @@ szétcsúszása) vezetne be haszon nélkül.
 - `app/src/pages/PreviewPage.tsx:379` — a "Korábbi tervek" gomb célja a
   30. tétel páciens-részletoldalára frissül; `:368–385` egyébként
   változatlan (4. döntés).
-- `app/src/components/NavBar.tsx:5–15` — a négy átmeneti link
-  eltávolítása (5. döntés).
+- `app/src/components/NavBar.tsx` `ATMENETI_LINKS` tömb (`:21–26`) +
+  a hozzá tartozó `Separator` (`:77`) — a négy átmeneti link és a
+  vizuális elválasztó eltávolítása, a `FO_LINKS` rendering egyszerűsítése
+  (5. döntés).
 - `docs/07-felulet-rendszer.md` — lezáráskor egy rövid breadcrumb+stepper
   stílus- és billentyűzet-elérhetőségi szabály (ez az első bevezetés, a
   30. tétel Tabs-jegyzetének mintájára).

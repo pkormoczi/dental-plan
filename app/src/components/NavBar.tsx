@@ -3,8 +3,8 @@ import { Separator } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import logoUrl from '../assets/logo.png';
 
-// Végleges öt tételes fő navigáció (backlog-29, redesign DP-001, C1
-// feloldás) -- ez a forrásigazság az IA-ra, a docs/03-funkcionalis-spec.md
+// Végleges öt tételes fő navigáció, D34 (docs/01-attekintes-es-dontesek.md)
+// -- ez a forrásigazság az IA-ra, a docs/03-funkcionalis-spec.md
 // "Fő navigáció" szakasza ugyanezt írja le prózában.
 const FO_LINKS: Array<{ to: string; label: string }> = [
   { to: '/', label: 'Kezdőlap' },
@@ -14,9 +14,11 @@ const FO_LINKS: Array<{ to: string; label: string }> = [
   { to: '/demo', label: 'DEMO' },
 ];
 
-// Ideiglenes: a terv-workflow oldalai (backlog-30/31, DP-002/DP-003) még
-// nincsenek a páciens-kontextus alá húzva, addig ezek az EGYETLEN
-// belépési pontjaik -- a 31. tétel törli, amint a stepper átveszi a
+// Ideiglenes: a terv-workflow oldalainak (Terv szerkesztő/Előnézet) még
+// nincs kontextuális köréjük épített navigációja (breadcrumb/stepper) --
+// a Páciens és a Korábbi tervek linkje emiatt marad itt, nem azért, mert
+// nincs hova mutatniuk (a páciens-részletoldal, /paciensek/:patientDir,
+// már elérhető). Törlendő, amint a terv-workflow shell átveszi a
 // szerepüket.
 const ATMENETI_LINKS: Array<{ to: string; label: string }> = [
   { to: '/paciens', label: 'Páciens' },

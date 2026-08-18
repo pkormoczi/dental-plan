@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PlanHistoryPage from './PlanHistoryPage';
 import { TestProviders } from '../testUtils';
@@ -12,13 +12,15 @@ import { buildDownloadFileName } from '../storage/paths';
 import { useAppState } from '../state/AppState';
 import type { Plan } from '../domain/types';
 
-// backlog-28: a kereszt-link a Páciensek képernyőre navigál, a patientDir-t
-// a route state-ben átadva -- ezt a probe-ot olvassuk vissza, a valódi
-// PaciensekPage.tsx-et nem kell ehhez a teszthez felhúzni.
+// backlog-30: a kereszt-link az egyesített páciens-részletoldalra navigál
+// (`/paciensek/:patientDir`), a tab-ot `location.state.tab`-ban átadva --
+// ezt a probe-ot olvassuk vissza, a valódi PatientDetailPage.tsx-et nem
+// kell ehhez a teszthez felhúzni.
 function PaciensekProbe() {
+  const { patientDir } = useParams<{ patientDir: string }>();
   const location = useLocation();
-  const patientDir = (location.state as { patientDir?: string } | null)?.patientDir;
-  return <div data-testid="paciensek-oldal">{patientDir}</div>;
+  const tab = (location.state as { tab?: string } | null)?.tab ?? '';
+  return <div data-testid="paciensek-oldal" data-patientdir={patientDir} data-tab={tab} />;
 }
 
 // backlog-17: a két "Új terv…" gomb a Páciens adatlapra navigál
@@ -135,7 +137,7 @@ function renderHistory() {
         <Route path="/" element={<PlanHistoryPage />} />
         <Route path="/paciens" element={<DraftProbe />} />
         <Route path="/terv" element={<div>TERV-OLDAL</div>} />
-        <Route path="/paciensek" element={<PaciensekProbe />} />
+        <Route path="/paciensek/:patientDir" element={<PaciensekProbe />} />
       </Routes>
     </TestProviders>,
   );
@@ -586,7 +588,7 @@ describe('PlanHistoryPage', () => {
       expect(screen.queryByText('Terv Nélküli Panni')).not.toBeInTheDocument();
     });
 
-    it('a "Páciens adatai" kereszt-link a Páciensek képernyőre navigál, a patientDir-t átadva', async () => {
+    it('a "Páciens adatai" kereszt-link a páciens-részletoldalra navigál, az adatai tabbal előválasztva', async () => {
       const user = userEvent.setup();
       renderHistory();
 
@@ -595,7 +597,8 @@ describe('PlanHistoryPage', () => {
       await user.click(within(card).getByRole('button', { name: 'Páciens adatai' }));
 
       const probe = await screen.findByTestId('paciensek-oldal');
-      expect(probe.textContent).toBeTruthy();
+      expect(probe.dataset.patientdir).toBeTruthy();
+      expect(probe.dataset.tab).toBe('adatai');
     });
   });
 });

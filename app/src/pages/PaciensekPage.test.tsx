@@ -5,16 +5,20 @@
 
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 import PaciensekPage from './PaciensekPage';
 import { TestProviders } from '../testUtils';
 import { DemoStorage } from '../storage/DemoStorage';
 
-function TervekProbe() {
+// backlog-30: a "Korábbi tervek" kereszt-link mostantól az egyesített
+// páciens-részletoldalra mutat (`/paciensek/:patientDir`), a tab-ot
+// `location.state.tab`-ban átadva.
+function PaciensProbe() {
+  const { patientDir } = useParams<{ patientDir: string }>();
   const location = useLocation();
-  const patientDir = (location.state as { patientDir?: string } | null)?.patientDir;
-  return <div data-testid="tervek-oldal">{patientDir}</div>;
+  const tab = (location.state as { tab?: string } | null)?.tab ?? '';
+  return <div data-testid="paciens-reszletei" data-patientdir={patientDir} data-tab={tab} />;
 }
 
 function renderPage() {
@@ -22,7 +26,7 @@ function renderPage() {
     <TestProviders>
       <Routes>
         <Route path="/" element={<PaciensekPage />} />
-        <Route path="/tervek" element={<TervekProbe />} />
+        <Route path="/paciensek/:patientDir" element={<PaciensProbe />} />
       </Routes>
     </TestProviders>,
   );
@@ -176,7 +180,7 @@ describe('PaciensekPage', () => {
     expect(screen.getAllByDisplayValue('Vadonatúj Elemér')).toHaveLength(1);
   });
 
-  it('a "Korábbi tervek" kereszt-link a /tervek útvonalra navigál, a patientDir-t átadva', async () => {
+  it('a "Korábbi tervek" kereszt-link a páciens-részletoldalra navigál, a tervek tabbal előválasztva', async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -184,7 +188,8 @@ describe('PaciensekPage', () => {
     await user.click(screen.getByText('Nagy Éva'));
     await user.click(await screen.findByRole('button', { name: 'Korábbi tervek' }));
 
-    const probe = await screen.findByTestId('tervek-oldal');
-    expect(probe.textContent).toBeTruthy();
+    const probe = await screen.findByTestId('paciens-reszletei');
+    expect(probe.dataset.patientdir).toBeTruthy();
+    expect(probe.dataset.tab).toBe('tervek');
   });
 });

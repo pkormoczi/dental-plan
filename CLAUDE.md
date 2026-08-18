@@ -428,10 +428,40 @@ szintű törzsadat, D33) segédfüggvényei, szintén ne írd újra őket:
   törzsadat-alapú párja. `ujTervForrasPaciensbol(storage, settings,
   priceList, patientDir)` (`app/src/state/planIndulas.ts`) a közös
   forráskiválasztás: törzsadat, ha van, egyébként a legutóbb módosított
-  terv-lánc legfrissebb `paciens` pillanatképe — a PlanHistoryPage.tsx
-  páciensszintű "Új terv" gombja és a NewPlanPage.tsx "Meglévő páciens
-  keresése" előtöltése is ezt hívja, hogy a két hely ne térjen el
-  egymástól.
+  terv-lánc legfrissebb `paciens` pillanatképe — a `PatientPlanChains.tsx`
+  páciensszintű "Új terv" gombja (`PlanHistoryPage.tsx` és
+  `PatientDetailPage.tsx` is ezen keresztül hívja, backlog-30) és a
+  NewPlanPage.tsx "Meglévő páciens keresése" előtöltése is ezt hívja, hogy
+  a hívási helyek ne térjenek el egymástól.
+
+A páciens detail shell tétel (`docs/03-funkcionalis-spec.md` § 10.
+Páciens részletei, D35) segédfüggvényei/komponensei, szintén ne írd újra
+őket:
+- `app/src/components/PatientEditorPanel.tsx` — a törzsadat-szerkesztő
+  panel (mezők + Save/Cancel), eredetileg a `PaciensekPage.tsx` helyi
+  komponense volt; a `PaciensekPage.tsx` lista soronkénti accordionja ÉS a
+  `PatientDetailPage.tsx` "Páciens adatai" tabja is ezt hívja, azonos
+  prop-szerződéssel. Az `onNavigateToHistory` callback jelentése hívónként
+  eltér (route-navigáció vs. tab-váltás) — a komponens ezt nem ismeri.
+- `app/src/components/PatientPlanChains.tsx` — EGY páciens terv-lánc →
+  verzió fája a hozzá tartozó akciókkal (Új verzió/Másolás új tervbe/
+  Megnézés/Letöltés/Új terv/címke-szerkesztés), eredetileg a
+  `PlanHistoryPage.tsx` soronkénti JSX-e volt; páciens-paraméteresre
+  alakítva a `PlanHistoryPage.tsx` lista (patiensenként egy példány) ÉS a
+  `PatientDetailPage.tsx` "Kezelési tervek" tabja (egy példány) is
+  használja. Az interakciós state (címke-szerkesztés, megerősítő
+  dialógus, akció-hiba, összecsukás) a komponensben él, példányonként
+  függetlenül — a `plans`/`versionsByPlan`/`plansByVersion`/
+  `totalsByVersion` a hívó tölti be és adja át, az `onLabelSaved`
+  callbacken át kell a hívó saját állapotát frissítenie sikeres
+  címke-mentés után.
+- `loadPlanChainData(storage, patientDir)` (`app/src/domain/planChainData.ts`)
+  — EGY páciens terv-lánc/verzió adatainak 3-lépéses
+  (`listPlans`→`listVersions`→`loadPlan`) betöltése, amit a
+  `PlanHistoryPage.tsx` (minden páciensre egyszerre) és a
+  `PatientDetailPage.tsx` (egyetlen páciensre) is hív; sosem dob, egy
+  sérült lépés `unreadable: true`-t állít a részlegesen betöltött adat
+  mellett (P1-2 mintája).
 
 ## Domain szókincs
 
@@ -483,7 +513,7 @@ Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
-döntések (DXXX) egy helyen, számozva élnek a
+döntések (D1–D35) egy helyen, számozva élnek a
 `docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
 háttere külön fájlban, `backlog/plans/backlog-<n>-<cim>-terv.md` néven.
 Amikor egy modul vagy komponens "miért így van megcsinálva" kérdés merül
@@ -551,7 +581,7 @@ ugyanabban a körben, nem később:
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D34 döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a D1–D35 döntések és indoklásuk; adatvédelmi keret; kockázatok |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, kezelések és árak, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |

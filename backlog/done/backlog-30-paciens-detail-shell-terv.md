@@ -11,11 +11,13 @@ szelete (`backlog/redesign/03_dental-plan-implementacios-backlog-javaslat.md`
 D-döntéseiből, nem új grill-me session. Az itt hivatkozott `D3`/`D5`/`D45`
 stb. számok a redesign saját D1–D606 számozásából valók
 (`backlog/redesign/01_dental-plan-redesign-dontesek.md`) — NEM azonosak a
-`docs/01-attekintes-es-dontesek.md` D-táblájával; a `29. tétel` (DP-001,
-`backlog/plans/backlog-29-fonavigacio-terv.md`) döntése ebből a tételből
-is érvényes: a `Páciensek`/`Korábbi tervek` nav-linkek végleges
-megszüntetése ennek a tételnek ÉS a DP-003-nak (Terv workflow shell) is
-előfeltétele, nem csak ennek.
+`docs/01-attekintes-es-dontesek.md` D-táblájával. A 29. tétel (DP-001)
+már lezárult (`docs/01-attekintes-es-dontesek.md` D34,
+`docs/03-funkcionalis-spec.md` § Fő navigáció) — a `Páciens`/`Terv
+szerkesztő`/`Előnézet`/`Korábbi tervek` nav-linkek D34 szerint átmenetileg
+a navon maradnak, amíg ez a tétel ÉS a DP-003 (Terv workflow shell) át
+nem veszi a szerepüket; a végleges megszüntetés emiatt nem csak ennek a
+tételnek, hanem a DP-003-nak is előfeltétele.
 
 ## Probléma
 

@@ -112,7 +112,19 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   megismételnie — accessible name-mel megkülönböztethetetlen lenne a még
   látható triggerektől. Rövidebb, egyértelmű felirat (pl. „Törlés") elég,
   ha a dialógus címe már egyértelművé teszi, mi történik
-  (`pages/PlanHistoryPage.tsx`, `pages/PlanEditorPage.tsx`).
+  (`components/PatientPlanChains.tsx`, `pages/PlanEditorPage.tsx`).
+- Fülek (Radix Themes `Tabs`): a `DemoPage.tsx` (backlog-29) UNCONTROLLED
+  (`defaultValue`, nincs URL-/state-szinkron), a `PatientDetailPage.tsx`
+  (backlog-30) CONTROLLED (`value`/`onValueChange`) — utóbbi azért, mert a
+  kezdő tabot a hívó (`location.state`) és belső callback-ek (más tab
+  tartalmából indított váltás) is vezérlik. **Teszt-gotcha**: a
+  `Tabs.Trigger` egy második, csak CSS-sel (`visibility: hidden`) takart
+  span-t is renderel a felirat mellé (szélesség-tartalék, hogy a kijelölt/
+  nem kijelölt vastagság ne tördelje újra a sávot) — a vitest-készlet nem
+  tölti be a Radix Themes CSS-t, ezért az accessible name jsdom alatt
+  duplázva számít ki (pl. „FunkciókFunkciók"). A `getByRole('tab', ...)`
+  ezért mindig regexet kapjon névre (`{ name: /Funkciók/ }`), nem pontos
+  stringet — lásd `DemoPage.test.tsx`/`PatientDetailPage.test.tsx`.
 
 ### Szín, forma, sűrűség
 

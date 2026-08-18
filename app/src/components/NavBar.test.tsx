@@ -1,8 +1,9 @@
-// backlog-29: a NavBar eddig nem volt közvetlenül tesztelve, csak
-// közvetve (App.test.tsx a Filerendszer/DEMO linken keresztül). Ez a teszt
-// a tétel lényegét fedi: a végleges öt tételes fő navigáció pontos
-// felirata/sorrendje, plusz az egyelőre megtartott négy átmeneti link
-// (2. döntés, backlog/plans/backlog-29-fonavigacio-terv.md).
+// A NavBar eddig nem volt közvetlenül tesztelve, csak közvetve
+// (App.test.tsx a Filerendszer/DEMO linken keresztül). Ez a teszt a
+// docs/01-attekintes-es-dontesek.md D34 szerinti végleges öt tételes fő
+// navigáció pontos feliratát/sorrendjét fedi, plusz az egyelőre
+// megtartott négy átmeneti workflow-linket (docs/03-funkcionalis-spec.md
+// § Fő navigáció).
 
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
