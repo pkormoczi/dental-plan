@@ -13,23 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 33. tétel — Közös Save/Cancel és dirty-navigation guard
-  (a `backlog/redesign/` redesign-döntéssorozat DP-005 tétele) — feltárás
-  szerint MA három egymástól független dirty-detektálás és ötszörösen
-  másolt `AlertDialog`-minta él egymás mellett (Árlista admin és a
-  Beállítások legtöbb szekciója tisztán autosave, csak a Páciens-
-  szerkesztő és a Beállítások "Nyomtatvány szövegei" szekció közelít a
-  cél-mintához). Ez a tétel egy közös dirty-tracking hookot és egy közös
-  "elvetnéd a módosításokat?" dialógus-komponenst épít, a Páciens-
-  szerkesztőt (bájtra változatlan viselkedéssel) és a Sablonok szekció
-  hiányzó Cancel gombját/guardját ráállítja. Az Árlista admin és a
-  Beállítások többi szekciójának autosave→explicit átállítása
-  SZÁNDÉKOSAN kívül marad — a saját tételeik (DP-080/081, DP-082–087)
-  dolga. A "piszkozat felülírása" (aktív draft) guardok a 32. tétel
-  (DP-004) már lezárt területe, ehhez nem nyúl. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-33-save-cancel-dirty-guard-terv.md`
-
 ### 34. tétel — Kezdőlap új struktúrája
   (a `backlog/redesign/` redesign-döntéssorozat DP-010 tétele) — a mai
   Home NEM minimalista (5 kártya, demó-only gombok); ez a tétel egy új,

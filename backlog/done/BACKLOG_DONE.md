@@ -931,3 +931,40 @@ karbantartási kör négy önálló javítása.
   védi ki, hogy egy véglegesítés/eldobás utáni puszta workflow-navigáció
   ne támasszon fel egy már törölt piszkozatot (`docs/03-funkcionalis-spec.md`
   § Autosave).
+
+---
+
+### 33. Közös Save/Cancel és dirty-navigation guard — KÉSZ (2026-08-19)
+
+- **Méret:** ~1 nap. Feltárás alapján a D38 által kívánt viselkedés
+  (mentési hiba nem dobja el a piszkozatot, elhagyás megerősítést kér) MÁR
+  MA IS teljesült mindenhol — két különböző, egymástól független ok miatt
+  (autosave-oldalakon D31 optimista modellje, explicit-Save oldalakon a
+  `catch` ág egyszerűen nem nyúlt a draft-hoz). A tétel csak egy közös
+  absztrakció ALÁ hozta a már működő viselkedést.
+- **Kereteket sért?** Nem — új, önálló D38 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** három egymástól független dirty-detektálás
+  (referencia-egyenlőség, `JSON.stringify`-alapú mély-egyenlőség,
+  mezőnkénti string-összehasonlítás) és egy ötször másolat-beillesztett
+  megerősítő `AlertDialog` élt egymás mellett — egy kódkomment maga is
+  elismerte a duplikációt.
+- **Megvalósítás:** két közös primitív, `components/useDirtyDraft.ts`
+  (`draftDirty`/`useDirtyDraft`, a `PatientEditorPanel` bevált
+  `JSON.stringify`-komparátorából kiemelve) és
+  `components/DiscardChangesDialog.tsx` (`useDiscardGuard`/
+  `DiscardChangesDialog`). A `PatientEditorPanel` és a `PaciensekPage.tsx`
+  sor-váltási guardja bájtra változatlan viselkedéssel állt át rájuk. A
+  Beállítások "Nyomtatvány szövegei" szekciója — az egyetlen, ami már
+  eddig is dirty-gated explicit Save-et használt — kapott egy hiányzó
+  Mégse gombot, megerősítéssel (mert egyszerre minden nyelv/szlot
+  piszkozatát elveti) és a `dp:sablon-piszkozat` cache törlésével.
+  Feltárás közben előkerült egy, a 30. tételtől eredő valódi rés is: a
+  `PatientDetailPage.tsx` a Radix `Tabs` unmountolása miatt némán
+  elveszítette a "Páciens adatai" tabon félbehagyott szerkesztést egy
+  tab-váltásnál — ez is ugyanerre a guardra állt rá. Az Árlista admin és a
+  Beállítások többi szekciójának autosave-mechanizmusa, valamint a
+  "piszkozat felülírása" aktív-draft guardok (D37, `docs/03-funkcionalis-spec.md`
+  § Autosave) szándékosan változatlanok maradtak. Nincs böngésző-/
+  router-szintű navigáció-blokkolás — az app `HashRouter`-t használ, amit
+  a react-router `useBlocker`-e nem támogat data router nélkül, és a
+  sablon-piszkozat egyébként is túléli az elnavigálást a cache-en át.

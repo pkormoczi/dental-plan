@@ -113,6 +113,19 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   látható triggerektől. Rövidebb, egyértelmű felirat (pl. „Törlés") elég,
   ha a dialógus címe már egyértelművé teszi, mi történik
   (`components/PatientPlanChains.tsx`, `pages/PlanEditorPage.tsx`).
+- Explicit Mentés/Mégse gombpárral szerkesztett mezőkészlet (D38): a
+  dirty-detektálás közös hookon (`components/useDirtyDraft.ts`
+  `useDirtyDraft`/`draftDirty`), a szerkesztett elem elhagyása előtti
+  megerősítés közös komponensen (`components/DiscardChangesDialog.tsx`
+  `useDiscardGuard`/`DiscardChangesDialog`) megy át — nem bespoke
+  `JSON.stringify`-összehasonlítás és másolat-beillesztett `AlertDialog`
+  hívási helyenként. A guard hatóköre a Mégse gomb ÉS a lapon belüli
+  elem-váltás (sor-/tab-váltás); NINCS böngésző-/router-szintű
+  navigáció-blokkolás (`components/PatientEditorPanel.tsx`,
+  `pages/PaciensekPage.tsx`, `pages/PatientDetailPage.tsx`,
+  `pages/SettingsPage.tsx` „Nyomtatvány szövegei" szekció). Az
+  Árlista admin és a Beállítások többi szekciója autosave marad (D31) —
+  ezekhez a primitívek nem hívási hely, csak jövőbeli lehetőség.
 - Fülek (Radix Themes `Tabs`): a `DemoPage.tsx` (backlog-29) UNCONTROLLED
   (`defaultValue`, nincs URL-/state-szinkron), a `PatientDetailPage.tsx`
   (backlog-30) CONTROLLED (`value`/`onValueChange`) — utóbbi azért, mert a

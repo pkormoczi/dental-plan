@@ -884,7 +884,13 @@ hossz-alapú, soha nem újrahasznosított).
   miatt a „Minden adat törlése"/„Demó adat visszaállítása" ezt is elsöpri,
   külön kód nélkül. A „Szöveg mentése" gomb `useRef`-alapú in-flight
   zárat visel, mert a `disabled` prop önmagában megkerülhető egy render
-  előtti második kattintással.
+  előtti második kattintással. **„Mégse" gomb** (D38) a „Szöveg mentése"
+  mellett, dirty állapotban engedélyezett — MEGERŐSÍTÉST kér (nem
+  azonnali, ellentétben pl. a Páciens adatai szerkesztőjével), mert
+  egyszerre minden nyelv/szlot piszkozatát elveti, nem csak a jelenleg
+  látszó nyelvet, és a `dp:sablon-piszkozat` cache-bejegyzést is törli
+  minden érintett base-hez — enélkül a piszkozat egy F5 után
+  visszatérne.
 - **Német nyelvű ajánlat engedélyezése** (`nemetEngedelyezve`) — checkbox.
   Bekapcsolva megjelenik az **alapértelmezett nyelv** kapcsolója (ez lesz
   az új tervek nyelve), alatta a **német tartalom készültsége**:
@@ -1004,3 +1010,9 @@ kereszt-linkek mutatnak ide.
   ezen az oldalon EGYSZERŰ TAB-VÁLTÁS, nem route-navigáció — a komponensek
   nem ismerik a különbséget, a hívó (ez az oldal vs. a két régi lista)
   dönti el, mit jelent a callback.
+- **Tab-váltási guard** (D38): a Radix `Tabs` unmountolja az inaktív tabot,
+  tehát a `Páciens adatai` tabon félbehagyott, nem mentett szerkesztés
+  egyébként némán elveszne egy tabváltásnál (`Tabs.List` kattintás VAGY a
+  fenti kereszt-linkek). A `PaciensekPage` (§ 9) sor-váltási guardjával
+  azonos primitíven (`useDiscardGuard`/`DiscardChangesDialog`) megy át —
+  megerősítést kér, a `Kezelési tervek` tab felé váltás irányban.

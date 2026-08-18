@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, Button, Callout, Skeleton, Tabs, Text } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
+import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import PatientDetailHeader from '../components/PatientDetailHeader';
 import PatientEditorPanel from '../components/PatientEditorPanel';
 import PatientPlanChains from '../components/PatientPlanChains';
@@ -47,6 +48,20 @@ export default function PatientDetailPage() {
   const [tab, setTab] = useState<DetailTab>(
     (location.state as { tab?: DetailTab } | null)?.tab === 'adatai' ? 'adatai' : 'tervek',
   );
+
+  // A Radix `Tabs` unmountolja a nem aktív tab tartalmát -- a "Páciens
+  // adatai" tabon félbehagyott szerkesztés máskülönben némán elveszne
+  // egy tab-váltásnál, ugyanaz az eset, amit a PaciensekPage.tsx
+  // sor-váltásnál már guardol (D38).
+  const [dirtyAdatai, setDirtyAdatai] = useState(false);
+  const guard = useDiscardGuard(dirtyAdatai);
+
+  function requestTab(next: DetailTab) {
+    guard.request(() => {
+      setDirtyAdatai(false);
+      setTab(next);
+    });
+  }
 
   const [startingPlan, setStartingPlan] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -151,7 +166,7 @@ export default function PatientDetailPage() {
     <Box style={{ maxWidth: 900, margin: '0 auto' }}>
       <PatientDetailHeader adatok={displayedAdatok} />
 
-      <Tabs.Root value={tab} onValueChange={(v) => setTab(v === 'adatai' ? 'adatai' : 'tervek')}>
+      <Tabs.Root value={tab} onValueChange={(v) => requestTab(v === 'adatai' ? 'adatai' : 'tervek')}>
         <Tabs.List mb="4">
           <Tabs.Trigger value="adatai">Páciens adatai</Tabs.Trigger>
           <Tabs.Trigger value="tervek">Kezelési tervek</Tabs.Trigger>
@@ -164,9 +179,9 @@ export default function PatientDetailPage() {
             fallbackPlan={fallbackPlan}
             fallbackLoading={false}
             fallbackError={null}
-            onDirtyChange={() => {}}
+            onDirtyChange={setDirtyAdatai}
             onSaved={setAdatok}
-            onNavigateToHistory={() => setTab('tervek')}
+            onNavigateToHistory={() => requestTab('tervek')}
           />
         </Tabs.Content>
 
@@ -196,7 +211,7 @@ export default function PatientDetailPage() {
               plansByVersion={chainData?.plansByVersion ?? {}}
               totalsByVersion={chainData?.totalsByVersion ?? {}}
               unreadable={chainData?.unreadable ?? false}
-              onNavigateToPatientData={() => setTab('adatai')}
+              onNavigateToPatientData={() => requestTab('adatai')}
               onLabelSaved={(planDir, tervCim) =>
                 setChainData((prev) =>
                   prev
@@ -213,6 +228,15 @@ export default function PatientDetailPage() {
           )}
         </Tabs.Content>
       </Tabs.Root>
+
+      <DiscardChangesDialog
+        open={guard.pending}
+        onOpenChange={(open) => !open && guard.cancel()}
+        onConfirm={guard.confirm}
+        title="Nem mentett módosítás"
+        description="A Páciens adatai lapon van nem mentett módosításod. Ha lapot váltasz, ez elvész — csak a Mentés gomb rögzíti a törzsadatban. Biztosan folytatod?"
+        confirmLabel="Váltás, módosítás elvetésével"
+      />
     </Box>
   );
 }

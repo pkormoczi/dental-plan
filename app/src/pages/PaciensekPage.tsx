@@ -15,7 +15,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  AlertDialog,
   Box,
   Button,
   Callout,
@@ -27,6 +26,7 @@ import {
   TextField,
 } from '@radix-ui/themes';
 import { ChevronDownIcon, ChevronRightIcon, CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
+import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import PatientEditorPanel from '../components/PatientEditorPanel';
 import { t } from '../design/tokens';
 import { latestVersionAcrossPlans } from '../domain/planFolders';
@@ -50,7 +50,7 @@ export default function PaciensekPage() {
 
   const [openDir, setOpenDir] = useState<string | null>(null);
   const [dirtyOpen, setDirtyOpen] = useState(false);
-  const [pendingSwitch, setPendingSwitch] = useState<{ target: string | null } | null>(null);
+  const guard = useDiscardGuard(dirtyOpen);
 
   // A fallback (legutóbbi terv `paciens` pillanatképe) csak kinyitáskor,
   // lustán töltődik -- lásd a fájl fejlécét.
@@ -169,11 +169,7 @@ export default function PaciensekPage() {
   // egy tudatos navigáció, nem véletlen kattintás egy másik sorra).
   function requestToggle(dirName: string) {
     const target = openDir === dirName ? null : dirName;
-    if (openDir && dirtyOpen) {
-      setPendingSwitch({ target });
-      return;
-    }
-    applySwitch(target);
+    guard.request(() => applySwitch(target));
   }
 
   const handleDirtyChange = useCallback((dirty: boolean) => setDirtyOpen(dirty), []);
@@ -335,36 +331,14 @@ export default function PaciensekPage() {
         submitError={createError}
       />
 
-      <AlertDialog.Root
-        open={pendingSwitch !== null}
-        onOpenChange={(open) => !open && setPendingSwitch(null)}
-      >
-        <AlertDialog.Content maxWidth="440px">
-          <AlertDialog.Title>Nem mentett módosítás</AlertDialog.Title>
-          <AlertDialog.Description size="2">
-            Ennél a páciensnél van nem mentett módosításod. Ha másik sorra váltasz, ez elvész —
-            csak a Mentés gomb rögzíti a törzsadatban. Biztosan folytatod?
-          </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
-            <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">
-                Mégse
-              </Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button
-                color="red"
-                onClick={() => {
-                  if (pendingSwitch) applySwitch(pendingSwitch.target);
-                  setPendingSwitch(null);
-                }}
-              >
-                Váltás, módosítás elvetésével
-              </Button>
-            </AlertDialog.Action>
-          </Flex>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
+      <DiscardChangesDialog
+        open={guard.pending}
+        onOpenChange={(open) => !open && guard.cancel()}
+        onConfirm={guard.confirm}
+        title="Nem mentett módosítás"
+        description="Ennél a páciensnél van nem mentett módosításod. Ha másik sorra váltasz, ez elvész — csak a Mentés gomb rögzíti a törzsadatban. Biztosan folytatod?"
+        confirmLabel="Váltás, módosítás elvetésével"
+      />
     </Box>
   );
 }

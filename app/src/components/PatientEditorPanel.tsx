@@ -14,10 +14,11 @@
 // PatientDetailPage.tsx "Páciens adatai" tabjában egyszerű tab-váltás --
 // ez a komponens csak a callbacket hívja, a különbséget nem ismeri.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Box, Button, Callout, Checkbox, Flex, Grid, Text, TextField } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import { Field } from './Field';
+import { useDirtyDraft } from './useDirtyDraft';
 import { t } from '../design/tokens';
 import { megjelenitettTorzsadat } from '../domain/paciensAdatok';
 import type { Paciens, PatientFolder, PatientMasterData, Plan } from '../domain/types';
@@ -50,22 +51,13 @@ export default function PatientEditorPanel({
     [adatok, fallbackPlan, patient],
   );
 
-  const [draft, setDraft] = useState<PatientMasterData>(displayed);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Amíg a fallback tölt, a `displayed` még a névre szűkített üres
-  // rekord -- a piszkozatot csak AKKOR inicializáljuk ebből, ha a doki még
-  // nem kezdett gépelni, és csak egyszer (ne írja felül menet közben).
-  const initializedRef = useRef(false);
-  useEffect(() => {
-    if (initializedRef.current || fallbackLoading) return;
-    setDraft(displayed);
-    initializedRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayed, fallbackLoading]);
-
-  const dirty = JSON.stringify(draft) !== JSON.stringify(displayed);
+  // Amíg a fallback tölt, a `displayed` még a névre szűkített üres rekord --
+  // a piszkozatot csak AKKOR inicializáljuk ebből, ha a doki még nem kezdett
+  // gépelni (`ready: !fallbackLoading`, lásd useDirtyDraft.ts).
+  const { draft, setDraft, dirty, reset } = useDirtyDraft(displayed, { ready: !fallbackLoading });
   useEffect(() => {
     onDirtyChange(dirty);
   }, [dirty, onDirtyChange]);
@@ -89,7 +81,7 @@ export default function PatientEditorPanel({
   }
 
   function handleCancel() {
-    setDraft(displayed);
+    reset();
   }
 
   if (fallbackLoading) {

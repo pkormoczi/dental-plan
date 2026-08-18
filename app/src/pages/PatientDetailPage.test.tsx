@@ -131,4 +131,42 @@ describe('PatientDetailPage', () => {
     ).not.toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Új terv' })).toBeInTheDocument();
   });
+
+  // D38: a Radix `Tabs` unmountolja az inaktív tabot -- a "Páciens
+  // adatai" tabon félbehagyott szerkesztés máskülönben némán elveszne
+  // egy tab-váltásnál.
+  it('mentetlen módosítással tabot váltva megerősítést kér -- Mégse megtartja a piszkozatot', async () => {
+    const user = userEvent.setup();
+    renderDetail(nagyDir, { tab: 'adatai' });
+
+    const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
+    await user.clear(telefonMezo);
+    await user.type(telefonMezo, 'ideiglenes érték');
+
+    await user.click(await screen.findByRole('tab', { name: /Kezelési tervek/ }));
+    const dialog = await screen.findByRole('alertdialog');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('ideiglenes érték')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /Páciens adatai/ })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('mentetlen módosítással tabot váltva a megerősítés után elveszik a piszkozat', async () => {
+    const user = userEvent.setup();
+    renderDetail(nagyDir, { tab: 'adatai' });
+
+    const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
+    await user.clear(telefonMezo);
+    await user.type(telefonMezo, 'ideiglenes érték');
+
+    await user.click(await screen.findByRole('tab', { name: /Kezelési tervek/ }));
+    await user.click(await screen.findByRole('button', { name: 'Váltás, módosítás elvetésével' }));
+
+    const tervekTab = await screen.findByRole('tab', { name: /Kezelési tervek/ });
+    expect(tervekTab).toHaveAttribute('aria-selected', 'true');
+
+    await user.click(await screen.findByRole('button', { name: 'Páciens adatai' }));
+    expect(await screen.findByDisplayValue('+36 20 555 1234')).toBeInTheDocument();
+  });
 });

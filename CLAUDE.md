@@ -488,6 +488,25 @@ ne írd újra őket:
   olvasó oldala — a `loadPlanIntoDraft`/`copyPlanIntoDraft` opcionális
   második (`patientDir`) paramétere tölti fel, ahol a hívó már ismeri
 
+A közös Save/Cancel + dirty-navigation guard tétel
+(`docs/01-attekintes-es-dontesek.md` D38, `docs/07-felulet-rendszer.md`
+§ Komponensek) segédfüggvényei/komponensei, szintén ne írd újra őket:
+- `draftDirty(draft, saved)` / `useDirtyDraft(saved, opts)`
+  (`app/src/components/useDirtyDraft.ts`) — a `PatientEditorPanel` korábbi,
+  bespoke `JSON.stringify`-alapú mély-egyenlőségéből kiemelt közös
+  primitív; `opts.ready` a késve érkező (pl. lustán betöltött fallback)
+  `saved`-ből való egyszeri, felülírás nélküli inicializáláshoz
+- `useDiscardGuard(dirty)` / `DiscardChangesDialog`
+  (`app/src/components/DiscardChangesDialog.tsx`) — a MA ötször
+  másolat-beillesztett „elvetnéd a módosításokat?" `AlertDialog` közös
+  hook+komponens párja; `request(apply)` dirty állapotban megerősítést kér,
+  egyébként azonnal lefuttatja `apply`-t. Hívói: `PatientEditorPanel`
+  retrofitja, `PaciensekPage.tsx` sor-váltása, `PatientDetailPage.tsx`
+  tab-váltása, `SettingsPage.tsx` „Nyomtatvány szövegei" Mégse gombja. A
+  „piszkozat felülírása" (aktív terv-draft) guardok (`Home.tsx`,
+  `NewPlanPage.tsx`, `PatientPlanChains.tsx`) MÁS domaint védenek (D37) —
+  ezekre SZÁNDÉKOSAN nincsenek ráállítva
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

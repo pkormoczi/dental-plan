@@ -233,5 +233,59 @@ describe('SettingsPage', () => {
       expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v2.md')).not.toBeNull();
       expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v3.md')).toBeNull();
     });
+
+    // D38: a szekció eddig egyedüliként nem kapott Mégse gombot,
+    // holott a Save/Cancel-mintát máshol (PatientEditorPanel) már követte.
+    it('a "Mégse" gomb tiltott, amíg nincs piszkozat-eltérés', async () => {
+      renderSettings();
+      await screen.findByLabelText('Nyilatkozat');
+
+      expect(screen.getByRole('button', { name: 'Mégse' })).toBeDisabled();
+    });
+
+    // A Mégse minden nyelv/szlot piszkozatát elveti -- ezért (a
+    // PatientEditorPanel azonnali Mégse-jétől eltérően) megerősítést kér,
+    // és a `dp:sablon-piszkozat` cache-t is törli, különben egy F5 után a
+    // piszkozat visszatérne.
+    it('"Mégse" megerősítés után visszaállítja a mentett szöveget, és törli a piszkozat-cache-t (túléli az F5-öt is)', async () => {
+      const user = userEvent.setup();
+      const { unmount } = renderSettings();
+
+      const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      await user.type(nyilatkozat, ' Elmentetlen piszkozat.');
+      await waitFor(() =>
+        expect(localStorage.getItem('dp:sablon-piszkozat')).toContain('Elmentetlen piszkozat.'),
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Mégse' }));
+      const dialog = await screen.findByRole('alertdialog');
+      await user.click(within(dialog).getByRole('button', { name: 'Elvetés' }));
+
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(nyilatkozat.value).not.toContain('Elmentetlen piszkozat.');
+      expect(localStorage.getItem('dp:sablon-piszkozat')).not.toContain('Elmentetlen piszkozat.');
+
+      // unmount + újrarender (F5-szimuláció) -- a cache-törlés miatt a
+      // piszkozat NEM tér vissza.
+      unmount();
+      renderSettings();
+      const nyilatkozatAgain = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      expect(nyilatkozatAgain.value).not.toContain('Elmentetlen piszkozat.');
+    });
+
+    it('"Mégse" a dialóguson belüli "Mégse"-re (elvetve az elvetést) megtartja a piszkozatot', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+
+      const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      await user.type(nyilatkozat, ' Elmentetlen piszkozat.');
+
+      await user.click(screen.getByRole('button', { name: 'Mégse' }));
+      const dialog = await screen.findByRole('alertdialog');
+      await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(nyilatkozat.value).toContain('Elmentetlen piszkozat.');
+    });
   });
 });

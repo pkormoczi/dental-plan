@@ -20,6 +20,8 @@ import {
   TextField,
 } from '@radix-ui/themes';
 import ChipGroup from '../components/ChipGroup';
+import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
+import { useDirtyDraft } from '../components/useDirtyDraft';
 import { lefedettseg } from '../domain/coverage';
 import { isPlaceholderTemplate } from '../domain/templates';
 import type { Nyelv } from '../domain/types';
@@ -31,15 +33,6 @@ import { useStorage } from '../storage/StorageContext';
 import { useAppState } from '../state/AppState';
 
 type TemplateSlotKey = 'nyilatkozat' | 'fizetesi-feltetelek' | 'garancia';
-
-interface TemplateDraft {
-  /** A jelenleg betöltött verzió fájlneve (pl. "nyilatkozat-hu-v2.md"). */
-  name: string;
-  /** A tárolóból betöltött törzs (cím nélkül) -- a "nem mentett módosítás" ehhez képest dől el. */
-  original: string;
-  /** A szerkesztőben lévő, még nem feltétlenül mentett törzs. */
-  draft: string;
-}
 
 const TEMPLATE_SLOTS: Array<{ key: TemplateSlotKey; label: string; rows: number }> = [
   { key: 'nyilatkozat', label: 'Nyilatkozat', rows: 14 },
@@ -109,7 +102,18 @@ export default function SettingsPage() {
   // pinneli, melyik szöveget írta alá a páciens (D4), ezért a szerkesztés
   // itt mindig ÚJ verziófájlt hoz létre, a régit nem írja felül.
   const [templateLang, setTemplateLang] = useState<Nyelv>('hu');
-  const [templates, setTemplates] = useState<Record<string, TemplateDraft>>({});
+  // A tárolóból betöltött szöveg base-enként ("igazság") és a jelenleg
+  // rá mutató verziófájl neve -- a mai draftDirty (useDirtyDraft) ehhez a
+  // "saved" oldalhoz hasonlítja a szerkesztőmezők piszkozatát.
+  const [templateNames, setTemplateNames] = useState<Record<string, string>>({});
+  const [savedTemplateTexts, setSavedTemplateTexts] = useState<Record<string, string>>({});
+  const {
+    draft: templateDrafts,
+    setDraft: setTemplateDrafts,
+    dirty: templatesDirty,
+    reset: resetTemplateDrafts,
+  } = useDirtyDraft<Record<string, string>>(savedTemplateTexts);
+  const cancelTemplatesGuard = useDiscardGuard(templatesDirty);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [templateLoadError, setTemplateLoadError] = useState<string | null>(null);
   const [templateSaving, setTemplateSaving] = useState(false);
@@ -145,16 +149,31 @@ export default function SettingsPage() {
             const { name, body } = await loadLatestTemplateByBase(base);
             const text = stripMarkdownHeading(body);
             // Néma visszaállítás (4. döntés): ha van cache-elt piszkozat
-            // ehhez a base-hez, az kerül a `draft` mezőbe -- az `original`
-            // marad a ténylegesen tárolt szöveg, hogy a meglévő "Nem
-            // mentett módosítás" felirat automatikusan jelezze az eltérést.
+            // ehhez a base-hez, az kerül a piszkozat-oldalra -- a saved
+            // oldal marad a ténylegesen tárolt szöveg, hogy a meglévő "Nem
+            // mentett módosítás" felirat (useDirtyDraft dirty-je)
+            // automatikusan jelezze az eltérést.
             const cachedDraft = draftCache[base];
-            return [base, { name, original: text, draft: cachedDraft ?? text }] as const;
+            return [base, { name, text, draft: cachedDraft ?? text }] as const;
           }),
         );
         if (cancelled) return;
         for (const [base] of entries) loadedTemplateBasesRef.current.add(base);
-        setTemplates((prev) => ({ ...prev, ...Object.fromEntries(entries) }));
+        setTemplateNames((prev) => ({
+          ...prev,
+          ...Object.fromEntries(entries.map(([base, e]) => [base, e.name])),
+        }));
+        setSavedTemplateTexts((prev) => ({
+          ...prev,
+          ...Object.fromEntries(entries.map(([base, e]) => [base, e.text])),
+        }));
+        // A már betöltött (és esetleg szerkesztett) base-ek piszkozata NEM
+        // veszhet el egy később érkező nyelv betöltésekor -- ezért az ÚJ
+        // bejegyzések kerülnek balra a spreadben, a `prev` felülírja őket.
+        setTemplateDrafts((prev) => ({
+          ...Object.fromEntries(entries.map(([base, e]) => [base, e.draft])),
+          ...prev,
+        }));
         setTemplateLoadError(null);
       } catch (err) {
         if (!cancelled) {
@@ -169,21 +188,18 @@ export default function SettingsPage() {
     return () => {
       cancelled = true;
     };
-  }, [settings.nemetEngedelyezve, loadLatestTemplateByBase]);
+  }, [settings.nemetEngedelyezve, loadLatestTemplateByBase, setTemplateDrafts]);
 
   function updateTemplateDraft(key: TemplateSlotKey, value: string) {
     const base = templateBase(key, templateLang);
-    setTemplates((prev) => {
-      const existing = prev[base];
-      if (!existing) return prev;
-      return { ...prev, [base]: { ...existing, draft: value } };
+    setTemplateDrafts((prev) => {
+      if (!(base in prev)) return prev;
+      return { ...prev, [base]: value };
     });
     // Minden leütésre ír, debounce nélkül -- a localStorage-írás szinkron és
     // olcsó, a meglévő piszkozat-minta (DemoDraftStorage) sem debounce-ol.
     updateTemplateDraftCache(base, value);
   }
-
-  const templatesDirty = Object.values(templates).some((d) => d.draft !== d.original);
 
   async function handleSaveTemplates() {
     // 5. döntés: dupla-kattintás elleni zár, lásd a `templateSavingRef` fenti
@@ -193,18 +209,23 @@ export default function SettingsPage() {
     setTemplateSaving(true);
     setTemplateSaveError(null);
     try {
-      const dirtyEntries = Object.entries(templates).filter(([, d]) => d.draft !== d.original);
-      if (dirtyEntries.length > 0) {
-        const updated: Record<string, TemplateDraft> = {};
-        for (const [base, draft] of dirtyEntries) {
+      const dirtyBases = Object.keys(templateDrafts).filter(
+        (base) => templateDrafts[base] !== savedTemplateTexts[base],
+      );
+      if (dirtyBases.length > 0) {
+        const nameUpdates: Record<string, string> = {};
+        const textUpdates: Record<string, string> = {};
+        for (const base of dirtyBases) {
           const heading = TEMPLATE_HEADINGS[base as keyof typeof TEMPLATE_HEADINGS] ?? base;
-          const fullBody = `# ${heading}\n\n${draft.draft.trim()}\n`;
-          const newName = await storage.saveTemplate(base, fullBody);
-          updated[base] = { name: newName, original: draft.draft, draft: draft.draft };
+          const text = templateDrafts[base];
+          const fullBody = `# ${heading}\n\n${text.trim()}\n`;
+          nameUpdates[base] = await storage.saveTemplate(base, fullBody);
+          textUpdates[base] = text;
           // Törlés kizárólag sikeres mentéskor, base-enként (4. döntés).
           clearTemplateDraftCacheEntry(base);
         }
-        setTemplates((prev) => ({ ...prev, ...updated }));
+        setTemplateNames((prev) => ({ ...prev, ...nameUpdates }));
+        setSavedTemplateTexts((prev) => ({ ...prev, ...textUpdates }));
       }
       setTemplateSaved(true);
       setTimeout(() => setTemplateSaved(false), 2000);
@@ -218,8 +239,21 @@ export default function SettingsPage() {
     }
   }
 
-  const deNyilatkozat = templates['nyilatkozat-de'];
-  const deNyilatkozatKesz = deNyilatkozat != null && !isPlaceholderTemplate(deNyilatkozat.original);
+  // A "Mégse" MINDEN nyelv/szlot piszkozatát elveti, nem csak a jelenleg
+  // látszó nyelvet -- ezért megerősítést kér (cancelTemplatesGuard), és a
+  // `dp:sablon-piszkozat` cache-bejegyzést is törli minden dirty base-hez,
+  // különben egy F5 után a piszkozat visszatérne.
+  function handleCancelTemplates() {
+    const dirtyBases = Object.keys(templateDrafts).filter(
+      (base) => templateDrafts[base] !== savedTemplateTexts[base],
+    );
+    resetTemplateDrafts();
+    dirtyBases.forEach(clearTemplateDraftCacheEntry);
+  }
+
+  const deNyilatkozatOriginal = savedTemplateTexts['nyilatkozat-de'];
+  const deNyilatkozatKesz =
+    deNyilatkozatOriginal != null && !isPlaceholderTemplate(deNyilatkozatOriginal);
 
   // P0-8: korábban `void saveSettings(...)` volt -- a hívó nem várta meg és
   // nem ellenőrizte az eredményét, tehát egy sikertelen mentés (pl. kvóta)
@@ -382,7 +416,9 @@ export default function SettingsPage() {
               EUR árak: {eurArazott} / {cov.aktivOsszes} kitöltve
               <br />
               Nyilatkozat:{' '}
-              <Text style={{ fontFamily: t.mono }}>{deNyilatkozat?.name ?? 'nyilatkozat-de-v1.md'}</Text>
+              <Text style={{ fontFamily: t.mono }}>
+                {templateNames['nyilatkozat-de'] ?? 'nyilatkozat-de-v1.md'}
+              </Text>
               {deNyilatkozatKesz ? ' — kész' : ' — placeholder, jogi lektorálás szükséges'}
               <br />
               <RadixLink asChild>
@@ -422,20 +458,21 @@ export default function SettingsPage() {
           </Text>
         ) : (
           TEMPLATE_SLOTS.map((slot) => {
-            const draft = templates[templateBase(slot.key, templateLang)];
-            if (!draft) return null;
+            const base = templateBase(slot.key, templateLang);
+            const value = templateDrafts[base];
+            if (value === undefined) return null;
             return (
               <Box key={slot.key} mb="3">
                 <Field label={slot.label}>
                   <TextArea
-                    value={draft.draft}
+                    value={value}
                     onChange={(e) => updateTemplateDraft(slot.key, e.target.value)}
                     rows={slot.rows}
                     resize="vertical"
                   />
                 </Field>
                 <Text as="div" size="1" color="gray">
-                  Jelenleg: <Text style={{ fontFamily: t.mono }}>{draft.name}</Text>
+                  Jelenleg: <Text style={{ fontFamily: t.mono }}>{templateNames[base]}</Text>
                 </Text>
               </Box>
             );
@@ -467,12 +504,33 @@ export default function SettingsPage() {
             </Text>
           )}
           <Button
+            type="button"
+            variant="soft"
+            color="gray"
+            onClick={() => cancelTemplatesGuard.request(handleCancelTemplates)}
+            disabled={templatesLoading || templateSaving || !templatesDirty}
+          >
+            Mégse
+          </Button>
+          <Button
             onClick={handleSaveTemplates}
             disabled={templatesLoading || templateSaving || !templatesDirty}
           >
             {templateSaving ? 'Mentés…' : templateSaved ? 'Mentve ✓' : 'Szöveg mentése'}
           </Button>
         </Flex>
+
+        {/* A Mégse minden nyelv/szlot piszkozatát elveti (nem csak a
+            jelenleg látszó nyelvet), ezért -- a PatientEditorPanel azonnali
+            Mégse-jétől eltérően -- megerősítést kér (D38). */}
+        <DiscardChangesDialog
+          open={cancelTemplatesGuard.pending}
+          onOpenChange={(open) => !open && cancelTemplatesGuard.cancel()}
+          onConfirm={cancelTemplatesGuard.confirm}
+          title="Nem mentett módosítás"
+          description="Minden nyelven/szövegen elveted a nem mentett módosításokat -- ez nem vonható vissza."
+          confirmLabel="Elvetés"
+        />
       </Card>
 
       <Card size="2" mb="4">
