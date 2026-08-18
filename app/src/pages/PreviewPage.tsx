@@ -376,7 +376,14 @@ export default function PreviewPage() {
         </Text>
         <Flex gap="3" justify="center">
           <Button onClick={startNewPlan}>Új terv indítása</Button>
-          <Button variant="soft" color="gray" onClick={() => navigate('/tervek')}>
+          {/* backlog-31, D36: a MOST mentett páciens részletoldalára visz
+              (Kezelési tervek tab), nem a globális listára -- a globális
+              `/tervek` a Home "Korábbi tervek" gombjával marad elérhető. */}
+          <Button
+            variant="soft"
+            color="gray"
+            onClick={() => navigate(`/paciensek/${encodeURIComponent(savedRef.patientDir)}`)}
+          >
             Korábbi tervek
           </Button>
         </Flex>

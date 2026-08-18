@@ -110,12 +110,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // A német a seed alapértelmezés szerint már engedélyezve van, nincs
-    // szükség a Beállítások oldalon való bekapcsolásra -- csak átnavigálunk
-    // rajta, hogy a Kezdőlap "Korábbi tervek" parancsikonja (ami a navbar
-    // linkjével azonos nevű) ne okozzon kétértelmű találatot.
-    await user.click(await screen.findByRole('link', { name: 'Beállítások' }));
-    await user.click(await screen.findByRole('link', { name: 'Korábbi tervek' }));
+    await user.click(await screen.findByRole('button', { name: 'Korábbi tervek' }));
     const patientNameEl = await screen.findByText('Kovács János');
     const card = patientNameEl.closest('[data-patient]') as HTMLElement;
     await user.click(await verzioMenupont(user, card, 'Új verzió'));
@@ -123,7 +118,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     // keresője -- findAllBy, nem findBy (ami az egyértelműséget várná el).
     await screen.findAllByPlaceholderText(/Tétel keresése/);
 
-    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
 
     expect(await screen.findByText('Az ajánlat nyelve és pénzneme')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Deutsch' })).toBeNull();
@@ -152,7 +147,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     await user.click(await screen.findByText('Fogeltávolítás'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
     await screen.findByText('Az ajánlat nyelve és pénzneme');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
 
@@ -161,7 +156,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     expect(within(dialog).queryByText(/átírt/)).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Folytatás' }));
 
-    await user.click(screen.getByRole('link', { name: 'Terv szerkesztő' }));
+    await user.click(screen.getByRole('link', { name: 'Kezelések' }));
     expect(await screen.findByDisplayValue('Zahnextraktion')).toBeInTheDocument();
     expect(screen.queryByText('átírt')).toBeNull();
   });
@@ -185,7 +180,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     await user.clear(nameField);
     await user.type(nameField, 'Kihúzás megbeszélt módon');
 
-    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
     await screen.findByText('Az ajánlat nyelve és pénzneme');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
 
@@ -194,7 +189,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Folytatás' }));
 
-    await user.click(screen.getByRole('link', { name: 'Terv szerkesztő' }));
+    await user.click(screen.getByRole('link', { name: 'Kezelések' }));
     expect(await screen.findByDisplayValue('Kihúzás megbeszélt módon')).toBeInTheDocument();
     expect(screen.getByText('átírt')).toBeInTheDocument();
   });
@@ -243,12 +238,12 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
     expect(screen.getByRole('button', { name: 'Leírás' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Magyar leírás szövege')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
     await screen.findByText('Az ajánlat nyelve és pénzneme');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
     await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
 
-    await user.click(screen.getByRole('link', { name: 'Terv szerkesztő' }));
+    await user.click(screen.getByRole('link', { name: 'Kezelések' }));
     expect(await screen.findByDisplayValue('Deutsche Beschreibung')).toBeInTheDocument();
   });
 
@@ -274,12 +269,12 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
     await user.clear(leirasField);
     await user.type(leirasField, 'Kézzel pontosított leírás');
 
-    await user.click(screen.getByRole('link', { name: 'Páciens' }));
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
     await screen.findByText('Az ajánlat nyelve és pénzneme');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
     await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
 
-    await user.click(screen.getByRole('link', { name: 'Terv szerkesztő' }));
+    await user.click(screen.getByRole('link', { name: 'Kezelések' }));
     expect(await screen.findByDisplayValue('Kézzel pontosított leírás')).toBeInTheDocument();
   });
 });

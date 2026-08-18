@@ -877,3 +877,26 @@ karbantartási kör négy önálló javítása.
   `position: sticky` használata; controlled Radix `Tabs` — az app második
   Tabs-használata a `DemoPage.tsx` (backlog-29) uncontrolled mintája
   után, `docs/07-felulet-rendszer.md`-ben rögzített stílus-szabállyal.
+
+---
+
+### 31. Terv workflow shell, breadcrumb és stepper — KÉSZ (2026-08-18)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új, önálló D36 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a három workflow-oldal (Páciens adatlap/Terv
+  szerkesztő/Előnézet) között kizárólag egyirányú "Tovább" gombokkal
+  lehetett haladni, visszafelé csak a NavBar négy, ideiglenesen megtartott
+  linkjével (D34); nem volt sehol jelzés arról, hol tart a doki a
+  folyamatban, sem kapaszkodó arról, melyik páciens tervén dolgozik.
+- **Megvalósítás:** új közös layout-route (`components/TervWorkflowShell.tsx`,
+  react-router `Outlet`, az app első nested route-mintája) a három
+  workflow-oldal köré: állandó breadcrumb (`Páciensek > [páciens neve]`,
+  a páciens-szegmens egyelőre nem link) + szabadon kattintható,
+  route-vezérelt 3-lépéses stepper (`docs/03-funkcionalis-spec.md` §
+  Terv-workflow héj). A meglévő laponkénti "Tovább" gombok változatlanul
+  megmaradtak. A véglegesítés utáni sikerpanel "Korábbi tervek" gombja a
+  MOST mentett páciens részletoldalára (30. tétel) navigál, nem a
+  globális listára. Utolsó lépésként megszűnt a D34-ben átmenetileg
+  megtartott négy NavBar-link (`Páciens`/`Terv szerkesztő`/`Előnézet`/
+  `Korábbi tervek`) — a fő navigáció ezzel véglegesen ötelemű.

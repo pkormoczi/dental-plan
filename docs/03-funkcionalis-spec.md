@@ -24,13 +24,31 @@ felhasználó-szemszögű megfelelője, `FEATURES.md`), **Filerendszer** (a
 fenti 8. képernyő) és **Változásnapló** (`CHANGELOG.md`) — mindhárom
 fejlesztési/demonstrációs tartalom, elkülönítve az üzleti workflow-tól.
 
-**Átmenet:** a `Páciens`/`Terv szerkesztő`/`Előnézet` képernyők (2–4.)
-egyelőre saját nav-linkkel is elérhetők, halványabb stílussal, a végleges
-öt link mögött — ez az EGYETLEN belépési pontjuk, amíg a terv-workflow
-shell (breadcrumb + stepper) át nem veszi a szerepüket, és a linkek
-törlődnek. A `Korábbi tervek` (5.) linkje ugyanide tartozik, de már csak
-átmeneti belépési pontként él — a páciens-részletoldal (10., `Kezelési
-tervek` tab) elkészült, a kereszt-linkek onnantól oda mutatnak.
+A `Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi tervek` képernyők (2–5.)
+korábban átmenetileg saját nav-linkkel is elérhetők voltak — ezt a
+terv-workflow héj (lásd alább, D36) váltotta fel, a linkek megszűntek.
+
+### Terv-workflow héj (D36)
+
+A `Páciens adatlap`/`Terv szerkesztő`/`Előnézet és véglegesítés` (2–4.
+képernyő) közös héjban él (`app/src/components/TervWorkflowShell.tsx`),
+ami mindhárom oldal fölött állandó:
+
+- **Breadcrumb** — `Páciensek > [páciens neve]`. A `Páciensek` szegmens a
+  pácienslistára (9. képernyő) linkel. A páciens-név szegmens ma **csak
+  szöveg**, nem link — a draftra kötött stabil `patientDir`/`paciensId`
+  ma nincs nyilvántartva, egy `buildPatientDirName()`-ből találgatott link
+  nem garantáltan a valódi forrásmappára mutatna (pl. kézzel átírt
+  névnél). Üres névnél a "Új páciens" tartalék-címke látszik.
+- **Stepper** — szabadon kattintható, 3 lépés: `Terv adatai → Kezelések →
+  Előnézet és véglegesítés`. Az aktuális lépés a route-ból dől el
+  (`/paciens`/`/terv`/`/elonezet`), nincs hozzá külön `Plan`/state-mező.
+  Validáció és blokkolás nélkül bármelyik lépésre át lehet ugrani — ez a
+  meglévő, laponkénti "Tovább a terv szerkesztőhöz"/"Előnézet" gombok
+  MELLETT él, nem helyettük.
+
+A sikeres véglegesítés utáni "A terv elmentve ✓" sikerpanel (lásd § 4)
+felett a héj továbbra is látszik.
 
 ---
 
@@ -440,6 +458,19 @@ seed-feltöltés és a véglegesítés-őr mind ezt hívja.
   még nem adta meg), ezért a HU-visszaesés magyar nyelvű terven nem fut
   le (a placeholder szöveg magyarul nyomtatódik, sárga figyelmeztetés
   nélkül — nincs mire visszaesni), csak német nyelvű tervnél jelez.
+
+### Sikeres véglegesítés
+
+A mentés után a terv-workflow héj (D36) fölött megjelenő "A terv elmentve
+✓" panel (`app/src/pages/PreviewPage.tsx`) a mentett terv útvonalát
+(`patientDir / planDir / versionDir`) mutatja, két gombbal:
+
+- **„Új terv indítása"** — az `/uj-terv` köztes páciens-választóra visz
+  (lásd § 5 „Új terv indítása").
+- **„Korábbi tervek"** — a MOST mentett páciens részletoldalára
+  (10. képernyő, `Kezelési tervek` tab) navigál, nem a globális Korábbi
+  tervek listára (§ 5) — az utóbbi a Kezdőlap saját „Korábbi tervek"
+  gombjával marad elérhető.
 
 ### Letöltési fájlnév
 

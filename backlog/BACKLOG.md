@@ -1,6 +1,6 @@
 # Backlog
 
-A `docs/01` sérthetetlen keretei (D1–D35) egyik tételt sem sértik —
+A `docs/01` sérthetetlen keretei (`D<szám>` formátumban) egyik tételt sem sértik —
 ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. Lezárt
@@ -12,19 +12,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ---
 ## KIDOLGOZOTT
-
-### 31. tétel — Terv workflow shell, breadcrumb és stepper
-  (a `backlog/redesign/` redesign-döntéssorozat DP-003 tétele) — állandó,
-  kattintható breadcrumb (`Páciensek > [páciens neve]`) + 3-lépéses,
-  szabadon kattintható stepper (`Terv adatai → Kezelések → Előnézet és
-  véglegesítés`) a három workflow-oldal köré. A véglegesítés utáni
-  sikerpanel változatlan marad (a `Terv részletei` nézet még nem létezik,
-  DP-060 dolga), csak a "Korábbi tervek" gomb célja frissül a 30. tétel
-  páciens-részletoldalára. Utolsó lépésként eltávolítja a 29. tételben
-  (DP-001) átmenetileg megtartott négy NavBar-linket
-  (`Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi tervek`), lezárva azt a
-  függőséget. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-31-terv-workflow-shell-terv.md`
 
 ### 32. tétel — Aktív draft lifecycle és autosave
   (a `backlog/redesign/` redesign-döntéssorozat DP-004 tétele) — feltárás

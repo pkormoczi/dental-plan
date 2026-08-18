@@ -125,6 +125,16 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   duplázva számít ki (pl. „FunkciókFunkciók"). A `getByRole('tab', ...)`
   ezért mindig regexet kapjon névre (`{ name: /Funkciók/ }`), nem pontos
   stringet — lásd `DemoPage.test.tsx`/`PatientDetailPage.test.tsx`.
+- Breadcrumb + workflow stepper (`components/TervWorkflowShell.tsx`,
+  D36): a `@radix-ui/themes@3`-ban nincs Breadcrumb/Stepper primitív, ezért
+  `Flex`/`Link`/`Badge`/`Text`-ből épül, nem kézzel írt HTML-ből. Mindkettő
+  saját `<nav aria-label="…">` landmark, az aktív stepper-lépésen
+  `aria-current="step"`. A lépések react-router **linkek, nem gombok** —
+  natív "megnyitás új lapon" és normál Tab-sorrend, nem a fogtérkép
+  roving-kurzoros mintája. A sorszám-`Badge` `aria-hidden`, a link saját
+  `aria-label`-je a tiszta lépésfelirat — enélkül a Badge számjegye
+  belefolyna az accessible name-be (pl. „1Terv adatai”), és a „Kezelések”
+  lépés ütközne a NavBar „Kezelések és árak” linkjével.
 
 ### Szín, forma, sűrűség
 

@@ -463,6 +463,16 @@ Páciens részletei, D35) segédfüggvényei/komponensei, szintén ne írd újra
   sérült lépés `unreadable: true`-t állít a részlegesen betöltött adat
   mellett (P1-2 mintája).
 
+A terv-workflow héj tétel (`docs/03-funkcionalis-spec.md` § Terv-workflow
+héj, D36) komponense, szintén ne írd újra:
+- `app/src/components/TervWorkflowShell.tsx` — a `/paciens`/`/terv`/
+  `/elonezet` közös layout-route-ja (react-router `Outlet`, az app első
+  nested route-mintája, `App.tsx`): állandó breadcrumb + szabadon
+  kattintható, route-vezérelt 3-lépéses stepper. Az aktuális lépést
+  kizárólag a `useLocation().pathname` dönti el, nincs hozzá `Plan`/
+  `AppState` mező. A meglévő, laponkénti "Tovább" gombok ettől
+  függetlenül, változatlanul megmaradnak.
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

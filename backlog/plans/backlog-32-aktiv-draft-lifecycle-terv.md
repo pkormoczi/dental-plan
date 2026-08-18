@@ -105,19 +105,19 @@ tartalmi része (nem kerülnek papírra, nem `terv.json`-adat), a
 `DraftStorage` (UI-oldali, nem system of record) a helyes réteg rájuk,
 ugyanúgy, ahogy a `mentve` időbélyeg is ott él, nem a `Plan`-on.
 
-### 2. `lastRoute` írása: a 31. tétel (DP-003) workflow-héjából
+### 2. `lastRoute` írása: a terv-workflow héjból (D36)
 
-A `lastRoute` mezőt a 31. tételben (`backlog/plans/backlog-31-terv-workflow-shell-terv.md`)
-bevezetett közös workflow-héj (`TervWorkflowShell`) írja, egy kis
+A `lastRoute` mezőt a közös workflow-héj (`TervWorkflowShell`,
+`docs/03-funkcionalis-spec.md` § Terv-workflow héj, D36) írja, egy kis
 effektussal, minden route-váltáskor a három workflow-oldal között —
-mert az a komponens tudja MA IS, melyik lépésen áll a doki (a 31. tétel 6.
-döntése szerint route-alapon). A `patientDir`-t azok a MEGLÉVŐ helyek
-töltik ki, ahol a draft indításakor már ismert (pl. `NewPlanPage.tsx`
-"Meglévő páciens keresése" ága, `PlanHistoryPage.tsx` "Új verzió"/
-"Másolás új tervbe"/"Új terv" akciói) — ezek MA IS tudják, melyik
-páciensről van szó, csak eddig nem adták tovább a draftnak.
+mert az a komponens tudja MA IS, melyik lépésen áll a doki (route-alapon,
+lásd D36). A `patientDir`-t azok a MEGLÉVŐ helyek töltik ki, ahol a draft
+indításakor már ismert (pl. `NewPlanPage.tsx` "Meglévő páciens keresése"
+ága, `PlanHistoryPage.tsx` "Új verzió"/"Másolás új tervbe"/"Új terv"
+akciói) — ezek MA IS tudják, melyik páciensről van szó, csak eddig nem
+adták tovább a draftnak.
 
-**Miért:** a 31. tétel héja már pontosan ott van, ahol a route ismert —
+**Miért:** a workflow-héj már pontosan ott van, ahol a route ismert —
 felesleges lenne három helyen (mindhárom oldalon külön) duplikálni a
 route-figyelést. A `patientDir` kitöltését NEM ez a tétel vezeti be mint
 új mechanizmust, csak összeköti a MÁR ISMERT adatot egy MÁR LÉTEZŐ

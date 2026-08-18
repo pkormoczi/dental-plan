@@ -1,9 +1,8 @@
 // A NavBar eddig nem volt közvetlenül tesztelve, csak közvetve
 // (App.test.tsx a Filerendszer/DEMO linken keresztül). Ez a teszt a
 // docs/01-attekintes-es-dontesek.md D34 szerinti végleges öt tételes fő
-// navigáció pontos feliratát/sorrendjét fedi, plusz az egyelőre
-// megtartott négy átmeneti workflow-linket (docs/03-funkcionalis-spec.md
-// § Fő navigáció).
+// navigáció pontos feliratát/sorrendjét fedi -- a korábban itt élt négy
+// átmeneti workflow-link a terv-workflow héjjal (D36) megszűnt.
 
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -22,22 +21,10 @@ function renderNavBar() {
 }
 
 describe('NavBar', () => {
-  it('a végleges öt linket mutatja elöl, a megadott sorrendben és felirattal', () => {
+  it('a végleges öt linket mutatja, a megadott sorrendben és felirattal', () => {
     renderNavBar();
     const links = screen.getAllByRole('link').map((el) => el.textContent);
-    expect(links.slice(0, 5)).toEqual([
-      'Kezdőlap',
-      'Páciensek',
-      'Kezelések és árak',
-      'Beállítások',
-      'DEMO',
-    ]);
-  });
-
-  it('utánuk a négy átmeneti workflow-linket mutatja, ugyanabban a sorrendben', () => {
-    renderNavBar();
-    const links = screen.getAllByRole('link').map((el) => el.textContent);
-    expect(links.slice(5)).toEqual(['Páciens', 'Terv szerkesztő', 'Előnézet', 'Korábbi tervek']);
+    expect(links).toEqual(['Kezdőlap', 'Páciensek', 'Kezelések és árak', 'Beállítások', 'DEMO']);
   });
 
   it('a "Kezelések és árak" a /arlista-ra, a "DEMO" a /demo-ra mutat', () => {

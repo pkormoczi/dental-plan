@@ -4,6 +4,7 @@ import { Box, Flex, Skeleton, Theme } from '@radix-ui/themes';
 import DemoBanner from './components/DemoBanner';
 import ErrorBoundary from './components/ErrorBoundary';
 import NavBar from './components/NavBar';
+import TervWorkflowShell from './components/TervWorkflowShell';
 import { t } from './design/tokens';
 import DemoPage from './pages/DemoPage';
 import Home from './pages/Home';
@@ -49,16 +50,21 @@ export default function App() {
                     <Routes>
                       <Route path="/" element={<Home />} />
                       <Route path="/uj-terv" element={<NewPlanPage />} />
-                      <Route path="/paciens" element={<PatientPage />} />
-                      <Route path="/terv" element={<PlanEditorPage />} />
-                      <Route
-                        path="/elonezet"
-                        element={
-                          <Suspense fallback={<PreviewLoading />}>
-                            <PreviewPage />
-                          </Suspense>
-                        }
-                      />
+                      {/* Terv-workflow héj (backlog-31, D36) -- az app első
+                          layout-route-ja: a breadcrumb+stepper a három lépés
+                          köré épül, az Outlet rendereli a tényleges oldalt. */}
+                      <Route element={<TervWorkflowShell />}>
+                        <Route path="/paciens" element={<PatientPage />} />
+                        <Route path="/terv" element={<PlanEditorPage />} />
+                        <Route
+                          path="/elonezet"
+                          element={
+                            <Suspense fallback={<PreviewLoading />}>
+                              <PreviewPage />
+                            </Suspense>
+                          }
+                        />
+                      </Route>
                       <Route path="/tervek" element={<PlanHistoryPage />} />
                       <Route path="/paciensek" element={<PaciensekPage />} />
                       <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />

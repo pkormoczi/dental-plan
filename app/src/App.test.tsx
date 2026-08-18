@@ -77,16 +77,18 @@ describe('Végpontok közötti folyamat', () => {
     const savedRefEl = screen.getByText(/_v1$/);
     const [savedPatientDir, savedPlanDir, savedVersionDir] = (savedRefEl.textContent ?? '').split(' / ');
 
-    // Korábbi tervek -- a demó seed miatt több páciens is szerepel, ezért a
-    // saját tervünket a kártyáján (nevén) belül keressük, nem globálisan.
+    // A sikerpanel "Korábbi tervek" gombja a MOST mentett páciens
+    // részletoldalára visz (Kezelési tervek tab), nem a globális listára --
+    // egyetlen páciens látszik, nem kell kártyára szűkíteni.
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
-    const patientNameEl = await screen.findByText('Teszt Aladár');
-    const patientCard = patientNameEl.closest('[data-patient]') as HTMLElement;
-    expect(within(patientCard).getByText(/^v1 ·/)).toBeInTheDocument();
+    // Két helyen is megjelenik a név (sticky fejléc + PatientPlanChains saját
+    // fejléce) -- findAllBy, nem findBy.
+    await screen.findAllByText('Teszt Aladár');
+    expect(screen.getByText(/^v1 ·/)).toBeInTheDocument();
 
     // Új verzió -> a korábban felvitt tétel már ott van -- ezért nem kell
     // újragépelni (ez a "Korábbi tervek" fő létjogosultsága).
-    await user.click(await verzioMenupont(user, patientCard, 'Új verzió'));
+    await user.click(await verzioMenupont(user, document.body, 'Új verzió'));
     await screen.findByPlaceholderText(/Tétel keresése/);
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
 
@@ -102,10 +104,11 @@ describe('Végpontok közötti folyamat', () => {
     await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
-    const patientNameEl2 = await screen.findByText('Teszt Aladár');
-    const patientCard2 = patientNameEl2.closest('[data-patient]') as HTMLElement;
-    expect(within(patientCard2).getByText(/^v2 ·/)).toBeInTheDocument();
-    expect(within(patientCard2).getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- D4
+    // Két helyen is megjelenik a név (sticky fejléc + PatientPlanChains saját
+    // fejléce) -- findAllBy, nem findBy.
+    await screen.findAllByText('Teszt Aladár');
+    expect(screen.getByText(/^v2 ·/)).toBeInTheDocument();
+    expect(screen.getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- D4
 
     // DEMO -> Filerendszer fül -- ugyanennek a mentésnek látszania kell a
     // fa-nézetben is: az első verzió mappája (v1) D4 miatt érintetlen maradt.
