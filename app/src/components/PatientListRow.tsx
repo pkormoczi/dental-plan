@@ -1,10 +1,12 @@
-// Kompakt páciens-sor (D43, docs/03-funkcionalis-spec.md § 9. Páciensek /
-// § 1. Indítás) -- eredetileg a `Home.tsx` "Legutóbbi páciensek" listájának
-// helyi `RecentRow`-ja volt, a 38. tétel emelte ide, mert mostantól a
-// Pácienslista (`pages/PaciensekPage.tsx`) sora is ugyanezt a formát
-// használja. Név + DOB + telefon, KIVÉTELKÉNT csak a törzsadat-betöltési
-// hiba kap jelzést -- a "Rögzített törzsadat"/"Élő adat a legutóbbi
-// tervből" két NORMÁL állapot nem kap semmilyen jelvényt (D43).
+// Kompakt páciens-sor a Kezdőlap "Legutóbbi páciensek" listájához (D39,
+// docs/03-funkcionalis-spec.md § 1. Indítás) -- eredetileg a `Home.tsx`
+// helyi `RecentRow`-ja volt, a 38. tétel emelte ide. A Pácienslista
+// (`pages/paciensek/PatientTableRow.tsx`) SZÁNDÉKOSAN külön komponens
+// (D47) -- a `children` (aktivitás-szöveg) itt sor alatti tartalom, egy
+// oszlopos táblázat-cellába ez nem ültethető át. Név + DOB + telefon,
+// KIVÉTELKÉNT csak a törzsadat-betöltési hiba kap jelzést -- a "Rögzített
+// törzsadat"/"Élő adat a legutóbbi tervből" két NORMÁL állapot nem kap
+// semmilyen jelvényt (D43).
 
 import type { ReactNode } from 'react';
 import { Flex, Text } from '@radix-ui/themes';

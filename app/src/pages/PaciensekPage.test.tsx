@@ -13,6 +13,18 @@ import PaciensekPage from './PaciensekPage';
 import { TestProviders } from '../testUtils';
 import { resetListStateMemoryForTests } from '../components/useListStateMemory';
 import { DemoStorage } from '../storage/DemoStorage';
+import type { PatientMasterData } from '../domain/types';
+
+/** A `dp:paciensek/<dir>/<fajl>` alakú seed-kulcsok közül az elsőt adja, aminek a mappaneve tartalmazza a keresett részletet (Home.test.tsx findSeedKey mintája). */
+function findSeedKey(dirReszlet: string, fajlnev: string): string {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)!;
+    if (key.startsWith('dp:paciensek/') && key.includes(dirReszlet) && key.endsWith(`/${fajlnev}`)) {
+      return key;
+    }
+  }
+  throw new Error(`nincs "${fajlnev}" kulcs "${dirReszlet}"-hez`);
+}
 
 function PaciensProbe() {
   const { patientDir } = useParams<{ patientDir: string }>();
@@ -187,5 +199,88 @@ describe('PaciensekPage', () => {
     expect(
       await screen.findByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
     ).toHaveValue('nagy');
+  });
+
+  it('a keresőmezőnek látható "Keresés" címkéje is van, az input fölött (docs/07)', async () => {
+    renderPage();
+    await screen.findByText('Nagy Éva');
+
+    const input = screen.getByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' });
+    const label = screen.getByText('Keresés');
+    expect(label.tagName).toBe('LABEL');
+    expect(label).toHaveAttribute('for', input.id);
+  });
+
+  it('oszlopfejlécekkel jelenik meg a lista: Név / Született / Telefon', async () => {
+    renderPage();
+    await screen.findByText('Nagy Éva');
+
+    expect(screen.getByRole('columnheader', { name: 'Név' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Született' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Telefon' })).toBeInTheDocument();
+  });
+
+  it('a találatszám a listaméretet, szűréskor a szűrt/teljes arányt mutatja', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('Nagy Éva');
+
+    const total = (await screen.findAllByRole('row')).length - 1; // fejlécsor nélkül
+    expect(screen.getByText(`${total} páciens`)).toBeInTheDocument();
+
+    await user.type(
+      screen.getByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
+      'nagy',
+    );
+    expect(screen.getByText(`1 találat a ${total} páciensből`)).toBeInTheDocument();
+  });
+
+  it('hiányzó születési dátum/telefon esetén a cellák "—"-t mutatnak, nem üresek', async () => {
+    const key = findSeedKey('Nagy', 'paciens-adatok.json');
+    const adat = JSON.parse(localStorage.getItem(key)!) as PatientMasterData;
+    localStorage.setItem(key, JSON.stringify({ ...adat, szuletesiIdo: '', telefon: '' }));
+
+    renderPage();
+    await screen.findByText('Nagy Éva');
+    const row = patientRow('Nagy Éva');
+    expect(within(row).getAllByText('—')).toHaveLength(2);
+  });
+
+  it('sérült törzsadatnál a hibaüzenet egyetlen, két oszlopot átfogó cellában jelenik meg', async () => {
+    const key = findSeedKey('Nagy', 'paciens-adatok.json');
+    localStorage.setItem(key, 'not valid json {{{');
+
+    renderPage();
+    await screen.findByText('Nagy Éva');
+    const row = patientRow('Nagy Éva');
+    const hibaCella = within(row).getByText('⚠ adat nem olvasható').closest('td')!;
+    expect(hibaCella).toHaveAttribute('colspan', '2');
+  });
+
+  it('a sor bármely pontjára kattintás navigál, nem csak a névre', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('1990.11.02.');
+    await user.click(screen.getByText('1990.11.02.'));
+
+    const probe = await screen.findByTestId('paciens-reszletei');
+    expect(probe.dataset.patientdir).toBeTruthy();
+  });
+
+  it('a névre kattintás nem hoz létre dupla history-bejegyzést (a sor onClick-je nem fut le duplán)', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Nagy Éva');
+    await user.click(screen.getByText('Nagy Éva'));
+    await screen.findByTestId('paciens-reszletei');
+
+    // Ha a sor onClick-je is navigálna a Link mellett, egy "vissza" csak a
+    // dupla push második elemét bontaná le -- a lista csak innen látszana.
+    await user.click(screen.getByRole('button', { name: 'Vissza a listára' }));
+    expect(
+      await screen.findByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
+    ).toBeInTheDocument();
   });
 });

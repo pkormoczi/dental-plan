@@ -1178,3 +1178,35 @@ karbantartási kör négy önálló javítása.
   nem egy második megerősítő-mechanizmust bevezetve. Böngésző vissza/előre
   gomb, F5, URL-sáv átírás változatlanul védtelen marad, tudatos
   döntésként.
+
+---
+
+### 44. Pácienslista oszlopos átdizájnolása — KÉSZ (2026-08-19)
+
+- **Méret:** ~fél nap.
+- **Kereteket sért?** Nem — új D47 (`docs/01-attekintes-es-dontesek.md`).
+  Ez a tétel nem szerepelt korábban a `backlog/BACKLOG.md`-ben: a doki
+  közvetlen, `/grill-me` munkamenetben adott dizájn-visszajelzésből indult
+  (a 43. tétel precedense szerint).
+- **Valódi haszon:** a Pácienslista sora egy futó szöveges `Flex` volt
+  (`components/PatientListRow.tsx`) — nem volt vizuális ritmusa (a
+  születési dátum/telefon soronként más-más vízszintes pozícióra esett),
+  nem jelezte hover/fókuszra, hogy kattintható, és a sor "léptéke" ~62px
+  volt, kevés pácienst mutatva egy képernyőn.
+- **Megvalósítás:** a Pácienslista saját, oszlopos táblázat-sort kapott
+  (`pages/paciensek/PatientTableRow.tsx`, Radix `Table.Root size="2"`,
+  ~42px sormagasság), fejléccel (Név / Született / Telefon, félkövér,
+  `t.brand` színű felirattal, az Árlista admin kategória-fejlécével azonos
+  stílusban). Hiányzó születési dátum/telefon az
+  app "—" jelölését kapja; a törzsadat-betöltési hiba egy összevont,
+  két oszlopot átfogó cellában jelenik meg. A sor egérrel bárhol
+  kattintható, de a névcella valódi `<a>` maradt (középső gomb/"megnyitás
+  új lapon" is működik) — a sor onClick-je a `closest('a')` őrrel kizárja
+  a duplikált navigációt. Hoverre/fókuszra a teljes sor háttere
+  `accentWash`-ra vált, a Radix `--table-row-background-color`
+  változóján át (`index.css`, `main.tsx` írja be `tokens.ts`-ből). A
+  keresőmező látható "Keresés" címkét kapott (`docs/07`: "Címke az input
+  fölött, soha placeholder helyett"), és a lista fölé egy találatszám
+  sor került. A Kezdőlap "Legutóbbi páciensek" listája (`components/
+  PatientListRow.tsx`) SZÁNDÉKOSAN változatlan maradt — a két lista
+  elrendezése ezután tudatosan eltér (D47).

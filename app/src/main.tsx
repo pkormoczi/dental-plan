@@ -20,6 +20,10 @@ document.documentElement.style.setProperty('--solid-fill', t.ink)
 document.documentElement.style.setProperty('--solid-fill-hover', t.text)
 document.documentElement.style.setProperty('--solid-fill-text', t.onBrand)
 
+// Pácienslista sor-hover/fókusz háttere (index.css) -- ugyanaz a minta,
+// hogy az accentWash-nak EGY forrása maradjon.
+document.documentElement.style.setProperty('--accent-wash', t.accentWash)
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

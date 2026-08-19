@@ -1022,17 +1022,29 @@ szerkesztő mezői/mentés-szabályai ott vannak leírva (D43).
   `PlanHistoryPage` végösszeg-betöltésének mintájára) minden látható
   sorra egyszerre, nem soronkénti lusta betöltéssel. Alfabetikus
   (`localeCompare('hu')` a megjelenített néven).
-- **Sor tartalma**: név + születési dátum + telefon, kompakt formában
-  (`components/PatientListRow.tsx` — a Kezdőlap „Legutóbbi páciensek”
-  soraival azonos komponens). A két NORMÁL állapot („van már lezárt
-  törzsadata” / „egyelőre csak élő fallback”) NEM kap semmilyen jelvényt;
-  KIZÁRÓLAG a törzsadat-betöltés hibája jelenik meg jelzésként
-  (`⚠ adat nem olvasható`).
+- **Sor tartalma**: oszlopos táblázat (Radix `Table`, `pages/paciensek/
+  PatientTableRow.tsx`, D47) — Név / Született / Telefon fejléccel, félkövér,
+  `t.brand` színű oszlopcímekkel (az Árlista admin kategória-fejlécével
+  azonos stílus). A Kezdőlap „Legutóbbi páciensek”
+  sora (`components/PatientListRow.tsx`) SZÁNDÉKOSAN külön komponens (D47) —
+  az eltérő elrendezés (táblázat vs. az aktivitás-szöveget hordozó kompakt
+  sor) miatt. A két NORMÁL állapot („van már lezárt törzsadata” / „egyelőre
+  csak élő fallback”) NEM kap semmilyen jelvényt; a törzsadat-betöltés
+  hibája egy összevont, a Született+Telefon oszlopot átfogó cellában
+  jelenik meg (`⚠ adat nem olvasható`). Hiányzó születési dátum vagy
+  telefon az app „—” hiányzó-érték jelölését kapja. A sor egérrel bárhol
+  kattintható (a névcella egy valódi `<a>`-t tartalmaz, középső gombbal/
+  „megnyitás új lapon”-nal is elérhető), hoverre/fókuszra a teljes sor
+  háttere `accentWash`-ra vált.
 - **Keresés**: névre (ékezetfüggetlen, mint korábban), ÉS — 2+ begépelt
   számjegytől — a születési dátumra/telefonszámra is, elválasztójeltől
   függetlenül (`keresoKulcs()`/`torzsadatEgyezik()`,
   `domain/paciensKereses.ts`; a telefon-egyezéshez a D42
-  `telefonKulcs()`-előtag-normalizálását is felhasználva).
+  `telefonKulcs()`-előtag-normalizálását is felhasználva). A mezőnek
+  látható „Keresés” címkéje van a mező fölött (`docs/07`: címke soha nem
+  csak placeholder), a lista fölött egy találatszám sor mutatja a
+  szűrt/teljes arányt (`„N találat az M páciensből”`, szűrés nélkül
+  `„M páciens”`).
 - **Sor megnyitása**: a sorra kattintás a páciens-részletoldalra (§ 10)
   navigál — alapértelmezetten a `Kezelési tervek` tabra (a § 10
   alapértelmezése), NEM nyílik ki helyben szerkesztő.

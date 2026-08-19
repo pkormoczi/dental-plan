@@ -119,3 +119,17 @@ button {
 .rt-Button:where(.rt-variant-ghost) {
   --button-ghost-padding-x: 4px;
 }
+
+/*
+ * Pácienslista (PaciensekPage.tsx) sor-hover/fókusz -- a Radix a hátteret
+ * cellánként rajzolja (`--table-row-background-color`), egy <tr>-re tett
+ * `background` a cellák saját háttere mögé kerülne, ezért ezen a
+ * változón át kell felülírni. `--accent-wash` (`main.tsx`-ben `tokens.ts`
+ * `accentWash`-ából írva) az app meglévő "kijelölt sor" tokenje
+ * (docs/07-felulet-rendszer.md), nem új szín.
+ * `:focus-within`, mert a navigáció a névcella <a>-ján ül, nem a <tr>-en.
+ */
+.paciens-lista tbody tr:hover,
+.paciens-lista tbody tr:focus-within {
+  --table-row-background-color: var(--accent-wash);
+}

@@ -588,12 +588,13 @@ A Pácienslista navigációs-listává alakítása tétel
   tárolt születési dátum/telefon számjegysorára is illeszkedik (a
   telefonnál a D42 `telefonKulcs()`-előtag-normalizálását is bevonva) —
   csak a `PaciensekPage.tsx` hívja
-- `app/src/components/PatientListRow.tsx` — a kompakt páciens-sor (név +
-  DOB + telefon, KIZÁRÓLAG a törzsadat-betöltés hibája kap jelzést),
-  eredetileg a `Home.tsx` "Legutóbbi páciensek" helyi `RecentRow`-ja volt;
-  a `PaciensekPage.tsx` második hívóként emelte ide. A `children` prop a
-  sor alatti kiegészítő tartalomhoz (a Kezdőlap ide adja az
-  `aktivitasSzoveg()`-et, a Pácienslista nem ad semmit)
+- `app/src/components/PatientListRow.tsx` — a Kezdőlap "Legutóbbi
+  páciensek" kompakt páciens-sora (név + DOB + telefon, KIZÁRÓLAG a
+  törzsadat-betöltés hibája kap jelzést; `children` prop a sor alatti
+  aktivitás-szöveghez, `aktivitasSzoveg()`). A Pácienslista (D47) SAJÁT,
+  oszlopos táblázat-sort használ (`app/src/pages/paciensek/
+  PatientTableRow.tsx`) — a két lista elrendezése SZÁNDÉKOSAN eltér,
+  ne vond össze őket
 - `useListStateMemory(key, ready)` (`app/src/components/useListStateMemory.ts`)
   — egy lista keresőszövegének/scroll-pozíciójának megőrzése route-váltás
   után-vissza, KIZÁRÓLAG böngésző-"vissza" (POP) navigációnál; modul-

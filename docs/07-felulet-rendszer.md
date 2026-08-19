@@ -63,6 +63,19 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   kattintható/billentyűzetes SVG adatvizualizáció ÉS beviteli eszköz —
   lásd `components/DentalChart.tsx`, `design/toothChartSvg.ts`) és a
   nyomtatvány (`pdf/TervDocument.tsx`, A4 layout).
+- `Table.Root` sűrűsége a sor szerepétől függ: `size="1"` a sűrű
+  szerkesztőrácsokon (Árlista admin tétel-/kategória-táblázata, a
+  tervszerkesztő sortáblázata), `size="2"` a letapogatásra/kattintásra
+  szánt navigációs listákon (Pácienslista, D47) — utóbbi ~42px sormagasságot
+  ad kézi érték nélkül. Az oszlopfejléc félkövér, `t.brand` színnel — ugyanaz
+  a stílus, mint az Árlista admin kategória-fejlécén (`Text weight="bold"
+  style={{ color: t.brand }}`), a méret nem nő vele (`size="2"`, a
+  Radix-alapértelmezett félkövérrel egybeesik). A sor hover/fókusz háttere
+  `accentWash` (az app
+  meglévő „kijelölt sor" tokenje) a Radix `--table-row-background-color`
+  változóján át felülírva (`index.css`, `main.tsx` írja be `tokens.ts`
+  `accentWash`-ából) — egy `<tr>`-re tett közvetlen `background` a cellák
+  saját háttere MÖGÉ kerülne, mert a Radix soronként, cellánként rajzol.
 - Soronkénti akciók: **legfeljebb két látható gomb egy adatsoron** (nulla
   is rendben van), a többi Radix Themes `DropdownMenu`-ba. A trigger `⋯`
   (`DotsHorizontalIcon`) `IconButton`, és az `aria-label`-jének
