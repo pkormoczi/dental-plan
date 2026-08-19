@@ -1295,6 +1295,28 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
       },
     ],
   },
+  // Terv nélküli páciens (backlog-41, D50) -- a Páciensek képernyőn felvéve,
+  // de még nincs kezelési terve. Lezárt törzsadata van, de a Korábbi
+  // tervek listán NEM jelenik meg (nincs terv-lánca, `PlanHistoryPage.tsx`
+  // ezt a filtert alkalmazza). E nélkül friss demó adaton EGYETLEN páciens
+  // sem lenne törölhető -- mindenki másnak van véglegesített terve.
+  {
+    paciensId: 'kelepe',
+    nev: 'Kelemen Petra',
+    szuletesiIdo: '1997-02-19',
+    lakcim: '7621 Pécs, Király utca 8.',
+    telefon: '+36 20 890 1234',
+    email: 'kelemen.petra@example.hu',
+    taj: '934 567 812',
+    patientData: true,
+    // Szándékosan a Nagy Éva-nál (NAP_MS) régebbi, hogy a
+    // NewPlanPage.test.tsx "utolsoAktivitas nélküli páciens kimarad a
+    // recentsből" tesztje (ami a Kovács-aktivitás eltávolítása utáni top-5
+    // között konkrétan Nagy Évát várja) ne csússzon el egy új, frissebb
+    // seed-aktivitástól.
+    aktivitas: { tipus: 'letrehozva', msEzelott: 2 * NAP_MS },
+    lancok: [],
+  },
 ];
 
 const ujPaciensek = UJ_PACIENSEK.map(buildUjPaciens);

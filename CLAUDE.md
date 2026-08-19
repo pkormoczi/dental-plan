@@ -102,6 +102,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A `paciens-adatok.json` (ELLENTÉTBEN a `paciens.json`/`terv-cimke.json`-nal) valódi system of record a saját mezőire — nincs automatikus szinkron a `terv.json` `paciens` blokkjával egyik irányban sem, egy konkrét terv adatlapján tett módosítás soha nem írja át, és fordítva | D33 — a `terv.json` `paciens` blokkja pillanatkép marad (D7); egy automatikus szinkron összemosná "mit tartalmazott ez a konkrét, esetleg aláírt ajánlat" és "mi a páciens jelenleg ismert adata" fogalmát |
 | Az árlista `arlistaVerzio` mezője az Árlista admin MINDEN mentésekor a mai napra áll, mezőnkénti különbségtevés nélkül | D30 — a nyomtatvány lábléce ebből mondja, „melyik árlistából készült"; egy befagyott érték hamis audit-adat lenne vitánál. A már mentett terveken lévő érték ettől függetlenül pillanatkép marad (D7) |
 | A `PlanStorage`-t fogyasztó `savePriceList`/`saveSettings` kizárólag updatert fogad, sosem kész objektumot; a memóriabeli állapot a mentés előtt, szinkron frissül, és hibára nem gördül vissza | D31 — a render-idejű closure-be zárt régi állapot két gyors egymás utáni szerkesztésnél némán eldobja az egyiket a doki törzsadatában (árlista, rendelő-adat); a `FileSystemStorage`-váltás alatt a ma kicsi versenyablak nagyságrendekkel tágul |
+| Páciens nem törölhető, ha van véglegesített (`statusz === 'VEGLEGES'`) terve, rá mutató aktív mentetlen piszkozata, vagy olvashatatlan terv-lánca/verziója | D50 — egy aláírt/kiadott dokumentum vagy egy folyamatban lévő szerkesztés mögül a törlés adatvesztést jelentene; a `deletePatient` a teljes páciensmappát véglegesen elviszi, nincs „kuka” |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -651,8 +652,9 @@ adatlap "Páciens törzsadata") segédfüggvényei/komponensei, szintén ne írd
   (`app/src/domain/torzsadatBetoltes.ts`) — a draft-hoz tartozó
   páciensmappa nevének feloldása, `piszkozatPatientDir` (D37, lehet
   `null`) elsőbbséggel, `plan.paciensId` → `listPatients()` tartalékkal;
-  sosem dob. Két hívója: `pages/patientPage/TorzsadatSyncCard.tsx` és
-  `pages/PreviewPage.tsx`
+  sosem dob. Hívói: `pages/patientPage/TorzsadatSyncCard.tsx`,
+  `pages/PreviewPage.tsx` és — a páciens-törlés (D50) aktív-draft
+  ellenőrzéséhez — `pages/PatientDetailPage.tsx`
 - `components/TorzsadatDiffDialog.tsx` — a mezőszintű, checkbox-listás
   összevető/szinkron dialógus mindhárom módhoz (master→draft kézi,
   draft→master kézi, draft→master lépés-elhagyási ajánlat, `onSkip` prop
@@ -673,6 +675,22 @@ adatlap "Páciens törzsadata") segédfüggvényei/komponensei, szintén ne írd
   véglegesítésnél; szándékosan KÍVÜL van a `VEGLEGESITES_LEPESEK` PUHA
   láncán, mert az közvetlenül a `kovetkezoLepes` bejárását vezérli, egy ott
   felvett mező automatikusan megerősítő dialógust nyitna
+
+A páciens törlése tétel (`docs/01-attekintes-es-dontesek.md` D50,
+`docs/02-domain-modell.md` § Páciens- és terv-mappa,
+`docs/03-funkcionalis-spec.md` § 10. Páciens részletei) segédfüggvénye,
+szintén ne írd újra:
+- `paciensTorlesAkadaly(chainData, sajatAktivPiszkozat)`
+  (`app/src/domain/paciensTorles.ts`) — az EGYETLEN hely, ahol eldől, hogy
+  egy páciens törölhető-e: `null`, ha igen, egyébként a blokkoló ok
+  (`'veglegesitett-terv'` / `'aktiv-piszkozat'` / `'nem-olvashato'`,
+  ebben a precedencia-sorrendben). Tiszta függvény — a hívó
+  (`pages/PatientDetailPage.tsx`) adja a MÁR betöltött
+  `domain/planChainData.ts` `PlanChainData`-t és a saját aktív draftjának
+  hovatartozását (a MEGLÉVŐ `feloldPatientDir()`-rel, D48, eldöntve, nem
+  új heurisztikával). A tényleges törlés a `PlanStorage.deletePatient(
+  patientDir)` — az interfész első destruktív metódusa, feltétel nélkül
+  végrehajt; az előfeltétel-ellenőrzés a hívó felelőssége
 
 ## Domain szókincs
 

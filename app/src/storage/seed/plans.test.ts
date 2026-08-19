@@ -125,6 +125,17 @@ describe('seedPatientData (D33)', () => {
   });
 });
 
+// backlog-41 (D50): a páciens-törlés csak akkor kipróbálható friss demó
+// adaton, ha legalább egy seed páciensnek nincs terv-lánca -- mindenki
+// másnak van (legalább egy) VEGLEGES verziója, ami a törlést blokkolná.
+describe('seedPatients terv nélküli demó páciens (backlog-41)', () => {
+  it('legalább egy seed páciensnek nincs egyetlen terv-lánca sem', () => {
+    const patientDirsWithPlans = new Set(seedPlans.map((e) => e.patientDir));
+    const tervNelkuli = seedPatients.filter(({ patientDir }) => !patientDirsWithPlans.has(patientDir));
+    expect(tervNelkuli.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
 // D39/D40: a Kezdőlap és az /uj-terv köztes páciensválasztó recent listája
 // üres állapotot mutatna friss demón, ha a seed pácienseknek nincs
 // utolsoAktivitas-uk -- ez a teszt a pontos időbélyeget SZÁNDÉKOSAN nem

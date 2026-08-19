@@ -1268,3 +1268,28 @@ karbantartási kör négy önálló javítása.
   Nyomtatványok tab `dp:sablon-piszkozat` localStorage-cache-e is törlődik,
   különben egy F5 a tab-váltás után visszahozná a már elvetett szöveget. A
   Logó kártya a `Settings.logoFajl` mezővel együtt törölve.
+
+---
+
+### 41. Páciens törlése — KÉSZ (2026-08-19)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D50 (`docs/01-attekintes-es-dontesek.md`),
+  a D4 (verziómappa soha felül nem írható) természetes kiterjesztése
+  törlésre.
+- **Valódi haszon:** törlési képesség SEHOL nem létezett a rendszerben —
+  egy véletlenül felvitt vagy duplikált páciens (a quick-create és a
+  duplikáció-detektálás óta egyre könnyebben keletkező eset) örökre a
+  listákban maradt, visszaút nélkül.
+- **Megvalósítás:** a `PlanStorage` interfész első destruktív metódusa
+  (`deletePatient(patientDir)`) a teljes páciensmappát törli egy
+  prefix-seprésben. A törölhetőségi feltételt (nincs véglegesített terve,
+  nincs rá mutató aktív, mentetlen piszkozata, minden terv-lánca olvasható
+  volt) egy tiszta domain-őr dönti el (`paciensTorlesAkadaly()`), a
+  draft-hovatartozást a MEGLÉVŐ D48 `feloldPatientDir()`-rel felismerve,
+  nem új heurisztikával. Az elérési pont kizárólag a páciens-részletoldal
+  sticky fejlécének `⋯` menüje — a menüpont akadály esetén tiltott marad,
+  alatta rövid indoklással, nem tűnik el. Megerősítő dialógus, végleges
+  törlés — nincs „kuka”, nincs helyreállítás, nincs páciens-összevonás
+  (docs/02-domain-modell.md § Páciens- és terv-mappa,
+  docs/03-funkcionalis-spec.md § 10. Páciens részletei).

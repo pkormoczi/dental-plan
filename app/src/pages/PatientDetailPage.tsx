@@ -12,8 +12,19 @@
 
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, Callout, Skeleton, Tabs, Text } from '@radix-ui/themes';
-import { ArrowLeftIcon, CrossCircledIcon } from '@radix-ui/react-icons';
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Callout,
+  DropdownMenu,
+  Flex,
+  IconButton,
+  Skeleton,
+  Tabs,
+  Text,
+} from '@radix-ui/themes';
+import { ArrowLeftIcon, CrossCircledIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import { useNavGuard } from '../components/NavGuardContext';
 import PatientDetailHeader from '../components/PatientDetailHeader';
@@ -22,6 +33,8 @@ import PatientPlanChains from '../components/PatientPlanChains';
 import { loadPlanChainData, versionDataKey, type PlanChainData } from '../domain/planChainData';
 import { latestVersionAcrossPlans } from '../domain/planFolders';
 import { megjelenitettTorzsadat } from '../domain/paciensAdatok';
+import { paciensTorlesAkadaly, type TorlesAkadaly } from '../domain/paciensTorles';
+import { feloldPatientDir } from '../domain/torzsadatBetoltes';
 import type { PatientFolder, PatientMasterData } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import { ujTervForrasPaciensbol } from '../state/planIndulas';
@@ -30,11 +43,20 @@ import { useStorage } from '../storage/StorageContext';
 type DetailTab = 'adatai' | 'tervek';
 type EditorMod = 'nezet' | 'szerkesztes';
 
+// A DropdownMenu.Label szövege a törlés akadályára (backlog-41, D50) --
+// prezentáció, ezért itt él, nem a domain `paciensTorlesAkadaly()` mellett.
+const AKADALY_SZOVEG: Record<TorlesAkadaly, string> = {
+  'veglegesitett-terv': 'Véglegesített terve van',
+  'aktiv-piszkozat': 'Aktív piszkozat tartozik hozzá',
+  'nem-olvashato': 'Néhány terve nem olvasható',
+};
+
 export default function PatientDetailPage() {
   const { patientDir: rawPatientDir } = useParams<{ patientDir: string }>();
   const patientDir = rawPatientDir ?? '';
   const { storage } = useStorage();
-  const { settings, priceList, copyPlanIntoDraft } = useAppState();
+  const { settings, priceList, plan, vanMentetlenPiszkozat, piszkozatPatientDir, copyPlanIntoDraft } =
+    useAppState();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -109,6 +131,43 @@ export default function PatientDetailPage() {
       cancelled = true;
     };
   }, [storage, patientDir]);
+
+  // Melyik páciensmappához tartozik a doki JELENLEGI, mentetlen piszkozata
+  // (backlog-41, D50 2. döntés) -- a MEGLÉVŐ `feloldPatientDir()` (D48)
+  // resolverét hívja, nem új heurisztikát: `piszkozatPatientDir` (D37)
+  // elsőbbséggel, `plan.paciensId` tartalékkal, sosem dob.
+  const [draftPatientDir, setDraftPatientDir] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const dir = await feloldPatientDir(storage, piszkozatPatientDir, plan.paciensId);
+      if (!cancelled) setDraftPatientDir(dir);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [storage, piszkozatPatientDir, plan.paciensId]);
+
+  const sajatAktivPiszkozat = vanMentetlenPiszkozat && draftPatientDir === patientDir;
+  const torlesAkadaly = paciensTorlesAkadaly(chainData, sajatAktivPiszkozat);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Fire-and-forget, mint az AdatkezelesSection.tsx demó-törlő gombjai: a
+  // dialógus a kattintásra azonnal zárul, a hiba a lapon, a header alatt
+  // jelenik meg -- nincs toast (docs/07). Szándékosan NEM megy át a D38/D46
+  // discard guardon (3. döntés): a "Páciens adatai" tabon félbehagyott
+  // szerkesztés tárgytalanná válik, ha magát a pácienst töröljük.
+  async function performDelete() {
+    setDeleteError(null);
+    try {
+      await storage.deletePatient(patientDir);
+      navigate('/paciensek', { replace: true });
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'A páciens törlése váratlanul meghiúsult.');
+    }
+  }
 
   const latestOverall = chainData
     ? latestVersionAcrossPlans(chainData.plans, (planDir) => chainData.versionsByPlan[planDir] ?? [])
@@ -210,7 +269,59 @@ export default function PatientDetailPage() {
   return (
     <Box style={{ maxWidth: 900, margin: '0 auto' }}>
       {backLink}
-      <PatientDetailHeader adatok={displayedAdatok} />
+      <PatientDetailHeader
+        adatok={displayedAdatok}
+        actions={
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              {/* SZÁNDÉKOSAN "páciens műveletek", NEM "további műveletek" --
+                  az utóbbi (docs/07 sorbeli-akció konvenciója,
+                  PatientPlanChains.tsx) a `verzioMenupont()` teszt-helperben
+                  `document.body`-szinten, /további műveletek$/-mintával
+                  keres rá; ha ez a header-gomb is arra végződne, ütközne
+                  vele (két találat egy oldalon, App.test.tsx). Ez itt nem is
+                  sorbeli akció -- egyetlen példány van az oldalon
+                  (a lapon megjelenő EGY páciensre), nem listasorra. */}
+              <IconButton
+                size="1"
+                variant="soft"
+                color="gray"
+                aria-label={`${displayedAdatok.nev} — páciens műveletek`}
+              >
+                <DotsHorizontalIcon />
+              </IconButton>
+            </DropdownMenu.Trigger>
+            {/* onCloseAutoFocus: a menü záráskor visszavenné a fókuszt a
+                triggerre, és ezzel elhalászná azt a megerősítő AlertDialog
+                elől, ami ugyanabban a tickben nyílik (PatientPlanChains.tsx
+                mintája). */}
+            <DropdownMenu.Content size="1" onCloseAutoFocus={(e) => e.preventDefault()}>
+              <DropdownMenu.Item
+                color="red"
+                disabled={torlesAkadaly !== null}
+                onSelect={() => setDeleteOpen(true)}
+              >
+                Páciens törlése
+              </DropdownMenu.Item>
+              {torlesAkadaly && (
+                <>
+                  <DropdownMenu.Separator />
+                  <DropdownMenu.Label>{AKADALY_SZOVEG[torlesAkadaly]}</DropdownMenu.Label>
+                </>
+              )}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        }
+      />
+
+      {deleteError && (
+        <Callout.Root color="red" size="1" mb="4">
+          <Callout.Icon>
+            <CrossCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>{deleteError}</Callout.Text>
+        </Callout.Root>
+      )}
 
       <Tabs.Root value={tab} onValueChange={(v) => requestTab(v === 'adatai' ? 'adatai' : 'tervek')}>
         <Tabs.List mb="4">
@@ -263,8 +374,8 @@ export default function PatientDetailPage() {
                   prev
                     ? {
                         ...prev,
-                        plans: prev.plans.map((plan) =>
-                          plan.dirName === planDir ? { ...plan, tervCim } : plan,
+                        plans: prev.plans.map((p) =>
+                          p.dirName === planDir ? { ...p, tervCim } : p,
                         ),
                       }
                     : prev,
@@ -283,6 +394,28 @@ export default function PatientDetailPage() {
         description="A Páciens adatai lapon van nem mentett módosításod. Ha lapot váltasz, ez elvész — csak a Mentés gomb rögzíti a törzsadatban. Biztosan folytatod?"
         confirmLabel="Váltás, módosítás elvetésével"
       />
+
+      <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Páciens törlése</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            „{displayedAdatok.nev}” végleges törlése — a törzsadata és az összes hozzá tartozó fájl
+            elvész. A művelet nem vonható vissza.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button color="red" onClick={() => void performDelete()}>
+                Törlés
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Box>
   );
 }

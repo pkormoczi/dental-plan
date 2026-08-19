@@ -75,4 +75,15 @@ export interface PlanStorage {
     nev: string,
     kezdoAdatok?: Pick<Paciens, 'szuletesiIdo' | 'telefon'>,
   ): Promise<PatientFolder>;
+  /**
+   * A teljes páciensmappa törlése (backlog-41, D50) -- az interfész ELSŐ
+   * destruktív metódusa. Az előfeltétel (nincs véglegesített terve, nincs
+   * rá mutató aktív draft) NEM ennek a metódusnak a felelőssége, hanem a
+   * hívóé, `domain/paciensTorles.ts` `paciensTorlesAkadaly()`-jával
+   * eldöntve -- ez itt feltétel nélkül végrehajt. Ismeretlen `patientDir`-re
+   * **dob**, nem no-op: egy néma nyelés elfedne egy hívói hibát egy
+   * visszafordíthatatlan műveletnél (ellentétben pl. a `loadPatientData`
+   * `null`-jával, ami egy VÁRT, gyakori állapot).
+   */
+  deletePatient(patientDir: string): Promise<void>;
 }

@@ -1154,6 +1154,9 @@ szerkesztő mezői/mentés-szabályai ott vannak leírva (D43).
   kerül oda, ha legalább egy terve is lesz.
 - A nyomtatvány (PDF) nem változik: ez a képernyő SOHA nem forrása a
   PDF-nek (D7, D33).
+- **Törlés** (D50): a lista élőben (`storage.listPatients()`) tölt be,
+  tehát egy törölt páciens a törlés után azonnal eltűnik innen is —
+  magát a törlés akcióját lásd § 10, ez a képernyő nem kínálja soronként.
 
 ---
 
@@ -1232,3 +1235,16 @@ maradnak — csak a bennük lévő kereszt-linkek mutatnak ide.
   EGYETLEN útja a tab-váltásnak ezen az oldalon, D44). A megosztott
   primitíven (`useDiscardGuard`/`DiscardChangesDialog`) megy át —
   megerősítést kér, a `Kezelési tervek` tab felé váltás irányban.
+- **Páciens törlése** (D50): a sticky fejléc jobb szélén egy `⋯` menü
+  (`components/PatientDetailHeader.tsx` `actions` propja) EGYETLEN
+  ponttal, „Páciens törlése” — ez az EGYETLEN elérési pont az egész
+  appban, nincs a Pácienslista sorain vagy a Korábbi tervek
+  verziósorainak `⋯` menüjén. A pont csak akkor aktív, ha a páciensnek
+  nincs véglegesített terve, nincs rá mutató aktív, mentetlen piszkozata,
+  és minden terv-lánca/verziója olvasható volt; egyébként tiltott, alatta
+  egy rövid indoklással („Véglegesített terve van” / „Aktív piszkozat
+  tartozik hozzá” / „Néhány terve nem olvasható”). Kattintásra egy
+  megerősítő `AlertDialog` nevezi meg a pácienst és mondja ki, hogy a
+  művelet végleges; megerősítés után a teljes páciensmappa törlődik
+  (`storage.deletePatient()`), és a doki a Pácienslistára kerül. Nincs
+  „kuka”, nincs helyreállítás, nincs páciens-összevonás.

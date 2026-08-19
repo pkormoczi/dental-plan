@@ -13,17 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 41. tétel — Páciens törlése
-  (a `backlog/redesign/` redesign-döntéssorozat DP-017 tétele) — törlési
-  képesség SEHOL nem létezik ma (a `PlanStorage` interfésznek nincs
-  törlő metódusa). Ez a tétel egy `deletePatient` storage-metódust, egy
-  "van véglegesített terve" ellenőrzést és egy `Plan.paciensId`-alapú
-  "van rá mutató aktív draft" ellenőrzést épít, a törlést kizárólag a
-  30. tétel páciens-részletoldalának overflow menüjébe kötve, megerősítő
-  dialóggal, merge nélkül. Függ a 30. tételtől. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-41-paciens-torles-terv.md`
-
 ---
 ## KIDOLGOZÁSRA VÁR
 

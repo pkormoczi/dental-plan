@@ -106,6 +106,15 @@ igazsága változatlanul a `terv.json` (D7).
   (D29) egy sérült/ismeretlen alakú érték némán kimarad a listából, nem
   hibát dob a betöltéskor (`app/src/domain/paciensAktivitas.ts`
   `ervenyesAktivitas`).
+- **Törlés (D50, `docs/03-funkcionalis-spec.md` § 10. Páciens részletei):**
+  a törlés egysége a teljes páciensmappa (`paciens.json` +
+  `paciens-adatok.json` + minden terv-lánc/verziómappa alatta) —
+  KIZÁRÓLAG akkor, ha a mappa alatt sehol nincs `statusz === 'VEGLEGES'`
+  verzió, és nincs rá mutató aktív, mentetlen piszkozat
+  (`app/src/domain/paciensTorles.ts` `paciensTorlesAkadaly()`). Végleges,
+  nincs "kuka"/helyreállítás — a D4 (verziómappa soha felül nem írható)
+  adatintegritási korlátjának természetes kiterjesztése: egy aláírt/
+  kiadott dokumentum mögül nem törölhető a páciens
 
 ### Páciens-szintű törzsadat (`paciens-adatok.json`, D33)
 

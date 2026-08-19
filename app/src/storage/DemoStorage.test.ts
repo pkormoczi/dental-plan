@@ -432,6 +432,54 @@ describe('DemoStorage', () => {
     });
   });
 
+  describe('deletePatient (backlog-41, D50)', () => {
+    it('törli a páciens minden kulcsát -- paciens.json, paciens-adatok.json, terv-cimke.json, terv.json, pdf', async () => {
+      const folder = await storage.createPatient('Törlendő Páciens');
+      const plan = makeBlankPlan({ paciensId: folder.paciensId });
+      const ref = await storage.savePlan(plan, new Uint8Array([1]));
+      await storage.savePlanLabel(ref.patientDir, ref.planDir, 'Egyedi címke');
+
+      await storage.deletePatient(folder.dirName);
+
+      const patients = await storage.listPatients();
+      expect(patients.some((p) => p.dirName === folder.dirName)).toBe(false);
+      expect(await storage.loadPatientData(folder.dirName)).toBeNull();
+      await expect(storage.loadPlan(ref)).rejects.toThrow();
+
+      // Nem elég, hogy a listPatients ne találja -- ténylegesen egyetlen
+      // dp:paciensek/<dir>/ kulcs se maradhat, különben egy jövőbeli
+      // listFileTree/readRawFile még mindig mutatná.
+      const remaining: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)!;
+        if (key.startsWith(`dp:paciensek/${folder.dirName}/`)) remaining.push(key);
+      }
+      expect(remaining).toEqual([]);
+    });
+
+    // A záró `/` a prefixben nem díszítés: enélkül a lenti "Kis-Bela_abc123"
+    // törlése "Kis-Bela_abc123-Junior"-t is elvinné, mert a puszta
+    // string-előtag illeszkedne.
+    it('egy MÁSIK páciens nem sérül, akinek a mappaneve a töröltnek karakter-előtagja', async () => {
+      const rovid = await storage.createPatient('Kis Béla');
+      const hosszabbDir = `${rovid.dirName}-Junior`;
+      localStorage.setItem(
+        `dp:paciensek/${hosszabbDir}/paciens.json`,
+        JSON.stringify({ schemaVersion: 1, paciensId: 'zzzzzz', nev: 'Kis Béla Junior' }),
+      );
+
+      await storage.deletePatient(rovid.dirName);
+
+      const patients = await storage.listPatients();
+      expect(patients.some((p) => p.dirName === rovid.dirName)).toBe(false);
+      expect(patients.some((p) => p.dirName === hosszabbDir)).toBe(true);
+    });
+
+    it('ismeretlen patientDir-re dob -- egy néma no-op elfedne egy hívói hibát egy visszafordíthatatlan műveletnél', async () => {
+      await expect(storage.deletePatient('Nincs-Ilyen_zzzzzz')).rejects.toThrow();
+    });
+  });
+
   describe('utolsoAktivitas (D39)', () => {
     it('createPatient "letrehozva" aktivitást ír', async () => {
       const folder = await storage.createPatient('Aktivitás Teszt');

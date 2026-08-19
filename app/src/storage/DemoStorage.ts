@@ -682,4 +682,27 @@ export class DemoStorage implements PlanStorage {
       return { dirName: patientDir, paciensId, nev, utolsoAktivitas };
     });
   }
+
+  /**
+   * A teljes páciensmappa törlése (backlog-41, D50) -- egyetlen
+   * prefix-seprés, mert a `listPatients()` BÁRMELY, a mappa alatti kulcsból
+   * levezeti a páciens létezését (lásd ott): egy részleges törlés
+   * dirnév-ből visszafejtett nevű szellem-pácienst hagyna vissza. A záró
+   * `/` azért kell a prefixben, hogy egy másik páciens mappaneve, aminek ez
+   * a `patientDir` az előtagja, ne essen bele. Az `eachKey` előbb
+   * snapshotol, tehát a `removeItem` a callbackben biztonságos.
+   */
+  async deletePatient(patientDir: string): Promise<void> {
+    return this.enqueue(async () => {
+      const prefix = `${PATIENTS_PREFIX}${patientDir}/`;
+      const keys: string[] = [];
+      this.eachKey((key) => {
+        if (key.startsWith(prefix)) keys.push(key);
+      });
+      if (keys.length === 0) {
+        throw new Error(`Nincs ilyen páciens: ${patientDir}`);
+      }
+      keys.forEach((key) => localStorage.removeItem(key));
+    });
+  }
 }

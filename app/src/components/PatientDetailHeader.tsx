@@ -4,19 +4,27 @@
 // réteg. Az adatforrás a `megjelenitettTorzsadat()` (domain/paciensAdatok.ts,
 // D33) eredménye, változtatás nélkül -- a fejléc csak megjeleníti.
 
+import type { ReactNode } from 'react';
 import { Flex, Text } from '@radix-ui/themes';
 import { formatShortDate } from '../domain/date';
 import type { PatientMasterData } from '../domain/types';
 import { t } from '../design/tokens';
 
-export default function PatientDetailHeader({ adatok }: { adatok: PatientMasterData }) {
+export default function PatientDetailHeader({
+  adatok,
+  actions,
+}: {
+  adatok: PatientMasterData;
+  /** Pl. a páciens-törlés `⋯` menüje (backlog-41) -- opcionális, hogy a komponens display-only maradjon a hívó nélkül. */
+  actions?: ReactNode;
+}) {
   const dob = adatok.szuletesiIdo ? formatShortDate(adatok.szuletesiIdo, 'hu') : null;
   const meta = [dob, adatok.telefon].filter(Boolean).join(' · ');
 
   return (
     <Flex
-      direction="column"
-      gap="1"
+      justify="between"
+      align="start"
       py="3"
       mb="4"
       data-testid="patient-detail-header"
@@ -32,14 +40,17 @@ export default function PatientDetailHeader({ adatok }: { adatok: PatientMasterD
         borderBottom: `1px solid ${t.uiLine}`,
       }}
     >
-      <Text size="4" weight="bold" style={{ color: t.brand }}>
-        {adatok.nev || 'Névtelen páciens'}
-      </Text>
-      {meta && (
-        <Text size="2" style={{ color: t.uiTextMuted }}>
-          {meta}
+      <Flex direction="column" gap="1">
+        <Text size="4" weight="bold" style={{ color: t.brand }}>
+          {adatok.nev || 'Névtelen páciens'}
         </Text>
-      )}
+        {meta && (
+          <Text size="2" style={{ color: t.uiTextMuted }}>
+            {meta}
+          </Text>
+        )}
+      </Flex>
+      {actions}
     </Flex>
   );
 }

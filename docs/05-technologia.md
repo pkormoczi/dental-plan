@@ -39,6 +39,7 @@ interface PlanStorage {
   loadPatientData(patientDir: string): Promise<PatientMasterData | null>  // null = nincs törzsadat, élő fallback
   savePatientData(patientDir: string, data: PatientMasterData): Promise<void>
   createPatient(nev: string, kezdoAdatok?: Pick<Paciens, 'szuletesiIdo' | 'telefon'>): Promise<PatientFolder>  // terv nélküli páciens, D41
+  deletePatient(patientDir: string): Promise<void>  // teljes páciensmappa törlése, D50 -- előfeltétel a hívó felelőssége
 }
 ```
 

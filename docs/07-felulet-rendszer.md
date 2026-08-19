@@ -98,6 +98,20 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   `DropdownMenu.Content` `onCloseAutoFocus`-át meg kell előzni, különben a
   záró menü visszaveszi a fókuszt a dialógus elől (lásd
   `pages/PlanHistoryPage.tsx`).
+- Egy-entitásos (nem sorbeli) `⋯` menü (pl. a páciens-részletoldal sticky
+  fejlécének törlés-menüje, D50, `pages/PatientDetailPage.tsx`): ugyanaz a
+  `DropdownMenu` felépítés, de az `aria-label` SZÁNDÉKOSAN NEM a fenti
+  soros-akció „...további műveletek” végződésű konvencióját követi (itt
+  nincs több azonos-nevű sor, amitől meg kellene különböztetni) — elég
+  egyedi, de úgy, hogy NE illeszkedjen a sorbeli minta tesztjeinek
+  `/további műveletek$/` lekérdezésére (`testQueries.ts` `verzioMenupont`)
+  — két találat lenne egy oldalon. Egy
+  feltételesen letiltott, kockázatos menüpont (pl. „Páciens törlése", ha a
+  törlési feltétel nem teljesül) `DropdownMenu.Item disabled` marad
+  látható állapotban — nem tűnik el —, alatta egy `DropdownMenu.Separator`
+  + `DropdownMenu.Label` rövid indoklással, hogy a doki lássa, miért nem
+  törölhető, nem csak azt, hogy nem törölhető. A destruktív menüpont
+  `color="red"`.
 - Lenyíló/összecsukható panel (pl. a tervszerkesztő „Érintett fogak"
   fogtérkép-panelje, `components/ToothChartPanel.tsx`): egy `useState`
   boolean + feltételes render, Radix Themes `Button` triggerrel
