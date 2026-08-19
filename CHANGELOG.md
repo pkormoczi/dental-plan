@@ -2,6 +2,80 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. augusztus 19.
+
+- A tervkészítés lépéseinél (Páciens adatlap → Terv szerkesztő → Előnézet) mostantól egy állandó
+  "morzsa" és egy kattintható, 3-lépéses folyamatjelző látható a tetején, bármelyik korábbi
+  lépésre bármikor vissza lehet lépni. Ezeknek a lépéseknek eddig önálló menüpontjuk volt a fő
+  navigációban (Páciens / Terv szerkesztő / Előnézet / Korábbi tervek) — ezek most eltűntek
+  onnan, helyettük a folyamat saját lépésjelzője vezet végig rajtuk. A véglegesítés utáni
+  "Korábbi tervek" gomb mostantól egyenesen a mentett páciens saját részletoldalára visz.
+- Piszkozat-kezelés pontosabb lett: a Kezdőlap "Megnyitás" gombja mindig a piszkozat pontosan ott
+  folytatódó lépésére navigál (nem találgat), a szerkesztőben megjelent egy "Piszkozat mentve"
+  jelzés, és egy gombbal a teljes piszkozat eldobható (megerősítéssel védve a véletlen kattintás
+  ellen).
+- Egységesítettük a Mentés/Mégse gombokat és a "biztosan elveted a nem mentett módosításokat?"
+  megerősítő ablakot minden szerkesztő felületen (Páciens adatlap, Beállítások Nyomtatvány
+  szövegei), és ez a védelem mostantól a főmenüre kattintásra is kiterjed: ha félbehagyott
+  szerkesztés közben másik főmenüpontra váltanánk, a program rákérdez, mielőtt elveszne a
+  módosítás. Eddig egy fül-váltás a páciens-részletoldalon néha némán elvesztette a félbehagyott
+  szerkesztést — ezt is javítottuk.
+- A Kezdőlap új felépítést kapott: egy fő "+ Új kezelési terv" gomb, az aktív (mentetlen)
+  piszkozat kártyája, és legfeljebb 5, legutóbb aktív páciens neve/születési dátuma/telefonszáma,
+  mellette hogy mikor volt utoljára rajta érdemi tevékenység (pl. "2 órája", "tegnap"). A két
+  demó-gomb (adat visszaállítása / minden adat törlése) átkerült a DEMO oldal új
+  "Adatkezelés" füljére.
+- Az "Új kezelési terv indítása" köztes páciensválasztó mostantól automatikusan a keresőmezőre
+  ugorva nyílik meg, üres keresésnél a legutóbb aktív pácienseket ajánlja, gépelés közben
+  relevancia szerint rendez, és egérhasználat nélkül, nyilakkal/Enterrel/Esc-kel is végigjárható.
+  Ha nincs találat, egy "Új páciens" opció azonnal indítja az új páciens felvételét a már
+  begépelt névvel.
+- Új páciens gyors felvétele egységesült: az "Új kezelési terv indítása" ág és a Páciensek lista
+  "+ Új páciens" gombja mostantól ugyanazt a felugró ablakot nyitja meg, és csak sikeres mentés
+  után lép tovább — így már a terv elkészítése előtt létrejön a valódi páciensrekord.
+- Új páciens felvételekor vagy átnevezésekor a program mostantól figyelmeztet, ha hasonló nevű
+  (vagy azonos születési dátumú/telefonszámú) páciens már szerepel a rendszerben — ezzel
+  elkerülhető a véletlenül duplán felvitt páciens.
+- A Páciensek lista kereshető lett születési dátumra és telefonszámra is (eddig csak névre
+  lehetett), és oszlopos táblázat formátumot kapott (Név / Született / Telefon fejléccel); a
+  kereső szövege és a görgetési pozíció is megmarad, ha "Vissza" gombbal térünk rá vissza.
+- A Páciens adatai fül mostantól alapból csak megtekinthető, és külön "Szerkesztés" gombbal
+  váltható szerkeszthetővé; hibás e-mail cím vagy érvénytelen születési dátum megadásakor a
+  program figyelmeztet.
+- A Páciens adatlapon megjelenik, ha a páciens tárolt elérhetőségei eltérnek egy korábban mentett
+  tervben szereplő adatoktól, és felkínálja a kétirányú frissítést; véglegesítéskor egy
+  nem-kötelező (át lehet ugrani) figyelmeztetés is jelez ilyen eltérést.
+- A páciens részletoldal fejlécének új menüjéből törölhető egy páciens, ha nincs véglegesített
+  terve és nincs rá mutató mentetlen piszkozata sem — egyéb esetben a program megmondja, miért
+  nem törölhető.
+- Javítottunk egy hibát, ami miatt egy páciens terv-láncának fejléce a legrégebbi (nem a
+  legfrissebb) verzió dátumát mutatta. A terv-láncok mostantól a legfrissebb véglegesített verzió
+  szerint, csökkenő sorrendben jelennek meg, alapból csak a legfrissebb van kinyitva, és az
+  aktív, még mentetlen piszkozat egy jól látható, önálló blokkban jelenik meg a lista tetején. Az
+  "Új verzió" indítása mostantól csak a lánc legfrissebb verziójáról lehetséges, a betöltött
+  piszkozat pedig helyesen "Piszkozat" jelzést kap (eddig előfordulhatott, hogy tévesen
+  "véglegesítve" jelvényt mutatott egy még el sem mentett módosításnál).
+- Meglévő pácienshez induló új terv-lánc mostantól örökli a doki utolsó véglegesített ajánlatának
+  nyelvét és pénznemét — pl. ha egy páciensnek korábban németül/euróban készült ajánlata, az új
+  terve is ezzel indul, nem kell minden alkalommal újra átállítani.
+- A korábbi, önálló "Korábbi tervek" oldal (az összes páciens minden tervét egy nézetben mutató
+  lista) most a DEMO oldal új füleként érhető el; a régi link automatikusan ide irányít át.
+- A Beállítások oldal 3 fülre bomlott (Rendelő adatai / Nyomtatványok / Egyéb), mindegyik saját
+  Mentés/Mégse gombpárral — a korábbi, leütésenkénti automatikus mentés ezen az oldalon
+  megszűnt (az Árlista adminban változatlan maradt). A nem használt Logó kártya eltűnt a
+  Beállításokból.
+- Bővült a DEMO adatállomány: a korábbi 3 minta-páciens helyett most 22 érhető el, többféle
+  esettel (több nyelv/pénznem, kedvezmény, kiskorú páciens stb.) a funkciók kipróbálásához.
+
+## 2026. augusztus 18.
+
+- A fő navigáció átalakult: mostantól 5 fő menüpont van (Kezdőlap, Páciensek, Kezelések és árak,
+  Beállítások, DEMO). Az eddigi "Árlista admin" neve "Kezelések és árak"-ra változott.
+- Megjelent egy új DEMO oldal, amely egy helyen, fülekkel fogja össze a korábbi
+  fájlrendszer-nézetet és a Kezdőlapról ide költözött Funkciólista/Változásnapló kártyákat.
+- Új, önálló páciens részletoldal jött létre két füllel (Páciens adatai / Kezelési tervek) —
+  innen egy kattintással váltható a páciens elérhetőségei és a korábbi tervei között.
+
 ## 2026. augusztus 12.
 
 - Megjelent egy új „Páciensek” menüpont: itt a páciens elérhetőségei (telefon, e-mail, lakcím,
