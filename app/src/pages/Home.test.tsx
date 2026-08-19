@@ -18,7 +18,9 @@ import { TestProviders } from '../testUtils';
 import { AppStateProvider } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
-import type { Plan } from '../domain/types';
+import { legutobbAktivPaciensek, RECENT_PACIENS_LIMIT } from '../domain/paciensAktivitas';
+import { seedPatientData } from '../storage/seed/plans';
+import type { AktivitasTipus, Plan } from '../domain/types';
 
 function makeDirtyPlan(overrides: Partial<Plan> = {}): Plan {
   return {
@@ -107,6 +109,27 @@ function findSeedKey(dirReszlet: string, fajlnev: string): string {
   }
   throw new Error(`nincs "${fajlnev}" kulcs "${dirReszlet}"-hez`);
 }
+
+/** A demó-készlet MINDEN pácienséről leveszi az `utolsoAktivitas` mezőt -- a 22 páciensre bővített
+ * seed (D40) miatt a "teljesen üres recents" állapot teszteléséhez már nem elég 1-3 nevesített pácienst kezelni. */
+function stripAllUtolsoAktivitas() {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)!;
+    if (key.startsWith('dp:paciensek/') && key.endsWith('/paciens.json')) {
+      const raw = JSON.parse(localStorage.getItem(key)!);
+      delete raw.utolsoAktivitas;
+      localStorage.setItem(key, JSON.stringify(raw));
+    }
+  }
+}
+
+/** A `paciensAktivitas.ts` modul-privát `AKTIVITAS_CIMKE` térképének tesztbeli tükre -- csak a
+ * várt szöveg összeállításához, nem a döntési logikához (azt `paciensAktivitas.test.ts` fedi). */
+const AKTIVITAS_CIMKE: Record<AktivitasTipus, string> = {
+  letrehozva: 'Páciens létrehozva',
+  'torzsadat-mentve': 'Törzsadat mentve',
+  'terv-veglegesitve': 'Terv véglegesítve',
+};
 
 // A `TestProviders` bare MemoryRouter-je nem vált route-ot (lásd fenti
 // D29-komment) -- ahol a "Megnyitás" TÉNYLEGES célja számít (D37
@@ -256,18 +279,25 @@ describe('Home -- legutóbbi páciensek (D39)', () => {
     await seeder.init();
   });
 
-  it('a friss seeden három recent sort mutat, a legutóbbi aktivitás szerint, aktivitás-címkével', async () => {
+  // Adatvezérelt: a várt sorrendet/tartalmat magából a seedből
+  // (`legutobbAktivPaciensek`) számolja ki, nem konkrét neveket hardkódol --
+  // így a demó-készlet bővítése (backlog-35 utáni, 22 páciensre bővített
+  // seed, D40) nem töri meg.
+  it('a friss seeden a limitnek megfelelő recent sort mutat, a legutóbbi aktivitás szerint, aktivitás-címkével', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patients = await seeder.listPatients();
+    const top = legutobbAktivPaciensek(patients, RECENT_PACIENS_LIMIT);
+
     renderHome();
     await screen.findByText('Legutóbbi páciensek');
 
     const links = await screen.findAllByRole('link');
-    expect(links).toHaveLength(3);
-    expect(links[0]).toHaveTextContent('Kovács János');
-    expect(links[0]).toHaveTextContent('Terv véglegesítve');
-    expect(links[1]).toHaveTextContent('Nagy Éva');
-    expect(links[1]).toHaveTextContent('Törzsadat mentve');
-    expect(links[2]).toHaveTextContent('Tóth Zoltán');
-    expect(links[2]).toHaveTextContent('Terv véglegesítve');
+    expect(links).toHaveLength(top.length);
+    top.forEach((p, i) => {
+      expect(links[i]).toHaveTextContent(p.nev);
+      expect(links[i]).toHaveTextContent(AKTIVITAS_CIMKE[p.utolsoAktivitas!.tipus]);
+    });
   });
 
   it('egy páciens MEGNYITÁSA (kattintás) nem befolyásolja, milyen sorrendben és tartalommal jelenik meg a lista', async () => {
@@ -285,12 +315,7 @@ describe('Home -- legutóbbi páciensek (D39)', () => {
   });
 
   it('utolsoAktivitas nélküli pácienseknél az üres állapot jelenik meg', async () => {
-    for (const dirReszlet of ['Kovács', 'Nagy', 'Tóth']) {
-      const key = findSeedKey(dirReszlet, 'paciens.json');
-      const raw = JSON.parse(localStorage.getItem(key)!);
-      delete raw.utolsoAktivitas;
-      localStorage.setItem(key, JSON.stringify(raw));
-    }
+    stripAllUtolsoAktivitas();
 
     renderHome();
     expect(await screen.findByText(/Még nincs mentett munkád/)).toBeInTheDocument();
@@ -298,15 +323,30 @@ describe('Home -- legutóbbi páciensek (D39)', () => {
   });
 
   it('egy páciens sérült paciens-adatok.json-ja mellett a sora "⚠ adat nem olvasható"-t mutat, a többi érintetlen', async () => {
-    const key = findSeedKey('Nagy', 'paciens-adatok.json');
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patients = await seeder.listPatients();
+    const top = legutobbAktivPaciensek(patients, RECENT_PACIENS_LIMIT);
+    // A sérült-fájl demó csak lezárt törzsadatú (paciens-adatok.json-nal
+    // rendelkező) pácienst érinthet -- a recentsben lévő, patientData-val
+    // rendelkezők közül az elsőt választjuk, hogy a teszt a demó-készlet
+    // jövőbeli bővítésével is stabil maradjon.
+    const serult = top.find((p) => seedPatientData.some((d) => d.patientDir === p.dirName));
+    if (!serult) throw new Error('a teszthez legalább egy, a recentsben lévő, törzsadatos páciens kell');
+    const key = findSeedKey(serult.dirName, 'paciens-adatok.json');
     localStorage.setItem(key, 'not valid json {{{');
 
     renderHome();
     const links = await screen.findAllByRole('link');
-    expect(links).toHaveLength(3);
-    expect(links[1]).toHaveTextContent('Nagy Éva');
-    expect(links[1]).toHaveTextContent('⚠ adat nem olvasható');
-    expect(links[0]).not.toHaveTextContent('⚠ adat nem olvasható');
-    expect(links[2]).not.toHaveTextContent('⚠ adat nem olvasható');
+    expect(links).toHaveLength(top.length);
+    const serultIndex = top.findIndex((p) => p.dirName === serult.dirName);
+    links.forEach((link, i) => {
+      if (i === serultIndex) {
+        expect(link).toHaveTextContent(serult.nev);
+        expect(link).toHaveTextContent('⚠ adat nem olvasható');
+      } else {
+        expect(link).not.toHaveTextContent('⚠ adat nem olvasható');
+      }
+    });
   });
 });

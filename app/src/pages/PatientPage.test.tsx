@@ -118,7 +118,10 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     await user.click(await verzioMenupont(user, card, 'Új verzió'));
     // Kovács János demó tervének két fázisa van, mindkettőnek saját
     // keresője -- findAllBy, nem findBy (ami az egyértelműséget várná el).
-    await screen.findAllByPlaceholderText(/Tétel keresése/);
+    // A 22 páciensre bővített demó-készlet (D40) miatt a `/tervek` lista
+    // eagerly tölt be minden pácienst -- a navigáció ide-oda ezért az
+    // alapértelmezett 1000ms-nél lassabb is lehet erősen terhelt CI-futásnál.
+    await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
 
     await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
 

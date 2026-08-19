@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DemoStorage } from './DemoStorage';
 import type { DemoNode } from './demoFileTree';
 import { VersionConflictError } from './paths';
+import { seedPatients } from './seed/plans';
 import type { Plan } from '../domain/types';
 
 function makeBlankPlan(overrides: Partial<Plan> = {}): Plan {
@@ -456,10 +457,16 @@ describe('DemoStorage', () => {
       expect(record?.utolsoAktivitas).toBeUndefined();
     });
 
-    it('resetDemoData után mindhárom seed páciensnek van utolsoAktivitas-a', async () => {
+    // D39/D40: a demó-készlet egy páciense (Császár Tibor) SZÁNDÉKOSAN nem
+    // kap utolsoAktivitas-t -- egy legacy-migrációt szimuláló edge case
+    // (lásd storage/seed/plans.ts), ezért a várt darabszámot a seed
+    // forrásából számoljuk, nem "mindenki"-t állítunk.
+    it('resetDemoData után a seed pácienseknek pontosan a szándékolt köre kap utolsoAktivitas-t', async () => {
       storage.resetDemoData();
       const patients = await storage.listPatients();
-      expect(patients.every((p) => p.utolsoAktivitas != null)).toBe(true);
+      const vartAktivDbSzama = seedPatients.filter(({ record }) => record.utolsoAktivitas != null).length;
+      expect(patients.filter((p) => p.utolsoAktivitas != null)).toHaveLength(vartAktivDbSzama);
+      expect(patients.some((p) => p.utolsoAktivitas == null)).toBe(true);
     });
   });
 

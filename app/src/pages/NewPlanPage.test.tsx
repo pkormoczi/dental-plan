@@ -20,6 +20,7 @@ import NewPlanPage from './NewPlanPage';
 import { TestProviders } from '../testUtils';
 import { DemoStorage } from '../storage/DemoStorage';
 import { useAppState } from '../state/AppState';
+import { legutobbAktivPaciensek, RECENT_PACIENS_LIMIT } from '../domain/paciensAktivitas';
 import type { Plan } from '../domain/types';
 
 function DraftProbe() {
@@ -123,34 +124,47 @@ describe('NewPlanPage', () => {
     expect(input).toHaveFocus();
   });
 
+  // Adatvezérelt: a várt top-5-öt magából a seedből (`legutobbAktivPaciensek`)
+  // számolja ki, nem konkrét neveket hardkódol -- így a demó-készlet
+  // bővítése (backlog-35 utáni, 22 páciensre bővített seed) nem töri meg.
   it('kezdetben a legutóbbi pácienseket sorolja fel, keresésre szűkíti a találatokat', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patients = await seeder.listPatients();
+    const top5 = legutobbAktivPaciensek(patients, RECENT_PACIENS_LIMIT);
+    const nemTop = patients.find((p) => !top5.some((t) => t.dirName === p.dirName));
+    if (!nemTop) throw new Error('a teszthez legalább egy, a recentsből kimaradó páciens kell');
+
     const user = userEvent.setup();
     renderNewPlan();
 
-    expect(await screen.findByRole('button', { name: /Kovács János/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Nagy Éva/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Tóth Zoltán/ })).toBeInTheDocument();
+    for (const p of top5) {
+      expect(await screen.findByRole('button', { name: new RegExp(p.nev) })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('button', { name: new RegExp(nemTop.nev) })).not.toBeInTheDocument();
 
-    await user.type(screen.getByRole('textbox', { name: 'Meglévő páciens keresése' }), 'nagy');
-    expect(screen.queryByRole('button', { name: /Kovács János/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Nagy Éva' })).toBeInTheDocument();
+    await user.type(screen.getByRole('textbox', { name: 'Meglévő páciens keresése' }), nemTop.nev);
+    expect(await screen.findByRole('button', { name: nemTop.nev })).toBeInTheDocument();
   });
 
   it('0 karakternél a recents recency-sorrendben áll, nem alfabetikusan', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
-    // Friss aktivitás -- alfabetikusan utolsó, recency szerint első.
+    // Friss aktivitás -- alfabetikusan utolsó, recency szerint minden
+    // meglévő seed-pácienst megelőz.
     await seeder.createPatient('Zsolt Zoltán');
+    const patients = await seeder.listPatients();
+    const vartSorrend = legutobbAktivPaciensek(patients, RECENT_PACIENS_LIMIT).map((p) => p.nev);
+    expect(vartSorrend[0]).toBe('Zsolt Zoltán');
 
     renderNewPlan();
 
-    const nevek = ['Zsolt Zoltán', 'Kovács János', 'Nagy Éva', 'Tóth Zoltán'];
-    await screen.findByRole('button', { name: /Tóth Zoltán/ });
+    await screen.findByRole('button', { name: new RegExp(vartSorrend[vartSorrend.length - 1]) });
     const gombok = screen.getAllByRole('button');
     const sorrend = gombok
-      .map((b) => nevek.find((n) => b.textContent?.includes(n)))
+      .map((b) => vartSorrend.find((n) => b.textContent?.includes(n)))
       .filter((n): n is string => n != null);
-    expect(sorrend).toEqual(nevek);
+    expect(sorrend).toEqual(vartSorrend);
   });
 
   it('utolsoAktivitas nélküli páciens kimarad a recentsből, de kereséssel megtalálható', async () => {
@@ -202,41 +216,43 @@ describe('NewPlanPage', () => {
   it('nyíl le majd Enter a második találatot választja', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
-    await seeder.createPatient('Anna Teszt');
-    await seeder.createPatient('Anna Vizsga');
-    await seeder.createPatient('Anna Zoltán');
+    // "Xilofon" előtag -- egy valós Hungarian keresztnévvel (pl. "Anna")
+    // ütközne a seedben lévő "Szabó Anna"/"Gál Hanna" pácienssel.
+    await seeder.createPatient('Xilofon Teszt');
+    await seeder.createPatient('Xilofon Vizsga');
+    await seeder.createPatient('Xilofon Zoltán');
 
     const user = userEvent.setup();
     renderNewPlan();
 
     const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
-    await user.type(input, 'anna');
-    await screen.findByRole('button', { name: 'Anna Teszt' });
+    await user.type(input, 'xilofon');
+    await screen.findByRole('button', { name: 'Xilofon Teszt' });
 
     await user.keyboard('{ArrowDown}{Enter}');
 
     expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
-    expect(screen.getByTestId('draft-nev')).toHaveTextContent('Anna Vizsga');
+    expect(screen.getByTestId('draft-nev')).toHaveTextContent('Xilofon Vizsga');
   });
 
   it('nyíl fel a lista elejéről az utolsó találatra ugrik (körbeér)', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
-    await seeder.createPatient('Anna Teszt');
-    await seeder.createPatient('Anna Vizsga');
-    await seeder.createPatient('Anna Zoltán');
+    await seeder.createPatient('Xilofon Teszt');
+    await seeder.createPatient('Xilofon Vizsga');
+    await seeder.createPatient('Xilofon Zoltán');
 
     const user = userEvent.setup();
     renderNewPlan();
 
     const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
-    await user.type(input, 'anna');
-    await screen.findByRole('button', { name: 'Anna Teszt' });
+    await user.type(input, 'xilofon');
+    await screen.findByRole('button', { name: 'Xilofon Teszt' });
 
     await user.keyboard('{ArrowUp}{Enter}');
 
     expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
-    expect(screen.getByTestId('draft-nev')).toHaveTextContent('Anna Zoltán');
+    expect(screen.getByTestId('draft-nev')).toHaveTextContent('Xilofon Zoltán');
   });
 
   it('Escape kiüríti a keresőt és visszahozza a recents listát', async () => {

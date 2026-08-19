@@ -125,12 +125,16 @@ describe('seedPatientData (D33)', () => {
   });
 });
 
-// D39: a Kezdőlap recent listája üres állapotot mutatna friss demón,
-// ha a seed pácienseknek nincs utolsoAktivitas-uk -- ez a teszt a pontos
-// időbélyeget SZÁNDÉKOSAN nem vizsgálja (betöltési időhöz képesti relatív
-// eltolásból származik, lásd plans.ts), csak az invariánsokat: érvényes,
-// múltbeli, és a demó recent-sorrendje determinisztikus.
-describe('seedPatients utolsoAktivitas (D39)', () => {
+// D39/D40: a Kezdőlap és az /uj-terv köztes páciensválasztó recent listája
+// üres állapotot mutatna friss demón, ha a seed pácienseknek nincs
+// utolsoAktivitas-uk -- ez a teszt a pontos időbélyeget SZÁNDÉKOSAN nem
+// vizsgálja (betöltési időhöz képesti relatív eltolásból származik, lásd
+// plans.ts), csak az invariánsokat: legalább 20 páciens, minden VALÓS
+// (`aktivitas` mezővel megadott) időbélyeg érvényes és múltbeli, és a
+// `legutobbAktivPaciensek` a SAJÁT rendezési szabálya szerint determinisztikus
+// sorrendet ad -- adatvezérelten, a konkrét pácienslistától függetlenül,
+// hogy a demó-készlet bővítése ne törje meg ezt a tesztet.
+describe('seedPatients utolsoAktivitas (D39/D40)', () => {
   const patientFolders: PatientFolder[] = seedPatients.map(({ patientDir, record }) => ({
     dirName: patientDir,
     paciensId: record.paciensId,
@@ -138,27 +142,37 @@ describe('seedPatients utolsoAktivitas (D39)', () => {
     utolsoAktivitas: record.utolsoAktivitas,
   }));
 
-  it.each(seedPatients.map(({ patientDir, record }) => ({ patientDir, record })))(
-    '$patientDir -- utolsoAktivitas érvényes és múltbeli',
-    ({ record }) => {
-      const aktivitas = ervenyesAktivitas(record.utolsoAktivitas);
-      expect(aktivitas).toBeDefined();
-      expect(Date.parse(aktivitas!.idopont)).toBeLessThan(Date.now());
-    },
-  );
-
-  it('a három időbélyeg szigorúan csökkenő sorrendben áll: Kovács > Nagy > Tóth', () => {
-    const idopontja = (nev: string) =>
-      Date.parse(seedPatients.find(({ record }) => record.nev === nev)!.record.utolsoAktivitas!.idopont);
-    const kovacs = idopontja('Kovács János');
-    const nagy = idopontja('Nagy Éva');
-    const toth = idopontja('Tóth Zoltán');
-    expect(kovacs).toBeGreaterThan(nagy);
-    expect(nagy).toBeGreaterThan(toth);
+  it('legalább 20 demó páciens van', () => {
+    expect(seedPatients.length).toBeGreaterThanOrEqual(20);
   });
 
-  it('legutobbAktivPaciensek ebben a sorrendben adja vissza a demó pácienseit', () => {
-    const nevSorrend = legutobbAktivPaciensek(patientFolders, 5).map((p) => p.nev);
-    expect(nevSorrend).toEqual(['Kovács János', 'Nagy Éva', 'Tóth Zoltán']);
+  it('van olyan páciens, akinek nincs utolsoAktivitas-a (legacy-migráció edge case)', () => {
+    expect(seedPatients.some(({ record }) => record.utolsoAktivitas == null)).toBe(true);
+  });
+
+  it.each(
+    seedPatients
+      .filter(({ record }) => record.utolsoAktivitas != null)
+      .map(({ patientDir, record }) => ({ patientDir, record })),
+  )('$patientDir -- utolsoAktivitas érvényes és múltbeli', ({ record }) => {
+    const aktivitas = ervenyesAktivitas(record.utolsoAktivitas);
+    expect(aktivitas).toBeDefined();
+    expect(Date.parse(aktivitas!.idopont)).toBeLessThan(Date.now());
+  });
+
+  it('legutobbAktivPaciensek a limitnek megfelelő számú, csökkenő időrendű, utolsoAktivitas nélküli pácienst nem tartalmazó listát ad', () => {
+    const LIMIT = 5;
+    const top = legutobbAktivPaciensek(patientFolders, LIMIT);
+    const aktivakSzama = patientFolders.filter((p) => p.utolsoAktivitas != null).length;
+    expect(top).toHaveLength(Math.min(LIMIT, aktivakSzama));
+    expect(top.every((p) => p.utolsoAktivitas != null)).toBe(true);
+    for (let i = 1; i < top.length; i++) {
+      expect(Date.parse(top[i - 1].utolsoAktivitas!.idopont)).toBeGreaterThanOrEqual(
+        Date.parse(top[i].utolsoAktivitas!.idopont),
+      );
+    }
+    // Determinisztikus: ugyanaz a bemenet mindig ugyanazt a nevsorrendet adja.
+    const ujra = legutobbAktivPaciensek(patientFolders, LIMIT).map((p) => p.nev);
+    expect(ujra).toEqual(top.map((p) => p.nev));
   });
 });
