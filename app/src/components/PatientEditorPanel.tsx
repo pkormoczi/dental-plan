@@ -1,28 +1,27 @@
 // A páciens-törzsadat (paciens-adatok.json, D33) szerkesztő panelje --
 // eredetileg a PaciensekPage.tsx helyi `PatientEditor`-a volt, backlog-30
-// (Páciens detail shell) emelte ide, mert mostantól KÉT hívó használja:
-// a PaciensekPage.tsx lista soronkénti accordionja ÉS a PatientDetailPage.tsx
-// "Páciens adatai" tabja. A `PatientPage.tsx` "Személyes adatok"
-// mezőelrendezését követi (közös `components/Field`-del), de Card doboz
-// nélkül (docs/07-felulet-rendszer.md: "Nincs card doboz adat körül") és
-// explicit Mentés/Mégse gombpárral, mert itt -- ellentétben a
-// terv-piszkozattal, ami folyamatosan autosave-el -- egy zárt fájl jön
-// létre az első mentéskor (D33).
+// (Páciens detail shell) emelte ide, majd a 38. tétel (D43) óta a
+// PatientDetailPage.tsx "Páciens adatai" tabja az EGYETLEN hívási helye --
+// a PaciensekPage.tsx lista azóta tiszta navigációs lista. A
+// `PatientPage.tsx` "Személyes adatok" mezőelrendezését követi (közös
+// `components/Field`-del), de Card doboz nélkül
+// (docs/07-felulet-rendszer.md: "Nincs card doboz adat körül") és explicit
+// Mentés/Mégse gombpárral, mert itt -- ellentétben a terv-piszkozattal,
+// ami folyamatosan autosave-el -- egy zárt fájl jön létre az első
+// mentéskor (D33).
 //
-// Az `onNavigateToHistory` jelentése a hívótól függ: a PaciensekPage.tsx-ben
-// route-navigáció az egyesített páciens-részletoldalra, a
-// PatientDetailPage.tsx "Páciens adatai" tabjában egyszerű tab-váltás --
-// ez a komponens csak a callbacket hívja, a különbséget nem ismeri.
+// Az `onNavigateToHistory` prop az egyetlen hívónál mindig egyszerű
+// tab-váltást jelent (PatientDetailPage.tsx "Kezelési tervek" tabjára) --
+// a komponens ettől függetlenül callbackként kapja, nem route-navigációt
+// hardkódolva, mert nem feltételezheti, ki hívja.
 //
 // Mentéskor duplikáció-ellenőrzés fut (D42, redesign D208) -- csak
 // save-time, a `UjPaciensDialog.tsx`-szel ellentétben NINCS inline
 // javaslat-lista: itt nem "válassz helyette" a kérdés (ez egy MÁR nyitott
 // páciens szerkesztése, nem egy új rekord felvitele), csak egy egyszerű
 // megerősítő felsorolás, ha az átírt név egy másik pácienssel ütközne. A
-// `patients` listát a komponens saját maga tölti be -- a két hívó
-// (`PaciensekPage.tsx`, `PatientDetailPage.tsx`) egyike sem tart mindig kéznél
-// egy friss listát, és a prop-szerződésnek a két hívó között azonosnak kell
-// maradnia.
+// `patients` listát a komponens saját maga tölti be -- a hívó
+// (`PatientDetailPage.tsx`) nem tart kéznél egy friss, teljes listát.
 
 import { useEffect, useMemo, useState } from 'react';
 import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Grid, Text, TextField } from '@radix-ui/themes';

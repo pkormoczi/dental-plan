@@ -79,3 +79,8 @@ if (!Element.prototype.releasePointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
+
+// jsdom `window.scrollTo`-ja "Not implemented" konzol-zajt ad (a
+// `useListStateMemory.ts` scroll-visszaállítása hívja) -- a fenti
+// scrollIntoView-stub mintáján felülírva egy no-op-ra.
+window.scrollTo = () => {};

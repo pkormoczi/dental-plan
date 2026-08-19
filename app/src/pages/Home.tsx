@@ -13,8 +13,9 @@ import {
   Text,
 } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
+import PatientListRow from '../components/PatientListRow';
 import { t } from '../design/tokens';
-import { formatPiszkozatIdo, formatShortDate } from '../domain/date';
+import { formatPiszkozatIdo } from '../domain/date';
 import { RECENT_PACIENS_LIMIT, aktivitasSzoveg, legutobbAktivPaciensek } from '../domain/paciensAktivitas';
 import { loadMegjelenitettTorzsadat, type BetoltottTorzsadat } from '../domain/torzsadatBetoltes';
 import { useAppState } from '../state/AppState';
@@ -217,46 +218,14 @@ export default function Home() {
 }
 
 function RecentRow({ item, most }: { item: BetoltottTorzsadat; most: Date }) {
-  const { patient, torzsadat, hiba } = item;
-  const dob = torzsadat.szuletesiIdo ? formatShortDate(torzsadat.szuletesiIdo, 'hu') : null;
-
   return (
-    // Szándékosan location.state nélkül: a PatientDetailPage alapértelmezett
-    // tabja 'tervek' (D192) -- ha ez a default valaha megváltozna, ez a
-    // navigáció csendben rossz tabra nyitna.
-    <Link
-      to={`/paciensek/${encodeURIComponent(patient.dirName)}`}
-      style={{ display: 'block', padding: '8px 0', textDecoration: 'none', color: 'inherit' }}
-    >
-      <Flex align="baseline" gap="2" wrap="wrap">
-        <Text size="2" weight="medium">
-          {torzsadat.nev}
-        </Text>
-        {hiba ? (
-          <Text size="1" style={{ color: t.warn }}>
-            ⚠ adat nem olvasható
-          </Text>
-        ) : (
-          <>
-            {dob && (
-              <Text size="1" color="gray">
-                {dob}
-              </Text>
-            )}
-            {torzsadat.telefon && (
-              <Text size="1" color="gray">
-                {torzsadat.telefon}
-              </Text>
-            )}
-          </>
-        )}
-      </Flex>
-      {patient.utolsoAktivitas && (
+    <PatientListRow item={item}>
+      {item.patient.utolsoAktivitas && (
         <Text as="p" size="1" color="gray" mt="1" mb="0">
-          {aktivitasSzoveg(patient.utolsoAktivitas, most)}
+          {aktivitasSzoveg(item.patient.utolsoAktivitas, most)}
         </Text>
       )}
-    </Link>
+    </PatientListRow>
   );
 }
 

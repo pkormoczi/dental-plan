@@ -122,8 +122,8 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   hívási helyenként. A guard hatóköre a Mégse gomb ÉS a lapon belüli
   elem-váltás (sor-/tab-váltás); NINCS böngésző-/router-szintű
   navigáció-blokkolás (`components/PatientEditorPanel.tsx`,
-  `pages/PaciensekPage.tsx`, `pages/PatientDetailPage.tsx`,
-  `pages/SettingsPage.tsx` „Nyomtatvány szövegei" szekció). Az
+  `pages/PatientDetailPage.tsx`, `pages/SettingsPage.tsx` „Nyomtatvány
+  szövegei" szekció). Az
   Árlista admin és a Beállítások többi szekciója autosave marad (D31) —
   ezekhez a primitívek nem hívási hely, csak jövőbeli lehetőség.
 - Fülek (Radix Themes `Tabs`): a `DemoPage.tsx` (backlog-29) UNCONTROLLED

@@ -2,11 +2,11 @@
 // mintájára egy `PlanStorage`-ot paraméterként kapó domain modul (a
 // `paciensAdatok.ts` marad tisztán pure, a `DemoStorage` is importálja).
 // A `loadMegjelenitettTorzsadat` a Kezdőlap recent listája (max 5 páciens,
-// eager) és -- a `PaciensekPage.ensureFallbackLoaded` belső sétájából
-// kiemelve -- a Páciensek lista sorkinyitása alatt is fut, hogy a két hely
-// ne térjen el egymástól. A `loadTorzsadatok` (D42) ugyanezt TÖBB
-// páciensre, egy jelölt-körre futtatja -- a `domain/paciensDuplikacio.ts`
-// 2. fázisának betöltője.
+// eager) alatt fut. A `loadTorzsadatok` ugyanezt TÖBB páciensre futtatja --
+// egyrészt a Pácienslista (D43) TELJES, látható listájára egyszerre, a
+// `PlanHistoryPage` végösszeg-betöltésének mintájára, másrészt (D42) egy
+// szűk jelölt-körre, a `domain/paciensDuplikacio.ts` 2. fázisának
+// betöltőjeként.
 
 import { megjelenitettTorzsadat } from './paciensAdatok';
 import { latestVersionAcrossPlans } from './planFolders';

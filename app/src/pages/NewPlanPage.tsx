@@ -175,12 +175,14 @@ export default function NewPlanPage() {
   }
 
   // Escape/Mégse/kattintás a felugró ablakon kívül -- sikeres létrehozás
-  // nélküli zárás. A dialógus `onCloseAutoFocus` preventDefault-ja miatt
-  // (a közös komponens ezt a PaciensekPage.tsx friss-sor-fókuszálásához
-  // igényli) a fókusz különben a body-ra esne, megszakítva a
-  // gépel -> nyíl -> Enter ciklust -- ezért itt kézzel visszaadjuk a
-  // keresőmezőnek. A `q` state-hez NEM nyúlunk (D205): a keresőszöveg
-  // megmarad.
+  // nélküli zárás. Az `UjPaciensDialog.tsx` `Dialog.Content`-je (trigger
+  // nélküli, kontrollált `Dialog.Root`) mindig megelőzi a beépített
+  // `onCloseAutoFocus`-t -- a `triggerRef` null, a fókusz különben a
+  // body-ra esne (ugyanaz a Radix-mintájú bug, mint amit az
+  // `UjPaciensDialog.tsx` `AlertDialog.Content` kommentje igazol),
+  // megszakítva a gépel -> nyíl -> Enter ciklust -- ezért itt kézzel
+  // visszaadjuk a keresőmezőnek. A `q` state-hez NEM nyúlunk (D205): a
+  // keresőszöveg megmarad.
   function handleUjOpenChange(open: boolean) {
     setUjOpen(open);
     if (!open) {

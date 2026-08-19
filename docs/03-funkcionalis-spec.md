@@ -1006,52 +1006,48 @@ mockup `localStorage`-adatából.
 
 ## 9. Páciensek
 
-A páciens ÉLŐ, terv-mentéstől független törzsadatának (`paciens-adatok.json`,
-D33, `docs/02-domain-modell.md` § Páciens-szintű törzsadat) karbantartó
-képernyője — funkcionálisan külön a Korábbi tervektől (§ 5): az a kezelési
-előzmény/verziók képernyője, ez a törzsadaté. A kettő kölcsönösen linkel
-egymásra ugyanahhoz a pácienshez.
+Tiszta navigációs lista a páciens-részletoldalhoz (§ 10) — funkcionálisan
+külön a Korábbi tervektől (§ 5): az a kezelési előzmény/verziók képernyője,
+ez a páciens-azonosítás/keresés képernyője. A kettő kölcsönösen linkel
+egymásra ugyanahhoz a pácienshez. A törzsadat-szerkesztő (`paciens-
+adatok.json`, D33) EGYETLEN helye a § 10 `Páciens adatai` tabja — a
+szerkesztő mezői/mentés-szabályai ott vannak leírva (D43).
 
-- **Lista**: `storage.listPatients()` alapján, kereshető
-  (`Keresés páciensnévre…`, ékezetfüggetlen). Soronként egy állapotjelvény
-  mutatja, van-e már lezárt törzsadata a páciensnek ("Rögzített törzsadat")
-  vagy egyelőre csak a legutóbbi terve alapján látszik-e élőben
-  ("Élő adat a legutóbbi tervből") — ez a lista-szintű eldöntéshez elég
-  csak azt tudni, létezik-e a `paciens-adatok.json`, nem kell minden
-  terv-láncot bejárni.
-- **Sor kinyitása**: inline szerkesztő nyílik (a Páciens adatlap
-  mezőelrendezése: Név / Született+TAJ / Lakcím / Telefon+E-mail / Kiskorú
-  + feltételes Törvényes képviselő). Ha a páciensnek nincs még
-  `paciens-adatok.json`-ja, a mezők a legutóbb módosított terv-láncának
-  legfrissebb `paciens` pillanatképéből előre kitöltve nyílnak (ez a
-  fallback-adat csak a sor KINYITÁSAKOR, lustán töltődik be), egy rövid
-  sor jelzi, hogy ez az adat még nem önálló — mentéssel válik azzá.
-- **Mentés**: explicit „Mentés”/„Mégse” gombpár, NEM leütésenkénti autosave
-  (ellentétben pl. a Beállítások rendelő-mezőivel) — az első mentés
-  szemantikus állapotváltás (fallback → lezárt törzsadat), ezt a dokinak
-  szándékosan kell kiváltania. Sor váltásakor/csukásakor, ha van nem
-  mentett módosítás, megerősítést kér. A Mentés gomb a duplikáció-
-  detektálást (D42) is lefuttatja a végleges adatokra, mielőtt tényleg
-  ment — ha egy MÁSIK páciensre pontos vagy hasonló találatot ad, egy
-  megerősítő dialógus („Hasonló nevű páciens már létezik") kéri a
-  jóváhagyást, javaslat-lista/„Ezt a pácienst választom" akció nélkül
-  (ez itt átnevezés, nem választás — a doki már egy konkrét, nyitott
-  páciens adatlapján van).
+- **Lista**: `storage.listPatients()` + a törzsadat/fallback eager
+  betöltésével (`loadTorzsadatok()`, `domain/torzsadatBetoltes.ts` — a
+  `PlanHistoryPage` végösszeg-betöltésének mintájára) minden látható
+  sorra egyszerre, nem soronkénti lusta betöltéssel. Alfabetikus
+  (`localeCompare('hu')` a megjelenített néven).
+- **Sor tartalma**: név + születési dátum + telefon, kompakt formában
+  (`components/PatientListRow.tsx` — a Kezdőlap „Legutóbbi páciensek”
+  soraival azonos komponens). A két NORMÁL állapot („van már lezárt
+  törzsadata” / „egyelőre csak élő fallback”) NEM kap semmilyen jelvényt;
+  KIZÁRÓLAG a törzsadat-betöltés hibája jelenik meg jelzésként
+  (`⚠ adat nem olvasható`).
+- **Keresés**: névre (ékezetfüggetlen, mint korábban), ÉS — 2+ begépelt
+  számjegytől — a születési dátumra/telefonszámra is, elválasztójeltől
+  függetlenül (`keresoKulcs()`/`torzsadatEgyezik()`,
+  `domain/paciensKereses.ts`; a telefon-egyezéshez a D42
+  `telefonKulcs()`-előtag-normalizálását is felhasználva).
+- **Sor megnyitása**: a sorra kattintás a páciens-részletoldalra (§ 10)
+  navigál — alapértelmezetten a `Kezelési tervek` tabra (a § 10
+  alapértelmezése), NEM nyílik ki helyben szerkesztő.
+- **Állapot-megőrzés**: a listáról egy sorra navigálva, majd böngésző-
+  „vissza”-val visszatérve a keresőszöveg és a görgetési pozíció megmarad
+  (`components/useListStateMemory.ts`) — KIZÁRÓLAG ezen az úton; egy friss
+  belépés (pl. a NavBar „Páciensek” linkjéről) mindig tiszta listát ad.
+  Munkamenetre szűkített (nem böngészőtár), lapfrissítés után nem marad meg.
 - **Új páciens**: „+ Új páciens” gomb, mezős dialógus (kötelező Név +
-  opcionális Született/Telefon — a többi adat a mentés után, a kinyíló
-  sorban adható meg, az `UjTetelDialog.tsx` mintájára). Ugyanez a dialógus
-  (`UjPaciensDialog.tsx`) szolgálja az „Új terv indítása" köztes
-  páciensválasztó „Vadonatúj páciens" ágát is (D41), a duplikáció-
-  detektálás (D42) mindkét belépési ponton azonos (lásd fent, „Új terv
-  indítása").
-  `storage.createPatient(nev, kezdoAdatok?)` mindkét gyökér-fájlt
-  (`paciens.json` + `paciens-adatok.json`) létrehozza, terv nélkül. Az így
-  felvitt páciens a Korábbi tervek listán NEM jelenik meg (§ 5) — csak
-  akkor kerül oda, ha legalább egy terve is lesz.
-- **Kereszt-link**: a szerkesztőben egy „Korábbi tervek” link a páciens-
-  részletoldalra navigál (§ 10), a `Kezelési tervek` tabbal előválasztva;
-  a részletoldal `Kezelési tervek` tabja fordítva, egy „Páciens adatai”
-  linkkel vált vissza erre a tabra.
+  opcionális Született/Telefon — a többi adat a mentés után, a
+  részletoldal `Páciens adatai` tabján adható meg, az `UjTetelDialog.tsx`
+  mintájára). Ugyanez a dialógus (`UjPaciensDialog.tsx`) szolgálja az „Új
+  terv indítása” köztes páciensválasztó „Vadonatúj páciens” ágát is (D41),
+  a duplikáció-detektálás (D42) mindkét belépési ponton azonos (lásd fent,
+  „Új terv indítása”). `storage.createPatient(nev, kezdoAdatok?)` mindkét
+  gyökér-fájlt (`paciens.json` + `paciens-adatok.json`) létrehozza, terv
+  nélkül, majd a mentés a páciens-részletoldalra navigál, a `Páciens
+  adatai` tabbal. Az így felvitt páciens a Korábbi tervek listán NEM
+  jelenik meg (§ 5) — csak akkor kerül oda, ha legalább egy terve is lesz.
 - A nyomtatvány (PDF) nem változik: ez a képernyő SOHA nem forrása a
   PDF-nek (D7, D33).
 
@@ -1061,13 +1057,15 @@ egymásra ugyanahhoz a pácienshez.
 
 URL-lel címezhető (`/paciensek/:patientDir`, D35), két tabbal: `Páciens
 adatai | Kezelési tervek`. Megvalósítás: `app/src/pages/PatientDetailPage.tsx`.
-Ez a képernyő a `Páciensek` (§ 9) és a `Korábbi tervek` (§ 5) tartalmát
-FOGADJA BE két tabként — egyik oldal tartalma sem duplikálva, közös
-komponensekbe (`components/PatientEditorPanel.tsx`,
-`components/PatientPlanChains.tsx`) emelve, amiket mindkét régi lista-
-oldal sora ÉS ez az oldal is használ. A `Páciensek`/`Korábbi tervek`
-listák önmagukban változatlanul elérhetők maradnak — csak a bennük lévő
-kereszt-linkek mutatnak ide.
+Ez a képernyő a törzsadat-szerkesztést (§ 9) és a `Korábbi tervek` (§ 5)
+tartalmát FOGADJA BE két tabként. A `Páciens adatai` tab tartalma
+(`components/PatientEditorPanel.tsx`) itt van az EGYETLEN hívási helyén
+(D43) — a § 9 Pácienslistája tiszta navigációs lista, nem tartalmazza. A
+`Kezelési tervek` tab tartalma (`components/PatientPlanChains.tsx`)
+ellenben KÉT hívási helyen közös: itt ÉS a `Korábbi tervek` (§ 5)
+páciensenkénti listasorában, hogy egyik oldal se duplikálja a másikat. A
+`Páciensek`/`Korábbi tervek` listák önmagukban változatlanul elérhetők
+maradnak — csak a bennük lévő kereszt-linkek mutatnak ide.
 
 - **Sticky fejléc**: név + születési dátum + telefon, görgetéskor a lap
   tetején marad. Adatforrása a `megjelenitettTorzsadat()` (§ 9-cel azonos
@@ -1076,9 +1074,23 @@ kereszt-linkek mutatnak ide.
 - **Alapértelmezett tab**: `Kezelési tervek` — a hívó (a két lista
   kereszt-linkje) `location.state`-ben jelezheti, hogy helyette a
   `Páciens adatai` tabbal nyisson (pl. teljes pácienslétrehozás után).
-- **`Páciens adatai` tab**: a `PatientEditorPanel` (§ 9 „Sor kinyitása”/
-  „Mentés” szabályai szerint) — nincs rajta „Új terv” gomb, az kizárólag a
-  `Kezelési tervek` tabhoz tartozik.
+- **`Páciens adatai` tab**: a `PatientEditorPanel` — nincs rajta „Új terv”
+  gomb, az kizárólag a `Kezelési tervek` tabhoz tartozik. Ha a páciensnek
+  nincs még `paciens-adatok.json`-ja, a mezők (Név / Született+TAJ /
+  Lakcím / Telefon+E-mail / Kiskorú + feltételes Törvényes képviselő) a
+  legutóbb módosított terv-láncának legfrissebb `paciens` pillanatképéből
+  előre kitöltve nyílnak, egy rövid sor jelzi, hogy ez az adat még nem
+  önálló — mentéssel válik azzá. Explicit „Mentés”/„Mégse” gombpár, NEM
+  leütésenkénti autosave (ellentétben pl. a Beállítások rendelő-
+  mezőivel) — az első mentés szemantikus állapotváltás (fallback → lezárt
+  törzsadat), ezt a dokinak szándékosan kell kiváltania. Tab-váltáskor, ha
+  van nem mentett módosítás, megerősítést kér (lásd lent). A Mentés gomb a
+  duplikáció-detektálást (D42) is lefuttatja a végleges adatokra, mielőtt
+  tényleg ment — ha egy MÁSIK páciensre pontos vagy hasonló találatot ad,
+  egy megerősítő dialógus („Hasonló nevű páciens már létezik”) kéri a
+  jóváhagyást, javaslat-lista/„Ezt a pácienst választom” akció nélkül (ez
+  itt átnevezés, nem választás — a doki már egy konkrét, nyitott páciens
+  adatlapján van).
 - **`Kezelési tervek` tab**: a `PatientPlanChains` (§ 5 fa/verzió/akció
   szabályai szerint). Ha a páciensnek még nincs egyetlen olvasható
   terv-verziója sem, a fa helyett egy „Új terv” CTA jelenik meg — ez az
@@ -1086,12 +1098,15 @@ kereszt-linkek mutatnak ide.
   Korábbi tervek listája (§ 5) egy ilyen pácienst eleve ki sem listáz.
 - A két tab közti „Korábbi tervek”/„Páciens adatai” gombja (a
   `PatientEditorPanel`, illetve a `PatientPlanChains` saját kereszt-linkje)
-  ezen az oldalon EGYSZERŰ TAB-VÁLTÁS, nem route-navigáció — a komponensek
-  nem ismerik a különbséget, a hívó (ez az oldal vs. a két régi lista)
-  dönti el, mit jelent a callback.
+  ezen az oldalon EGYSZERŰ TAB-VÁLTÁS, nem route-navigáció — egyik
+  komponens sem ismeri a különbséget, a hívó dönti el, mit jelent a
+  callback. A `PatientPlanChains` „Páciens adatai” linkjénél ez tényleges
+  választás (a `Korábbi tervek`, § 5, MÁSIK hívójánál ugyanez route-
+  navigáció); a `PatientEditorPanel` „Korábbi tervek” linkjénél nincs
+  választás, itt az EGYETLEN hívó mindig tab-váltást jelent.
 - **Tab-váltási guard** (D38): a Radix `Tabs` unmountolja az inaktív tabot,
   tehát a `Páciens adatai` tabon félbehagyott, nem mentett szerkesztés
   egyébként némán elveszne egy tabváltásnál (`Tabs.List` kattintás VAGY a
-  fenti kereszt-linkek). A `PaciensekPage` (§ 9) sor-váltási guardjával
-  azonos primitíven (`useDiscardGuard`/`DiscardChangesDialog`) megy át —
-  megerősítést kér, a `Kezelési tervek` tab felé váltás irányban.
+  fenti kereszt-linkek). A megosztott primitíven (`useDiscardGuard`/
+  `DiscardChangesDialog`) megy át — megerősítést kér, a `Kezelési tervek`
+  tab felé váltás irányban.

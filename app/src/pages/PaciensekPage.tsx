@@ -5,34 +5,20 @@
 // verziók képernyője, ez a törzsadaté -- a kettő kölcsönösen linkel
 // egymásra ugyanahhoz a pácienshez.
 //
-// Amíg egy páciensnek nincs saját paciens-adatok.json-ja, a sor a
-// legutóbb módosított terv-láncának legfrissebb `paciens` pillanatképéből
-// mutat élő fallbacket (`megjelenitettTorzsadat`, domain/paciensAdatok.ts)
-// -- ezt csak a sor KINYITÁSAKOR tölti be lustán, a lista maga csak azt
-// tudja előre, van-e lezárt törzsadata (ehhez elég a paciens-adatok.json
-// meglétét lekérdezni, nem kell minden terv-láncot bejárni).
+// A 38. tétel (D43) óta ez tiszta NAVIGÁCIÓS lista: a sorok a páciens-
+// részletoldalra (`PatientDetailPage.tsx`) navigálnak, a törzsadat-
+// szerkesztő (`PatientEditorPanel`) itt nem jelenik meg -- az egyetlen
+// helye a részletoldal `Páciens adatai` tabja.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Callout,
-  Flex,
-  Heading,
-  Separator,
-  Skeleton,
-  Text,
-  TextField,
-} from '@radix-ui/themes';
-import { ChevronDownIcon, ChevronRightIcon, CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
-import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
-import PatientEditorPanel from '../components/PatientEditorPanel';
+import { Box, Button, Callout, Flex, Heading, Separator, Skeleton, Text, TextField } from '@radix-ui/themes';
+import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
+import PatientListRow from '../components/PatientListRow';
+import { useListStateMemory } from '../components/useListStateMemory';
 import { t } from '../design/tokens';
-import { uresTorzsadat } from '../domain/paciensAdatok';
-import { norm } from '../domain/search';
-import { loadUtolsoTerv } from '../domain/torzsadatBetoltes';
-import type { PatientFolder, PatientMasterData, Plan } from '../domain/types';
+import { keresoKulcs, torzsadatEgyezik } from '../domain/paciensKereses';
+import { loadTorzsadatok, type BetoltottTorzsadat } from '../domain/torzsadatBetoltes';
 import UjPaciensDialog from './paciensek/UjPaciensDialog';
 import { useStorage } from '../storage/StorageContext';
 
@@ -40,24 +26,10 @@ export default function PaciensekPage() {
   const { storage } = useStorage();
   const navigate = useNavigate();
 
-  const [patients, setPatients] = useState<PatientFolder[]>([]);
+  const [items, setItems] = useState<BetoltottTorzsadat[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
-  const [q, setQ] = useState('');
-
-  const [masterByPatient, setMasterByPatient] = useState<Record<string, PatientMasterData | null>>({});
-  const [masterErrorByPatient, setMasterErrorByPatient] = useState<Record<string, string>>({});
-
-  const [openDir, setOpenDir] = useState<string | null>(null);
-  const [dirtyOpen, setDirtyOpen] = useState(false);
-  const guard = useDiscardGuard(dirtyOpen);
-
-  // A fallback (legutóbbi terv `paciens` pillanatképe) csak kinyitáskor,
-  // lustán töltődik -- lásd a fájl fejlécét.
-  const [fallbackByPatient, setFallbackByPatient] = useState<Record<string, Plan | null>>({});
-  const [fallbackAttempted, setFallbackAttempted] = useState<Set<string>>(new Set());
-  const [fallbackLoadingSet, setFallbackLoadingSet] = useState<Set<string>>(new Set());
-  const [fallbackErrorByPatient, setFallbackErrorByPatient] = useState<Record<string, string>>({});
+  const { q, setQ } = useListStateMemory('paciensek', !loading);
 
   const [newOpen, setNewOpen] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -70,26 +42,12 @@ export default function PaciensekPage() {
       try {
         const list = await storage.listPatients();
         if (cancelled) return;
-        // P1-2 mintája (PlanHistoryPage.tsx): egyetlen sérült
-        // paciens-adatok.json ne bénítsa meg a teljes listát.
-        const results = await Promise.allSettled(list.map((p) => storage.loadPatientData(p.dirName)));
+        // loadTorzsadatok (P1-2 mintája) sosem dob -- egy sérült
+        // paciens-adatok.json a sor `hiba` mezőjében jelenik meg, nem
+        // bénítja meg a teljes listát.
+        const byDir = await loadTorzsadatok(storage, list);
         if (cancelled) return;
-        const master: Record<string, PatientMasterData | null> = {};
-        const masterErrors: Record<string, string> = {};
-        results.forEach((res, i) => {
-          const dirName = list[i].dirName;
-          if (res.status === 'fulfilled') {
-            master[dirName] = res.value;
-          } else {
-            masterErrors[dirName] =
-              res.reason instanceof Error
-                ? res.reason.message
-                : 'A törzsadat betöltése váratlanul meghiúsult.';
-          }
-        });
-        setPatients(list);
-        setMasterByPatient(master);
-        setMasterErrorByPatient(masterErrors);
+        setItems(list.map((p) => byDir[p.dirName]));
       } catch (err) {
         if (!cancelled) {
           setListError(
@@ -105,58 +63,10 @@ export default function PaciensekPage() {
     };
   }, [storage]);
 
-  const filtered = patients
-    .filter((p) => !q.trim() || norm(p.nev).includes(norm(q)))
-    .sort((a, b) => a.nev.localeCompare(b.nev));
-
-  const ensureFallbackLoaded = useCallback(
-    async (patientDir: string) => {
-      setFallbackAttempted((prev) => new Set(prev).add(patientDir));
-      setFallbackLoadingSet((prev) => new Set(prev).add(patientDir));
-      try {
-        const plan = await loadUtolsoTerv(storage, patientDir);
-        setFallbackByPatient((prev) => ({ ...prev, [patientDir]: plan }));
-      } catch (err) {
-        setFallbackErrorByPatient((prev) => ({
-          ...prev,
-          [patientDir]:
-            err instanceof Error ? err.message : 'A legutóbbi terv betöltése váratlanul meghiúsult.',
-        }));
-      } finally {
-        setFallbackLoadingSet((prev) => {
-          const next = new Set(prev);
-          next.delete(patientDir);
-          return next;
-        });
-      }
-    },
-    [storage],
-  );
-
-  function applySwitch(target: string | null) {
-    setOpenDir(target);
-    setDirtyOpen(false);
-    if (
-      target &&
-      masterByPatient[target] == null &&
-      !masterErrorByPatient[target] &&
-      !fallbackAttempted.has(target)
-    ) {
-      void ensureFallbackLoaded(target);
-    }
-  }
-
-  // A mentetlen szerkesztés (nem a globális terv-piszkozat, csak ennek a
-  // sornak a saját form-állapota) elvesztése elleni őr -- ugyanaz az elv,
-  // mint a terv-piszkozatnál (`vanMentetlenPiszkozat`), csak lapon belüli
-  // hatókörrel: sor váltásakor/csukásakor kérdez, kereszt-linknél nem (az
-  // egy tudatos navigáció, nem véletlen kattintás egy másik sorra).
-  function requestToggle(dirName: string) {
-    const target = openDir === dirName ? null : dirName;
-    guard.request(() => applySwitch(target));
-  }
-
-  const handleDirtyChange = useCallback((dirty: boolean) => setDirtyOpen(dirty), []);
+  const kulcs = keresoKulcs(q);
+  const filtered = items
+    .filter((item) => !kulcs || torzsadatEgyezik(item.torzsadat, kulcs))
+    .sort((a, b) => a.torzsadat.nev.localeCompare(b.torzsadat.nev, 'hu'));
 
   async function handleCreatePatient(
     nev: string,
@@ -165,23 +75,8 @@ export default function PaciensekPage() {
     setCreateError(null);
     try {
       const folder = await storage.createPatient(nev, kezdoAdatok);
-      setPatients((prev) => [...prev, folder]);
-      // Ugyanaz a `uresTorzsadat` építi, amit a storage ténylegesen kiírt
-      // (DemoStorage.createPatient) -- nem egy második, driftelhető
-      // konstans, hogy ne kelljen egy extra loadPatientData-t várni.
-      setMasterByPatient((prev) => ({
-        ...prev,
-        [folder.dirName]: { ...uresTorzsadat(nev, folder.paciensId), ...kezdoAdatok },
-      }));
-      // NEM `applySwitch`-en át: az a MÉG renderelés előtti (ezért a fenti
-      // setMasterByPatient-et még nem látó) `masterByPatient`-re nézne rá, és
-      // tévesen fallback-betöltést indítana egy olyan pácienshez, akinek
-      // szándékosan nincs egyetlen terve sem. Itt biztosan tudjuk, hogy
-      // nincs mit betölteni -- `fallbackAttempted`-be tesszük egyenesen.
-      setFallbackAttempted((prev) => new Set(prev).add(folder.dirName));
       setNewOpen(false);
-      setOpenDir(folder.dirName);
-      setDirtyOpen(false);
+      navigate(`/paciensek/${encodeURIComponent(folder.dirName)}`, { state: { tab: 'adatai' } });
     } catch (err) {
       setCreateError(
         err instanceof Error ? err.message : 'Az új páciens felvitele váratlanul meghiúsult.',
@@ -212,8 +107,8 @@ export default function PaciensekPage() {
       <TextField.Root
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Keresés páciensnévre…"
-        aria-label="Keresés páciensnévre"
+        placeholder="Keresés névre, születési dátumra vagy telefonra…"
+        aria-label="Keresés névre, születési dátumra vagy telefonra"
         mb="4"
       />
 
@@ -234,107 +129,30 @@ export default function PaciensekPage() {
             <InfoCircledIcon />
           </Callout.Icon>
           <Callout.Text>
-            {patients.length === 0
+            {items.length === 0
               ? 'Még nincs felvitt páciens. Indíts egy tervet a Kezdőlapon, vagy vidd fel az elsőt a „+ Új páciens” gombbal.'
-              : `Nincs találat erre: „${q}”. Próbálj más névre keresni.`}
+              : `Nincs találat erre: „${q}”. Próbálj más névre, születési dátumra vagy telefonra keresni.`}
           </Callout.Text>
         </Callout.Root>
       )}
 
-      {filtered.map((p, i) => {
-        const adatok = masterByPatient[p.dirName];
-        const masterError = masterErrorByPatient[p.dirName];
-        const isOpen = openDir === p.dirName;
-        return (
-          <Box key={p.dirName} mb="3" data-patient={p.dirName}>
-            <Flex
-              role="button"
-              tabIndex={0}
-              align="center"
-              justify="between"
-              gap="2"
-              aria-expanded={isOpen}
-              aria-controls={`paciens-szerkeszto-${p.dirName}`}
-              onClick={() => requestToggle(p.dirName)}
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter' && e.key !== ' ') return;
-                e.preventDefault();
-                requestToggle(p.dirName);
-              }}
-              style={{ cursor: 'pointer', padding: '6px 0' }}
-            >
-              <Flex align="center" gap="2">
-                {isOpen ? <ChevronDownIcon /> : <ChevronRightIcon />}
-                <Text size="2" weight="medium">
-                  {p.nev}
-                </Text>
-              </Flex>
-              <Text size="1" style={{ color: masterError ? t.warn : t.uiTextMuted }}>
-                {masterError
-                  ? '⚠ törzsadat nem olvasható'
-                  : adatok
-                    ? 'Rögzített törzsadat'
-                    : 'Élő adat a legutóbbi tervből'}
-              </Text>
-            </Flex>
-
-            {isOpen && (
-              <Box id={`paciens-szerkeszto-${p.dirName}`} pl="5" pt="2" pb="1">
-                {masterError ? (
-                  <Callout.Root color="red" size="1">
-                    <Callout.Icon>
-                      <CrossCircledIcon />
-                    </Callout.Icon>
-                    <Callout.Text>A törzsadat betöltése nem sikerült: {masterError}</Callout.Text>
-                  </Callout.Root>
-                ) : (
-                  <PatientEditorPanel
-                    patient={p}
-                    adatok={adatok ?? null}
-                    fallbackPlan={fallbackByPatient[p.dirName]}
-                    fallbackLoading={fallbackLoadingSet.has(p.dirName)}
-                    fallbackError={fallbackErrorByPatient[p.dirName] ?? null}
-                    onDirtyChange={handleDirtyChange}
-                    onSaved={(saved) =>
-                      setMasterByPatient((prev) => ({ ...prev, [p.dirName]: saved }))
-                    }
-                    onNavigateToHistory={() =>
-                      navigate(`/paciensek/${encodeURIComponent(p.dirName)}`, {
-                        state: { tab: 'tervek' },
-                      })
-                    }
-                  />
-                )}
-              </Box>
-            )}
-
-            {i < filtered.length - 1 && <Separator size="4" mt="3" color="gray" />}
-          </Box>
-        );
-      })}
+      {filtered.map((item, i) => (
+        <Box key={item.patient.dirName} mb="3" data-patient={item.patient.dirName}>
+          <PatientListRow item={item} />
+          {i < filtered.length - 1 && <Separator size="4" mt="3" color="gray" />}
+        </Box>
+      ))}
 
       <UjPaciensDialog
         open={newOpen}
         onOpenChange={setNewOpen}
-        patients={patients}
+        patients={items.map((item) => item.patient)}
         onSave={(nev, kezdoAdatok) => void handleCreatePatient(nev, kezdoAdatok)}
         onUseExisting={(p) => {
-          // Mindig NYIT (nem `requestToggle`) -- a "Ezt a pácienst
-          // választom" szándéka mindig a sor megnyitása, nem a
-          // csukott/nyitott állapot invertálása.
           setNewOpen(false);
-          guard.request(() => applySwitch(p.dirName));
+          navigate(`/paciensek/${encodeURIComponent(p.dirName)}`, { state: { tab: 'adatai' } });
         }}
         submitError={createError}
-      />
-
-      <DiscardChangesDialog
-        open={guard.pending}
-        onOpenChange={(open) => !open && guard.cancel()}
-        onConfirm={guard.confirm}
-        title="Nem mentett módosítás"
-        description="Ennél a páciensnél van nem mentett módosításod. Ha másik sorra váltasz, ez elvész — csak a Mentés gomb rögzíti a törzsadatban. Biztosan folytatod?"
-        confirmLabel="Váltás, módosítás elvetésével"
       />
     </Box>
   );
@@ -345,14 +163,16 @@ function PatientsSkeleton() {
   return (
     <>
       {[0, 1, 2].map((i) => (
-        <Flex key={i} justify="between" align="center" py="2">
+        <Box key={i} py="2">
           <Skeleton>
-            <Box height="20px" width="180px" />
+            <Box height="18px" width="220px" />
           </Skeleton>
-          <Skeleton>
-            <Box height="16px" width="150px" />
-          </Skeleton>
-        </Flex>
+          <Box mt="1">
+            <Skeleton>
+              <Box height="14px" width="150px" />
+            </Skeleton>
+          </Box>
+        </Box>
       ))}
     </>
   );

@@ -1074,3 +1074,29 @@ karbantartási kör négy önálló javítása.
   szerkesztő (`PatientEditorPanel.tsx`) Mentés gombja csak a save-time
   ellenőrzést kapta meg, javaslat-lista nélkül -- ott nem választás,
   hanem átnevezés a kérdés.
+
+---
+
+### 38. Pácienslista és keresés — KÉSZ (2026-08-19)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D43 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a lista sorai eddig helyben nyíltak ki egy inline
+  törzsadat-szerkesztővel, pedig a páciens-részletoldal (D35) óta ez egy
+  duplikált belépési pont volt ugyanahhoz a szerkesztőhöz; a sor emellett
+  csak nevet mutatott, nem volt DOB/telefon a megkülönböztetéshez, és a
+  keresőszöveg/scroll elveszett egy megnyitás-visszalépés után.
+- **Megvalósítás:** a lista tiszta navigációs listává alakult -- a sorok
+  a páciens-részletoldalra navigálnak, a törzsadat-szerkesztő
+  (`PatientEditorPanel`) egyetlen hívási helye onnantól a részletoldal
+  "Páciens adatai" tabja. A kompakt sor (`components/PatientListRow.tsx`,
+  a Kezdőlap "Legutóbbi páciensek" listájával közös komponens) nevet,
+  születési dátumot és telefont mutat, a törzsadat két normál állapota
+  jelvény nélkül, kizárólag a betöltési hiba jelezve. A keresés névre
+  (mint korábban) és -- 2+ begépelt számjegytől -- a születési
+  dátumra/telefonszámra is illeszkedik, elválasztójeltől függetlenül
+  (`domain/paciensKereses.ts` `keresoKulcs`/`torzsadatEgyezik`, a D42
+  `telefonKulcs()`-előtag-normalizálását újrahasznosítva). Egy sorra
+  navigálva, majd böngésző-"vissza"-val visszatérve a keresőszöveg és a
+  görgetési pozíció megmarad (`components/useListStateMemory.ts`) --
+  kizárólag ezen az úton, munkamenetre szűkítve, böngészőtár nélkül.

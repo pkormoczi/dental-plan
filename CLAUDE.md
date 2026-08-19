@@ -439,10 +439,11 @@ Páciens részletei, D35) segédfüggvényei/komponensei, szintén ne írd újra
 őket:
 - `app/src/components/PatientEditorPanel.tsx` — a törzsadat-szerkesztő
   panel (mezők + Save/Cancel), eredetileg a `PaciensekPage.tsx` helyi
-  komponense volt; a `PaciensekPage.tsx` lista soronkénti accordionja ÉS a
-  `PatientDetailPage.tsx` "Páciens adatai" tabja is ezt hívja, azonos
-  prop-szerződéssel. Az `onNavigateToHistory` callback jelentése hívónként
-  eltér (route-navigáció vs. tab-váltás) — a komponens ezt nem ismeri.
+  komponense volt; a 38. tétel (D43) óta a `PatientDetailPage.tsx` "Páciens
+  adatai" tabja az EGYETLEN hívási helye — a `PaciensekPage.tsx` lista
+  azóta tiszta navigációs lista, nem tartalmaz szerkesztőt. Az
+  `onNavigateToHistory` callback ettől függetlenül megmaradt prop, mert a
+  komponens nem ismerheti a hívóját.
 - `app/src/components/PatientPlanChains.tsx` — EGY páciens terv-lánc →
   verzió fája a hozzá tartozó akciókkal (Új verzió/Másolás új tervbe/
   Megnézés/Letöltés/Új terv/címke-szerkesztés), eredetileg a
@@ -501,8 +502,9 @@ A közös Save/Cancel + dirty-navigation guard tétel
   másolat-beillesztett „elvetnéd a módosításokat?" `AlertDialog` közös
   hook+komponens párja; `request(apply)` dirty állapotban megerősítést kér,
   egyébként azonnal lefuttatja `apply`-t. Hívói: `PatientEditorPanel`
-  retrofitja, `PaciensekPage.tsx` sor-váltása, `PatientDetailPage.tsx`
-  tab-váltása, `SettingsPage.tsx` „Nyomtatvány szövegei" Mégse gombja. A
+  retrofitja (a 38. tétel/D43 óta az EGYETLEN hívási helyén,
+  `PatientDetailPage.tsx`-ben), `PatientDetailPage.tsx` tab-váltása,
+  `SettingsPage.tsx` „Nyomtatvány szövegei" Mégse gombja. A
   „piszkozat felülírása" (aktív terv-draft) guardok (`Home.tsx`,
   `NewPlanPage.tsx`, `PatientPlanChains.tsx`) MÁS domaint védenek (D37) —
   ezekre SZÁNDÉKOSAN nincsenek ráállítva
@@ -528,8 +530,9 @@ ne írd újra őket:
   patient)` (`app/src/domain/torzsadatBetoltes.ts`) — EGY páciens
   legfrissebb terv-verziójának betöltése (nem `loadPlanChainData`, az
   minden verziót betöltene), illetve a `megjelenitettTorzsadat()` (D33)
-  betöltve, sosem dobva (P1-2 mintája). A Kezdőlap recent sorai ÉS a
-  `PaciensekPage.tsx` sorkinyitása is ezt hívja
+  betöltve, sosem dobva (P1-2 mintája). A Kezdőlap recent sorai hívják
+  közvetlenül; a `loadTorzsadatok()` (lásd lent, D43) ugyanezt TÖBB
+  páciensre futtatja
 
 Az „Új terv indítása" köztes páciensválasztó (`docs/01-attekintes-es-
 dontesek.md` D40, `docs/03-funkcionalis-spec.md` § Új terv indítása)
@@ -559,13 +562,38 @@ segédfüggvényei/rétegei, szintén ne írd újra őket:
   egy hasonló névegyezés pedig nem (D42)
 - `loadTorzsadatok(storage, patients)` (`app/src/domain/torzsadatBetoltes.ts`)
   — a 2. fázis betöltője, a meglévő `loadMegjelenitettTorzsadat()` (D33)
-  több páciensre, `dirName` szerint kulcsolva, sosem dobva
+  több páciensre, `dirName` szerint kulcsolva, sosem dobva. A
+  `usePaciensDuplikacio` (jelölt-körre, lásd lent) mellett a
+  `PaciensekPage.tsx` (D43) is ezt hívja, a teljes listára egyszerre, a
+  `PlanHistoryPage` végösszeg-betöltésének mintájára
 - `usePaciensDuplikacio(opts)` (`app/src/components/usePaciensDuplikacio.ts`)
   — a React-réteg: additív, kulcsolt cache a versenyhelyzetek ellen (nem
   lista-csere/sorszámozás), `ellenoriz(bemenet)` a save-time útvonalhoz. A
   `UjPaciensDialog.tsx` (inline javaslat-lista, `DuplikacioJavaslatok.tsx`
   + két megerősítő `AlertDialog`) ÉS a `PatientEditorPanel.tsx`
   (átnevezéskor, csak `ellenoriz`, javaslat-lista nélkül) is ezt hívja
+
+A Pácienslista navigációs-listává alakítása tétel
+(`docs/01-attekintes-es-dontesek.md` D43, `docs/03-funkcionalis-spec.md`
+§ 9. Páciensek) segédfüggvényei/komponensei, szintén ne írd újra őket:
+- `keresoKulcs(q)` / `torzsadatEgyezik(adat, kulcs)`
+  (`app/src/domain/paciensKereses.ts`) — a `paciensTalalatok()` (D40)
+  névkereső-modulja mellett: `keresoKulcs` egyszer normalizál (a
+  `nevEgyezik()` konvenciója), `torzsadatEgyezik` a névegyezés MELLETT a
+  tárolt születési dátum/telefon számjegysorára is illeszkedik (a
+  telefonnál a D42 `telefonKulcs()`-előtag-normalizálását is bevonva) —
+  csak a `PaciensekPage.tsx` hívja
+- `app/src/components/PatientListRow.tsx` — a kompakt páciens-sor (név +
+  DOB + telefon, KIZÁRÓLAG a törzsadat-betöltés hibája kap jelzést),
+  eredetileg a `Home.tsx` "Legutóbbi páciensek" helyi `RecentRow`-ja volt;
+  a `PaciensekPage.tsx` második hívóként emelte ide. A `children` prop a
+  sor alatti kiegészítő tartalomhoz (a Kezdőlap ide adja az
+  `aktivitasSzoveg()`-et, a Pácienslista nem ad semmit)
+- `useListStateMemory(key, ready)` (`app/src/components/useListStateMemory.ts`)
+  — egy lista keresőszövegének/scroll-pozíciójának megőrzése route-váltás
+  után-vissza, KIZÁRÓLAG böngésző-"vissza" (POP) navigációnál; modul-
+  szintű `Map`-ben (a kódbázis első modul-szintű mutábilis állapota),
+  NEM böngészőtárban — csak a `PaciensekPage.tsx` hívja
 
 ## Domain szókincs
 

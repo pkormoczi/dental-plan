@@ -1,24 +1,33 @@
-// backlog-28. tétel: a Páciensek képernyő -- a paciens-adatok.json (D33)
-// szerkesztője. A törzsadat-nélküli sorok élő fallbackje a legutóbbi terv
-// `paciens` pillanatképéből jön, lásd seed/plans.ts (Kovács János, Nagy
-// Éva telefonszáma).
+// 38. tétel (D43): a lista tiszta NAVIGÁCIÓS lista -- a sorok a
+// páciens-részletoldalra (`/paciensek/:patientDir`) navigálnak, a
+// törzsadat-szerkesztő (`PatientEditorPanel`) mezőkészlet/Save-Cancel
+// viselkedése a `PatientDetailPage.test.tsx`-ben fedett (az egyetlen
+// megmaradó hívási hely). Ez a fájl a lista-specifikus viselkedést fedi:
+// sor tartalma, keresés (név/DOB/telefon), navigáció, state-megőrzés.
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Route, Routes, useLocation, useParams } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 import PaciensekPage from './PaciensekPage';
 import { TestProviders } from '../testUtils';
+import { resetListStateMemoryForTests } from '../components/useListStateMemory';
 import { DemoStorage } from '../storage/DemoStorage';
 
-// backlog-30: a "Korábbi tervek" kereszt-link mostantól az egyesített
-// páciens-részletoldalra mutat (`/paciensek/:patientDir`), a tab-ot
-// `location.state.tab`-ban átadva.
 function PaciensProbe() {
   const { patientDir } = useParams<{ patientDir: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const tab = (location.state as { tab?: string } | null)?.tab ?? '';
-  return <div data-testid="paciens-reszletei" data-patientdir={patientDir} data-tab={tab} />;
+  return (
+    <div>
+      <div data-testid="paciens-reszletei" data-patientdir={patientDir} data-tab={tab} />
+      {/* `navigate(-1)` -- valódi böngésző-"vissza" (POP), a `Link to="/"`-tól
+          eltérően, ami PUSH-ot adna, tehát a `useListStateMemory` (D43) nem
+          állítana vissza semmit -- lásd useListStateMemory.test.tsx. */}
+      <button onClick={() => navigate(-1)}>Vissza a listára</button>
+    </div>
+  );
 }
 
 function renderPage() {
@@ -39,161 +48,84 @@ function patientRow(nev: string): HTMLElement {
 describe('PaciensekPage', () => {
   beforeEach(async () => {
     localStorage.clear();
+    resetListStateMemoryForTests();
     const seeder = new DemoStorage();
     await seeder.init();
   });
 
   it('a keresőmezőnek van elérhető neve, nem csak placeholder-e (docs/07)', async () => {
     renderPage();
-    expect(await screen.findByRole('textbox', { name: 'Keresés páciensnévre' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
+    ).toBeInTheDocument();
   });
 
-  it('a törzsadat-állapot szerinti jelvényt mutatja soronként', async () => {
+  it('a sor nevet, születési dátumot és telefont mutat, jelvény nélkül', async () => {
     renderPage();
 
     await screen.findByText('Nagy Éva');
-    expect(within(patientRow('Nagy Éva')).getByText('Rögzített törzsadat')).toBeInTheDocument();
-    expect(within(patientRow('Kovács János')).getByText('Élő adat a legutóbbi tervből')).toBeInTheDocument();
-    expect(within(patientRow('Tóth Zoltán')).getByText('Élő adat a legutóbbi tervből')).toBeInTheDocument();
+    const row = patientRow('Nagy Éva');
+    expect(within(row).getByText('1990.11.02.')).toBeInTheDocument();
+    expect(within(row).getByText('+36 20 555 1234')).toBeInTheDocument();
+    expect(within(row).queryByText('Rögzített törzsadat')).not.toBeInTheDocument();
+    expect(within(row).queryByText('Élő adat a legutóbbi tervből')).not.toBeInTheDocument();
   });
 
-  it('keresésre szűkíti a listát', async () => {
+  it('egy sorra kattintás a páciens-részletoldalra navigál, nem nyílik ki helyben', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Nagy Éva');
+    await user.click(screen.getByText('Nagy Éva'));
+
+    const probe = await screen.findByTestId('paciens-reszletei');
+    expect(probe.dataset.patientdir).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Mentés' })).not.toBeInTheDocument();
+  });
+
+  it('keresésre névre szűkíti a listát', async () => {
     const user = userEvent.setup();
     renderPage();
 
     await screen.findByText('Kovács János');
-    await user.type(screen.getByRole('textbox', { name: 'Keresés páciensnévre' }), 'nagy');
+    await user.type(
+      screen.getByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
+      'nagy',
+    );
 
     expect(screen.queryByText('Kovács János')).not.toBeInTheDocument();
     expect(screen.getByText('Nagy Éva')).toBeInTheDocument();
   });
 
-  it('lezárt törzsadat esetén rögtön a törzsadatból tölti fel a mezőket, fallback-jelzés nélkül', async () => {
+  it('keresés a születési dátumra is talál egyezést', async () => {
     const user = userEvent.setup();
     renderPage();
 
     await screen.findByText('Nagy Éva');
-    await user.click(screen.getByText('Nagy Éva'));
-
-    expect(await screen.findByDisplayValue('+36 20 555 1234')).toBeInTheDocument();
-    expect(screen.queryByText(/mentéssel önálló/)).not.toBeInTheDocument();
-  });
-
-  it('törzsadat nélkül a legutóbbi terv paciens pillanatképét mutatja, fallback-jelzéssel', async () => {
-    const user = userEvent.setup();
-    renderPage();
-
-    await screen.findByText('Kovács János');
-    await user.click(screen.getByText('Kovács János'));
-
-    expect(await screen.findByDisplayValue('+36 30 123 4567')).toBeInTheDocument();
-    expect(screen.getByText(/mentéssel önálló/)).toBeInTheDocument();
-  });
-
-  it('mentés után a jelvény "Rögzített törzsadat"-ra vált, és a paciens-adatok.json ténylegesen létrejön', async () => {
-    const user = userEvent.setup();
-    renderPage();
-
-    await screen.findByText('Kovács János');
-    await user.click(screen.getByText('Kovács János'));
-    await screen.findByDisplayValue('+36 30 123 4567');
-
-    const mentesBtn = screen.getByRole('button', { name: 'Mentés' });
-    expect(mentesBtn).toBeDisabled(); // még nincs módosítás
-
-    const telefonMezo = screen.getByDisplayValue('+36 30 123 4567');
-    await user.clear(telefonMezo);
-    await user.type(telefonMezo, '+36 70 000 1111');
-    expect(mentesBtn).toBeEnabled();
-
-    await user.click(mentesBtn);
-
-    await waitFor(() =>
-      expect(within(patientRow('Kovács János')).getByText('Rögzített törzsadat')).toBeInTheDocument(),
+    await user.type(
+      screen.getByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
+      '1990',
     );
 
-    const verify = new DemoStorage();
-    await verify.init();
-    const patients = await verify.listPatients();
-    const kovacs = patients.find((p) => p.nev === 'Kovács János')!;
-    const adatok = await verify.loadPatientData(kovacs.dirName);
-    expect(adatok?.telefon).toBe('+36 70 000 1111');
+    expect(screen.getByText('Nagy Éva')).toBeInTheDocument();
+    expect(screen.queryByText('Kovács János')).not.toBeInTheDocument();
   });
 
-  it('átnevezés egy másik meglévő páciens nevére megerősítést kér mentéskor (D42, redesign D208)', async () => {
-    const user = userEvent.setup();
-    renderPage();
-
-    await screen.findByText('Tóth Zoltán');
-    await user.click(screen.getByText('Tóth Zoltán'));
-    const row = patientRow('Tóth Zoltán');
-    const dirName = row.getAttribute('data-patient')!;
-
-    const nevMezo = await within(row).findByRole('textbox', { name: 'Név *' });
-    await user.clear(nevMezo);
-    await user.type(nevMezo, 'Fekete Zoltán');
-    await user.click(within(row).getByRole('button', { name: 'Mentés' }));
-
-    const alert = await screen.findByRole('alertdialog');
-    expect(within(alert).getByText('Hasonló nevű páciens már létezik')).toBeInTheDocument();
-
-    await user.click(within(alert).getByRole('button', { name: 'Mégse' }));
-    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
-    expect(within(row).getByRole('textbox', { name: 'Név *' })).toHaveValue('Fekete Zoltán');
-
-    await user.click(within(row).getByRole('button', { name: 'Mentés' }));
-    const alert2 = await screen.findByRole('alertdialog');
-    await user.click(within(alert2).getByRole('button', { name: 'Mentés mégis' }));
-    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
-
-    const verify = new DemoStorage();
-    await verify.init();
-    const adatok = await verify.loadPatientData(dirName);
-    expect(adatok?.nev).toBe('Fekete Zoltán');
-  });
-
-  it('Mégse a legutóbb mentett/betöltött értékre állítja vissza a piszkozatot', async () => {
+  it('keresés a telefonszámra is talál egyezést, elválasztójeltől függetlenül', async () => {
     const user = userEvent.setup();
     renderPage();
 
     await screen.findByText('Nagy Éva');
-    await user.click(screen.getByText('Nagy Éva'));
-    const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
+    await user.type(
+      screen.getByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
+      '5551234',
+    );
 
-    await user.clear(telefonMezo);
-    await user.type(telefonMezo, 'ideiglenes, nem mentett érték');
-    await user.click(screen.getByRole('button', { name: 'Mégse' }));
-
-    expect(await screen.findByDisplayValue('+36 20 555 1234')).toBeInTheDocument();
+    expect(screen.getByText('Nagy Éva')).toBeInTheDocument();
+    expect(screen.queryByText('Kovács János')).not.toBeInTheDocument();
   });
 
-  it('sor váltásakor mentetlen módosításnál megerősítést kér', async () => {
-    const user = userEvent.setup();
-    renderPage();
-
-    await screen.findByText('Nagy Éva');
-    await user.click(screen.getByText('Nagy Éva'));
-    const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
-    await user.clear(telefonMezo);
-    await user.type(telefonMezo, 'ideiglenes érték');
-
-    await user.click(screen.getByText('Kovács János'));
-    const dialog = await screen.findByRole('alertdialog');
-
-    // Mégse -- a dialóguson BELÜL keresve (a Nagy Éva sornak is van saját
-    // "Mégse" gombja, ami ilyenkor is a DOM-ban marad). A Nagy Éva sor
-    // marad nyitva, a piszkozat megtartva.
-    await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
-    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(screen.getByDisplayValue('ideiglenes érték')).toBeInTheDocument();
-
-    // Váltás megerősítéssel -- a Kovács János sor nyílik meg, a piszkozat elveszik.
-    await user.click(screen.getByText('Kovács János'));
-    await user.click(await screen.findByRole('button', { name: 'Váltás, módosítás elvetésével' }));
-    expect(await screen.findByDisplayValue('+36 30 123 4567')).toBeInTheDocument();
-  });
-
-  it('"+ Új páciens" terv nélküli pácienst vesz fel, rögtön nyitva, "Rögzített törzsadat" jelvénnyel, a megadott születési dátummal/telefonnal', async () => {
+  it('"+ Új páciens" mentés után a részletoldalra navigál, a Páciens adatai tabbal', async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -205,17 +137,17 @@ describe('PaciensekPage', () => {
     await user.type(within(dialog).getByLabelText('Telefon'), '+36 20 333 4444');
     await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(await screen.findByText('Vadonatúj Elemér')).toBeInTheDocument();
-    const row = patientRow('Vadonatúj Elemér');
-    expect(within(row).getByText('Rögzített törzsadat')).toBeInTheDocument();
-    // Rögtön nyitva -- a szerkesztő mezői is látszanak, a megadott adatokkal.
-    expect(within(row).getAllByDisplayValue('Vadonatúj Elemér')).toHaveLength(1);
-    expect(within(row).getByDisplayValue('1985-03-20')).toBeInTheDocument();
-    expect(within(row).getByDisplayValue('+36 20 333 4444')).toBeInTheDocument();
+    const probe = await screen.findByTestId('paciens-reszletei');
+    expect(probe.dataset.patientdir).toBeTruthy();
+    expect(probe.dataset.tab).toBe('adatai');
+
+    const verify = new DemoStorage();
+    await verify.init();
+    const patients = await verify.listPatients();
+    expect(patients.some((p) => p.nev === 'Vadonatúj Elemér')).toBe(true);
   });
 
-  it('"+ Új páciens" névegyezésnél az "Ezt a pácienst választom" a meglévő sort nyitja meg (D203/D204)', async () => {
+  it('"+ Új páciens" névegyezésnél az "Ezt a pácienst választom" a meglévő páciens részletoldalára navigál (D203/D204)', async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -227,20 +159,25 @@ describe('PaciensekPage', () => {
       await within(dialog).findByRole('button', { name: 'Ezt a pácienst választom: Kovács János' }),
     );
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(await screen.findByDisplayValue('+36 30 123 4567')).toBeInTheDocument();
+    const probe = await screen.findByTestId('paciens-reszletei');
+    expect(probe.dataset.tab).toBe('adatai');
   });
 
-  it('a "Korábbi tervek" kereszt-link a páciens-részletoldalra navigál, a tervek tabbal előválasztva', async () => {
+  it('elnavigálás után böngésző-"vissza" navigálva a keresőszöveg megmarad (D43)', async () => {
     const user = userEvent.setup();
     renderPage();
 
     await screen.findByText('Nagy Éva');
+    await user.type(
+      screen.getByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
+      'nagy',
+    );
     await user.click(screen.getByText('Nagy Éva'));
-    await user.click(await screen.findByRole('button', { name: 'Korábbi tervek' }));
+    await screen.findByTestId('paciens-reszletei');
 
-    const probe = await screen.findByTestId('paciens-reszletei');
-    expect(probe.dataset.patientdir).toBeTruthy();
-    expect(probe.dataset.tab).toBe('tervek');
+    await user.click(screen.getByRole('button', { name: 'Vissza a listára' }));
+    expect(
+      await screen.findByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
+    ).toHaveValue('nagy');
   });
 });

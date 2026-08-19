@@ -51,8 +51,8 @@ export default function PatientDetailPage() {
 
   // A Radix `Tabs` unmountolja a nem aktív tab tartalmát -- a "Páciens
   // adatai" tabon félbehagyott szerkesztés máskülönben némán elveszne
-  // egy tab-váltásnál, ugyanaz az eset, amit a PaciensekPage.tsx
-  // sor-váltásnál már guardol (D38).
+  // egy tab-váltásnál, ugyanaz a közös primitív (D38), mint amit a
+  // SettingsPage.tsx "Nyomtatvány szövegei" szekciója Mégse gombjánál hív.
   const [dirtyAdatai, setDirtyAdatai] = useState(false);
   const guard = useDiscardGuard(dirtyAdatai);
 

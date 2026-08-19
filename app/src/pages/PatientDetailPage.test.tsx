@@ -1,12 +1,16 @@
 // backlog-30: az egyesített páciens-részletoldal (két tab: Páciens adatai |
-// Kezelési tervek, URL-lel címezhető). A mezőkészlet/Save-Cancel
-// viselkedés (PatientEditorPanel) és a terv-lánc/verzió fa (PatientPlanChains)
-// saját, teljes lefedettséggel rendelkezik a PaciensekPage.test.tsx-ben és
-// a PlanHistoryPage.test.tsx-ben -- ez a fájl csak az ÚJ, oldal-szintű
-// viselkedést fedi: URL-ből feloldott páciens, alapértelmezett/átadott tab,
-// tab-váltás navigáció NÉLKÜL, 0 láncú páciens CTA-ja, sticky fejléc.
+// Kezelési tervek, URL-lel címezhető). A terv-lánc/verzió fa
+// (PatientPlanChains) saját, teljes lefedettséggel rendelkezik a
+// PlanHistoryPage.test.tsx-ben. A `Páciens adatai` tab tartalmának
+// (PatientEditorPanel) mezőkészlet/Save-Cancel viselkedése -- a 38. tétel
+// (D43) óta, mióta a Pácienslista tiszta navigációs lista, ennek az
+// egyetlen hívási helye ez az oldal -- itt fedve (mentés → tényleges
+// paciens-adatok.json, átnevezés-duplikáció megerősítés). Ami ezen felül
+// marad, csak az ÚJ, oldal-szintű viselkedés: URL-ből feloldott páciens,
+// alapértelmezett/átadott tab, tab-váltás navigáció NÉLKÜL, 0 láncú páciens
+// CTA-ja, sticky fejléc.
 
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
@@ -43,6 +47,7 @@ function renderDetail(patientDir: string, state?: Record<string, unknown>) {
 
 const nagyDir = seedPatients.find((p) => p.record.nev === 'Nagy Éva')!.patientDir;
 const kovacsDir = seedPatients.find((p) => p.record.nev === 'Kovács János')!.patientDir;
+const tothDir = seedPatients.find((p) => p.record.nev === 'Tóth Zoltán')!.patientDir;
 
 describe('PatientDetailPage', () => {
   beforeEach(async () => {
@@ -168,5 +173,56 @@ describe('PatientDetailPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Páciens adatai' }));
     expect(await screen.findByDisplayValue('+36 20 555 1234')).toBeInTheDocument();
+  });
+
+  // Kovács Jánosnak (a seed szerint) nincs saját paciens-adatok.json-ja --
+  // a mezők a legutóbbi terv paciens-pillanatképéből előre kitöltve
+  // nyílnak, fallback-jelzéssel; mentés után a jelzés eltűnik és a fájl
+  // ténylegesen létrejön.
+  it('törzsadat nélküli páciensnél a legutóbbi terv paciens pillanatképét mutatja, fallback-jelzéssel, mentés után önálló törzsadattá válik', async () => {
+    const user = userEvent.setup();
+    renderDetail(kovacsDir, { tab: 'adatai' });
+
+    expect(await screen.findByDisplayValue('+36 30 123 4567')).toBeInTheDocument();
+    expect(screen.getByText(/mentéssel önálló/)).toBeInTheDocument();
+
+    const telefonMezo = screen.getByDisplayValue('+36 30 123 4567');
+    await user.clear(telefonMezo);
+    await user.type(telefonMezo, '+36 70 000 1111');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+    await waitFor(() => expect(screen.queryByText(/mentéssel önálló/)).not.toBeInTheDocument());
+
+    const verify = new DemoStorage();
+    await verify.init();
+    const adatok = await verify.loadPatientData(kovacsDir);
+    expect(adatok?.telefon).toBe('+36 70 000 1111');
+  });
+
+  it('átnevezés egy másik meglévő páciens nevére megerősítést kér mentéskor (D42, redesign D208)', async () => {
+    const user = userEvent.setup();
+    renderDetail(tothDir, { tab: 'adatai' });
+
+    const nevMezo = await screen.findByRole('textbox', { name: 'Név *' });
+    await user.clear(nevMezo);
+    await user.type(nevMezo, 'Fekete Zoltán');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+    const alert = await screen.findByRole('alertdialog');
+    expect(within(alert).getByText('Hasonló nevű páciens már létezik')).toBeInTheDocument();
+
+    await user.click(within(alert).getByRole('button', { name: 'Mégse' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('textbox', { name: 'Név *' })).toHaveValue('Fekete Zoltán');
+
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    const alert2 = await screen.findByRole('alertdialog');
+    await user.click(within(alert2).getByRole('button', { name: 'Mentés mégis' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+
+    const verify = new DemoStorage();
+    await verify.init();
+    const adatok = await verify.loadPatientData(tothDir);
+    expect(adatok?.nev).toBe('Fekete Zoltán');
   });
 });

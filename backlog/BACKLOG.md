@@ -13,17 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 38. tétel — Pácienslista és keresés
-  (a `backlog/redesign/` redesign-döntéssorozat DP-014 tétele) — a lista
-  ma már alfabetikus és névre keres (ez már megfelel), de a sorok
-  helyben nyílnak ki (nem navigálnak), nincs DOB/telefon a sorban, és
-  nincs search/scroll-state megőrzés. Ez a tétel a sorokat a 30. tétel
-  páciens-részletoldalára navigáló linkekre váltja, DOB/telefont ad a
-  kompakt sorhoz (eager betöltéssel, a `PlanHistoryPage` végösszeg-
-  mintájára), és általános state-megőrzést épít. Függ a 30. tételtől.
-  A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-38-pacienslista-terv.md`
-
 ### 39. tétel — Páciens adatok read-only / edit / full create
   (a `backlog/redesign/` redesign-döntéssorozat DP-015 tétele) — a
   `PatientEditor` ma kinyitáskor rögtön szerkeszthető, nincs read-only
