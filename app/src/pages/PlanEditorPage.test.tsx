@@ -591,7 +591,7 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     seedWithGermanEnabledAndNoEurPrices();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     await screen.findByText('Az ajánlat nyelve és pénzneme');
     await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
@@ -608,7 +608,7 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     seedWithGermanEnabled();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     await screen.findByText('Az ajánlat nyelve és pénzneme');
     await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));

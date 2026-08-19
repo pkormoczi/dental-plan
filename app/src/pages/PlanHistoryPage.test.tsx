@@ -243,7 +243,7 @@ describe('PlanHistoryPage', () => {
   });
 
   // docs/03-funkcionalis-spec.md § Autosave: ugyanaz a felülírás-kockázat,
-  // mint a Home "Új terv indítása" gombjánál -- az "Új verzió" szó nélkül
+  // mint a Home "+ Új kezelési terv" gombjánál -- az "Új verzió" szó nélkül
   // felülírná a folyamatban lévő, mentetlen piszkozatot.
   it('"Új verzió" megerősítést kér mentetlen piszkozatnál, és csak megerősítésre nyit meg', async () => {
     seedPersistedDraft();

@@ -47,7 +47,7 @@ describe('Végpontok közötti folyamat', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Aladár');
@@ -144,7 +144,7 @@ describe('Végpontok közötti folyamat', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Németh Éva');
@@ -195,7 +195,7 @@ describe('Végpontok közötti folyamat', () => {
     const user = userEvent.setup();
     const first = render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Új terv indítása' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Piszkozat Ilona');
@@ -234,7 +234,9 @@ describe('Végpontok közötti folyamat', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(await screen.findByRole('button', { name: 'Korábbi tervek' }));
+    // D39: a "Korábbi tervek" gomb lekerült a Kezdőlapról -- a `/tervek`
+    // route URL-ről marad elérhető, itt közvetlen hash-navigációval.
+    window.location.hash = '#/tervek';
     const nagyEva = await screen.findByText('Nagy Éva');
     const card = nagyEva.closest('[data-patient]') as HTMLElement;
     // Nagy Évának két önálló terv-lánca is van (D29) -- a páciens-blokk

@@ -29,10 +29,10 @@ import { ChevronDownIcon, ChevronRightIcon, CrossCircledIcon, InfoCircledIcon } 
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import PatientEditorPanel from '../components/PatientEditorPanel';
 import { t } from '../design/tokens';
-import { latestVersionAcrossPlans } from '../domain/planFolders';
 import { uresTorzsadat } from '../domain/paciensAdatok';
 import { norm } from '../domain/search';
-import type { PatientFolder, PatientMasterData, Plan, PlanVersion } from '../domain/types';
+import { loadUtolsoTerv } from '../domain/torzsadatBetoltes';
+import type { PatientFolder, PatientMasterData, Plan } from '../domain/types';
 import UjPaciensDialog from './paciensek/UjPaciensDialog';
 import { useStorage } from '../storage/StorageContext';
 
@@ -114,23 +114,7 @@ export default function PaciensekPage() {
       setFallbackAttempted((prev) => new Set(prev).add(patientDir));
       setFallbackLoadingSet((prev) => new Set(prev).add(patientDir));
       try {
-        const plans = await storage.listPlans(patientDir);
-        const versionsByPlanDir: Record<string, PlanVersion[]> = {};
-        await Promise.all(
-          plans.map(async (plan) => {
-            versionsByPlanDir[plan.dirName] = await storage.listVersions(patientDir, plan.dirName);
-          }),
-        );
-        const latest = latestVersionAcrossPlans(plans, (planDir) => versionsByPlanDir[planDir] ?? []);
-        if (!latest) {
-          setFallbackByPatient((prev) => ({ ...prev, [patientDir]: null }));
-          return;
-        }
-        const plan = await storage.loadPlan({
-          patientDir,
-          planDir: latest.planDir,
-          versionDir: latest.version.dirName,
-        });
+        const plan = await loadUtolsoTerv(storage, patientDir);
         setFallbackByPatient((prev) => ({ ...prev, [patientDir]: plan }));
       } catch (err) {
         setFallbackErrorByPatient((prev) => ({

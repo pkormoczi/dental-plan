@@ -168,15 +168,38 @@ export interface Plan {
 }
 
 /**
+ * A "jelentős aktivitás" típusa és időbélyege egy páciensen (D39,
+ * docs/03-funkcionalis-spec.md § 1. Indítás). Csak a LEGUTÓBBI esemény
+ * marad meg -- nem napló --, és kizárólag tényleges tartalmi íráskor
+ * frissül (`domain/paciensAktivitas.ts` `ujAktivitas`); egy páciens/terv
+ * puszta megnyitása/megtekintése sosem ír bele.
+ */
+export type AktivitasTipus = 'letrehozva' | 'torzsadat-mentve' | 'terv-veglegesitve';
+
+export interface PatientActivity {
+  tipus: AktivitasTipus;
+  /** ISO wall-clock (`new Date().toISOString()`) -- NEM naptári/üzleti dátum, ellentétben a `Plan.keltezes`-szel. */
+  idopont: string;
+}
+
+/**
  * paciens.json -- egy páciens-mappa azonosító-/kereső-indexe (D29). SOHA
  * nem system of record: a `nev` kizárólag kereséshez és előtöltéshez való
  * gyorsítótár, a `terv.json` `paciens` blokkja marad a pillanatkép (D7,
  * docs/02-domain-modell.md § Páciens- és terv-mappa).
+ *
+ * `utolsoAktivitas` additív mező, `schemaVersion` nem emelkedett -- hiánya
+ * azt jelenti, a páciensen még nem történt jelentős aktivitás (vagy egy
+ * funkció előtti/legacy rekordról van szó), nem hibaállapot. Puszta index
+ * mezőként egy sérült/ismeretlen alakú értéke sosem dobhat (D29) --
+ * `domain/paciensAktivitas.ts` `ervenyesAktivitas()` némán `undefined`-re
+ * esik vissza, ellentétben a `PatientMasterData` szigorú validációjával.
  */
 export interface PatientRecord {
   schemaVersion: 1;
   paciensId: string;
   nev: string;
+  utolsoAktivitas?: PatientActivity;
 }
 
 /**
@@ -230,12 +253,17 @@ export interface Settings {
 /**
  * Egy páciensmappa a paciensek/ fában (lásd storage/paths.ts). A `nev` a
  * `paciens.json`-ből jön -- nem a mappanév visszafejtése és nem egy
- * betöltött `terv.json`-é (D29).
+ * betöltött `terv.json`-é (D29). Az `utolsoAktivitas` a `paciens.json`
+ * ugyanezen mezőjének tükre -- ez teszi lehetővé, hogy a Kezdőlap recent
+ * listája (`domain/paciensAktivitas.ts` `legutobbAktivPaciensek`) a
+ * `listPatients()` eredményéből dolgozzon, `paciens.json` újraolvasása
+ * nélkül.
  */
 export interface PatientFolder {
   dirName: string;
   paciensId: string;
   nev: string;
+  utolsoAktivitas?: PatientActivity;
 }
 
 /**

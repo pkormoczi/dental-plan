@@ -16,8 +16,9 @@ export default function DemoBanner() {
       }}
     >
       <strong>DEMÓ</strong> — az adatok csak ebben a böngészőben, titkosítatlanul
-      tárolódnak. Ne írj be valódi páciensadatot; ha véletlenül mégis, a
-      Kezdőlapon a „Minden adat törlése” gombbal tudod kiüríteni a tárolót.
+      tárolódnak. Ne írj be valódi páciensadatot; ha véletlenül mégis, a DEMO
+      oldal Adatkezelés fülén a „Minden adat törlése” gombbal tudod kiüríteni
+      a tárolót.
     </div>
   );
 }

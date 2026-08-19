@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { addDaysIso, formatLongDate, formatPiszkozatIdo, formatShortDate, todayIso } from './date';
+import {
+  addDaysIso,
+  formatLongDate,
+  formatPiszkozatIdo,
+  formatRelativIdo,
+  formatShortDate,
+  todayIso,
+} from './date';
 
 describe('todayIso', () => {
   it('returns an ISO (YYYY-MM-DD) date', () => {
@@ -32,6 +39,51 @@ describe('formatPiszkozatIdo', () => {
     expect(formatPiszkozatIdo('2026-08-09T10:15:00.000Z')).toMatch(
       /^\d{4}\. \d{2}\. \d{2}\. \d{2}:\d{2}$/,
     );
+  });
+});
+
+describe('formatRelativIdo', () => {
+  const most = new Date(2026, 7, 9, 12, 0, 0);
+  const isoBefore = (ms: number) => new Date(most.getTime() - ms).toISOString();
+
+  it('shows "az imént" under a minute', () => {
+    expect(formatRelativIdo(isoBefore(0), most)).toBe('az imént');
+    expect(formatRelativIdo(isoBefore(30_000), most)).toBe('az imént');
+  });
+
+  it('shows "az imént" for a future timestamp (clock skew)', () => {
+    expect(formatRelativIdo(new Date(most.getTime() + 5_000).toISOString(), most)).toBe('az imént');
+  });
+
+  it('shows minutes under an hour', () => {
+    expect(formatRelativIdo(isoBefore(5 * 60_000), most)).toBe('5 perce');
+    expect(formatRelativIdo(isoBefore(59 * 60_000), most)).toBe('59 perce');
+  });
+
+  it('shows hours under a day', () => {
+    expect(formatRelativIdo(isoBefore(60 * 60_000), most)).toBe('1 órája');
+    expect(formatRelativIdo(isoBefore(23 * 60 * 60_000), most)).toBe('23 órája');
+  });
+
+  it('stays elapsed-time based across a local midnight under 24h', () => {
+    const este = new Date(2026, 7, 8, 23, 0, 0); // előző nap 23:00
+    const hajnal = new Date(2026, 7, 9, 0, 30, 0); // 1.5 órával később, már másnap
+    expect(formatRelativIdo(este.toISOString(), hajnal)).toBe('1 órája');
+  });
+
+  it('shows "tegnap" for a calendar-yesterday timestamp past 24h elapsed', () => {
+    const tegnapHajnal = new Date(2026, 7, 8, 0, 30, 0);
+    const maEste = new Date(2026, 7, 9, 23, 0, 0);
+    expect(formatRelativIdo(tegnapHajnal.toISOString(), maEste)).toBe('tegnap');
+  });
+
+  it('shows days for 2-6 days', () => {
+    expect(formatRelativIdo(isoBefore(3 * 86_400_000), most)).toBe('3 napja');
+    expect(formatRelativIdo(isoBefore(6 * 86_400_000), most)).toBe('6 napja');
+  });
+
+  it('falls back to the absolute short date from 7 days', () => {
+    expect(formatRelativIdo(isoBefore(8 * 86_400_000), most)).toBe('2026.08.01.');
   });
 });
 

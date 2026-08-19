@@ -1,4 +1,4 @@
-// Köztes kereső/választó lépés a Home "Új terv indítása" gombja után (D29,
+// Köztes kereső/választó lépés a Home "+ Új kezelési terv" gombja után (D29,
 // docs/03-funkcionalis-spec.md § Új terv indítása). A Korábbi tervek oldal
 // saját "Új terv"/"Másolás új tervbe" gombjai NEM ide navigálnak -- azoknál
 // a célpáciens már adott a forrás tervből, nincs kétértelműség.

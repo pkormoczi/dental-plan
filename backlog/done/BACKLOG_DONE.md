@@ -968,3 +968,39 @@ karbantartási kör négy önálló javítása.
   router-szintű navigáció-blokkolás — az app `HashRouter`-t használ, amit
   a react-router `useBlocker`-e nem támogat data router nélkül, és a
   sablon-piszkozat egyébként is túléli az elnavigálást a cache-en át.
+
+---
+
+### 34. Kezdőlap új struktúrája — KÉSZ (2026-08-19)
+
+- **Méret:** ~1,5 nap. A valódi új hatókör egyetlen, korábban sehol nem
+  létező adat volt: egy páciensenkénti wall-clock "utolsó jelentős
+  aktivitás" időbélyeg (a `PlanVersion.isoDate`/`Plan.keltezes` a doki
+  által szabadon szerkeszthető ÜZLETI dátum, D22, nem mentési időpont).
+- **Kereteket sért?** Nem — új D39 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a korábbi Home öt egymásra épülő kártyát/gombot
+  mutatott egyszerre, demó-eszközök és üzleti navigáció keverten, és
+  sehol nem látszott, kikkel dolgozott a doki nemrég.
+- **Megvalósítás:** a `paciens.json` (`PatientRecord`) kap egy opcionális
+  `utolsoAktivitas: { tipus, idopont }` mezőt, additív, `schemaVersion`
+  emelése nélkül — három MEGLÉVŐ storage-írási pont (`createPatient`,
+  `savePatientData`, `savePlan`) tölti ki, egy negyedik (a legacy-mappa
+  migráció) szándékosan nem, hogy ne szintetizáljon hamis időbélyeget az
+  üzleti `keltezes`-ből. Puszta index-mezőként (D29) egy sérült/ismeretlen
+  érték a betöltéskor némán kimarad, nem hibát dob
+  (`domain/paciensAktivitas.ts` `ervenyesAktivitas`). Új domain-réteg:
+  `domain/paciensAktivitas.ts` (a rendező/limitáló `legutobbAktivPaciensek`
+  és a sor-szöveg `aktivitasSzoveg`, mindkettőt a Kezdőlap ÉS a 35. tétel
+  páciensválasztója is hívja majd), `domain/date.ts` `formatRelativIdo`
+  (szándékosan kézzel formázva, nem `Intl.RelativeTimeFormat`-tal — annak
+  magyar kimenete pontatlan/félrevezető a kívánt "2 órája"/"tegnap"
+  szöveghez képest), és `domain/torzsadatBetoltes.ts`
+  (`loadUtolsoTerv`/`loadMegjelenitettTorzsadat`, amit a Kezdőlap ÉS a
+  `PaciensekPage.tsx` sorkinyitása is megoszt — utóbbi belső sétáját ez
+  váltotta ki, bájtra változatlan viselkedéssel). A Kezdőlap három blokkra
+  csökkent (fő CTA `+ Új kezelési terv`, változatlan aktív-draft kártya,
+  max 5 recent páciens); a demó-only "Demó adat visszaállítása"/"Minden
+  adat törlése" a DEMO oldal új, negyedik (Adatkezelés) fülére költözött a
+  hozzá tartozó `reloadFromStorage()` P0-6 óvatossággal együtt; a "Korábbi
+  tervek" gomb megszűnt, a globális `/tervek` lista mostantól kizárólag
+  URL-ről érhető el.

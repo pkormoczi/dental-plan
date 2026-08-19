@@ -13,7 +13,7 @@ export function parseJson<T>(raw: string, fileKind: string): T {
   } catch {
     throw new Error(
       `A(z) ${fileKind} fájl nem érvényes JSON, valószínűleg sérült. Próbáld a ` +
-        `"Demó adat visszaállítása" gombot a Kezdőlapon.`,
+        `"Demó adat visszaállítása" gombot a DEMO oldal Adatkezelés fülén.`,
     );
   }
 }

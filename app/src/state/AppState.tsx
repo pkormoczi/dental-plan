@@ -63,7 +63,7 @@ interface AppStateValue {
    * nincs a fájl-storage-ban -- azaz `plan` egy másik objektumreferencia,
    * mint a legutóbb onnan betöltött/oda mentett terv. Ez vezérli a Home
    * "Piszkozat folytatása" kártyáját és a felülírás elleni AlertDialog-okat
-   * (Home "Új terv indítása", PlanHistoryPage mindhárom terv-létrehozó
+   * (Home "+ Új kezelési terv", PlanHistoryPage mindhárom terv-létrehozó
    * gombja) -- lásd docs/03-funkcionalis-spec.md § Autosave.
    */
   vanMentetlenPiszkozat: boolean;
@@ -259,7 +259,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   // localStorage.setItem ezen a méreten elhanyagolható költségű, a debounce
   // itt csak egy felesleges adatvesztési ablakot nyitna összeomláskor. Az
   // érintetlen, üres piszkozatot (`piszkozatTartalmas` false) NEM írja, hogy
-  // minden "Új terv indítása" után ne jöjjön létre azonnal egy tartalmilag
+  // minden "+ Új kezelési terv" után ne jöjjön létre azonnal egy tartalmilag
   // üres, de technikailag létező perzisztált piszkozat.
   useEffect(() => {
     if (!plan) return;

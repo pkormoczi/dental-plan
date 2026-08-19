@@ -10,7 +10,7 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
 import { beforeEach, describe, expect, it } from 'vitest';
 import Home from './Home';
@@ -69,6 +69,45 @@ function Probe({ label }: { label: string }) {
   return <div>{label}</div>;
 }
 
+function PatientProbe() {
+  const { patientDir } = useParams();
+  const location = useLocation();
+  return (
+    <div>
+      <div data-testid="patientdir">{patientDir}</div>
+      <div data-testid="state">{JSON.stringify(location.state ?? null)}</div>
+    </div>
+  );
+}
+
+function renderHomeWithPatientRoute() {
+  return render(
+    <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
+      <MemoryRouter initialEntries={['/']}>
+        <StorageProvider>
+          <AppStateProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/paciensek/:patientDir" element={<PatientProbe />} />
+            </Routes>
+          </AppStateProvider>
+        </StorageProvider>
+      </MemoryRouter>
+    </Theme>,
+  );
+}
+
+/** A `dp:paciensek/<dir>/<fajl>` alakú seed-kulcsok közül az elsőt adja, aminek a mappaneve tartalmazza a keresett részletet. */
+function findSeedKey(dirReszlet: string, fajlnev: string): string {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)!;
+    if (key.startsWith('dp:paciensek/') && key.includes(dirReszlet) && key.endsWith(`/${fajlnev}`)) {
+      return key;
+    }
+  }
+  throw new Error(`nincs "${fajlnev}" kulcs "${dirReszlet}"-hez`);
+}
+
 // A `TestProviders` bare MemoryRouter-je nem vált route-ot (lásd fenti
 // D29-komment) -- ahol a "Megnyitás" TÉNYLEGES célja számít (D37
 // lastRoute), valódi Routes/probe-oldalak kellenek, a
@@ -103,9 +142,21 @@ describe('Home -- piszkozat-perzisztencia', () => {
 
   it('nincs "Piszkozat folytatása" kártya és hibaüzenet sincs, ha nincs perzisztált piszkozat', async () => {
     renderHome();
-    await screen.findByRole('button', { name: 'Új terv indítása' });
+    await screen.findByRole('button', { name: '+ Új kezelési terv' });
     expect(screen.queryByText('Piszkozat folytatása')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Piszkozat elvetése' })).not.toBeInTheDocument();
+  });
+
+  // D39: a demó-only "Demó adat visszaállítása"/"Minden adat törlése" a
+  // DEMO oldal Adatkezelés fülére költözött, a "Korábbi tervek" gomb pedig
+  // lekerült (a `/tervek` route URL-ről marad elérhető) -- lásd
+  // DemoPage.test.tsx / AdatkezelesSection.test.tsx.
+  it('nincs "Korábbi tervek" gomb és nincs demó-only adatkezelő gomb sem', async () => {
+    renderHome();
+    await screen.findByRole('button', { name: '+ Új kezelési terv' });
+    expect(screen.queryByRole('button', { name: 'Korábbi tervek' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Demó adat visszaállítása' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Minden adat törlése' })).not.toBeInTheDocument();
   });
 
   it('a "Piszkozat folytatása" kártya a páciensnevet és az utolsó mentés időpontját mutatja', async () => {
@@ -130,13 +181,13 @@ describe('Home -- piszkozat-perzisztencia', () => {
   // páciens-választón fut le (lásd NewPlanPage.test.tsx) -- a Home gombja
   // feltétel nélkül odanavigál, itt csak ennyi ellenőrizhető izoláltan
   // (a `TestProviders` bare `MemoryRouter`-je nem vált route-ot).
-  it('"Új terv indítása" nem nyit megerősítő dialógust -- feltétel nélkül az /uj-terv köztes lépésre navigál', async () => {
+  it('"+ Új kezelési terv" nem nyit megerősítő dialógust -- feltétel nélkül az /uj-terv köztes lépésre navigál', async () => {
     seedPersistedDraft(makeDirtyPlan());
     const user = userEvent.setup();
     renderHome();
     await screen.findByText('Piszkozat folytatása');
 
-    await user.click(screen.getByRole('button', { name: 'Új terv indítása' }));
+    await user.click(screen.getByRole('button', { name: '+ Új kezelési terv' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     // A piszkozat itt még nem veszett el -- az őr a NewPlanPage-en dől el.
     expect(screen.getByText('Piszkozat folytatása')).toBeInTheDocument();
@@ -195,5 +246,67 @@ describe('Home -- piszkozat-perzisztencia', () => {
 
     await user.click(screen.getByRole('button', { name: 'Elvetés' }));
     expect(screen.queryByText('Piszkozat folytatása')).not.toBeInTheDocument();
+  });
+});
+
+describe('Home -- legutóbbi páciensek (D39)', () => {
+  beforeEach(async () => {
+    localStorage.clear();
+    const seeder = new DemoStorage();
+    await seeder.init();
+  });
+
+  it('a friss seeden három recent sort mutat, a legutóbbi aktivitás szerint, aktivitás-címkével', async () => {
+    renderHome();
+    await screen.findByText('Legutóbbi páciensek');
+
+    const links = await screen.findAllByRole('link');
+    expect(links).toHaveLength(3);
+    expect(links[0]).toHaveTextContent('Kovács János');
+    expect(links[0]).toHaveTextContent('Terv véglegesítve');
+    expect(links[1]).toHaveTextContent('Nagy Éva');
+    expect(links[1]).toHaveTextContent('Törzsadat mentve');
+    expect(links[2]).toHaveTextContent('Tóth Zoltán');
+    expect(links[2]).toHaveTextContent('Terv véglegesítve');
+  });
+
+  it('egy páciens MEGNYITÁSA (kattintás) nem befolyásolja, milyen sorrendben és tartalommal jelenik meg a lista', async () => {
+    const user = userEvent.setup();
+    renderHomeWithPatientRoute();
+
+    const link = await screen.findByRole('link', { name: /Kovács János/ });
+    await user.click(link);
+
+    // D192: nincs location.state -- a PatientDetailPage alapértelmezett
+    // tabja ('tervek') a `null` state mellett is a Kezelési tervek tabot
+    // mutatja.
+    expect(await screen.findByTestId('state')).toHaveTextContent('null');
+    expect(screen.getByTestId('patientdir')).not.toHaveTextContent('');
+  });
+
+  it('utolsoAktivitas nélküli pácienseknél az üres állapot jelenik meg', async () => {
+    for (const dirReszlet of ['Kovács', 'Nagy', 'Tóth']) {
+      const key = findSeedKey(dirReszlet, 'paciens.json');
+      const raw = JSON.parse(localStorage.getItem(key)!);
+      delete raw.utolsoAktivitas;
+      localStorage.setItem(key, JSON.stringify(raw));
+    }
+
+    renderHome();
+    expect(await screen.findByText(/Még nincs mentett munkád/)).toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('egy páciens sérült paciens-adatok.json-ja mellett a sora "⚠ adat nem olvasható"-t mutat, a többi érintetlen', async () => {
+    const key = findSeedKey('Nagy', 'paciens-adatok.json');
+    localStorage.setItem(key, 'not valid json {{{');
+
+    renderHome();
+    const links = await screen.findAllByRole('link');
+    expect(links).toHaveLength(3);
+    expect(links[1]).toHaveTextContent('Nagy Éva');
+    expect(links[1]).toHaveTextContent('⚠ adat nem olvasható');
+    expect(links[0]).not.toHaveTextContent('⚠ adat nem olvasható');
+    expect(links[2]).not.toHaveTextContent('⚠ adat nem olvasható');
   });
 });

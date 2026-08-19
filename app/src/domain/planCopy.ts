@@ -15,7 +15,7 @@ import type { PatientMasterData, Plan, PriceList, Settings } from './types';
  * forrásból (D29: ez tartja a másolatot ugyanabban a páciens-mappában, új
  * terv-láncként -- lásd `planMasolatKent` kommentjét), minden más a mai
  * `createBlankPlan()` friss alapértéke (nyelv/pénznem is), ugyanúgy, mintha
- * a doki a Kezdőlap "Új terv indítása" gombját nyomta volna.
+ * a doki a Kezdőlap "+ Új kezelési terv" gombját nyomta volna.
  */
 export function planUjPaciensselTervhez(
   plan: Plan,

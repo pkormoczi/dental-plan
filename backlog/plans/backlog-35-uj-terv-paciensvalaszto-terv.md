@@ -111,7 +111,9 @@ találat, mert épp begépelte a nevet.
   recents/keresés kettéválasztás, relevancia-rendezés, no-match ág.
 - Új `onKeyDown` kezelés a találati listán, az `ItemPicker.tsx:129–159`
   mintájára.
-- `app/src/domain/legutobbAktivPaciensek.ts` (34. tétel) — import és
+- `app/src/domain/paciensAktivitas.ts` `legutobbAktivPaciensek()` (34.
+  tétel, D39 — a terv eredeti javaslatától eltérő fájlnéven, a rendező/
+  szöveg-helperekkel egy kohéziós modulban valósult meg) — import és
   hívás recents-hez.
 
 ## Tesztelés (irányadó, nem kimerítő)

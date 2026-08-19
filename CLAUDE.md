@@ -507,6 +507,29 @@ A közös Save/Cancel + dirty-navigation guard tétel
   `NewPlanPage.tsx`, `PatientPlanChains.tsx`) MÁS domaint védenek (D37) —
   ezekre SZÁNDÉKOSAN nincsenek ráállítva
 
+A Kezdőlap „Legutóbbi páciensek" tétel (`docs/01-attekintes-es-dontesek.md`
+D39, `docs/03-funkcionalis-spec.md` § 1. Indítás) segédfüggvényei, szintén
+ne írd újra őket:
+- `ujAktivitas(tipus, most?)` / `ervenyesAktivitas(value)` /
+  `legutobbAktivPaciensek(patients, limit)` / `aktivitasSzoveg(aktivitas,
+  most)` (`app/src/domain/paciensAktivitas.ts`) — az EGYETLEN hely, ahol a
+  `paciens.json` `utolsoAktivitas` mezője íródik, tolerálva olvasódik
+  (D29: sosem dob), rendeződik/limitálódik (tiszta függvény, nincs I/O —
+  a hívó adja a MÁR betöltött `PatientFolder[]`-t) és szövegesedik. A
+  Kezdőlap ÉS a 35. tétel (páciensválasztó) is ezt hívja, hogy a két
+  recent-lista ne térjen el egymástól
+- `formatRelativIdo(iso, most)` (`app/src/domain/date.ts`) — a
+  „2 órája"/„tegnap"/„3 napja" jelzés; szándékosan NEM
+  `Intl.RelativeTimeFormat` (a `hu`/`auto` "2 órával ezelőtt"-et és
+  naptári-periódusra hivatkozó "előző hét" alakot ad), a `most` kötelező
+  paraméter a determinisztikus teszteléshez
+- `loadUtolsoTerv(storage, patientDir)` / `loadMegjelenitettTorzsadat(storage,
+  patient)` (`app/src/domain/torzsadatBetoltes.ts`) — EGY páciens
+  legfrissebb terv-verziójának betöltése (nem `loadPlanChainData`, az
+  minden verziót betöltene), illetve a `megjelenitettTorzsadat()` (D33)
+  betöltve, sosem dobva (P1-2 mintája). A Kezdőlap recent sorai ÉS a
+  `PaciensekPage.tsx` sorkinyitása is ezt hívja
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

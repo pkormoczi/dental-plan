@@ -61,3 +61,38 @@ export function formatPiszkozatIdo(iso: string): string {
   const ido = d.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' });
   return `${datum} ${ido}`;
 }
+
+function localIsoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const nap = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${nap}`;
+}
+
+function localMidnight(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+/**
+ * A Kezdőlap recent-páciens sorának "2 órája"/"tegnap"/"3 napja" jelzése
+ * (docs/03-funkcionalis-spec.md § 1. Indítás, D39). Szándékosan NEM
+ * `Intl.RelativeTimeFormat`: `hu`/`numeric:'auto'` "2 órával ezelőtt"-et ad
+ * (nem "2 órája"-t), és a hét/hónap egységnél naptári periódusra hivatkozik,
+ * nem eltelt időre (`-1 week` -> "előző hét", ami egy 6 napos elemre
+ * félrevezető) -- ugyanaz az ok, ami `formatShortDate`-et is kézi
+ * összerakásra vitte. A `most` szándékosan kötelező, lásd a fájl fejlécét.
+ * A perc/óra sáv eltelt-idő alapú, a nap-sáv helyi naptári nap alapú --
+ * enélkül egy tegnap éjfél körüli időbélyeg hol "23 órája", hol "tegnap"
+ * lenne attól függően, melyik oldalára esik a határnak.
+ */
+export function formatRelativIdo(iso: string, most: Date): string {
+  const akkor = new Date(iso);
+  const eltelt = most.getTime() - akkor.getTime();
+  if (eltelt < 60_000) return 'az imént';
+  if (eltelt < 3_600_000) return `${Math.floor(eltelt / 60_000)} perce`;
+  if (eltelt < 86_400_000) return `${Math.floor(eltelt / 3_600_000)} órája`;
+  const napkulonbseg = Math.round((localMidnight(most) - localMidnight(akkor)) / 86_400_000);
+  if (napkulonbseg === 1) return 'tegnap';
+  if (napkulonbseg <= 6) return `${napkulonbseg} napja`;
+  return formatShortDate(localIsoDate(akkor), 'hu');
+}

@@ -10,6 +10,7 @@
 
 import { javasoltTervCim } from '../domain/tervCim';
 import { paciensIndexNev, uresTorzsadat } from '../domain/paciensAdatok';
+import { ervenyesAktivitas, ujAktivitas } from '../domain/paciensAktivitas';
 import { assertKnownSchemaVersion } from '../domain/schema';
 import { isPlaceholderTemplate } from '../domain/templates';
 import {
@@ -284,6 +285,11 @@ export class DemoStorage implements PlanStorage {
       localStorage.removeItem(`${prefix}${versionDir}/pdf`);
     }
 
+    // Nincs utolsoAktivitas: az egyetlen elérhető időbélyeg itt a `keltezes`
+    // (üzleti, doki által szabadon szerkeszthető dátum, D22) -- abból
+    // szintetizálni fals, akár JÖVŐBELI wall-clock időt adna, ami a pácienst
+    // örökre a recent lista tetejére ragasztaná. A hiányzó mező a következő
+    // valódi íráskor magától gyógyul.
     const record: PatientRecord = {
       schemaVersion: 1,
       paciensId,
@@ -366,7 +372,12 @@ export class DemoStorage implements PlanStorage {
       if (raw != null) {
         try {
           const record = parseJson<PatientRecord>(raw, 'paciens.json');
-          return { dirName, paciensId: record.paciensId, nev: record.nev };
+          return {
+            dirName,
+            paciensId: record.paciensId,
+            nev: record.nev,
+            utolsoAktivitas: ervenyesAktivitas(record.utolsoAktivitas),
+          };
         } catch {
           // esik át a mappanév-visszafejtésre lent
         }
@@ -500,6 +511,7 @@ export class DemoStorage implements PlanStorage {
       schemaVersion: 1,
       paciensId,
       nev: paciensIndexNev(existingPatientData, plan.paciens.nev),
+      utolsoAktivitas: ujAktivitas('terv-veglegesitve'),
     };
     const patientRecordKeyStr = patientRecordKey(patientDir);
 
@@ -638,7 +650,12 @@ export class DemoStorage implements PlanStorage {
   async savePatientData(patientDir: string, data: PatientMasterData): Promise<void> {
     return this.enqueue(async () => {
       localStorage.setItem(patientDataKey(patientDir), JSON.stringify(data));
-      const record: PatientRecord = { schemaVersion: 1, paciensId: data.paciensId, nev: data.nev };
+      const record: PatientRecord = {
+        schemaVersion: 1,
+        paciensId: data.paciensId,
+        nev: data.nev,
+        utolsoAktivitas: ujAktivitas('torzsadat-mentve'),
+      };
       localStorage.setItem(patientRecordKey(patientDir), JSON.stringify(record));
     });
   }
@@ -648,11 +665,12 @@ export class DemoStorage implements PlanStorage {
     return this.enqueue(async () => {
       const paciensId = generateId();
       const patientDir = buildPatientDirName(nev, paciensId);
-      const record: PatientRecord = { schemaVersion: 1, paciensId, nev };
+      const utolsoAktivitas = ujAktivitas('letrehozva');
+      const record: PatientRecord = { schemaVersion: 1, paciensId, nev, utolsoAktivitas };
       const data = uresTorzsadat(nev, paciensId);
       localStorage.setItem(patientRecordKey(patientDir), JSON.stringify(record));
       localStorage.setItem(patientDataKey(patientDir), JSON.stringify(data));
-      return { dirName: patientDir, paciensId, nev };
+      return { dirName: patientDir, paciensId, nev, utolsoAktivitas };
     });
   }
 }

@@ -1,18 +1,29 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AlertDialog, Box, Button, Callout, Card, Flex, Heading, Text } from '@radix-ui/themes';
+import { Fragment, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Callout,
+  Card,
+  Flex,
+  Heading,
+  Separator,
+  Skeleton,
+  Text,
+} from '@radix-ui/themes';
+import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
-import { formatPiszkozatIdo } from '../domain/date';
+import { formatPiszkozatIdo, formatShortDate } from '../domain/date';
+import { RECENT_PACIENS_LIMIT, aktivitasSzoveg, legutobbAktivPaciensek } from '../domain/paciensAktivitas';
+import { loadMegjelenitettTorzsadat, type BetoltottTorzsadat } from '../domain/torzsadatBetoltes';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
 
-type PendingAction = 'reset' | 'clearAll' | 'discardDraft' | null;
-
 export default function Home() {
-  const { resetDemoData, clearAll } = useStorage();
+  const { storage } = useStorage();
   const {
     plan,
-    reloadFromStorage,
     vanMentetlenPiszkozat,
     piszkozatMentve,
     piszkozatHiba,
@@ -21,41 +32,36 @@ export default function Home() {
     resetPlanDraft,
   } = useAppState();
   const navigate = useNavigate();
-  const [justReset, setJustReset] = useState(false);
-  const [justCleared, setJustCleared] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const [discardOpen, setDiscardOpen] = useState(false);
 
-  async function performReset() {
-    setPendingAction(null);
-    setError(null);
-    try {
-      resetDemoData();
-      // P0-6: korábban itt állt meg a reset -- a localStorage frissült, de
-      // az AppState memóriabeli settings/priceList/plan state-je nem, így a
-      // következő mentés csendben visszaírta a régi állapotot a friss seed
-      // fölé. A "Visszaállítva ✓" csak akkor jelenik meg, ha ez is lefutott.
-      await reloadFromStorage();
-      setJustReset(true);
-      setTimeout(() => setJustReset(false), 2500);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'A visszaállítás váratlanul meghiúsult.');
-    }
-  }
+  const [recents, setRecents] = useState<BetoltottTorzsadat[] | null>(null);
+  const [recentsError, setRecentsError] = useState<string | null>(null);
 
-  async function performClearAll() {
-    setPendingAction(null);
-    setError(null);
-    try {
-      clearAll();
-      resetDemoData();
-      await reloadFromStorage();
-      setJustCleared(true);
-      setTimeout(() => setJustCleared(false), 2500);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'A törlés váratlanul meghiúsult.');
-    }
-  }
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setRecents(null);
+      setRecentsError(null);
+      try {
+        const list = await storage.listPatients();
+        if (cancelled) return;
+        const top = legutobbAktivPaciensek(list, RECENT_PACIENS_LIMIT);
+        const loaded = await Promise.all(top.map((p) => loadMegjelenitettTorzsadat(storage, p)));
+        if (cancelled) return;
+        setRecents(loaded);
+      } catch (err) {
+        if (!cancelled) {
+          setRecentsError(
+            err instanceof Error ? err.message : 'A legutóbbi páciensek betöltése váratlanul meghiúsult.',
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [storage]);
 
   async function handleDiscardDraft() {
     setError(null);
@@ -73,42 +79,11 @@ export default function Home() {
   // `discardPersistedDraft` önmagában NEM nullázná a `plan`/`mentettPlan`
   // state-et, tehát a kártya nem tűnne el.
   function performDiscardDraft() {
-    setPendingAction(null);
+    setDiscardOpen(false);
     resetPlanDraft();
   }
 
-  // docs/03-funkcionalis-spec.md § Autosave: ugyanaz a felülírás-kockázat,
-  // mint a "Demó adat visszaállítása"/"Minden adat törlése" gomboknál -- a
-  // doki figyelmetlenül eldobná a folyamatban lévő munkáját. Egyetlen
-  // AlertDialog, cím/leírás/gombfelirat/onConfirm egy lookup-táblából -- 3
-  // ágnál az egymásba ágyazott ternáriusok már olvashatatlanok lennének.
-  const confirmSpecs: Record<
-    Exclude<PendingAction, null>,
-    { title: string; description: string; actionLabel: string; onConfirm: () => void }
-  > = {
-    reset: {
-      title: 'Demó adat visszaállítása',
-      description: 'Biztosan visszaállítod a demó adatot? Minden saját szerkesztésed elvész.',
-      actionLabel: 'Visszaállítás',
-      onConfirm: () => void performReset(),
-    },
-    clearAll: {
-      title: 'Minden adat törlése',
-      description:
-        'Biztosan törlöd ÖSSZES adatot (árlista, beállítások, minden mentett terv)? Ez ' +
-        'nem demó-visszaállítás, hanem teljes törlés -- utána a Demó adat visszaállítása ' +
-        'gombbal tudsz újra a seedből kiindulni.',
-      actionLabel: 'Törlés',
-      onConfirm: () => void performClearAll(),
-    },
-    discardDraft: {
-      title: 'Piszkozat eldobása',
-      description: 'Biztosan eldobod a folyamatban lévő piszkozatot? Ez nem vonható vissza.',
-      actionLabel: 'Elvetés',
-      onConfirm: performDiscardDraft,
-    },
-  };
-  const activeSpec = pendingAction ? confirmSpecs[pendingAction] : null;
+  const most = new Date();
 
   return (
     <Box style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -164,56 +139,65 @@ export default function Home() {
             >
               Megnyitás
             </Button>
-            <Button variant="soft" color="gray" onClick={() => setPendingAction('discardDraft')}>
+            <Button variant="soft" color="gray" onClick={() => setDiscardOpen(true)}>
               Piszkozat elvetése
             </Button>
           </Flex>
         </Card>
       )}
 
-      <Card size="2" mb="4">
-        <Text as="p" size="2" mt="0">
-          Ez a mockup a végleges alkalmazás vázán fut, demó adatokkal. A
-          véglegesben ugyanez az alkalmazás egy, a doki gépén kijelölt
-          mappába ír majd — itt egyelőre a böngésző tárolja az adatot.
-        </Text>
-        <Flex gap="3" mt="4" wrap="wrap">
-          {/* A piszkozat-felülírás-őr innentől az /uj-terv köztes
-              páciens-választón fut le (csak ott dől el ténylegesen, hogy a
-              doki egy meglévő pácienshez vagy egy vadonatújhoz indul-e) --
-              ez a gomb feltétel nélkül odanavigál. */}
-          <Button onClick={() => navigate('/uj-terv')}>Új terv indítása</Button>
-          <Button variant="soft" color="gray" onClick={() => navigate('/tervek')}>
-            Korábbi tervek
-          </Button>
-          <Button variant="soft" color="gray" onClick={() => setPendingAction('reset')}>
-            {justReset ? 'Visszaállítva ✓' : 'Demó adat visszaállítása'}
-          </Button>
-        </Flex>
-      </Card>
+      <Box mb="5">
+        {/* A piszkozat-felülírás-őr innentől az /uj-terv köztes
+            páciens-választón fut le (csak ott dől el ténylegesen, hogy a
+            doki egy meglévő pácienshez vagy egy vadonatújhoz indul-e) --
+            ez a gomb feltétel nélkül odanavigál. */}
+        <Button onClick={() => navigate('/uj-terv')}>+ Új kezelési terv</Button>
+      </Box>
 
-      <Card size="2" mb="4">
-        <Text as="p" size="2" weight="bold" mb="2" style={{ color: t.danger }}>
-          Adatvédelem
-        </Text>
-        <Text as="p" size="2" color="gray" mt="0">
-          Ez a demó a böngésző <Text style={{ fontFamily: t.mono }}>localStorage</Text>-ában,
-          titkosítatlanul tárol mindent, amit beírsz -- ide valódi páciensadat nem való (lásd a
-          fenti DEMÓ sávot). Ha véletlenül mégis valódit vittél be, ez a gomb ténylegesen kiüríti a
-          tárolót (nem csak visszaseedeli a demó adatot).
-        </Text>
-        <Button color="red" variant="soft" onClick={() => setPendingAction('clearAll')}>
-          {justCleared ? 'Törölve ✓' : 'Minden adat törlése'}
-        </Button>
-      </Card>
+      <Text as="p" size="2" weight="bold" mb="2">
+        Legutóbbi páciensek
+      </Text>
 
-      <AlertDialog.Root
-        open={pendingAction !== null}
-        onOpenChange={(open) => !open && setPendingAction(null)}
-      >
+      {recentsError && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Icon>
+            <CrossCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            A legutóbbi páciensek betöltése nem sikerült: {recentsError} Próbáld a{' '}
+            <Link to="/paciensek">Páciensek</Link> oldalt.
+          </Callout.Text>
+        </Callout.Root>
+      )}
+
+      {recents == null && !recentsError && <RecentsSkeleton />}
+
+      {recents != null && recents.length === 0 && (
+        <Callout.Root color="gray">
+          <Callout.Icon>
+            <InfoCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            Még nincs mentett munkád. Indíts egy kezelési tervet a fenti gombbal, vagy vidd fel az
+            első pácienst a Páciensek oldalon.
+          </Callout.Text>
+        </Callout.Root>
+      )}
+
+      {recents != null &&
+        recents.map((item, i) => (
+          <Fragment key={item.patient.dirName}>
+            <RecentRow item={item} most={most} />
+            {i < recents.length - 1 && <Separator size="4" color="gray" />}
+          </Fragment>
+        ))}
+
+      <AlertDialog.Root open={discardOpen} onOpenChange={setDiscardOpen}>
         <AlertDialog.Content maxWidth="440px">
-          <AlertDialog.Title>{activeSpec?.title}</AlertDialog.Title>
-          <AlertDialog.Description size="2">{activeSpec?.description}</AlertDialog.Description>
+          <AlertDialog.Title>Piszkozat eldobása</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            Biztosan eldobod a folyamatban lévő piszkozatot? Ez nem vonható vissza.
+          </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
               <Button variant="soft" color="gray">
@@ -221,13 +205,77 @@ export default function Home() {
               </Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action>
-              <Button color="red" onClick={activeSpec?.onConfirm}>
-                {activeSpec?.actionLabel}
+              <Button color="red" onClick={performDiscardDraft}>
+                Elvetés
               </Button>
             </AlertDialog.Action>
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
     </Box>
+  );
+}
+
+function RecentRow({ item, most }: { item: BetoltottTorzsadat; most: Date }) {
+  const { patient, torzsadat, hiba } = item;
+  const dob = torzsadat.szuletesiIdo ? formatShortDate(torzsadat.szuletesiIdo, 'hu') : null;
+
+  return (
+    // Szándékosan location.state nélkül: a PatientDetailPage alapértelmezett
+    // tabja 'tervek' (D192) -- ha ez a default valaha megváltozna, ez a
+    // navigáció csendben rossz tabra nyitna.
+    <Link
+      to={`/paciensek/${encodeURIComponent(patient.dirName)}`}
+      style={{ display: 'block', padding: '8px 0', textDecoration: 'none', color: 'inherit' }}
+    >
+      <Flex align="baseline" gap="2" wrap="wrap">
+        <Text size="2" weight="medium">
+          {torzsadat.nev}
+        </Text>
+        {hiba ? (
+          <Text size="1" style={{ color: t.warn }}>
+            ⚠ adat nem olvasható
+          </Text>
+        ) : (
+          <>
+            {dob && (
+              <Text size="1" color="gray">
+                {dob}
+              </Text>
+            )}
+            {torzsadat.telefon && (
+              <Text size="1" color="gray">
+                {torzsadat.telefon}
+              </Text>
+            )}
+          </>
+        )}
+      </Flex>
+      {patient.utolsoAktivitas && (
+        <Text as="p" size="1" color="gray" mt="1" mb="0">
+          {aktivitasSzoveg(patient.utolsoAktivitas, most)}
+        </Text>
+      )}
+    </Link>
+  );
+}
+
+/** docs/07-felulet-rendszer.md: skeleton a végleges elrendezés alakjában, ne pörgő spinner. */
+function RecentsSkeleton() {
+  return (
+    <>
+      {[0, 1, 2].map((i) => (
+        <Box key={i} py="2">
+          <Skeleton>
+            <Box height="18px" width="220px" />
+          </Skeleton>
+          <Box mt="1">
+            <Skeleton>
+              <Box height="14px" width="150px" />
+            </Skeleton>
+          </Box>
+        </Box>
+      ))}
+    </>
   );
 }

@@ -16,7 +16,15 @@
 import { addDaysIso } from '../../domain/date';
 import { javasoltTervCim } from '../../domain/tervCim';
 import { computeOsszesitok } from '../../domain/totals';
-import type { Fazis, PatientMasterData, PatientRecord, Plan } from '../../domain/types';
+import { ujAktivitas } from '../../domain/paciensAktivitas';
+import type {
+  AktivitasTipus,
+  Fazis,
+  PatientActivity,
+  PatientMasterData,
+  PatientRecord,
+  Plan,
+} from '../../domain/types';
 import { buildPatientDirName, buildPlanDirName, buildVersionDirName } from '../paths';
 import { seedPriceList } from './priceList';
 
@@ -340,13 +348,49 @@ export const seedPlans: SeedPlanEntry[] = [
   ...toEntries(tothDir, [tothZoltan]),
 ];
 
+// A seed `keltezes` dátumai heteken belüliek (üzleti dátum, D22, nem
+// aktivitás-időbélyeg) -- azokból az `utolsoAktivitas` relatív-idő sávjai
+// közül csak a ">7 nap -> abszolút dátum" ág látszana. A betöltés
+// pillanatához képesti eltolás mindhárom sávot (perc/óra, "tegnap", abszolút
+// dátum) bemutatja egy friss demóban. Nagy Éva kapja a `torzsadat-mentve`
+// típust, mert egyedül neki van `paciens-adatok.json`-ja lent -- a seed
+// önmagában koherens marad.
+const AKTIVITAS_ALAPIDO = new Date();
+const ORA_MS = 60 * 60 * 1000;
+const NAP_MS = 24 * ORA_MS;
+
+function aktivitasEzelott(tipus: AktivitasTipus, msEzelott: number): PatientActivity {
+  return ujAktivitas(tipus, new Date(AKTIVITAS_ALAPIDO.getTime() - msEzelott));
+}
+
 /** A `paciens.json` indexrekordok -- lásd docs/02-domain-modell.md § Páciens- és terv-mappa. */
 export const seedPatients: Array<{ patientDir: string; record: PatientRecord }> = [
-  { patientDir: kovacsDir, record: { schemaVersion: 1, paciensId: KOVACS_PACIENS_ID, nev: kovacsJanos.paciens.nev } },
-  { patientDir: nagyDir, record: { schemaVersion: 1, paciensId: NAGY_PACIENS_ID, nev: nagyEvaPaciens.nev } },
+  {
+    patientDir: kovacsDir,
+    record: {
+      schemaVersion: 1,
+      paciensId: KOVACS_PACIENS_ID,
+      nev: kovacsJanos.paciens.nev,
+      utolsoAktivitas: aktivitasEzelott('terv-veglegesitve', 2 * ORA_MS),
+    },
+  },
+  {
+    patientDir: nagyDir,
+    record: {
+      schemaVersion: 1,
+      paciensId: NAGY_PACIENS_ID,
+      nev: nagyEvaPaciens.nev,
+      utolsoAktivitas: aktivitasEzelott('torzsadat-mentve', NAP_MS),
+    },
+  },
   {
     patientDir: tothDir,
-    record: { schemaVersion: 1, paciensId: tothZoltan.paciensId!, nev: tothZoltan.paciens.nev },
+    record: {
+      schemaVersion: 1,
+      paciensId: tothZoltan.paciensId!,
+      nev: tothZoltan.paciens.nev,
+      utolsoAktivitas: aktivitasEzelott('terv-veglegesitve', 9 * NAP_MS),
+    },
   },
 ];
 

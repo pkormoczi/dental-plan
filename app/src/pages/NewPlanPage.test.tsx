@@ -1,4 +1,4 @@
-// D29: a Home "Új terv indítása" gombja utáni köztes kereső/választó lépés
+// D29: a Home "+ Új kezelési terv" gombja utáni köztes kereső/választó lépés
 // (docs/03-funkcionalis-spec.md § Új terv indítása). Lásd
 // PlanHistoryPage.test.tsx a `DraftProbe`/`seedPersistedDraft` mintáért --
 // ugyanaz a piszkozat-felülírás-őr fut itt is.

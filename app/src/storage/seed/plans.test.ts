@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { basePrice } from '../../domain/money';
+import { ervenyesAktivitas, legutobbAktivPaciensek } from '../../domain/paciensAktivitas';
+import type { PatientFolder } from '../../domain/types';
 import { seedPatientData, seedPatients, seedPlans } from './plans';
 import { seedPriceList } from './priceList';
 
@@ -120,5 +122,43 @@ describe('seedPatientData (D33)', () => {
 
   it('szándékosan nem minden seed páciensnek van törzsadata', () => {
     expect(seedPatientData.length).toBeLessThan(seedPatients.length);
+  });
+});
+
+// D39: a Kezdőlap recent listája üres állapotot mutatna friss demón,
+// ha a seed pácienseknek nincs utolsoAktivitas-uk -- ez a teszt a pontos
+// időbélyeget SZÁNDÉKOSAN nem vizsgálja (betöltési időhöz képesti relatív
+// eltolásból származik, lásd plans.ts), csak az invariánsokat: érvényes,
+// múltbeli, és a demó recent-sorrendje determinisztikus.
+describe('seedPatients utolsoAktivitas (D39)', () => {
+  const patientFolders: PatientFolder[] = seedPatients.map(({ patientDir, record }) => ({
+    dirName: patientDir,
+    paciensId: record.paciensId,
+    nev: record.nev,
+    utolsoAktivitas: record.utolsoAktivitas,
+  }));
+
+  it.each(seedPatients.map(({ patientDir, record }) => ({ patientDir, record })))(
+    '$patientDir -- utolsoAktivitas érvényes és múltbeli',
+    ({ record }) => {
+      const aktivitas = ervenyesAktivitas(record.utolsoAktivitas);
+      expect(aktivitas).toBeDefined();
+      expect(Date.parse(aktivitas!.idopont)).toBeLessThan(Date.now());
+    },
+  );
+
+  it('a három időbélyeg szigorúan csökkenő sorrendben áll: Kovács > Nagy > Tóth', () => {
+    const idopontja = (nev: string) =>
+      Date.parse(seedPatients.find(({ record }) => record.nev === nev)!.record.utolsoAktivitas!.idopont);
+    const kovacs = idopontja('Kovács János');
+    const nagy = idopontja('Nagy Éva');
+    const toth = idopontja('Tóth Zoltán');
+    expect(kovacs).toBeGreaterThan(nagy);
+    expect(nagy).toBeGreaterThan(toth);
+  });
+
+  it('legutobbAktivPaciensek ebben a sorrendben adja vissza a demó pácienseit', () => {
+    const nevSorrend = legutobbAktivPaciensek(patientFolders, 5).map((p) => p.nev);
+    expect(nevSorrend).toEqual(['Kovács János', 'Nagy Éva', 'Tóth Zoltán']);
   });
 });

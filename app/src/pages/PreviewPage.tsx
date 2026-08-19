@@ -378,7 +378,7 @@ export default function PreviewPage() {
           <Button onClick={startNewPlan}>Új terv indítása</Button>
           {/* backlog-31, D36: a MOST mentett páciens részletoldalára visz
               (Kezelési tervek tab), nem a globális listára -- a globális
-              `/tervek` a Home "Korábbi tervek" gombjával marad elérhető. */}
+              `/tervek` D39 óta csak URL-ről érhető el, nincs hozzá nav-link. */}
           <Button
             variant="soft"
             color="gray"

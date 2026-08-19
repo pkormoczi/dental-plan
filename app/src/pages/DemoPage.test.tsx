@@ -1,8 +1,10 @@
 // backlog-29: a DEMO oldal a korábban önálló Filerendszer nézetet és a
-// Kezdőlapról levett Funkciólista/Változásnapló kártyát fogja össze három
-// fülben. Ez a teszt csak a fül-váltást fedi -- az egyes tartalmak saját
-// tesztjei (FileTreeSection.test.tsx, FeatureOverviewCard.test.tsx)
-// változatlanul felelősek a bennük lévő viselkedésért.
+// Kezdőlapról levett Funkciólista/Változásnapló kártyát fogja össze -- D39
+// óta négy fülben, a Kezdőlapról ide költözött két demó-adatkezelő gombbal
+// (Adatkezelés fül) kiegészülve. Ez a teszt csak a fül-váltást fedi -- az
+// egyes tartalmak saját tesztjei (FileTreeSection.test.tsx,
+// FeatureOverviewCard.test.tsx) változatlanul felelősek a bennük lévő
+// viselkedésért.
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -26,16 +28,18 @@ function renderDemoPage() {
 // (pl. "FunkciókFunkciók"). Ezért a fül-lekérdezések regexet használnak.
 
 describe('DemoPage', () => {
-  it('a három fület mutatja, alapból a Funkciók kiválasztva', async () => {
+  it('a négy fület mutatja, alapból a Funkciók kiválasztva', async () => {
     renderDemoPage();
 
     const funkciok = await screen.findByRole('tab', { name: /Funkciók/ });
     const filerendszer = screen.getByRole('tab', { name: /Filerendszer/ });
     const valtozasnaplo = screen.getByRole('tab', { name: /Változásnapló/ });
+    const adatkezeles = screen.getByRole('tab', { name: /Adatkezelés/ });
 
     expect(funkciok).toHaveAttribute('aria-selected', 'true');
     expect(filerendszer).toHaveAttribute('aria-selected', 'false');
     expect(valtozasnaplo).toHaveAttribute('aria-selected', 'false');
+    expect(adatkezeles).toHaveAttribute('aria-selected', 'false');
     expect(await screen.findByText('Miben segít az alkalmazás?')).toBeInTheDocument();
   });
 
@@ -53,5 +57,14 @@ describe('DemoPage', () => {
 
     await user.click(await screen.findByRole('tab', { name: /Filerendszer/ }));
     expect(await screen.findByText(/Ez a nézet azt mutatja meg/)).toBeInTheDocument();
+  });
+
+  it('az Adatkezelés fülre kattintva a két demó-adatkezelő gomb jelenik meg', async () => {
+    const user = userEvent.setup();
+    renderDemoPage();
+
+    await user.click(await screen.findByRole('tab', { name: /Adatkezelés/ }));
+    expect(await screen.findByRole('button', { name: 'Demó adat visszaállítása' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Minden adat törlése' })).toBeInTheDocument();
   });
 });

@@ -19,10 +19,12 @@ A fenti számozott lista a képernyők tartalmát írja le, nem a navigációs
 sávot. A végleges, öt tételes fő navigáció:
 `Kezdőlap | Páciensek | Kezelések és árak | Beállítások | DEMO`.
 
-A `DEMO` menüpont három fület fog össze: **Funkciók** (ez a dokumentum
+A `DEMO` menüpont négy fület fog össze: **Funkciók** (ez a dokumentum
 felhasználó-szemszögű megfelelője, `FEATURES.md`), **Filerendszer** (a
-fenti 8. képernyő) és **Változásnapló** (`CHANGELOG.md`) — mindhárom
-fejlesztési/demonstrációs tartalom, elkülönítve az üzleti workflow-tól.
+fenti 8. képernyő), **Változásnapló** (`CHANGELOG.md`) és **Adatkezelés**
+(a Kezdőlapról D39-cel átköltöztetett „Demó adat visszaállítása"/„Minden
+adat törlése") — mind a négy fejlesztési/demonstrációs tartalom,
+elkülönítve az üzleti workflow-tól.
 
 A `Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi tervek` képernyők (2–5.)
 korábban átmenetileg saját nav-linkkel is elérhetők voltak — ezt a
@@ -61,6 +63,38 @@ felett a héj továbbra is látszik.
 Első futáskor a doki kijelöl egy gyökérmappát. Ez a `PlanStorage`
 inicializálása. A böngészős implementációnál a hozzájárulást
 munkamenetenként újra kell kérni — ez egy kattintás, de számolni kell vele.
+
+### Kezdőlap tartalma (D39)
+
+A Kezdőlap (`app/src/pages/Home.tsx`) minimalista: pontosan három blokk,
+ebben a sorrendben.
+
+- **Sérült-piszkozat kártya** és **aktív-draft kártya** — a piszkozat-
+  autosave belépési pontja, lásd lent § Autosave. Legitim hibaállapot,
+  illetve folyamatban lévő munka jelzése — nem demó-eszköz, nem tartozik a
+  lenti recent listához.
+- **Fő CTA**: `+ Új kezelési terv` — az `/uj-terv` köztes páciens-
+  választóra visz (lásd § 5 „Új terv indítása"), feltétel nélkül (a
+  piszkozat-felülírás-őr ott dől el).
+- **Legutóbbi páciensek** — max 5 páciens, a legutóbbi JELENTŐS
+  aktivitásuk szerint csökkenő sorrendben. „Jelentős aktivitás" a páciens
+  létrehozása, a törzsadat mentése vagy egy terv véglegesítése — egy
+  páciens/terv puszta MEGNYITÁSA sosem számít bele. Az időbélyeg a
+  `paciens.json` új, opcionális `utolsoAktivitas` mezőjén él
+  (`{ tipus, idopont }`, `docs/02-domain-modell.md` § Páciens- és
+  terv-mappa) — puszta index, akárcsak a mező többi tartalma (D29): egy
+  sérült/ismeretlen érték némán kimarad a listából, nem hibát dob. Egy sor
+  a páciens nevét, születési dátumát, telefonját (a lezárt törzsadatból,
+  vagy — ha az még nincs — a legutóbbi terv `paciens` pillanatképéből,
+  `megjelenitettTorzsadat()`) és az aktivitás típusát + relatív idejét
+  mutatja (pl. „Terv véglegesítve · 2 órája"); kattintásra a páciens
+  részletoldalára navigál, a `Kezelési tervek` tabra (D192, alapértelmezett
+  tab, nincs hozzá explicit `location.state`).
+
+A korábbi „Demó adat visszaállítása"/„Minden adat törlése" gomb és a
+„Korábbi tervek" gomb NEM része ennek a három blokknak — előbbi kettő a
+DEMO oldal Adatkezelés fülére költözött, utóbbi (a globális `/tervek`
+lista) csak URL-ről érhető el, lásd fent § Fő navigáció.
 
 A nyelvválasztás nem itt, hanem a Páciens adatlapon van (2. képernyő) —
 lásd ott.
@@ -361,7 +395,7 @@ szerkesztésre vonatkozik — egy visszatérő páciens régi, `VEGLEGES` tervé
 üres piszkozatot (ami megegyezik egy friss tervvel) nem perzisztálja, csak
 az első tartalmi módosítás után kezd írni. A visszaállítás csendes és
 memóriabeli — a Kezdőlap „Piszkozat folytatása” kártyája a belépési pont
-hozzá; a Kezdőlap „Új terv indítása” gombja maga feltétel nélkül navigál
+hozzá; a Kezdőlap „+ Új kezelési terv” gombja maga feltétel nélkül navigál
 (a köztes `/uj-terv` választóra, D29 — lásd § Korábbi tervek), de MINDEN
 tényleges terv-létrehozó akció megerősítést kér, mielőtt felülírná: az
 `/uj-terv` mindkét ága („Meglévő páciens keresése…”, „Vadonatúj páciens”)
@@ -499,8 +533,8 @@ A mentés után a terv-workflow héj (D36) fölött megjelenő "A terv elmentve
   (lásd § 5 „Új terv indítása").
 - **„Korábbi tervek"** — a MOST mentett páciens részletoldalára
   (10. képernyő, `Kezelési tervek` tab) navigál, nem a globális Korábbi
-  tervek listára (§ 5) — az utóbbi a Kezdőlap saját „Korábbi tervek"
-  gombjával marad elérhető.
+  tervek listára (§ 5) — az utóbbi D39 óta kizárólag URL-ről (`/tervek`)
+  érhető el, nincs hozzá nav-link vagy Kezdőlap-gomb.
 
 ### Letöltési fájlnév
 
@@ -590,12 +624,13 @@ melyik páciens-mappába, D29)** kerül:
 | **„Új verzió"** | verziósor `⋯` menüjében | mindent, a `tervId`-t is | ugyanabba a terv-mappába `<ma>_v<n+1>` (D4) |
 | **„Másolás új tervbe"** | verziósor `⋯` menüjében | mindent az azonosító/állapot/dátum kivételével | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
 | **„Új terv"** | a páciensnév mellett, balra | csak a `paciens` blokkot | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
-| **„Új terv indítása"** | Kezdőlap, az `/uj-terv` köztes választón át (lásd „Új terv indítása — a köztes páciens-választó" lentebb) | „Meglévő páciens keresése": a kiválasztott páciens `paciens` blokkja; „Vadonatúj páciens": semmi | **új** terv-mappa — a kiválasztott MEGLÉVŐ vagy egy vadonatúj páciens-mappában, `<ma>_v1` (D26/D29) |
+| **„+ Új kezelési terv"** | Kezdőlap, az `/uj-terv` köztes választón át (lásd „Új terv indítása — a köztes páciens-választó" lentebb) | „Meglévő páciens keresése": a kiválasztott páciens `paciens` blokkja; „Vadonatúj páciens": semmi | **új** terv-mappa — a kiválasztott MEGLÉVŐ vagy egy vadonatúj páciens-mappában, `<ma>_v1` (D26/D29) |
 
 Ebből következik a feliratok kötelező rendszere: **minden új tervláncot
-indító akció felirata tartalmazza az „új terv" kifejezést („Új terv",
-„Másolás új tervbe", „Új terv indítása", „Vadonatúj páciens"), és egyedül
-a meglévő láncot folytató akció feliratában szerepel a „verzió" szó („Új
+indító akció felirata az „új terv" fogalmát hordozza — szó szerint („Új
+terv", „Másolás új tervbe", „Vadonatúj páciens") vagy a D7 szerinti stabil
+Kezdőlap-CTA szövegével („+ Új kezelési terv", D39) —, és egyedül a
+meglévő láncot folytató akció feliratában szerepel a „verzió" szó („Új
 verzió").** Egy „Megnyitás…" típusú, a mechanizmust (és nem az eredményt)
 megnevező felirat elrejtené azt az egyetlen különbséget, amit a dokinak
 kattintás előtt látnia kell — lásd `docs/07-felulet-rendszer.md` („a
@@ -660,7 +695,7 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   (`ujTervForrasPaciensbol()`, `app/src/state/planIndulas.ts`, D33):
   - **„Új terv"** — a Korábbi tervek listán, a páciensnév mellett balra,
     páciensszinten (nem egy konkrét verzióhoz kötve).
-  - **„Meglévő páciens keresése…"** — a Kezdőlap „Új terv indítása"
+  - **„Meglévő páciens keresése…"** — a Kezdőlap „+ Új kezelési terv"
     gombja utáni `/uj-terv` köztes választón (lásd lentebb).
 
   Mindkét belépési pont ugyanazt a sorrendet követi: ha a pácienshez van
@@ -717,7 +752,7 @@ egy másikban. A „Vadonatúj páciens" ág (lásd lentebb) ettől eltérően:
 
 ### „Új terv indítása" — a köztes páciens-választó (D29)
 
-A Kezdőlap „Új terv indítása" gombja nem egyenesen a Páciens adatlapra
+A Kezdőlap „+ Új kezelési terv" gombja nem egyenesen a Páciens adatlapra
 navigál, hanem egy köztes kereső/választó lépésre (`/uj-terv`,
 `app/src/pages/NewPlanPage.tsx`) — a teljesen friss, Home-ról induló útnál
 a doki még nem gépelt be semmit, tehát itt (és csak itt) van

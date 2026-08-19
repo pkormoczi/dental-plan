@@ -13,18 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 34. tétel — Kezdőlap új struktúrája
-  (a `backlog/redesign/` redesign-döntéssorozat DP-010 tétele) — a mai
-  Home NEM minimalista (5 kártya, demó-only gombok); ez a tétel egy új,
-  megosztott páciensenkénti "utolsó jelentős aktivitás" időbélyeget vezet
-  be (nincs sehol wall-clock időbélyeg páciensre ma), ebből épít egy
-  max-5-ös recent-páciens listát, a fő CTA-t D7 szövegére igazítja, és a
-  demó-only gombokat (Demó adat visszaállítása, Minden adat törlése) a
-  29. tételben már elkészült `/demo` oldalra mozgatja. Az aktív draft
-  blokk viselkedése (Continue/discard) a 32. tétel (DP-004) már lezárt
-  munkája, ide csak beépül. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-34-kezdolap-terv.md`
-
 ### 35. tétel — Új terv páciensválasztó
   (a `backlog/redesign/` redesign-döntéssorozat DP-011 tétele) — a mai
   `/uj-terv` kereső nem autofókuszos, 0 karakternél a TELJES listát

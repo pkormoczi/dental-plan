@@ -406,6 +406,63 @@ describe('DemoStorage', () => {
     });
   });
 
+  describe('utolsoAktivitas (D39)', () => {
+    it('createPatient "letrehozva" aktivitást ír', async () => {
+      const folder = await storage.createPatient('Aktivitás Teszt');
+      expect(folder.utolsoAktivitas?.tipus).toBe('letrehozva');
+      expect(Number.isFinite(Date.parse(folder.utolsoAktivitas!.idopont))).toBe(true);
+
+      const patients = await storage.listPatients();
+      const record = patients.find((p) => p.dirName === folder.dirName);
+      expect(record?.utolsoAktivitas?.tipus).toBe('letrehozva');
+    });
+
+    it('savePatientData "torzsadat-mentve" aktivitásra írja felül', async () => {
+      const folder = await storage.createPatient('Törzsadat Aktivitás');
+      await storage.savePatientData(folder.dirName, {
+        schemaVersion: 1,
+        paciensId: folder.paciensId,
+        nev: 'Törzsadat Aktivitás',
+        szuletesiIdo: '',
+        lakcim: '',
+        telefon: '',
+        email: '',
+        taj: '',
+        kiskoru: false,
+        torvenyesKepviselo: null,
+      });
+      const patients = await storage.listPatients();
+      const record = patients.find((p) => p.dirName === folder.dirName);
+      expect(record?.utolsoAktivitas?.tipus).toBe('torzsadat-mentve');
+    });
+
+    it('savePlan "terv-veglegesitve" aktivitásra írja felül', async () => {
+      const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
+      const patients = await storage.listPatients();
+      const record = patients.find((p) => p.dirName === ref.patientDir);
+      expect(record?.utolsoAktivitas?.tipus).toBe('terv-veglegesitve');
+    });
+
+    it('listPatients elvisel egy szemetes utolsoAktivitas mezőt -- a páciens megmarad, csak a mező marad el (D29)', async () => {
+      const folder = await storage.createPatient('Szemetes Aktivitás');
+      const key = `dp:paciensek/${folder.dirName}/paciens.json`;
+      const raw = JSON.parse(localStorage.getItem(key)!);
+      raw.utolsoAktivitas = 'nem-objektum';
+      localStorage.setItem(key, JSON.stringify(raw));
+
+      const patients = await storage.listPatients();
+      const record = patients.find((p) => p.dirName === folder.dirName);
+      expect(record?.nev).toBe('Szemetes Aktivitás');
+      expect(record?.utolsoAktivitas).toBeUndefined();
+    });
+
+    it('resetDemoData után mindhárom seed páciensnek van utolsoAktivitas-a', async () => {
+      storage.resetDemoData();
+      const patients = await storage.listPatients();
+      expect(patients.every((p) => p.utolsoAktivitas != null)).toBe(true);
+    });
+  });
+
   describe('listFileTree / readRawFile', () => {
     it('a friss seed gyökere csak a két JSON-t, a sablonok/-at és a paciensek/-et tartalmazza, PDF nélkül', async () => {
       const tree = storage.listFileTree();
@@ -530,6 +587,9 @@ describe('DemoStorage', () => {
       expect(migrated).toBeDefined();
       expect(migrated!.nev).toBe('Legacy Pati');
       expect(migrated!.paciensId).toBe('zzzzzz');
+      // A migráció nem szintetizál utolsoAktivitas-t -- az egyetlen elérhető
+      // időbélyeg a `keltezes` (üzleti dátum, D22), abból nem szabad.
+      expect(migrated!.utolsoAktivitas).toBeUndefined();
 
       const plans = await storage.listPlans(legacyPatientDir);
       expect(plans).toHaveLength(1); // mindkét régi verzió UGYANABBA az egy láncba kerül

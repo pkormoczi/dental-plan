@@ -67,7 +67,8 @@ igazsága változatlanul a `terv.json` (D7).
 {
   "schemaVersion": 1,
   "paciensId": "k9m2r4",
-  "nev": "Kovács János"    // csak kereséshez/előtöltéshez -- SOHA nem írja felül egy már mentett terv.json paciens blokkját
+  "nev": "Kovács János",   // csak kereséshez/előtöltéshez -- SOHA nem írja felül egy már mentett terv.json paciens blokkját
+  "utolsoAktivitas": { "tipus": "terv-veglegesitve", "idopont": "2026-08-09T10:15:00.000Z" }  // opcionális, D39
 }
 ```
 
@@ -96,6 +97,15 @@ igazsága változatlanul a `terv.json` (D7).
   `terv.json` `paciens` blokkjával (D7) —, **kivéve, ha a pácienshez már
   létezik lezárt `paciens-adatok.json`** (lásd lent, D33): ilyenkor a
   törzsadat neve az igazság, a terv-mentés nem írhatja felül némán.
+- Az `utolsoAktivitas` (D39, `docs/03-funkcionalis-spec.md` § 1. Indítás)
+  opcionális mező — a Kezdőlap „Legutóbbi páciensek" listájának egyetlen
+  adatforrása. Kizárólag három tényleges írási eseményen frissül (páciens
+  létrehozása, `paciens-adatok.json` mentése, terv véglegesítése
+  `storage.savePlan()`-nal); egy páciens/terv puszta megnyitása sosem ír
+  bele. Csak a LEGUTÓBBI esemény marad meg, nem napló. Puszta index-mezőként
+  (D29) egy sérült/ismeretlen alakú érték némán kimarad a listából, nem
+  hibát dob a betöltéskor (`app/src/domain/paciensAktivitas.ts`
+  `ervenyesAktivitas`).
 
 ### Páciens-szintű törzsadat (`paciens-adatok.json`, D33)
 

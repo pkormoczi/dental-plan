@@ -8,6 +8,7 @@ import { Box, Heading, Tabs, Text } from '@radix-ui/themes';
 import ChangelogCard from '../components/ChangelogCard';
 import FeatureOverviewCard from '../components/FeatureOverviewCard';
 import { t } from '../design/tokens';
+import AdatkezelesSection from './demo/AdatkezelesSection';
 import FileTreeSection from './demo/FileTreeSection';
 
 export default function DemoPage() {
@@ -25,6 +26,7 @@ export default function DemoPage() {
           <Tabs.Trigger value="funkciok">Funkciók</Tabs.Trigger>
           <Tabs.Trigger value="filerendszer">Filerendszer</Tabs.Trigger>
           <Tabs.Trigger value="valtozasnaplo">Változásnapló</Tabs.Trigger>
+          <Tabs.Trigger value="adatkezeles">Adatkezelés</Tabs.Trigger>
         </Tabs.List>
 
         <Tabs.Content value="funkciok">
@@ -40,6 +42,12 @@ export default function DemoPage() {
         <Tabs.Content value="valtozasnaplo">
           <Box style={{ maxWidth: 760 }}>
             <ChangelogCard />
+          </Box>
+        </Tabs.Content>
+
+        <Tabs.Content value="adatkezeles">
+          <Box style={{ maxWidth: 760 }}>
+            <AdatkezelesSection />
           </Box>
         </Tabs.Content>
       </Tabs.Root>
