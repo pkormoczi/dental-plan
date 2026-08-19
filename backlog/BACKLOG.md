@@ -13,6 +13,95 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
+### 57. tétel — Kezelésszerkesztő oldal alaplayout és fogtérkép
+  (a `backlog/redesign/` redesign-döntéssorozat DP-040 tétele) — a
+  `docs/03` § 3 már ma is részletesen dokumentálja a kezelésszerkesztőt
+  (D70 „AS-IS"); a feltárás szerint a fogtérkép-csukottság és az
+  összegzés-elhelyezés már megfelel a redesignnak, egyedül a friss
+  piszkozat kereső-autofókusza hiányzik. A fázis-szintű mechanikák
+  (összecsukás/sorrend/törlés/átnevezés/megjegyzés) a 58. tételbe
+  tartoznak. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-57-kezelesszerkeszto-alaplayout-terv.md`
+
+### 58. tétel — Kezelési fázisok kezelése
+  (a `backlog/redesign/` redesign-döntéssorozat DP-041 tétele) — ma
+  nincs fázis-szintű összecsukás és sorrendezés (nulla infra), a
+  sor-törlésnek nincs Undo-ja, a fázismegjegyzés mindig látszik
+  (nincs progresszív elrejtés). Ez a tétel bevezeti mindezt, megtartva
+  a mai, dokumentált üres-fázis gyors-törlési kivételt és az always-on
+  fázisnév-mezőt (D86 pencil-mintája helyett, indoklással). A
+  döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-58-fazisok-kezelese-terv.md`
+
+### 59. tétel — Kezelés keresés, quick items és hozzáadás
+  (a `backlog/redesign/` redesign-döntéssorozat DP-042 tétele) — a
+  kereső/gyorsgombok/hozzáadás nagyrészt már megfelel a redesignnak.
+  A D99/D100 (fókusz a Fog mezőre tételhozzáadás után) EXPLICIT
+  ELVETVE, mert ütközik a `docs/07`/`CLAUDE.md` „a kereső-ciklus nem
+  törhet el" kötelező szabályával — a user ezt megkérdezve a mai
+  ciklus megtartása mellett döntött. D101 (új fázis kereső-autofókusza)
+  változatlanul bekerül. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-59-kezeles-kereses-terv.md`
+
+### 60. tétel — Kezeléssor szerkesztése
+  (a `backlog/redesign/` redesign-döntéssorozat DP-043 tétele) — az
+  egyedi név/ár-eltérés jelzés ma csak német terven működik (magyaron
+  sosem), és sehol nincs reset a névre/árra/leírásra. Ez a tétel
+  nyelvfüggetlenné teszi a markereket és reset-vezérlőket ad
+  mindháromhoz; a becsült ár `≈` widget marad (docs/07 nevesített
+  kivétele), csak pozíciót vált. A javaslat „sorrend/mozgatás" és
+  „accordion" scope-bulletjei explicit kizárva (nincs döntés mögöttük,
+  előbbi ellentmond D102-nek). A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-60-kezelessor-szerkesztes-terv.md`
+
+### 61. tétel — Árlista-snapshot és explicit refresh
+  (a `backlog/redesign/` redesign-döntéssorozat DP-044 tétele) — a
+  soron ma nincs ár-követési komparátor és semmi nem diffel egy sort
+  az aktuális árlistához. Ez a tétel egy `nevKoveti()` mintájú,
+  derived ár-komparátort és mező-/sor-szintű explicit refresh UI-t
+  vezet be, megerősítő előnézettel. Feloldja a 49. tétel 2./6.
+  VÁRAKOZÓ döntését. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-61-arlista-snapshot-refresh-terv.md`
+
+### 62. tétel — Többpénznemes listaár / ajánlati ár state
+  (a `backlog/redesign/` redesign-döntéssorozat DP-045 tétele) — a
+  `Sor` ma egyetlen implicit-pénznemű árpárt tart, a pénznemváltás
+  DESTRUKTÍV (törli a sorokat), miközben az árlistai `Tetel.ar` már ma
+  is mindkét pénznemet tartja. Ez a tétel additív „másik pénznem"
+  stash-mezőt ad a sorhoz, nem-destruktívvá téve a váltást, séma-
+  bővítés nélkül. A 63./64. tétel erre épül. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-62-tobbpenznemes-ar-terv.md`
+
+### 63. tétel — Egyedi végösszeg
+  (a `backlog/redesign/` redesign-döntéssorozat DP-046 tétele) — a
+  „Kerek végösszeg" ma abszolút összeg (D25 szerint helyesen), de
+  csak kedvezményre korlátozva, felár nélkül. Ez a tétel átnevezi
+  „Egyedi végösszeg"-re, felár-irányt enged (önállóan eldöntve, mert a
+  mai korlát hatókör-döntés volt, nem adatvédelem), és 0-összeg
+  megerősítést + üres/autofókuszált bekapcsolást ad. A döntéseket lásd
+  a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-63-egyedi-vegosszeg-terv.md`
+
+### 64. tétel — Előleg és fennmaradó összeg
+  (a `backlog/redesign/` redesign-döntéssorozat DP-047 tétele) — az
+  Előleg ma SZÁZALÉK-alapú, tudatos drift-mentes indoklással; a
+  redesign abszolút összeget kér, ami a mai automatikus 0-100%-os
+  védelmet megszünteti. A user a redesign mellett döntött — ez a
+  tétel a teljes deposit≤final validációs láncot nulláról építi fel.
+  A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-64-eloleg-terv.md`
+
+### 65. tétel — Manuális szövegek nyelvi review-ja
+  (a `backlog/redesign/` redesign-döntéssorozat DP-048 tétele) —
+  nyelvi review-metaadat (`authoredInLanguage`/`reviewedForLanguage`)
+  sehol nem létezik; a meglévő `sorFallback` egy MÁSIK problémát old
+  meg (árlistai fordítás-hiány, magyar terven nem is fut). Ez a tétel
+  a doki saját, szabad szövegeinek nyelv-ellenőrzését építi ki,
+  guided review-val, a meglévő mechanizmus mellett, nem helyette. A
+  döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-65-nyelvi-review-terv.md`
+
 ### 51. tétel — Terv adatai oldal layout + cím + dátumok
   (a `backlog/redesign/` redesign-döntéssorozat DP-030 tétele) — a mai
   "Páciens adatlap" (a workflow-stepper már "Terv adatai"-nak hívja)
