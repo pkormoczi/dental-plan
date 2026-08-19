@@ -15,6 +15,8 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import NavBar from '../components/NavBar';
+import { NavGuardProvider } from '../components/NavGuardContext';
 import PatientDetailPage from './PatientDetailPage';
 import { AppStateProvider, useAppState } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
@@ -34,10 +36,38 @@ function renderDetail(patientDir: string, state?: Record<string, unknown>) {
       >
         <StorageProvider>
           <AppStateProvider>
-            <Routes>
-              <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
-              <Route path="/paciens" element={<DraftProbe />} />
-            </Routes>
+            <NavGuardProvider>
+              <Routes>
+                <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
+                <Route path="/paciens" element={<DraftProbe />} />
+              </Routes>
+            </NavGuardProvider>
+          </AppStateProvider>
+        </StorageProvider>
+      </MemoryRouter>
+    </Theme>,
+  );
+}
+
+// D46: a NavBar-t IS rendereli, ugyanabban a router-fában -- a valós
+// bekötés (`useNavGuard(dirtyAdatai)` a PatientDetailPage-ben, a NavBar
+// kattintás-elfogása) csak így igazolható, nem a `renderDetail()` szűkebb
+// harness-ével.
+function renderDetailWithNavBar(patientDir: string, state?: Record<string, unknown>) {
+  return render(
+    <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
+      <MemoryRouter
+        initialEntries={[{ pathname: `/paciensek/${encodeURIComponent(patientDir)}`, state }]}
+      >
+        <StorageProvider>
+          <AppStateProvider>
+            <NavGuardProvider>
+              <NavBar />
+              <Routes>
+                <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
+                <Route path="/" element={<div>Kezdőlap-próba</div>} />
+              </Routes>
+            </NavGuardProvider>
           </AppStateProvider>
         </StorageProvider>
       </MemoryRouter>
@@ -324,5 +354,55 @@ describe('PatientDetailPage', () => {
     expect(await screen.findByText(/A mentés váratlanul meghiúsult|QuotaExceededError/)).toBeInTheDocument();
     expect(screen.getByDisplayValue('+36 70 111 2222')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mentés' })).toBeInTheDocument();
+
+    vi.restoreAllMocks();
+  });
+
+  // D46: a Páciens adatai tabon mentetlen módosítással NavBar-kattintás is
+  // megerősítést kér -- korábban (D38 eredeti hatóköre) csak a lapon
+  // belüli tab-váltás volt védve, a NavBar-ról a piszkozat némán elveszett.
+  it('mentetlen módosítással a NavBar-kattintás is megerősítést kér -- Mégse a lapon tart', async () => {
+    const user = userEvent.setup();
+    renderDetailWithNavBar(nagyDir, { tab: 'adatai' });
+
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+    const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
+    await user.clear(telefonMezo);
+    await user.type(telefonMezo, 'ideiglenes érték');
+
+    await user.click(screen.getByRole('link', { name: 'Kezdőlap' }));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByText('Nem mentett módosítás')).toBeInTheDocument();
+    expect(screen.queryByText('Kezdőlap-próba')).not.toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('ideiglenes érték')).toBeInTheDocument();
+  });
+
+  it('mentetlen módosítással a NavBar-kattintás megerősítés után ténylegesen navigál', async () => {
+    const user = userEvent.setup();
+    renderDetailWithNavBar(nagyDir, { tab: 'adatai' });
+
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+    const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
+    await user.clear(telefonMezo);
+    await user.type(telefonMezo, 'ideiglenes érték');
+
+    await user.click(screen.getByRole('link', { name: 'Kezdőlap' }));
+    await user.click(await screen.findByRole('button', { name: 'Váltás, módosítás elvetésével' }));
+
+    expect(await screen.findByText('Kezdőlap-próba')).toBeInTheDocument();
+  });
+
+  it('nézet módban (nincs mentetlen módosítás) a NavBar-kattintás megerősítés nélkül navigál', async () => {
+    const user = userEvent.setup();
+    renderDetailWithNavBar(nagyDir, { tab: 'adatai' });
+
+    await screen.findByRole('button', { name: 'Szerkesztés' });
+    await user.click(screen.getByRole('link', { name: 'Kezdőlap' }));
+
+    expect(await screen.findByText('Kezdőlap-próba')).toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 });

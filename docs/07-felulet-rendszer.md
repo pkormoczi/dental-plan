@@ -119,11 +119,16 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   megerősítés közös komponensen (`components/DiscardChangesDialog.tsx`
   `useDiscardGuard`/`DiscardChangesDialog`) megy át — nem bespoke
   `JSON.stringify`-összehasonlítás és másolat-beillesztett `AlertDialog`
-  hívási helyenként. A guard hatóköre a Mégse gomb ÉS a lapon belüli
-  elem-váltás (sor-/tab-váltás); NINCS böngésző-/router-szintű
-  navigáció-blokkolás (`components/PatientEditorPanel.tsx`,
-  `pages/PatientDetailPage.tsx`, `pages/SettingsPage.tsx` „Nyomtatvány
-  szövegei" szekció). Az
+  hívási helyenként. A guard hatóköre a Mégse gomb, a lapon belüli
+  elem-váltás (sor-/tab-váltás) ÉS a NavBar-navigáció (D46,
+  `components/NavGuardContext.tsx` — a védett felület egy plusz
+  `useNavGuard(dirty)` hívással regisztrál, a NavBar a MEGLÉVŐ
+  `useDiscardGuard`-ot hívja újra a megosztott jelzőre); NINCS
+  böngésző-/router-szintű navigáció-blokkolás (böngésző vissza/előre, F5,
+  URL-sáv átírás — ehhez data router kellene, a `HashRouter` nem
+  támogatja). Hívó felületek: `components/PatientEditorPanel.tsx` (a
+  `pages/PatientDetailPage.tsx`-en át), `pages/SettingsPage.tsx`
+  „Nyomtatvány szövegei" szekció. Az
   Árlista admin és a Beállítások többi szekciója autosave marad (D31) —
   ezekhez a primitívek nem hívási hely, csak jövőbeli lehetőség.
 - Read-only label+érték adatnézet (D45): `components/Field.tsx`

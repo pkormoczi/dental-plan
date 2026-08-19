@@ -15,6 +15,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, Button, Callout, Skeleton, Tabs, Text } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
+import { useNavGuard } from '../components/NavGuardContext';
 import PatientDetailHeader from '../components/PatientDetailHeader';
 import PatientEditorPanel from '../components/PatientEditorPanel';
 import PatientPlanChains from '../components/PatientPlanChains';
@@ -63,6 +64,10 @@ export default function PatientDetailPage() {
   // SettingsPage.tsx "Nyomtatvány szövegei" szekciója Mégse gombjánál hív.
   const [dirtyAdatai, setDirtyAdatai] = useState(false);
   const guard = useDiscardGuard(dirtyAdatai);
+  // D46: ugyanez a dirty jelző a NavBar-navigációt is védi, a
+  // NavGuardContext-en keresztül -- a NavBar a MEGLÉVŐ guard-primitívvel
+  // fogja el a kattintást, ez a hook csak regisztrál.
+  useNavGuard(dirtyAdatai);
 
   function requestTab(next: DetailTab) {
     guard.request(() => {

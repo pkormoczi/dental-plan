@@ -4,6 +4,7 @@ import { Box, Flex, Skeleton, Theme } from '@radix-ui/themes';
 import DemoBanner from './components/DemoBanner';
 import ErrorBoundary from './components/ErrorBoundary';
 import NavBar from './components/NavBar';
+import { NavGuardProvider } from './components/NavGuardContext';
 import TervWorkflowShell from './components/TervWorkflowShell';
 import { t } from './design/tokens';
 import DemoPage from './pages/DemoPage';
@@ -39,43 +40,49 @@ export default function App() {
       <ErrorBoundary>
         <StorageProvider>
           <AppStateProvider>
-            <HashRouter>
-              <div style={{ minHeight: '100vh', background: t.page }}>
-                <DemoBanner />
-                <NavBar />
-                <main style={{ padding: 24, fontFamily: t.font, color: t.text }}>
-                  {/* Külön boundary a Routes körül: egy oldal hibája ne vigye
-                      el a NavBart is -- a doki így el tud navigálni máshova. */}
-                  <ErrorBoundary title="Hiba történt ezen az oldalon">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
-                      <Route path="/uj-terv" element={<NewPlanPage />} />
-                      {/* Terv-workflow héj (backlog-31, D36) -- az app első
-                          layout-route-ja: a breadcrumb+stepper a három lépés
-                          köré épül, az Outlet rendereli a tényleges oldalt. */}
-                      <Route element={<TervWorkflowShell />}>
-                        <Route path="/paciens" element={<PatientPage />} />
-                        <Route path="/terv" element={<PlanEditorPage />} />
-                        <Route
-                          path="/elonezet"
-                          element={
-                            <Suspense fallback={<PreviewLoading />}>
-                              <PreviewPage />
-                            </Suspense>
-                          }
-                        />
-                      </Route>
-                      <Route path="/tervek" element={<PlanHistoryPage />} />
-                      <Route path="/paciensek" element={<PaciensekPage />} />
-                      <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
-                      <Route path="/arlista" element={<PriceListAdminPage />} />
-                      <Route path="/beallitasok" element={<SettingsPage />} />
-                      <Route path="/demo" element={<DemoPage />} />
-                    </Routes>
-                  </ErrorBoundary>
-                </main>
-              </div>
-            </HashRouter>
+            {/* NavBar-t ÉS a route-olt lapokat is le kell fednie -- a
+                D38-védett felületek (PatientDetailPage, SettingsPage) a
+                NavBar-ral megosztott "van piszkozat" jelzőt ezen keresztül
+                érik el (D46). */}
+            <NavGuardProvider>
+              <HashRouter>
+                <div style={{ minHeight: '100vh', background: t.page }}>
+                  <DemoBanner />
+                  <NavBar />
+                  <main style={{ padding: 24, fontFamily: t.font, color: t.text }}>
+                    {/* Külön boundary a Routes körül: egy oldal hibája ne vigye
+                        el a NavBart is -- a doki így el tud navigálni máshova. */}
+                    <ErrorBoundary title="Hiba történt ezen az oldalon">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/uj-terv" element={<NewPlanPage />} />
+                        {/* Terv-workflow héj (backlog-31, D36) -- az app első
+                            layout-route-ja: a breadcrumb+stepper a három lépés
+                            köré épül, az Outlet rendereli a tényleges oldalt. */}
+                        <Route element={<TervWorkflowShell />}>
+                          <Route path="/paciens" element={<PatientPage />} />
+                          <Route path="/terv" element={<PlanEditorPage />} />
+                          <Route
+                            path="/elonezet"
+                            element={
+                              <Suspense fallback={<PreviewLoading />}>
+                                <PreviewPage />
+                              </Suspense>
+                            }
+                          />
+                        </Route>
+                        <Route path="/tervek" element={<PlanHistoryPage />} />
+                        <Route path="/paciensek" element={<PaciensekPage />} />
+                        <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
+                        <Route path="/arlista" element={<PriceListAdminPage />} />
+                        <Route path="/beallitasok" element={<SettingsPage />} />
+                        <Route path="/demo" element={<DemoPage />} />
+                      </Routes>
+                    </ErrorBoundary>
+                  </main>
+                </div>
+              </HashRouter>
+            </NavGuardProvider>
           </AppStateProvider>
         </StorageProvider>
       </ErrorBoundary>

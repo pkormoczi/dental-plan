@@ -9,12 +9,18 @@ import { describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
 import NavBar from './NavBar';
+import { NavGuardProvider } from './NavGuardContext';
 
+// D46: a NavBar `useNavGuardState()`-et hív, ami Provider nélkül dob -- a
+// kattintás-elfogás/megerősítő-dialógus mechanizmusát külön,
+// `NavGuardContext.test.tsx` fedi, ez a fájl a linkek feliratát/sorrendjét.
 function renderNavBar() {
   return render(
     <Theme>
       <MemoryRouter>
-        <NavBar />
+        <NavGuardProvider>
+          <NavBar />
+        </NavGuardProvider>
       </MemoryRouter>
     </Theme>,
   );

@@ -21,6 +21,7 @@ import {
 } from '@radix-ui/themes';
 import ChipGroup from '../components/ChipGroup';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
+import { useNavGuard } from '../components/NavGuardContext';
 import { useDirtyDraft } from '../components/useDirtyDraft';
 import { lefedettseg } from '../domain/coverage';
 import { isPlaceholderTemplate } from '../domain/templates';
@@ -114,6 +115,10 @@ export default function SettingsPage() {
     reset: resetTemplateDrafts,
   } = useDirtyDraft<Record<string, string>>(savedTemplateTexts);
   const cancelTemplatesGuard = useDiscardGuard(templatesDirty);
+  // D46: ugyanez a dirty jelző a NavBar-navigációt is védi
+  // (NavGuardContext) -- a NavBar a MEGLÉVŐ guard-primitívvel fogja el a
+  // kattintást, ez a hook csak regisztrál.
+  useNavGuard(templatesDirty);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [templateLoadError, setTemplateLoadError] = useState<string | null>(null);
   const [templateSaving, setTemplateSaving] = useState(false);

@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Theme } from '@radix-ui/themes';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SettingsPage from './SettingsPage';
+import NavBar from '../components/NavBar';
+import { NavGuardProvider } from '../components/NavGuardContext';
+import { AppStateProvider } from '../state/AppState';
+import { StorageProvider } from '../storage/StorageContext';
 import { TestProviders } from '../testUtils';
 
 function renderSettings() {
@@ -9,6 +15,30 @@ function renderSettings() {
     <TestProviders>
       <SettingsPage />
     </TestProviders>,
+  );
+}
+
+// D46: a NavBar-t IS rendereli, ugyanabban a router-fában -- a valós
+// bekötés (`useNavGuard(templatesDirty)` a SettingsPage-ben, a NavBar
+// kattintás-elfogása) csak így igazolható, nem a `renderSettings()` szűkebb
+// harness-ével.
+function renderSettingsWithNavBar() {
+  return render(
+    <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
+      <MemoryRouter initialEntries={['/beallitasok']}>
+        <StorageProvider>
+          <AppStateProvider>
+            <NavGuardProvider>
+              <NavBar />
+              <Routes>
+                <Route path="/beallitasok" element={<SettingsPage />} />
+                <Route path="/" element={<div>Kezdőlap-próba</div>} />
+              </Routes>
+            </NavGuardProvider>
+          </AppStateProvider>
+        </StorageProvider>
+      </MemoryRouter>
+    </Theme>,
   );
 }
 
@@ -286,6 +316,38 @@ describe('SettingsPage', () => {
 
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
       expect(nyilatkozat.value).toContain('Elmentetlen piszkozat.');
+    });
+
+    // D46: korábban (D38 eredeti hatóköre) csak a "Mégse" gomb volt védve --
+    // a NavBar-ról elnavigálva a sablon-piszkozat némán elveszett.
+    it('mentetlen sablon-piszkozattal a NavBar-kattintás is megerősítést kér -- Mégse a lapon tart', async () => {
+      const user = userEvent.setup();
+      renderSettingsWithNavBar();
+
+      const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      await user.type(nyilatkozat, ' Elmentetlen piszkozat.');
+
+      await user.click(screen.getByRole('link', { name: 'Kezdőlap' }));
+      const dialog = await screen.findByRole('alertdialog');
+      expect(within(dialog).getByText('Nem mentett módosítás')).toBeInTheDocument();
+      expect(screen.queryByText('Kezdőlap-próba')).not.toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(nyilatkozat.value).toContain('Elmentetlen piszkozat.');
+    });
+
+    it('mentetlen sablon-piszkozattal a NavBar-kattintás megerősítés után ténylegesen navigál', async () => {
+      const user = userEvent.setup();
+      renderSettingsWithNavBar();
+
+      const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
+      await user.type(nyilatkozat, ' Elmentetlen piszkozat.');
+
+      await user.click(screen.getByRole('link', { name: 'Kezdőlap' }));
+      await user.click(await screen.findByRole('button', { name: 'Váltás, módosítás elvetésével' }));
+
+      expect(await screen.findByText('Kezdőlap-próba')).toBeInTheDocument();
     });
   });
 });

@@ -1149,3 +1149,32 @@ karbantartási kör négy önálló javítása.
   páciens kiválasztása (kereszt-link, "Ezt a pácienst választom") READ-ONLY
   nézetben nyit. Az üres mezők jelölésére szándékosan az app meglévő "—"
   konvenciója maradt az egyetlen forrás, nem egy új szöveges jelölés.
+
+---
+
+### 43. Nem mentett módosítás védelem kiterjesztése a NavBar-navigációra — KÉSZ (2026-08-19)
+
+- **Méret:** ~fél nap.
+- **Kereteket sért?** Nem — új D46 (`docs/01-attekintes-es-dontesek.md`),
+  a D38 hatókörének kiterjesztése. Ez a tétel nem szerepelt korábban a
+  `backlog/BACKLOG.md`-ben: a 39. tétel (D45) kézi tesztelése közben
+  derült ki, a 15. tétel precedense szerint.
+- **Valódi haszon:** a D38 "van nem mentett módosítás" védelme eddig csak
+  a lapon belüli elem-váltásra (sor-/tab-váltás) és a Mégse gombra terjedt
+  ki -- a NavBar valamelyik linkjére kattintva egy piszkozat (pl. a
+  Páciens adatai tabon félbehagyott szerkesztés, vagy a Beállítások
+  "Nyomtatvány szövegei" szekciója) figyelmeztetés nélkül, nyomtalanul
+  elveszett.
+- **Megvalósítás:** a NavBar linkjei a saját `NavLink` komponenseink,
+  tehát a kattintásukat `onClick`+`preventDefault`-tal el lehet fogni --
+  ehhez, a D38 eredeti indoklásával ellentétben, NEM kell router-szintű
+  blokkolás (amit a `HashRouter` amúgy sem támogatna). Új
+  `components/NavGuardContext.tsx`: egyetlen, app-szintű megosztott "van
+  piszkozat" jelző (`NavGuardProvider`), amit egy védett felület egy plusz
+  `useNavGuard(dirty)` hívással regisztrál a MÁR meglévő dirty state-jével
+  (`PatientDetailPage.tsx`, `SettingsPage.tsx` -- egy-egy sor, nincs
+  prop-fűzés), és amit a `NavBar.tsx` olvas, a MEGLÉVŐ
+  `useDiscardGuard`/`DiscardChangesDialog` primitívet (D38) újrahívva --
+  nem egy második megerősítő-mechanizmust bevezetve. Böngésző vissza/előre
+  gomb, F5, URL-sáv átírás változatlanul védtelen marad, tudatos
+  döntésként.

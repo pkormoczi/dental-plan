@@ -616,6 +616,20 @@ A törzsadat-szerkesztő read-only/edit módváltás tétel
   `Field`-re, lásd a fájl saját kommentjét); üres értéknél az app
   meglévő „—” hiányzó-érték jelölését adja, nem külön szöveget
 
+A nem mentett módosítás védelmének NavBar-navigációra kiterjesztése
+(`docs/01-attekintes-es-dontesek.md` D46, `docs/07-felulet-rendszer.md`
+§ Komponensek) segédfüggvényei, szintén ne írd újra őket:
+- `NavGuardProvider` / `useNavGuard(dirty)` / `useNavGuardState()`
+  (`app/src/components/NavGuardContext.tsx`) — egyetlen, app-szintű
+  megosztott „van piszkozat” jelző (nem kulcsolt regisztry, mert a
+  `HashRouter` egyszerre egy route-ot renderel, tehát egyszerre
+  kizárólag egy D38-védett felület lehet mountolva). Egy védett felület
+  (`pages/PatientDetailPage.tsx`, `pages/SettingsPage.tsx`) a MÁR
+  meglévő dirty state-jét regisztrálja egy plusz `useNavGuard(dirty)`
+  hívással; a `components/NavBar.tsx` a MEGLÉVŐ
+  `useDiscardGuard`/`DiscardChangesDialog` primitívet (D38) hívja újra
+  erre a jelzőre, nem épít második megerősítő-mechanizmust
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
