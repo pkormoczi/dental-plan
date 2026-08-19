@@ -189,10 +189,13 @@ describe('UjPaciensDialog', () => {
     );
     await user.click(valasztomBtn);
 
-    // CI-n (gyengébb futtatókon) a debounce (DUPLIKACIO_DEBOUNCE_MS) utáni
-    // click+render lánc néha az alapértelmezett 1000ms fölé csúszik, ugyanaz
-    // az ok, ami miatt a fenti `valasztomBtn` keresés is 3000ms-et kapott.
-    const alert = await screen.findByRole('alertdialog', {}, { timeout: 3000 });
+    // CI-n (gyengébb futtatókon, teljes tesztkészlet alatti terheléssel) a
+    // debounce (DUPLIKACIO_DEBOUNCE_MS) utáni click+render lánc az
+    // alapértelmezett 1000ms-nél, majd egy 3000ms-es próbálkozásnál is
+    // tovább tartott -- a `vite.config.ts` `testTimeout` kommentje szerint a
+    // CI mérten ~3x lassabb, itt ennél nagyobb biztonsági ráhagyás kell
+    // (a globális `testTimeout: 15000` bőven elfér).
+    const alert = await screen.findByRole('alertdialog', {}, { timeout: 8000 });
     expect(within(alert).getByText('A megadott adatok eltérnek')).toBeInTheDocument();
     expect(within(alert).getByText(/a születési dátum/)).toBeInTheDocument();
     expect(onUseExisting).not.toHaveBeenCalled();
