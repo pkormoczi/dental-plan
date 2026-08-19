@@ -144,6 +144,18 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   „Nyomtatvány szövegei" szekció. Az
   Árlista admin és a Beállítások többi szekciója autosave marad (D31) —
   ezekhez a primitívek nem hívási hely, csak jövőbeli lehetőség.
+- Mezőnkénti összevető/szinkron-dialógus (D48, `components/TorzsadatDiffDialog.tsx`)
+  — a fenti „Mezős felugró ablak” mintájának checkbox-listás változata:
+  Radix Themes `Dialog`, mert tényleges mezőválasztás történik benne, nem
+  puszta megerősítés. Alapból SEMMI nincs kijelölve, egy „Összes kijelölése”
+  checkbox fölötte. **Külön guard-mechanizmus a D38/D46 fenti
+  „van nem mentett módosítás” primitívjétől**
+  (`components/LepesGuardContext.tsx`) — az egy AJÁNLATOT ad
+  (frissítenéd a törzsadatot, mielőtt továbblépsz?), nem adatvesztés elleni
+  blokkot; a terv-piszkozat úgyis autosave-el (D37), tehát a D38 dirty-
+  fogalma itt nem értelmezhető. Csak a Páciens adatlap "Tovább" gombja és a
+  workflow-stepper Kezelések/Előnézet linkjei hívják — a NavBar-navigációt a
+  D46 guard fedi, a kettő nem keveredik egy felületen.
 - Read-only label+érték adatnézet (D45): `components/Field.tsx`
   `ReadOnlyField` — a `FieldGroup`-ra épül (NEM a `Field`-re, lásd a
   `Field.tsx` fejléckommentjét: egy `<label>` statikus szöveg köré téve

@@ -1210,3 +1210,34 @@ karbantartási kör négy önálló javítása.
   sor került. A Kezdőlap "Legutóbbi páciensek" listája (`components/
   PatientListRow.tsx`) SZÁNDÉKOSAN változatlan maradt — a két lista
   elrendezése ezután tudatosan eltér (D47).
+
+### 40. Páciens master ↔ terv snapshot compare/sync — KÉSZ (2026-08-19)
+
+- **Méret:** ~1.5 nap.
+- **Kereteket sért?** Nem — új D48 (`docs/01-attekintes-es-dontesek.md`),
+  a D33 (nincs automatikus szinkron) meglévő invariánsának felülete, nem
+  új korlát.
+- **Valódi haszon:** a D33 (28. tétel) már kimondta, hogy a
+  `paciens-adatok.json` és a `terv.json` `paciens` blokkja között nincs
+  automatikus szinkron, de semmilyen felület nem mutatta meg vagy tette
+  kezelhetővé, ha a kettő szétcsúszik — a doki vakon szerkesztette a terv
+  pillanatképét anélkül, hogy látta volna, mit tart a törzsadat.
+- **Megvalósítás:** a Páciens adatlapon (a Személyes adatok kártya alatt)
+  új "Páciens törzsadata" kártya (`pages/patientPage/TorzsadatSyncCard.tsx`)
+  mezőszintű összevetést mutat, két külön irányú gombbal ("Frissítés a
+  törzsadatból" / "Törzsadat frissítése a tervből") — soha nem egy közös
+  "Szinkronizálás" gomb; mindkettő ugyanazt a checkbox-listás dialógust
+  nyitja (`components/TorzsadatDiffDialog.tsx`), alapból semmi nincs
+  kijelölve. A "Terv adatai" lépés ELŐRE elhagyásakor (a "Tovább" gomb és a
+  workflow-stepper Kezelések/Előnézet linkjei,
+  `components/LepesGuardContext.tsx` — külön mechanizmus a D46
+  NavGuard-tól) egyszer felkínálja a frissítést, de KIZÁRÓLAG valódi
+  ütközésnél (mindkét oldalon kitöltött, eltérő érték) — egy üres mező
+  puszta pótlása (a leggyakoribb eset, quick-create utáni adatkitöltés) nem
+  szakítja félbe a workflow-t. Törzsadat nélküli páciensnél információs
+  blokk + azonnali létrehozás opció. Írási hiba esetén a dialógus nyitva
+  marad, Újra/Folytatás írás nélkül választással, a piszkozat mindkét
+  esetben érintetlen. A véglegesítésnél (`domain/veglegesitesOr.ts`
+  `masterElteresek`) a mastert újraolvasva egy INFO-szintű, nem blokkoló
+  sor jelzi az eltérést — a véglegesítés emiatt sosem kér megerősítést
+  (docs/03-funkcionalis-spec.md § 2. és § 4.).

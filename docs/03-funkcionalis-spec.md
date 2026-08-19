@@ -52,6 +52,13 @@ ami mindhárom oldal fölött állandó:
   `lastRoute` metaadatát (D37) is frissíti — ebből tudja a Kezdőlap
   "Piszkozat folytatása" kártyája, melyik lépésre navigáljon vissza (lásd
   lent, § Autosave).
+- **Lépés-elhagyási ajánlat** (D48) — a stepper Kezelések/Előnézet linkjei
+  és a Páciens adatlap "Tovább" gombja MEGELŐZI a tényleges navigációt egy
+  elfogási ponttal (`components/LepesGuardContext.tsx`), amit KIZÁRÓLAG a
+  Páciens adatlap "Páciens törzsadata" kártyája (`TorzsadatSyncCard.tsx`)
+  használ, amíg mountolva van — a stepper Terv adatai (visszafelé) linkje,
+  a breadcrumb és a NavBar-navigáció (D46, külön mechanizmus) nem érintett.
+  Lásd § 2. "Páciens törzsadata".
 
 A sikeres véglegesítés utáni "A terv elmentve ✓" sikerpanel (lásd § 4)
 felett a héj továbbra is látszik.
@@ -150,6 +157,39 @@ jelölő. Ha kiskorú, megjelenik a törvényes képviselő neve és elérhetős
 Csak a **név** kötelező (ebből képződik a mappanév). A többi hiánya
 véglegesítéskor figyelmeztetést ad, de nem blokkol — a doki néha
 gyorsan akar árajánlatot adni.
+
+### Páciens törzsadata (D48)
+
+A Személyes adatok kártya ALATT, önálló „Páciens törzsadata” kártya — a
+`paciens-adatok.json` (D33) és az AKTUÁLIS terv-piszkozat `paciens` blokkja
+közötti mezőszintű összevetés/szinkron. Csak akkor jelenik meg, ha a
+piszkozat páciensmappája ismert (`feloldPatientDir()`,
+`app/src/domain/torzsadatBetoltes.ts`); ha nem, a kártya kimarad.
+
+- **Lezárt törzsadatnál**: az eltérő mezők száma, és KÉT külön gomb —
+  „Frissítés a törzsadatból” (master → piszkozat) és „Törzsadat frissítése a
+  tervből” (piszkozat → master) — soha nem egy közös „Szinkronizálás” gomb.
+  Mindkettő ugyanazt a mezőszintű, checkboxos dialógust nyitja
+  (`components/TorzsadatDiffDialog.tsx`), csak a kijelölt mezőket alkalmazva;
+  alapból SEMMI nincs kijelölve, „Összes kijelölése” mindent bejelöl.
+  Eltérés hiányában semleges szöveg, gombok nélkül.
+- **Törzsadat nélkül (fallback)**: információs blokk (nem hiba-szín) jelzi,
+  hogy a páciensnek még nincs önálló törzsadata, egy gombbal, ami AZONNAL
+  létrehozza a piszkozat aktuális adataiból.
+- **A „Tovább a terv szerkesztőhöz” gomb és a workflow-stepper Kezelések/
+  Előnézet linkjei** (lásd lent, § Terv-workflow héj) a lépés elhagyásakor
+  egyszer felkínálják a törzsadat-frissítést, ha VALÓDI ütközés áll fenn — két
+  eltérő, MINDKÉT oldalon kitöltött érték. Egy üres mező puszta pótlása (a
+  leggyakoribb eset: egy vadonatúj páciensnél a törzsadat a quick-create után
+  még csak a nevet tartalmazza, a doki itt tölti ki a többit) NEM számít
+  ütközésnek, nem szakítja félbe a workflow-t. Ugyanarra az eltérésre a
+  prompt a workflow-n belül nem jelenik meg újra, amíg a diff nem változik.
+  Ha nincs törzsadat, ugyanez a lépés egy (alapból kijelöletlen) opciót ad a
+  törzsadat azonnali létrehozására.
+- **Írási hiba** (kizárólag a piszkozat → master irányban) esetén a dialógus
+  nyitva marad, a hibaüzenet mellett „Újra” (ugyanaz az írás újra) vagy —
+  csak a lépés-elhagyási prompt módban — „Folytatás írás nélkül” (a
+  piszkozat érintetlenül a workflow folytatódik) választással.
 
 ---
 
@@ -486,11 +526,24 @@ felsorolja az érintett sorokat, „Folytatás" gombbal átugorható
 `leirasokMutatasa` kapcsolója ki van kapcsolva — ilyenkor a leírás úgysem
 kerül a nyomtatványra.
 
+**Páciens törzsadat-eltérés (INFO-szint, D48):** ha a páciensnek van lezárt
+törzsadata (`paciens-adatok.json`, D33), és az eltér a terv `paciens`
+pillanatképétől, egy semleges (szürke) sáv sorolja fel az eltérő mezőket, egy
+"Terv adatai" gombbal a Páciens adatlapra. Ez **nem** tagja a fenti
+megerősítő-láncnak — nem kér "Folytatás"-t, nem blokkol, a véglegesítés
+önmagában nem kényszerít szinkronizálást (D9/D33 elve marad). A mastert a
+rendszer véglegesítéskor újraolvassa, hogy a sáv a legfrissebb állapotot
+mutassa — a mentett `terv.json` `paciens` blokkja ettől függetlenül a
+piszkozat pillanatképe marad (D7).
+
 A fenti négy lépés sorrendje és a kemény/puha megkülönböztetés tiszta,
 React-mentes függvényként él (`veglegesitesDiagnozis`/`kovetkezoLepes`,
-`app/src/domain/veglegesitesOr.ts`) — a `PreviewPage.tsx` csak a React
-state-et, a dialógus-szövegeket és a fenti Sablon-placeholder őr D23-zárát
-tartja meg, a lánc bejárását innen kapja.
+`app/src/domain/veglegesitesOr.ts`) — ugyanez a függvény adja vissza az
+INFO-szintű törzsadat-eltérést is, egy ötödik, a láncon KÍVÜLI mezőként
+(`masterElteresek`), hogy egy ott felvett mező ne váltson ki automatikusan
+megerősítő dialógust. A `PreviewPage.tsx` csak a React state-et, a
+dialógus-szövegeket és a fenti Sablon-placeholder őr D23-zárát tartja meg, a
+lánc bejárását innen kapja.
 
 ### Sablon-placeholder őr
 

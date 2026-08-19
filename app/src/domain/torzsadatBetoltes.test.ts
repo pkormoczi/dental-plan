@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DemoStorage } from '../storage/DemoStorage';
-import { loadMegjelenitettTorzsadat, loadTorzsadatok, loadUtolsoTerv } from './torzsadatBetoltes';
+import {
+  feloldPatientDir,
+  loadMegjelenitettTorzsadat,
+  loadTorzsadatok,
+  loadUtolsoTerv,
+} from './torzsadatBetoltes';
 import type { Plan } from './types';
 
 function makeBlankPlan(overrides: Partial<Plan> = {}): Plan {
@@ -119,6 +124,27 @@ describe('torzsadatBetoltes', () => {
       expect(eredmeny[nagy.dirName].torzsadat.nev).toBe('Nagy Éva');
       expect(eredmeny[serult.dirName].hiba).not.toBeNull();
       expect(eredmeny[serult.dirName].torzsadat.nev).toBe('Sérült A Listában');
+    });
+  });
+
+  describe('feloldPatientDir', () => {
+    it('a piszkozatPatientDir-t adja vissza, ha ismert -- a paciensId-t meg sem nézi', async () => {
+      const dir = await feloldPatientDir(storage, 'Ismert-Dir_x1', 'nem-letezo-id');
+      expect(dir).toBe('Ismert-Dir_x1');
+    });
+
+    it('piszkozatPatientDir hiányában a paciensId-ből oldja fel a dirName-et', async () => {
+      const kovacs = (await storage.listPatients()).find((p) => p.nev === 'Kovács János')!;
+      const dir = await feloldPatientDir(storage, null, kovacs.paciensId);
+      expect(dir).toBe(kovacs.dirName);
+    });
+
+    it('null-t ad, ha sem patientDir, sem paciensId nem ismert', async () => {
+      expect(await feloldPatientDir(storage, null, undefined)).toBeNull();
+    });
+
+    it('null-t ad, ha a paciensId nem oldható fel egyetlen páciensre sem', async () => {
+      expect(await feloldPatientDir(storage, null, 'ismeretlen-id')).toBeNull();
     });
   });
 });

@@ -13,17 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 40. tétel — Páciens master ↔ terv snapshot compare/sync
-  (a `backlog/redesign/` redesign-döntéssorozat DP-016 tétele) — a D33
-  (backlog-28) már kimondta, hogy a `paciens-adatok.json` és a
-  `terv.json` `paciens` blokkja között nincs automatikus szinkron, de
-  SEMMILYEN UI nem létezik, ami ezt az eltérést megmutatná vagy
-  kezelhetővé tenné — ez teljesen új felület. Két külön irányú (master→
-  draft, draft→master) explicit művelet, mezőszintű diff alapból
-  kijelöletlen checkboxokkal, fallback-állapot infó-blokk, író-hiba
-  Retry/Continue. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-40-master-snapshot-sync-terv.md`
-
 ### 41. tétel — Páciens törlése
   (a `backlog/redesign/` redesign-döntéssorozat DP-017 tétele) — törlési
   képesség SEHOL nem létezik ma (a `PlanStorage` interfésznek nincs

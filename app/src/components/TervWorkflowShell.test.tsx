@@ -11,11 +11,12 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
 import { beforeEach, describe, expect, it } from 'vitest';
 import TervWorkflowShell from './TervWorkflowShell';
+import App from '../App';
 import PatientPage from '../pages/PatientPage';
 import { AppStateProvider } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
-import type { Plan } from '../domain/types';
+import type { Paciens, Plan } from '../domain/types';
 
 // D37: egy aktív, tartalmas piszkozat, opcionális patientDir/lastRoute
 // metaadattal -- a `dp:piszkozat` kulcsba előre beírva, MIELŐTT a
@@ -56,6 +57,23 @@ async function seedActiveDraft(meta: { patientDir?: string; lastRoute?: string }
   localStorage.setItem(
     'dp:piszkozat',
     JSON.stringify({ schemaVersion: 1, mentve: '2026-08-09T10:15:00.000Z', plan: makeDirtyPlan(), ...meta }),
+  );
+}
+
+// backlog-40: a lépés-elhagyási törzsadat-prompthoz egy piszkozat, aminek a
+// paciens blokkja/paciensId-ja explicit adott -- a `dp:piszkozat` kulcsba
+// írva, MIELŐTT a StorageProvider renderelne (lásd `seedActiveDraft` fenti
+// kommentjét).
+async function seedDraftWithPaciens(patientDir: string, paciens: Paciens, paciensId: string) {
+  const plan = { ...makeDirtyPlan(), paciens, paciensId };
+  localStorage.setItem(
+    'dp:piszkozat',
+    JSON.stringify({
+      schemaVersion: 1,
+      mentve: '2026-08-09T10:15:00.000Z',
+      plan,
+      patientDir,
+    }),
   );
 }
 
@@ -157,5 +175,122 @@ describe('TervWorkflowShell', () => {
       const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
       expect(rec.lastRoute).toBe('/elonezet');
     });
+  });
+});
+
+// backlog-40 (3. döntés, D161): a "Terv adatai" lépés ELŐRE elhagyásának
+// ajánlat-jellegű elfogása -- kizárólag VALÓDI ütközésnél (mindkét oldalon
+// van érték, és eltér, lásd `domain/masterSnapshotDiff.ts` `valodiUtkozesek`),
+// és kizárólag a stepper Kezelések/Előnézet linkjein + a PatientPage "Tovább"
+// gombján, sosem a NavBar-on.
+describe('TervWorkflowShell -- backlog-40: lépés-elhagyási törzsadat-prompt', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  function paciens(overrides: Partial<Paciens> = {}): Paciens {
+    return {
+      nev: 'Teszt Piroska',
+      szuletesiIdo: '',
+      lakcim: '',
+      telefon: '+36 20 111 2222',
+      email: '',
+      taj: '',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+      ...overrides,
+    };
+  }
+
+  async function seedUtkozoMasterEsDraft() {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Piroska', {
+      szuletesiIdo: '',
+      telefon: '+36 70 999 8888',
+    });
+    await seedDraftWithPaciens(patient.dirName, paciens(), patient.paciensId);
+    return patient;
+  }
+
+  it('a stepper "Kezelések" linkjére felajánlja a törzsadat-frissítést, amíg el nem dől', async () => {
+    const user = userEvent.setup();
+    await seedUtkozoMasterEsDraft();
+    renderShell('/paciens');
+    await screen.findByPlaceholderText('Kovács János');
+
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(screen.queryByText('Kezelések-oldal')).toBeNull();
+  });
+
+  it('a "Kihagyás, tovább lépek" gomb navigál, ugyanarra a diffre visszatérve nem jelenik meg újra', async () => {
+    const user = userEvent.setup();
+    await seedUtkozoMasterEsDraft();
+    renderShell('/paciens');
+    await screen.findByPlaceholderText('Kovács János');
+
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Kihagyás, tovább lépek' }));
+    expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
+
+    // Vissza a Terv adatai lépésre (backward -- nem elfogott), majd újra
+    // előre: ugyanarra a diffre a prompt NEM jelenik meg újra (D161).
+    await user.click(screen.getByRole('link', { name: /Terv adatai/ }));
+    await screen.findByPlaceholderText('Kovács János');
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+
+    expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('a diff megváltozása után (mezőszerkesztés) a prompt ismét megjelenik', async () => {
+    const user = userEvent.setup();
+    await seedUtkozoMasterEsDraft();
+    renderShell('/paciens');
+    await screen.findByPlaceholderText('Kovács János');
+
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+    let dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Kihagyás, tovább lépek' }));
+    await screen.findByText('Kezelések-oldal');
+
+    await user.click(screen.getByRole('link', { name: /Terv adatai/ }));
+    const telefonInput = await screen.findByLabelText('Telefon');
+    await user.clear(telefonInput);
+    await user.type(telefonInput, '+36 20 333 4444');
+
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+
+    dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+  });
+
+  it('a PatientPage "Tovább" gombja is a lépés-elhagyási promptot futtatja', async () => {
+    const user = userEvent.setup();
+    await seedUtkozoMasterEsDraft();
+    renderShell('/paciens');
+    await screen.findByPlaceholderText('Kovács János');
+
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(screen.queryByText('Kezelések-oldal')).toBeNull();
+  });
+
+  it('NavBar-navigációra a prompt NEM jelenik meg -- a teljes App-on át kilépés a workflow-ból azonnal navigál', async () => {
+    const user = userEvent.setup();
+    await seedUtkozoMasterEsDraft();
+    render(<App />);
+    window.location.hash = '#/paciens';
+
+    await screen.findByPlaceholderText('Kovács János');
+    await user.click(screen.getByRole('link', { name: 'Beállítások' }));
+
+    expect(await screen.findByRole('heading', { name: /Beállítások/ })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

@@ -160,6 +160,17 @@ beleértve:
 - A nyomtatvány (PDF) nem változik: a `paciens-adatok.json` SOHA nem
   forrása a PDF-nek, kizárólag a `terv.json` saját `paciens` blokkja kerül
   nyomtatásra (D7).
+- **A két adatforrás összevetése/szinkronja mindig explicit, doki-kezdeményezésű
+  (D48).** A Páciens adatlapon (`docs/03-funkcionalis-spec.md` § 2.) egy
+  külön kártya mezőszintű diffet ad a törzsadat és az AKTUÁLIS terv-piszkozat
+  `paciens` blokkja között, két külön irányú művelettel (master → draft,
+  draft → master) — sosem automatikus, sosem egy közös gomb. A "Terv adatai"
+  workflow-lépés ELŐRE elhagyásakor, ha van VALÓDI ütközés (mindkét oldalon
+  kitöltött, eltérő érték — egy üres mező pótlása nem az), a rendszer egyszer
+  felkínálja a frissítést. Ez a mechanizmus nem érinti az itt leírt
+  invariánsokat: a `terv.json` `paciens` blokkja a mentés pillanatában
+  továbbra is pillanatkép marad (D7), és a törzsadat lezártsága/„nincs üres
+  = törlés” szabálya változatlan.
 
 ## `arlista.json`
 

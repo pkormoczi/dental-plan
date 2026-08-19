@@ -4,13 +4,15 @@
 
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import PatientPage from './PatientPage';
 import { TestProviders } from '../testUtils';
 import { verzioMenupont } from '../testQueries';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
+import { DemoStorage } from '../storage/DemoStorage';
+import type { Paciens, Plan } from '../domain/types';
 
 function renderPatient() {
   return render(
@@ -289,5 +291,204 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
 
     await user.click(screen.getByRole('link', { name: 'Kezelések' }));
     expect(await screen.findByDisplayValue('Kézzel pontosított leírás')).toBeInTheDocument();
+  });
+});
+
+// backlog-40: a "Páciens törzsadata" kártya -- docs/03-funkcionalis-spec.md
+// § 2. Páciens adatlap. A kártya csak akkor renderelődik, ha a piszkozat
+// patientDir-je ismert (D37) -- ezért itt közvetlenül a `dp:piszkozat`
+// kulcsba seedelünk, a TervWorkflowShell.test.tsx `seedActiveDraft`
+// mintáját követve, MIELŐTT a StorageProvider renderelne.
+describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
+  function makePaciens(overrides: Partial<Paciens> = {}): Paciens {
+    return {
+      nev: 'Teszt Elek',
+      szuletesiIdo: '1980-05-05',
+      lakcim: 'Régi utca 1.',
+      telefon: '+36 30 000 0000',
+      email: 'regi@example.hu',
+      taj: '111 222 333',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+      ...overrides,
+    };
+  }
+
+  function makePlanWithPaciens(paciens: Paciens, paciensId: string): Plan {
+    return {
+      schemaVersion: 1,
+      tervId: '',
+      verzio: 0,
+      statusz: 'PISZKOZAT',
+      nyelv: 'hu',
+      penznem: 'HUF',
+      keltezes: '2026-08-05',
+      ervenyesIg: '2026-11-03',
+      arlistaVerzio: '2026-07-01',
+      sablonVerzio: 'nyilatkozat-hu-v1',
+      orvos: 'Dr. Mándoki István',
+      paciens,
+      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+      osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+      paciensId,
+    };
+  }
+
+  async function seedDraft(patientDir: string, paciens: Paciens, paciensId: string) {
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({
+        schemaVersion: 1,
+        mentve: '2026-08-09T10:15:00.000Z',
+        plan: makePlanWithPaciens(paciens, paciensId),
+        patientDir,
+      }),
+    );
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('lezárt törzsadatnál eltérésszámot és KÉT külön gombot mutat, "Szinkronizálás" feliratú gomb nincs', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', {
+      szuletesiIdo: '1980-05-05',
+      telefon: '+36 70 999 8888',
+    });
+    await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
+
+    renderPatient();
+
+    expect(await screen.findByText('Páciens törzsadata')).toBeInTheDocument();
+    expect(await screen.findByText(/mező eltér a páciens törzsadatától/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Frissítés a törzsadatból' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Törzsadat frissítése a tervből' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Szinkronizálás/ })).toBeNull();
+  });
+
+  it('megegyező adatoknál semleges szöveget mutat, gombok nélkül', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const paciens = makePaciens();
+    const patient = await seeder.createPatient(paciens.nev, {
+      szuletesiIdo: paciens.szuletesiIdo,
+      telefon: paciens.telefon,
+    });
+    await seeder.savePatientData(patient.dirName, { schemaVersion: 1, paciensId: patient.paciensId, ...paciens });
+    await seedDraft(patient.dirName, paciens, patient.paciensId);
+
+    renderPatient();
+
+    expect(await screen.findByText('A törzsadat és a terv adatai megegyeznek.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Frissítés a törzsadatból' })).toBeNull();
+  });
+
+  it('"Frissítés a törzsadatból": a kijelölt mező a törzsadat értékét írja a piszkozatba', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', {
+      szuletesiIdo: '1980-05-05',
+      telefon: '+36 70 999 8888',
+    });
+    await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
+
+    renderPatient();
+    await screen.findByText(/mező eltér a páciens törzsadatától/);
+    await user.click(screen.getByRole('button', { name: 'Frissítés a törzsadatból' }));
+
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Telefon' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Frissítés a piszkozatban' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByLabelText('Telefon')).toHaveValue('+36 70 999 8888');
+    // Nem kijelölt mező NEM változik.
+    expect(screen.getByLabelText('E-mail')).toHaveValue('regi@example.hu');
+  });
+
+  it('"Törzsadat frissítése a tervből": a kijelölt mező perzisztálódik a paciens-adatok.json-ba', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', {
+      szuletesiIdo: '1980-05-05',
+      telefon: '+36 70 999 8888',
+    });
+    await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
+
+    renderPatient();
+    await screen.findByText(/mező eltér a páciens törzsadatától/);
+    await user.click(screen.getByRole('button', { name: 'Törzsadat frissítése a tervből' }));
+
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Összes kijelölése' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Törzsadat mentése' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    const verify = new DemoStorage();
+    await verify.init();
+    const adatok = await verify.loadPatientData(patient.dirName);
+    expect(adatok?.telefon).toBe('+36 30 000 0000'); // a draft (makePaciens()) értéke
+  });
+
+  it('törzsadat nélküli (fallback) páciensnél információs blokkot mutat, és a gomb azonnal létrehozza a törzsadatot', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    // Kovács János a demó-seedben törzsadat NÉLKÜL szerepel (fallback).
+    const kovacs = (await seeder.listPatients()).find((p) => p.nev === 'Kovács János')!;
+    await seedDraft(kovacs.dirName, makePaciens({ nev: 'Kovács János' }), kovacs.paciensId);
+
+    renderPatient();
+
+    expect(
+      await screen.findByText(/még nincs önálló törzsadata/),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Törzsadat létrehozása a terv adataiból' }));
+
+    await waitFor(async () => {
+      const verify = new DemoStorage();
+      await verify.init();
+      const adatok = await verify.loadPatientData(kovacs.dirName);
+      expect(adatok?.telefon).toBe('+36 30 000 0000');
+    });
+  });
+
+  it('draft->master írási hiba esetén a dialógus nyitva marad, Újra/Mégse jelenik meg, a piszkozat érintetlen', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', {
+      szuletesiIdo: '1980-05-05',
+      telefon: '+36 70 999 8888',
+    });
+    await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
+
+    renderPatient();
+    await screen.findByText(/mező eltér a páciens törzsadatától/);
+    await user.click(screen.getByRole('button', { name: 'Törzsadat frissítése a tervből' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Telefon' }));
+
+    const setItemSpy = vi
+      .spyOn(localStorage, 'setItem')
+      .mockImplementation(() => {
+        throw new Error('Megtelt a tárhely.');
+      });
+    await user.click(within(dialog).getByRole('button', { name: 'Törzsadat mentése' }));
+
+    expect(await screen.findByText('Megtelt a tárhely.')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    setItemSpy.mockRestore();
+
+    await user.click(screen.getByRole('button', { name: 'Mégse' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    // A piszkozat (a "Telefon" mező a lapon) érintetlen maradt.
+    expect(screen.getByLabelText('Telefon')).toHaveValue('+36 30 000 0000');
   });
 });

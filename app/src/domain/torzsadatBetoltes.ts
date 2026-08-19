@@ -93,3 +93,27 @@ export async function loadTorzsadatok(
   });
   return eredmeny;
 }
+
+/**
+ * A draft-hoz tartozó páciensmappa nevének feloldása a master-összevetéshez
+ * (backlog-40). A `piszkozatPatientDir` (D37, `state/AppState.tsx`)
+ * best-effort ismert -- lehet `null` (pl. funkció előtti perzisztált
+ * piszkozat). Tartalék: `plan.paciensId` -> `listPatients()` -> `dirName`,
+ * ugyanaz a feloldás, mint amit a `DemoStorage.doSavePlan()` is használ
+ * véglegesítéskor. Sosem dob -- egy sikertelen listázás egyszerűen
+ * feloldatlan (`null`) marad, a hívó ilyenkor nem mutatja a törzsadat-kártyát.
+ */
+export async function feloldPatientDir(
+  storage: PlanStorage,
+  piszkozatPatientDir: string | null,
+  paciensId: string | undefined,
+): Promise<string | null> {
+  if (piszkozatPatientDir) return piszkozatPatientDir;
+  if (!paciensId) return null;
+  try {
+    const patients = await storage.listPatients();
+    return patients.find((p) => p.paciensId === paciensId)?.dirName ?? null;
+  } catch {
+    return null;
+  }
+}

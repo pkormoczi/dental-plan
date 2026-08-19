@@ -8,9 +8,10 @@
 // megmaradnak -- a stepper a szabad ugrálást adja hozzá, nem irányított
 // útvonalat vált ki.
 
-import { useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Badge, Box, Separator, Text } from '@radix-ui/themes';
+import { LepesGuardProvider, type LepesHandler } from './LepesGuardContext';
 import { t } from '../design/tokens';
 import { useAppState } from '../state/AppState';
 import type { WorkflowRoute } from '../storage/DraftStorage';
@@ -24,6 +25,7 @@ const LEPESEK: ReadonlyArray<{ to: WorkflowRoute; label: string }> = [
 export default function TervWorkflowShell() {
   const { plan, piszkozatPatientDir, jelezWorkflowLepes } = useAppState();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const paciensNev = plan.paciens.nev.trim() || 'Új páciens';
 
   // D37: a piszkozat "utolsó workflow-lépése" -- a héj tudja MA IS, melyik
@@ -34,6 +36,43 @@ export default function TervWorkflowShell() {
       jelezWorkflowLepes(pathname as WorkflowRoute);
     }
   }, [pathname, jelezWorkflowLepes]);
+
+  // backlog-40 (3. döntés, D161): a "Terv adatai" lépés ELŐRE (Kezelések/
+  // Előnézet felé) elhagyásának ajánlat-jellegű elfogása
+  // (components/LepesGuardContext.tsx). A hatókör szűkítése (kizárólag a
+  // /paciens lépésről indított előrelépés) NEM itt dől el explicit módon --
+  // a `TorzsadatSyncCard` (a `PatientPage` gyereke) kizárólag akkor
+  // regisztrál handlert, amikor mountolva van, tehát máshonnan indított
+  // navigációnál `lepesHandlerRef.current` eleve `null`.
+  const [lepesHandler, setLepesHandler] = useState<LepesHandler | null>(null);
+  const lepesHandlerRef = useRef<LepesHandler | null>(null);
+  lepesHandlerRef.current = lepesHandler;
+  const [elutasitottDiffId, setElutasitottDiffId] = useState<string | null>(null);
+
+  const kerLepesValtas = useCallback((proceed: () => void) => {
+    if (lepesHandlerRef.current?.(proceed)) return;
+    proceed();
+  }, []);
+
+  const lepesGuardValue = useMemo(
+    () => ({
+      kerLepesValtas,
+      // `setLepesHandler(handler)` KÖZVETLENÜL egy React setState-gotcha
+      // lenne: egy setState-nek átadott FÜGGVÉNYt React updater-funkcióként
+      // hívná meg (`handler(prevState)`), nem állapotként tárolná -- innen
+      // a `() => handler` becsomagolás.
+      regisztralLepesHandler: (handler: LepesHandler | null) => setLepesHandler(() => handler),
+      elutasitottDiffId,
+      setElutasitottDiffId,
+    }),
+    [kerLepesValtas, elutasitottDiffId],
+  );
+
+  function handleLepesClick(e: React.MouseEvent, to: WorkflowRoute) {
+    if (to === pathname) return; // ugyanarra a lépésre kattintás -- nincs mit elfogni
+    e.preventDefault();
+    kerLepesValtas(() => navigate(to));
+  }
 
   return (
     <Box style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -84,6 +123,7 @@ export default function TervWorkflowShell() {
               )}
               <Link
                 to={lepes.to}
+                onClick={(e) => handleLepesClick(e, lepes.to)}
                 aria-current={aktiv ? 'step' : undefined}
                 // A sorszám-Badge tisztán vizuális -- `aria-label` nélkül a
                 // Badge szöveges tartalma ("1") belefolyna a link accessible
@@ -115,7 +155,9 @@ export default function TervWorkflowShell() {
 
       <Separator size="4" mb="4" />
 
-      <Outlet />
+      <LepesGuardProvider value={lepesGuardValue}>
+        <Outlet />
+      </LepesGuardProvider>
     </Box>
   );
 }

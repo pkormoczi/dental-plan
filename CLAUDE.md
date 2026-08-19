@@ -631,6 +631,49 @@ A nem mentett módosítás védelmének NavBar-navigációra kiterjesztése
   `useDiscardGuard`/`DiscardChangesDialog` primitívet (D38) hívja újra
   erre a jelzőre, nem épít második megerősítő-mechanizmust
 
+A páciens törzsadata ↔ terv-piszkozat összevetés/szinkron tétel
+(`docs/01-attekintes-es-dontesek.md` D48, `docs/02-domain-modell.md` §
+Páciens-szintű törzsadat, `docs/03-funkcionalis-spec.md` § 2. Páciens
+adatlap "Páciens törzsadata") segédfüggvényei/komponensei, szintén ne írd
+újra őket:
+- `masterSnapshotDiff(master, snapshot)` / `mezoErtekSzoveg(p, kulcs)` /
+  `alkalmazMezoket(cel, forras, kulcsok)` / `diffAzonosito(elteresek,
+  master, snapshot)` (`app/src/domain/masterSnapshotDiff.ts`) — a
+  mezőszintű összevetés tiszta magja, a `Paciens` 8 mezőjére. A master
+  `Paciens`-alakra hozásához a MEGLÉVŐ `paciensTorzsadatbol()`
+  (`domain/paciensAdatok.ts`, D33) hívandó. `valodiUtkozesek(elteresek,
+  master, snapshot)` (ugyanitt) a `elteresek` azon részhalmaza, ahol
+  MINDKÉT oldalon van érték, és azok különböznek — a lépés-elhagyási prompt
+  EZT nézi, nem a teljes `elteresek`-et, hogy egy üres mező puszta pótlása
+  (a leggyakoribb eset: quick-create után a törzsadat még csak a nevet
+  tartalmazza) ne szakítsa félbe a workflow-t minden alkalommal
+- `feloldPatientDir(storage, piszkozatPatientDir, paciensId)`
+  (`app/src/domain/torzsadatBetoltes.ts`) — a draft-hoz tartozó
+  páciensmappa nevének feloldása, `piszkozatPatientDir` (D37, lehet
+  `null`) elsőbbséggel, `plan.paciensId` → `listPatients()` tartalékkal;
+  sosem dob. Két hívója: `pages/patientPage/TorzsadatSyncCard.tsx` és
+  `pages/PreviewPage.tsx`
+- `components/TorzsadatDiffDialog.tsx` — a mezőszintű, checkbox-listás
+  összevető/szinkron dialógus mindhárom módhoz (master→draft kézi,
+  draft→master kézi, draft→master lépés-elhagyási ajánlat, `onSkip` prop
+  különbözteti meg) — ne írj mellé külön dialógust egyik irányhoz sem
+- `components/LepesGuardContext.tsx` `useLepesGuard()` /
+  `useLepesElhagyas(handler)` — a "Terv adatai" lépés ELŐRE elhagyásának
+  ajánlat-jellegű elfogása, a `TervWorkflowShell.tsx`-ben élő state fölött;
+  KÜLÖN mechanizmus a D46 `NavGuardContext`-től (más a szemantika, lásd a
+  fájl fejlécét), nem építendő rá és nem keverendő össze vele
+- `pages/patientPage/TorzsadatSyncCard.tsx` — a "Páciens törzsadata" kártya
+  (a Páciens adatlap Személyes adatok kártyája alatt) — tartja a
+  master-betöltést, mindkét kézi dialógust ÉS a lépés-elhagyási handler
+  regisztrációját is; a `PatientPage.tsx` emiatt gyakorlatilag érintetlen
+  maradt
+- `veglegesitesDiagnozis(plan, priceList, leirasokMutatasa, master)`
+  (`domain/veglegesitesOr.ts`) negyedik paramétere és `masterElteresek`
+  mezője — az INFO-szintű, NEM blokkoló törzsadat-eltérés a
+  véglegesítésnél; szándékosan KÍVÜL van a `VEGLEGESITES_LEPESEK` PUHA
+  láncán, mert az közvetlenül a `kovetkezoLepes` bejárását vezérli, egy ott
+  felvett mező automatikusan megerősítő dialógust nyitna
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

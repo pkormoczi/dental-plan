@@ -24,11 +24,13 @@ import {
 } from '@radix-ui/themes';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import ChipGroup from '../components/ChipGroup';
+import { useLepesGuard } from '../components/LepesGuardContext';
 import { sablonVerzioFor } from '../domain/blankPlan';
 import { lefedettseg } from '../domain/coverage';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import type { Nyelv, Penznem } from '../domain/types';
 import { t } from '../design/tokens';
+import TorzsadatSyncCard from './patientPage/TorzsadatSyncCard';
 import { useAppState } from '../state/AppState';
 
 type PendingChange = { kind: 'nyelv'; value: Nyelv } | { kind: 'penznem'; value: Penznem };
@@ -36,6 +38,7 @@ type PendingChange = { kind: 'nyelv'; value: Nyelv } | { kind: 'penznem'; value:
 export default function PatientPage() {
   const { plan, setPlan, settings, priceList } = useAppState();
   const navigate = useNavigate();
+  const { kerLepesValtas } = useLepesGuard();
   const paciens = plan.paciens;
   const [pending, setPending] = useState<PendingChange | null>(null);
 
@@ -281,8 +284,12 @@ export default function PatientPage() {
         )}
       </Card>
 
+      <TorzsadatSyncCard />
+
       <Flex justify="end" mt="4">
-        <Button onClick={() => navigate('/terv')}>Tovább a terv szerkesztőhöz</Button>
+        <Button onClick={() => kerLepesValtas(() => navigate('/terv'))}>
+          Tovább a terv szerkesztőhöz
+        </Button>
       </Flex>
 
       <AlertDialog.Root open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>

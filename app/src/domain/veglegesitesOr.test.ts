@@ -7,6 +7,9 @@ import {
 } from './veglegesitesOr';
 import type { Paciens, Plan, PriceList, Sor } from './types';
 
+/** A legtöbb teszt a master-eltérést nem vizsgálja -- lásd külön describe lent. */
+const NO_MASTER = null;
+
 function paciens(partial: Partial<Paciens> = {}): Paciens {
   return {
     nev: 'Teszt Elek',
@@ -90,13 +93,14 @@ const priceList: PriceList = {
 describe('veglegesitesDiagnozis', () => {
   it('teljesen kitöltött magyar terven minden kemény és puha jelzés hamis/üres', () => {
     const plan = makePlan([[sor()]]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
 
     expect(diag.nameMissing).toBe(false);
     expect(diag.uresSorok).toEqual([]);
     expect(diag.nevProblemak).toEqual({ nincsForditas: [], elterAzArlistatol: [], egyedi: [] });
     expect(diag.nullaSorok).toEqual([]);
     expect(diag.hianyzoLeirasok).toEqual([]);
+    expect(diag.masterElteresek).toEqual([]);
     expect(diag.alkalmazhato).toEqual({
       'missing-fields': false,
       'de-fallback-names': false,
@@ -107,7 +111,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('üres páciensnév a nameMissing kemény jelzőt adja, a puha láncot nem érinti', () => {
     const plan = makePlan([[sor()]], { paciens: paciens({ nev: '  ' }) });
-    const diag = veglegesitesDiagnozis(plan, priceList, true);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
 
     expect(diag.nameMissing).toBe(true);
     expect(diag.alkalmazhato['missing-fields']).toBe(false); // a NÉV külön flag, nem a "többi mező hiányzik" lépés
@@ -115,7 +119,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('meg nem nevezett sor az uresSorok kemény listában jelenik meg, a puha láncban NEM', () => {
     const plan = makePlan([[sor({ tetelId: '', nevSnapshot: '', fogak: '16' })]]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
 
     expect(diag.uresSorok).toEqual([{ fazisIndex: 0, fazisNev: '1. kezelés', sorIndex: 0, fogak: '16' }]);
     // egy névtelen sor összege is 0, de a nullaSorok CSAK a megnevezett
@@ -125,13 +129,13 @@ describe('veglegesitesDiagnozis', () => {
 
   it('hiányzó egyéb páciensadat a "missing-fields" lépést teszi alkalmazhatóvá', () => {
     const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '' }) });
-    const diag = veglegesitesDiagnozis(plan, priceList, true);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
     expect(diag.alkalmazhato['missing-fields']).toBe(true);
   });
 
   it('német nyelvű terven a fordítás nélküli tétel neve a "de-fallback-names" lépést teszi alkalmazhatóvá', () => {
     const plan = makePlan([[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás' })]], { nyelv: 'de' });
-    const diag = veglegesitesDiagnozis(plan, priceList, true);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
 
     expect(diag.nevProblemak.nincsForditas).toEqual(['Fogeltávolítás']);
     expect(diag.alkalmazhato['de-fallback-names']).toBe(true);
@@ -141,7 +145,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([
       [sor({ nevSnapshot: 'Ingyenes kontroll', listaEgysegar: 0, tenylegesEgysegar: 0 })],
     ]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
 
     expect(diag.nullaSorok).toEqual(['Ingyenes kontroll']);
     expect(diag.alkalmazhato['zero-price-rows']).toBe(true);
@@ -150,13 +154,13 @@ describe('veglegesitesDiagnozis', () => {
   it('hiányzó csomag-leírás a "missing-leiras" lépést teszi alkalmazhatóvá, ha a leírások mutatása be van kapcsolva', () => {
     const plan = makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: 'All-on-4 csomag' })]]);
 
-    const bekapcsolva = veglegesitesDiagnozis(plan, priceList, true);
+    const bekapcsolva = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
     expect(bekapcsolva.hianyzoLeirasok).toHaveLength(1);
     expect(bekapcsolva.alkalmazhato['missing-leiras']).toBe(true);
 
     // Kikapcsolt leirasokMutatasa mellett a hiány nem érinti a nyomtatványt
     // -- docs/02-domain-modell.md § Tétel-leírás.
-    const kikapcsolva = veglegesitesDiagnozis(plan, priceList, false);
+    const kikapcsolva = veglegesitesDiagnozis(plan, priceList, false, NO_MASTER);
     expect(kikapcsolva.hianyzoLeirasok).toEqual([]);
     expect(kikapcsolva.alkalmazhato['missing-leiras']).toBe(false);
   });
@@ -169,11 +173,41 @@ describe('veglegesitesDiagnozis', () => {
       ],
       { paciens: paciens({ nev: '' }) }, // kemény: nameMissing
     );
-    const diag = veglegesitesDiagnozis(plan, priceList, true);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
 
     expect(diag.nameMissing).toBe(true);
     expect(diag.uresSorok).toHaveLength(1);
     expect(diag.alkalmazhato['zero-price-rows']).toBe(true);
+  });
+
+  // backlog-40: a master↔snapshot eltérés INFO-szintű, nem PUHA lánc-tag --
+  // lásd a `masterElteresek` doc-kommentjét (D162).
+  describe('masterElteresek (backlog-40)', () => {
+    it('master nélkül üres listát ad', () => {
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, null);
+      expect(diag.masterElteresek).toEqual([]);
+    });
+
+    it('eltérő masternél felsorolja az eltérő mezőket', () => {
+      const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '+36 20 123 4567' }) });
+      const master = paciens({ telefon: '+36 70 999 8888' });
+      const diag = veglegesitesDiagnozis(plan, priceList, true, master);
+      expect(diag.masterElteresek.map((m) => m.kulcs)).toEqual(['telefon']);
+    });
+
+    it('a master-eltérés NEM befolyásolja az alkalmazhato mapet -- nem tagja a PUHA láncnak', () => {
+      const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '+36 20 123 4567' }) });
+      const master = paciens({ telefon: '+36 70 999 8888' });
+      const diag = veglegesitesDiagnozis(plan, priceList, true, master);
+      expect(diag.masterElteresek.length).toBeGreaterThan(0);
+      expect(diag.alkalmazhato).toEqual({
+        'missing-fields': false,
+        'de-fallback-names': false,
+        'zero-price-rows': false,
+        'missing-leiras': false,
+      });
+      expect(kovetkezoLepes(diag.alkalmazhato, 0)).toBeNull();
+    });
   });
 });
 

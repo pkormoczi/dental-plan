@@ -610,6 +610,86 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
   );
 });
 
+// backlog-40 (6. döntés, D162/D163): a páciens törzsadata és a terv
+// `paciens` pillanatképe közötti eltérés INFO-szintű, nem blokkoló sorként
+// jelenik meg -- a véglegesítés önmagában nem kényszerít szinkronizálást.
+describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'eltérő törzsadatnál info-Callout jelenik meg, de a véglegesítés emiatt NEM kér megerősítést',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      // A quick-create után a törzsadat még csak a nevet tartalmazza -- a
+      // többi mező kitöltése itt egy master<->draft ELTÉRÉS (fill-in), ami
+      // az Előnézeten info-sávot ad, de a lépés-elhagyáskor NEM szakítja
+      // félbe a workflow-t (`domain/masterSnapshotDiff.ts` `valodiUtkozesek`).
+      await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Info');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      fireEvent.change(await screen.findByLabelText('Született'), { target: { value: '1990-01-01' } });
+      await user.type(screen.getByLabelText('TAJ'), '123 456 789');
+      await user.type(screen.getByLabelText('Lakcím'), '1113 Budapest, Bartók Béla út 42. 2/5');
+      await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
+      await user.type(screen.getByLabelText('E-mail'), 'teszt.info@example.hu');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'Fogeltávolítás');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+
+      expect(
+        await screen.findByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Telefon/)).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /Véglegesítés és mentés/ }));
+
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
+    },
+    20000,
+  );
+
+  it(
+    'a "Terv adatai" gomb a törzsadat info-sávból a Páciens adatlapra navigál',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Info2');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.type(await screen.findByLabelText('Telefon'), '+36 30 123 4567');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'Fogeltávolítás');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      await screen.findByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/);
+      await user.click(screen.getByRole('button', { name: 'Terv adatai' }));
+
+      expect(await screen.findByDisplayValue('Teszt Info2')).toBeInTheDocument();
+    },
+    20000,
+  );
+});
+
 // backlog-20: a lényegi sanitizálás/előtag-logika a
 // storage/paths.test.ts `buildDownloadFileName`-jét fedi -- itt csak azt,
 // hogy a "Letöltés" link ténylegesen az ő kimenetét használja.

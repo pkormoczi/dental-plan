@@ -4,12 +4,35 @@
 // egy belső <Theme> újrainjektálással csomagolják, ami hiba nélkül csak
 // akkor működik, ha VAN ambiens Theme kontextus a fán (lásd App.tsx).
 
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
+import { LepesGuardProvider } from './components/LepesGuardContext';
 import { NavGuardProvider } from './components/NavGuardContext';
 import { AppStateProvider } from './state/AppState';
 import { StorageProvider } from './storage/StorageContext';
+
+/**
+ * `PatientPage.tsx` (`useLepesGuard`) és a `TorzsadatSyncCard.tsx`
+ * (`useLepesElhagyas`) csak a `TervWorkflowShell` alatt kap valódi
+ * lépés-elhagyási ajánlatot (backlog-40) -- a lapszintű tesztek (amik nem a
+ * teljes `<App/>`-on, hanem közvetlenül `PatientPage`-en keresztül
+ * renderelnek) egy néma, mindig-azonnal-továbbengedő értéket kapnak, hogy a
+ * Provider hiánya ne dobjon. A tényleges elfogás-logikát a
+ * `TervWorkflowShell.test.tsx` teszteli, a valódi shell-lel.
+ */
+function TestLepesGuardProvider({ children }: { children: ReactNode }) {
+  const value = useMemo(
+    () => ({
+      kerLepesValtas: (proceed: () => void) => proceed(),
+      regisztralLepesHandler: () => {},
+      elutasitottDiffId: null,
+      setElutasitottDiffId: () => {},
+    }),
+    [],
+  );
+  return <LepesGuardProvider value={value}>{children}</LepesGuardProvider>;
+}
 
 export function TestProviders({ children }: { children: ReactNode }) {
   return (
@@ -19,7 +42,9 @@ export function TestProviders({ children }: { children: ReactNode }) {
           <AppStateProvider>
             {/* D46: a D38-védett lapok (pl. SettingsPage sablon-szekciója)
                 useNavGuard()-ot hívnak -- Provider nélkül dob. */}
-            <NavGuardProvider>{children}</NavGuardProvider>
+            <NavGuardProvider>
+              <TestLepesGuardProvider>{children}</TestLepesGuardProvider>
+            </NavGuardProvider>
           </AppStateProvider>
         </StorageProvider>
       </MemoryRouter>

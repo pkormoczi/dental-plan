@@ -9,10 +9,12 @@ import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Skeleton, Text } fro
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
 import { formatMoney } from '../domain/money';
+import { paciensTorzsadatbol } from '../domain/paciensAdatok';
 import { isPlaceholderTemplate } from '../domain/templates';
 import { computeOsszesitok } from '../domain/totals';
 import { buildToothVisualStates } from '../domain/toothVisual';
-import type { PlanRef } from '../domain/types';
+import { feloldPatientDir } from '../domain/torzsadatBetoltes';
+import type { Paciens, PlanRef } from '../domain/types';
 import {
   kovetkezoLepes,
   veglegesitesDiagnozis,
@@ -41,7 +43,7 @@ function nevListaSzoveg(cim: string, nevek: string[]): string {
 }
 
 export default function PreviewPage() {
-  const { plan, settings, priceList, markPlanSaved } = useAppState();
+  const { plan, settings, priceList, markPlanSaved, piszkozatPatientDir } = useAppState();
   const { storage, loadLatestTemplateByBase } = useStorage();
   const navigate = useNavigate();
 
@@ -75,6 +77,41 @@ export default function PreviewPage() {
   // önmagában nem elég, mert egy második kattintás a state frissülése
   // (render) ELŐTT is megtörténhet.
   const savingRef = useRef(false);
+
+  // backlog-40 (6. döntés, D162/D163): a páciens törzsadata (D33) INFO-
+  // szintű, nem blokkoló jelzésként jelenik meg, ha eltér a terv `paciens`
+  // pillanatképétől -- a `patientDirForMaster` a `doFinalize()` mastert
+  // ÚJRAOLVasó lépéséhez is kell (D163), nem csak a mount-időbeli
+  // betöltéshez.
+  const [masterPaciens, setMasterPaciens] = useState<Paciens | null>(null);
+  const [patientDirForMaster, setPatientDirForMaster] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const dir = await feloldPatientDir(storage, piszkozatPatientDir, plan.paciensId);
+      if (cancelled) return;
+      setPatientDirForMaster(dir);
+      if (!dir) {
+        setMasterPaciens(null);
+        return;
+      }
+      try {
+        const data = await storage.loadPatientData(dir);
+        if (!cancelled) setMasterPaciens(data ? paciensTorzsadatbol(data) : null);
+      } catch {
+        // Best-effort, D162: egy sikertelen betöltés csak az info-sort
+        // némítja el, a véglegesítést nem akadályozza.
+        if (!cancelled) setMasterPaciens(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // A `plan.paciens` (a draft mezői) szándékosan NEM dependency -- csak az
+    // azonosító (patientDir/paciensId) változása indokol újratöltést.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storage, piszkozatPatientDir, plan.paciensId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -224,8 +261,9 @@ export default function PreviewPage() {
     nevProblemak: { nincsForditas, elterAzArlistatol, egyedi },
     nullaSorok,
     hianyzoLeirasok,
+    masterElteresek,
     alkalmazhato,
-  } = veglegesitesDiagnozis(plan, priceList, plan.leirasokMutatasa ?? true);
+  } = veglegesitesDiagnozis(plan, priceList, plan.leirasokMutatasa ?? true, masterPaciens);
 
   /**
    * A `confirmStep`-dialógus cím/leírás szövege -- négy lépésnél a korábbi,
@@ -289,6 +327,18 @@ export default function PreviewPage() {
     setSaving(true);
     setSaveError(null);
     try {
+      // D163: a mastert véglegesítéskor újraolvassuk -- csak az info-sáv
+      // frissítéséhez (D162, a `finalPlan.paciens` ettől függetlenül a
+      // draft pillanatképe marad, D7). Best-effort, nem blokkolhatja a
+      // mentést.
+      if (patientDirForMaster) {
+        try {
+          const fresh = await storage.loadPatientData(patientDirForMaster);
+          setMasterPaciens(fresh ? paciensTorzsadatbol(fresh) : null);
+        } catch {
+          // lásd fent
+        }
+      }
       const finalPlan = {
         ...plan,
         statusz: 'VEGLEGES' as const,
@@ -458,6 +508,21 @@ export default function PreviewPage() {
           <Flex mt="2">
             <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>
               Vissza a szerkesztőbe
+            </Button>
+          </Flex>
+        </Callout.Root>
+      )}
+      {/* backlog-40 (6. döntés, D162): INFO-szintű, NEM blokkoló jelzés --
+          a véglegesítés önmagában nem kényszerít szinkronizálást (D9/D33). */}
+      {masterElteresek.length > 0 && (
+        <Callout.Root color="gray" mb="3">
+          <Callout.Text>
+            A páciens törzsadata {masterElteresek.length} mezőben eltér a terv adataitól (
+            {masterElteresek.map((m) => m.cimke).join(', ')}).
+          </Callout.Text>
+          <Flex mt="2">
+            <Button variant="soft" color="gray" onClick={() => navigate('/paciens')}>
+              Terv adatai
             </Button>
           </Flex>
         </Callout.Root>

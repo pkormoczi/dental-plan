@@ -19,8 +19,9 @@ import {
   type HianyzoCsomagLeiras,
   type KitoltetlenSor,
 } from './kitoltetlen';
+import { masterSnapshotDiff, type MezoElteres } from './masterSnapshotDiff';
 import { fallbackSorok, type FallbackSorokEredmeny } from './nev';
-import type { Plan, PriceList } from './types';
+import type { Paciens, Plan, PriceList } from './types';
 
 export type VeglegesitesLepes =
   | 'missing-fields'
@@ -47,6 +48,18 @@ export interface VeglegesitesDiagnozis {
   nevProblemak: FallbackSorokEredmeny;
   nullaSorok: string[];
   hianyzoLeirasok: HianyzoCsomagLeiras[];
+  /**
+   * A páciens törzsadata (D33) és a terv `paciens` pillanatképe közötti
+   * mezőszintű eltérés -- INFO-szintű jelzés (backlog-40, D162), NEM tagja a
+   * PUHA `VEGLEGESITES_LEPESEK` láncnak és nem befolyásolja az
+   * `alkalmazhato`-t: az a map közvetlenül a `kovetkezoLepes` bejárását
+   * vezérli, egy ott felvett mező automatikusan megerősítő dialógust
+   * nyitna, amit a D162 kifejezetten tilt (a véglegesítés önmagában nem
+   * kényszerít szinkronizálást, D9/D33). `master: null`-nál mindig üres --
+   * a hívó (`PreviewPage.tsx`) felelőssége eldönteni, mit jelent a `null`
+   * (nincs lezárt törzsadat, vagy nem oldható fel a patientDir).
+   */
+  masterElteresek: MezoElteres[];
   /** Melyik PUHA lépés alkalmazható -- ez vezérli a `kovetkezoLepes` bejárását. */
   alkalmazhato: Record<VeglegesitesLepes, boolean>;
 }
@@ -55,12 +68,14 @@ export interface VeglegesitesDiagnozis {
  * A véglegesítés-őr összes bemenete egy helyen, tiszta függvényként.
  * `leirasokMutatasa` a hívó felelőssége (`plan.leirasokMutatasa ?? true`) --
  * ez a modul nem ismeri a `Plan` mező alapértékét, csak a kikapcsolt/
- * bekapcsolt tényt.
+ * bekapcsolt tényt. `master` ugyanígy a hívó betöltése (`null` = nincs
+ * lezárt törzsadat vagy nem ismert a patientDir).
  */
 export function veglegesitesDiagnozis(
   plan: Plan,
   priceList: PriceList,
   leirasokMutatasa: boolean,
+  master: Paciens | null,
 ): VeglegesitesDiagnozis {
   const nameMissing = !plan.paciens.nev.trim();
   const otherFieldsMissing =
@@ -88,6 +103,7 @@ export function veglegesitesDiagnozis(
   // akkor releváns, ha a leírások ténylegesen nyomtatódnak; kikapcsolt
   // `leirasokMutatasa` mellett a hiányuk nem érinti a nyomtatványt.
   const hianyzoLeirasok = leirasokMutatasa ? hianyzoCsomagLeirasok(plan, priceList) : [];
+  const masterElteresek = master ? masterSnapshotDiff(master, plan.paciens) : [];
 
   return {
     nameMissing,
@@ -95,6 +111,7 @@ export function veglegesitesDiagnozis(
     nevProblemak,
     nullaSorok,
     hianyzoLeirasok,
+    masterElteresek,
     alkalmazhato: {
       'missing-fields': otherFieldsMissing,
       'de-fallback-names': nevProblemaSzama > 0,
