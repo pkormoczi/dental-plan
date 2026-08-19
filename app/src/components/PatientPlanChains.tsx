@@ -1,9 +1,9 @@
 // EGY páciens terv-lánc -> verzió fája (D29), a hozzá tartozó akciókkal
 // (Új verzió / Másolás új tervbe / Megnézés / Letöltés / Új terv /
-// terv-címke szerkesztés). Eredetileg a PlanHistoryPage.tsx soronkénti
+// terv-címke szerkesztés). Eredetileg az OsszesTervSection.tsx soronkénti
 // (`.map(patients...)`) JSX-e volt -- backlog-30 (Páciens detail shell)
 // emelte ide, páciens-paraméteresre alakítva, mert mostantól KÉT hívó
-// használja: a PlanHistoryPage.tsx lista (patiensenként egy példány) ÉS a
+// használja: az OsszesTervSection.tsx lista (patiensenként egy példány) ÉS a
 // PatientDetailPage.tsx "Kezelési tervek" tabja (egy példány).
 //
 // A korábban OLDAL-szintű, csak EGY aktív interakciót engedő state
@@ -11,7 +11,7 @@
 // idekerült, saját `useState`-ekként -- minden példány függetlenül kezeli
 // a saját interakcióját. A `patient`-en kívüli adatokat (plans/
 // versionsByPlan/plansByVersion/totalsByVersion) a hívó tölti be és adja
-// át, hogy a betöltési STRATÉGIA (a PlanHistoryPage egyszerre, minden
+// át, hogy a betöltési STRATÉGIA (az OsszesTervSection egyszerre, minden
 // páciensre; a PatientDetailPage egyetlen páciensre, lásd
 // domain/planChainData.ts) hívónként eltérhessen, a renderelés viszont
 // egy helyen éljen.
@@ -109,7 +109,7 @@ export interface PatientPlanChainsProps {
    * planDir -> nyitva (46. tétel, D237/D250). Hiányzó kulcs = alapértelmezés
    * (csak a legfrissebb lánc, `rendezettLancok()[0]`, nyitva). Ha nincs
    * átadva (PatientDetailPage `embedded`), a komponens a saját, lokális
-   * state-jében tartja a nyitottságot; ha VAN (PlanHistoryPage `standalone`),
+   * state-jében tartja a nyitottságot; ha VAN (OsszesTervSection `standalone`),
    * ez a prop az igazság forrása -- a POP-navigációs visszaállításhoz a
    * lapnak kell birtokolnia (D240, `useListStateMemory`).
    */
@@ -755,7 +755,7 @@ export default function PatientPlanChains({
                     triggereké -- amíg a dialógus nyitva van, minden sor
                     trigger-gombja is a DOM-ban marad, azonos accessible
                     name-mel megkülönböztethetetlenek lennének (lásd
-                    PlanHistoryPage.test.tsx). */}
+                    OsszesTervSection.test.tsx). */}
                 {pending && pendingSpecs[pending.kind].actionLabel}
               </Button>
             </AlertDialog.Action>

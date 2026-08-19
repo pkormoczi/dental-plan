@@ -243,9 +243,12 @@ describe('Végpontok közötti folyamat', () => {
     render(<App />);
 
     // D39: a "Korábbi tervek" gomb lekerült a Kezdőlapról -- a `/tervek`
-    // route URL-ről marad elérhető, itt közvetlen hash-navigációval.
+    // route URL-ről marad elérhető, itt közvetlen hash-navigációval. D54
+    // óta a `/tervek` a DEMO "Összes terv" fülére (`/demo/tervek`)
+    // redirectel -- ezt igazolja a hash-ellenőrzés lent.
     window.location.hash = '#/tervek';
     const nagyEva = await screen.findByText('Nagy Éva');
+    expect(window.location.hash).toBe('#/demo/tervek');
     const card = nagyEva.closest('[data-patient]') as HTMLElement;
     // A "Tömések" lánc (v1 2026-06-10, v2 2026-07-22) NEM a legfrissebb
     // véglegesített dátumú lánc a "Fogkőeltávolítás" (2026-08-01) mellett

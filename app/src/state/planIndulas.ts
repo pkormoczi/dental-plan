@@ -2,7 +2,7 @@
 // (backlog-28): a törzsadatot (paciens-adatok.json, D33) preferálja
 // forrásként, ha van; egyébként a páciens legutóbb módosított terv-
 // láncának legfrissebb `paciens` pillanatképére esik vissza (a D29 előtti
-// viselkedés). A PlanHistoryPage.tsx páciensszintű "Új terv" gombja és a
+// viselkedés). A OsszesTervSection.tsx páciensszintű "Új terv" gombja és a
 // NewPlanPage.tsx "Meglévő páciens keresése" előtöltése EZT hívja -- nem
 // egymástól függetlenül újraírva --, hogy a két hely ne térjen el egymástól.
 //

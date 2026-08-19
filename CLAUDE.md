@@ -225,7 +225,7 @@ szintén ne írd újra őket:
 - `piszkozatTartalmas(plan)` (`app/src/domain/piszkozat.ts`) — az EGYETLEN
   hely, ahol eldől, hogy egy `Plan`-en van-e olyan tartalom, amit kár lenne
   elveszíteni; ezt hasonlítja az `AppState` (írási trigger) és a
-  Home/PlanHistoryPage (felülírás elleni AlertDialog) is, ne implementáld
+  Home/OsszesTervSection (felülírás elleni AlertDialog) is, ne implementáld
   újra egy `createBlankPlan()`-nal való mély-egyenlőség-hasonlítással (a
   `keltezes`/`orvos`/`nyelv` a mai dátumtól/beállításoktól függ, hamis
   "módosítva"-t adna)
@@ -343,7 +343,7 @@ terv-mappa, D29) segédfüggvényei, szintén ne írd újra őket:
   ütközésfeloldásában (D28, `resolveToothVisual`). `megjelenitettTervCim(
   tervCim, plan, priceList)` (ugyanitt) az EGYETLEN hely, ahol eldől, hogy
   a kézi (`terv-cimke.json`-beli) vagy az élő javaslat látszik —
-  `PlanHistoryPage.tsx` és a `storage.savePlan()` induló terv-mappanév-
+  `OsszesTervSection.tsx` és a `storage.savePlan()` induló terv-mappanév-
   javaslata is ezt hívja
 - `buildPlanDirName(tervCim, planId)` / `parsePlanDirName(dirName)`
   (`app/src/storage/paths.ts`) — a `buildPatientDirName`/
@@ -353,7 +353,7 @@ terv-mappa, D29) segédfüggvényei, szintén ne írd újra őket:
 - `latestVersionAcrossPlans(plans, versionsFor)`
   (`app/src/domain/planFolders.ts`) — egy páciens összes terv-láncának
   összes verziója közül a legfrissebb (`isoDate`, holtversenynél nagyobb
-  `verzio`); a `PlanHistoryPage.tsx` páciensszintű „Új terv” gombja és az
+  `verzio`); az `OsszesTervSection.tsx` páciensszintű „Új terv” gombja és az
   `/uj-terv` „Meglévő páciens keresése” előtöltése is ezt hívja, hogy a
   két hely ne térjen el egymástól
 
@@ -381,7 +381,7 @@ véglegesítés „Letöltési fájlnév") segédfüggvényei, szintén ne írd 
 - `buildDownloadFileName(nev, opts)` (ugyanitt) — primitív
   paraméterekkel (nincs `Plan` a `paths.ts`-ben): az `isDraft` eldöntése
   (mi számít piszkozatnak — a nyers `plan.statusz !== 'VEGLEGES'`) a hívó
-  (`PreviewPage.tsx`, `PlanHistoryPage.tsx`) dolga
+  (`PreviewPage.tsx`, `OsszesTervSection.tsx`) dolga
 
 A véglegesítés-őr kiemelése (`docs/03-funkcionalis-spec.md` § 4. Előnézet
 és véglegesítés) segédfüggvénye, szintén ne írd újra:
@@ -431,7 +431,7 @@ szintű törzsadat, D33) segédfüggvényei, szintén ne írd újra őket:
   priceList, patientDir)` (`app/src/state/planIndulas.ts`) a közös
   forráskiválasztás: törzsadat, ha van, egyébként a legutóbb módosított
   terv-lánc legfrissebb `paciens` pillanatképe — a `PatientPlanChains.tsx`
-  páciensszintű "Új terv" gombja (`PlanHistoryPage.tsx` és
+  páciensszintű "Új terv" gombja (`OsszesTervSection.tsx` és
   `PatientDetailPage.tsx` is ezen keresztül hívja, backlog-30) és a
   NewPlanPage.tsx "Meglévő páciens keresése" előtöltése is ezt hívja, hogy
   a hívási helyek ne térjenek el egymástól.
@@ -467,9 +467,9 @@ Páciens részletei, D35) segédfüggvényei/komponensei, szintén ne írd újra
   ugyanezt a váltást (D44).
 - `app/src/components/PatientPlanChains.tsx` — EGY páciens terv-lánc →
   verzió fája a hozzá tartozó akciókkal (Új verzió/Másolás új tervbe/
-  Megnézés/Letöltés/Új terv/címke-szerkesztés), eredetileg a
-  `PlanHistoryPage.tsx` soronkénti JSX-e volt; páciens-paraméteresre
-  alakítva a `PlanHistoryPage.tsx` lista (patiensenként egy példány) ÉS a
+  Megnézés/Letöltés/Új terv/címke-szerkesztés), eredetileg az
+  `OsszesTervSection.tsx` soronkénti JSX-e volt; páciens-paraméteresre
+  alakítva az `OsszesTervSection.tsx` lista (patiensenként egy példány) ÉS a
   `PatientDetailPage.tsx` "Kezelési tervek" tabja (egy példány) is
   használja. Az interakciós state (címke-szerkesztés, megerősítő
   dialógus, akció-hiba, összecsukás) a komponensben él, példányonként
@@ -484,8 +484,8 @@ Páciens részletei, D35) segédfüggvényei/komponensei, szintén ne írd újra
   kizárólag `'standalone'`-ban hívódik.
 - `loadPlanChainData(storage, patientDir)` (`app/src/domain/planChainData.ts`)
   — EGY páciens terv-lánc/verzió adatainak 3-lépéses
-  (`listPlans`→`listVersions`→`loadPlan`) betöltése, amit a
-  `PlanHistoryPage.tsx` (minden páciensre egyszerre) és a
+  (`listPlans`→`listVersions`→`loadPlan`) betöltése, amit az
+  `OsszesTervSection.tsx` (minden páciensre egyszerre) és a
   `PatientDetailPage.tsx` (egyetlen páciensre) is hív; sosem dob, egy
   sérült lépés `unreadable: true`-t állít a részlegesen betöltött adat
   mellett (P1-2 mintája).
@@ -590,8 +590,8 @@ segédfüggvényei/rétegei, szintén ne írd újra őket:
   — a 2. fázis betöltője, a meglévő `loadMegjelenitettTorzsadat()` (D33)
   több páciensre, `dirName` szerint kulcsolva, sosem dobva. A
   `usePaciensDuplikacio` (jelölt-körre, lásd lent) mellett a
-  `PaciensekPage.tsx` (D43) is ezt hívja, a teljes listára egyszerre, a
-  `PlanHistoryPage` végösszeg-betöltésének mintájára
+  `PaciensekPage.tsx` (D43) is ezt hívja, a teljes listára egyszerre, az
+  `OsszesTervSection` végösszeg-betöltésének mintájára
 - `usePaciensDuplikacio(opts)` (`app/src/components/usePaciensDuplikacio.ts`)
   — a React-réteg: additív, kulcsolt cache a versenyhelyzetek ellen (nem
   lista-csere/sorszámozás), `ellenoriz(bemenet)` a save-time útvonalhoz. A
@@ -621,8 +621,8 @@ A Pácienslista navigációs-listává alakítása tétel
   összecsukható blokkok nyitottságának (46. tétel) megőrzése route-váltás
   után-vissza, KIZÁRÓLAG böngésző-"vissza" (POP) navigációnál; modul-
   szintű `Map`-ben (a kódbázis első modul-szintű mutábilis állapota),
-  NEM böngészőtárban — a `PaciensekPage.tsx` (kereső/scroll) és a
-  `PlanHistoryPage.tsx` (mindhárom mező) hívja
+  NEM böngészőtárban — a `PaciensekPage.tsx` (kereső/scroll) és az
+  `OsszesTervSection.tsx` (mindhárom mező) hívja
 
 A törzsadat-szerkesztő read-only/edit módváltás tétel
 (`docs/01-attekintes-es-dontesek.md` D45, `docs/03-funkcionalis-spec.md`
@@ -716,8 +716,8 @@ szintén ne írd újra:
 
 A terv-lánc fa lánc-szintű összecsukása és aktív-draft blokkja
 (`docs/01-attekintes-es-dontesek.md` D51, `docs/03-funkcionalis-spec.md`
-§ 5. Korábbi tervek) segédfüggvényei/komponense, szintén ne írd újra
-őket:
+§ 5. Terv-láncok és verziók) segédfüggvényei/komponense, szintén ne írd
+újra őket:
 - `legfrissebbVerzio(versions)` (`app/src/domain/planFolders.ts`) — EGY
   terv-lánc legfrissebb verziója (max `isoDate`, holtversenynél nagyobb
   `verzio`) — a `latestVersionAcrossPlans()` egy láncra szűkített
@@ -739,7 +739,7 @@ A terv-lánc fa lánc-szintű összecsukása és aktív-draft blokkja
   `paciensTorlesAkadaly` mögötti feloldó-effekt kiemelve; a
   `feloldPatientDir()`-t (D48) hívja. `useAktivDraft()` laponként
   EGYSZER hívandó (nem páciensenként), a `sajatDraft()` tiszta szűrő
-  szűkíti egy konkrét páciensre — a `PlanHistoryPage.tsx` (egyszer a lap
+  szűkíti egy konkrét páciensre — az `OsszesTervSection.tsx` (egyszer a lap
   tetején) ÉS a `PatientDetailPage.tsx` (a D50 törlés-őrhöz) is ezt
   hívja, hogy a két hely ne térjen el egymástól
 - `piszkozatCelRoute(lastRoute, plan)` (`app/src/domain/piszkozat.ts`) —
@@ -754,7 +754,7 @@ A terv-lánc fa lánc-szintű összecsukása és aktív-draft blokkja
 - `useListStateMemory(key, ready)` bővítése (`app/src/components/
   useListStateMemory.ts`) — lásd fent a D43 bekezdésben; a `nyitottak`/
   `setNyitott` mezőpár a lánc-nyitottság POP-only memóriája, a hívó
-  dönti el az `id` jelentését (a `PlanHistoryPage.tsx`-en
+  dönti el az `id` jelentését (az `OsszesTervSection.tsx`-en
   `${patientDir}/${planDir}`)
 
 ## Domain szókincs

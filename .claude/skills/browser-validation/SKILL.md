@@ -67,7 +67,7 @@ A tényleges URL-t a szerver kimenetéből olvasd (Vite 5174+-ra léphet, ha az
 5173 foglalt). A `base: '/dental-plan/'` (vite.config.ts) + `HashRouter` miatt
 minden route `http://localhost:<port>/dental-plan/#/<route>` alakú:
 
-`#/`, `#/paciens`, `#/terv`, `#/elonezet`, `#/tervek`, `#/arlista`, `#/beallitasok`.
+`#/`, `#/paciens`, `#/terv`, `#/elonezet`, `#/demo/tervek`, `#/arlista`, `#/beallitasok`.
 
 A production build (`npm run build && npm run preview`, port 4173) szükséges,
 ha a lazy-loadolt `PreviewPage` chunk (~1,45 MB, `@react-pdf/renderer`) valódi
@@ -157,7 +157,8 @@ köztes betöltési állapot (pl. Suspense fallback egy lassú chunk alatt) **ne
 kapható el megbízhatóan screenshottal**, még `networkConditions` fojtással
 sem. Ha egy skeleton/loading-állapot helyességét kell igazolni, tedd
 forráskód-szinten (a végleges elrendezéssel egyező méretű `Skeleton`
-komponens, lásd `PlanHistoryPage.tsx` `HistorySkeleton` mintáját) és a
+komponens, lásd `pages/demo/OsszesTervSection.tsx` `HistorySkeleton`
+mintáját) és a
 vitest-készleten keresztül, ne várj rá screenshot-bizonyítékot.
 
 ### Konzol

@@ -3,8 +3,8 @@
 // végleges (FileSystemStorage, 2. fázis) alkalmazás a doki gépére, a mockup
 // `dp:` localStorage-kulcsaiból fává építve (storage/demoFileTree.ts).
 //
-// `useMemo`, NEM async-effekt-plusz-loading-skeleton (mint a
-// PlanHistoryPage): a `listFileTree()` szinkron `localStorage`-bejárás, nem
+// `useMemo`, NEM async-effekt-plusz-loading-skeleton (mint az
+// OsszesTervSection): a `listFileTree()` szinkron `localStorage`-bejárás, nem
 // egy `PlanStorage`-hívás, egy mesterséges betöltés-villanás docs/07 "Nincs
 // kitalált adat a felületen" szellemével ütközne. Az `AppStateProvider`
 // már ma is megvárja a `ready` promise-t a gyerek-oldalak renderelése

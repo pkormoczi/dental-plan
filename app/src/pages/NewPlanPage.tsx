@@ -108,7 +108,7 @@ export default function NewPlanPage() {
   // A páciens ELÉRHETŐ legjobb adataiból tölti elő a Páciens adatlapot: a
   // lezárt törzsadatból (paciens-adatok.json, D33), ha van, egyébként a
   // LEGUTÓBB MÓDOSÍTOTT terv-lánc legfrissebb verziójából -- ugyanaz a
-  // közös kiválasztás, mint a PlanHistoryPage páciensszintű "Új terv"
+  // közös kiválasztás, mint az OsszesTervSection páciensszintű "Új terv"
   // gombjáé (state/planIndulas.ts).
   async function selectExistingPatient(patient: PatientFolder) {
     setSelectError(null);

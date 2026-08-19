@@ -1,7 +1,7 @@
 // backlog-30: az egyesített páciens-részletoldal (két tab: Páciens adatai |
 // Kezelési tervek, URL-lel címezhető). A terv-lánc/verzió fa
 // (PatientPlanChains) saját, teljes lefedettséggel rendelkezik a
-// PlanHistoryPage.test.tsx-ben. A `Páciens adatai` tab tartalmának
+// OsszesTervSection.test.tsx-ben. A `Páciens adatai` tab tartalmának
 // (PatientEditorPanel) mezőkészlet/Save-Cancel viselkedése -- a 38. tétel
 // (D43) óta, mióta a Pácienslista tiszta navigációs lista, ennek az
 // egyetlen hívási helye ez az oldal -- itt fedve (mentés → tényleges
@@ -174,7 +174,7 @@ describe('PatientDetailPage', () => {
   // `PatientPlanChains` lánc-SZINTŰ toggle-je EZEN a tabon is érvényes,
   // ugyanazzal az alapértelmezéssel (csak a legfrissebb véglegesített
   // dátumú lánc nyitva), mint a `standalone` Korábbi tervek listán
-  // (PlanHistoryPage.test.tsx) -- a fejlécek attól függetlenül mindig
+  // (OsszesTervSection.test.tsx) -- a fejlécek attól függetlenül mindig
   // látszanak.
   it('2+ terv-lánccal rendelkező páciensnél a Kezelési tervek tabon is per-lánc összecsukás van, ugyanazzal az alapértelmezéssel', async () => {
     renderDetail(nagyDir);

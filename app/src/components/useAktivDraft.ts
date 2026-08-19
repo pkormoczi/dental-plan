@@ -2,7 +2,7 @@
 // (46. tétel). Eredetileg a `PatientDetailPage.tsx` D50 törlés-őrének
 // `draftPatientDir` effektje volt -- kiemelve, mert a terv-lánc fa
 // aktív-draft blokkja (`components/PatientPlanChains.tsx`) is ugyanezt a
-// feloldást igényli, és a `PlanHistoryPage.tsx`-en (sok páciens egy lapon)
+// feloldást igényli, és az `OsszesTervSection.tsx`-en (sok páciens egy lapon)
 // ezt EGYSZER kell hívni, nem páciensenként -- a `feloldPatientDir()`
 // `listPatients()` tartaléka különben N-szer futna le egy nagy listán.
 

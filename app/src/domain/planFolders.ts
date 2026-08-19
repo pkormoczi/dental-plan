@@ -1,6 +1,6 @@
 // Segédfüggvény a Korábbi tervek fájának (páciens → terv → verzió, D29)
 // "legutóbb módosított lánc legfrissebb verziója" kiválasztásához -- ezt
-// használja a PlanHistoryPage páciensszintű "Új terv" gombja (melyik verzió
+// használja az OsszesTervSection páciensszintű "Új terv" gombja (melyik verzió
 // `paciens` blokkját vigye tovább) és az /uj-terv "Meglévő páciens
 // keresése" előtöltése is, hogy a két hely ne térjen el egymástól.
 

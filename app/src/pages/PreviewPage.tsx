@@ -427,8 +427,9 @@ export default function PreviewPage() {
         <Flex gap="3" justify="center">
           <Button onClick={startNewPlan}>Új terv indítása</Button>
           {/* backlog-31, D36: a MOST mentett páciens részletoldalára visz
-              (Kezelési tervek tab), nem a globális listára -- a globális
-              `/tervek` D39 óta csak URL-ről érhető el, nincs hozzá nav-link. */}
+              (Kezelési tervek tab), nem a globális listára -- a globális,
+              több-pácienses áttekintő a DEMO oldal "Összes terv" fülén él
+              (D54), másodlagos a napi munkához képest. */}
           <Button
             variant="soft"
             color="gray"

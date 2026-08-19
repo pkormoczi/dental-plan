@@ -82,7 +82,7 @@ export default function UjTetelDialog({
           amiben a dialógust is zárja -- a friss sor `autoFocus` HUF ár mezője
           tehát ugyanabban a commitban mountol, amiben a Dialog bezárna. Radix
           alapból ilyenkor visszaadná a fókuszt a triggerre (ugyanaz a
-          minta, mint a `DropdownMenu.Content`-nél, lásd PlanHistoryPage.tsx),
+          minta, mint a `DropdownMenu.Content`-nél, lásd OsszesTervSection.tsx),
           és elhalászná azt a friss mező elől. */}
       <Dialog.Content maxWidth="440px" onCloseAutoFocus={(e) => e.preventDefault()}>
         <Dialog.Title>Új tétel</Dialog.Title>

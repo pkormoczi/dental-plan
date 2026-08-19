@@ -2,17 +2,17 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import PlanHistoryPage from './PlanHistoryPage';
-import { resetListStateMemoryForTests } from '../components/useListStateMemory';
-import { TestProviders } from '../testUtils';
-import { patientCard, verzioMenupont } from '../testQueries';
-import { DemoStorage } from '../storage/DemoStorage';
-import { seedPlans } from '../storage/seed/plans';
-import { formatMoney } from '../domain/money';
-import { buildDownloadFileName } from '../storage/paths';
-import { useAppState } from '../state/AppState';
-import type { Plan } from '../domain/types';
-import type { WorkflowRoute } from '../storage/DraftStorage';
+import OsszesTervSection from './OsszesTervSection';
+import { resetListStateMemoryForTests } from '../../components/useListStateMemory';
+import { TestProviders } from '../../testUtils';
+import { patientCard, verzioMenupont } from '../../testQueries';
+import { DemoStorage } from '../../storage/DemoStorage';
+import { seedPlans } from '../../storage/seed/plans';
+import { formatMoney } from '../../domain/money';
+import { buildDownloadFileName } from '../../storage/paths';
+import { useAppState } from '../../state/AppState';
+import type { Plan } from '../../domain/types';
+import type { WorkflowRoute } from '../../storage/DraftStorage';
 
 // backlog-30: a kereszt-link az egyesített páciens-részletoldalra navigál
 // (`/paciensek/:patientDir`), a tab-ot `location.state.tab`-ban átadva --
@@ -166,7 +166,7 @@ function renderHistory() {
   return render(
     <TestProviders>
       <Routes>
-        <Route path="/" element={<PlanHistoryPage />} />
+        <Route path="/" element={<OsszesTervSection />} />
         <Route path="/paciens" element={<DraftProbe />} />
         <Route path="/terv" element={<div>TERV-OLDAL</div>} />
         <Route path="/paciensek/:patientDir" element={<PaciensekProbe />} />
@@ -175,7 +175,7 @@ function renderHistory() {
   );
 }
 
-describe('PlanHistoryPage', () => {
+describe('OsszesTervSection', () => {
   beforeEach(async () => {
     localStorage.clear();
     // A rendes seedet egy különálló DemoStorage-példánnyal írjuk be előre --
@@ -299,7 +299,7 @@ describe('PlanHistoryPage', () => {
     // Mégse -- nem navigál, nem hívja loadPlanIntoDraft-ot.
     await user.click(screen.getByRole('button', { name: 'Mégse' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(await screen.findByText('Korábbi tervek')).toBeInTheDocument();
+    expect(await screen.findByText('Összes terv')).toBeInTheDocument();
 
     // Megerősítés -- ténylegesen megnyitja (loadPlanIntoDraft -> navigate).
     await user.click(await verzioMenupont(user, card, 'Új verzió'));

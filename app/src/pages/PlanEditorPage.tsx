@@ -482,7 +482,7 @@ export default function PlanEditorPage() {
                 {/* Szándékosan NEM „Fázis törlése" -- a canDelete gate
                     (>=2 fázis) miatt minden fázis trigger-gombja a DOM-ban
                     marad, amíg a dialógus nyitva van (ugyanaz a helyzet,
-                    mint PlanHistoryPage.tsx-ben). */}
+                    mint OsszesTervSection.tsx-ben). */}
                 Törlés
               </Button>
             </AlertDialog.Action>

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Box, Flex, Skeleton, Theme } from '@radix-ui/themes';
 import DemoBanner from './components/DemoBanner';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -14,7 +14,6 @@ import PaciensekPage from './pages/PaciensekPage';
 import PatientDetailPage from './pages/PatientDetailPage';
 import PatientPage from './pages/PatientPage';
 import PlanEditorPage from './pages/PlanEditorPage';
-import PlanHistoryPage from './pages/PlanHistoryPage';
 import PriceListAdminPage from './pages/PriceListAdminPage';
 import SettingsPage from './pages/SettingsPage';
 import { AppStateProvider } from './state/AppState';
@@ -71,12 +70,16 @@ export default function App() {
                             }
                           />
                         </Route>
-                        <Route path="/tervek" element={<PlanHistoryPage />} />
+                        {/* D54: a globális, több-pácienses terv-lista a DEMO oldal
+                            "Összes terv" fülére költözött -- a régi, könyvjelzett
+                            `/tervek` URL ne haljon meg némán. */}
+                        <Route path="/tervek" element={<Navigate to="/demo/tervek" replace />} />
                         <Route path="/paciensek" element={<PaciensekPage />} />
                         <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
                         <Route path="/arlista" element={<PriceListAdminPage />} />
                         <Route path="/beallitasok" element={<SettingsPage />} />
                         <Route path="/demo" element={<DemoPage />} />
+                        <Route path="/demo/:tab" element={<DemoPage />} />
                       </Routes>
                     </ErrorBoundary>
                   </main>

@@ -1,12 +1,12 @@
-// Közös DOM-lekérdezések a Korábbi tervek listájához, több tesztfájlnak
-// (PlanHistoryPage, App, PatientPage). Szándékosan NEM a testUtils.tsx-ben:
+// Közös DOM-lekérdezések a terv-lánc/verzió fához, több tesztfájlnak
+// (OsszesTervSection, App, PatientPage). Szándékosan NEM a testUtils.tsx-ben:
 // az egy komponenst (TestProviders) exportál, és a mellé tett
 // segédfüggvények a react(only-export-components) lint-szabályt sértenék.
 
 import { screen, within } from '@testing-library/react';
 import type userEvent from '@testing-library/user-event';
 
-/** A páciensblokk stabil horgonya -- lásd `data-patient` a PlanHistoryPage-en. */
+/** A páciensblokk stabil horgonya -- lásd `data-patient` az OsszesTervSection-ön. */
 export function patientCard(nev: string): HTMLElement {
   return screen.getByText(nev).closest('[data-patient]') as HTMLElement;
 }

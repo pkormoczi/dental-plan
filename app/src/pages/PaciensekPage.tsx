@@ -1,9 +1,9 @@
 // Páciensek -- backlog-28. tétel: a `terv.json` `paciens` blokkja
 // tervenkénti pillanatkép (D7), itt viszont a doki a páciens JELENLEG
 // érvényes, terv-mentéstől független adatait tartja (paciens-adatok.json,
-// D33). Funkcionálisan külön a Korábbi tervektől: az a kezelési előzmény/
-// verziók képernyője, ez a törzsadaté -- a kettő kölcsönösen linkel
-// egymásra ugyanahhoz a pácienshez.
+// D33). Funkcionálisan külön a terv-lánc/verzió fától (docs/03 § 5): az a
+// kezelési előzmény/verziók tartalma, ez a törzsadaté -- mindkettő
+// ugyanoda, a páciens-részletoldalra vezet.
 //
 // A 38. tétel (D43) óta ez tiszta NAVIGÁCIÓS lista: a sorok a páciens-
 // részletoldalra (`PatientDetailPage.tsx`) navigálnak, a törzsadat-
@@ -109,7 +109,7 @@ export default function PaciensekPage() {
           <Heading size="5" style={{ color: t.brand }}>
             Páciensek
           </Heading>
-          <Tooltip content="A terv-mentéstől független, élő adatok — a kezelési előzményekért lásd a Korábbi terveket.">
+          <Tooltip content="A terv-mentéstől független, élő adatok — a kezelési előzményekért lásd a páciens Kezelési tervek tabját.">
             <IconButton
               aria-label="A Páciensek lista magyarázata"
               variant="ghost"

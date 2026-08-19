@@ -48,7 +48,7 @@ interface AppStateValue {
   /**
    * Beteszi a piszkozatba egy `planUjPaciensselTervhez`/`planMasolatKent`
    * (domain/planCopy.ts, backlog-17) hívás EREDMÉNYÉT -- a hívó (
-   * PlanHistoryPage.tsx) már elvégezte a tiszta transzformációt, ez a
+   * OsszesTervSection.tsx) már elvégezte a tiszta transzformációt, ez a
    * függvény csak a React-bekötésért felel. A `resetPlanDraft` mintáját
    * követi, NEM a `loadPlanIntoDraft`-ét: a most kapott `next` MÉG SOHA
    * nincs elmentve a saját `tervId` alatt (a `planMasolatKent` is üres
@@ -65,7 +65,7 @@ interface AppStateValue {
    * nincs a fájl-storage-ban -- azaz `plan` egy másik objektumreferencia,
    * mint a legutóbb onnan betöltött/oda mentett terv. Ez vezérli a Home
    * "Piszkozat folytatása" kártyáját és a felülírás elleni AlertDialog-okat
-   * (Home "+ Új kezelési terv", PlanHistoryPage mindhárom terv-létrehozó
+   * (Home "+ Új kezelési terv", OsszesTervSection mindhárom terv-létrehozó
    * gombja) -- lásd docs/03-funkcionalis-spec.md § Autosave.
    */
   vanMentetlenPiszkozat: boolean;

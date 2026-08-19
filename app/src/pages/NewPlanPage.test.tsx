@@ -1,6 +1,6 @@
 // D29: a Home "+ Új kezelési terv" gombja utáni köztes kereső/választó lépés
 // (docs/03-funkcionalis-spec.md § Új terv indítása). Lásd
-// PlanHistoryPage.test.tsx a `DraftProbe`/`seedPersistedDraft` mintáért --
+// OsszesTervSection.test.tsx a `DraftProbe`/`seedPersistedDraft` mintáért --
 // ugyanaz a piszkozat-felülírás-őr fut itt is.
 //
 // A találati/recents sorok (D40) a név mellett egy halvány

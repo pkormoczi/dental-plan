@@ -4,7 +4,7 @@
 // A `loadMegjelenitettTorzsadat` a Kezdőlap recent listája (max 5 páciens,
 // eager) alatt fut. A `loadTorzsadatok` ugyanezt TÖBB páciensre futtatja --
 // egyrészt a Pácienslista (D43) TELJES, látható listájára egyszerre, a
-// `PlanHistoryPage` végösszeg-betöltésének mintájára, másrészt (D42) egy
+// `OsszesTervSection` végösszeg-betöltésének mintájára, másrészt (D42) egy
 // szűk jelölt-körre, a `domain/paciensDuplikacio.ts` 2. fázisának
 // betöltőjeként.
 

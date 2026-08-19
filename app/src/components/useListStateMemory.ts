@@ -6,11 +6,11 @@
 // tiszta listát ad. Modul-szintű `Map`-ben tartja az állapotot, NEM
 // böngészőtárban -- a keresőszöveg páciensnév-töredék lehet, ezt a
 // munkamenetre (a lap bezárásáig) szűkíti, F5 után nem marad meg. Hívói:
-// `PaciensekPage.tsx` (csak `q`/scroll) és `PlanHistoryPage.tsx` (mindhárom
+// `PaciensekPage.tsx` (csak `q`/scroll) és `OsszesTervSection.tsx` (mindhárom
 // mező -- a terv-lánc fa lánc-összecsukása).
 //
 // A `nyitottak` mező tartalma a hívó belügye -- a hook nem ismeri, mit
-// jelöl az `id` (a PlanHistoryPage-en `${patientDir}/${planDir}`).
+// jelöl az `id` (az OsszesTervSection-en `${patientDir}/${planDir}`).
 
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useNavigationType } from 'react-router-dom';

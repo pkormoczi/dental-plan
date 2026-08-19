@@ -3,7 +3,7 @@
 // piszkozathoz -- ezeket a teszteket egy előre, közvetlenül a `dp:piszkozat`
 // localStorage-kulcsba írt DraftRecord-dal szimuláljuk (AppState a betöltő
 // effektjében ezt olvassa vissza, lásd AppState.test-szerű mintát
-// PlanHistoryPage.test.tsx-ben: előbb a rendes seedet kell beírni, MERT a
+// OsszesTervSection.test.tsx-ben: előbb a rendes seedet kell beírni, MERT a
 // StorageProvider saját DemoStorage-példánya `init()`-kor `resetDemoData()`-t
 // futtatna, ami a `clearAll()` miatt a piszkozatot is elsöpörné, ha az már
 // előtte a helyén lenne).

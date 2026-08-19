@@ -48,7 +48,7 @@ Read, in this order:
    - `app/src/pages/PatientPage.tsx`
    - `app/src/pages/PlanEditorPage.tsx` + `app/src/pages/planEditor/*`
    - `app/src/pages/PreviewPage.tsx`
-   - `app/src/pages/PlanHistoryPage.tsx`
+   - `app/src/pages/demo/OsszesTervSection.tsx`
    - `app/src/pages/PriceListAdminPage.tsx` + `app/src/pages/priceListAdmin/*`
    - `app/src/pages/SettingsPage.tsx`
    - Shared UI components they render (`app/src/components/*`) where relevant to what's

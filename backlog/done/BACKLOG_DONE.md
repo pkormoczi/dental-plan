@@ -1371,3 +1371,31 @@ karbantartási kör négy önálló javítása.
   (docs/01-attekintes-es-dontesek.md D53, docs/03-funkcionalis-
   spec.md § 4. Előnézet és véglegesítés "Letöltési fájlnév", § 5.
   Korábbi tervek).
+
+---
+
+### 54. „Összes terv" a DEMO oldalon — KÉSZ (2026-08-19)
+
+- **Méret:** ~0.5 nap.
+- **Kereteket sért?** Nem — új D54 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a `Korábbi tervek` globális, több-pácienses nézet a
+  páciens-központú redesign óta teljesen árva volt — sehonnan nem linkelt
+  rá semmi, csak kézzel beírt `/tervek` URL-lel volt elérhető, miközben a
+  `docs/03-funkcionalis-spec.md` és a `PaciensekPage.tsx` tooltipje
+  továbbra is élő, kölcsönösen linkelt képernyőként írta le. Ez a limbó
+  garantálta, hogy egy jövőbeli munkamenet vagy némán kitakarítja, vagy
+  visszatesz rá egy nav-linket, holott a redesign IA már kimondta:
+  a tartalom a páciens `Kezelési tervek` tabjába olvad.
+- **Megvalósítás:** a globális terv-lánc/verzió fa (`PlanHistoryPage.tsx`
+  → `pages/demo/OsszesTervSection.tsx`) a DEMO oldal új, ötödik („Összes
+  terv") fülére költözött, változatlan tartalommal és akciókkal — a
+  páciens-részletoldal `Kezelési tervek` tabja marad az elsődleges gazda
+  (D35/D44), ez az áttekintő másodlagos. A `/tervek` URL erre a fülre
+  (`/demo/tervek`) redirectel; mind az öt DEMO fül URL-címezhető
+  (`/demo/:tab`), a fülváltás `replace` navigáció, hogy a
+  `useListStateMemory` (D43/D51) POP-alapú megőrzése ne ragadjon fülbe
+  zárva. A `PaciensekPage.tsx` tooltipje és a `docs/03-funkcionalis-
+  spec.md` § 5 (átnevezve „Terv-láncok és verziók"-ra) már a helyes
+  elsődleges/másodlagos viszonyt írja le
+  (docs/01-attekintes-es-dontesek.md D54, docs/03-funkcionalis-spec.md
+  § 5. Terv-láncok és verziók).

@@ -3,7 +3,7 @@
 // (readRawFile), PDF esetén a ténylegesen elmentett bájtokból (loadPlanPdf)
 // blob-URL és "Megnyitás új lapon" link.
 //
-// A blob-URL-t NEM azonnal revoke-oljuk (szemben a PlanHistoryPage
+// A blob-URL-t NEM azonnal revoke-oljuk (szemben az OsszesTervSection
 // letöltés-gombjával, ahol a szinkron a.click() miatt biztonságos) --
 // egy target="_blank" fülnek ideje kell betöltenie a blobot, ezért a
 // revoke az effekt CLEANUP-jában történik, a következő kiválasztáskor

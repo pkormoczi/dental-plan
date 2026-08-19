@@ -1297,7 +1297,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
   },
   // Terv nélküli páciens (backlog-41, D50) -- a Páciensek képernyőn felvéve,
   // de még nincs kezelési terve. Lezárt törzsadata van, de a Korábbi
-  // tervek listán NEM jelenik meg (nincs terv-lánca, `PlanHistoryPage.tsx`
+  // tervek listán NEM jelenik meg (nincs terv-lánca, `OsszesTervSection.tsx`
   // ezt a filtert alkalmazza). E nélkül friss demó adaton EGYETLEN páciens
   // sem lenne törölhető -- mindenki másnak van véglegesített terve.
   {

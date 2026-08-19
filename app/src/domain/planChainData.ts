@@ -1,5 +1,5 @@
 // EGY páciens terv-lánc/verzió adatainak 3-lépéses betöltése
-// (listPlans -> listVersions -> loadPlan), amit a PlanHistoryPage.tsx
+// (listPlans -> listVersions -> loadPlan), amit az OsszesTervSection.tsx
 // (patiensenként) és a PatientDetailPage.tsx (backlog-30) is használ --
 // ne írd újra egyik hívó oldalon se. Sosem dob: egy sérült lépés
 // `unreadable: true`-t állít, a többi sikeresen betöltött adat mellett

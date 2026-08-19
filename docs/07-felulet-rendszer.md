@@ -80,12 +80,12 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   is rendben van), a többi Radix Themes `DropdownMenu`-ba. A trigger `⋯`
   (`DotsHorizontalIcon`) `IconButton`, és az `aria-label`-jének
   tartalmaznia kell a SOR azonosítóját (pl. `Fogpótlás — v2 — további
-  műveletek` — a Korábbi tervek verziósorán a terv-lánc címkéje IS kell,
+  műveletek` — a terv-lánc fa verziósorán a terv-lánc címkéje IS kell,
   mert egy páciensnek több lánca is lehet, mindegyik saját `v1`-gyel
   indulva, D29), nem lehet csupasz „További műveletek" — egy listában
   több sor is van, azonos accessible name-mel képernyőolvasóval
   megkülönböztethetetlenek. Ez a lista-jellegű sorokra vonatkozik (pl.
-  `PlanHistoryPage` verziósora), ahol a gombok a TELJES sorra ható
+  `PatientPlanChains` verziósora), ahol a gombok a TELJES sorra ható
   akciók. A szerkesztő `LineRow`-jának saját mezőjéhez kötött vezérlői
   (a Fog mező melletti fogválasztó, az Ajánlati ár melletti `≈` becsült-ár
   kapcsoló, a Db mező melletti ⟳ visszakapcsoló, D32) nem esnek e szabály
@@ -97,7 +97,7 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   kell lenniük. A menüből nyíló megerősítő dialógusnál a
   `DropdownMenu.Content` `onCloseAutoFocus`-át meg kell előzni, különben a
   záró menü visszaveszi a fókuszt a dialógus elől (lásd
-  `pages/PlanHistoryPage.tsx`).
+  `pages/demo/OsszesTervSection.tsx`).
 - Egy-entitásos (nem sorbeli) `⋯` menü (pl. a páciens-részletoldal sticky
   fejlécének törlés-menüje, D50, `pages/PatientDetailPage.tsx`): ugyanaz a
   `DropdownMenu` felépítés, de az `aria-label` SZÁNDÉKOSAN NEM a fenti

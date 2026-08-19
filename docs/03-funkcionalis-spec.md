@@ -6,7 +6,9 @@
 2. Páciens adatlap — itt dől el a terv nyelve és pénzneme (D21)
 3. **Terv szerkesztő** — a legfontosabb
 4. Előnézet és véglegesítés
-5. Korábbi tervek
+5. Terv-láncok és verziók — elsődleges gazdája a 10. képernyő `Kezelési
+   tervek` tabja; a DEMO oldal „Összes terv" füle (D54) a másodlagos,
+   több-pácienses áttekintő
 6. Kezelések és árak (árlista admin)
 7. Beállítások
 8. Filerendszer — demó-only, a leendő fájlrendszeres architektúra vizualizációja, a DEMO oldal egyik füle
@@ -19,12 +21,15 @@ A fenti számozott lista a képernyők tartalmát írja le, nem a navigációs
 sávot. A végleges, öt tételes fő navigáció:
 `Kezdőlap | Páciensek | Kezelések és árak | Beállítások | DEMO`.
 
-A `DEMO` menüpont négy fület fog össze: **Funkciók** (ez a dokumentum
-felhasználó-szemszögű megfelelője, `FEATURES.md`), **Filerendszer** (a
-fenti 8. képernyő), **Változásnapló** (`CHANGELOG.md`) és **Adatkezelés**
-(a Kezdőlapról D39-cel átköltöztetett „Demó adat visszaállítása"/„Minden
-adat törlése") — mind a négy fejlesztési/demonstrációs tartalom,
-elkülönítve az üzleti workflow-tól.
+A `DEMO` menüpont öt fület fog össze, mindegyik URL-címezhető
+(`/demo/:tab`, D54): **Funkciók** (ez a dokumentum felhasználó-szemszögű
+megfelelője, `FEATURES.md`), **Összes terv** (a globális, több-pácienses
+terv-lánc/verzió fa, lásd § 5, D54 — ez az EGYETLEN kivétel: valódi
+terv-adatot mutat, és a rajta lévő akciók — Új terv, Új verzió, Másolás,
+Letöltés — élesek), **Filerendszer** (a fenti 8. képernyő),
+**Változásnapló** (`CHANGELOG.md`) és **Adatkezelés** (a Kezdőlapról
+D39-cel átköltöztetett „Demó adat visszaállítása"/„Minden adat törlése")
+— a `/tervek` URL erre a fülre (`/demo/tervek`) redirectel.
 
 A `Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi tervek` képernyők (2–5.)
 korábban átmenetileg saját nav-linkkel is elérhetők voltak — ezt a
@@ -99,9 +104,10 @@ ebben a sorrendben.
   tab, nincs hozzá explicit `location.state`).
 
 A korábbi „Demó adat visszaállítása"/„Minden adat törlése" gomb és a
-„Korábbi tervek" gomb NEM része ennek a három blokknak — előbbi kettő a
-DEMO oldal Adatkezelés fülére költözött, utóbbi (a globális `/tervek`
-lista) csak URL-ről érhető el, lásd fent § Fő navigáció.
+„Korábbi tervek" gomb NEM része ennek a három blokknak — mindkettő a DEMO
+oldalra költözött (D54): előbbi kettő az Adatkezelés fülre, utóbbi (a
+globális, több-pácienses terv-lánc/verzió fa) az „Összes terv" fülre
+(`/demo/tervek`), lásd fent § Fő navigáció.
 
 A nyelvválasztás nem itt, hanem a Páciens adatlapon van (2. képernyő) —
 lásd ott.
@@ -444,10 +450,10 @@ szerkesztésre vonatkozik — egy visszatérő páciens régi, `VEGLEGES` tervé
 az első tartalmi módosítás után kezd írni. A visszaállítás csendes és
 memóriabeli — a Kezdőlap „Piszkozat folytatása” kártyája a belépési pont
 hozzá; a Kezdőlap „+ Új kezelési terv” gombja maga feltétel nélkül navigál
-(a köztes `/uj-terv` választóra, D29 — lásd § Korábbi tervek), de MINDEN
-tényleges terv-létrehozó akció megerősítést kér, mielőtt felülírná: az
-`/uj-terv` mindkét ága („Meglévő páciens keresése…”, „Vadonatúj páciens”)
-és a „Korábbi tervek” mindhárom akciója („Új verzió”, „Másolás új
+(a köztes `/uj-terv` választóra, D29 — lásd § 5 „Új terv indítása”), de
+MINDEN tényleges terv-létrehozó akció megerősítést kér, mielőtt felülírná:
+az `/uj-terv` mindkét ága („Meglévő páciens keresése…”, „Vadonatúj
+páciens”) és a terv-lánc fa mindhárom akciója („Új verzió”, „Másolás új
 tervbe”, „Új terv”) — egyik sem kivétel. A megerősített felülírás
 pillanatában a perzisztált piszkozat **azonnal** törlődik, nem a
 következő írási triggerre vár.
@@ -593,13 +599,13 @@ A mentés után a terv-workflow héj (D36) fölött megjelenő "A terv elmentve
 - **„Új terv indítása"** — az `/uj-terv` köztes páciens-választóra visz
   (lásd § 5 „Új terv indítása").
 - **„Korábbi tervek"** — a MOST mentett páciens részletoldalára
-  (10. képernyő, `Kezelési tervek` tab) navigál, nem a globális Korábbi
-  tervek listára (§ 5) — az utóbbi D39 óta kizárólag URL-ről (`/tervek`)
-  érhető el, nincs hozzá nav-link vagy Kezdőlap-gomb.
+  (10. képernyő, `Kezelési tervek` tab) navigál, nem a DEMO „Összes terv"
+  fülére (§ 5, D54) — az utóbbi a teljes, több-pácienses áttekintő,
+  másodlagos a napi munkához képest.
 
 ### Letöltési fájlnév
 
-A „Letöltés" gomb (ez a képernyő) és a Korábbi tervek verziósorának „⋯"
+A „Letöltés" gomb (ez a képernyő) és a terv-lánc fa verziósorának „⋯"
 menüje egyaránt a `buildDownloadFileName(nev, opts)`
 (`app/src/storage/paths.ts`) kimenetét adja fájlnévnek, hogy egy
 Letöltések mappában sok páciens sok fájlja között a doki a fájlnévről
@@ -621,19 +627,35 @@ azonnal `PISZKOZAT-` előtagot kap, amíg a doki újra nem véglegesíti.
 
 ---
 
-## 5. Korábbi tervek
+## 5. Terv-láncok és verziók
 
-A `paciensek/` fa beolvasása, kereshető listával. Páciensnév szerint
-csoportosítva, alatta a terv-láncok (D29), azon belül a verziók dátummal
-és **végösszeggel**. Egy terv nélküli, csak `paciens-adatok.json`-nal
-rendelkező páciens (a Páciensek képernyőn, § 9, terv nélkül felvéve) itt
-NEM jelenik meg — ez a képernyő a kezelési előzményekről szól, nem a
-törzsadatról. Minden páciensnév mellett egy „Páciens adatai” kereszt-link
-navigál a páciens-részletoldalra (§ 10), ugyanahhoz a pácienshez, a
-`Páciens adatai` tabbal előválasztva — ezen a képernyőn a páciensnév az
-EGYETLEN páciens-címke, a kereszt-link pedig az EGYETLEN út a
-részletoldalra. Ugyanez a fa a részletoldalba beágyazva név és
-kereszt-link NÉLKÜL renderel (D44, § 10).
+Ez a szakasz a `components/PatientPlanChains.tsx` komponens — a
+páciensenkénti terv-lánc/verzió fa és a hozzá tartozó akciók — MEGOSZTOTT
+specifikációja. Két hívója van, és **elsődleges gazdája a páciens
+részletoldal (§ 10) `Kezelési tervek` tabja** (D35/D44): a doki napi
+munkája mindig egy konkrét páciensen keresztül fut, a fa ott, a törzsadat
+mellett, `embedded` fejléccel jelenik meg. A `paciensek/` fa TELJES,
+több-pácienses beolvasása (`standalone` fejléccel, D54) a DEMO oldal
+„Összes terv” fülén él (`/demo/tervek`), mint másodlagos áttekintő — nem
+napi munkaeszköz, hanem a doki-validáció közbeni teljes-listás betekintés
+(lásd „Fő navigáció (D34)” fent).
+
+A lenti leírás (a fa, a címke, a `⋯` menü, a négy terv-létrehozási út, az
+aktív-draft blokk) mindkét felületre egyaránt vonatkozik, a fejléc-eltérés
+kivételével (lásd „Aktív draft a listán” alatti bekezdés és „A négy
+terv-létrehozási út” táblázata).
+
+Az „Összes terv” fülön (`standalone` fejléc) a `paciensek/` fa beolvasása,
+kereshető listával. Páciensnév szerint csoportosítva, alatta a terv-láncok
+(D29), azon belül a verziók dátummal és **végösszeggel**. Egy terv
+nélküli, csak `paciens-adatok.json`-nal rendelkező páciens (a Páciensek
+képernyőn, § 9, terv nélkül felvéve) itt NEM jelenik meg — ez a nézet a
+kezelési előzményekről szól, nem a törzsadatról. Minden páciensnév mellett
+egy „Páciens adatai” kereszt-link navigál a páciens-részletoldalra
+(§ 10), ugyanahhoz a pácienshez, a `Páciens adatai` tabbal előválasztva —
+ezen a fülön a páciensnév az EGYETLEN páciens-címke, a kereszt-link pedig
+az EGYETLEN út a részletoldalra. Ugyanez a fa a részletoldalba beágyazva
+(`embedded` fejléc) név és kereszt-link NÉLKÜL renderel (D44, § 10).
 
 Az összecsukás **lánc-szintű** (D51, nem páciens-szintű): minden terv-lánc
 fejléce önálló, tiszta toggle (nem navigáció), és alapból CSAK a
@@ -763,7 +785,7 @@ a páciensnév mellett** — de a névfejlécen KÍVÜL, mert a páciensnév cí
 a gomb akció. A rövid felirat nem mondja ki, hogy a páciensadatot átviszi;
 ezt az elhelyezés hordozza. A gomb `soft` accent (nem szürke), a
 páciensnév `t.brand` színével egy családban; a `#f77409`-hez nem nyúlunk
-(docs/07: soha nem szövegszín). Ez a leírás a Korábbi tervek listájának
+(docs/07: soha nem szövegszín). Ez a leírás a DEMO „Összes terv" fülének
 `standalone` fejlécére vonatkozik (D44) — a részletoldalba (§ 10)
 beágyazva ugyanez a gomb teljes értékű CTA, névfejléc nélkül.
 
@@ -799,8 +821,9 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
 - **A páciens ELÉRHETŐ legjobb adataiból — csak a páciensadat.** Két
   belépési pontja van, ugyanazzal az eredménnyel, közös forráskiválasztással
   (`ujTervForrasPaciensbol()`, `app/src/state/planIndulas.ts`, D33):
-  - **„Új terv"** — a Korábbi tervek listán, a páciensnév mellett balra,
-    páciensszinten (nem egy konkrét verzióhoz kötve).
+  - **„Új terv"** — a terv-lánc fa `standalone` fejlécén (DEMO „Összes
+    terv" fül), a páciensnév mellett balra, páciensszinten (nem egy
+    konkrét verzióhoz kötve).
   - **„Meglévő páciens keresése…"** — a Kezdőlap „+ Új kezelési terv"
     gombja utáni `/uj-terv` köztes választón (lásd lentebb).
 
@@ -850,9 +873,9 @@ címváltozás), és ez a tranzitív lépés önmagában is jelzi, hogy ez egy �
 terv indítása, nem egy meglévő verzió folytatása — nincs hozzá külön,
 tisztázó megerősítő dialógus, csak a meglévő piszkozat-felülírás-őr fut le
 mindegyiknél, ha van mentetlen munka. A megkülönböztetés másik fele a
-feliratokban van (lásd § Korábbi tervek, „A négy terv-létrehozási út"):
-mindegyik tartalmazza az „új terv" kifejezést, a láncot folytató akció
-pedig az egyetlen, amiben a „verzió" szó szerepel.
+feliratokban van (lásd fent, „A négy terv-létrehozási út"): mindegyik
+tartalmazza az „új terv" kifejezést, a láncot folytató akció pedig az
+egyetlen, amiben a „verzió" szó szerepel.
 
 A másolat rögtön MENTETLEN piszkozatnak számít (a „Piszkozat folytatása"
 kártya azonnal megjelenik a Kezdőlapon), mert még soha nincs elmentve a
@@ -917,7 +940,7 @@ piszkozat itt még nem veszik el. A „Vadonatúj páciens" ágon ez a
 megerősítés a quick-create dialógus MEGNYITÁSA előtt fut le; a
 dialógus saját Mégse/Escape-je (fent) ettől független, külön lépés.
 
-A Korábbi tervek saját „Új terv"/„Másolás új tervbe" gombjai (lásd fent)
+A terv-lánc fa saját „Új terv"/„Másolás új tervbe" gombjai (lásd fent)
 **nem** ide navigálnak — azoknál a célpáciens már adott a forrás tervből,
 nincs kétértelműség.
 
@@ -1124,8 +1147,8 @@ mockup `localStorage`-adatából.
 - **Read-only fa**: mappa/fájl diszklózúra, a gyökér és az első szint
   (`sablonok/`, `paciensek/`, a két root JSON) alapból nyitva, mélyebb
   szintek (páciens-/terv-/verziómappák) csukva. Semmilyen törlés/
-  átnevezés/írás nincs ezen a képernyőn — a meglévő útvonalak (Korábbi
-  tervek, Kezelések és árak, Beállítások) változatlanok.
+  átnevezés/írás nincs ezen a képernyőn — a meglévő útvonalak (Összes
+  terv, Kezelések és árak, Beállítások) változatlanok.
 - **Egy fájlra kattintva** a ténylegesen tárolt tartalom jelenik meg alatta:
   JSON fájloknál pretty-printelve, sablon-`.md` fájloknál nyers szöveggel
   (a `[PLACEHOLDER`/`[PLATZHALTER` jelöléssel együtt), a `kezelesi-terv.pdf`-nél
@@ -1149,15 +1172,17 @@ mockup `localStorage`-adatából.
 ## 9. Páciensek
 
 Tiszta navigációs lista a páciens-részletoldalhoz (§ 10) — funkcionálisan
-külön a Korábbi tervektől (§ 5): az a kezelési előzmény/verziók képernyője,
-ez a páciens-azonosítás/keresés képernyője. A kettő kölcsönösen linkel
-egymásra ugyanahhoz a pácienshez. A törzsadat-szerkesztő (`paciens-
-adatok.json`, D33) EGYETLEN helye a § 10 `Páciens adatai` tabja — a
-szerkesztő mezői/mentés-szabályai ott vannak leírva (D43).
+külön a terv-lánc/verzió fától (§ 5): az a kezelési előzmény/verziók
+tartalma, ez a páciens-azonosítás/keresés képernyője. Mindkettő ugyanoda,
+a páciens-részletoldalra vezet — ez a lista a sor kattintásával, a DEMO
+„Összes terv" füle a „Páciens adatai" kereszt-linkkel. A törzsadat-
+szerkesztő (`paciens-adatok.json`, D33) EGYETLEN helye a § 10 `Páciens
+adatai` tabja — a szerkesztő mezői/mentés-szabályai ott vannak leírva
+(D43).
 
 - **Lista**: `storage.listPatients()` + a törzsadat/fallback eager
-  betöltésével (`loadTorzsadatok()`, `domain/torzsadatBetoltes.ts` — a
-  `PlanHistoryPage` végösszeg-betöltésének mintájára) minden látható
+  betöltésével (`loadTorzsadatok()`, `domain/torzsadatBetoltes.ts` — az
+  `OsszesTervSection` végösszeg-betöltésének mintájára) minden látható
   sorra egyszerre, nem soronkénti lusta betöltéssel. Alfabetikus
   (`localeCompare('hu')` a megjelenített néven).
 - **Sor tartalma**: oszlopos táblázat (Radix `Table`, `pages/paciensek/
@@ -1204,7 +1229,7 @@ szerkesztő mezői/mentés-szabályai ott vannak leírva (D43).
   gyökér-fájlt (`paciens.json` + `paciens-adatok.json`) létrehozza, terv
   nélkül, majd a mentés a páciens-részletoldalra, SZERKESZTÉS módban
   előválasztott `Páciens adatai` tabra navigál (D45). Az így felvitt
-  páciens a Korábbi tervek listán NEM jelenik meg (§ 5) — csak akkor
+  páciens a DEMO „Összes terv" fülén NEM jelenik meg (§ 5) — csak akkor
   kerül oda, ha legalább egy terve is lesz.
 - A nyomtatvány (PDF) nem változik: ez a képernyő SOHA nem forrása a
   PDF-nek (D7, D33).
@@ -1218,17 +1243,20 @@ szerkesztő mezői/mentés-szabályai ott vannak leírva (D43).
 
 URL-lel címezhető (`/paciensek/:patientDir`, D35), két tabbal: `Páciens
 adatai | Kezelési tervek`. Megvalósítás: `app/src/pages/PatientDetailPage.tsx`.
-Ez a képernyő a törzsadat-szerkesztést (§ 9) és a `Korábbi tervek` (§ 5)
-tartalmát FOGADJA BE két tabként. A `Páciens adatai` tab tartalma
+Ez a képernyő a törzsadat-szerkesztést (§ 9) és a terv-lánc/verzió fát
+(§ 5) FOGADJA BE két tabként — a `Kezelési tervek` tab az ELSŐDLEGES
+gazdája a § 5 tartalmának (D54), a DEMO „Összes terv" füle másodlagos,
+több-pácienses áttekintő. A `Páciens adatai` tab tartalma
 (`components/PatientEditorPanel.tsx`) itt van az EGYETLEN hívási helyén
 (D43) — a § 9 Pácienslistája tiszta navigációs lista, nem tartalmazza. A
 `Kezelési tervek` tab tartalma (`components/PatientPlanChains.tsx`)
-ellenben KÉT hívási helyen közös: itt ÉS a `Korábbi tervek` (§ 5)
-páciensenkénti listasorában, hogy egyik oldal se duplikálja a másikat. A
-fejléce viszont hívónként eltér (D44, lásd lent): itt beágyazva
-(`header: 'embedded'`), a listában önállóan (`header: 'standalone'`). A
-`Páciensek`/`Korábbi tervek` listák önmagukban változatlanul elérhetők
-maradnak — csak a bennük lévő kereszt-linkek mutatnak ide.
+ellenben KÉT hívási helyen közös: itt ÉS a DEMO „Összes terv" fülének
+(§ 5) páciensenkénti listasorában, hogy egyik felület se duplikálja a
+másikat. A fejléce viszont hívónként eltér (D44, lásd lent): itt
+beágyazva (`header: 'embedded'`), a DEMO fülön önállóan
+(`header: 'standalone'`). A `Páciensek` lista és a DEMO „Összes terv"
+füle önmagukban változatlanul elérhetők maradnak — csak a bennük lévő
+kereszt-linkek mutatnak ide.
 
 - **Sticky fejléc**: név + születési dátum + telefon, görgetéskor a lap
   tetején marad. Adatforrása a `megjelenitettTorzsadat()` (§ 9-cel azonos
@@ -1277,8 +1305,8 @@ maradnak — csak a bennük lévő kereszt-linkek mutatnak ide.
   teljes értékű CTA-ként, ugyanolyan hangsúllyal, mint a lenti üres
   állapoté. Ha a páciensnek még nincs egyetlen olvasható terv-verziója
   sem, a fa helyett egy „Új terv” CTA jelenik meg — ez az EGYETLEN eset,
-  ahol ez a képernyő ilyen üres állapotot mutat, mert a Korábbi tervek
-  listája (§ 5) egy ilyen pácienst eleve ki sem listáz.
+  ahol ez a képernyő ilyen üres állapotot mutat, mert a DEMO „Összes terv”
+  füle (§ 5) egy ilyen pácienst eleve ki sem listáz.
 - A `Páciens adatai` tab „Korábbi tervek” gombja — ami korábban a
   `PatientEditorPanel` alján állt — megszűnt (D44): a tabok közti váltás
   egyetlen helye a tabsor. A `Kezelési tervek` tab tartalma emiatt sem
@@ -1292,8 +1320,8 @@ maradnak — csak a bennük lévő kereszt-linkek mutatnak ide.
 - **Páciens törlése** (D50): a sticky fejléc jobb szélén egy `⋯` menü
   (`components/PatientDetailHeader.tsx` `actions` propja) EGYETLEN
   ponttal, „Páciens törlése” — ez az EGYETLEN elérési pont az egész
-  appban, nincs a Pácienslista sorain vagy a Korábbi tervek
-  verziósorainak `⋯` menüjén. A pont csak akkor aktív, ha a páciensnek
+  appban, nincs a Pácienslista sorain vagy a terv-lánc fa verziósorainak
+  `⋯` menüjén. A pont csak akkor aktív, ha a páciensnek
   nincs véglegesített terve, nincs rá mutató aktív, mentetlen piszkozata,
   és minden terv-lánca/verziója olvasható volt; egyébként tiltott, alatta
   egy rövid indoklással („Véglegesített terve van” / „Aktív piszkozat

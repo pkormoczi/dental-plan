@@ -1,27 +1,30 @@
-// Korábbi tervek -- docs/03-funkcionalis-spec.md "5. Korábbi tervek".
+// Összes terv -- a DEMO oldal füle (D54), docs/03-funkcionalis-spec.md
+// "5. Terv-láncok és verziók". A teljes, több-pácienses áttekintő --
+// napi munkára a § 10 páciens-részletoldal `Kezelési tervek` tabja való,
+// ez a fa csak a doki-validáció közbeni teljes-listás betekintésre.
 //
 // Ez a legerősebb indoka a fájlrendszer-hozzáférésnek: egy visszatérő
 // pácienshez ne kelljen újragépelni a tételeket. Háromszintű fa (páciens →
 // terv → verzió, D29) -- egy páciensnek több terv-lánca is lehet. A
 // páciensenkénti terv-lánc/verzió fa és a hozzá tartozó akciók
-// (backlog-30 óta) a `components/PatientPlanChains.tsx`-ben élnek -- ez az
-// oldal csak listáz, szűr és betölt, a renderelést/interakciót átadja neki.
+// (backlog-30 óta) a `components/PatientPlanChains.tsx`-ben élnek -- ez a
+// szekció csak listáz, szűr és betölt, a renderelést/interakciót átadja neki.
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Callout, Flex, Heading, Separator, Skeleton, Text, TextField } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
-import PatientPlanChains from '../components/PatientPlanChains';
-import { sajatDraft, useAktivDraft } from '../components/useAktivDraft';
-import { useListStateMemory } from '../components/useListStateMemory';
-import { t } from '../design/tokens';
-import { type PlanChainData, loadPlanChainData } from '../domain/planChainData';
-import { norm } from '../domain/search';
-import type { PatientFolder } from '../domain/types';
-import { useStorage } from '../storage/StorageContext';
+import PatientPlanChains from '../../components/PatientPlanChains';
+import { sajatDraft, useAktivDraft } from '../../components/useAktivDraft';
+import { useListStateMemory } from '../../components/useListStateMemory';
+import { t } from '../../design/tokens';
+import { type PlanChainData, loadPlanChainData } from '../../domain/planChainData';
+import { norm } from '../../domain/search';
+import type { PatientFolder } from '../../domain/types';
+import { useStorage } from '../../storage/StorageContext';
 
 // A lánc-nyitottság memória-kulcsa (46. tétel) -- a `versionDataKey()`
-// mintáján, a `PlanHistoryPage` egy lapon SOK páciens fáját rendereli,
+// mintáján, az `OsszesTervSection` egy lapon SOK páciens fáját rendereli,
 // tehát a `planDir` önmagában nem lenne egyedi a `useListStateMemory`
 // modul-szintű, oldal-szintű `nyitottak` rekordjában.
 function lancMemoriaKulcs(patientDir: string, planDir: string): string {
@@ -49,7 +52,7 @@ const EMPTY_CHAIN_DATA: PlanChainData = {
   unreadable: false,
 };
 
-export default function PlanHistoryPage() {
+export default function OsszesTervSection() {
   const { storage } = useStorage();
   const navigate = useNavigate();
 
@@ -117,7 +120,7 @@ export default function PlanHistoryPage() {
   return (
     <Box style={{ maxWidth: 760, margin: '0 auto' }}>
       <Heading size="5" mb="4" style={{ color: t.brand }}>
-        Korábbi tervek
+        Összes terv
       </Heading>
 
       <TextField.Root
@@ -168,7 +171,7 @@ export default function PlanHistoryPage() {
         return (
           // `data-patient` a páciensblokk stabil horgonya -- a névfejléc DOM-beli
           // mélysége az akciógomb kiemelése óta nem alkalmas erre (lásd
-          // PlanHistoryPage.test.tsx).
+          // OsszesTervSection.test.tsx).
           <Box key={p.dirName} mb="5" data-patient={p.dirName}>
             <PatientPlanChains
               patient={p}

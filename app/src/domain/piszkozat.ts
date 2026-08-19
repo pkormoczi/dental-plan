@@ -2,7 +2,7 @@
 // piszkozatot (ami megegyezik a friss createBlankPlan() eredményével) nem
 // perzisztáljuk -- csak az első tartalmi módosítás után kezd írni". Ez a
 // "tartalmas piszkozat" definíciója, amit az AppState (írási trigger) és a
-// Home/PlanHistoryPage (felülírás elleni AlertDialog) egyaránt használ --
+// Home/OsszesTervSection (felülírás elleni AlertDialog) egyaránt használ --
 // ne írd újra máshol.
 
 import { ELSO_FAZIS_NEV } from './blankPlan';
