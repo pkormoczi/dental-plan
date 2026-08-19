@@ -1120,3 +1120,32 @@ karbantartási kör négy önálló javítása.
   értékű CTA-ként -- a nevet a sticky fejléc, a törzsadat felé vezető
   utat a tabsor már hordozza. A `PatientEditorPanel` alján megszűnt a
   tükör-"Korábbi tervek" gomb is, ugyanezen elv szerint.
+
+---
+
+### 39. Páciens adatok read-only / edit / full create — KÉSZ (2026-08-19)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D45 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a törzsadat-szerkesztő (`PatientEditorPanel`) egy
+  páciens puszta megtekintésekor is rögtön szerkeszthető mezőket nyitott
+  meg (véletlen módosítás kockázata), és semmilyen mezőszintű validáció
+  nem védte a `paciens-adatok.json`-t (valódi system of record, D33) egy
+  jövőbeli születési dátum vagy szintaktikailag hibás e-mail cím ellen.
+- **Megvalósítás:** a panel kétállású — alapból READ-ONLY nézet
+  (`components/Field.tsx` új `ReadOnlyField` exportja, a kitöltetlen
+  mezőkön az app meglévő "—" hiányzó-érték jelölésével), egy "Szerkesztés"
+  gombbal a MEGLÉVŐ input-mezős nézetre váltva. Az e-mail-formátum és a
+  jövőbeli születési dátum blokkoló mezővalidáció lett (új
+  `domain/paciensValidacio.ts` `emailHiba`/`szuletesiIdoHiba`), a Mentés
+  gomb nem tiltott, de hibás mezőnél a mentés megszakad — ugyanez a
+  Született-validáció a quick-create (`UjPaciensDialog.tsx`) mezőjére is
+  kiterjed, hogy ugyanaz az adat ne kapjon két ítéletet a két belépési
+  ponton. A Save/Cancel gombpár, a dirty-detektálás, a tab-váltási guard
+  (D38) és a mentési hiba utáni state-megőrzés funkcionálisan
+  változatlan maradt, csak a szerkesztés módra korlátozva. A `PaciensekPage.tsx`
+  "+ Új páciens" sikeres mentése a részletoldalt kivételesen SZERKESZTÉS
+  módban nyitja (`location.state.mod: 'szerkesztes'`) — egy MEGLÉVŐ
+  páciens kiválasztása (kereszt-link, "Ezt a pácienst választom") READ-ONLY
+  nézetben nyit. Az üres mezők jelölésére szándékosan az app meglévő "—"
+  konvenciója maradt az egyetlen forrás, nem egy új szöveges jelölés.

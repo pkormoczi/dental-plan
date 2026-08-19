@@ -126,6 +126,16 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   szövegei" szekció). Az
   Árlista admin és a Beállítások többi szekciója autosave marad (D31) —
   ezekhez a primitívek nem hívási hely, csak jövőbeli lehetőség.
+- Read-only label+érték adatnézet (D45): `components/Field.tsx`
+  `ReadOnlyField` — a `FieldGroup`-ra épül (NEM a `Field`-re, lásd a
+  `Field.tsx` fejléckommentjét: egy `<label>` statikus szöveg köré téve
+  elrontaná az accessible name számítást). A halvány címke/erős érték
+  kontraszt a Radix `color="gray"` propból jön, nem külön tokenből. Az
+  app EGYETLEN hiányzó-érték jelölése az em dash (`—`) — ezt használja a
+  `ReadOnlyField` is, nem egy külön „Nincs megadva”-szerű szöveget, hogy
+  ne éljen két versengő „nincs adat” nyelv egymás mellett
+  (`components/PatientPlanChains.tsx`, `pdf/TervDocument.tsx` ugyanezt
+  a jelölést használja).
 - Fülek (Radix Themes `Tabs`): a `DemoPage.tsx` (backlog-29) UNCONTROLLED
   (`defaultValue`, nincs URL-/state-szinkron), a `PatientDetailPage.tsx`
   (backlog-30) CONTROLLED (`value`/`onValueChange`) — utóbbi azért, mert a

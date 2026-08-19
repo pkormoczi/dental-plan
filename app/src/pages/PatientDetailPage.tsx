@@ -27,6 +27,7 @@ import { ujTervForrasPaciensbol } from '../state/planIndulas';
 import { useStorage } from '../storage/StorageContext';
 
 type DetailTab = 'adatai' | 'tervek';
+type EditorMod = 'nezet' | 'szerkesztes';
 
 export default function PatientDetailPage() {
   const { patientDir: rawPatientDir } = useParams<{ patientDir: string }>();
@@ -49,6 +50,13 @@ export default function PatientDetailPage() {
     (location.state as { tab?: DetailTab } | null)?.tab === 'adatai' ? 'adatai' : 'tervek',
   );
 
+  // Quick-create után a hívó szerkesztés módban jelzi a "Páciens adatai" tab
+  // nyitását (D45) -- csak a kezdőértékhez olvassuk, ugyanúgy, mint a
+  // `tab`-ot.
+  const [editorMod, setEditorMod] = useState<EditorMod>(
+    (location.state as { mod?: EditorMod } | null)?.mod === 'szerkesztes' ? 'szerkesztes' : 'nezet',
+  );
+
   // A Radix `Tabs` unmountolja a nem aktív tab tartalmát -- a "Páciens
   // adatai" tabon félbehagyott szerkesztés máskülönben némán elveszne
   // egy tab-váltásnál, ugyanaz a közös primitív (D38), mint amit a
@@ -59,6 +67,9 @@ export default function PatientDetailPage() {
   function requestTab(next: DetailTab) {
     guard.request(() => {
       setDirtyAdatai(false);
+      // A panel unmountol egy tab-váltásnál -- egy oda-vissza váltás nélküle
+      // újra szerkesztés módban nyitná meg a "Páciens adatai" tabot.
+      setEditorMod('nezet');
       setTab(next);
     });
   }
@@ -179,6 +190,7 @@ export default function PatientDetailPage() {
             fallbackPlan={fallbackPlan}
             fallbackLoading={false}
             fallbackError={null}
+            kezdoMod={editorMod}
             onDirtyChange={setDirtyAdatai}
             onSaved={setAdatok}
           />

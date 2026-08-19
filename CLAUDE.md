@@ -600,6 +600,22 @@ A Pácienslista navigációs-listává alakítása tétel
   szintű `Map`-ben (a kódbázis első modul-szintű mutábilis állapota),
   NEM böngészőtárban — csak a `PaciensekPage.tsx` hívja
 
+A törzsadat-szerkesztő read-only/edit módváltás tétel
+(`docs/01-attekintes-es-dontesek.md` D45, `docs/03-funkcionalis-spec.md`
+§ 10. Páciens részletei) segédfüggvényei/komponensei, szintén ne írd újra
+őket:
+- `emailHiba(email)` / `szuletesiIdoHiba(szuletesiIdo, ma)`
+  (`app/src/domain/paciensValidacio.ts`) — blokkoló mezővalidáció (nem a
+  `validate.ts` JSON-betöltési `assert*`-mintája, ez hibaszöveget ad
+  vissza, nem dob); mindkettő üres bemenetnél `null`-t ad (opcionális
+  mező). A `PatientEditorPanel.tsx` Mentés gombja ÉS a quick-create
+  `UjPaciensDialog.tsx` Született mezője is ezt hívja, hogy ugyanaz az
+  adat ne kapjon két különböző ítéletet a két belépési ponton
+- `ReadOnlyField` (`app/src/components/Field.tsx`) — a `Field`/
+  `FieldGroup` read-only párja, a `FieldGroup`-ra épülve (nem a
+  `Field`-re, lásd a fájl saját kommentjét); üres értéknél az app
+  meglévő „—” hiányzó-érték jelölését adja, nem külön szöveget
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

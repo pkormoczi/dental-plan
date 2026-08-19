@@ -21,18 +21,28 @@
 // megerősítő felsorolás, ha az átírt név egy másik pácienssel ütközne. A
 // `patients` listát a komponens saját maga tölti be -- a hívó
 // (`PatientDetailPage.tsx`) nem tart kéznél egy friss, teljes listát.
+//
+// Kétállású render (D45): alapból olvasó nézet
+// (`ReadOnlyField`-ekkel, a MENTETT `displayed` alapból, nem a draftból),
+// egy "Szerkesztés" gombbal a mai input-mezős nézetre váltva -- így a
+// puszta megnyitás sosem indít piszkozatot. A `kezdoMod` prop a
+// quick-create utáni azonnali szerkesztés-módú nyitáshoz (`PatientDetailPage.tsx`).
 
 import { useEffect, useMemo, useState } from 'react';
 import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Grid, Text, TextField } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
-import { Field } from './Field';
+import { Field, ReadOnlyField } from './Field';
 import { useDirtyDraft } from './useDirtyDraft';
 import { usePaciensDuplikacio } from './usePaciensDuplikacio';
 import { t } from '../design/tokens';
+import { formatShortDate, todayIso } from '../domain/date';
 import { megjelenitettTorzsadat } from '../domain/paciensAdatok';
 import type { DuplikaciosJelolt } from '../domain/paciensDuplikacio';
+import { emailHiba, szuletesiIdoHiba } from '../domain/paciensValidacio';
 import type { Paciens, PatientFolder, PatientMasterData, Plan } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
+
+type Mod = 'nezet' | 'szerkesztes';
 
 export default function PatientEditorPanel({
   patient,
@@ -40,6 +50,7 @@ export default function PatientEditorPanel({
   fallbackPlan,
   fallbackLoading,
   fallbackError,
+  kezdoMod = 'nezet',
   onDirtyChange,
   onSaved,
 }: {
@@ -49,6 +60,8 @@ export default function PatientEditorPanel({
   fallbackPlan: Plan | null | undefined;
   fallbackLoading: boolean;
   fallbackError: string | null;
+  /** Quick-create után a hívó szerkesztés módban jelzi a nyitást (D45). */
+  kezdoMod?: Mod;
   onDirtyChange: (dirty: boolean) => void;
   onSaved: (saved: PatientMasterData) => void;
 }) {
@@ -59,9 +72,11 @@ export default function PatientEditorPanel({
     [adatok, fallbackPlan, patient],
   );
 
+  const [mod, setMod] = useState<Mod>(kezdoMod);
   const [saving, setSaving] = useState(false);
   const [ellenorzesFolyamatban, setEllenorzesFolyamatban] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [megprobaltMenteni, setMegprobaltMenteni] = useState(false);
   const [duplikaciMegerosites, setDuplikaciMegerosites] = useState<DuplikaciosJelolt[] | null>(null);
 
   // Amíg a fallback tölt, a `displayed` még a névre szűkített üres rekord --
@@ -69,8 +84,11 @@ export default function PatientEditorPanel({
   // gépelni (`ready: !fallbackLoading`, lásd useDirtyDraft.ts).
   const { draft, setDraft, dirty, reset } = useDirtyDraft(displayed, { ready: !fallbackLoading });
   useEffect(() => {
-    onDirtyChange(dirty);
-  }, [dirty, onDirtyChange]);
+    onDirtyChange(mod === 'szerkesztes' && dirty);
+  }, [mod, dirty, onDirtyChange]);
+
+  const emailHibaSzoveg = megprobaltMenteni ? emailHiba(draft.email) : null;
+  const szuletesiIdoHibaSzoveg = megprobaltMenteni ? szuletesiIdoHiba(draft.szuletesiIdo, todayIso()) : null;
 
   function patch(fields: Partial<Paciens>) {
     setDraft((prev) => ({ ...prev, ...fields }));
@@ -109,7 +127,11 @@ export default function PatientEditorPanel({
       const toSave: PatientMasterData = { ...draft, schemaVersion: 1, paciensId: patient.paciensId };
       await storage.savePatientData(patient.dirName, toSave);
       onSaved(toSave);
+      setMegprobaltMenteni(false);
+      setMod('nezet');
     } catch (err) {
+      // Mentési hiba: a draft ÉS a szerkesztés mód érintetlen marad (D38) --
+      // a doki beírt adata nem veszhet el egy sikertelen íráskor.
       setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
     } finally {
       setSaving(false);
@@ -117,6 +139,9 @@ export default function PatientEditorPanel({
   }
 
   async function handleSave() {
+    setMegprobaltMenteni(true);
+    if (emailHiba(draft.email) || szuletesiIdoHiba(draft.szuletesiIdo, todayIso())) return;
+
     setEllenorzesFolyamatban(true);
     try {
       const talalatok = await ellenoriz({
@@ -136,6 +161,8 @@ export default function PatientEditorPanel({
 
   function handleCancel() {
     reset();
+    setMegprobaltMenteni(false);
+    setMod('nezet');
   }
 
   if (fallbackLoading) {
@@ -154,6 +181,57 @@ export default function PatientEditorPanel({
         </Callout.Icon>
         <Callout.Text>A legutóbbi terv betöltése nem sikerült: {fallbackError}</Callout.Text>
       </Callout.Root>
+    );
+  }
+
+  if (mod === 'nezet') {
+    return (
+      <Box py="2">
+        {!isLocked && (
+          <Text as="p" size="1" color="gray" mb="3">
+            Ez az adat a páciens legutóbbi mentett tervéből látszik — mentéssel önálló, terv-
+            mentéstől független törzsadattá válik.
+          </Text>
+        )}
+
+        <ReadOnlyField label="Név" value={displayed.nev} />
+
+        <Grid columns="2" gap="3" mt="3">
+          <ReadOnlyField
+            label="Született"
+            value={displayed.szuletesiIdo ? formatShortDate(displayed.szuletesiIdo, 'hu') : ''}
+          />
+          <ReadOnlyField label="TAJ" value={displayed.taj} />
+        </Grid>
+
+        <Box mt="3">
+          <ReadOnlyField label="Lakcím" value={displayed.lakcim} />
+        </Box>
+
+        <Grid columns="2" gap="3" mt="3">
+          <ReadOnlyField label="Telefon" value={displayed.telefon} />
+          <ReadOnlyField label="E-mail" value={displayed.email} />
+        </Grid>
+
+        <Box mt="3">
+          <ReadOnlyField label="Kiskorú" value={displayed.kiskoru ? 'Igen' : 'Nem'} />
+        </Box>
+
+        {displayed.kiskoru && (
+          <Box mt="3">
+            <ReadOnlyField
+              label="Törvényes képviselő (név, elérhetőség)"
+              value={displayed.torvenyesKepviselo ?? ''}
+            />
+          </Box>
+        )}
+
+        <Flex justify="end" mt="4">
+          <Button size="1" onClick={() => setMod('szerkesztes')}>
+            Szerkesztés
+          </Button>
+        </Flex>
+      </Box>
     );
   }
 
@@ -181,6 +259,8 @@ export default function PatientEditorPanel({
             type="date"
             value={draft.szuletesiIdo}
             onChange={(e) => patch({ szuletesiIdo: e.target.value })}
+            aria-invalid={szuletesiIdoHibaSzoveg ? true : undefined}
+            style={szuletesiIdoHibaSzoveg ? { boxShadow: `inset 0 0 0 1px ${t.danger}` } : undefined}
           />
         </Field>
         <Field label="TAJ">
@@ -191,6 +271,11 @@ export default function PatientEditorPanel({
           />
         </Field>
       </Grid>
+      {szuletesiIdoHibaSzoveg && (
+        <Text as="div" size="1" mt="1" style={{ color: t.danger }}>
+          {szuletesiIdoHibaSzoveg}
+        </Text>
+      )}
 
       <Box mt="3">
         <Field label="Lakcím">
@@ -216,9 +301,16 @@ export default function PatientEditorPanel({
             value={draft.email}
             onChange={(e) => patch({ email: e.target.value })}
             placeholder="kovacs.janos@example.hu"
+            aria-invalid={emailHibaSzoveg ? true : undefined}
+            style={emailHibaSzoveg ? { boxShadow: `inset 0 0 0 1px ${t.danger}` } : undefined}
           />
         </Field>
       </Grid>
+      {emailHibaSzoveg && (
+        <Text as="div" size="1" mt="1" style={{ color: t.danger }}>
+          {emailHibaSzoveg}
+        </Text>
+      )}
 
       <Text as="label" size="2" mt="3" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Checkbox
@@ -250,14 +342,7 @@ export default function PatientEditorPanel({
       )}
 
       <Flex justify="end" gap="2" mt="4">
-        <Button
-          type="button"
-          size="1"
-          variant="soft"
-          color="gray"
-          disabled={!dirty || saving}
-          onClick={handleCancel}
-        >
+        <Button type="button" size="1" variant="soft" color="gray" disabled={saving} onClick={handleCancel}>
           Mégse
         </Button>
         <Button

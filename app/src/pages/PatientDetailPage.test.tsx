@@ -14,7 +14,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PatientDetailPage from './PatientDetailPage';
 import { AppStateProvider, useAppState } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
@@ -79,7 +79,7 @@ describe('PatientDetailPage', () => {
 
     const adataiTab = await screen.findByRole('tab', { name: /Páciens adatai/ });
     expect(adataiTab).toHaveAttribute('aria-selected', 'true');
-    expect(await screen.findByRole('button', { name: 'Mentés' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Szerkesztés' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Új terv' })).not.toBeInTheDocument();
   });
 
@@ -111,7 +111,7 @@ describe('PatientDetailPage', () => {
   it('a Páciens adatai tabon nincs "Korábbi tervek" gomb', async () => {
     renderDetail(nagyDir, { tab: 'adatai' });
 
-    await screen.findByRole('button', { name: 'Mentés' }); // a panel betöltött
+    await screen.findByRole('button', { name: 'Szerkesztés' }); // a panel betöltött
     expect(screen.queryByRole('button', { name: 'Korábbi tervek' })).not.toBeInTheDocument();
   });
 
@@ -145,6 +145,7 @@ describe('PatientDetailPage', () => {
     const user = userEvent.setup();
     renderDetail(nagyDir, { tab: 'adatai' });
 
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
     const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
     await user.clear(telefonMezo);
     await user.type(telefonMezo, 'ideiglenes érték');
@@ -162,6 +163,7 @@ describe('PatientDetailPage', () => {
     const user = userEvent.setup();
     renderDetail(nagyDir, { tab: 'adatai' });
 
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
     const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
     await user.clear(telefonMezo);
     await user.type(telefonMezo, 'ideiglenes érték');
@@ -172,8 +174,14 @@ describe('PatientDetailPage', () => {
     const tervekTab = await screen.findByRole('tab', { name: /Kezelési tervek/ });
     expect(tervekTab).toHaveAttribute('aria-selected', 'true');
 
+    // A tab-váltás a szerkesztés módot is nullázza -- a visszatérés nézet
+    // módban, nem a piszkozatban félbehagyott adatokkal történik.
     await user.click(await screen.findByRole('tab', { name: /Páciens adatai/ }));
-    expect(await screen.findByDisplayValue('+36 20 555 1234')).toBeInTheDocument();
+    // A sticky fejléc is mutatja ugyanezt a telefonszámot -- a `tabpanel`-re
+    // szűkítve egyértelmű, hogy a panel (nem a fejléc) tartalmát nézzük.
+    const panel = await screen.findByRole('tabpanel');
+    expect(await within(panel).findByText('+36 20 555 1234')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mentés' })).not.toBeInTheDocument();
   });
 
   // Kovács Jánosnak (a seed szerint) nincs saját paciens-adatok.json-ja --
@@ -184,10 +192,14 @@ describe('PatientDetailPage', () => {
     const user = userEvent.setup();
     renderDetail(kovacsDir, { tab: 'adatai' });
 
-    expect(await screen.findByDisplayValue('+36 30 123 4567')).toBeInTheDocument();
+    // A sticky fejléc is mutatja ugyanezt a telefonszámot -- a `tabpanel`-re
+    // szűkítve egyértelmű, hogy a panel (nem a fejléc) tartalmát nézzük.
+    const panel = await screen.findByRole('tabpanel');
+    expect(await within(panel).findByText('+36 30 123 4567')).toBeInTheDocument();
     expect(screen.getByText(/mentéssel önálló/)).toBeInTheDocument();
 
-    const telefonMezo = screen.getByDisplayValue('+36 30 123 4567');
+    await user.click(screen.getByRole('button', { name: 'Szerkesztés' }));
+    const telefonMezo = await screen.findByDisplayValue('+36 30 123 4567');
     await user.clear(telefonMezo);
     await user.type(telefonMezo, '+36 70 000 1111');
     await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -204,6 +216,7 @@ describe('PatientDetailPage', () => {
     const user = userEvent.setup();
     renderDetail(tothDir, { tab: 'adatai' });
 
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
     const nevMezo = await screen.findByRole('textbox', { name: 'Név *' });
     await user.clear(nevMezo);
     await user.type(nevMezo, 'Fekete Zoltán');
@@ -225,5 +238,91 @@ describe('PatientDetailPage', () => {
     await verify.init();
     const adatok = await verify.loadPatientData(tothDir);
     expect(adatok?.nev).toBe('Fekete Zoltán');
+  });
+
+  // D45: a törzsadat-szerkesztő alapból olvasó nézetben nyílik, a
+  // kitöltetlen mezők az app meglévő "—" hiányzó-érték konvencióját kapják
+  // (nem egy új "Nincs megadva" szöveget).
+  it('alapból olvasó nézetben nyílik, a kitöltetlen mezők "—"-t mutatnak', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const folder = await seeder.createPatient('Teszt Üres');
+
+    renderDetail(folder.dirName, { tab: 'adatai' });
+
+    expect(await screen.findByRole('button', { name: 'Szerkesztés' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mentés' })).not.toBeInTheDocument();
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Törvényes képviselő/)).not.toBeInTheDocument();
+  });
+
+  it('location.state.mod: "szerkesztes" a Páciens adatai tabot azonnal szerkesztés módban nyitja (quick-create után)', async () => {
+    renderDetail(nagyDir, { tab: 'adatai', mod: 'szerkesztes' });
+
+    expect(await screen.findByRole('button', { name: 'Mentés' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Szerkesztés' })).not.toBeInTheDocument();
+  });
+
+  it('jövőbeli születési dátum blokkolja a mentést', async () => {
+    const user = userEvent.setup();
+    renderDetail(nagyDir, { tab: 'adatai' });
+
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+    const szuletettMezo = await screen.findByLabelText('Született');
+    await user.clear(szuletettMezo);
+    await user.type(szuletettMezo, '2099-01-01');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+    expect(await screen.findByText('A születési dátum nem lehet jövőbeli.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Mentés' })).toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+
+    const verify = new DemoStorage();
+    await verify.init();
+    const adatok = await verify.loadPatientData(nagyDir);
+    expect(adatok?.szuletesiIdo).toBe('1990-11-02');
+  });
+
+  it('érvénytelen e-mail cím blokkolja a mentést', async () => {
+    const user = userEvent.setup();
+    renderDetail(nagyDir, { tab: 'adatai' });
+
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+    const emailMezo = await screen.findByRole('textbox', { name: 'E-mail' });
+    await user.clear(emailMezo);
+    await user.type(emailMezo, 'nem-ervenyes-cim');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+    expect(await screen.findByText('Érvénytelen e-mail cím.')).toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+
+    const verify = new DemoStorage();
+    await verify.init();
+    const adatok = await verify.loadPatientData(nagyDir);
+    expect(adatok?.email).toBe('nagy.eva@example.hu');
+  });
+
+  it('mentési hiba után a beírt érték megmarad, szerkesztés módban', async () => {
+    const user = userEvent.setup();
+    renderDetail(nagyDir, { tab: 'adatai' });
+
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+    const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
+
+    const originalSetItem = localStorage.setItem.bind(localStorage);
+    vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+      if (key === `dp:paciensek/${nagyDir}/paciens-adatok.json`) {
+        throw new DOMException('QuotaExceededError');
+      }
+      originalSetItem(key, value);
+    });
+
+    await user.clear(telefonMezo);
+    await user.type(telefonMezo, '+36 70 111 2222');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+    expect(await screen.findByText(/A mentés váratlanul meghiúsult|QuotaExceededError/)).toBeInTheDocument();
+    expect(screen.getByDisplayValue('+36 70 111 2222')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Mentés' })).toBeInTheDocument();
   });
 });

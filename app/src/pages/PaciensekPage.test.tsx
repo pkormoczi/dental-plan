@@ -18,10 +18,12 @@ function PaciensProbe() {
   const { patientDir } = useParams<{ patientDir: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const tab = (location.state as { tab?: string } | null)?.tab ?? '';
+  const state = location.state as { tab?: string; mod?: string } | null;
+  const tab = state?.tab ?? '';
+  const mod = state?.mod ?? '';
   return (
     <div>
-      <div data-testid="paciens-reszletei" data-patientdir={patientDir} data-tab={tab} />
+      <div data-testid="paciens-reszletei" data-patientdir={patientDir} data-tab={tab} data-mod={mod} />
       {/* `navigate(-1)` -- valódi böngésző-"vissza" (POP), a `Link to="/"`-tól
           eltérően, ami PUSH-ot adna, tehát a `useListStateMemory` (D43) nem
           állítana vissza semmit -- lásd useListStateMemory.test.tsx. */}
@@ -140,6 +142,9 @@ describe('PaciensekPage', () => {
     const probe = await screen.findByTestId('paciens-reszletei');
     expect(probe.dataset.patientdir).toBeTruthy();
     expect(probe.dataset.tab).toBe('adatai');
+    // Frissen létrehozott páciens -- szerkesztés módban nyílik (D45), hogy
+    // a doki tovább tölthesse a mezőket.
+    expect(probe.dataset.mod).toBe('szerkesztes');
 
     const verify = new DemoStorage();
     await verify.init();
@@ -161,6 +166,9 @@ describe('PaciensekPage', () => {
 
     const probe = await screen.findByTestId('paciens-reszletei');
     expect(probe.dataset.tab).toBe('adatai');
+    // Egy MEGLÉVŐ páciens kiválasztása -- nem létrehozás -- nézet módban
+    // nyit, nem szerkesztésben (D45).
+    expect(probe.dataset.mod).toBe('');
   });
 
   it('elnavigálás után böngésző-"vissza" navigálva a keresőszöveg megmarad (D43)', async () => {

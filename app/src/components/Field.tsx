@@ -36,3 +36,20 @@ export function FieldGroup({ label, children }: { label: string; children: React
     </Box>
   );
 }
+
+/**
+ * Olvasó-módú (nem szerkeszthető) label + érték pár, `FieldGroup`-ra épülve
+ * (nem `Field`-re -- statikus szöveg `<label>`-be téve elrontaná az
+ * accessible name számítást, lásd fent). Üres érték `—`-t mutat, az app
+ * meglévő hiányzó-érték konvenciója szerint (`PatientPlanChains.tsx`,
+ * `pdf/TervDocument.tsx`).
+ */
+export function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <FieldGroup label={label}>
+      <Text as="div" size="2" color={value ? undefined : 'gray'}>
+        {value || '—'}
+      </Text>
+    </FieldGroup>
+  );
+}

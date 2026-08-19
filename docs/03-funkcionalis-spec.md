@@ -1044,14 +1044,18 @@ szerkesztő mezői/mentés-szabályai ott vannak leírva (D43).
 - **Új páciens**: „+ Új páciens” gomb, mezős dialógus (kötelező Név +
   opcionális Született/Telefon — a többi adat a mentés után, a
   részletoldal `Páciens adatai` tabján adható meg, az `UjTetelDialog.tsx`
-  mintájára). Ugyanez a dialógus (`UjPaciensDialog.tsx`) szolgálja az „Új
-  terv indítása” köztes páciensválasztó „Vadonatúj páciens” ágát is (D41),
-  a duplikáció-detektálás (D42) mindkét belépési ponton azonos (lásd fent,
-  „Új terv indítása”). `storage.createPatient(nev, kezdoAdatok?)` mindkét
+  mintájára). A Született mezőnél jövőbeli dátum blokkolóan hibát ad
+  (D45, ugyanaz a szabály, mint a `PatientEditorPanel`-en), a Mentés
+  gomb ilyenkor nem hoz létre pácienst. Ugyanez a dialógus
+  (`UjPaciensDialog.tsx`) szolgálja az „Új terv indítása” köztes
+  páciensválasztó „Vadonatúj páciens” ágát is (D41), a duplikáció-
+  detektálás (D42) mindkét belépési ponton azonos (lásd fent, „Új terv
+  indítása”). `storage.createPatient(nev, kezdoAdatok?)` mindkét
   gyökér-fájlt (`paciens.json` + `paciens-adatok.json`) létrehozza, terv
-  nélkül, majd a mentés a páciens-részletoldalra navigál, a `Páciens
-  adatai` tabbal. Az így felvitt páciens a Korábbi tervek listán NEM
-  jelenik meg (§ 5) — csak akkor kerül oda, ha legalább egy terve is lesz.
+  nélkül, majd a mentés a páciens-részletoldalra, SZERKESZTÉS módban
+  előválasztott `Páciens adatai` tabra navigál (D45). Az így felvitt
+  páciens a Korábbi tervek listán NEM jelenik meg (§ 5) — csak akkor
+  kerül oda, ha legalább egy terve is lesz.
 - A nyomtatvány (PDF) nem változik: ez a képernyő SOHA nem forrása a
   PDF-nek (D7, D33).
 
@@ -1081,22 +1085,38 @@ maradnak — csak a bennük lévő kereszt-linkek mutatnak ide.
   kereszt-linkje) `location.state`-ben jelezheti, hogy helyette a
   `Páciens adatai` tabbal nyisson (pl. teljes pácienslétrehozás után).
 - **`Páciens adatai` tab**: a `PatientEditorPanel` — nincs rajta „Új terv”
-  gomb, az kizárólag a `Kezelési tervek` tabhoz tartozik. Ha a páciensnek
-  nincs még `paciens-adatok.json`-ja, a mezők (Név / Született+TAJ /
-  Lakcím / Telefon+E-mail / Kiskorú + feltételes Törvényes képviselő) a
-  legutóbb módosított terv-láncának legfrissebb `paciens` pillanatképéből
-  előre kitöltve nyílnak, egy rövid sor jelzi, hogy ez az adat még nem
-  önálló — mentéssel válik azzá. Explicit „Mentés”/„Mégse” gombpár, NEM
-  leütésenkénti autosave (ellentétben pl. a Beállítások rendelő-
-  mezőivel) — az első mentés szemantikus állapotváltás (fallback → lezárt
-  törzsadat), ezt a dokinak szándékosan kell kiváltania. Tab-váltáskor, ha
-  van nem mentett módosítás, megerősítést kér (lásd lent). A Mentés gomb a
-  duplikáció-detektálást (D42) is lefuttatja a végleges adatokra, mielőtt
-  tényleg ment — ha egy MÁSIK páciensre pontos vagy hasonló találatot ad,
-  egy megerősítő dialógus („Hasonló nevű páciens már létezik”) kéri a
-  jóváhagyást, javaslat-lista/„Ezt a pácienst választom” akció nélkül (ez
-  itt átnevezés, nem választás — a doki már egy konkrét, nyitott páciens
-  adatlapján van).
+  gomb, az kizárólag a `Kezelési tervek` tabhoz tartozik. Kétállású (D45):
+  megnyitáskor alapból READ-ONLY nézet (`ReadOnlyField`-ekkel, a mentett
+  adatból, sosem egy piszkozatból), egy „Szerkesztés” gombbal az input-
+  mezős nézetre váltva — a puszta megtekintés így sosem indít piszkozatot.
+  A kitöltetlen mezők READ-ONLY nézetben az app meglévő „—” hiányzó-érték
+  jelölését kapják (nem egy külön szöveget). Ha a páciensnek nincs még
+  `paciens-adatok.json`-ja, a mezők (Név / Született+TAJ / Lakcím /
+  Telefon+E-mail / Kiskorú + feltételes Törvényes képviselő) a legutóbb
+  módosított terv-láncának legfrissebb `paciens` pillanatképéből előre
+  kitöltve nyílnak (READ-ONLY nézetben is), egy rövid sor jelzi, hogy ez az
+  adat még nem önálló — mentéssel válik azzá. Szerkesztés módban explicit
+  „Mentés”/„Mégse” gombpár, NEM leütésenkénti autosave (ellentétben pl. a
+  Beállítások rendelő-mezőivel) — az első mentés szemantikus állapotváltás
+  (fallback → lezárt törzsadat), ezt a dokinak szándékosan kell kiváltania;
+  a „Mégse” gomb módosítás nélkül is elérhető, hogy vissza lehessen lépni
+  READ-ONLY nézetbe. Az e-mail mező (ha kitöltött) szintaktikai formátumát
+  és a Született mező jövőbeli dátumát a Mentés gomb blokkolóan ellenőrzi
+  (hibaszöveg a mező alatt, a Mentés gomb kattintható marad); a Mentés
+  gomb sikeres mentés után visszalép READ-ONLY nézetbe. Tab-váltáskor, ha
+  szerkesztés módban van nem mentett módosítás, megerősítést kér (lásd
+  lent) — a tab-váltás egyben READ-ONLY nézetre is visszaállítja a panelt.
+  A Mentés gomb a duplikáció-detektálást (D42) is lefuttatja a végleges
+  adatokra, mielőtt tényleg ment — ha egy MÁSIK páciensre pontos vagy
+  hasonló találatot ad, egy megerősítő dialógus („Hasonló nevű páciens már
+  létezik”) kéri a jóváhagyást, javaslat-lista/„Ezt a pácienst választom”
+  akció nélkül (ez itt átnevezés, nem választás — a doki már egy konkrét,
+  nyitott páciens adatlapján van). A `PaciensekPage.tsx` „+ Új páciens”
+  sikeres mentése után a tab kivételesen SZERKESZTÉS módban nyílik (a
+  hívó `location.state.mod: 'szerkesztes'`-t jelez) — a doki épp csak a
+  nevet adta meg, valószínűleg tovább akarja tölteni a többi mezőt; egy
+  MEGLÉVŐ páciens kiválasztása (kereszt-link, „Ezt a pácienst választom”)
+  ellenben READ-ONLY nézetben nyit.
 - **`Kezelési tervek` tab**: a `PatientPlanChains` (§ 5 fa/verzió/akció
   szabályai szerint), de a fejléce beágyazott (D44): a páciensnév és a
   „Páciens adatai” kereszt-link elmarad, mert a sticky fejléc és a

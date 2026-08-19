@@ -76,7 +76,13 @@ export default function PaciensekPage() {
     try {
       const folder = await storage.createPatient(nev, kezdoAdatok);
       setNewOpen(false);
-      navigate(`/paciensek/${encodeURIComponent(folder.dirName)}`, { state: { tab: 'adatai' } });
+      // Frissen létrehozott páciens -- szerkesztés módban nyílik, mert a
+      // doki valószínűleg tovább akarja tölteni a többi mezőt (D45). A
+      // meglévő páciens kiválasztásának ága (`onUseExisting` lent)
+      // szándékosan nézet módban marad.
+      navigate(`/paciensek/${encodeURIComponent(folder.dirName)}`, {
+        state: { tab: 'adatai', mod: 'szerkesztes' },
+      });
     } catch (err) {
       setCreateError(
         err instanceof Error ? err.message : 'Az új páciens felvitele váratlanul meghiúsult.',

@@ -13,16 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 39. tétel — Páciens adatok read-only / edit / full create
-  (a `backlog/redesign/` redesign-döntéssorozat DP-015 tétele) — a
-  `PatientEditor` ma kinyitáskor rögtön szerkeszthető, nincs read-only
-  alapállapot/Edit-gomb, nincs "Nincs megadva" szöveg, nincs email-/DOB-
-  validáció. A Save/Cancel, a dirty-guard és a mentési-hiba-megőrzés MÁR
-  MA IS jól működik (a 33. tétel/DP-005 feltárása szerint), ez a tétel
-  csak a hiányzó read-only/Edit módot és validációkat adja hozzá. A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-39-paciens-adatok-terv.md`
-
 ### 40. tétel — Páciens master ↔ terv snapshot compare/sync
   (a `backlog/redesign/` redesign-döntéssorozat DP-016 tétele) — a D33
   (backlog-28) már kimondta, hogy a `paciens-adatok.json` és a

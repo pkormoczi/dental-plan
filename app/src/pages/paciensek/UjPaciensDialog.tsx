@@ -26,7 +26,9 @@ import DuplikacioJavaslatok from './DuplikacioJavaslatok';
 import { Field } from '../../components/Field';
 import { usePaciensDuplikacio } from '../../components/usePaciensDuplikacio';
 import { t } from '../../design/tokens';
+import { todayIso } from '../../domain/date';
 import type { DuplikaciosJelolt } from '../../domain/paciensDuplikacio';
+import { szuletesiIdoHiba } from '../../domain/paciensValidacio';
 import type { PatientFolder } from '../../domain/types';
 import { useStorage } from '../../storage/StorageContext';
 
@@ -120,6 +122,7 @@ export default function UjPaciensDialog({
 
   const nevHiba = megprobaltMenteni && !nev.trim() ? 'A név nem lehet üres.' : null;
   const nevTrim = nev.trim();
+  const szuletesiIdoHibaSzoveg = megprobaltMenteni ? szuletesiIdoHiba(szuletesiIdo, todayIso()) : null;
 
   const { jeloltek, ellenoriz } = usePaciensDuplikacio({
     storage,
@@ -136,7 +139,7 @@ export default function UjPaciensDialog({
 
   async function handleSubmit() {
     setMegprobaltMenteni(true);
-    if (!nevTrim) return;
+    if (!nevTrim || szuletesiIdoHiba(szuletesiIdo, todayIso())) return;
     setEllenorzesFolyamatban(true);
     try {
       const talalatok = await ellenoriz({ nev: nevTrim, szuletesiIdo, telefon });
@@ -203,12 +206,14 @@ export default function UjPaciensDialog({
             {!nevHiba && <DuplikacioJavaslatok jeloltek={jeloltek} onValaszt={valasztottJelolt} />}
           </Box>
 
-          <Grid columns="2" gap="3" mb="3">
+          <Grid columns="2" gap="3" mb="1">
             <Field label="Született">
               <TextField.Root
                 type="date"
                 value={szuletesiIdo}
                 onChange={(e) => setSzuletesiIdo(e.target.value)}
+                aria-invalid={szuletesiIdoHibaSzoveg ? true : undefined}
+                style={szuletesiIdoHibaSzoveg ? { boxShadow: `inset 0 0 0 1px ${t.danger}` } : undefined}
               />
             </Field>
             <Field label="Telefon">
@@ -219,6 +224,11 @@ export default function UjPaciensDialog({
               />
             </Field>
           </Grid>
+          {szuletesiIdoHibaSzoveg && (
+            <Text as="div" size="1" mb="2" style={{ color: t.danger }}>
+              {szuletesiIdoHibaSzoveg}
+            </Text>
+          )}
 
           {submitError && (
             <Text as="div" size="1" mb="2" style={{ color: t.danger }}>
