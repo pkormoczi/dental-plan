@@ -634,7 +634,10 @@ kibontva jelenik meg — nincs plusz kattintás. **2+ lánc** esetén alapból
 csukva nyílik (csak a páciensnév, a láncok száma és a legutóbb módosított
 lánc legfrissebb dátuma/összege látszik), kattintásra bomlik ki. A
 verzió-szint egy kibontott terven belül mindig látszik, nincs harmadik
-szintű összecsukás.
+szintű összecsukás. Ez az összecsukás kizárólag ezen a listán (több páciens
+blokkja egymás alatt) érvényes — a részletoldalba beágyazva (§ 10) egy
+páciens összes lánca mindig kibontva látszik, "N terv" kapcsoló nélkül,
+mert ott már csak az ő saját láncai vannak a nézeten.
 
 Minden terv-lánc fejlécén egy **címke** áll: `<tervCim> · <a lánc
 legkorábbi verziójának dátuma>`. A címke a doki által bármikor szabadon

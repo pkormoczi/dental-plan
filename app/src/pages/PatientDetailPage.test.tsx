@@ -169,6 +169,19 @@ describe('PatientDetailPage', () => {
     expect(await screen.findByRole('button', { name: '+ Új terv' })).toBeInTheDocument();
   });
 
+  // A Korábbi tervek listáján (PlanHistoryPage.test.tsx) 2+ terv-lánccal
+  // rendelkező páciens alapból csukva nyílik -- itt, a részletoldal saját
+  // tabján (D35) ez felesleges extra kattintás lenne, mert eleve csak EGY
+  // páciens saját láncai vannak a nézeten.
+  it('2+ terv-lánccal rendelkező páciensnél a Kezelési tervek tabon nincs összecsukás -- minden lánc azonnal látszik', async () => {
+    renderDetail(nagyDir);
+
+    await screen.findByRole('button', { name: '+ Új terv' }); // a tab tartalma betöltött
+    expect(screen.queryByRole('button', { name: /^\d+ terv$/ })).not.toBeInTheDocument();
+    expect(screen.getByText(/^Tömések ·/)).toBeInTheDocument();
+    expect(screen.getByText(/^Fogkőeltávolítás ·/)).toBeInTheDocument();
+  });
+
   // D38: a Radix `Tabs` unmountolja az inaktív tabot -- a "Páciens
   // adatai" tabon félbehagyott szerkesztés máskülönben némán elveszne
   // egy tab-váltásnál.

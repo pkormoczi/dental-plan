@@ -109,10 +109,16 @@ export default function PatientPlanChains({
     useAppState();
   const navigate = useNavigate();
 
-  // 1 (vagy 0) terv-lánc: nincs plusz kattintás, mindig kibontva (a
-  // tipikus eset). 2+ lánc: alapból csukva, kattintásra nyílik.
+  const standalone = header === 'standalone';
+
+  // Az összecsukás CSAK `standalone`-ban él (Korábbi tervek: több páciens
+  // blokkja áll egymás alatt, egy 2+ láncú páciens ott továbbra is
+  // hosszabbá tenné a listát). `embedded`-ben (páciens-részletoldal, D35)
+  // mindig EGY páciens saját láncai látszanak -- a kattintás felesleges
+  // extra lépés, mindig kibontva.
+  const collapsible = standalone && plans.length > 1;
   const [expandedOverride, setExpandedOverride] = useState<boolean | null>(null);
-  const expanded = plans.length > 1 ? (expandedOverride ?? false) : true;
+  const expanded = collapsible ? (expandedOverride ?? false) : true;
 
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionError, setActionError] = useState<{
@@ -347,8 +353,6 @@ export default function PatientPlanChains({
       : (plan.tervCim ?? ALAPERTELMEZETT_TERV_CIM);
   }
 
-  const standalone = header === 'standalone';
-
   return (
     <Box>
       {/* `embedded` fejlécben a páciensnév és a „Páciens adatai” kereszt-link
@@ -412,12 +416,15 @@ export default function PatientPlanChains({
         </Callout.Root>
       )}
 
-      {/* A "N terv" kapcsoló a névfejléc ALATTI sorba került (nem a
-          fejléc mellé, mint korábban) -- csak ez a szó kattintható,
-          a "· legutóbb: …" szöveg mellette sima, nem interaktív
-          marad. Kinyitva a dátum/összeg elmarad, mert a lista alatta
-          úgyis részletesen látszik. */}
-      {plans.length > 1 && (
+      {/* A "N terv" kapcsoló CSAK `standalone`-ban jelenik meg (lásd fent a
+          `collapsible`/`expanded` derivációját) -- `embedded`-ben egy
+          páciens saját láncai mindig kibontva látszanak, nincs mit
+          összecsukni. A névfejléc ALATTI sorba került (nem a fejléc mellé,
+          mint korábban) -- csak ez a szó kattintható, a "· legutóbb: …"
+          szöveg mellette sima, nem interaktív marad. Kinyitva a
+          dátum/összeg elmarad, mert a lista alatta úgyis részletesen
+          látszik. */}
+      {collapsible && (
         <Flex align="center" gap="1" mb="2" wrap="wrap">
           <Button
             type="button"
