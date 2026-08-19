@@ -189,7 +189,10 @@ describe('UjPaciensDialog', () => {
     );
     await user.click(valasztomBtn);
 
-    const alert = await screen.findByRole('alertdialog');
+    // CI-n (gyengébb futtatókon) a debounce (DUPLIKACIO_DEBOUNCE_MS) utáni
+    // click+render lánc néha az alapértelmezett 1000ms fölé csúszik, ugyanaz
+    // az ok, ami miatt a fenti `valasztomBtn` keresés is 3000ms-et kapott.
+    const alert = await screen.findByRole('alertdialog', {}, { timeout: 3000 });
     expect(within(alert).getByText('A megadott adatok eltérnek')).toBeInTheDocument();
     expect(within(alert).getByText(/a születési dátum/)).toBeInTheDocument();
     expect(onUseExisting).not.toHaveBeenCalled();
