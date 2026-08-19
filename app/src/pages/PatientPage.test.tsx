@@ -145,7 +145,9 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Elek');
-    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
     await user.type(search, 'fogeltavolitas');
@@ -174,7 +176,9 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Elek');
-    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
     await user.type(search, 'fogeltavolitas');
@@ -231,7 +235,9 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Elek');
-    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
     await user.type(search, 'fogeltavolitas');
@@ -261,7 +267,9 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Elek');
-    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
     await user.type(search, 'fogeltavolitas');

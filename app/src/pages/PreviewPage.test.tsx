@@ -43,7 +43,9 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Ilona');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       // Fogtérkép-kattintással létrehozott, tétel nélküli sor -- a panel
       // alapból csukva, előbb ki kell nyitni.
@@ -117,7 +119,9 @@ describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => 
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Piszkozat Béla');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'fogeltavolitas');
@@ -187,7 +191,9 @@ describe('PreviewPage -- hiányzó és eltérő tételnevek két külön listáb
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Elek');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       // Fordítás nélküli tétel -- "nincsForditas".
@@ -238,7 +244,9 @@ describe('PreviewPage -- hiányzó és eltérő tételnevek két külön listáb
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Egyedi');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'Érzéstelenítés');
@@ -304,7 +312,9 @@ describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Placeholder');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'zahnextraktion');
@@ -363,7 +373,9 @@ describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Fallback');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'zahnextraktion');
@@ -426,7 +438,9 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Csomag');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'fogeltavolitas');
@@ -466,7 +480,9 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Kikapcsolva');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'fogeltavolitas');
@@ -515,7 +531,9 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
       // Minden páciensmező kitöltve -- a "Hiányzó páciensadatok" lépés
       // kimarad, hogy a 0 Ft-os dialógus jöjjön elsőként.
       await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Nulla');
-      fireEvent.change(screen.getByLabelText('Született'), { target: { value: '1990-01-01' } });
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      fireEvent.change(await screen.findByLabelText('Született'), { target: { value: '1990-01-01' } });
       await user.type(screen.getByLabelText('TAJ'), '123 456 789');
       await user.type(
         screen.getByLabelText('Lakcím'),
@@ -560,7 +578,9 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Lánc');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'Érzéstelenítés');
@@ -609,7 +629,9 @@ describe('PreviewPage -- letöltési fájlnév', () => {
       await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Ilona');
-      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'fogeltavolitas');

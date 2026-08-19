@@ -21,6 +21,7 @@ import {
 } from '../domain/validate';
 import { buildDemoFileTree, type DemoNode } from './demoFileTree';
 import type {
+  Paciens,
   PatientFolder,
   PatientMasterData,
   PatientRecord,
@@ -660,14 +661,22 @@ export class DemoStorage implements PlanStorage {
     });
   }
 
-  /** Vadonatúj, terv nélküli páciens (backlog-28, 6. döntés) -- mindkét gyökér-fájlt megírja. */
-  async createPatient(nev: string): Promise<PatientFolder> {
+  /**
+   * Vadonatúj, terv nélküli páciens (backlog-28, 6. döntés) -- mindkét
+   * gyökér-fájlt megírja. A `kezdoAdatok` (backlog-36, D15) a quick-create
+   * dialógus opcionális szuletesiIdo/telefon mezőit terjeszti az
+   * `uresTorzsadat()` alapértékére.
+   */
+  async createPatient(
+    nev: string,
+    kezdoAdatok?: Pick<Paciens, 'szuletesiIdo' | 'telefon'>,
+  ): Promise<PatientFolder> {
     return this.enqueue(async () => {
       const paciensId = generateId();
       const patientDir = buildPatientDirName(nev, paciensId);
       const utolsoAktivitas = ujAktivitas('letrehozva');
       const record: PatientRecord = { schemaVersion: 1, paciensId, nev, utolsoAktivitas };
-      const data = uresTorzsadat(nev, paciensId);
+      const data = { ...uresTorzsadat(nev, paciensId), ...kezdoAdatok };
       localStorage.setItem(patientRecordKey(patientDir), JSON.stringify(record));
       localStorage.setItem(patientDataKey(patientDir), JSON.stringify(data));
       return { dirName: patientDir, paciensId, nev, utolsoAktivitas };

@@ -346,6 +346,31 @@ describe('DemoStorage', () => {
       expect(await storage.listPlans(folder.dirName)).toEqual([]);
     });
 
+    // backlog-36, D15: a quick-create dialógus születési dátumot/telefont is
+    // felvehet -- egy logikailag atomi lépésben kerül a paciens-adatok.json-ba,
+    // nem egy utólagos savePatientData-val (az hamis 'torzsadat-mentve'
+    // aktivitást írna egy frissen létrehozott páciensre).
+    it('createPatient a kezdoAdatok-ot (születési dátum, telefon) a paciens-adatok.json-ba írja', async () => {
+      const folder = await storage.createPatient('Kezdőadatos Páciens', {
+        szuletesiIdo: '1990-05-12',
+        telefon: '+36 20 111 2222',
+      });
+
+      const adatok = await storage.loadPatientData(folder.dirName);
+      expect(adatok).toEqual({
+        schemaVersion: 1,
+        paciensId: folder.paciensId,
+        nev: 'Kezdőadatos Páciens',
+        szuletesiIdo: '1990-05-12',
+        lakcim: '',
+        telefon: '+36 20 111 2222',
+        email: '',
+        taj: '',
+        kiskoru: false,
+        torvenyesKepviselo: null,
+      });
+    });
+
     it('savePatientData a paciens.json index nev-jét is frissíti', async () => {
       const folder = await storage.createPatient('Régi Név');
       await storage.savePatientData(folder.dirName, {

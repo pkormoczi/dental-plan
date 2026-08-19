@@ -593,6 +593,9 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
 
     await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt EUR');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await screen.findByText('Az ajánlat nyelve és pénzneme');
     await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
@@ -610,6 +613,9 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
 
     await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt EUR');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await screen.findByText('Az ajánlat nyelve és pénzneme');
     await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));

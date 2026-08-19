@@ -5,6 +5,7 @@
 // tudhat arról, hogy éppen melyik implementáció fut.
 
 import type {
+  Paciens,
   PatientFolder,
   PatientMasterData,
   Plan,
@@ -62,10 +63,16 @@ export interface PlanStorage {
    */
   savePatientData(patientDir: string, data: PatientMasterData): Promise<void>;
   /**
-   * Vadonatúj, terv nélküli páciens felvitele (backlog-28, 6. döntés) --
-   * generálja a `paciensId`-t és a mappanevet, és mindkét fájlt megírja
-   * (`paciens.json` + `paciens-adatok.json`, utóbbi csak a `nev`-vel
-   * kitöltve).
+   * Vadonatúj, terv nélküli páciens felvitele (backlog-28, 6. döntés;
+   * backlog-36 a `kezdoAdatok`-kal bővítette, D15). Generálja a
+   * `paciensId`-t és a mappanevet, és mindkét fájlt megírja (`paciens.json`
+   * + `paciens-adatok.json`) EGY logikailag atomi lépésben -- nem
+   * `createPatient` + utólagos `savePatientData`, mert az utóbbi
+   * `ujAktivitas('torzsadat-mentve')`-t írna egy frissen létrehozott
+   * páciensre (D39 szerint hamis aktivitás-típus egy `createPatient`-hívásra).
    */
-  createPatient(nev: string): Promise<PatientFolder>;
+  createPatient(
+    nev: string,
+    kezdoAdatok?: Pick<Paciens, 'szuletesiIdo' | 'telefon'>,
+  ): Promise<PatientFolder>;
 }

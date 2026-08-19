@@ -158,15 +158,21 @@ export default function PaciensekPage() {
 
   const handleDirtyChange = useCallback((dirty: boolean) => setDirtyOpen(dirty), []);
 
-  async function handleCreatePatient(nev: string) {
+  async function handleCreatePatient(
+    nev: string,
+    kezdoAdatok: { szuletesiIdo: string; telefon: string },
+  ) {
     setCreateError(null);
     try {
-      const folder = await storage.createPatient(nev);
+      const folder = await storage.createPatient(nev, kezdoAdatok);
       setPatients((prev) => [...prev, folder]);
       // Ugyanaz a `uresTorzsadat` építi, amit a storage ténylegesen kiírt
       // (DemoStorage.createPatient) -- nem egy második, driftelhető
       // konstans, hogy ne kelljen egy extra loadPatientData-t várni.
-      setMasterByPatient((prev) => ({ ...prev, [folder.dirName]: uresTorzsadat(nev, folder.paciensId) }));
+      setMasterByPatient((prev) => ({
+        ...prev,
+        [folder.dirName]: { ...uresTorzsadat(nev, folder.paciensId), ...kezdoAdatok },
+      }));
       // NEM `applySwitch`-en át: az a MÉG renderelés előtti (ezért a fenti
       // setMasterByPatient-et még nem látó) `masterByPatient`-re nézne rá, és
       // tévesen fallback-betöltést indítana egy olyan pácienshez, akinek
@@ -311,7 +317,14 @@ export default function PaciensekPage() {
         open={newOpen}
         onOpenChange={setNewOpen}
         patients={patients}
-        onSave={(nev) => void handleCreatePatient(nev)}
+        onSave={(nev, kezdoAdatok) => void handleCreatePatient(nev, kezdoAdatok)}
+        onUseExisting={(p) => {
+          // Mindig NYIT (nem `requestToggle`) -- a "Ezt a pácienst
+          // választom" szándéka mindig a sor megnyitása, nem a
+          // csukott/nyitott állapot invertálása.
+          setNewOpen(false);
+          guard.request(() => applySwitch(p.dirName));
+        }}
         submitError={createError}
       />
 

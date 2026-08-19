@@ -1025,3 +1025,28 @@ karbantartási kör négy önálló javítása.
   maradnak (Tab-sorrendből nem esnek ki). Nulla találatnál egy közvetlen
   "Új páciens: „…"" pszeudó-opció a begépelt névvel indítja a "Vadonatúj
   páciens" ágat, a mindig látható gomb mellett.
+
+---
+
+### 36. Quick Patient létrehozás — KÉSZ (2026-08-19)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D41 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** az `/uj-terv` "Vadonatúj páciens" ága a terv előtt nem
+  hozott létre valódi páciensrekordot (a mappa csak mentéskor
+  materializálódott) — ez ellentmondott annak, hogy a `/paciensek` "+ Új
+  páciens" belépési pontja már D29 szerint valódi rekordot ír.
+- **Megvalósítás:** a `PlanStorage.createPatient` opcionális
+  `kezdoAdatok` (`szuletesiIdo`/`telefon`) paramétert kapott, egy
+  logikailag atomi írásban a `uresTorzsadat()` alappal együtt. A közös
+  `UjPaciensDialog.tsx` DOB+telefon mezőt kapott, és egy `onUseExisting`
+  callbackot: névegyezésnél a figyelmeztetés cselekvővé vált ("Ezt a
+  pácienst választom"), a begépelt adatok eldobásával a MEGLÉVŐ
+  páciensre folytatva a flow-t. Az `/uj-terv` "Vadonatúj páciens" ága
+  mostantól ugyanezt a dialógust nyitja meg, és csak sikeres
+  `storage.createPatient` után futtatja a MEGLÉVŐ `selectExistingPatient`
+  útvonalat a friss páciens-mappára — ez a törzsadat-ágon tölti elő a
+  draftot, és mellékesen kitölti a `DraftMeta.patientDir`-t (D37) külön
+  kód nélkül. Elfogadott mellékhatás: egy elhagyott piszkozat után is
+  ottmarad a létrehozott páciensrekord, ami a Kezdőlap "Legutóbbi
+  páciensek" (D39) listáján is megjelenik.

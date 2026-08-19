@@ -38,7 +38,7 @@ interface PlanStorage {
   saveTemplate(name: string, body: string): Promise<string>  // új verziófájlt ad vissza
   loadPatientData(patientDir: string): Promise<PatientMasterData | null>  // null = nincs törzsadat, élő fallback
   savePatientData(patientDir: string, data: PatientMasterData): Promise<void>
-  createPatient(nev: string): Promise<PatientFolder>  // terv nélküli páciens
+  createPatient(nev: string, kezdoAdatok?: Pick<Paciens, 'szuletesiIdo' | 'telefon'>): Promise<PatientFolder>  // terv nélküli páciens, D41
 }
 ```
 

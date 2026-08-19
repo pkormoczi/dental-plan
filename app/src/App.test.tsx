@@ -51,7 +51,9 @@ describe('Végpontok közötti folyamat', () => {
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Aladár');
-    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
     await user.type(search, 'fogeltavolitas');
@@ -148,6 +150,8 @@ describe('Végpontok közötti folyamat', () => {
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Németh Éva');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
     // Nyelv: Deutsch. A pénznem NEM követi automatikusan -- D21 lényege,
     // hogy egy német nyelvű ajánlat is maradhat forintos.
@@ -199,7 +203,9 @@ describe('Végpontok közötti folyamat', () => {
     await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Piszkozat Ilona');
-    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
     await user.type(search, 'fogeltavolitas');
@@ -218,9 +224,13 @@ describe('Végpontok közötti folyamat', () => {
     render(<App />);
 
     // Csendes, memóriabeli restore (4. döntés) -- a Kezdőlapon a "Piszkozat
-    // folytatása" kártya a belépési pont, a páciensnévvel.
+    // folytatása" kártya a belépési pont, a páciensnévvel. A quick-create
+    // (backlog-36, D14) miatt a páciens EKKORRA már valódi rekord is --
+    // "Piszkozat Ilona" ezért a "Legutóbbi páciensek" listában is szerepel,
+    // a kártyára kell szűkíteni.
     expect(await screen.findByText('Piszkozat folytatása')).toBeInTheDocument();
-    expect(screen.getByText('Piszkozat Ilona')).toBeInTheDocument();
+    const piszkozatCard = screen.getByRole('button', { name: 'Megnyitás' }).closest('.rt-Card') as HTMLElement;
+    expect(within(piszkozatCard).getByText('Piszkozat Ilona')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Megnyitás' }));
     await screen.findByPlaceholderText(/Tétel keresése/);

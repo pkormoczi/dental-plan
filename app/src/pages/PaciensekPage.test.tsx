@@ -161,23 +161,42 @@ describe('PaciensekPage', () => {
     expect(await screen.findByDisplayValue('+36 30 123 4567')).toBeInTheDocument();
   });
 
-  it('"+ Új páciens" terv nélküli pácienst vesz fel, rögtön nyitva, "Rögzített törzsadat" jelvénnyel', async () => {
+  it('"+ Új páciens" terv nélküli pácienst vesz fel, rögtön nyitva, "Rögzített törzsadat" jelvénnyel, a megadott születési dátummal/telefonnal', async () => {
     const user = userEvent.setup();
     renderPage();
 
     await screen.findByText('Kovács János');
     await user.click(screen.getByRole('button', { name: '+ Új páciens' }));
-    const nevMezo = await screen.findByPlaceholderText('Kovács János');
-    await user.type(nevMezo, 'Vadonatúj Elemér');
-    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Vadonatúj Elemér');
+    await user.type(within(dialog).getByLabelText('Született'), '1985-03-20');
+    await user.type(within(dialog).getByLabelText('Telefon'), '+36 20 333 4444');
+    await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(await screen.findByText('Vadonatúj Elemér')).toBeInTheDocument();
-    expect(
-      within(patientRow('Vadonatúj Elemér')).getByText('Rögzített törzsadat'),
-    ).toBeInTheDocument();
-    // Rögtön nyitva -- a szerkesztő mezői is látszanak, üresen.
-    expect(screen.getAllByDisplayValue('Vadonatúj Elemér')).toHaveLength(1);
+    const row = patientRow('Vadonatúj Elemér');
+    expect(within(row).getByText('Rögzített törzsadat')).toBeInTheDocument();
+    // Rögtön nyitva -- a szerkesztő mezői is látszanak, a megadott adatokkal.
+    expect(within(row).getAllByDisplayValue('Vadonatúj Elemér')).toHaveLength(1);
+    expect(within(row).getByDisplayValue('1985-03-20')).toBeInTheDocument();
+    expect(within(row).getByDisplayValue('+36 20 333 4444')).toBeInTheDocument();
+  });
+
+  it('"+ Új páciens" névegyezésnél az "Ezt a pácienst választom" a meglévő sort nyitja meg (D203/D204)', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Kovács János');
+    await user.click(screen.getByRole('button', { name: '+ Új páciens' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Kovács János');
+    await user.click(
+      await within(dialog).findByRole('button', { name: 'Ezt a pácienst választom' }),
+    );
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(await screen.findByDisplayValue('+36 30 123 4567')).toBeInTheDocument();
   });
 
   it('a "Korábbi tervek" kereszt-link a páciens-részletoldalra navigál, a tervek tabbal előválasztva', async () => {

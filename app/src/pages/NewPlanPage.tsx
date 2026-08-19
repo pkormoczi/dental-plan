@@ -24,6 +24,7 @@ import type { PatientFolder } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import { ujTervForrasPaciensbol } from '../state/planIndulas';
 import { useStorage } from '../storage/StorageContext';
+import UjPaciensDialog from './paciensek/UjPaciensDialog';
 
 type PendingAction =
   | { kind: 'existing'; patient: PatientFolder }
@@ -31,14 +32,7 @@ type PendingAction =
 
 export default function NewPlanPage() {
   const { storage } = useStorage();
-  const {
-    settings,
-    priceList,
-    setPlan,
-    resetPlanDraft,
-    copyPlanIntoDraft,
-    vanMentetlenPiszkozat,
-  } = useAppState();
+  const { settings, priceList, copyPlanIntoDraft, vanMentetlenPiszkozat } = useAppState();
   const navigate = useNavigate();
 
   const [patients, setPatients] = useState<PatientFolder[]>([]);
@@ -50,6 +44,16 @@ export default function NewPlanPage() {
   const [selectError, setSelectError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  // A "Vadonatúj páciens"/no-match ág mostantól a quick-create dialóguson át
+  // hoz létre valódi Patient-rekordot MÉG A TERV ELŐTT (D14, backlog-36) --
+  // korábban `resetPlanDraft()` egyenesen egy üres draftra navigált, rekord
+  // nélkül. Az `ujNev` a no-match opció begépelt szövege, a dialógus ezzel
+  // előtöltve nyílik.
+  const [ujOpen, setUjOpen] = useState(false);
+  const [ujNev, setUjNev] = useState<string | undefined>(undefined);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,12 +129,13 @@ export default function NewPlanPage() {
   }
 
   // A `nev` a no-match ág begépelt szövege (docs/03-funkcionalis-spec.md
-  // „Új terv indítása") -- a mindig látható "Vadonatúj páciens" gomb
-  // `nev` nélkül hívja, üres draft-tal indul, változatlanul.
-  function startBrandNewPatient(nev?: string) {
-    resetPlanDraft();
-    if (nev) setPlan((prev) => ({ ...prev, paciens: { ...prev.paciens, nev } }));
-    navigate('/paciens');
+  // „Új terv indítása") -- a mindig látható "Vadonatúj páciens" gomb `nev`
+  // nélkül hívja. Csak MEGNYITJA a quick-create dialógust -- a tényleges
+  // rekordlétrehozás és navigáció a `createAndStart` sikerágában történik.
+  function openQuickCreate(nev?: string) {
+    setCreateError(null);
+    setUjNev(nev);
+    setUjOpen(true);
   }
 
   function runOrConfirm(action: PendingAction) {
@@ -145,7 +150,41 @@ export default function NewPlanPage() {
     if (action.kind === 'existing') {
       void selectExistingPatient(action.patient);
     } else {
-      startBrandNewPatient(action.nev);
+      openQuickCreate(action.nev);
+    }
+  }
+
+  // Sikeres `storage.createPatient` után UGYANAZT a `selectExistingPatient`-et
+  // futtatjuk a frissen létrehozott mappára: a `paciens-adatok.json` (amit a
+  // `createPatient` már megírt) miatt `ujTervForrasPaciensbol` a törzsadat-ágon
+  // tölt elő, a `copyPlanIntoDraft(next, folder.dirName)` pedig kitölti a
+  // draft `patientDir`-jét (D37) -- külön kód nélkül teljesíti a terv-doc 5.
+  // döntését, és a későbbi `savePlan` a MÁR LÉTEZŐ páciensmappába ment.
+  async function createAndStart(nev: string, kezdoAdatok: { szuletesiIdo: string; telefon: string }) {
+    setCreateError(null);
+    try {
+      const folder = await storage.createPatient(nev, kezdoAdatok);
+      setPatients((prev) => [...prev, folder]);
+      setUjOpen(false);
+      await selectExistingPatient(folder);
+    } catch (err) {
+      setCreateError(
+        err instanceof Error ? err.message : 'Az új páciens felvitele váratlanul meghiúsult.',
+      );
+    }
+  }
+
+  // Escape/Mégse/kattintás a felugró ablakon kívül -- sikeres létrehozás
+  // nélküli zárás. A dialógus `onCloseAutoFocus` preventDefault-ja miatt
+  // (a közös komponens ezt a PaciensekPage.tsx friss-sor-fókuszálásához
+  // igényli) a fókusz különben a body-ra esne, megszakítva a
+  // gépel -> nyíl -> Enter ciklust -- ezért itt kézzel visszaadjuk a
+  // keresőmezőnek. A `q` state-hez NEM nyúlunk (D205): a keresőszöveg
+  // megmarad.
+  function handleUjOpenChange(open: boolean) {
+    setUjOpen(open);
+    if (!open) {
+      requestAnimationFrame(() => searchInputRef.current?.focus());
     }
   }
 
@@ -211,6 +250,7 @@ export default function NewPlanPage() {
           Meglévő páciens keresése…
         </Text>
         <TextField.Root
+          ref={searchInputRef}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={onKeyDown}
@@ -318,6 +358,19 @@ export default function NewPlanPage() {
       <Button size="3" variant="soft" color="gray" onClick={() => runOrConfirm({ kind: 'new' })}>
         Vadonatúj páciens
       </Button>
+
+      <UjPaciensDialog
+        open={ujOpen}
+        onOpenChange={handleUjOpenChange}
+        patients={patients}
+        initialNev={ujNev}
+        onSave={(nev, kezdoAdatok) => void createAndStart(nev, kezdoAdatok)}
+        onUseExisting={(p) => {
+          setUjOpen(false);
+          void selectExistingPatient(p);
+        }}
+        submitError={createError}
+      />
 
       <AlertDialog.Root open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
         <AlertDialog.Content maxWidth="440px">

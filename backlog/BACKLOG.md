@@ -13,17 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 36. tétel — Quick Patient létrehozás
-  (a `backlog/redesign/` redesign-döntéssorozat DP-012 tétele) — feltárás
-  szerint az `/uj-terv` "Vadonatúj páciens" ága MA NEM hoz létre valódi
-  Patient-rekordot a terv előtt (csak mentéskor materializálódik) — ez
-  direkt ellentmond a cél-viselkedésnek. Ez a tétel a MEGLÉVŐ
-  `UjPaciensDialog.tsx`-et (ami a Páciensek listáról már ezt csinálja)
-  DOB+telefon mezővel bővíti és mindkét belépési ponton futtatja, plusz
-  bekötteti a friss `patientDir`-t a 32. tétel `DraftRecord`-jába. A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-36-quick-patient-terv.md`
-
 ### 37. tétel — Páciens-duplikáció felismerés és feloldás
   (a `backlog/redesign/` redesign-döntéssorozat DP-013 tétele) — a mai
   duplikáció-jelzés egyetlen helyen, tisztán név-egyezésen alapul,
