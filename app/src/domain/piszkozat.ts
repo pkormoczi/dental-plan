@@ -7,6 +7,7 @@
 
 import { ELSO_FAZIS_NEV } from './blankPlan';
 import type { Plan } from './types';
+import type { WorkflowRoute } from '../storage/DraftStorage';
 
 /**
  * Igaz, ha a terven van olyan tartalom, amit kár lenne elveszíteni.
@@ -60,4 +61,15 @@ export function piszkozatTartalmas(plan: Plan): boolean {
   if (!csakEgyAlapFazis) return true;
 
   return false;
+}
+
+/**
+ * Hová navigáljon a piszkozat "Megnyitás"/"Folytatás" akciója: a D37
+ * `piszkozatLastRoute` metaadata, ha ismert, egyébként a névkitöltés
+ * heurisztikája (a Home.tsx eredeti kifejezése, 46. tétel óta kiemelve --
+ * a Kezdőlap kártyája ÉS a terv-lánc fa aktív-draft blokkja is ezt hívja,
+ * ne másolódjon).
+ */
+export function piszkozatCelRoute(lastRoute: WorkflowRoute | null, plan: Plan): WorkflowRoute {
+  return lastRoute ?? (plan.paciens.nev.trim() ? '/terv' : '/paciens');
 }

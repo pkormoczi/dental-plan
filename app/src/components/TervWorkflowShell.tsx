@@ -13,14 +13,9 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Badge, Box, Separator, Text } from '@radix-ui/themes';
 import { LepesGuardProvider, type LepesHandler } from './LepesGuardContext';
 import { t } from '../design/tokens';
+import { WORKFLOW_LEPESEK } from '../domain/workflowLepesek';
 import { useAppState } from '../state/AppState';
 import type { WorkflowRoute } from '../storage/DraftStorage';
-
-const LEPESEK: ReadonlyArray<{ to: WorkflowRoute; label: string }> = [
-  { to: '/paciens', label: 'Terv adatai' },
-  { to: '/terv', label: 'Kezelések' },
-  { to: '/elonezet', label: 'Előnézet és véglegesítés' },
-];
 
 export default function TervWorkflowShell() {
   const { plan, piszkozatPatientDir, jelezWorkflowLepes } = useAppState();
@@ -32,7 +27,7 @@ export default function TervWorkflowShell() {
   // route-on áll a doki (route-alapú stepper), ezért ez az egyetlen hely,
   // ahol ez a metaadat íródik, nem mindhárom oldalon külön.
   useEffect(() => {
-    if (LEPESEK.some((lepes) => lepes.to === pathname)) {
+    if (WORKFLOW_LEPESEK.some((lepes) => lepes.to === pathname)) {
       jelezWorkflowLepes(pathname as WorkflowRoute);
     }
   }, [pathname, jelezWorkflowLepes]);
@@ -111,7 +106,7 @@ export default function TervWorkflowShell() {
         aria-label="Terv munkafolyamat"
         style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}
       >
-        {LEPESEK.map((lepes, i) => {
+        {WORKFLOW_LEPESEK.map((lepes, i) => {
           const aktiv = pathname === lepes.to;
           return (
             <span key={lepes.to} style={{ display: 'flex', alignItems: 'center' }}>

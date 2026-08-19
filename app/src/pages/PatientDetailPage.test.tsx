@@ -21,7 +21,7 @@ import PatientDetailPage from './PatientDetailPage';
 import { AppStateProvider, useAppState } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
-import { seedPatients } from '../storage/seed/plans';
+import { seedPatients, seedPlans } from '../storage/seed/plans';
 
 function DraftProbe() {
   const { plan } = useAppState();
@@ -169,17 +169,42 @@ describe('PatientDetailPage', () => {
     expect(await screen.findByRole('button', { name: '+ Új terv' })).toBeInTheDocument();
   });
 
-  // A Korábbi tervek listáján (PlanHistoryPage.test.tsx) 2+ terv-lánccal
-  // rendelkező páciens alapból csukva nyílik -- itt, a részletoldal saját
-  // tabján (D35) ez felesleges extra kattintás lenne, mert eleve csak EGY
-  // páciens saját láncai vannak a nézeten.
-  it('2+ terv-lánccal rendelkező páciensnél a Kezelési tervek tabon nincs összecsukás -- minden lánc azonnal látszik', async () => {
+  // A korábbi, oldal-szintű "N terv" burkoló toggle (páciens-szinten) itt
+  // MA IS nincs (a 46. tétel előtt sem volt, D44) -- de a 46. tétel óta a
+  // `PatientPlanChains` lánc-SZINTŰ toggle-je EZEN a tabon is érvényes,
+  // ugyanazzal az alapértelmezéssel (csak a legfrissebb véglegesített
+  // dátumú lánc nyitva), mint a `standalone` Korábbi tervek listán
+  // (PlanHistoryPage.test.tsx) -- a fejlécek attól függetlenül mindig
+  // látszanak.
+  it('2+ terv-lánccal rendelkező páciensnél a Kezelési tervek tabon is per-lánc összecsukás van, ugyanazzal az alapértelmezéssel', async () => {
     renderDetail(nagyDir);
 
     await screen.findByRole('button', { name: '+ Új terv' }); // a tab tartalma betöltött
+    // Nincs páciens-szintű burkoló toggle.
     expect(screen.queryByRole('button', { name: /^\d+ terv$/ })).not.toBeInTheDocument();
+    // A fejlécek nyitottságtól függetlenül mindig látszanak.
     expect(screen.getByText(/^Tömések ·/)).toBeInTheDocument();
     expect(screen.getByText(/^Fogkőeltávolítás ·/)).toBeInTheDocument();
+
+    const nagyEvaEntries = seedPlans.filter((e) => e.plan.paciens.nev === 'Nagy Éva');
+    const nagyEvaChains = new Map<string, typeof nagyEvaEntries>();
+    for (const entry of nagyEvaEntries) {
+      const list = nagyEvaChains.get(entry.planDir) ?? [];
+      list.push(entry);
+      nagyEvaChains.set(entry.planDir, list);
+    }
+    const tomesekPlanDir = [...nagyEvaChains.values()].find((c) => c.length > 1)![0].planDir;
+    const fogkoPlanDir = [...nagyEvaChains.values()].find((c) => c.length === 1)![0].planDir;
+    const tomesekDoboz = document.querySelector(`[data-plan="${tomesekPlanDir}"]`) as HTMLElement;
+    const fogkoDoboz = document.querySelector(`[data-plan="${fogkoPlanDir}"]`) as HTMLElement;
+
+    // A "Fogkőeltávolítás" lánc (2026-08-01) a legfrissebb véglegesített
+    // dátumú (D186) -- ez nyitva, a "Tömések" lánc csukva.
+    expect(within(fogkoDoboz).getByRole('button', { expanded: true })).toBeInTheDocument();
+    expect(within(tomesekDoboz).getByRole('button', { expanded: false })).toBeInTheDocument();
+    expect(
+      within(tomesekDoboz).queryByRole('button', { name: /további műveletek$/ }),
+    ).not.toBeInTheDocument();
   });
 
   // D38: a Radix `Tabs` unmountolja az inaktív tabot -- a "Páciens

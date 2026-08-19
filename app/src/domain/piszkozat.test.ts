@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createBlankPlan } from './blankPlan';
-import { piszkozatTartalmas } from './piszkozat';
-import type { PriceList, Settings } from './types';
+import { piszkozatCelRoute, piszkozatTartalmas } from './piszkozat';
+import type { Plan, PriceList, Settings } from './types';
 
 const settings: Settings = {
   schemaVersion: 1,
@@ -145,5 +145,25 @@ describe('piszkozatTartalmas', () => {
   it('is NOT affected by nyelv/penznem toggles alone (két kattintás, nem gépelt munka)', () => {
     const plan = createBlankPlan(settings, priceList);
     expect(piszkozatTartalmas({ ...plan, nyelv: 'de', penznem: 'EUR' })).toBe(false);
+  });
+});
+
+describe('piszkozatCelRoute', () => {
+  it('prefers the known lastRoute over the name-based heuristic', () => {
+    const plan = createBlankPlan(settings, priceList);
+    expect(piszkozatCelRoute('/elonezet', { ...plan, paciens: { ...plan.paciens, nev: '' } })).toBe(
+      '/elonezet',
+    );
+  });
+
+  it('falls back to /terv when the name is already filled in', () => {
+    const blank = createBlankPlan(settings, priceList);
+    const plan: Plan = { ...blank, paciens: { ...blank.paciens, nev: 'Teszt Elek' } };
+    expect(piszkozatCelRoute(null, plan)).toBe('/terv');
+  });
+
+  it('falls back to /paciens when the name is still empty', () => {
+    const plan = createBlankPlan(settings, priceList);
+    expect(piszkozatCelRoute(null, { ...plan, paciens: { ...plan.paciens, nev: '' } })).toBe('/paciens');
   });
 });

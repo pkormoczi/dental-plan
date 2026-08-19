@@ -1,8 +1,9 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Route, Routes, useLocation, useParams } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PlanHistoryPage from './PlanHistoryPage';
+import { resetListStateMemoryForTests } from '../components/useListStateMemory';
 import { TestProviders } from '../testUtils';
 import { patientCard, verzioMenupont } from '../testQueries';
 import { DemoStorage } from '../storage/DemoStorage';
@@ -11,16 +12,25 @@ import { formatMoney } from '../domain/money';
 import { buildDownloadFileName } from '../storage/paths';
 import { useAppState } from '../state/AppState';
 import type { Plan } from '../domain/types';
+import type { WorkflowRoute } from '../storage/DraftStorage';
 
 // backlog-30: a kereszt-link az egyesített páciens-részletoldalra navigál
 // (`/paciensek/:patientDir`), a tab-ot `location.state.tab`-ban átadva --
 // ezt a probe-ot olvassuk vissza, a valódi PatientDetailPage.tsx-et nem
-// kell ehhez a teszthez felhúzni.
+// kell ehhez a teszthez felhúzni. A "Vissza" gomb a 46. tétel POP-memória
+// (D240) teszteléséhez kell -- a `useListStateMemory.test.tsx` `DetailProbe`
+// mintája.
 function PaciensekProbe() {
   const { patientDir } = useParams<{ patientDir: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const tab = (location.state as { tab?: string } | null)?.tab ?? '';
-  return <div data-testid="paciensek-oldal" data-patientdir={patientDir} data-tab={tab} />;
+  return (
+    <div>
+      <div data-testid="paciensek-oldal" data-patientdir={patientDir} data-tab={tab} />
+      <button onClick={() => navigate(-1)}>Vissza</button>
+    </div>
+  );
 }
 
 // backlog-17: a két "Új terv…" gomb a Páciens adatlapra navigál
@@ -41,7 +51,10 @@ function DraftProbe() {
   );
 }
 
-function seedPersistedDraft(overrides: Partial<Plan> = {}) {
+function seedPersistedDraft(
+  overrides: Partial<Plan> = {},
+  meta: { patientDir?: string; lastRoute?: WorkflowRoute } = {},
+) {
   const plan: Plan = {
     schemaVersion: 1,
     tervId: '',
@@ -70,7 +83,7 @@ function seedPersistedDraft(overrides: Partial<Plan> = {}) {
   };
   localStorage.setItem(
     'dp:piszkozat',
-    JSON.stringify({ schemaVersion: 1, mentve: '2026-08-09T10:00:00.000Z', plan }),
+    JSON.stringify({ schemaVersion: 1, mentve: '2026-08-09T10:00:00.000Z', plan, ...meta }),
   );
 }
 
@@ -124,10 +137,29 @@ for (const entry of nagyEvaEntries) {
   nagyEvaChains.set(entry.planDir, list);
 }
 const nagyEvaMultiVersionChain = [...nagyEvaChains.values()].find((c) => c.length > 1)!;
+const nagyEvaSingleVersionChain = [...nagyEvaChains.values()].find((c) => c.length === 1)!;
 
-/** A "2 terv" összecsukás-kapcsoló -- csak akkor létezik, ha a páciensnek 2+ lánca van. */
-async function expandPatientBlock(user: ReturnType<typeof userEvent.setup>, card: HTMLElement) {
-  await user.click(within(card).getByRole('button', { name: /^\d+ terv$/ }));
+/** EGY terv-lánc doboza a `data-plan` horgony alapján (46. tétel). */
+function lancDoboz(card: HTMLElement, planDir: string): HTMLElement {
+  return card.querySelector(`[data-plan="${planDir}"]`) as HTMLElement;
+}
+
+/**
+ * A lánc-fejléc toggle gombja -- az EGYETLEN gomb a fejlécen, aminek van
+ * `aria-expanded` attribútuma (a ceruza-gombnak nincs).
+ */
+function lancToggle(doboz: HTMLElement): HTMLElement {
+  return within(doboz)
+    .getAllByRole('button')
+    .find((b) => b.hasAttribute('aria-expanded'))!;
+}
+
+/** Kinyit egy csukott láncot -- nem csinál semmit, ha már nyitva van. */
+async function nyissLancot(user: ReturnType<typeof userEvent.setup>, doboz: HTMLElement) {
+  const toggle = lancToggle(doboz);
+  if (toggle.getAttribute('aria-expanded') === 'false') {
+    await user.click(toggle);
+  }
 }
 
 function renderHistory() {
@@ -152,6 +184,10 @@ describe('PlanHistoryPage', () => {
     // tehát a lenti kézi sérülés a render UTÁN is megmarad.
     const seeder = new DemoStorage();
     await seeder.init();
+    // useListStateMemory.ts fejléce: egy MemoryRouter kezdeti navigációja is
+    // POP-nak számít, tesztfájlon belüli it()-ek enélkül tévesen örökölnék
+    // egymás kereső-/nyitottsági állapotát (46. tétel).
+    resetListStateMemoryForTests();
   });
 
   it('a keresőmezőnek van elérhető neve, nem csak placeholder-e (docs/07)', async () => {
@@ -191,12 +227,13 @@ describe('PlanHistoryPage', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    // Nagy Évának két önálló terv-lánca van (D29) -- a páciens-blokk emiatt
-    // alapból csukva nyílik.
-    await expandPatientBlock(user, card);
+    // A "Tömések" lánc NEM a legfrissebb véglegesített dátumú (46. tétel,
+    // D186) -- alapból csukva nyílik, explicit ki kell nyitni.
+    const doboz = lancDoboz(card, v1.planDir);
+    await nyissLancot(user, doboz);
 
-    expect(await within(card).findByText(penz(v1.plan.osszesitok.fizetendo))).toBeInTheDocument();
-    expect(within(card).getByText(penz(v2.plan.osszesitok.fizetendo))).toBeInTheDocument();
+    expect(await within(doboz).findByText(penz(v1.plan.osszesitok.fizetendo))).toBeInTheDocument();
+    expect(within(doboz).getByText(penz(v2.plan.osszesitok.fizetendo))).toBeInTheDocument();
   });
 
   it('sérült verziónál "—" áll az összeg helyén, a többi sor érintetlen', async () => {
@@ -217,10 +254,11 @@ describe('PlanHistoryPage', () => {
     // viszi magával a lista többi sorát (ugyanaz a P1-2 elv).
     await screen.findByText('Nagy Éva');
     const nagyEvaCard = patientCard('Nagy Éva');
-    await expandPatientBlock(user, nagyEvaCard);
     const [, v2] = nagyEvaMultiVersionChain;
-    expect(within(nagyEvaCard).getByText(penz(v2.plan.osszesitok.fizetendo))).toBeInTheDocument();
-    expect(within(nagyEvaCard).queryByText('—')).not.toBeInTheDocument();
+    const doboz = lancDoboz(nagyEvaCard, v2.planDir);
+    await nyissLancot(user, doboz);
+    expect(within(doboz).getByText(penz(v2.plan.osszesitok.fizetendo))).toBeInTheDocument();
+    expect(within(doboz).queryByText('—')).not.toBeInTheDocument();
   });
 
   it('opening a corrupted version surfaces a visible inline error instead of doing nothing (P1-2)', async () => {
@@ -252,7 +290,8 @@ describe('PlanHistoryPage', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    await expandPatientBlock(user, card);
+    // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva -- nincs mit
+    // kinyitni ehhez a teszthez.
 
     await user.click(await verzioMenupont(user, card, 'Új verzió'));
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
@@ -281,10 +320,13 @@ describe('PlanHistoryPage', () => {
     const card = patientCard('Nagy Éva');
 
     expect(within(card).getByRole('button', { name: '+ Új terv' })).toBeInTheDocument();
-    await expandPatientBlock(user, card);
+    // Nagy Éva 3 verzióval szerepel a seedben, 2 önálló láncban -- a
+    // "Fogkőeltávolítás" lánc alapból nyitva, a "Tömések" láncot explicit
+    // ki kell nyitni (46. tétel), hogy mindhárom verziósor látszódjon.
+    const [v1] = nagyEvaMultiVersionChain;
+    await nyissLancot(user, lancDoboz(card, v1.planDir));
 
-    // Nagy Éva 3 verzióval szerepel a seedben, 2 önálló láncban -- egy-egy
-    // "⋯" menü verziónként. Az accessible name a terv-címkével ÉS a
+    // Egy-egy "⋯" menü verziónként. Az accessible name a terv-címkével ÉS a
     // verziószámmal képzett, mert két különböző lánc is indulhat v1-gyel.
     const triggers = within(card).getAllByRole('button', { name: /további műveletek$/ });
     expect(triggers).toHaveLength(3);
@@ -298,7 +340,7 @@ describe('PlanHistoryPage', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    await expandPatientBlock(user, card);
+    // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva.
     const trigger = within(card).getAllByRole('button', { name: /további műveletek$/ })[0];
     await user.click(trigger);
 
@@ -321,10 +363,12 @@ describe('PlanHistoryPage', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    await expandPatientBlock(user, card);
-    // Az ELSŐ terv-lánc (fogpótlás) verziói fordítva listázódnak (legfrissebb
-    // elöl) -- az első "⋯" menü ennek a láncnak a v2 sorához tartozik.
-    await user.click(await verzioMenupont(user, card, 'Másolás új tervbe'));
+    // A "Tömések" lánc NEM a legfrissebb véglegesített dátumú (46. tétel,
+    // D186) -- explicit ki kell nyitni. A verziói fordítva listázódnak
+    // (legfrissebb elöl) -- az első "⋯" menü a v2 sorához tartozik.
+    const doboz = lancDoboz(card, v2.planDir);
+    await nyissLancot(user, doboz);
+    await user.click(await verzioMenupont(user, doboz, 'Másolás új tervbe'));
 
     expect(await screen.findByTestId('draft-oldal')).toHaveTextContent('PACIENS-OLDAL');
     expect(screen.getByTestId('draft-nev')).toHaveTextContent('Nagy Éva');
@@ -360,7 +404,7 @@ describe('PlanHistoryPage', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    await expandPatientBlock(user, card);
+    // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva.
 
     await user.click(await verzioMenupont(user, card, 'Másolás új tervbe'));
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
@@ -382,7 +426,7 @@ describe('PlanHistoryPage', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    await expandPatientBlock(user, card);
+    // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva.
 
     // A seed-verziókhoz nincs mentett PDF (csak terv.json) -- a lényeg, hogy a
     // menüpont a downloadVersion ágra fut, és a hiánya a SOR alatt, inline
@@ -472,7 +516,7 @@ describe('PlanHistoryPage', () => {
 
       await screen.findByText('Nagy Éva');
       const card = patientCard('Nagy Éva');
-      await expandPatientBlock(user, card);
+      // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva.
 
       // A seed-verziókhoz nincs mentett PDF -- ugyanaz az eset, mint a
       // "Letöltés" hibaágánál (3. döntés: nincs második hiba-minta).
@@ -496,32 +540,58 @@ describe('PlanHistoryPage', () => {
       expect(within(card).getByText(/^v1 ·/)).toBeInTheDocument();
     });
 
-    it('2+ terv-lánccal rendelkező páciens alapból csukva jelenik meg', async () => {
+    // 46. tétel: a page-szintű "N terv" kapcsoló megszűnt -- a lánc-szintű
+    // toggle vette át a szerepét (D237/D249/D250). Alapból a legfrissebb
+    // VÉGLEGESÍTETT dátumú lánc (D186) van nyitva, a többi csukva; a
+    // fejlécek (címke + legfrissebb verzió + csukott állapotban az összeg)
+    // NYITOTTSÁGTÓL FÜGGETLENÜL mindig látszanak.
+    it('2+ terv-lánccal rendelkező páciensnél alapból csak a legfrissebb (véglegesített dátumú) lánc nyitva', async () => {
       renderHistory();
       await screen.findByText('Nagy Éva');
       const card = patientCard('Nagy Éva');
 
-      expect(within(card).getByRole('button', { name: '2 terv' })).toBeInTheDocument();
-      // Csukott állapotban a verziósorok NEM láthatók.
-      expect(within(card).queryByRole('button', { name: /további műveletek$/ })).not.toBeInTheDocument();
-      // ...de a "2 terv" kapcsoló melletti legutóbbi lánc dátuma/összege igen,
-      // sima (nem kattintható) szövegként.
-      expect(within(card).getByText(/^· legutóbb:/)).toBeInTheDocument();
+      expect(within(card).queryByRole('button', { name: /^\d+ terv$/ })).not.toBeInTheDocument();
+
+      const [v1] = nagyEvaMultiVersionChain;
+      const tomesekDoboz = lancDoboz(card, v1.planDir);
+      const fogkoDoboz = lancDoboz(card, nagyEvaSingleVersionChain[0].planDir);
+
+      // A "Fogkőeltávolítás" lánc (2026-08-01) a legfrissebb véglegesített
+      // dátumú -- ez nyitva; a "Tömések" lánc (legfrissebb verziója
+      // 2026-07-22) csukva.
+      expect(lancToggle(fogkoDoboz)).toHaveAttribute('aria-expanded', 'true');
+      expect(lancToggle(tomesekDoboz)).toHaveAttribute('aria-expanded', 'false');
+
+      // Csukott állapotban a verziósorok NEM láthatók...
+      expect(
+        within(tomesekDoboz).queryByRole('button', { name: /további műveletek$/ }),
+      ).not.toBeInTheDocument();
+      // ...de a fejléc (címke + legfrissebb verzió + összeg) igen.
+      expect(within(tomesekDoboz).getByText(/^Tömések ·/)).toBeInTheDocument();
     });
 
-    it('kattintásra kinyílik, mindkét terv-lánc látszik a saját címkéjével', async () => {
+    it('a csukott lánc fejléce kattintás nélkül is látszik, kattintásra a verziósorai is megjelennek', async () => {
       const user = userEvent.setup();
       renderHistory();
       await screen.findByText('Nagy Éva');
       const card = patientCard('Nagy Éva');
 
-      await expandPatientBlock(user, card);
-
-      // Élő auto-javaslat -- a fogpótlás lánc domináns kategóriája "Tömések",
-      // a fogkőeltávolítás láncé "Fogkőeltávolítás" (mindkettő egyetlen
-      // kategóriára hivatkozik, lásd seed/plans.ts).
+      // Élő auto-javaslat -- a "Tömések" lánc domináns kategóriája "Tömések",
+      // a "Fogkőeltávolítás" láncé "Fogkőeltávolítás" (mindkettő egyetlen
+      // kategóriára hivatkozik, lásd seed/plans.ts). Mindkét fejléc
+      // kattintás NÉLKÜL is látszik (46. tétel) -- a nyitottság csak a
+      // verziósorokat rejti.
       expect(within(card).getByText(/^Tömések ·/)).toBeInTheDocument();
       expect(within(card).getByText(/^Fogkőeltávolítás ·/)).toBeInTheDocument();
+
+      const [v1] = nagyEvaMultiVersionChain;
+      const tomesekDoboz = lancDoboz(card, v1.planDir);
+      expect(
+        within(tomesekDoboz).queryByRole('button', { name: /további műveletek$/ }),
+      ).not.toBeInTheDocument();
+
+      await nyissLancot(user, tomesekDoboz);
+      expect(within(tomesekDoboz).getAllByRole('button', { name: /további műveletek$/ })).toHaveLength(2);
     });
 
     it('a terv-címke inline szerkeszthető, üresen mentve visszaáll az automatikus javaslatra', async () => {
@@ -529,29 +599,25 @@ describe('PlanHistoryPage', () => {
       renderHistory();
       await screen.findByText('Nagy Éva');
       const card = patientCard('Nagy Éva');
-      await expandPatientBlock(user, card);
+      // A ceruza-gomb a lánc nyitottságától függetlenül elérhető.
+      const [v1] = nagyEvaMultiVersionChain;
+      const doboz = lancDoboz(card, v1.planDir);
 
-      // Nagy Évának két lánca van (két pencil-gomb, D29) -- a [0] a fogpótlás
-      // lánc, a DOM-beli első (lásd a fenti "kattintásra kinyílik" tesztet).
-      await user.click(
-        within(card).getAllByRole('button', { name: 'Terv címének szerkesztése' })[0],
-      );
-      const input = within(card).getByRole('textbox', { name: 'Terv címe' });
+      await user.click(within(doboz).getByRole('button', { name: 'Terv címének szerkesztése' }));
+      const input = within(doboz).getByRole('textbox', { name: 'Terv címe' });
       await user.clear(input);
       await user.type(input, 'Fogpótlás — Éva');
-      await user.click(within(card).getByRole('button', { name: 'Címke mentése' }));
+      await user.click(within(doboz).getByRole('button', { name: 'Címke mentése' }));
 
-      expect(await within(card).findByText(/^Fogpótlás — Éva ·/)).toBeInTheDocument();
+      expect(await within(doboz).findByText(/^Fogpótlás — Éva ·/)).toBeInTheDocument();
 
       // Üresen mentve vissza az automatikus javaslatra ("Tömések").
-      await user.click(
-        within(card).getAllByRole('button', { name: 'Terv címének szerkesztése' })[0],
-      );
-      const input2 = within(card).getByRole('textbox', { name: 'Terv címe' });
+      await user.click(within(doboz).getByRole('button', { name: 'Terv címének szerkesztése' }));
+      const input2 = within(doboz).getByRole('textbox', { name: 'Terv címe' });
       await user.clear(input2);
-      await user.click(within(card).getByRole('button', { name: 'Címke mentése' }));
+      await user.click(within(doboz).getByRole('button', { name: 'Címke mentése' }));
 
-      expect(await within(card).findByText(/^Tömések ·/)).toBeInTheDocument();
+      expect(await within(doboz).findByText(/^Tömések ·/)).toBeInTheDocument();
     });
 
     it('Escape a szerkesztés közben elveti a módosítást', async () => {
@@ -559,17 +625,16 @@ describe('PlanHistoryPage', () => {
       renderHistory();
       await screen.findByText('Nagy Éva');
       const card = patientCard('Nagy Éva');
-      await expandPatientBlock(user, card);
+      const [v1] = nagyEvaMultiVersionChain;
+      const doboz = lancDoboz(card, v1.planDir);
 
-      await user.click(
-        within(card).getAllByRole('button', { name: 'Terv címének szerkesztése' })[0],
-      );
-      const input = within(card).getByRole('textbox', { name: 'Terv címe' });
+      await user.click(within(doboz).getByRole('button', { name: 'Terv címének szerkesztése' }));
+      const input = within(doboz).getByRole('textbox', { name: 'Terv címe' });
       await user.type(input, 'Ideiglenes szöveg, ami nem mentődik');
       await user.keyboard('{Escape}');
 
-      expect(within(card).queryByRole('textbox', { name: 'Terv címe' })).not.toBeInTheDocument();
-      expect(within(card).getByText(/^Tömések ·/)).toBeInTheDocument();
+      expect(within(doboz).queryByRole('textbox', { name: 'Terv címe' })).not.toBeInTheDocument();
+      expect(within(doboz).getByText(/^Tömések ·/)).toBeInTheDocument();
     });
   });
 
@@ -599,6 +664,252 @@ describe('PlanHistoryPage', () => {
       const probe = await screen.findByTestId('paciensek-oldal');
       expect(probe.dataset.patientdir).toBeTruthy();
       expect(probe.dataset.tab).toBe('adatai');
+    });
+  });
+
+  // 46. tétel: lánc-fejléc tartalom/rendezés/badge-ek, aktív-draft blokk,
+  // POP-memória.
+  describe('lánc-fejléc, badge-ek és aktív draft blokk (46. tétel)', () => {
+    it('a láncok a legfrissebb VÉGLEGESÍTETT dátum szerint csökkenően rendeződnek, NEM a lánc indulási dátuma szerint', async () => {
+      renderHistory();
+      await screen.findByText('Nagy Éva');
+      const card = patientCard('Nagy Éva');
+
+      // A "Tömések" lánc 2026-06-10-én INDULT (korábban, mint a
+      // "Fogkőeltávolítás" 2026-08-01-es egyetlen verziója) -- mégis a
+      // "Fogkőeltávolítás" áll elöl a DOM-ban, mert a legfrissebb
+      // VÉGLEGESÍTETT verziója (2026-08-01) frissebb, mint a "Tömések"
+      // láncé (2026-07-22).
+      const dobozok = card.querySelectorAll('[data-plan]');
+      expect(dobozok[0]).toHaveAttribute('data-plan', nagyEvaSingleVersionChain[0].planDir);
+      expect(dobozok[1]).toHaveAttribute('data-plan', nagyEvaMultiVersionChain[0].planDir);
+    });
+
+    it('a csukott lánc fejléce a legfrissebb verzió dátumát/verziószámát/összegét mutatja, nem a lánc indulási dátumát/összegét (bug-regresszió)', async () => {
+      renderHistory();
+      await screen.findByText('Nagy Éva');
+      const card = patientCard('Nagy Éva');
+      const [v1, v2] = nagyEvaMultiVersionChain;
+      const doboz = lancDoboz(card, v1.planDir);
+      const headerRow = doboz.firstElementChild as HTMLElement;
+
+      expect(within(headerRow).getByText(/v2 · 2026-07-22/)).toBeInTheDocument();
+      expect(within(headerRow).queryByText(/v1 · 2026-06-10/)).not.toBeInTheDocument();
+      expect(within(headerRow).getByText(penz(v2.plan.osszesitok.fizetendo))).toBeInTheDocument();
+      expect(within(headerRow).queryByText(penz(v1.plan.osszesitok.fizetendo))).not.toBeInTheDocument();
+    });
+
+    it('nyitáskor a fejléc-összeg eltűnik (a legfrissebb verziósor ugyanazt az értéket mutatja alatta)', async () => {
+      const user = userEvent.setup();
+      renderHistory();
+      await screen.findByText('Nagy Éva');
+      const card = patientCard('Nagy Éva');
+      const [, v2] = nagyEvaMultiVersionChain;
+      const doboz = lancDoboz(card, v2.planDir);
+      const headerRow = doboz.firstElementChild as HTMLElement;
+
+      expect(within(headerRow).getByText(penz(v2.plan.osszesitok.fizetendo))).toBeInTheDocument();
+      await nyissLancot(user, doboz);
+      expect(within(headerRow).queryByText(penz(v2.plan.osszesitok.fizetendo))).not.toBeInTheDocument();
+      // ...de a verziósorban ugyanez az összeg megvan.
+      expect(within(doboz).getByText(penz(v2.plan.osszesitok.fizetendo))).toBeInTheDocument();
+    });
+
+    it('nyitott lánc visszazárható a fejléc-toggle-re kattintva', async () => {
+      const user = userEvent.setup();
+      renderHistory();
+      await screen.findByText('Nagy Éva');
+      const card = patientCard('Nagy Éva');
+      const doboz = lancDoboz(card, nagyEvaSingleVersionChain[0].planDir);
+
+      expect(lancToggle(doboz)).toHaveAttribute('aria-expanded', 'true');
+      await user.click(lancToggle(doboz));
+      expect(lancToggle(doboz)).toHaveAttribute('aria-expanded', 'false');
+      expect(within(doboz).queryByRole('button', { name: /további műveletek$/ })).not.toBeInTheDocument();
+    });
+
+    it('a lánc-toggle billentyűzettel (Space) is elérhető, natív gomb, nincs fa-szemantika az oldalon', async () => {
+      const user = userEvent.setup();
+      renderHistory();
+      await screen.findByText('Nagy Éva');
+      const card = patientCard('Nagy Éva');
+      const doboz = lancDoboz(card, nagyEvaSingleVersionChain[0].planDir);
+      const toggle = lancToggle(doboz);
+
+      toggle.focus();
+      await user.keyboard(' ');
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+      expect(screen.queryByRole('tree')).not.toBeInTheDocument();
+      expect(screen.queryByRole('treeitem')).not.toBeInTheDocument();
+    });
+
+    it('"Legutóbbi" badge csak a 2+ verziós lánc legfrissebb során jelenik meg, egyverziós láncon sosem', async () => {
+      const user = userEvent.setup();
+      renderHistory();
+      await screen.findByText('Nagy Éva');
+      const card = patientCard('Nagy Éva');
+      const [v1, v2] = nagyEvaMultiVersionChain;
+      const doboz = lancDoboz(card, v1.planDir);
+      await nyissLancot(user, doboz);
+
+      const v2Sor = within(doboz).getByText(new RegExp(`^v${v2.plan.verzio} · ${v2.plan.keltezes}`))
+        .closest('.rt-Flex') as HTMLElement;
+      const v1Sor = within(doboz).getByText(new RegExp(`^v${v1.plan.verzio} · ${v1.plan.keltezes}`))
+        .closest('.rt-Flex') as HTMLElement;
+      expect(within(v2Sor).getByText('Legutóbbi')).toBeInTheDocument();
+      expect(within(v1Sor).queryByText('Legutóbbi')).not.toBeInTheDocument();
+
+      // Az egyverziós "Fogkőeltávolítás" láncon (alapból nyitva) nincs
+      // "Legutóbbi" jelvény -- funkciótlan dísz lenne (docs/07).
+      const fogkoDoboz = lancDoboz(card, nagyEvaSingleVersionChain[0].planDir);
+      expect(within(fogkoDoboz).queryByText('Legutóbbi')).not.toBeInTheDocument();
+    });
+
+    it('aktív draft esetén a hozzá tartozó lánc fejléce "Piszkozat" jelzést kap, a másik lánc nem, és a jelzés nem külön kattintható', async () => {
+      const [v1] = nagyEvaMultiVersionChain;
+      seedPersistedDraft(
+        { tervId: v1.plan.tervId, paciens: { ...v1.plan.paciens, nev: 'Nagy Éva' } },
+        { patientDir: nagyEvaEntries[0].patientDir },
+      );
+      renderHistory();
+      // A draft blokk is "Nagy Éva" szöveget mutat -- screen.findByText itt
+      // ambiguus lenne, a "Folytatás" gomb megjelenése egyértelmű várakozás.
+      await screen.findByRole('button', { name: 'Folytatás' });
+      const card = document.querySelector(`[data-patient="${nagyEvaEntries[0].patientDir}"]`) as HTMLElement;
+      const tomesekDoboz = lancDoboz(card, v1.planDir);
+      const fogkoDoboz = lancDoboz(card, nagyEvaSingleVersionChain[0].planDir);
+
+      expect(within(tomesekDoboz).getByText('Piszkozat')).toBeInTheDocument();
+      expect(within(fogkoDoboz).queryByText('Piszkozat')).not.toBeInTheDocument();
+
+      // A fejlécen csak a toggle és a ceruza gomb van -- a jelzés nem hozott
+      // létre harmadik, önálló kattintható elemet.
+      const headerRow = tomesekDoboz.firstElementChild as HTMLElement;
+      expect(within(headerRow).getAllByRole('button')).toHaveLength(2);
+    });
+
+    it('a saját draft nélküli páciensnél nincs draft-blokk és nincs lánc-jelzés', async () => {
+      seedPersistedDraft(
+        { paciens: { ...seedPlans[0].plan.paciens, nev: 'Piszkozat Panni' } },
+        { patientDir: 'nem-letezo-mappa' },
+      );
+      renderHistory();
+      await screen.findByText('Kovács János');
+      const card = patientCard('Kovács János');
+
+      expect(within(card).queryByText('Piszkozat')).not.toBeInTheDocument();
+      expect(within(card).queryByRole('button', { name: 'Folytatás' })).not.toBeInTheDocument();
+    });
+
+    it('aktív draft esetén a hozzá tartozó páciens kártyáján a láncok FÖLÖTT jelenik meg a draft-blokk, tartalmazza a kontextust, a workflow-lépést és az utolsó módosítás időbélyegét', async () => {
+      seedPersistedDraft(
+        {
+          tervId: '',
+          paciens: { ...seedPlans[0].plan.paciens, nev: 'Nagy Éva' },
+          fazisok: [
+            {
+              sorszam: 1,
+              megnevezes: '1. kezelés',
+              megjegyzes: '',
+              sorok: [
+                {
+                  tetelId: 't001',
+                  nevSnapshot: 'Teszt tétel',
+                  savos: false,
+                  fogak: '',
+                  mennyiseg: 1,
+                  listaEgysegar: 10000,
+                  tenylegesEgysegar: 10000,
+                },
+              ],
+            },
+          ],
+        },
+        { patientDir: nagyEvaEntries[0].patientDir, lastRoute: '/terv' },
+      );
+      renderHistory();
+      const folytatasBtn = await screen.findByRole('button', { name: 'Folytatás' });
+      const card = document.querySelector(`[data-patient="${nagyEvaEntries[0].patientDir}"]`) as HTMLElement;
+
+      expect(within(card).getByText('Új terv')).toBeInTheDocument();
+      expect(within(card).getByText('Kezelések')).toBeInTheDocument();
+      expect(within(card).getByText(/Utolsó módosítás:/)).toBeInTheDocument();
+      expect(within(card).getByText(penz(10000))).toBeInTheDocument();
+
+      // A blokk a láncok FÖLÖTT áll: a DOM-sorrendben a "Folytatás" gomb
+      // megelőzi az első `[data-plan]` blokkot.
+      const elsoLanc = card.querySelector('[data-plan]') as HTMLElement;
+      expect(
+        folytatasBtn.compareDocumentPosition(elsoLanc) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('üres (sor nélküli) draftnál nincs összeg (D246), hiányzó lastRoute-nál nincs lépés-sor', async () => {
+      seedPersistedDraft(
+        { tervId: '', paciens: { ...seedPlans[0].plan.paciens, nev: 'Nagy Éva' } },
+        { patientDir: nagyEvaEntries[0].patientDir },
+      );
+      renderHistory();
+      const folytatasBtn = await screen.findByRole('button', { name: 'Folytatás' });
+      const draftBlokk = folytatasBtn.closest('.rt-Card') as HTMLElement;
+      expect(within(draftBlokk).queryByText(/^\d/)).not.toBeInTheDocument(); // nincs pénzösszeg-szerű szöveg
+      expect(within(draftBlokk).queryByText('Terv adatai')).not.toBeInTheDocument();
+      expect(within(draftBlokk).queryByText('Kezelések')).not.toBeInTheDocument();
+      expect(within(draftBlokk).queryByText('Előnézet és véglegesítés')).not.toBeInTheDocument();
+    });
+
+    it('a "Folytatás" gomb megerősítés NÉLKÜL navigál (szemben az "Új verzió"-val), és a blokk törzsére kattintva sem duplikálódik a navigáció', async () => {
+      const user = userEvent.setup();
+      seedPersistedDraft(
+        { tervId: '', paciens: { ...seedPlans[0].plan.paciens, nev: 'Nagy Éva' } },
+        { patientDir: nagyEvaEntries[0].patientDir, lastRoute: '/terv' },
+      );
+      renderHistory();
+      const folytatasBtn = await screen.findByRole('button', { name: 'Folytatás' });
+
+      await user.click(folytatasBtn);
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(await screen.findByText('TERV-OLDAL')).toBeInTheDocument();
+    });
+
+    it('a draft-blokk törzsére (nem a gombra) kattintva is navigál', async () => {
+      const user = userEvent.setup();
+      seedPersistedDraft(
+        { tervId: '', paciens: { ...seedPlans[0].plan.paciens, nev: 'Nagy Éva' } },
+        { patientDir: nagyEvaEntries[0].patientDir, lastRoute: '/terv' },
+      );
+      renderHistory();
+      await screen.findByRole('button', { name: 'Folytatás' });
+      const card = document.querySelector(`[data-patient="${nagyEvaEntries[0].patientDir}"]`) as HTMLElement;
+
+      const kontextusSzoveg = within(card).getByText('Új terv');
+      await user.click(kontextusSzoveg);
+      expect(await screen.findByText('TERV-OLDAL')).toBeInTheDocument();
+    });
+
+    // D240: a lánc-nyitottság ÉS a keresőszöveg is visszaáll böngésző-
+    // "vissza" (POP) navigációnál, a MEGLÉVŐ useListStateMemory bővítésével.
+    it('böngésző-"vissza" navigációnál a lánc-nyitottság és a keresőszöveg is visszaáll', async () => {
+      const user = userEvent.setup();
+      renderHistory();
+      await screen.findByText('Nagy Éva');
+      const card = patientCard('Nagy Éva');
+      const doboz = lancDoboz(card, nagyEvaMultiVersionChain[0].planDir);
+
+      await user.type(screen.getByRole('textbox', { name: 'Keresés páciensnévre' }), 'Nagy');
+      await nyissLancot(user, doboz);
+      expect(lancToggle(doboz)).toHaveAttribute('aria-expanded', 'true');
+
+      await user.click(within(card).getByRole('button', { name: 'Páciens adatai' }));
+      await screen.findByTestId('paciensek-oldal');
+      await user.click(screen.getByRole('button', { name: 'Vissza' }));
+
+      await screen.findByText('Nagy Éva');
+      expect(screen.getByRole('textbox', { name: 'Keresés páciensnévre' })).toHaveValue('Nagy');
+      const cardAfter = patientCard('Nagy Éva');
+      const dobozAfter = lancDoboz(cardAfter, nagyEvaMultiVersionChain[0].planDir);
+      expect(lancToggle(dobozAfter)).toHaveAttribute('aria-expanded', 'true');
     });
   });
 });

@@ -247,17 +247,27 @@ describe('Végpontok közötti folyamat', () => {
     window.location.hash = '#/tervek';
     const nagyEva = await screen.findByText('Nagy Éva');
     const card = nagyEva.closest('[data-patient]') as HTMLElement;
-    // Nagy Évának két önálló terv-lánca is van (D29) -- a páciens-blokk
-    // emiatt alapból csukva nyílik, ki kell bontani a verziósorok eléréséhez.
-    await user.click(within(card).getByRole('button', { name: /^\d+ terv$/ }));
-    // A legfrissebb verzió (v2, 2026-07-22) az ELSŐ (fogpótlás) terv-láncban
-    // van legfelül -- lásd PlanHistoryPage.tsx `.slice().reverse()`.
-    await user.click(await verzioMenupont(user, card, 'Új verzió'));
+    // A "Tömések" lánc (v1 2026-06-10, v2 2026-07-22) NEM a legfrissebb
+    // véglegesített dátumú lánc a "Fogkőeltávolítás" (2026-08-01) mellett
+    // (46. tétel, D186) -- alapból csukva nyílik, ki kell bontani a
+    // verziósorok eléréséhez.
+    const tomesekCim = within(card).getByText(/^Tömések ·/);
+    const doboz = tomesekCim.closest('[data-plan]') as HTMLElement;
+    await user.click(doboz.querySelector('[aria-expanded="false"]') as HTMLElement);
+    // A legfrissebb verzió (v2, 2026-07-22) a lánc verziósorai közül az
+    // ELSŐ (fordítva rendezve, legfrissebb elöl) -- lásd PatientPlanChains.tsx
+    // `.slice().reverse()`.
+    await user.click(await verzioMenupont(user, doboz, 'Új verzió'));
 
     // A visszatérő páciensnek két fázisa is van (1. kezelés + 2. kezelés —
     // korona), tehát két ItemPicker-keresőmező is renderel -- itt csak azt
-    // ellenőrizzük, hogy a szerkesztő betöltött.
-    await screen.findAllByPlaceholderText(/Tétel keresése/);
+    // ellenőrizzük, hogy a szerkesztő betöltött. A 22 páciensre bővített
+    // demó-készlet (D40) miatt a `/tervek` lista eagerly tölt be minden
+    // pácienst, a 46. tétel lánc-nyitása pedig egy plusz kattintás/render
+    // kört told be előtte -- ezért az alapértelmezett 1000ms-nél lassabb is
+    // lehet erősen terhelt teljes-készlet futásnál (PatientPage.test.tsx
+    // mintája).
+    await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
     // A tájékoztató sáv megjelenik, a régi (2026-07-22-i) dátum sehol nem
     // látszik többé a szerkesztőben.
     expect(await screen.findByText(/Az új verzió mai dátummal indul/)).toBeInTheDocument();

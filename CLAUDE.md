@@ -597,10 +597,12 @@ A Pácienslista navigációs-listává alakítása tétel
   PatientTableRow.tsx`) — a két lista elrendezése SZÁNDÉKOSAN eltér,
   ne vond össze őket
 - `useListStateMemory(key, ready)` (`app/src/components/useListStateMemory.ts`)
-  — egy lista keresőszövegének/scroll-pozíciójának megőrzése route-váltás
+  — egy lista keresőszövegének/scroll-pozíciójának ÉS a sorain belüli
+  összecsukható blokkok nyitottságának (46. tétel) megőrzése route-váltás
   után-vissza, KIZÁRÓLAG böngésző-"vissza" (POP) navigációnál; modul-
   szintű `Map`-ben (a kódbázis első modul-szintű mutábilis állapota),
-  NEM böngészőtárban — csak a `PaciensekPage.tsx` hívja
+  NEM böngészőtárban — a `PaciensekPage.tsx` (kereső/scroll) és a
+  `PlanHistoryPage.tsx` (mindhárom mező) hívja
 
 A törzsadat-szerkesztő read-only/edit módváltás tétel
 (`docs/01-attekintes-es-dontesek.md` D45, `docs/03-funkcionalis-spec.md`
@@ -691,6 +693,49 @@ szintén ne írd újra:
   új heurisztikával). A tényleges törlés a `PlanStorage.deletePatient(
   patientDir)` — az interfész első destruktív metódusa, feltétel nélkül
   végrehajt; az előfeltétel-ellenőrzés a hívó felelőssége
+
+A terv-lánc fa lánc-szintű összecsukása és aktív-draft blokkja
+(`docs/01-attekintes-es-dontesek.md` D51, `docs/03-funkcionalis-spec.md`
+§ 5. Korábbi tervek) segédfüggvényei/komponense, szintén ne írd újra
+őket:
+- `legfrissebbVerzio(versions)` (`app/src/domain/planFolders.ts`) — EGY
+  terv-lánc legfrissebb verziója (max `isoDate`, holtversenynél nagyobb
+  `verzio`) — a `latestVersionAcrossPlans()` egy láncra szűkített
+  komparátora; a lánc-fejléc EZT a verziót mutatja, nem a `versions`
+  tömb utolsó elemét (a tömb sorrendje nem szerződés)
+- `legfrissebbVeglegesVerzio(planDir, versions, plansByVersion)` /
+  `rendezettLancok(plans, versionsByPlan, plansByVersion)`
+  (`app/src/domain/planChainData.ts`) — a lánc-rendezés (a legfrissebb
+  VÉGLEGESÍTETT verzió dátuma szerint csökkenően, D51) tiszta magja, a
+  MÁR betöltött `plansByVersion`-ből (nincs új storage-hívás). Kulcs
+  nélküli (nincs VEGLEGES verziójú) lánc a lista végére kerül —
+  előkészítve a backlog egy még nyitott, PISZKOZAT-státuszú mentett
+  verziót bevezető tételére, de ma minden mentett verzió VEGLEGES (a
+  `storage.savePlan()` egyetlen hívója a `PreviewPage.tsx`
+  véglegesítés-ága)
+- `useAktivDraft()` / `sajatDraft(draft, patientDir)`
+  (`app/src/components/useAktivDraft.ts`) — az EGYETLEN globális,
+  mentetlen piszkozat (D21) feloldott páciensmappája, a D50
+  `paciensTorlesAkadaly` mögötti feloldó-effekt kiemelve; a
+  `feloldPatientDir()`-t (D48) hívja. `useAktivDraft()` laponként
+  EGYSZER hívandó (nem páciensenként), a `sajatDraft()` tiszta szűrő
+  szűkíti egy konkrét páciensre — a `PlanHistoryPage.tsx` (egyszer a lap
+  tetején) ÉS a `PatientDetailPage.tsx` (a D50 törlés-őrhöz) is ezt
+  hívja, hogy a két hely ne térjen el egymástól
+- `piszkozatCelRoute(lastRoute, plan)` (`app/src/domain/piszkozat.ts`) —
+  hová navigáljon a piszkozat "Megnyitás"/"Folytatás" akciója
+  (`piszkozatLastRoute` elsőbbséggel, névkitöltés-heurisztika
+  tartalékkal); a Kezdőlap kártyája ÉS a terv-lánc fa aktív-draft blokkja
+  is ezt hívja
+- `WORKFLOW_LEPESEK` / `workflowLepesFelirat(route)`
+  (`app/src/domain/workflowLepesek.ts`) — a 3 workflow-route (D36) emberi
+  felirata; a `TervWorkflowShell.tsx` stepperje ÉS az aktív-draft blokk
+  workflow-lépés-sora is ezt hívja
+- `useListStateMemory(key, ready)` bővítése (`app/src/components/
+  useListStateMemory.ts`) — lásd fent a D43 bekezdésben; a `nyitottak`/
+  `setNyitott` mezőpár a lánc-nyitottság POP-only memóriája, a hívó
+  dönti el az `id` jelentését (a `PlanHistoryPage.tsx`-en
+  `${patientDir}/${planDir}`)
 
 ## Domain szókincs
 

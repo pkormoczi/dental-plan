@@ -629,22 +629,51 @@ EGYETLEN páciens-címke, a kereszt-link pedig az EGYETLEN út a
 részletoldalra. Ugyanez a fa a részletoldalba beágyazva név és
 kereszt-link NÉLKÜL renderel (D44, § 10).
 
-Egy páciensnek **1 terv-lánca** esetén (a tipikus eset) a blokk alapból
-kibontva jelenik meg — nincs plusz kattintás. **2+ lánc** esetén alapból
-csukva nyílik (csak a páciensnév, a láncok száma és a legutóbb módosított
-lánc legfrissebb dátuma/összege látszik), kattintásra bomlik ki. A
-verzió-szint egy kibontott terven belül mindig látszik, nincs harmadik
-szintű összecsukás. Ez az összecsukás kizárólag ezen a listán (több páciens
-blokkja egymás alatt) érvényes — a részletoldalba beágyazva (§ 10) egy
-páciens összes lánca mindig kibontva látszik, "N terv" kapcsoló nélkül,
-mert ott már csak az ő saját láncai vannak a nézeten.
+Az összecsukás **lánc-szintű** (D51, nem páciens-szintű): minden terv-lánc
+fejléce önálló, tiszta toggle (nem navigáció), és alapból CSAK a
+legfrissebb VÉGLEGESÍTETT dátumú lánc van nyitva (lásd lent a
+lánc-rendezésnél) — a többi csukva, több lánc egyszerre is nyitható.
+Egyverziós lánc is megtartja a lánc→verzió hierarchiát, nem lapul össze
+egyetlen sorrá. Ez a viselkedés MINDKÉT hívón azonos — a részletoldalba
+beágyazva (§ 10, D44) sincs külön páciens-szintű "N terv" burkoló, csak a
+névfejléc és a "Páciens adatai" kereszt-link marad el, a lánc-szintű
+összecsukás ott is érvényes. A lánc-fejléc (nyitottságtól FÜGGETLENÜL
+mindig renderel) a lánc LEGFRISSEBB verziójának adatait mutatja (dátum,
+verziószám), csukott állapotban a lánc végösszegét is — nyitva ez az
+utóbbi elmarad, mert redundáns a lent következő legfrissebb verziósor
+azonos értékével. A lánc legfrissebb verziósora, ha a láncnak 2+ verziója
+van, „Legutóbbi” jelvényt kap (egyverziós láncon nem, funkciótlan dísz
+lenne). A böngésző-"vissza" navigációnál a lánc-nyitottság és a
+keresőszöveg is visszaáll (`components/useListStateMemory.ts`).
+
+A láncok a bennük lévő legfrissebb VÉGLEGESÍTETT verzió dátuma szerint
+csökkenő sorrendben jelennek meg — NEM a lánc létrehozási (legkorábbi
+verzió) dátuma szerint: egy régen indult, de nemrég frissített lánc
+előrébb kerül, mint egy korábban lezárt, azóta nem frissült lánc.
 
 Minden terv-lánc fejlécén egy **címke** áll: `<tervCim> · <a lánc
-legkorábbi verziójának dátuma>`. A címke a doki által bármikor szabadon
-átírható (`terv-cimke.json`, `docs/02-domain-modell.md` § Páciens- és
-terv-mappa) — egy már véglegesített terv címkéjének átírása NEM hoz létre
-új verziót. Amíg a doki nem ír át semmit, a mező egy élő auto-javaslatot
-mutat (a terv domináns kategóriájának neve, `javasoltTervCim()`).
+legfrissebb verziójának dátuma/verziószáma>`. A címke a doki által
+bármikor szabadon átírható (`terv-cimke.json`, `docs/02-domain-modell.md`
+§ Páciens- és terv-mappa) — egy már véglegesített terv címkéjének
+átírása NEM hoz létre új verziót. Amíg a doki nem ír át semmit, a mező
+egy élő auto-javaslatot mutat (a terv domináns kategóriájának neve,
+`javasoltTervCim()`).
+
+### Aktív draft a listán
+
+Ha az EGYETLEN globális, mentetlen piszkozat (D21) a megjelenített
+pácienshez tartozik, két helyen jelenik meg: (1) a hozzá tartozó terv-lánc
+fejlécén egy nem-kattintható „Piszkozat” jelzés (a fejléc-toggle egyetlen
+kattintási zónája marad, a jelzés nem hoz létre második, beágyazott
+kattintható elemet), és (2) egy önálló blokk a láncok TETEJÉN, a
+finalizált láncok fölött: a draft kontextusa („Új terv” vagy „Új verzió —
+<lánc címke>”, ha a `tervId` egy meglévő lánccal egyezik), az aktuális
+workflow-lépés, az utolsó módosítás időbélyege, és a jelenlegi végösszeg
+előleg nélkül — tétel-/fázisszám nélkül, és HA a piszkozatban egyetlen
+sor sincs, összeg nélkül. A teljes blokk kattintható, a piszkozat utolsó
+workflow-lépésére navigál, plusz egy külön „Folytatás” gomb — EGYIK sem
+megy át a piszkozat-felülírás-őrön, mert a saját draft folytatása nem
+felülírás.
 
 A verziósoron megjelenő összeg a verzió saját `terv.json`-jából jött
 `osszesitok.fizetendo` (a ténylegesen fizetendő, nem a listaáras

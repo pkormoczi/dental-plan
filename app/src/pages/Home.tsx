@@ -17,6 +17,7 @@ import PatientListRow from '../components/PatientListRow';
 import { t } from '../design/tokens';
 import { formatPiszkozatIdo } from '../domain/date';
 import { RECENT_PACIENS_LIMIT, aktivitasSzoveg, legutobbAktivPaciensek } from '../domain/paciensAktivitas';
+import { piszkozatCelRoute } from '../domain/piszkozat';
 import { loadMegjelenitettTorzsadat, type BetoltottTorzsadat } from '../domain/torzsadatBetoltes';
 import { useAppState } from '../state/AppState';
 import { useStorage } from '../storage/StorageContext';
@@ -133,11 +134,7 @@ export default function Home() {
             </Text>
           )}
           <Flex gap="3">
-            <Button
-              onClick={() =>
-                navigate(piszkozatLastRoute ?? (plan.paciens.nev.trim() ? '/terv' : '/paciens'))
-              }
-            >
+            <Button onClick={() => navigate(piszkozatCelRoute(piszkozatLastRoute, plan))}>
               Megnyitás
             </Button>
             <Button variant="soft" color="gray" onClick={() => setDiscardOpen(true)}>

@@ -12,11 +12,34 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Callout, Flex, Heading, Separator, Skeleton, Text, TextField } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import PatientPlanChains from '../components/PatientPlanChains';
+import { sajatDraft, useAktivDraft } from '../components/useAktivDraft';
+import { useListStateMemory } from '../components/useListStateMemory';
 import { t } from '../design/tokens';
 import { type PlanChainData, loadPlanChainData } from '../domain/planChainData';
 import { norm } from '../domain/search';
 import type { PatientFolder } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
+
+// A lánc-nyitottság memória-kulcsa (46. tétel) -- a `versionDataKey()`
+// mintáján, a `PlanHistoryPage` egy lapon SOK páciens fáját rendereli,
+// tehát a `planDir` önmagában nem lenne egyedi a `useListStateMemory`
+// modul-szintű, oldal-szintű `nyitottak` rekordjában.
+function lancMemoriaKulcs(patientDir: string, planDir: string): string {
+  return `${patientDir}/${planDir}`;
+}
+
+/** A `nyitottak` rekord EGY páciensre eső, planDir-re vágott al-rekordja. */
+function lancokEhhezAPacienshez(
+  nyitottak: Record<string, boolean>,
+  patientDir: string,
+): Record<string, boolean> {
+  const prefix = `${patientDir}/`;
+  const result: Record<string, boolean> = {};
+  for (const [key, value] of Object.entries(nyitottak)) {
+    if (key.startsWith(prefix)) result[key.slice(prefix.length)] = value;
+  }
+  return result;
+}
 
 const EMPTY_CHAIN_DATA: PlanChainData = {
   plans: [],
@@ -32,9 +55,17 @@ export default function PlanHistoryPage() {
 
   const [patients, setPatients] = useState<PatientFolder[]>([]);
   const [chainDataByPatient, setChainDataByPatient] = useState<Record<string, PlanChainData>>({});
-  const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
+
+  // D240: a keresőszöveg ÉS a lánc-nyitottság is visszaáll böngésző-"vissza"
+  // (POP) navigációnál -- a `ready` a lista betöltöttsége, a `PaciensekPage`
+  // mintája.
+  const { q, setQ, nyitottak, setNyitott } = useListStateMemory('korabbi-tervek', !loading);
+  // Az EGYETLEN globális aktív draft (D21) -- EGYSZER a lap tetején, nem
+  // páciensenként (különben a `feloldPatientDir()` `listPatients()`
+  // tartaléka N-szer futna le egy nagy listán).
+  const aktivDraft = useAktivDraft();
 
   useEffect(() => {
     let cancelled = false;
@@ -147,6 +178,9 @@ export default function PlanHistoryPage() {
               totalsByVersion={data.totalsByVersion}
               unreadable={data.unreadable}
               header="standalone"
+              aktivDraft={sajatDraft(aktivDraft, p.dirName)}
+              nyitottLancok={lancokEhhezAPacienshez(nyitottak, p.dirName)}
+              onLancValtas={(planDir, nyitva) => setNyitott(lancMemoriaKulcs(p.dirName, planDir), nyitva)}
               onNavigateToPatientData={() =>
                 navigate(`/paciensek/${encodeURIComponent(p.dirName)}`, { state: { tab: 'adatai' } })
               }

@@ -25,6 +25,7 @@ import {
   Text,
 } from '@radix-ui/themes';
 import { ArrowLeftIcon, CrossCircledIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
+import { sajatDraft, useAktivDraft } from '../components/useAktivDraft';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import { useNavGuard } from '../components/NavGuardContext';
 import PatientDetailHeader from '../components/PatientDetailHeader';
@@ -34,7 +35,6 @@ import { loadPlanChainData, versionDataKey, type PlanChainData } from '../domain
 import { latestVersionAcrossPlans } from '../domain/planFolders';
 import { megjelenitettTorzsadat } from '../domain/paciensAdatok';
 import { paciensTorlesAkadaly, type TorlesAkadaly } from '../domain/paciensTorles';
-import { feloldPatientDir } from '../domain/torzsadatBetoltes';
 import type { PatientFolder, PatientMasterData } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import { ujTervForrasPaciensbol } from '../state/planIndulas';
@@ -55,8 +55,7 @@ export default function PatientDetailPage() {
   const { patientDir: rawPatientDir } = useParams<{ patientDir: string }>();
   const patientDir = rawPatientDir ?? '';
   const { storage } = useStorage();
-  const { settings, priceList, plan, vanMentetlenPiszkozat, piszkozatPatientDir, copyPlanIntoDraft } =
-    useAppState();
+  const { settings, priceList, copyPlanIntoDraft } = useAppState();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -133,23 +132,12 @@ export default function PatientDetailPage() {
   }, [storage, patientDir]);
 
   // Melyik páciensmappához tartozik a doki JELENLEGI, mentetlen piszkozata
-  // (backlog-41, D50 2. döntés) -- a MEGLÉVŐ `feloldPatientDir()` (D48)
-  // resolverét hívja, nem új heurisztikát: `piszkozatPatientDir` (D37)
-  // elsőbbséggel, `plan.paciensId` tartalékkal, sosem dob.
-  const [draftPatientDir, setDraftPatientDir] = useState<string | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const dir = await feloldPatientDir(storage, piszkozatPatientDir, plan.paciensId);
-      if (!cancelled) setDraftPatientDir(dir);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [storage, piszkozatPatientDir, plan.paciensId]);
-
-  const sajatAktivPiszkozat = vanMentetlenPiszkozat && draftPatientDir === patientDir;
-  const torlesAkadaly = paciensTorlesAkadaly(chainData, sajatAktivPiszkozat);
+  // (backlog-41, D50 2. döntés) -- a MEGLÉVŐ `useAktivDraft()` (46. tétel,
+  // a D48 `feloldPatientDir()`-jét birtokolja) hívja, ugyanaz a forrás,
+  // amit a "Kezelési tervek" tab aktív-draft blokkja is használ.
+  const aktivDraft = useAktivDraft();
+  const sajatAktivDraft = sajatDraft(aktivDraft, patientDir);
+  const torlesAkadaly = paciensTorlesAkadaly(chainData, sajatAktivDraft !== null);
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -343,7 +331,12 @@ export default function PatientDetailPage() {
         </Tabs.Content>
 
         <Tabs.Content value="tervek">
-          {latestOverall === null ? (
+          {/* 46. tétel: egy 0 láncú páciensnek is LEHET aktív, mentetlen
+              piszkozata (pl. "+ Új terv" indítva, de még nem véglegesítve)
+              -- ilyenkor a draft-blokkot kell mutatni, nem a "nincs terve"
+              CTA-t, különben a doki azt hinné, elveszett a félbeszakadt
+              munkája. */}
+          {latestOverall === null && sajatAktivDraft === null ? (
             <Box>
               <Text as="p" size="2" color="gray" mb="3">
                 Ennek a páciensnek még nincs kezelési terve.
@@ -369,6 +362,7 @@ export default function PatientDetailPage() {
               totalsByVersion={chainData?.totalsByVersion ?? {}}
               unreadable={chainData?.unreadable ?? false}
               header="embedded"
+              aktivDraft={sajatAktivDraft}
               onLabelSaved={(planDir, tervCim) =>
                 setChainData((prev) =>
                   prev

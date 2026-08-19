@@ -34,3 +34,21 @@ export function latestVersionAcrossPlans(
   }
   return best;
 }
+
+/**
+ * EGY terv-lánc legfrissebb verziója (`latestVersionAcrossPlans` egy
+ * láncra szűkített komparátora) -- `null`, ha a láncnak nincs olvasható
+ * verziója. A `versions` tömb sorrendjétől független (a `DemoStorage`
+ * `verzio` szerint növekvőn ad vissza, de ez nem szerződés) -- a lánc
+ * fejlécének (46. tétel, D238) EZ a "legfrissebb verzió" forrása, nem
+ * `versions[versions.length - 1]`.
+ */
+export function legfrissebbVerzio(versions: PlanVersion[]): PlanVersion | null {
+  let best: PlanVersion | null = null;
+  for (const version of versions) {
+    if (!best || version.isoDate > best.isoDate || (version.isoDate === best.isoDate && version.verzio > best.verzio)) {
+      best = version;
+    }
+  }
+  return best;
+}

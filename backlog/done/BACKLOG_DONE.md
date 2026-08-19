@@ -1293,3 +1293,32 @@ karbantartási kör négy önálló javítása.
   törlés — nincs „kuka”, nincs helyreállítás, nincs páciens-összevonás
   (docs/02-domain-modell.md § Páciens- és terv-mappa,
   docs/03-funkcionalis-spec.md § 10. Páciens részletei).
+
+---
+
+### 46. Kezelési terv-lánc fa — KÉSZ (2026-08-19)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D51 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a terv-lánc/verzió fa (`PatientPlanChains.tsx`) a
+  lánc-fejlécen a lánc LEGRÉGEBBI verziójának dátumát mutatta (tényleges
+  bug), a láncok storage-enumerációs, rendezetlen sorrendben jelentek
+  meg, és az aktív, mentetlen piszkozat sehol nem látszott ezen a
+  listán — csak a Kezdőlapon, amikor a doki már egy másik akciót
+  indítana, és a felülírás-őr csak akkor jelezte a konfliktust.
+- **Megvalósítás:** a korábbi, kizárólag a Korábbi tervek listán élő
+  páciens-szintű "N terv" kapcsoló megszűnt, helyette lánc-SZINTŰ
+  összecsukás él mindkét hívón (Korábbi tervek lista és a páciens-
+  részletoldal "Kezelési tervek" tabja egyaránt) — alapból csak a
+  legfrissebb VÉGLEGESÍTETT dátumú lánc nyitva, a láncok e szerint a
+  dátum szerint csökkenően rendezve. A lánc-fejléc nyitottságtól
+  függetlenül mindig a lánc tényleges legfrissebb verzióját mutatja,
+  csukott állapotban a lánc végösszegét is; a legfrissebb verziósor
+  2+ verziós láncon "Legutóbbi" jelvényt kap. Az aktív piszkozat a hozzá
+  tartozó lánc fejlécén jelzést kap, plusz egy önálló, a láncok fölötti
+  blokkot (kontextus, workflow-lépés, utolsó módosítás, végösszeg),
+  aminek kattintása a piszkozat-felülírás-őrt megkerülve navigál — a
+  saját draft folytatása nem felülírás. A lánc-nyitottság és a
+  keresőszöveg is visszaáll böngésző-"vissza" navigációnál
+  (`components/useListStateMemory.ts` bővítése,
+  docs/03-funkcionalis-spec.md § 5. Korábbi tervek).

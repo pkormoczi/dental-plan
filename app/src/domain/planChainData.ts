@@ -77,3 +77,55 @@ export async function loadPlanChainData(
 
   return { plans, versionsByPlan, plansByVersion, totalsByVersion, unreadable };
 }
+
+/**
+ * EGY lánc "rendezési dátuma" (46. tétel, D186): a legfrissebb VÉGLEGESÍTETT
+ * verziójának `isoDate`-je -- a MÁR betöltött `plansByVersion`-ből, nincs új
+ * storage-hívás. `null`, ha a láncnak nincs VEGLEGES verziója (ma nem
+ * fordul elő: a `storage.savePlan()` egyetlen hívója a PreviewPage.tsx
+ * véglegesítés-ága -- ez a backlog-48 még nem létező PISZKOZAT-státuszú
+ * mentett verziójára készül elő). Egy olvashatatlan verzió (nincs a
+ * `plansByVersion`-ben) best-effort VEGLEGES-nek számít, hogy egy sérült
+ * fájl ne dobja csendben a láncot a rendezés végére.
+ */
+export function legfrissebbVeglegesVerzio(
+  planDir: string,
+  versions: PlanVersion[],
+  plansByVersion: Record<string, Plan>,
+): PlanVersion | null {
+  let best: PlanVersion | null = null;
+  for (const version of versions) {
+    const plan = plansByVersion[versionDataKey(planDir, version.dirName)];
+    const veglegesnekSzamit = plan ? plan.statusz === 'VEGLEGES' : true;
+    if (!veglegesnekSzamit) continue;
+    if (!best || version.isoDate > best.isoDate || (version.isoDate === best.isoDate && version.verzio > best.verzio)) {
+      best = version;
+    }
+  }
+  return best;
+}
+
+/**
+ * A láncok listája a legfrissebb VÉGLEGESÍTETT verzió dátuma szerint
+ * csökkenően (D186) -- `legfrissebbVeglegesVerzio()`-val, a `plans`
+ * másolatán (nem mutálja a bemenetet). Kulcs nélküli lánc (nincs VEGLEGES
+ * verziója) a lista VÉGÉRE kerül; holtversenynél a nagyobb `verzio`, majd
+ * a `planDir` (`localeCompare('hu')`) dönt -- nem a `sort` stabilitására
+ * támaszkodva.
+ */
+export function rendezettLancok(
+  plans: PlanFolder[],
+  versionsByPlan: Record<string, PlanVersion[]>,
+  plansByVersion: Record<string, Plan>,
+): PlanFolder[] {
+  return [...plans].sort((a, b) => {
+    const va = legfrissebbVeglegesVerzio(a.dirName, versionsByPlan[a.dirName] ?? [], plansByVersion);
+    const vb = legfrissebbVeglegesVerzio(b.dirName, versionsByPlan[b.dirName] ?? [], plansByVersion);
+    if (!va && !vb) return a.dirName.localeCompare(b.dirName, 'hu');
+    if (!va) return 1;
+    if (!vb) return -1;
+    if (va.isoDate !== vb.isoDate) return va.isoDate < vb.isoDate ? 1 : -1;
+    if (va.verzio !== vb.verzio) return vb.verzio - va.verzio;
+    return a.dirName.localeCompare(b.dirName, 'hu');
+  });
+}

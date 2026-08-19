@@ -20,9 +20,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
+  Badge,
   Box,
   Button,
   Callout,
+  Card,
   DropdownMenu,
   Flex,
   IconButton,
@@ -40,14 +42,18 @@ import {
   Pencil1Icon,
 } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
-import { todayIso } from '../domain/date';
+import { formatPiszkozatIdo, todayIso } from '../domain/date';
 import { formatMoney } from '../domain/money';
-import { latestVersionAcrossPlans } from '../domain/planFolders';
+import { latestVersionAcrossPlans, legfrissebbVerzio } from '../domain/planFolders';
 import { planMasolatKent } from '../domain/planCopy';
-import { versionDataKey, type VersionTotal } from '../domain/planChainData';
+import { piszkozatCelRoute } from '../domain/piszkozat';
+import { rendezettLancok, versionDataKey, type VersionTotal } from '../domain/planChainData';
+import { tervVegosszeg } from '../domain/totals';
 import { ALAPERTELMEZETT_TERV_CIM, megjelenitettTervCim } from '../domain/tervCim';
+import { workflowLepesFelirat } from '../domain/workflowLepesek';
 import type { PatientFolder, Plan, PlanFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
+import type { AktivDraft } from './useAktivDraft';
 import { ujTervForrasPaciensbol } from '../state/planIndulas';
 import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
@@ -91,6 +97,25 @@ export interface PatientPlanChainsProps {
    * visszaesve).
    */
   onLabelSaved: (planDir: string, tervCim: string | null) => void;
+  /**
+   * Az EGYETLEN globális, mentetlen piszkozat (D21) -- KIZÁRÓLAG akkor
+   * átadva, ha ehhez a `patient`-hez tartozik (a hívó már szűrt
+   * `sajatDraft()`-tal, `components/useAktivDraft.ts`, 46. tétel). A
+   * komponens nem ellenőrzi újra a hovatartozást, ugyanaz a doktrína, mint
+   * a `plans`/`versionsByPlan` betöltésénél.
+   */
+  aktivDraft?: AktivDraft | null;
+  /**
+   * planDir -> nyitva (46. tétel, D237/D250). Hiányzó kulcs = alapértelmezés
+   * (csak a legfrissebb lánc, `rendezettLancok()[0]`, nyitva). Ha nincs
+   * átadva (PatientDetailPage `embedded`), a komponens a saját, lokális
+   * state-jében tartja a nyitottságot; ha VAN (PlanHistoryPage `standalone`),
+   * ez a prop az igazság forrása -- a POP-navigációs visszaállításhoz a
+   * lapnak kell birtokolnia (D240, `useListStateMemory`).
+   */
+  nyitottLancok?: Record<string, boolean>;
+  /** `nyitottLancok`-hoz tartozó író -- csak akkor hívódik, ha `nyitottLancok` is át van adva. */
+  onLancValtas?: (planDir: string, nyitva: boolean) => void;
 }
 
 export default function PatientPlanChains({
@@ -103,6 +128,9 @@ export default function PatientPlanChains({
   header,
   onNavigateToPatientData,
   onLabelSaved,
+  aktivDraft,
+  nyitottLancok,
+  onLancValtas,
 }: PatientPlanChainsProps) {
   const { storage, loadPlanPdf } = useStorage();
   const { settings, priceList, loadPlanIntoDraft, copyPlanIntoDraft, vanMentetlenPiszkozat } =
@@ -111,14 +139,27 @@ export default function PatientPlanChains({
 
   const standalone = header === 'standalone';
 
-  // Az összecsukás CSAK `standalone`-ban él (Korábbi tervek: több páciens
-  // blokkja áll egymás alatt, egy 2+ láncú páciens ott továbbra is
-  // hosszabbá tenné a listát). `embedded`-ben (páciens-részletoldal, D35)
-  // mindig EGY páciens saját láncai látszanak -- a kattintás felesleges
-  // extra lépés, mindig kibontva.
-  const collapsible = standalone && plans.length > 1;
-  const [expandedOverride, setExpandedOverride] = useState<boolean | null>(null);
-  const expanded = collapsible ? (expandedOverride ?? false) : true;
+  // Lánc-szintű összecsukás (46. tétel, D237/D249/D250) -- FELVÁLTJA a
+  // korábbi, kizárólag `standalone`-ban élő páciens-szintű "N terv"
+  // kapcsolót: az most már redundáns lenne a lánc-szintű toggle mellett,
+  // mindkét hívón egyformán. Override-map, a régi `expandedOverride ?? false`
+  // idióma lánconkénti kiterjesztése -- ha a hívó nem ad `nyitottLancok`-ot
+  // (embedded), a komponens saját state-je az igazság forrása.
+  const [helyiNyitas, setHelyiNyitas] = useState<Record<string, boolean>>({});
+  const nyitas = nyitottLancok ?? helyiNyitas;
+  const rendezett = rendezettLancok(plans, versionsByPlan, plansByVersion);
+  const alapNyitottDir = rendezett[0]?.dirName ?? null;
+  function nyitva(planDir: string): boolean {
+    return nyitas[planDir] ?? planDir === alapNyitottDir;
+  }
+  function toggleLanc(planDir: string) {
+    const kovetkezo = !nyitva(planDir);
+    if (onLancValtas) {
+      onLancValtas(planDir, kovetkezo);
+    } else {
+      setHelyiNyitas((prev) => ({ ...prev, [planDir]: kovetkezo }));
+    }
+  }
 
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [actionError, setActionError] = useState<{
@@ -132,9 +173,6 @@ export default function PatientPlanChains({
   const [labelError, setLabelError] = useState<{ planDir: string; message: string } | null>(null);
 
   const latestOverall = latestVersionAcrossPlans(plans, (planDir) => versionsByPlan[planDir] ?? []);
-  const latestOverallTotal = latestOverall
-    ? totalsByVersion[versionDataKey(latestOverall.planDir, latestOverall.version.dirName)]
-    : undefined;
 
   async function openVersion(ref: VersionRef) {
     setActionError(null);
@@ -353,6 +391,16 @@ export default function PatientPlanChains({
       : (plan.tervCim ?? ALAPERTELMEZETT_TERV_CIM);
   }
 
+  // Az aktív draft blokk kontextus-sora (6. döntés): "Új verzió — <lánc
+  // címke>", ha a piszkozat `tervId`-je egy MEGLÉVŐ lánccal egyezik,
+  // egyébként "Új terv" (a `tervId` üres -- "Másolás új tervbe"/"Új terv"
+  // eredménye).
+  let draftKontextus: string | null = null;
+  if (aktivDraft) {
+    const lanc = aktivDraft.plan.tervId ? plans.find((p) => p.tervId === aktivDraft.plan.tervId) : undefined;
+    draftKontextus = lanc ? `Új verzió — ${displayedLabel(lanc)}` : 'Új terv';
+  }
+
   return (
     <Box>
       {/* `embedded` fejlécben a páciensnév és a „Páciens adatai” kereszt-link
@@ -370,7 +418,7 @@ export default function PatientPlanChains({
           tartalom-terület tetejéhez, egy vonalban a verzió-sorok jobb
           szélével (⋯ menü / összeg) -- ezért `justify="end"` csak
           `embedded`-ben, `standalone`-ban marad a default balra zárás. */}
-      {(standalone || unreadable || latestOverall) && (
+      {(standalone || unreadable || latestOverall || aktivDraft) && (
         <Flex align="baseline" gap="3" mb="2" wrap="wrap" justify={standalone ? 'start' : 'end'}>
           {standalone && (
             <Text as="div" size="3" weight="bold" style={{ color: t.brand }}>
@@ -382,15 +430,20 @@ export default function PatientPlanChains({
               ⚠ néhány verziója nem olvasható
             </Text>
           )}
-          {latestOverall && (
+          {/* 46. tétel: a gomb akkor is megjelenik, ha a páciensnek nincs
+              még véglegesített terve, de VAN aktív, mentetlen piszkozata --
+              a `planDir`/`versionDir` ilyenkor nem használt (a `ujTerv`
+              dispatch a páciens ÉLŐ törzsadatával indít, nem egy konkrét
+              verzióból, lásd `ujTervPaciensAdataival()`). */}
+          {(latestOverall || aktivDraft) && (
             <Button
               size={standalone ? '1' : undefined}
               variant={standalone ? 'soft' : undefined}
               onClick={() =>
                 runOrConfirm({
                   kind: 'ujTerv',
-                  planDir: latestOverall.planDir,
-                  versionDir: latestOverall.version.dirName,
+                  planDir: latestOverall?.planDir,
+                  versionDir: latestOverall?.version.dirName,
                 })
               }
             >
@@ -416,135 +469,181 @@ export default function PatientPlanChains({
         </Callout.Root>
       )}
 
-      {/* A "N terv" kapcsoló CSAK `standalone`-ban jelenik meg (lásd fent a
-          `collapsible`/`expanded` derivációját) -- `embedded`-ben egy
-          páciens saját láncai mindig kibontva látszanak, nincs mit
-          összecsukni. A névfejléc ALATTI sorba került (nem a fejléc mellé,
-          mint korábban) -- csak ez a szó kattintható, a "· legutóbb: …"
-          szöveg mellette sima, nem interaktív marad. Kinyitva a
-          dátum/összeg elmarad, mert a lista alatta úgyis részletesen
-          látszik. */}
-      {collapsible && (
-        <Flex align="center" gap="1" mb="2" wrap="wrap">
-          <Button
-            type="button"
-            size="1"
-            variant="ghost"
-            aria-expanded={expanded}
-            aria-controls={`patient-plans-${patient.dirName}`}
-            onClick={() => setExpandedOverride(!expanded)}
-          >
-            {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
-            {plans.length} terv
-          </Button>
-          {!expanded && (
-            <Text size="2" color="gray">
-              · legutóbb:{' '}
-              {latestOverall
-                ? `${latestOverall.version.isoDate} · ${formatMoney(
-                    latestOverallTotal?.fizetendo ?? null,
-                    latestOverallTotal?.penznem ?? 'HUF',
-                  )}`
-                : '—'}
-            </Text>
-          )}
-        </Flex>
+      {aktivDraft && (
+        <AktivDraftBlokk
+          kontextus={draftKontextus ?? 'Új terv'}
+          paciensNev={aktivDraft.plan.paciens.nev.trim()}
+          lepesFelirat={workflowLepesFelirat(aktivDraft.lastRoute)}
+          mentve={aktivDraft.mentve}
+          osszeg={
+            aktivDraft.plan.fazisok.every((f) => f.sorok.length === 0)
+              ? null
+              : {
+                  ertek: tervVegosszeg(aktivDraft.plan.fazisok, aktivDraft.plan.kedvezmenyOsszeg),
+                  penznem: aktivDraft.plan.penznem,
+                }
+          }
+          onFolytatas={() => navigate(piszkozatCelRoute(aktivDraft.lastRoute, aktivDraft.plan))}
+        />
       )}
 
-      {expanded && (
-        <Box id={`patient-plans-${patient.dirName}`}>
-          {plans.map((plan, planIdx) => {
-            const versions = versionsByPlan[plan.dirName] ?? [];
-            const isEditing = editingLabel?.planDir === plan.dirName;
-            const label = displayedLabel(plan);
-            return (
-              <Box key={plan.dirName} mb="3" data-plan={plan.dirName}>
-                {/* mt="4" a fölötte lévő elem mb-jével kollabálva 16px teret
-                    ad a cím fölé (a szülő Box-ok itt paddig/margó nélküliek,
-                    a margó "átüt" rajtuk); mb="2" 8px-re nyitja a cím és az
-                    első verzió-sor közti rést -- így a cím egyértelműen a
-                    verziók fejléceként olvasódik, nem újabb sorként. */}
-                <Flex align="center" gap="1" mt="4" mb="2">
-                  {isEditing ? (
-                    <>
-                      <TextField.Root
-                        size="1"
-                        autoFocus
-                        value={labelDraft}
-                        onChange={(e) => setLabelDraft(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            void saveLabel(plan.dirName, labelDraft);
-                          } else if (e.key === 'Escape') {
-                            cancelEditLabel();
-                          }
-                        }}
-                        placeholder="Terv címe"
-                        aria-label="Terv címe"
-                        style={{ maxWidth: 260 }}
-                      />
-                      <IconButton
-                        size="1"
-                        variant="soft"
-                        aria-label="Címke mentése"
-                        onClick={() => void saveLabel(plan.dirName, labelDraft)}
-                      >
-                        <CheckIcon />
-                      </IconButton>
-                      <IconButton
-                        size="1"
-                        variant="soft"
-                        color="gray"
-                        aria-label="Címke szerkesztésének elvetése"
-                        onClick={cancelEditLabel}
-                      >
-                        <Cross2Icon />
-                      </IconButton>
-                    </>
-                  ) : (
-                    <>
+      {rendezett.map((plan, planIdx) => {
+        const versions = versionsByPlan[plan.dirName] ?? [];
+        const isEditing = editingLabel?.planDir === plan.dirName;
+        const label = displayedLabel(plan);
+        const legfrissebb = legfrissebbVerzio(versions);
+        const chainTotal = legfrissebb
+          ? totalsByVersion[versionDataKey(plan.dirName, legfrissebb.dirName)]
+          : undefined;
+        const lancNyitva = nyitva(plan.dirName);
+        const lancDraftJelzett =
+          aktivDraft != null && aktivDraft.plan.tervId !== '' && aktivDraft.plan.tervId === plan.tervId;
+        const controlsId = `lanc-${patient.dirName}-${plan.dirName}`;
+        return (
+          <Box key={plan.dirName} mb="3" data-plan={plan.dirName}>
+            {/* mt="4" a fölötte lévő elem mb-jével kollabálva 16px teret
+                ad a cím fölé (a szülő Box-ok itt paddig/margó nélküliek,
+                a margó "átüt" rajtuk); mb="2" 8px-re nyitja a cím és az
+                első verzió-sor közti rést -- így a cím egyértelműen a
+                verziók fejléceként olvasódik, nem újabb sorként. A lánc-
+                toggle és a végösszeg (46. tétel, 2. döntés) a Flex KÉT
+                VÉGÉN áll -- a végösszeg CSAK csukott állapotban látszik,
+                nyitva redundáns lenne a legfrissebb verziósor azonos
+                értékével. */}
+            <Flex align="center" gap="2" mt="4" mb="2" justify="between">
+              <Flex align="center" gap="1" wrap="wrap">
+                {isEditing ? (
+                  <>
+                    <TextField.Root
+                      size="1"
+                      autoFocus
+                      value={labelDraft}
+                      onChange={(e) => setLabelDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          void saveLabel(plan.dirName, labelDraft);
+                        } else if (e.key === 'Escape') {
+                          cancelEditLabel();
+                        }
+                      }}
+                      placeholder="Terv címe"
+                      aria-label="Terv címe"
+                      style={{ maxWidth: 260 }}
+                    />
+                    <IconButton
+                      size="1"
+                      variant="soft"
+                      aria-label="Címke mentése"
+                      onClick={() => void saveLabel(plan.dirName, labelDraft)}
+                    >
+                      <CheckIcon />
+                    </IconButton>
+                    <IconButton
+                      size="1"
+                      variant="soft"
+                      color="gray"
+                      aria-label="Címke szerkesztésének elvetése"
+                      onClick={cancelEditLabel}
+                    >
+                      <Cross2Icon />
+                    </IconButton>
+                  </>
+                ) : (
+                  <>
+                    {/* Lánc-fejléc toggle (46. tétel, 1./8. döntés): sima
+                        `Button` `aria-expanded`/`aria-controls` párral, a
+                        MEGLÉVŐ (mai, most törölt page-szintű) toggle
+                        mintáján -- NEM fa-widget. A draft-jelző Badge a
+                        gombon BELÜL, saját onClick nélkül (5. döntés: nem
+                        kattintható külön, a kattintás célja a toggle marad;
+                        a badge szövege ezért szándékosan a gomb accessible
+                        name-ébe folyik). */}
+                    <Button
+                      type="button"
+                      size="1"
+                      variant="ghost"
+                      aria-expanded={lancNyitva}
+                      aria-controls={controlsId}
+                      onClick={() => toggleLanc(plan.dirName)}
+                    >
+                      {lancNyitva ? <ChevronDownIcon /> : <ChevronRightIcon />}
                       <Text size="2" weight="medium">
-                        {label} · {versions[0]?.isoDate ?? '—'}
+                        {label} · v{legfrissebb?.verzio ?? '—'} · {legfrissebb?.isoDate ?? '—'}
                       </Text>
-                      <IconButton
-                        size="1"
-                        variant="ghost"
-                        color="gray"
-                        aria-label="Terv címének szerkesztése"
-                        onClick={() => startEditLabel(plan.dirName, label)}
-                      >
-                        <Pencil1Icon />
-                      </IconButton>
-                    </>
-                  )}
-                </Flex>
-                {isEditing && (
-                  <Text as="p" size="1" color="gray" mt="0" mb="2">
-                    Üresen mentve visszaáll az automatikus javaslatra.
-                  </Text>
+                      {lancDraftJelzett && (
+                        <Badge color="amber" variant="soft" size="1" ml="1">
+                          Piszkozat
+                        </Badge>
+                      )}
+                    </Button>
+                    <IconButton
+                      size="1"
+                      variant="ghost"
+                      color="gray"
+                      aria-label="Terv címének szerkesztése"
+                      onClick={() => startEditLabel(plan.dirName, label)}
+                    >
+                      <Pencil1Icon />
+                    </IconButton>
+                  </>
                 )}
-                {labelError?.planDir === plan.dirName && (
-                  <Callout.Root color="red" size="1" mb="2">
-                    <Callout.Icon>
-                      <CrossCircledIcon />
-                    </Callout.Icon>
-                    <Callout.Text>{labelError.message}</Callout.Text>
-                  </Callout.Root>
-                )}
+              </Flex>
+              {!isEditing && !lancNyitva && (
+                <Text
+                  size="2"
+                  weight="medium"
+                  style={{ fontVariantNumeric: 'tabular-nums', textAlign: 'right', minWidth: '7rem' }}
+                >
+                  {formatMoney(chainTotal?.fizetendo ?? null, chainTotal?.penznem ?? 'HUF')}
+                </Text>
+              )}
+            </Flex>
+            {isEditing && (
+              <Text as="p" size="1" color="gray" mt="0" mb="2">
+                Üresen mentve visszaáll az automatikus javaslatra.
+              </Text>
+            )}
+            {labelError?.planDir === plan.dirName && (
+              <Callout.Root color="red" size="1" mb="2">
+                <Callout.Icon>
+                  <CrossCircledIcon />
+                </Callout.Icon>
+                <Callout.Text>{labelError.message}</Callout.Text>
+              </Callout.Root>
+            )}
 
+            {/* Feltételes render, NEM CSS-rejtés (docs/07-felulet-rendszer.md
+                "Billentyűzet") -- csukott lánc `⋯` gombjai kiesnek a
+                Tab-sorrendből, nem csak vizuálisan tűnnek el. Ismert,
+                docs-szentesített kompromisszum: csukott állapotban az
+                `aria-controls` fenti nem létező id-re mutat -- ugyanez volt
+                igaz a korábbi page-szintű togglenál is. */}
+            {lancNyitva && (
+              <Box id={controlsId}>
                 {versions
                   .slice()
                   .reverse()
                   .map((v, vi) => {
                     const ref: VersionRef = { planDir: plan.dirName, versionDir: v.dirName };
                     const total = totalsByVersion[versionDataKey(plan.dirName, v.dirName)];
+                    // "Legutóbbi" badge (46. tétel, 4. döntés): csak 2+
+                    // verziós láncon -- egyverziós láncon funkciótlan dísz
+                    // lenne (docs/07 tiltja).
+                    const legutobbi = versions.length > 1 && v.dirName === legfrissebb?.dirName;
                     return (
                       <Box key={v.dirName}>
                         {vi > 0 && <Separator size="4" />}
                         <Flex justify="between" align="center" py="2">
-                          <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                            v{v.verzio} · {v.isoDate}
-                          </Text>
+                          <Flex align="center" gap="2">
+                            <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                              v{v.verzio} · {v.isoDate}
+                            </Text>
+                            {legutobbi && (
+                              <Badge color="gray" variant="soft" size="1">
+                                Legutóbbi
+                              </Badge>
+                            )}
+                          </Flex>
                           <Flex align="center" gap="4">
                             {/* A verzió végösszege (osszesitok.fizetendo) a saját
                                 terv.json-jából, a saját pénznemében -- külön, jobbra
@@ -616,12 +715,12 @@ export default function PatientPlanChains({
                       </Box>
                     );
                   })}
-                {planIdx < plans.length - 1 && <Separator size="4" mt="2" mb="1" />}
               </Box>
-            );
-          })}
-        </Box>
-      )}
+            )}
+            {planIdx < rendezett.length - 1 && <Separator size="4" mt="2" mb="1" />}
+          </Box>
+        );
+      })}
 
       <AlertDialog.Root open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
         <AlertDialog.Content maxWidth="440px">
@@ -655,5 +754,77 @@ export default function PatientPlanChains({
         </AlertDialog.Content>
       </AlertDialog.Root>
     </Box>
+  );
+}
+
+/**
+ * Az aktív, mentetlen piszkozat blokkja a láncok FÖLÖTT (46. tétel, 6.
+ * döntés) -- tétel-/fázisszám és előlegösszeg nélkül (D247/D248), üres
+ * (sor nélküli) piszkozatnál `osszeg: null` (D246). A `Card` egésze
+ * kattintható (a `PatientTableRow.tsx` `closest('a')`-mintájának
+ * `closest('button')`-párja, hogy a "Folytatás" gomb kattintása ne
+ * duplikálja a navigációt), PLUSZ egy külön "Folytatás" gomb (D244) -- ez
+ * utóbbi az elsődleges billentyűzetes út. NEM megy át a `runOrConfirm`
+ * piszkozat-felülírás-őrön: a SAJÁT draft folytatása nem "felülírás".
+ */
+function AktivDraftBlokk({
+  kontextus,
+  paciensNev,
+  lepesFelirat,
+  mentve,
+  osszeg,
+  onFolytatas,
+}: {
+  kontextus: string;
+  paciensNev: string;
+  lepesFelirat: string | null;
+  mentve: string | null;
+  osszeg: { ertek: number; penznem: Plan['penznem'] } | null;
+  onFolytatas: () => void;
+}) {
+  return (
+    <Card
+      size="2"
+      mb="3"
+      style={{ cursor: 'pointer' }}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('button')) return;
+        onFolytatas();
+      }}
+    >
+      <Text as="p" size="2" weight="bold" mb="1" style={{ color: t.brand }}>
+        {kontextus}
+      </Text>
+      {paciensNev && (
+        <Text as="p" size="2" mt="0" mb="1">
+          {paciensNev}
+        </Text>
+      )}
+      {lepesFelirat && (
+        <Text as="p" size="1" color="gray" mt="0" mb="0">
+          {lepesFelirat}
+        </Text>
+      )}
+      {mentve && (
+        <Text as="p" size="1" color="gray" mt="0" mb="1">
+          Utolsó módosítás: {formatPiszkozatIdo(mentve)}
+        </Text>
+      )}
+      {osszeg && (
+        <Text
+          as="p"
+          size="2"
+          weight="medium"
+          mt="1"
+          mb="2"
+          style={{ fontVariantNumeric: 'tabular-nums' }}
+        >
+          {formatMoney(osszeg.ertek, osszeg.penznem)}
+        </Text>
+      )}
+      <Button size="1" mt="1" onClick={onFolytatas}>
+        Folytatás
+      </Button>
+    </Card>
   );
 }
