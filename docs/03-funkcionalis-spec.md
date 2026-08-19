@@ -620,7 +620,7 @@ a páciensmappa nevéé (`docs/02-domain-modell.md` „Mappanév szabályok"),
 hogy a fájl és a mappa neve vizuálisan párosítható legyen. A
 `PISZKOZAT-` előtag a nyers `plan.statusz !== 'VEGLEGES'`-ből jön —
 ugyanaz a jelzés, mint a szerkesztő fejlécének „véglegesítve"/„piszkozat"
-jelvényéé. Egy már véglegesített terv „Új verzió" menüponttal való
+jelvényéé. Egy már véglegesített terv „Új verzió" gombbal való
 újranyitásakor a `statusz` a betöltés pillanatában PISZKOZAT-ra áll
 (D53, lásd „Korábbi terv új verzióra nyitása" lentebb) — a letöltés így
 azonnal `PISZKOZAT-` előtagot kap, amíg a doki újra nem véglegesíti.
@@ -736,7 +736,7 @@ melyik páciens-mappába, D29)** kerül:
 
 | Gomb | Hol | Mit visz át | Mentéskor |
 |---|---|---|---|
-| **„Új verzió"** | verziósor `⋯` menüjében, KIZÁRÓLAG a lánc legfrissebb során (D53) | mindent, a `tervId`-t is | ugyanabba a terv-mappába `<ma>_v<n+1>` (D4) |
+| **„Új verzió"** | verziósor legfrissebb során, látható elsődleges gombként (D53/D58) | mindent, a `tervId`-t is | ugyanabba a terv-mappába `<ma>_v<n+1>` (D4) |
 | **„Másolás új tervbe"** | verziósor `⋯` menüjében | mindent az azonosító/állapot/dátum kivételével, PLUSZ a `paciens` blokk az ÉLŐ törzsadatból, ha van (D57) | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
 | **„Új terv"** | a páciensnév mellett, balra | csak a `paciens` blokkot | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
 | **„+ Új kezelési terv"** | Kezdőlap, az `/uj-terv` köztes választón át (lásd „Új terv indítása — a köztes páciens-választó" lentebb) | „Meglévő páciens keresése": a kiválasztott páciens `paciens` blokkja; „+ Új páciens": a quick-create dialógusban megadott név + opcionális születési dátum/telefon (D41) | **új** terv-mappa — a kiválasztott MEGLÉVŐ vagy a quick-create dialógussal frissen létrehozott páciens-mappában, `<ma>_v1` (D26/D29) |
@@ -762,17 +762,37 @@ felirat itt szándékosan szó szerint azonos a `PaciensekPage.tsx` „+ Új
 páciens" gombjával (lásd lentebb), hogy a két képernyő azonos akciója
 felismerhető maradjon.
 
-**A verziósoron nincs látható akciógomb** — a verzió-szintű műveletek a
-sor végi `⋯` menüben vannak, ebben a sorrendben: `Megnézés`, `Letöltés`,
-elválasztó, `Új verzió`, `Másolás új tervbe`. Elöl a két csak-olvasó
+**A verziósoron a lánc legfrissebb verziója két látható gombot kap, egy
+historical (nem legfrissebb) soron nincs látható gomb, csak `⋯` (D58).**
+A legfrissebb soron elsődleges `Új verzió` + másodlagos `Megnézés` (soft,
+gray) áll a `⋯` mellett — pontosan a `docs/07-felulet-rendszer.md`
+„legfeljebb két látható gomb egy adatsoron" határán belül, mert láncon
+belül LEGFELJEBB EGY sor kap „Új verzió"-t (D53). Ott a `⋯` menü
+Letöltésre és Másolás új tervbére szűkül. Egy historical soron a `⋯`
+tartalmazza mind a négy elemet: `Megnézés`, `Letöltés`, elválasztó,
+`Másolás új tervbe`, `Ugrás a legfrissebb verzióra`. Elöl a csak-olvasó
 művelet áll (a könnyebb, fájlt sem hagyó `Megnézés` a `Letöltés` előtt),
-utána a terv-létrehozók gyakoriság szerint. Egymás mellett több hosszú
-feliratú gomb zsúfolt és összetéveszthető volt; a menüben egymás ALATT
-állnak, ezért rövid feliratot is elbírnak. Az `Új verzió` menüpont
-KIZÁRÓLAG a lánc legfrissebb verziósorán jelenik meg (D53) — egy
-historical (nem legfrissebb) soron a menü a másik három elemre szűkül,
-mert a régi verzióból induló módosítás helyes útja a `Másolás új tervbe`
-(explicit új lánc, nem a meglévő lánc jelöletlen elágaztatása).
+utána a terv-létrehozó `Másolás új tervbe`, végül a navigációs `Ugrás a
+legfrissebb verzióra` — ez utóbbi NEM tervlétrehozó akció (nem hoz létre
+sem új láncot, sem új verziót), ezért a feliratrendszer „verzió szó
+kizárólag a meglévő láncot folytató akción" szabálya rá nem vonatkozik,
+a „verzió" szó itt a navigáció CÉLJÁT nevezi meg, nem egy létrehozott
+dokumentumot. Az `Új verzió` gomb KIZÁRÓLAG a lánc legfrissebb
+verziósorán jelenik meg, se gombként, se menüpontként nem érhető el
+máshol (D53) — a régi verzióból induló módosítás helyes útja a `Másolás
+új tervbe` (explicit új lánc, nem a meglévő lánc jelöletlen
+elágaztatása).
+
+Egy historical verzió másolásakor, ha a láncnak van a másolt verziónál
+frissebbje, egy figyelmeztető dialógus jelzi ezt a másolás megerősítése
+előtt — a MEGLÉVŐ piszkozat-felülírás-őr (`runOrConfirm`/`AlertDialog`)
+bővítése, FÜGGETLENÜL attól, van-e mentetlen piszkozat (D58, D260). A
+pontos (exact) másolás a figyelmeztetés elfogadása után is lefut; a
+dialógus piros gombja csak akkor jelenik meg, ha VALÓBAN piszkozat vész
+el, mert a historical-másolás önmagában nem adatvesztés-kockázat.
+Az „Ugrás a legfrissebb verzióra" azonos oldalon belüli scroll+fókusz a
+lánc dobozára, majd a lánc-fejléc toggle gombjára — nincs hozzá önálló
+route (D24), a lánc a menü megnyitásához már úgyis nyitva van.
 
 A `Megnézés` a verzió mentett PDF-jét nyitja meg új böngészőlapon (a
 böngésző natív PDF-nézőjében, nincs beépített olvasó nézet) — ugyanazt a
@@ -790,19 +810,22 @@ több terv-lánc is lehet (D29), és mindegyik saját `v1`-gyel indul — a
 puszta verziószám önmagában nem lenne egyedi, sem a szemnek, sem a
 képernyőolvasónak.
 
-A páciensszintű `Új terv` az egyetlen látható gomb, **balra, közvetlenül
-a páciensnév mellett** — de a névfejlécen KÍVÜL, mert a páciensnév címke,
-a gomb akció. A rövid felirat nem mondja ki, hogy a páciensadatot átviszi;
-ezt az elhelyezés hordozza. A gomb `soft` accent (nem szürke), a
-páciensnév `t.brand` színével egy családban; a `#f77409`-hez nem nyúlunk
-(docs/07: soha nem szövegszín). Ez a leírás a DEMO „Összes terv" fülének
-`standalone` fejlécére vonatkozik (D44) — a részletoldalba (§ 10)
-beágyazva ugyanez a gomb teljes értékű CTA, névfejléc nélkül.
+A páciensszintű `Új terv` az egyetlen látható gomb a PÁCIENS fejlécén,
+**balra, közvetlenül a páciensnév mellett** — de a névfejlécen KÍVÜL,
+mert a páciensnév címke, a gomb akció (a lánc verziósorainak D58 szerinti
+látható gombjai más hatókörben, a saját soruk mellett élnek, ez a
+szabály nem érinti őket). A rövid felirat nem mondja ki, hogy a
+páciensadatot átviszi; ezt az elhelyezés hordozza. A gomb `soft` accent
+(nem szürke), a páciensnév `t.brand` színével egy családban; a
+`#f77409`-hez nem nyúlunk (docs/07: soha nem szövegszín). Ez a leírás a
+DEMO „Összes terv" fülének `standalone` fejlécére vonatkozik (D44) — a
+részletoldalba (§ 10) beágyazva ugyanez a gomb teljes értékű CTA,
+névfejléc nélkül.
 
 ### Korábbi terv új verzióra nyitása
 
-Egy korábbi (jellemzően `VEGLEGES`) terv „Új verzió" menüponttal — KIZÁRÓLAG
-a lánc legfrissebb verziósoráról indítható (D53) — való megnyitásakor a
+Egy korábbi (jellemzően `VEGLEGES`) terv „Új verzió" gombbal — KIZÁRÓLAG
+a lánc legfrissebb verziósorán érhető el (D53/D58) — való megnyitásakor a
 `keltezes` a mai napra, az `ervenyesIg` ebből és az **aktuális**
 `beallitasok.ervenyessegNap`-ból újraszámolva íródik — nem a régi terv
 megőrzött érvényességi ablak-hossza (D22). A bélyegzés **a betöltés
@@ -874,7 +897,9 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   marad. Emiatt a `/paciens` lépésre érkező másolat a D48
   törzsadat-kártyán már egyező adatot lát, nem indul felesleges
   ütközés-prompt. Olvashatatlan törzsadatnál a másolás hibaüzenettel áll
-  meg (D33).
+  meg (D33). Egy historical (nem a lánc legfrissebb) verzió másolásakor
+  a doki külön figyelmeztetést kap, ha időközben újabb verzió is
+  született (D58, lásd fent § 5 „A verziósoron…").
 
 Mindhárom út a meglévő `frissDatummal` (D22) hívásával bélyegzi a
 `keltezes`/`ervenyesIg`-et a mai napra, és a másolat `osszesitok`-ja a

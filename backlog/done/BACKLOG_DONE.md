@@ -1471,3 +1471,30 @@ karbantartási kör négy önálló javítása.
   hibaüzenettel áll meg, nem esik vissza némán a régi adatra
   (docs/01-attekintes-es-dontesek.md D57, docs/03-funkcionalis-spec.md
   § "Terv másolása új tervként").
+
+### 50. tétel: Verzió-szintű akciók és historical figyelmeztetések — KÉSZ (2026-08-20)
+
+- **Méret:** ~0.5 nap.
+- **Kereteket sért?** Nem — új D58 (`docs/01-attekintes-es-dontesek.md`),
+  D53 parentézise pontosítva.
+- **Valódi haszon:** a verziósor eddig minden verzión azonos, csupasz
+  `⋯` menüt mutatott, nincs vizuális jelzés a legfrissebb/historical
+  verzió között, és nem figyelmeztetett, ha a doki egy régi verziót
+  másolt, miközben időközben újabb is született — könnyen elavult
+  ajánlat-változaton lehetett észrevétlenül dolgozni.
+- **Megvalósítás:** a lánc legfrissebb verziósora két látható gombot
+  kapott (elsődleges "Új verzió", másodlagos "Megnézés"), a `⋯` ott
+  Letöltésre és Másolás új tervbére szűkült; egy historical soron nincs
+  látható gomb, csak a `⋯`, plusz egy új "Ugrás a legfrissebb verzióra"
+  menüpont (azonos oldalon belüli scroll+fókusz, a meglévő `data-plan`
+  horgonyra, `requestAnimationFrame`-es fókuszkezeléssel a Radix
+  FocusScope miatt). Egy historical verzió másolásakor, ha a láncnak
+  van nála frissebb verziója, a meglévő piszkozat-felülírás-őr
+  (`runOrConfirm`/`AlertDialog`) bővült egy külön figyelmeztetéssel,
+  FÜGGETLENÜL attól, van-e mentetlen piszkozat -- a pontos másolás a
+  megerősítés után is lefut. A `csokkentettMozgas()`
+  (prefers-reduced-motion lekérdezés) kiemelve egy közös
+  `app/src/design/motion.ts` fájlba, mert a második hívóhely
+  (`PatientPlanChains.tsx`) miatt megszűnt egyetlen-hívós lenni
+  (docs/01-attekintes-es-dontesek.md D58, docs/03-funkcionalis-spec.md
+  § 5 "A verziósoron…").

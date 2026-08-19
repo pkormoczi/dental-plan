@@ -27,6 +27,7 @@ import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
 import ToothChartPanel from '../components/ToothChartPanel';
 import ToothPickerPopover from '../components/ToothPickerPopover';
+import { csokkentettMozgas } from '../design/motion';
 import { t } from '../design/tokens';
 import { formatLongDate, formatPiszkozatIdo } from '../domain/date';
 import { leirasTulHosszu } from '../domain/leirasHossz';
@@ -46,15 +47,6 @@ import {
 import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import ItemPicker from './planEditor/ItemPicker';
-
-/** `matchMedia` jsdom alatt nincs implementálva (vitest) -- óvatos lekérdezés. */
-function csokkentettMozgas(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
-}
 
 /**
  * Egy árlista-tétel felvételéhez/kitöltéséhez tartozó soradatok -- közös az

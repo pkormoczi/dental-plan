@@ -320,6 +320,15 @@ tervként, D26, D57) segédfüggvényei, szintén ne írd újra őket:
   (nem a `loadPlanIntoDraft`-én): a másolat azonnal mentetlen munkának
   számít, mert még soha nincs elmentve a saját `tervId` alatt
 
+A verzió-szintű akciók tétel (`docs/03-funkcionalis-spec.md` § 5. „A
+verziósoron…", D58) segédfüggvénye, szintén ne írd újra:
+- `csokkentettMozgas()` (`app/src/design/motion.ts`) — a
+  `docs/07-felulet-rendszer.md` „prefers-reduced-motion tiszteletben
+  tartva" NEM opcionális szabályának lekérdezése (`matchMedia`,
+  jsdom-biztos); a `PlanEditorPage.tsx` fogszám-fókuszálása és a
+  `PatientPlanChains.tsx` „Ugrás a legfrissebb verzióra"
+  scroll+fókusza is ezt hívja
+
 A tétel-leírás tétel (`docs/02-domain-modell.md` § Tétel-leírás, D27)
 segédfüggvényei, szintén ne írd újra őket:
 - `leirasKoveti(sor, tetel, nyelv)` (`app/src/domain/nev.ts`) — a

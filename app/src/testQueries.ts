@@ -12,12 +12,16 @@ export function patientCard(nev: string): HTMLElement {
 }
 
 /**
- * A verziósoron MINDEN művelet egy "⋯" DropdownMenu mögött van, és a menü
- * csak nyitáskor rendeli a menüpontokat a DOM-ba -- minden ilyen teszt ezen
- * megy keresztül.
+ * A verziósoron a `⋯` DropdownMenu mögötti műveletek -- a menü csak
+ * nyitáskor rendeli a menüpontokat a DOM-ba. `card` a páciensblokk
+ * (`patientCard`), `vi = 0` a legfrissebb verzió sora (a lista fordítva
+ * rendez).
  *
- * `card` a páciensblokk (`patientCard`), `vi = 0` a legfrissebb verzió sora
- * (a lista fordítva rendez).
+ * 50. tétel (D58) óta ez NEM minden verzió-szintű művelet útja: a legfrissebb
+ * soron az "Új verzió"/"Megnézés" látható gomb, nem menüpont -- azokhoz
+ * `within(card).getByRole('button', { name: '…' })` kell, ez a helper csak
+ * a `⋯`-ben maradt elemekhez (Letöltés, Másolás új tervbe, historical soron
+ * a Megnézés, Ugrás a legfrissebb verzióra).
  */
 export async function verzioMenupont(
   user: ReturnType<typeof userEvent.setup>,

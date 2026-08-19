@@ -13,19 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 50. tétel — Verzió-szintű akciók és historical figyelmeztetések
-  (a `backlog/redesign/` redesign-döntéssorozat DP-024 tétele) — ma
-  minden verziósoron azonos, csupasz `⋯` menü van, nincs vizuális
-  megkülönböztetés a legfrissebb és a historical verziók között, és
-  nincs figyelmeztetés egy régi verzió másolásakor, ha időközben újabb
-  született. Ez a tétel a legfrissebb soron látható elsődleges/
-  másodlagos gombot, a historical soron "Ugrás a legfrissebb verzióra"
-  linket és a historical-másolás figyelmeztetést vezeti be — a `docs/03`
-  "nincs látható akciógomb" mai szövegének felülvizsgálatával. Függ a
-  48. tétel legfrissebb-only szabályától. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-50-verzio-akciok-terv.md`
-
 ### 51. tétel — Terv adatai oldal layout + cím + dátumok
   (a `backlog/redesign/` redesign-döntéssorozat DP-030 tétele) — a mai
   "Páciens adatlap" (a workflow-stepper már "Terv adatai"-nak hívja)

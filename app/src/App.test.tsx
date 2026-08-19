@@ -16,7 +16,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { seedPriceList } from './storage/seed/priceList';
 import { seedSettings } from './storage/seed/settings';
-import { verzioMenupont } from './testQueries';
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@react-pdf/renderer')>();
@@ -89,8 +88,9 @@ describe('Végpontok közötti folyamat', () => {
     expect(screen.getByText(/^v1 ·/)).toBeInTheDocument();
 
     // Új verzió -> a korábban felvitt tétel már ott van -- ezért nem kell
-    // újragépelni (ez a "Korábbi tervek" fő létjogosultsága).
-    await user.click(await verzioMenupont(user, document.body, 'Új verzió'));
+    // újragépelni (ez a "Korábbi tervek" fő létjogosultsága). 50. tétel
+    // (D58) óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
+    await user.click(screen.getByRole('button', { name: 'Új verzió' }));
     await screen.findByPlaceholderText(/Tétel keresése/);
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
 
@@ -259,8 +259,9 @@ describe('Végpontok közötti folyamat', () => {
     await user.click(doboz.querySelector('[aria-expanded="false"]') as HTMLElement);
     // A legfrissebb verzió (v2, 2026-07-22) a lánc verziósorai közül az
     // ELSŐ (fordítva rendezve, legfrissebb elöl) -- lásd PatientPlanChains.tsx
-    // `.slice().reverse()`.
-    await user.click(await verzioMenupont(user, doboz, 'Új verzió'));
+    // `.slice().reverse()`. 50. tétel (D58) óta a legfrissebb soron látható
+    // gomb, nem "⋯" menüpont.
+    await user.click(within(doboz).getByRole('button', { name: 'Új verzió' }));
 
     // A visszatérő páciensnek két fázisa is van (1. kezelés + 2. kezelés —
     // korona), tehát két ItemPicker-keresőmező is renderel -- itt csak azt

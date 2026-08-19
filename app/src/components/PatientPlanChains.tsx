@@ -41,6 +41,7 @@ import {
   DotsHorizontalIcon,
   Pencil1Icon,
 } from '@radix-ui/react-icons';
+import { csokkentettMozgas } from '../design/motion';
 import { t } from '../design/tokens';
 import { formatPiszkozatIdo, todayIso } from '../domain/date';
 import { formatMoney } from '../domain/money';
@@ -64,7 +65,13 @@ interface VersionRef {
 }
 
 type PendingKind = 'open' | 'copy' | 'ujTerv';
-type PendingAction = Partial<VersionRef> & { kind: PendingKind };
+/**
+ * `historical` (50. tétel, D58) -- kizárólag `kind: 'copy'`-nál értelmes:
+ * igaz, ha a másolt verzió NEM a lánc legfrissebbje. Ez nyitja meg a
+ * dialógust akkor is, ha nincs mentetlen piszkozat (lásd `runOrConfirm`), és
+ * ez dönti el a dialógus tartalmát (lásd `pendingContent`).
+ */
+type PendingAction = Partial<VersionRef> & { kind: PendingKind; historical?: boolean };
 
 export interface PatientPlanChainsProps {
   patient: PatientFolder;
@@ -242,7 +249,11 @@ export default function PatientPlanChains({
   }
 
   function runOrConfirm(action: PendingAction) {
-    if (vanMentetlenPiszkozat) {
+    // D58: egy historical verzió másolása ATKKOR IS megerősítést kér, ha
+    // nincs mentetlen piszkozat -- a piszkozat-felülírás és a "régi
+    // verziót másolsz" két FÜGGETLEN ok a dialógusra, lásd pendingContent().
+    const historicalCopy = action.kind === 'copy' && action.historical === true;
+    if (vanMentetlenPiszkozat || historicalCopy) {
       setPending(action);
       return;
     }
@@ -283,6 +294,38 @@ export default function PatientPlanChains({
       actionLabel: 'Új terv, piszkozat elvetésével',
     },
   };
+
+  // D58 (50. tétel, D260): a lánchoz azóta újabb verzió készült -- a pontos
+  // (exact) másolás továbbra is engedett, csak tudatosítva.
+  const HISTORICAL_MASOLAS_FIGYELMEZTETES =
+    'Ez egy korábbi, nem a legfrissebb verzió -- a lánchoz azóta újabb verzió készült. A pontos ' +
+    'másolás (ezzel a régebbi tartalommal) folytatható, ha ez volt a szándékod.';
+
+  /**
+   * A dialógus címe/szövege/gombfelirata a `pending` okától függ (D58): a
+   * piszkozat-felülírás és a historical-másolás egymástól FÜGGETLEN okok,
+   * együtt és külön-külön is előfordulhatnak. A cím a súlyosabb
+   * (visszafordíthatatlanabb) következményt nevezi meg -- piszkozat-vesztés
+   * esetén ez marad "Piszkozat felülírása" akkor is, ha historical másolás
+   * is történik; tisztán historical másolásnál (nincs piszkozat) NEM
+   * piszkozatról van szó, a cím ezt tükrözi.
+   */
+  function pendingContent(action: PendingAction): { title: string; description: string; actionLabel: string } {
+    const historical = action.kind === 'copy' && action.historical === true;
+    const spec = pendingSpecs[action.kind];
+    if (!vanMentetlenPiszkozat && historical) {
+      return {
+        title: 'Korábbi verzió másolása',
+        description: HISTORICAL_MASOLAS_FIGYELMEZTETES,
+        actionLabel: 'Másolás a korábbi verzióval',
+      };
+    }
+    return {
+      title: 'Piszkozat felülírása',
+      description: historical ? `${HISTORICAL_MASOLAS_FIGYELMEZTETES} ${spec.description}` : spec.description,
+      actionLabel: spec.actionLabel,
+    };
+  }
 
   async function viewVersion(ref: VersionRef) {
     setActionError(null);
@@ -358,6 +401,29 @@ export default function PatientPlanChains({
             : 'A letöltés váratlanul meghiúsult.',
       });
     }
+  }
+
+  /**
+   * "Ugrás a legfrissebb verzióra" (50. tétel, D58, D24) -- azonos oldalon
+   * belüli scroll+fókusz a lánc legfrissebb verziósorára, a MEGLÉVŐ
+   * `data-plan={plan.dirName}` horgony felhasználásával (a lánc ilyenkor
+   * MÁR nyitva van, a horgony a DOM-ban). A `DropdownMenu.Content`-en lent
+   * MÁR le van tiltva az `onCloseAutoFocus`, tehát a Radix nem veszi
+   * vissza a fókuszt a (scroll után képernyőn kívülre kerülő) `⋯`
+   * triggerre -- a lánc-fejléc toggle gombjára fókuszálunk helyette, mert
+   * az minden láncon létezik, stabil id-vel.
+   */
+  function ugrasLegfrissebbre(planDir: string) {
+    const box = document.querySelector<HTMLElement>(`[data-plan="${planDir}"]`);
+    box?.scrollIntoView({ block: 'start', behavior: csokkentettMozgas() ? 'auto' : 'smooth' });
+    // requestAnimationFrame: a DropdownMenu.Item onSelect még a menü
+    // FocusScope-ja alatt fut -- egy szinkron .focus() ide kívülre a trap
+    // visszalöki, a menü bezárása UTÁN a fókusz body-ra esne (ugyanaz az
+    // idióma, mint az ItemPicker.tsx/UjPaciensDialog.tsx/NewPlanPage.tsx
+    // fókusz-visszaadásánál).
+    requestAnimationFrame(() => {
+      document.getElementById(`lanc-toggle-${planDir}`)?.focus();
+    });
   }
 
   function startEditLabel(planDir: string, current: string) {
@@ -567,6 +633,7 @@ export default function PatientPlanChains({
                         name-ébe folyik). */}
                     <Button
                       type="button"
+                      id={`lanc-toggle-${plan.dirName}`}
                       size="1"
                       variant="ghost"
                       aria-expanded={lancNyitva}
@@ -675,6 +742,27 @@ export default function PatientPlanChains({
                             >
                               {formatMoney(total?.fizetendo ?? null, total?.penznem ?? 'HUF')}
                             </Text>
+                            {/* D58 (50. tétel): a legfrissebb soron két látható gomb --
+                                elsődleges "Új verzió", másodlagos "Megnézés" (docs/07
+                                "legfeljebb két látható gomb egy adatsoron"). Egy
+                                historical soron NINCS látható gomb, csak a `⋯` --
+                                onnan induló módosítás helyes útja a "Másolás új
+                                tervbe" (D53). */}
+                            {isLegfrissebb && (
+                              <Flex align="center" gap="2">
+                                <Button size="1" onClick={() => runOrConfirm({ kind: 'open', ...ref })}>
+                                  Új verzió
+                                </Button>
+                                <Button
+                                  size="1"
+                                  variant="soft"
+                                  color="gray"
+                                  onClick={() => void viewVersion(ref)}
+                                >
+                                  Megnézés
+                                </Button>
+                              </Flex>
+                            )}
                             <DropdownMenu.Root>
                               <DropdownMenu.Trigger>
                                 {/* Az aria-label a terv-címkével ÉS a verziószámmal
@@ -694,28 +782,35 @@ export default function PatientPlanChains({
                               {/* onCloseAutoFocus: a menü záráskor visszavenné a
                                   fókuszt a triggerre, és ezzel elhalászná azt a
                                   piszkozat-őr AlertDialog-ja elől, ami ugyanabban a
-                                  tickben nyílik (runOrConfirm). Ne cseréld
-                                  setTimeout-os késleltetésre. */}
+                                  tickben nyílik (runOrConfirm), VAGY a "Ugrás a
+                                  legfrissebb verzióra" görgetés utáni saját
+                                  fókuszkezelést venné el (ugrasLegfrissebbre). Ne
+                                  cseréld setTimeout-os késleltetésre. */}
                               <DropdownMenu.Content size="1" onCloseAutoFocus={(e) => e.preventDefault()}>
-                                {/* Az elválasztó a csak-olvasó műveleteket választja el a
-                                    terv-létrehozóktól; a kettő közül a Megnézés áll elöl
-                                    (backlog-22), mert nem hagy fájlt a Letöltések mappában,
-                                    utána a gyakoribb terv-létrehozó (Új verzió). */}
-                                <DropdownMenu.Item onSelect={() => void viewVersion(ref)}>
-                                  Megnézés
-                                </DropdownMenu.Item>
+                                {/* Megnézés a legfrissebb soron már látható gombként
+                                    létezik (fent) -- itt csak historical soron
+                                    jelenik meg, hogy ne duplikálódjon. Az "Új verzió"
+                                    SOHA nem menüpont többé, csak látható gomb a
+                                    legfrissebb soron (D53/D58). */}
+                                {!isLegfrissebb && (
+                                  <DropdownMenu.Item onSelect={() => void viewVersion(ref)}>
+                                    Megnézés
+                                  </DropdownMenu.Item>
+                                )}
                                 <DropdownMenu.Item onSelect={() => downloadVersion(ref, plan.tervId)}>
                                   Letöltés
                                 </DropdownMenu.Item>
                                 <DropdownMenu.Separator />
-                                {isLegfrissebb && (
-                                  <DropdownMenu.Item onSelect={() => runOrConfirm({ kind: 'open', ...ref })}>
-                                    Új verzió
-                                  </DropdownMenu.Item>
-                                )}
-                                <DropdownMenu.Item onSelect={() => runOrConfirm({ kind: 'copy', ...ref })}>
+                                <DropdownMenu.Item
+                                  onSelect={() => runOrConfirm({ kind: 'copy', ...ref, historical: !isLegfrissebb })}
+                                >
                                   Másolás új tervbe
                                 </DropdownMenu.Item>
+                                {!isLegfrissebb && (
+                                  <DropdownMenu.Item onSelect={() => ugrasLegfrissebbre(plan.dirName)}>
+                                    Ugrás a legfrissebb verzióra
+                                  </DropdownMenu.Item>
+                                )}
                               </DropdownMenu.Content>
                             </DropdownMenu.Root>
                           </Flex>
@@ -740,9 +835,9 @@ export default function PatientPlanChains({
 
       <AlertDialog.Root open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
         <AlertDialog.Content maxWidth="440px">
-          <AlertDialog.Title>Piszkozat felülírása</AlertDialog.Title>
+          <AlertDialog.Title>{pending ? pendingContent(pending).title : 'Piszkozat felülírása'}</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            {pending && pendingSpecs[pending.kind].description}
+            {pending && pendingContent(pending).description}
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
@@ -752,7 +847,10 @@ export default function PatientPlanChains({
             </AlertDialog.Cancel>
             <AlertDialog.Action>
               <Button
-                color="red"
+                // D58: piros csak piszkozat-vesztés kockázatánál -- egy tisztán
+                // historical-másolási figyelmeztetésnél (nincs mentetlen
+                // piszkozat) nincs adatvesztés-kockázat, a piros túlsúlyozná.
+                color={vanMentetlenPiszkozat ? 'red' : undefined}
                 onClick={() => {
                   if (pending) void dispatchPending(pending);
                   setPending(null);
@@ -763,7 +861,7 @@ export default function PatientPlanChains({
                     trigger-gombja is a DOM-ban marad, azonos accessible
                     name-mel megkülönböztethetetlenek lennének (lásd
                     OsszesTervSection.test.tsx). */}
-                {pending && pendingSpecs[pending.kind].actionLabel}
+                {pending && pendingContent(pending).actionLabel}
               </Button>
             </AlertDialog.Action>
           </Flex>

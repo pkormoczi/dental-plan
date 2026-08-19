@@ -8,7 +8,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import PatientPage from './PatientPage';
 import { TestProviders } from '../testUtils';
-import { verzioMenupont } from '../testQueries';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 import { DemoStorage } from '../storage/DemoStorage';
@@ -120,7 +119,8 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     const patientNameEl = await screen.findByText('Kovács János');
     expect(window.location.hash).toBe('#/demo/tervek');
     const card = patientNameEl.closest('[data-patient]') as HTMLElement;
-    await user.click(await verzioMenupont(user, card, 'Új verzió'));
+    // 50. tétel (D58) óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
     // Kovács János demó tervének két fázisa van, mindkettőnek saját
     // keresője -- findAllBy, nem findBy (ami az egyértelműséget várná el).
     // A 22 páciensre bővített demó-készlet (D40) miatt a `/tervek` lista

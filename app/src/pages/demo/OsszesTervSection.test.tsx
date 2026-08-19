@@ -277,8 +277,9 @@ describe('OsszesTervSection', () => {
 
     // Korábban itt `alert()` jelent meg -- most a sérintett verzió-sora
     // mellett, a szövegben (docs/07-felulet-rendszer.md: "Nem toast, ha a
-    // hiba egy mezőhöz tartozik").
-    await user.click(await verzioMenupont(user, card, 'Új verzió'));
+    // hiba egy mezőhöz tartozik"). 50. tétel (D58) óta a legfrissebb soron
+    // látható gomb, nem "⋯" menüpont.
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
 
     expect(await within(card).findByText(/A terv megnyitása nem sikerült/)).toBeInTheDocument();
   });
@@ -294,9 +295,10 @@ describe('OsszesTervSection', () => {
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
     // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva -- nincs mit
-    // kinyitni ehhez a teszthez.
+    // kinyitni ehhez a teszthez. 50. tétel (D58) óta a legfrissebb soron
+    // látható gomb, nem "⋯" menüpont.
 
-    await user.click(await verzioMenupont(user, card, 'Új verzió'));
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
 
     // Mégse -- nem navigál, nem hívja loadPlanIntoDraft-ot.
@@ -305,7 +307,7 @@ describe('OsszesTervSection', () => {
     expect(await screen.findByText('Összes terv')).toBeInTheDocument();
 
     // Megerősítés -- ténylegesen megnyitja (loadPlanIntoDraft -> navigate).
-    await user.click(await verzioMenupont(user, card, 'Új verzió'));
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
     await user.click(
       await screen.findByRole('button', { name: 'Új verzió, piszkozat elvetésével' }),
     );
@@ -335,32 +337,32 @@ describe('OsszesTervSection', () => {
     expect(triggers).toHaveLength(3);
   });
 
-  // A doki explicit kérése volt ez a sorrend (Letöltés | Új verzió, Másolás
-  // új tervbe) -- ne csússzon el némán egy későbbi szerkesztésnél.
-  it('a "⋯" menü elemei rögzített sorrendben állnak', async () => {
+  // A doki explicit kérése volt ez a sorrend (Letöltés, Másolás új tervbe)
+  // -- ne csússzon el némán egy későbbi szerkesztésnél. 50. tétel (D58) óta
+  // a Megnézés/Új verzió a legfrissebb soron látható gomb, nem menüpont --
+  // ez a teszt csak a `⋯`-ben MARADT elemekre vonatkozik.
+  it('a "⋯" menü elemei rögzített sorrendben állnak, a legfrissebb sor két látható gombot kap', async () => {
     const user = userEvent.setup();
     renderHistory();
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
     // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva.
+    expect(within(card).getByRole('button', { name: 'Új verzió' })).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: 'Megnézés' })).toBeInTheDocument();
+
     const trigger = within(card).getAllByRole('button', { name: /további műveletek$/ })[0];
     await user.click(trigger);
 
     const items = await screen.findAllByRole('menuitem');
-    expect(items.map((el) => el.textContent)).toEqual([
-      'Megnézés',
-      'Letöltés',
-      'Új verzió',
-      'Másolás új tervbe',
-    ]);
+    expect(items.map((el) => el.textContent)).toEqual(['Letöltés', 'Másolás új tervbe']);
   });
 
   // D53 (48. tétel): "Új verzió" kizárólag a lánc legfrissebb verziósorán
   // engedett -- egy historical sorról indítva a doki tévesen azt hihetné,
   // hogy a régi verziót folytatja, valójában egy új "fejet" hozna létre a
   // láncon.
-  it('"Új verzió" a lánc historical (nem legfrissebb) verziósorán nem jelenik meg', async () => {
+  it('"Új verzió" a lánc historical (nem legfrissebb) verziósorán nem jelenik meg, se gombként, se menüpontként', async () => {
     const user = userEvent.setup();
     renderHistory();
 
@@ -370,6 +372,12 @@ describe('OsszesTervSection', () => {
     const doboz = lancDoboz(card, v1.planDir);
     await nyissLancot(user, doboz);
 
+    // A láncban EGYETLEN "Új verzió"/"Megnézés" látható gomb van -- a
+    // legfrissebb (v2) soré (D58); a historical (v1) soron nincs látható
+    // gomb egyáltalán.
+    expect(within(doboz).getAllByRole('button', { name: 'Új verzió' })).toHaveLength(1);
+    expect(within(doboz).getAllByRole('button', { name: 'Megnézés' })).toHaveLength(1);
+
     // A verziók fordítva listázódnak (legfrissebb elöl) -- a MÁSODIK "⋯"
     // trigger a historical (v1) sorhoz tartozik.
     const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
@@ -377,7 +385,36 @@ describe('OsszesTervSection', () => {
     await user.click(triggers[1]);
 
     const items = await screen.findAllByRole('menuitem');
-    expect(items.map((el) => el.textContent)).toEqual(['Megnézés', 'Letöltés', 'Másolás új tervbe']);
+    expect(items.map((el) => el.textContent)).toEqual([
+      'Megnézés',
+      'Letöltés',
+      'Másolás új tervbe',
+      'Ugrás a legfrissebb verzióra',
+    ]);
+  });
+
+  // D58/D24: azonos oldalon belüli scroll+fókusz, nem route-navigáció -- a
+  // jsdom stub (test-setup.ts) a scrollIntoView-t no-op-ra cseréli, ezért a
+  // hívást spy-jal igazoljuk, a célt a fókusszal.
+  it('"Ugrás a legfrissebb verzióra" a lánc dobozára görget és a lánc-fejléc toggle gombjára fókuszál', async () => {
+    const [v1] = nagyEvaMultiVersionChain;
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const doboz = lancDoboz(card, v1.planDir);
+    await nyissLancot(user, doboz);
+    const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+    await user.click(triggers[1]);
+    await user.click(await screen.findByRole('menuitem', { name: 'Ugrás a legfrissebb verzióra' }));
+
+    expect(scrollSpy).toHaveBeenCalled();
+    // A fókusz requestAnimationFrame-ben érkezik (lásd ugrasLegfrissebbre) --
+    // a menü FocusScope-ja alatt egy szinkron .focus() a trap miatt nem
+    // állna meg a célon.
+    await waitFor(() => expect(lancToggle(doboz)).toHaveFocus());
   });
 
   it('"Másolás új tervbe" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Páciens adatlapon', async () => {
@@ -404,6 +441,37 @@ describe('OsszesTervSection', () => {
     // A dátumbélyeg frissül (D22-mintájú, planMasolatKent) -- nem a forrás
     // 2026-07-22-es keltezése marad.
     expect(screen.getByTestId('draft-keltezes')).not.toHaveTextContent(v2.plan.keltezes);
+  });
+
+  // D58 (50. tétel, D260): a lánchoz azóta újabb verzió készült -- a doki
+  // figyelmeztetést kap, de a pontos (exact) másolás a megerősítés után is
+  // lefut. NINCS mentetlen piszkozat itt -- ez önmagában, a piszkozat-őrtől
+  // FÜGGETLENÜL nyitja a dialógust.
+  it('"Másolás új tervbe" egy historical soron figyelmeztet, hogy a láncnak van frissebb verziója', async () => {
+    const [v1] = nagyEvaMultiVersionChain;
+    const forrasSorSzam = v1.plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
+
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const doboz = lancDoboz(card, v1.planDir);
+    await nyissLancot(user, doboz);
+    // A verziók fordítva listázódnak (legfrissebb elöl) -- a MÁSODIK "⋯"
+    // trigger a historical (v1) sorhoz tartozik.
+    const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+    await user.click(triggers[1]);
+    await user.click(await screen.findByRole('menuitem', { name: 'Másolás új tervbe' }));
+
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
+    expect(screen.getByText('Korábbi verzió másolása')).toBeInTheDocument();
+    expect(screen.getByText(/azóta újabb verzió készült/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Másolás a korábbi verzióval' }));
+
+    expect(await screen.findByTestId('draft-oldal')).toHaveTextContent('PACIENS-OLDAL');
+    expect(screen.getByTestId('draft-sorcount')).toHaveTextContent(String(forrasSorSzam));
   });
 
   // D57: a "Másolás új tervbe" a paciens blokkot az ÉLŐ törzsadatból veszi,
@@ -494,6 +562,32 @@ describe('OsszesTervSection', () => {
     expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
   });
 
+  // D58: piszkozat-felülírás ÉS historical-másolás egyszerre -- a cím a
+  // súlyosabb (piszkozat-vesztés) következményt nevezi meg, de a leírás
+  // MINDKÉT figyelmeztetést tartalmazza, és a piros gomb marad.
+  it('historical verzió másolása mentetlen piszkozat mellett mindkét figyelmeztetést mutatja', async () => {
+    seedPersistedDraft();
+    const [v1] = nagyEvaMultiVersionChain;
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const doboz = lancDoboz(card, v1.planDir);
+    await nyissLancot(user, doboz);
+    const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+    await user.click(triggers[1]);
+    await user.click(await screen.findByRole('menuitem', { name: 'Másolás új tervbe' }));
+
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
+    expect(screen.getByText('Piszkozat felülírása')).toBeInTheDocument();
+    expect(screen.getByText(/azóta újabb verzió készült/)).toBeInTheDocument();
+    expect(screen.getByText(/Van mentetlen piszkozatod/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Másolás, piszkozat elvetésével' }));
+    expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
+  });
+
   it('a "⋯" menü Letöltés pontja a verzió mentett PDF-jét adja vissza', async () => {
     const user = userEvent.setup();
     renderHistory();
@@ -574,7 +668,8 @@ describe('OsszesTervSection', () => {
 
       await screen.findByText('Letöltés Teszt');
       const card = patientCard('Letöltés Teszt');
-      await user.click(await verzioMenupont(user, card, 'Megnézés'));
+      // 50. tétel (D58) óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
+      await user.click(within(card).getByRole('button', { name: 'Megnézés' }));
 
       expect(openMock).toHaveBeenCalledWith('', '_blank');
       await waitFor(() => expect(mockWin.location.href).toBe('blob:teszt'));
@@ -593,8 +688,9 @@ describe('OsszesTervSection', () => {
       // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva.
 
       // A seed-verziókhoz nincs mentett PDF -- ugyanaz az eset, mint a
-      // "Letöltés" hibaágánál (3. döntés: nincs második hiba-minta).
-      await user.click(await verzioMenupont(user, card, 'Megnézés'));
+      // "Letöltés" hibaágánál (3. döntés: nincs második hiba-minta). 50.
+      // tétel (D58) óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
+      await user.click(within(card).getByRole('button', { name: 'Megnézés' }));
 
       await waitFor(() => expect(mockWin.close).toHaveBeenCalled());
       expect(
