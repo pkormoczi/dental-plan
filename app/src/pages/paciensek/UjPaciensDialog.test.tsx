@@ -175,39 +175,38 @@ describe('UjPaciensDialog', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
-  // CI-n (gyengébb futtatókon, teljes tesztkészlet alatti terheléssel) a
-  // debounce (DUPLIKACIO_DEBOUNCE_MS) utáni click+render lánc mért
-  // időtartama fokozatosan derült ki: az alapértelmezett 1000ms, majd
-  // 3000ms, majd 8000ms is kevésnek bizonyult (utóbbi 8192ms-nél bukott,
-  // alig a határ fölött) -- a globális `testTimeout: 15000` (`vite.config.ts`
-  // kommentje szerint a CI mérten ~3x lassabb) itt szűken elfért volna, ezért
-  // ennek a tesztnek explicit, nagyobb saját timeout kell, hogy a belső
-  // `findByRole`-nak legyen hova nőnie a globális plafon előtt.
-  it(
-    'ellentmondó adatú pontos találat kiválasztásakor megerősítés jelenik meg, a konkrét eltéréssel',
-    async () => {
-      const { onUseExisting } = renderHarness(seededPatients);
-      const user = userEvent.setup();
+  // A CI-n konzisztensen (nem véletlenszerűen) bukott ezen a ponton --
+  // kiderült, miért: a `nev-pontos` jelölt gombja NULLA késleltetéssel
+  // megjelenik (`duplikaciosJeloltek()` kommentje), MIELŐTT a 2. fázis
+  // (DOB/telefon, `DUPLIKACIO_DEBOUNCE_MS` utáni betöltés) lefutna --
+  // ilyenkor `ellentmondas` még `false`, tehát a `valasztottJelolt()`
+  // közvetlenül `onUseExisting`-et hívná, SOHA nem nyitná meg a
+  // megerősítést, hiába vár rá a teszt akármeddig. Determinisztikus
+  // fix: a kattintás előtt megvárjuk, amíg a `DuplikacioJavaslatok.tsx`
+  // szövege ténylegesen jelzi a betöltött ellentmondást -- ezután a
+  // dialógus-nyitás már tisztán szinkron, nem igényel megnövelt timeoutot.
+  it('ellentmondó adatú pontos találat kiválasztásakor megerősítés jelenik meg, a konkrét eltéréssel', async () => {
+    const { onUseExisting } = renderHarness(seededPatients);
+    const user = userEvent.setup();
 
-      await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Kovács János');
-      await user.type(screen.getByLabelText('Született'), '1990-01-01');
+    await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Kovács János');
+    await user.type(screen.getByLabelText('Született'), '1990-01-01');
 
-      const valasztomBtn = await screen.findByRole(
-        'button',
-        { name: 'Ezt a pácienst választom: Kovács János' },
-        { timeout: 5000 },
-      );
-      await user.click(valasztomBtn);
+    await screen.findByText(
+      'Kovács János (azonos név, eltérő születési dátum)',
+      undefined,
+      { timeout: 5000 },
+    );
+    const valasztomBtn = screen.getByRole('button', { name: 'Ezt a pácienst választom: Kovács János' });
+    await user.click(valasztomBtn);
 
-      const alert = await screen.findByRole('alertdialog', {}, { timeout: 15000 });
-      expect(within(alert).getByText('A megadott adatok eltérnek')).toBeInTheDocument();
-      expect(within(alert).getByText(/a születési dátum/)).toBeInTheDocument();
-      expect(onUseExisting).not.toHaveBeenCalled();
+    const alert = await screen.findByRole('alertdialog');
+    expect(within(alert).getByText('A megadott adatok eltérnek')).toBeInTheDocument();
+    expect(within(alert).getByText(/a születési dátum/)).toBeInTheDocument();
+    expect(onUseExisting).not.toHaveBeenCalled();
 
-      await user.click(within(alert).getByRole('button', { name: 'Mégis ezt a pácienst választom' }));
-      await waitFor(() => expect(onUseExisting).toHaveBeenCalled());
-      expect(onUseExisting.mock.calls[0][0].nev).toBe('Kovács János');
-    },
-    20000,
-  );
+    await user.click(within(alert).getByRole('button', { name: 'Mégis ezt a pácienst választom' }));
+    await waitFor(() => expect(onUseExisting).toHaveBeenCalled());
+    expect(onUseExisting.mock.calls[0][0].nev).toBe('Kovács János');
+  });
 });
