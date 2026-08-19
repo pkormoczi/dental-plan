@@ -1050,3 +1050,27 @@ karbantartási kör négy önálló javítása.
   kód nélkül. Elfogadott mellékhatás: egy elhagyott piszkozat után is
   ottmarad a létrehozott páciensrekord, ami a Kezdőlap "Legutóbbi
   páciensek" (D39) listáján is megjelenik.
+
+---
+
+### 37. Páciens-duplikáció felismerés és feloldás — KÉSZ (2026-08-19)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D42 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a duplikáció-jelzés korábban egyetlen helyen,
+  tisztán pontos név-egyezésen alapult, cselekvés nélkül, és a
+  törzsadat-átnevezésnél egyáltalán nem volt ellenőrzés.
+- **Megvalósítás:** kétfázisú detektálás -- olcsó, csak
+  `PatientFolder[]`-t igénylő token-alapú név-hasonlóság (a magyar "-né"
+  toldalékra explicit kivétellel), majd csak a szűk jelölt-körre
+  betöltött születési dátum/telefon szűrve tovább. Pontos névegyezés az
+  ellentmondó adat mellett is látszik, jelöléssel; hasonló névegyezés
+  ellentmondásnál kiesik. A quick-create dialógus (`UjPaciensDialog.tsx`)
+  gépelés közben inline javaslat-listát mutat (max 3 + "+N további"), a
+  Mentés gomb pedig mindig lefuttatja ugyanezt az ellenőrzést a végleges
+  adatokra -- találat esetén egyetlen, diszkriminált-unió állapotú
+  `AlertDialog` fedi le mind a "Mégis új páciens létrehozása", mind az
+  eltérő-adatú találat kiválasztásának megerősítését. A törzsadat-
+  szerkesztő (`PatientEditorPanel.tsx`) Mentés gombja csak a save-time
+  ellenőrzést kapta meg, javaslat-lista nélkül -- ott nem választás,
+  hanem átnevezés a kérdés.

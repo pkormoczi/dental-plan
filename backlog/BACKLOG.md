@@ -13,17 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 37. tétel — Páciens-duplikáció felismerés és feloldás
-  (a `backlog/redesign/` redesign-döntéssorozat DP-013 tétele) — a mai
-  duplikáció-jelzés egyetlen helyen, tisztán név-egyezésen alapul,
-  cselekvés nélkül; a DOB/telefon NEM elérhető olcsón minden páciensre
-  (`listPatients()` csak nevet ad). Ez a tétel egy kétfázisú (olcsó
-  név-szűrés, majd szűk körű DOB/telefon-megerősítés) detektálást épít,
-  max 3 javaslattal, save-time ellenőrzéssel és "Mégis új páciens"
-  explicit megerősítéssel, a 36. tétel dialógusába kötve. A döntéseket
-  lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-37-paciens-duplikacio-terv.md`
-
 ### 38. tétel — Pácienslista és keresés
   (a `backlog/redesign/` redesign-döntéssorozat DP-014 tétele) — a lista
   ma már alfabetikus és névre keres (ez már megfelel), de a sorok

@@ -386,7 +386,7 @@ describe('NewPlanPage', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
     await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Kovács János');
     await user.click(
-      await within(dialog).findByRole('button', { name: 'Ezt a pácienst választom' }),
+      await within(dialog).findByRole('button', { name: 'Ezt a pácienst választom: Kovács János' }),
     );
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

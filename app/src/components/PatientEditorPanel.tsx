@@ -13,14 +13,26 @@
 // route-navigáció az egyesített páciens-részletoldalra, a
 // PatientDetailPage.tsx "Páciens adatai" tabjában egyszerű tab-váltás --
 // ez a komponens csak a callbacket hívja, a különbséget nem ismeri.
+//
+// Mentéskor duplikáció-ellenőrzés fut (D42, redesign D208) -- csak
+// save-time, a `UjPaciensDialog.tsx`-szel ellentétben NINCS inline
+// javaslat-lista: itt nem "válassz helyette" a kérdés (ez egy MÁR nyitott
+// páciens szerkesztése, nem egy új rekord felvitele), csak egy egyszerű
+// megerősítő felsorolás, ha az átírt név egy másik pácienssel ütközne. A
+// `patients` listát a komponens saját maga tölti be -- a két hívó
+// (`PaciensekPage.tsx`, `PatientDetailPage.tsx`) egyike sem tart mindig kéznél
+// egy friss listát, és a prop-szerződésnek a két hívó között azonosnak kell
+// maradnia.
 
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Callout, Checkbox, Flex, Grid, Text, TextField } from '@radix-ui/themes';
+import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Grid, Text, TextField } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import { Field } from './Field';
 import { useDirtyDraft } from './useDirtyDraft';
+import { usePaciensDuplikacio } from './usePaciensDuplikacio';
 import { t } from '../design/tokens';
 import { megjelenitettTorzsadat } from '../domain/paciensAdatok';
+import type { DuplikaciosJelolt } from '../domain/paciensDuplikacio';
 import type { Paciens, PatientFolder, PatientMasterData, Plan } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
 
@@ -52,7 +64,9 @@ export default function PatientEditorPanel({
   );
 
   const [saving, setSaving] = useState(false);
+  const [ellenorzesFolyamatban, setEllenorzesFolyamatban] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [duplikaciMegerosites, setDuplikaciMegerosites] = useState<DuplikaciosJelolt[] | null>(null);
 
   // Amíg a fallback tölt, a `displayed` még a névre szűkített üres rekord --
   // a piszkozatot csak AKKOR inicializáljuk ebből, ha a doki még nem kezdett
@@ -66,7 +80,33 @@ export default function PatientEditorPanel({
     setDraft((prev) => ({ ...prev, ...fields }));
   }
 
-  async function handleSave() {
+  const [patients, setPatients] = useState<PatientFolder[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await storage.listPatients();
+        if (!cancelled) setPatients(list);
+      } catch {
+        // A duplikáció-ellenőrzés best-effort -- egy sikertelen listázás
+        // nem akadályozza a mentést, csak a védelmet lazítja.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [storage]);
+
+  const { ellenoriz } = usePaciensDuplikacio({
+    storage,
+    patients,
+    nev: draft.nev,
+    szuletesiIdo: draft.szuletesiIdo,
+    telefon: draft.telefon,
+    kihagyottPaciensId: patient.paciensId,
+  });
+
+  async function vegrehajtMentest() {
     setSaving(true);
     setSaveError(null);
     try {
@@ -78,6 +118,24 @@ export default function PatientEditorPanel({
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleSave() {
+    setEllenorzesFolyamatban(true);
+    try {
+      const talalatok = await ellenoriz({
+        nev: draft.nev,
+        szuletesiIdo: draft.szuletesiIdo,
+        telefon: draft.telefon,
+      });
+      if (talalatok.length > 0) {
+        setDuplikaciMegerosites(talalatok);
+        return;
+      }
+    } finally {
+      setEllenorzesFolyamatban(false);
+    }
+    await vegrehajtMentest();
   }
 
   function handleCancel() {
@@ -210,11 +268,47 @@ export default function PatientEditorPanel({
           >
             Mégse
           </Button>
-          <Button size="1" disabled={!dirty || saving} onClick={() => void handleSave()}>
+          <Button
+            size="1"
+            disabled={!dirty || saving || ellenorzesFolyamatban}
+            onClick={() => void handleSave()}
+          >
             Mentés
           </Button>
         </Flex>
       </Flex>
+
+      <AlertDialog.Root
+        open={duplikaciMegerosites !== null}
+        onOpenChange={(o) => !o && setDuplikaciMegerosites(null)}
+      >
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Hasonló nevű páciens már létezik</AlertDialog.Title>
+          <AlertDialog.Description size="2" style={{ whiteSpace: 'pre-line' }}>
+            {duplikaciMegerosites?.map((j) => j.patient.nev).join(', ')} néven már van más páciens
+            nyilvántartva.
+            {'\n'}Biztosan ezzel a névvel/adatokkal mented?
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                color="red"
+                onClick={() => {
+                  setDuplikaciMegerosites(null);
+                  void vegrehajtMentest();
+                }}
+              >
+                Mentés mégis
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Box>
   );
 }

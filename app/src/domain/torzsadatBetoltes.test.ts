@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DemoStorage } from '../storage/DemoStorage';
-import { loadMegjelenitettTorzsadat, loadUtolsoTerv } from './torzsadatBetoltes';
+import { loadMegjelenitettTorzsadat, loadTorzsadatok, loadUtolsoTerv } from './torzsadatBetoltes';
 import type { Plan } from './types';
 
 function makeBlankPlan(overrides: Partial<Plan> = {}): Plan {
@@ -96,6 +96,29 @@ describe('torzsadatBetoltes', () => {
       const result = await loadMegjelenitettTorzsadat(storage, folder);
       expect(result.hiba).not.toBeNull();
       expect(result.torzsadat.nev).toBe('Sérült Törzsadat');
+    });
+  });
+
+  describe('loadTorzsadatok', () => {
+    it('paciens-adatok.json nélküli páciensre is megadja a telefont a legutóbbi terv pillanatképéből', async () => {
+      const patients = await storage.listPatients();
+      const kovacs = patients.find((p) => p.nev === 'Kovács János')!;
+      const eredmeny = await loadTorzsadatok(storage, [kovacs]);
+      expect(eredmeny[kovacs.dirName].torzsadat.telefon).toBe('+36 30 123 4567');
+    });
+
+    it('dirName szerint kulcsol, egy sérült páciens nem üríti ki a többit', async () => {
+      const nagy = (await storage.listPatients()).find((p) => p.nev === 'Nagy Éva')!;
+      const serult = await storage.createPatient('Sérült A Listában');
+      const key = `dp:paciensek/${serult.dirName}/paciens-adatok.json`;
+      localStorage.setItem(key, 'not valid json {{{');
+
+      const eredmeny = await loadTorzsadatok(storage, [nagy, serult]);
+
+      expect(eredmeny[nagy.dirName].hiba).toBeNull();
+      expect(eredmeny[nagy.dirName].torzsadat.nev).toBe('Nagy Éva');
+      expect(eredmeny[serult.dirName].hiba).not.toBeNull();
+      expect(eredmeny[serult.dirName].torzsadat.nev).toBe('Sérült A Listában');
     });
   });
 });

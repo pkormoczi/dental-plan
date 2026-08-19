@@ -780,13 +780,22 @@ kétértelműség, hogy melyik páciensről van szó:
   (`app/src/pages/paciensek/UjPaciensDialog.tsx`): kötelező név +
   opcionális születési dátum/telefon. A dialógus Mégse/Escape-je a
   köztes választón hagyja a dokit, a keresőszöveg megmarad (D205), a
-  fókusz visszakerül a keresőmezőre. Névegyezésnél a figyelmeztetés
-  cselekvővé válik: „Ezt a pácienst választom" a begépelt adatokat
-  eldobva a MEGLÉVŐ páciensre folytatja a flow-t (D203/D204). Csak
-  sikeres mentés után jön létre a valódi páciensrekord ÉS navigál a
-  Páciens adatlapra — a mindig látható gomb üres, a fenti no-match „Új
-  páciens" opció a begépelt névvel előtöltve nyitja ugyanezt a
-  dialógust.
+  fókusz visszakerül a keresőmezőre. A duplikáció-detektálás (D42)
+  kétfázisú: gépelés közben a begépelt névre pontos vagy hasonló
+  (token-alapú) egyezésű páciensek jelennek meg javaslatként (max 3,
+  „+N további" kibontással), a szűk jelölt-körre betöltött születési
+  dátum/telefon szűrve tovább — ellentmondó adatnál a hasonló-nevű
+  javaslat kiesik, a pontos névegyezés viszont jelöléssel bennmarad. Egy
+  javaslat „Ezt a pácienst választom" gombja a begépelt adatokat eldobva
+  a MEGLÉVŐ páciensre folytatja a flow-t (D203/D204); ha a talált adatok
+  ELTÉRNEK a begépeltektől, egy megerősítő dialógus kéri a végső
+  jóváhagyást. A Mentés gomb javaslat hiányában is mindig lefuttatja
+  ugyanezt az ellenőrzést a végleges adatokra, mielőtt tényleg ment — ha
+  talál ütközést, „Mégis új páciens létrehozása" explicit megerősítést
+  kér. Csak sikeres mentés után jön létre a valódi páciensrekord ÉS
+  navigál a Páciens adatlapra — a mindig látható gomb üres, a fenti
+  no-match „Új páciens" opció a begépelt névvel előtöltve nyitja ugyanezt
+  a dialógust.
 
 A piszkozat-felülírás-őr a köztes lépésen fut le (mindkét ágon), NEM a
 Kezdőlap gombján — a Kezdőlap gombja feltétel nélkül navigál ide, mert a
@@ -1021,14 +1030,20 @@ egymásra ugyanahhoz a pácienshez.
   (ellentétben pl. a Beállítások rendelő-mezőivel) — az első mentés
   szemantikus állapotváltás (fallback → lezárt törzsadat), ezt a dokinak
   szándékosan kell kiváltania. Sor váltásakor/csukásakor, ha van nem
-  mentett módosítás, megerősítést kér.
+  mentett módosítás, megerősítést kér. A Mentés gomb a duplikáció-
+  detektálást (D42) is lefuttatja a végleges adatokra, mielőtt tényleg
+  ment — ha egy MÁSIK páciensre pontos vagy hasonló találatot ad, egy
+  megerősítő dialógus („Hasonló nevű páciens már létezik") kéri a
+  jóváhagyást, javaslat-lista/„Ezt a pácienst választom" akció nélkül
+  (ez itt átnevezés, nem választás — a doki már egy konkrét, nyitott
+  páciens adatlapján van).
 - **Új páciens**: „+ Új páciens” gomb, mezős dialógus (kötelező Név +
   opcionális Született/Telefon — a többi adat a mentés után, a kinyíló
   sorban adható meg, az `UjTetelDialog.tsx` mintájára). Ugyanez a dialógus
   (`UjPaciensDialog.tsx`) szolgálja az „Új terv indítása" köztes
-  páciensválasztó „Vadonatúj páciens" ágát is (D41). Névegyezésnél a
-  figyelmeztetés cselekvővé válik: „Ezt a pácienst választom" a MEGLÉVŐ
-  sort nyitja meg, a begépelt adatok eldobásával (D203/D204).
+  páciensválasztó „Vadonatúj páciens" ágát is (D41), a duplikáció-
+  detektálás (D42) mindkét belépési ponton azonos (lásd fent, „Új terv
+  indítása").
   `storage.createPatient(nev, kezdoAdatok?)` mindkét gyökér-fájlt
   (`paciens.json` + `paciens-adatok.json`) létrehozza, terv nélkül. Az így
   felvitt páciens a Korábbi tervek listán NEM jelenik meg (§ 5) — csak

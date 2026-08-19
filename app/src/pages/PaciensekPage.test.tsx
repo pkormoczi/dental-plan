@@ -120,6 +120,38 @@ describe('PaciensekPage', () => {
     expect(adatok?.telefon).toBe('+36 70 000 1111');
   });
 
+  it('átnevezés egy másik meglévő páciens nevére megerősítést kér mentéskor (D42, redesign D208)', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Tóth Zoltán');
+    await user.click(screen.getByText('Tóth Zoltán'));
+    const row = patientRow('Tóth Zoltán');
+    const dirName = row.getAttribute('data-patient')!;
+
+    const nevMezo = await within(row).findByRole('textbox', { name: 'Név *' });
+    await user.clear(nevMezo);
+    await user.type(nevMezo, 'Fekete Zoltán');
+    await user.click(within(row).getByRole('button', { name: 'Mentés' }));
+
+    const alert = await screen.findByRole('alertdialog');
+    expect(within(alert).getByText('Hasonló nevű páciens már létezik')).toBeInTheDocument();
+
+    await user.click(within(alert).getByRole('button', { name: 'Mégse' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(within(row).getByRole('textbox', { name: 'Név *' })).toHaveValue('Fekete Zoltán');
+
+    await user.click(within(row).getByRole('button', { name: 'Mentés' }));
+    const alert2 = await screen.findByRole('alertdialog');
+    await user.click(within(alert2).getByRole('button', { name: 'Mentés mégis' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+
+    const verify = new DemoStorage();
+    await verify.init();
+    const adatok = await verify.loadPatientData(dirName);
+    expect(adatok?.nev).toBe('Fekete Zoltán');
+  });
+
   it('Mégse a legutóbb mentett/betöltött értékre állítja vissza a piszkozatot', async () => {
     const user = userEvent.setup();
     renderPage();
@@ -192,7 +224,7 @@ describe('PaciensekPage', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
     await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Kovács János');
     await user.click(
-      await within(dialog).findByRole('button', { name: 'Ezt a pácienst választom' }),
+      await within(dialog).findByRole('button', { name: 'Ezt a pácienst választom: Kovács János' }),
     );
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

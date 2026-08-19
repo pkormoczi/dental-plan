@@ -543,6 +543,30 @@ segédfüggvénye, szintén ne írd újra:
   `search.ts`-től, mert az a kétnyelvű ártétel-név-egyezés helye, ez
   páciensnév-rangsor — csak a `NewPlanPage.tsx` hívja
 
+A páciens-duplikáció felismerés tétel (`docs/01-attekintes-es-dontesek.md`
+D42, `docs/03-funkcionalis-spec.md` § 9. Páciensek / § Új terv indítása)
+segédfüggvényei/rétegei, szintén ne írd újra őket:
+- `nevJeloltek(patients, nev, opts?)` / `duplikaciosJeloltek(jeloltek,
+  bemenet, torzsadatByDir)` / `szuletesiIdoViszony(a, b)` /
+  `telefonKulcs(telefon)` / `telefonViszony(a, b)` / `JAVASLAT_LATHATO` /
+  `JELOLT_MAX` (`app/src/domain/paciensDuplikacio.ts`) — a kétfázisú
+  detektálás tiszta magja: `nevJeloltek` az olcsó, csak `PatientFolder[]`-t
+  igénylő 1. fázis (token-alapú név-hasonlóság, szándékosan NEM
+  Levenshtein/fuzzy, a magyar `-né` toldalékra explicit kivétellel),
+  `duplikaciosJeloltek` a szűk jelölt-körre betöltött DOB/telefonnal
+  fésüli össze — ez az EGYETLEN hely, ahol eldől, hogy egy pontos
+  névegyezés ellentmondó adat mellett is látszik-e (igen, jelöléssel),
+  egy hasonló névegyezés pedig nem (D42)
+- `loadTorzsadatok(storage, patients)` (`app/src/domain/torzsadatBetoltes.ts`)
+  — a 2. fázis betöltője, a meglévő `loadMegjelenitettTorzsadat()` (D33)
+  több páciensre, `dirName` szerint kulcsolva, sosem dobva
+- `usePaciensDuplikacio(opts)` (`app/src/components/usePaciensDuplikacio.ts`)
+  — a React-réteg: additív, kulcsolt cache a versenyhelyzetek ellen (nem
+  lista-csere/sorszámozás), `ellenoriz(bemenet)` a save-time útvonalhoz. A
+  `UjPaciensDialog.tsx` (inline javaslat-lista, `DuplikacioJavaslatok.tsx`
+  + két megerősítő `AlertDialog`) ÉS a `PatientEditorPanel.tsx`
+  (átnevezéskor, csak `ellenoriz`, javaslat-lista nélkül) is ezt hívja
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

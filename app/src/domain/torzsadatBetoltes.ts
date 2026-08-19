@@ -4,7 +4,9 @@
 // A `loadMegjelenitettTorzsadat` a Kezdőlap recent listája (max 5 páciens,
 // eager) és -- a `PaciensekPage.ensureFallbackLoaded` belső sétájából
 // kiemelve -- a Páciensek lista sorkinyitása alatt is fut, hogy a két hely
-// ne térjen el egymástól.
+// ne térjen el egymástól. A `loadTorzsadatok` (D42) ugyanezt TÖBB
+// páciensre, egy jelölt-körre futtatja -- a `domain/paciensDuplikacio.ts`
+// 2. fázisának betöltője.
 
 import { megjelenitettTorzsadat } from './paciensAdatok';
 import { latestVersionAcrossPlans } from './planFolders';
@@ -70,4 +72,24 @@ export async function loadMegjelenitettTorzsadat(
     torzsadat: megjelenitettTorzsadat(adatok, utolsoTerv, patient),
     hiba: hibak.length > 0 ? hibak.join(' ') : null,
   };
+}
+
+/**
+ * `loadMegjelenitettTorzsadat()` TÖBB páciensre, `dirName` szerint
+ * kulcsolva -- a duplikáció-detektálás (D42) jelölt-körének betöltője.
+ * Sosem dob (a `loadMegjelenitettTorzsadat` maga sem dob), egy sérült
+ * páciens `hiba` mezőt kap, a többit nem érinti (P1-2 mintája).
+ */
+export async function loadTorzsadatok(
+  storage: PlanStorage,
+  patients: PatientFolder[],
+): Promise<Record<string, BetoltottTorzsadat>> {
+  const betoltottek = await Promise.all(
+    patients.map((patient) => loadMegjelenitettTorzsadat(storage, patient)),
+  );
+  const eredmeny: Record<string, BetoltottTorzsadat> = {};
+  betoltottek.forEach((b, i) => {
+    eredmeny[patients[i].dirName] = b;
+  });
+  return eredmeny;
 }
