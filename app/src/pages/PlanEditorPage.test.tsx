@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import App from '../App';
 import PlanEditorPage from './PlanEditorPage';
 import { TestProviders } from '../testUtils';
+import { createBlankPlan } from '../domain/blankPlan';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 
@@ -386,6 +387,61 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
 
     await user.type(teethInput, ', 99');
     expect(await screen.findByText(/Nem érvényes FDI fogszám: 99/)).toBeInTheDocument();
+  });
+});
+
+describe('PlanEditorPage -- D59 friss piszkozat autofókusza', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('vadonatúj (tervId nélküli, sor nélküli) piszkozaton az első fázis keresője induláskor fókuszban van', async () => {
+    renderEditor();
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    expect(search).toHaveFocus();
+  });
+
+  it('betöltött (már mentett láncú) tervnél NINCS automatikus fókusz, akkor sem, ha nincs sora', async () => {
+    // Az init() resetDemoData()-t futtatna (és vele clearAll()-t, ami a
+    // lent beírt piszkozatot is elvinné), ha a `dp:arlista.json`/
+    // `dp:beallitasok.json` hiányzik -- lásd seedGermanPlanWithOneTranslatedItem
+    // fenti kommentjét, ugyanaz a gotcha.
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+    const plan = createBlankPlan(seedSettings, seedPriceList);
+    plan.tervId = 'terv-1';
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({ schemaVersion: 1, mentve: new Date(0).toISOString(), plan }),
+    );
+    renderEditor();
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    expect(search).not.toHaveFocus();
+  });
+
+  it('tervId nélküli, de már sorral rendelkező piszkozatnál NINCS automatikus fókusz', async () => {
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+    const plan = createBlankPlan(seedSettings, seedPriceList);
+    const tetel = seedPriceList.tetelek[0];
+    plan.fazisok[0].sorok.push({
+      tetelId: tetel.id,
+      nevSnapshot: tetel.nev.hu,
+      savos: false,
+      fogak: '',
+      mennyiseg: 1,
+      listaEgysegar: 1000,
+      tenylegesEgysegar: 1000,
+      leirasSnapshot: '',
+      mennyisegKezi: false,
+    });
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({ schemaVersion: 1, mentve: new Date(0).toISOString(), plan }),
+    );
+    renderEditor();
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    expect(search).not.toHaveFocus();
   });
 });
 

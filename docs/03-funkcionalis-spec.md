@@ -215,9 +215,9 @@ Ez dönti el, hogy az app gyorsabb-e az Excelnél. Megvalósítás:
 ### Fogtérkép (kattintható)
 
 A fogtérkép a **beavatkozás lista fölött**, egy lenyíló panelben van —
-alapból **csukva**, akkor is, ha a tervben már vannak érintett fogak; a
-csukott gomb felirata mutatja a darabszámot (`🦷 Érintett fogak (6)`).
-Kattintásra nyílik ki. Kinyitva nemcsak áttekintés, beviteli eszköz is —
+alapból **csukva**, akkor is, ha a tervben már vannak érintett fogak
+(D59); a csukott gomb felirata egyszerűen „Érintett fogak", darabszám
+nélkül. Kattintásra nyílik ki. Kinyitva nemcsak áttekintés, beviteli eszköz is —
 kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`).
 
 - **Kattintás egy már érintett fogra** a hozzá tartozó sorra ugrik
@@ -275,6 +275,15 @@ kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`
   találat, de egyik sem megfelelő, a lista alján egy „Egyedi tétel
   felvétele: „…"" pszeudo-opció is végigjárható ugyanazzal a `↑ ↓`/`Enter`
   ciklussal, a valódi találatok után.
+- **Friss piszkozat autofókusza (D59):** egy vadonatúj, még soha nem
+  mentett terv-láncon (nincs `tervId`), amíg egyetlen fázisnak sincs sora,
+  az első fázis keresője a lap betöltésekor automatikusan fókuszt kap —
+  a doki egérhasználat nélkül azonnal gépelhet. Ez KIZÁRÓLAG az első fázis
+  keresőjére vonatkozik, és megszűnik, amint az első sor bekerül (egy
+  utólag hozzáadott 2., 3. stb. fázis keresője sosem kap automatikus
+  fókuszt); egy betöltött („Új verzió", „Másolás új tervbe") terven —
+  akkor is, ha még nincs sora — szintén nincs automatikus fókusz, hogy ne
+  vigye el a figyelmet a lap tetején megjelenő tájékoztató Callout-okról.
 
 ### Gyorsgombok
 
@@ -384,6 +393,10 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
   tényleges ár a listaár fölé is emelhető). A kettő kizárja egymást, és
   ugyanazt a zöld színt kapja — ez semleges ténymegállapítás, nem
   hibajelzés, a doki dolgozhat felárral is (pl. sietős munka).
+- A terv-szintű összegzés (Mindösszesen/Kerek végösszeg/Előleg/Tétel-
+  leírások nyomtatása, lásd lent) **kizárólag** a fázislista végén, a
+  „+ Új kezelési fázis" gomb alatt jelenik meg — sem a szerkesztő
+  fejlécében, sem a workflow-héjban nincs végösszeg (D59).
 
 ### Kerek végösszeg
 

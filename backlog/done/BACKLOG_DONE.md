@@ -1498,3 +1498,26 @@ karbantartási kör négy önálló javítása.
   (`PatientPlanChains.tsx`) miatt megszűnt egyetlen-hívós lenni
   (docs/01-attekintes-es-dontesek.md D58, docs/03-funkcionalis-spec.md
   § 5 "A verziósoron…").
+
+### 57. tétel: Kezelésszerkesztő oldal alaplayout és fogtérkép — KÉSZ (2026-08-20)
+
+- **Méret:** ~0.25 nap.
+- **Kereteket sért?** Nem — új D59 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a feltárás szerint a tétel forrás-döntéseinek
+  (fogtérkép alapból csukva, terv-szintű összegzés kizárólag a
+  fázislista végén) döntő többsége már megvolt a kódban, csak nem volt
+  dokumentálva — ez a tétel ezt rögzítette. Az egyetlen valódi hiány a
+  friss piszkozat kereső-autofókusza volt: a doki eddig mindig
+  kattintott a keresőmezőbe egy vadonatúj terv megnyitásakor, mielőtt
+  gépelhetett volna, holott a billentyűzetes ciklus (gépel → nyíl →
+  Enter) a legfontosabb UX-pont.
+- **Megvalósítás:** a fázis alatti tételkereső (`ItemPicker`) automatikus
+  fókuszt kap, ha a terv-lánc még soha nem lett mentve (`tervId === ''`)
+  ÉS egyetlen fázisnak sincs sora — kizárólag az első fázis keresőjén; egy
+  betöltött terv ("Új verzió"/"Másolás új tervbe") vagy egy már tartalmas
+  fázis, illetve egy 2.+ fázis keresője soha nem kap automatikus fókuszt.
+  Ezzel egyidejűleg egy docs↔kód drift is javítva lett: a csukott
+  fogtérkép-gomb felirata a specben még darabszámot ígért, a kód viszont
+  ezt korábban tudatosan eltávolította
+  (docs/01-attekintes-es-dontesek.md D59, docs/03-funkcionalis-spec.md
+  § 3 "Fogtérkép"/"Tételkereső"/"Fázisok").

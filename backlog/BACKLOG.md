@@ -13,16 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 57. tétel — Kezelésszerkesztő oldal alaplayout és fogtérkép
-  (a `backlog/redesign/` redesign-döntéssorozat DP-040 tétele) — a
-  `docs/03` § 3 már ma is részletesen dokumentálja a kezelésszerkesztőt
-  (D70 „AS-IS"); a feltárás szerint a fogtérkép-csukottság és az
-  összegzés-elhelyezés már megfelel a redesignnak, egyedül a friss
-  piszkozat kereső-autofókusza hiányzik. A fázis-szintű mechanikák
-  (összecsukás/sorrend/törlés/átnevezés/megjegyzés) a 58. tételbe
-  tartoznak. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-57-kezelesszerkeszto-alaplayout-terv.md`
-
 ### 58. tétel — Kezelési fázisok kezelése
   (a `backlog/redesign/` redesign-döntéssorozat DP-041 tétele) — ma
   nincs fázis-szintű összecsukás és sorrendezés (nulla infra), a

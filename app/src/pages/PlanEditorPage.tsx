@@ -246,6 +246,15 @@ export default function PlanEditorPage() {
   const listTotal = sorokListaOsszeg(plan.fazisok);
   const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
 
+  // D59: egy VADONATÚJ (még soha nem mentett -- `tervId === ''`)
+  // ÉS sor nélküli piszkozaton az első fázis keresője induláskor fókuszt kap.
+  // Szándékosan NEM `piszkozatTartalmas()`: az a páciensnévre is igazat ad,
+  // tehát a normál Terv adatai -> Kezelések úton sosem sülne el. A `tervId`
+  // fél zárja ki a betöltött "Új verzió"/"Másolás új tervbe" esetet -- ott a
+  // fókusz elvinné a figyelmet a `frissitettDatum`/`loadedOsszesitokDiff`
+  // Callout-okról egy már tartalmas (bár még mentetlen) tervnél.
+  const ujUresPiszkozat = plan.tervId === '' && plan.fazisok.every((f) => f.sorok.length === 0);
+
   /**
    * A fogtérkép beviteli logikája: ha a fog már érintett, ugrás a sorára
    * (ismételt kattintásra a következő érintettre, körbe); ha nem, tétel
@@ -363,6 +372,7 @@ export default function PlanEditorPage() {
             fogterkep={fogterkep}
             canDelete={plan.fazisok.length > 1}
             total={fazisOsszeg(p)}
+            autoFokusz={pi === 0 && ujUresPiszkozat}
             onAdd={(item) => addLine(pi, item)}
             onAddEgyedi={(nev) => addEgyediLine(pi, nev)}
             onPatchLine={(li, patch) => patchLine(pi, li, patch)}
@@ -574,6 +584,7 @@ function PhaseSection({
   fogterkep,
   total,
   canDelete,
+  autoFokusz,
   onAdd,
   onAddEgyedi,
   onPatchLine,
@@ -593,6 +604,7 @@ function PhaseSection({
   fogterkep: FogterkepAllapot;
   total: number;
   canDelete: boolean;
+  autoFokusz: boolean;
   onAdd: (item: Tetel) => void;
   onAddEgyedi: (nev: string) => void;
   onPatchLine: (li: number, patch: Partial<Sor>) => void;
@@ -678,6 +690,7 @@ function PhaseSection({
         nyelv={nyelv}
         onPick={onAdd}
         onPickEgyedi={onAddEgyedi}
+        autoFocus={autoFokusz}
       />
 
       {frequent.length > 0 && (
