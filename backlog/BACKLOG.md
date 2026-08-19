@@ -13,6 +13,93 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
+### 47. tétel — Új kezelési terv (új lánc) inicializálása
+  (a `backlog/redesign/` redesign-döntéssorozat DP-021 tétele) — egy új
+  terv-lánc ma mindig a globális alapértékekkel indul (nyelv/pénznem a
+  Beállításokból, mindig HUF, első orvos), függetlenül attól, van-e a
+  pácienshez korábbi véglegesített terve. Ez a tétel a nyelv/pénznem
+  öröklését vezeti be a páciens legutóbbi véglegesített tervéből (első
+  tervnél globális default marad), és rögzíti, hogy az orvos mindig az
+  aktuális globális default marad (a tényleges orvos-törzs a 32. tétel/
+  DP-032-re vár). A tervcím-mechanizmus (élő javaslat, tárolt cím
+  nélkül) szándékosan változatlan marad. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-47-uj-terv-inicializalas-terv.md`
+
+### 48. tétel — Új verzió létrehozása
+  (a `backlog/redesign/` redesign-döntéssorozat DP-022 tétele) — "Új
+  verzió" ma bármelyik verziósorról indítható, jelöletlenül a lánc
+  fejére kerül, és a betöltött piszkozat `statusz`-a tévesen
+  `VEGLEGES` marad (hamis "véglegesítve" jelvény, hiányzó
+  `PISZKOZAT-` letöltési előtag). Ez a tétel a legfrissebb-only
+  korlátozást és a `statusz` `PISZKOZAT`-ra állítását vezeti be; a
+  nyelv/pénznem-zárolás feloldása és az orvos-öröklés a 31./32. tételre
+  (DP-031/DP-032) vár. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-48-uj-verzio-terv.md`
+
+### 49. tétel — Másolás új tervként
+  (a `backlog/redesign/` redesign-döntéssorozat DP-023 tétele) — a
+  "Másolás új tervbe" ma mindent változatlanul átvisz (árlista-
+  pillanatkép, sorok), és a forrás verzió páciens-pillanatképét másolja
+  az élő törzsadat helyett. Ez a tétel az élő páciens-master
+  átvételét vezeti be (a meglévő `ujTervForrasPaciensbol` mintáján);
+  a default-following árfrissítés és a hozzá tartozó figyelmeztetések
+  egy még nem létező kézi-felülírás állapotmodellre várnak (a DP-044-re).
+  A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-49-masolas-uj-tervkent-terv.md`
+
+### 50. tétel — Verzió-szintű akciók és historical figyelmeztetések
+  (a `backlog/redesign/` redesign-döntéssorozat DP-024 tétele) — ma
+  minden verziósoron azonos, csupasz `⋯` menü van, nincs vizuális
+  megkülönböztetés a legfrissebb és a historical verziók között, és
+  nincs figyelmeztetés egy régi verzió másolásakor, ha időközben újabb
+  született. Ez a tétel a legfrissebb soron látható elsődleges/
+  másodlagos gombot, a historical soron "Ugrás a legfrissebb verzióra"
+  linket és a historical-másolás figyelmeztetést vezeti be — a `docs/03`
+  "nincs látható akciógomb" mai szövegének felülvizsgálatával. Függ a
+  48. tétel legfrissebb-only szabályától. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-50-verzio-akciok-terv.md`
+
+### 51. tétel — Terv adatai oldal layout + cím + dátumok
+  (a `backlog/redesign/` redesign-döntéssorozat DP-030 tétele) — a mai
+  "Páciens adatlap" (a workflow-stepper már "Terv adatai"-nak hívja)
+  nem stacked-section szerkezetű, nincs cím mezője (a cím kizárólag a
+  `terv-cimke.json`-ban, csak már mentett lánchoz szerkeszthető), és
+  nincs szerkeszthető érvényességi dátuma. Ez a tétel a D68 szerinti
+  hat szekcióra tagolja a lapot, bevezet egy cím mezőt (meglévő
+  lánchoz azonnal, vadonatújhoz véglegesítéskor íródik ki), és
+  szerkeszthetővé teszi az "Érvényes eddig" dátumot. A döntéseket lásd
+  a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-51-terv-adatai-oldal-terv.md`
+
+### 52. tétel — Dokumentumnyelv és pénznem kiválasztása / öröklése
+  (a `backlog/redesign/` redesign-döntéssorozat DP-031 tétele) — a
+  nyelv/pénznem-kártya ma az első véglegesítés után véglegesen
+  zárolva marad ("Új verzió" drafton), a `nemetEngedelyezve`
+  funkciókapcsoló elrejti a kártyát, és a pénzformátum (`formatMoney`)
+  csak a pénznemtől függ, a nyelvtől nem (DE+HUF ma tévesen `1 234 567
+  Ft`-ot ír, nem `1.234.567 Ft`-ot). Ez a tétel feloldja a zárolást a
+  teljes piszkozat-életciklusra, teljesen eltávolítja a funkciókapcsolót,
+  és `formatMoney`/`formatPrice`-t nyelvfüggővé teszi (utóbbi kettő
+  explicit user-döntés, mert ellentmond a ma dokumentált D21-nek). Az
+  öröklési szabály (D534) feloldja a 47. tétel VÁRAKOZÓ döntését. A
+  döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-52-nyelv-penznem-terv.md`
+
+### 53. tétel — Kezelőorvos kiválasztása és öröklési szabályai
+  (a `backlog/redesign/` redesign-döntéssorozat DP-032 tétele) —
+  `Settings.orvosok` ma sima névlista, aktív/inaktív jelölés és
+  per-terv választó UI nélkül; az egyetlen írás `orvosok[0]`. Ez a
+  tétel additív módon (séma-bővítés nélkül) bevezeti az aktív/inaktív
+  és alapértelmezett-orvos fogalmát, egy választó UI-t a Terv adatai
+  lépésen, és a hozzá tartozó öröklési szabályokat (új lánc: mindig
+  default; új verzió: örökli, ha aktív; másolás: mindig default) —
+  ezzel feloldja a 47./48./49. tétel VÁRAKOZÓ orvos-döntéseit, plusz
+  egy új finalizációs hard blockot ad hiányzó/inaktív orvosra. A
+  döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-53-kezeloorvos-terv.md`
+
 ---
 ## KIDOLGOZÁSRA VÁR
 
