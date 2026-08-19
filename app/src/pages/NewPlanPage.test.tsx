@@ -20,7 +20,7 @@ import NewPlanPage from './NewPlanPage';
 import { TestProviders } from '../testUtils';
 import { DemoStorage } from '../storage/DemoStorage';
 import { useAppState } from '../state/AppState';
-import { legutobbAktivPaciensek, RECENT_PACIENS_LIMIT } from '../domain/paciensAktivitas';
+import { legutobbAktivPaciensek, UJ_TERV_RECENT_LIMIT } from '../domain/paciensAktivitas';
 import type { Plan } from '../domain/types';
 
 function DraftProbe() {
@@ -110,12 +110,12 @@ describe('NewPlanPage', () => {
     await seeder.init();
   });
 
-  it('a keresőmezőnek és a "Vadonatúj páciens" gombnak van elérhető neve', async () => {
+  it('a keresőmezőnek és a "+ Új páciens" gombnak van elérhető neve', async () => {
     renderNewPlan();
     expect(
       await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Vadonatúj páciens' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Új páciens' })).toBeInTheDocument();
   });
 
   it('a keresőmező automatikusan fókuszban van', async () => {
@@ -124,21 +124,21 @@ describe('NewPlanPage', () => {
     expect(input).toHaveFocus();
   });
 
-  // Adatvezérelt: a várt top-5-öt magából a seedből (`legutobbAktivPaciensek`)
+  // Adatvezérelt: a várt top-15-öt magából a seedből (`legutobbAktivPaciensek`)
   // számolja ki, nem konkrét neveket hardkódol -- így a demó-készlet
   // bővítése (backlog-35 utáni, 22 páciensre bővített seed) nem töri meg.
   it('kezdetben a legutóbbi pácienseket sorolja fel, keresésre szűkíti a találatokat', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
     const patients = await seeder.listPatients();
-    const top5 = legutobbAktivPaciensek(patients, RECENT_PACIENS_LIMIT);
-    const nemTop = patients.find((p) => !top5.some((t) => t.dirName === p.dirName));
+    const top15 = legutobbAktivPaciensek(patients, UJ_TERV_RECENT_LIMIT);
+    const nemTop = patients.find((p) => !top15.some((t) => t.dirName === p.dirName));
     if (!nemTop) throw new Error('a teszthez legalább egy, a recentsből kimaradó páciens kell');
 
     const user = userEvent.setup();
     renderNewPlan();
 
-    for (const p of top5) {
+    for (const p of top15) {
       expect(await screen.findByRole('button', { name: new RegExp(p.nev) })).toBeInTheDocument();
     }
     expect(screen.queryByRole('button', { name: new RegExp(nemTop.nev) })).not.toBeInTheDocument();
@@ -154,7 +154,7 @@ describe('NewPlanPage', () => {
     // meglévő seed-pácienst megelőz.
     await seeder.createPatient('Zsolt Zoltán');
     const patients = await seeder.listPatients();
-    const vartSorrend = legutobbAktivPaciensek(patients, RECENT_PACIENS_LIMIT).map((p) => p.nev);
+    const vartSorrend = legutobbAktivPaciensek(patients, UJ_TERV_RECENT_LIMIT).map((p) => p.nev);
     expect(vartSorrend[0]).toBe('Zsolt Zoltán');
 
     renderNewPlan();
@@ -317,24 +317,24 @@ describe('NewPlanPage', () => {
     expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Teljesen Ismeretlen Név');
   });
 
-  it('nulla meglévő páciensnél csak a "Vadonatúj páciens" ág látszik', async () => {
+  it('nulla meglévő páciensnél csak a "+ Új páciens" ág látszik', async () => {
     removeAllPatients();
     renderNewPlan();
 
     expect(
       await screen.findByText('Még nincs mentett terv, akihez visszatérhetnél.'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Vadonatúj páciens' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Új páciens' })).toBeInTheDocument();
   });
 
-  // D14: a "Vadonatúj páciens" ág mostantól a quick-create dialóguson át hoz
+  // D14: a "+ Új páciens" ág mostantól a quick-create dialóguson át hoz
   // létre valódi Patient-rekordot MÉG A TERV ELŐTT -- csak sikeres mentés
   // után navigál a Páciens adatlapra.
-  it('"Vadonatúj páciens" a quick-create dialógust nyitja azonnal, megerősítés nélkül -- csak sikeres mentés után navigál', async () => {
+  it('"+ Új páciens" a quick-create dialógust nyitja azonnal, megerősítés nélkül -- csak sikeres mentés után navigál', async () => {
     const user = userEvent.setup();
     renderNewPlan();
 
-    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(screen.queryByTestId('draft-oldal')).not.toBeInTheDocument();
 
@@ -346,14 +346,14 @@ describe('NewPlanPage', () => {
     expect(screen.getByTestId('draft-nev')).toHaveTextContent('Teszt Vadonatúj');
   });
 
-  it('"Vadonatúj páciens" Mégse/Escape a selectoron marad, a keresőszöveg megmarad (D205)', async () => {
+  it('"+ Új páciens" Mégse/Escape a selectoron marad, a keresőszöveg megmarad (D205)', async () => {
     const user = userEvent.setup();
     renderNewPlan();
 
     const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
     await user.type(input, 'xyz');
 
-    await user.click(screen.getByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.click(screen.getByRole('button', { name: '+ Új páciens' }));
     const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
     await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
 
@@ -362,11 +362,11 @@ describe('NewPlanPage', () => {
     expect(screen.getByRole('textbox', { name: 'Meglévő páciens keresése' })).toHaveValue('xyz');
   });
 
-  it('"Vadonatúj páciens" -- a dialógusban megadott születési dátum és telefon a draftba kerül', async () => {
+  it('"+ Új páciens" -- a dialógusban megadott születési dátum és telefon a draftba kerül', async () => {
     const user = userEvent.setup();
     renderNewPlan();
 
-    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
     const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
     await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Teszt Adatokkal');
     await user.type(within(dialog).getByLabelText('Született'), '1990-05-12');
@@ -378,11 +378,11 @@ describe('NewPlanPage', () => {
     expect(screen.getByTestId('draft-telefon')).toHaveTextContent('+36 20 111 2222');
   });
 
-  it('"Vadonatúj páciens" -- névegyezésnél az "Ezt a pácienst választom" a meglévő páciensre folytat (D203/D204)', async () => {
+  it('"+ Új páciens" -- névegyezésnél az "Ezt a pácienst választom" a meglévő páciensre folytat (D203/D204)', async () => {
     const user = userEvent.setup();
     renderNewPlan();
 
-    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
     const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
     await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Kovács János');
     await user.click(
@@ -407,19 +407,19 @@ describe('NewPlanPage', () => {
     expect(screen.getByTestId('draft-sorcount')).toHaveTextContent('0');
   });
 
-  it('"Vadonatúj páciens" megerősítést kér mentetlen piszkozatnál -- Mégse megtartja', async () => {
+  it('"+ Új páciens" megerősítést kér mentetlen piszkozatnál -- Mégse megtartja', async () => {
     seedPersistedDraft();
     const user = userEvent.setup();
     renderNewPlan();
 
-    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Mégse' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(screen.queryByTestId('draft-oldal')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.click(screen.getByRole('button', { name: '+ Új páciens' }));
     await user.click(await screen.findByRole('button', { name: 'Elvetés és új terv' }));
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
 

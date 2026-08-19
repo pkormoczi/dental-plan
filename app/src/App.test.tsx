@@ -48,7 +48,7 @@ describe('Végpontok közötti folyamat', () => {
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Teszt Aladár');
     await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -145,7 +145,7 @@ describe('Végpontok közötti folyamat', () => {
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Németh Éva');
     await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -198,7 +198,7 @@ describe('Végpontok közötti folyamat', () => {
     const first = render(<App />);
 
     await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-    await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
     const nameInput = await screen.findByPlaceholderText('Kovács János');
     await user.type(nameInput, 'Piszkozat Ilona');
     await user.click(screen.getByRole('button', { name: 'Mentés' }));

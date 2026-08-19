@@ -46,7 +46,7 @@ ami mindhárom oldal fölött állandó:
   ismert `patientDir`-je (D37) esetén a páciens-részletoldalára (10.
   képernyő) linkel, egyébként csak szöveg — a `patientDir` nem minden
   belépési ponton ismert (pl. egy funkció előtti perzisztált piszkozat; a
-  "Vadonatúj páciens" ág a quick-create dialógus (D41) sikeres mentése óta
+  "+ Új páciens" ág a quick-create dialógus (D41) sikeres mentése óta
   már ismeri). Üres névnél a "Új páciens" tartalék-címke látszik.
 - **Stepper** — szabadon kattintható, 3 lépés: `Terv adatai → Kezelések →
   Előnézet és véglegesítés`. Az aktuális lépés a route-ból dől el
@@ -452,7 +452,7 @@ memóriabeli — a Kezdőlap „Piszkozat folytatása” kártyája a belépési
 hozzá; a Kezdőlap „+ Új kezelési terv” gombja maga feltétel nélkül navigál
 (a köztes `/uj-terv` választóra, D29 — lásd § 5 „Új terv indítása”), de
 MINDEN tényleges terv-létrehozó akció megerősítést kér, mielőtt felülírná:
-az `/uj-terv` mindkét ága („Meglévő páciens keresése…”, „Vadonatúj
+az `/uj-terv` mindkét ága („Meglévő páciens keresése…”, „+ Új
 páciens”) és a terv-lánc fa mindhárom akciója („Új verzió”, „Másolás új
 tervbe”, „Új terv”) — egyik sem kivétel. A megerősített felülírás
 pillanatában a perzisztált piszkozat **azonnal** törlődik, nem a
@@ -739,18 +739,28 @@ melyik páciens-mappába, D29)** kerül:
 | **„Új verzió"** | verziósor `⋯` menüjében, KIZÁRÓLAG a lánc legfrissebb során (D53) | mindent, a `tervId`-t is | ugyanabba a terv-mappába `<ma>_v<n+1>` (D4) |
 | **„Másolás új tervbe"** | verziósor `⋯` menüjében | mindent az azonosító/állapot/dátum kivételével | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
 | **„Új terv"** | a páciensnév mellett, balra | csak a `paciens` blokkot | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
-| **„+ Új kezelési terv"** | Kezdőlap, az `/uj-terv` köztes választón át (lásd „Új terv indítása — a köztes páciens-választó" lentebb) | „Meglévő páciens keresése": a kiválasztott páciens `paciens` blokkja; „Vadonatúj páciens": a quick-create dialógusban megadott név + opcionális születési dátum/telefon (D41) | **új** terv-mappa — a kiválasztott MEGLÉVŐ vagy a quick-create dialógussal frissen létrehozott páciens-mappában, `<ma>_v1` (D26/D29) |
+| **„+ Új kezelési terv"** | Kezdőlap, az `/uj-terv` köztes választón át (lásd „Új terv indítása — a köztes páciens-választó" lentebb) | „Meglévő páciens keresése": a kiválasztott páciens `paciens` blokkja; „+ Új páciens": a quick-create dialógusban megadott név + opcionális születési dátum/telefon (D41) | **új** terv-mappa — a kiválasztott MEGLÉVŐ vagy a quick-create dialógussal frissen létrehozott páciens-mappában, `<ma>_v1` (D26/D29) |
 
 Ebből következik a feliratok kötelező rendszere: **minden új tervláncot
 indító akció felirata az „új terv" fogalmát hordozza — szó szerint („Új
-terv", „Másolás új tervbe", „Vadonatúj páciens") vagy a D7 szerinti stabil
-Kezdőlap-CTA szövegével („+ Új kezelési terv", D39) —, és egyedül a
-meglévő láncot folytató akció feliratában szerepel a „verzió" szó („Új
-verzió").** Egy „Megnyitás…" típusú, a mechanizmust (és nem az eredményt)
-megnevező felirat elrejtené azt az egyetlen különbséget, amit a dokinak
-kattintás előtt látnia kell — lásd `docs/07-felulet-rendszer.md` („a
-gombfelirat azt mondja, mi történik"). Ugyanezt mondja ki egy rövid,
-szürke magyarázó sor a lista tetején, a kereső alatt.
+terv", „Másolás új tervbe") vagy a D7 szerinti stabil Kezdőlap-CTA
+szövegével („+ Új kezelési terv", D39) —, és egyedül a meglévő láncot
+folytató akció feliratában szerepel a „verzió" szó („Új verzió").** Egy
+„Megnyitás…" típusú, a mechanizmust (és nem az eredményt) megnevező
+felirat elrejtené azt az egyetlen különbséget, amit a dokinak kattintás
+előtt látnia kell — lásd `docs/07-felulet-rendszer.md` („a gombfelirat azt
+mondja, mi történik"). Ugyanezt mondja ki egy rövid, szürke magyarázó sor a
+lista tetején, a kereső alatt.
+
+**Kimondott kivétel (D55):** az `/uj-terv` köztes választó „+ Új páciens"
+gombja NEM hordozza a „új terv" fogalmat a feliratában, szemben a fenti
+szabállyal. Ezen a képernyőn a fogalmat a képernyő fejléce („Új terv
+indítása") mondja ki egyszer, a doki belépésekor — ahogy a kereső
+találati sorai (a „Meglévő páciens keresése…" ág) sem hordozzák
+felirat-szinten, pedig azok is új tervláncot indítanak. A „+ Új páciens"
+felirat itt szándékosan szó szerint azonos a `PaciensekPage.tsx` „+ Új
+páciens" gombjával (lásd lentebb), hogy a két képernyő azonos akciója
+felismerhető maradjon.
 
 **A verziósoron nincs látható akciógomb** — a verzió-szintű műveletek a
 sor végi `⋯` menüben vannak, ebben a sorrendben: `Megnézés`, `Letöltés`,
@@ -839,7 +849,7 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
 
   Mindkét esetben minden más mező (`orvos`, `fazisok`, `elolegSzazalek`,
   `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss alapértéke —
-  pontosan úgy, mintha a doki egy „Vadonatúj páciens" tervet indítana,
+  pontosan úgy, mintha a doki egy „+ Új páciens" tervet indítana,
   csak a páciens mezők (és a `paciensId`) már ki vannak töltve. A
   **`nyelv`/`penznem` kivétel** (D52, § 2. „Nyelv és pénznem” fent): ha a
   pácienshez van legalább egy VÉGLEGESÍTETT terve, `ujTervForrasPaciensbol()`
@@ -882,7 +892,7 @@ kártya azonnal megjelenik a Kezdőlapon), mert még soha nincs elmentve a
 saját `tervId` alatt — más, mint egy `loadPlanIntoDraft`-tal betöltött,
 már mentett terv. Mentéskor az átvitt `paciensId` miatt (D29) a
 `storage.savePlan` a MEGLÉVŐ páciens-mappában nyit új terv-mappát — nem
-egy másikban. A „Vadonatúj páciens" ág (lásd lentebb) ettől eltérően: a
+egy másikban. A „+ Új páciens" ág (lásd lentebb) ettől eltérően: a
 quick-create dialógus (D41) sikeres mentése hoz létre egy ÚJ
 páciens-mappát, MIELŐTT a Páciens adatlap megnyílna — a `paciensId` ott
 sem üres, csak a keletkezés pillanata más.
@@ -893,27 +903,14 @@ A Kezdőlap „+ Új kezelési terv" gombja nem egyenesen a Páciens adatlapra
 navigál, hanem egy köztes kereső/választó lépésre (`/uj-terv`,
 `app/src/pages/NewPlanPage.tsx`) — a teljesen friss, Home-ról induló útnál
 a doki még nem gépelt be semmit, tehát itt (és csak itt) van
-kétértelműség, hogy melyik páciensről van szó:
+kétértelműség, hogy melyik páciensről van szó. A lépés fentről lefelé
+olvasva a doki tényleges döntési sorrendjét követi (D55): előbb dől el,
+hogy új vagy visszatérő páciensről van szó, csak utána a konkrét személy.
 
-- **„Meglévő páciens keresése…"** — névre kereső mező a páciens-index
-  (`storage.listPatients()`) alapján, ékezetfüggetlenül (`norm()`),
-  automatikusan fókuszban a lépés megnyílásakor (D40). Kétállású (D40):
-  0–1 karakternél a D39 „legutóbbi páciensek" listája (max 5, ugyanaz a
-  `legutobbAktivPaciensek()` helper, mint a Kezdőlapon); 2+ karaktertől a
-  `paciensTalalatok()` (`domain/paciensKereses.ts`) relevancia szerinti
-  rendezése (teljes név eleje > valamelyik szótöredék eleje > belső
-  egyezés, azon belül alfabetikus). A lista a tételkeresővel
-  (`ItemPicker.tsx`) azonos gépel → nyíl → Enter/Esc ciklust követi
-  (`ArrowDown`/`ArrowUp` mozgatja a kiemelést, `Enter` kiválaszt,
-  `Escape` kiüríti a keresőt). Nulla találatnál egy közvetlen „Új
-  páciens: „…"" opció jelenik meg a begépelt névvel, a „Vadonatúj
-  páciens" ágat indítja el, a quick-create dialógust a begépelt névvel
-  előtöltve. Kiválasztás után a közös forráskiválasztáson (lásd fent,
-  D33) előtöltve nyílik a Páciens adatlap — a nyelv/pénznem is a
-  kiválasztott páciens legutóbb véglegesített tervéből örökölve (D52,
-  fent § 2), ugyanazon a közös forráson keresztül.
-- **„Vadonatúj páciens" (D41)** — a `PaciensekPage.tsx` „+ Új páciens"-
-  ével közös quick-create dialógust nyitja meg
+- **„+ Új páciens" (D41/D55)** — a kereső kártya FÖLÖTT álló, mindig
+  látható, elsődleges gomb (megjelenésben és feliratban szó szerint azonos
+  a `PaciensekPage.tsx` „+ Új páciens" gombjával, lásd § 9), a
+  `PaciensekPage.tsx`-szel közös quick-create dialógust nyitja meg
   (`app/src/pages/paciensek/UjPaciensDialog.tsx`): kötelező név +
   opcionális születési dátum/telefon. A dialógus Mégse/Escape-je a
   köztes választón hagyja a dokit, a keresőszöveg megmarad (D205), a
@@ -930,15 +927,37 @@ kétértelműség, hogy melyik páciensről van szó:
   ugyanezt az ellenőrzést a végleges adatokra, mielőtt tényleg ment — ha
   talál ütközést, „Mégis új páciens létrehozása" explicit megerősítést
   kér. Csak sikeres mentés után jön létre a valódi páciensrekord ÉS
-  navigál a Páciens adatlapra — a mindig látható gomb üres, a fenti
-  no-match „Új páciens" opció a begépelt névvel előtöltve nyitja ugyanezt
-  a dialógust.
+  navigál a Páciens adatlapra — a felső, mindig látható gomb ÜRESEN nyitja
+  a dialógust; a kártyán belüli no-match „Új páciens" opció (lásd lent) a
+  begépelt névvel előtöltve nyitja ugyanezt.
+- Egy „vagy" feliratú vonalas elválasztó tagolja a két utat, alatta a
+  kereső kártya:
+- **„Meglévő páciens keresése…"** — névre kereső mező a páciens-index
+  (`storage.listPatients()`) alapján, ékezetfüggetlenül (`norm()`),
+  automatikusan fókuszban a lépés megnyílásakor (D40). Kétállású (D40):
+  0–1 karakternél a „legutóbbi páciensek" listája, max 15 elemig (D56, a
+  Kezdőlap D39 5-ös limitjétől szándékosan eltérve, ugyanaz a
+  `legutobbAktivPaciensek()` helper, más `limit`-paraméterrel) — a sor
+  egysoros: a név balra, tőle jobbra ugyanazon a soron az aktivitás-szöveg
+  (`aktivitasSzoveg()`), szemben a Kezdőlap kétsoros elrendezésével (D47);
+  2+ karaktertől a `paciensTalalatok()` (`domain/paciensKereses.ts`) relevancia szerinti
+  rendezése (teljes név eleje > valamelyik szótöredék eleje > belső
+  egyezés, azon belül alfabetikus). A lista a tételkeresővel
+  (`ItemPicker.tsx`) azonos gépel → nyíl → Enter/Esc ciklust követi
+  (`ArrowDown`/`ArrowUp` mozgatja a kiemelést, `Enter` kiválaszt,
+  `Escape` kiüríti a keresőt). Nulla találatnál egy közvetlen „Új
+  páciens: „…"" opció jelenik meg a begépelt névvel, a fenti „+ Új
+  páciens" ágat indítja el, a quick-create dialógust a begépelt névvel
+  előtöltve. Kiválasztás után a közös forráskiválasztáson (lásd fent,
+  D33) előtöltve nyílik a Páciens adatlap — a nyelv/pénznem is a
+  kiválasztott páciens legutóbb véglegesített tervéből örökölve (D52,
+  fent § 2), ugyanazon a közös forráson keresztül.
 
 A piszkozat-felülírás-őr a köztes lépésen fut le (mindkét ágon), NEM a
 Kezdőlap gombján — a Kezdőlap gombja feltétel nélkül navigál ide, mert a
-piszkozat itt még nem veszik el. A „Vadonatúj páciens" ágon ez a
-megerősítés a quick-create dialógus MEGNYITÁSA előtt fut le; a
-dialógus saját Mégse/Escape-je (fent) ettől független, külön lépés.
+piszkozat itt még nem veszik el. A „+ Új páciens" ágon ez a megerősítés a
+quick-create dialógus MEGNYITÁSA előtt fut le; a dialógus saját
+Mégse/Escape-je (fent) ettől független, külön lépés.
 
 A terv-lánc fa saját „Új terv"/„Másolás új tervbe" gombjai (lásd fent)
 **nem** ide navigálnak — azoknál a célpáciens már adott a forrás tervből,
@@ -1223,7 +1242,7 @@ adatai` tabja — a szerkesztő mezői/mentés-szabályai ott vannak leírva
   (D45, ugyanaz a szabály, mint a `PatientEditorPanel`-en), a Mentés
   gomb ilyenkor nem hoz létre pácienst. Ugyanez a dialógus
   (`UjPaciensDialog.tsx`) szolgálja az „Új terv indítása” köztes
-  páciensválasztó „Vadonatúj páciens” ágát is (D41), a duplikáció-
+  páciensválasztó „+ Új páciens” ágát is (D41), a duplikáció-
   detektálás (D42) mindkét belépési ponton azonos (lásd fent, „Új terv
   indítása”). `storage.createPatient(nev, kezdoAdatok?)` mindkét
   gyökér-fájlt (`paciens.json` + `paciens-adatok.json`) létrehozza, terv

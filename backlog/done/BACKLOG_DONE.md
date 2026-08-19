@@ -1399,3 +1399,49 @@ karbantartási kör négy önálló javítása.
   elsődleges/másodlagos viszonyt írja le
   (docs/01-attekintes-es-dontesek.md D54, docs/03-funkcionalis-spec.md
   § 5. Terv-láncok és verziók).
+
+---
+
+### 55. „Új terv indítása": új páciens felülre, kereső alulra — KÉSZ (2026-08-19)
+
+- **Méret:** ~0.5 nap.
+- **Kereteket sért?** Nem — új D55 (`docs/01-attekintes-es-dontesek.md`),
+  D40 pontosítva.
+- **Valódi haszon:** a köztes páciensválasztón az új-páciens ág a kereső
+  ALATT állt, a projekt "Mégse"-stílusával (`variant="soft" color="gray"`)
+  — a képernyőnek nem volt vizuális elsődleges akciója, és az olvasási
+  sorrend a doki tényleges döntési sorrendjének (előbb új vs. visszatérő
+  páciens, utána a konkrét személy) fordítottja volt.
+- **Megvalósítás:** a „+ Új páciens" gomb a kereső kártya FÖLÉ költözött,
+  a `PaciensekPage.tsx`-szel szó szerint azonos megjelenéssel (solid,
+  alapértelmezett méret) és felirattal, mindig látható, elsődleges
+  rangban; a két utat egy „vagy" feliratú elválasztó tagolja. A
+  kártyán belüli no-match „Új páciens: „…"" opció és a gépel → nyíl →
+  Enter/Esc billentyűzet-ciklus változatlan. A feliratrendszer
+  (`docs/03-funkcionalis-spec.md` "A négy terv-létrehozási út és a
+  gombfeliratok rendszere") kimondott kivételt kapott erre a képernyőre:
+  a "új terv" fogalmat itt a fejléc hordozza, nem az egyes gombok
+  (docs/01-attekintes-es-dontesek.md D40/D55, docs/03-funkcionalis-spec.md
+  § "Új terv indítása" — a köztes páciens-választó).
+
+---
+
+### 56. „Új terv indítása": legutóbbi páciensek 15-ös, egysoros lista — KÉSZ (2026-08-19)
+
+- **Méret:** ~0.25 nap.
+- **Kereteket sért?** Nem — új D56 (`docs/01-attekintes-es-dontesek.md`),
+  D40 pontosítva.
+- **Valódi haszon:** az `/uj-terv` köztes páciensválasztó a doki
+  elsődleges belépési pontja egy visszatérő pácienshez, de a
+  "Legutóbbi páciensek" lista a Kezdőlappal megegyező, szűk 5-ös
+  korlátot örökölte — ez túl gyakran kényszerítette gépelésre, holott a
+  cél épp a gépelés elkerülése.
+- **Megvalósítás:** új, önálló `UJ_TERV_RECENT_LIMIT = 15` konstans
+  (`domain/paciensAktivitas.ts`), a Kezdőlap `RECENT_PACIENS_LIMIT`
+  (5) mellett — ugyanaz a `legutobbAktivPaciensek()` helper, más
+  `limit`-paraméterrel, a Kezdőlap érintetlen. A sor kétsorosból
+  egysorosra vált (név balra, aktivitás-szöveg jobbra, ugyanazon a
+  soron), tipográfia/szín változatlan — a lépték-növelés előfeltétele
+  volt, hogy 15 sor ne fusson feleslegesen hosszúra
+  (docs/01-attekintes-es-dontesek.md D40/D56, docs/03-funkcionalis-
+  spec.md § "Új terv indítása" — a köztes páciens-választó).

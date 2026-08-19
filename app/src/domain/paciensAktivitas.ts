@@ -36,6 +36,11 @@ export function ervenyesAktivitas(value: unknown): PatientActivity | undefined {
 
 export const RECENT_PACIENS_LIMIT = 5;
 
+// Az /uj-terv köztes páciensválasztó (D56) SZÁNDÉKOSAN eltérő, nagyobb
+// limitje a Kezdőlap RECENT_PACIENS_LIMIT-jétől (D39/D40) -- ugyanaz a
+// legutobbAktivPaciensek() helper, más limit-paraméterrel hívva.
+export const UJ_TERV_RECENT_LIMIT = 15;
+
 /**
  * A legutóbbi jelentős aktivitású páciensek, csökkenő sorrendben (D190/D191).
  * `utolsoAktivitas` nélküli páciens nem kerül a listába. Tiszta függvény --

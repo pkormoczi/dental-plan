@@ -40,7 +40,7 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Ilona');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -116,7 +116,7 @@ describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => 
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Piszkozat Béla');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -188,7 +188,7 @@ describe('PreviewPage -- hiányzó és eltérő tételnevek két külön listáb
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Elek');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -241,7 +241,7 @@ describe('PreviewPage -- hiányzó és eltérő tételnevek két külön listáb
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Egyedi');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -309,7 +309,7 @@ describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Placeholder');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -370,7 +370,7 @@ describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Fallback');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -435,7 +435,7 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Csomag');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -477,7 +477,7 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Kikapcsolva');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
@@ -526,7 +526,7 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
 
       // Minden páciensmező kitöltve -- a "Hiányzó páciensadatok" lépés
       // kimarad, hogy a 0 Ft-os dialógus jöjjön elsőként.
@@ -576,7 +576,7 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Lánc');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -626,7 +626,7 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       // A quick-create után a törzsadat még csak a nevet tartalmazza -- a
       // többi mező kitöltése itt egy master<->draft ELTÉRÉS (fill-in), ami
       // az Előnézeten info-sávot ad, de a lépés-elhagyáskor NEM szakítja
@@ -668,7 +668,7 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Info2');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -706,7 +706,7 @@ describe('PreviewPage -- letöltési fájlnév', () => {
       render(<App />);
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: 'Vadonatúj páciens' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
       const nameInput = await screen.findByPlaceholderText('Kovács János');
       await user.type(nameInput, 'Teszt Ilona');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));

@@ -75,7 +75,7 @@ interface AppStateValue {
   piszkozatHiba: string | null;
   /**
    * D37: a piszkozathoz best-effort ismert páciens-mappa, vagy `null`, ha nem
-   * ismert (pl. a "Vadonatúj páciens" ág). A `TervWorkflowShell` breadcrumb-
+   * ismert (pl. a "+ Új páciens" ág). A `TervWorkflowShell` breadcrumb-
    * linkjéhez és a `PlanEditorPage` discard-navigációjához.
    */
   piszkozatPatientDir: string | null;

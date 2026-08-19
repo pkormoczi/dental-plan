@@ -86,7 +86,7 @@ export default function TervWorkflowShell() {
         </Text>
         {/* D37: a piszkozat patientDir-je best-effort ismert (lásd
             state/AppState.tsx) -- ha van, a páciens-szegmens a
-            részletoldalára linkel; ha nem (pl. "Vadonatúj páciens" ág,
+            részletoldalára linkel; ha nem (pl. "+ Új páciens" ág,
             vagy egy funkció előtti perzisztált draft), sima szöveg marad. */}
         {piszkozatPatientDir ? (
           <Link

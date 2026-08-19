@@ -13,12 +13,13 @@ import {
   Card,
   Flex,
   Heading,
+  Separator,
   Text,
   TextField,
 } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
-import { aktivitasSzoveg, legutobbAktivPaciensek, RECENT_PACIENS_LIMIT } from '../domain/paciensAktivitas';
+import { aktivitasSzoveg, legutobbAktivPaciensek, UJ_TERV_RECENT_LIMIT } from '../domain/paciensAktivitas';
 import { KERESES_MIN_KARAKTER, paciensTalalatok } from '../domain/paciensKereses';
 import type { PatientFolder } from '../domain/types';
 import { useAppState } from '../state/AppState';
@@ -86,7 +87,7 @@ export default function NewPlanPage() {
   // indítása".
   const isSearching = trimmed.length >= KERESES_MIN_KARAKTER;
   const recents = useMemo(
-    () => legutobbAktivPaciensek(patients, RECENT_PACIENS_LIMIT),
+    () => legutobbAktivPaciensek(patients, UJ_TERV_RECENT_LIMIT),
     [patients],
   );
   const talalatok = useMemo(
@@ -96,7 +97,7 @@ export default function NewPlanPage() {
   const listaTetelek = isSearching ? talalatok : recents;
   // Nulla találatnál egy közvetlen "Új páciens" pszeudó-opció a begépelt
   // névvel -- az ItemPicker "egyedi tétel felvétele" mintája (D40). A
-  // mindig látható "Vadonatúj páciens" gomb emellett is megmarad.
+  // mindig látható, kereső fölötti "+ Új páciens" gomb emellett is megmarad.
   const ujPaciensOpcio = isSearching && talalatok.length === 0;
   const opcioSzam = listaTetelek.length + (ujPaciensOpcio ? 1 : 0);
 
@@ -129,7 +130,7 @@ export default function NewPlanPage() {
   }
 
   // A `nev` a no-match ág begépelt szövege (docs/03-funkcionalis-spec.md
-  // „Új terv indítása") -- a mindig látható "Vadonatúj páciens" gomb `nev`
+  // „Új terv indítása") -- a mindig látható "+ Új páciens" gomb `nev`
   // nélkül hívja. Csak MEGNYITJA a quick-create dialógust -- a tényleges
   // rekordlétrehozás és navigáció a `createAndStart` sikerágában történik.
   function openQuickCreate(nev?: string) {
@@ -234,8 +235,8 @@ export default function NewPlanPage() {
         Új terv indítása
       </Heading>
       <Text as="p" size="2" color="gray" mb="4">
-        Visszatérő páciensnél kereséssel átveheted a mentett adatait, hogy ne kelljen
-        újragépelni — vagy indíts egy teljesen vadonatúj tervet.
+        Vegyél fel egy új pácienst, vagy keress rá egy visszatérőre — az ő mentett
+        adatait a terv átveszi, nem kell újragépelni.
       </Text>
 
       {selectError && (
@@ -247,7 +248,19 @@ export default function NewPlanPage() {
         </Callout.Root>
       )}
 
-      <Card size="2" mb="4">
+      <Button type="button" onClick={() => runOrConfirm({ kind: 'new' })}>
+        + Új páciens
+      </Button>
+
+      <Flex align="center" gap="3" my="4">
+        <Separator size="4" style={{ flexGrow: 1, width: 'auto' }} />
+        <Text size="1" color="gray">
+          vagy
+        </Text>
+        <Separator size="4" style={{ flexGrow: 1, width: 'auto' }} />
+      </Flex>
+
+      <Card size="2">
         <Text as="p" size="2" weight="bold" mb="2">
           Meglévő páciens keresése…
         </Text>
@@ -316,9 +329,8 @@ export default function NewPlanPage() {
                 onClick={() => runOrConfirm({ kind: 'existing', patient: p })}
                 onMouseEnter={() => setHi(i)}
                 style={{
-                  justifyContent: 'flex-start',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
                   height: 'auto',
                   padding: '8px 12px',
                   background: i === hi ? t.accentWash : undefined,
@@ -356,10 +368,6 @@ export default function NewPlanPage() {
           </Button>
         )}
       </Card>
-
-      <Button size="3" variant="soft" color="gray" onClick={() => runOrConfirm({ kind: 'new' })}>
-        Vadonatúj páciens
-      </Button>
 
       <UjPaciensDialog
         open={ujOpen}
