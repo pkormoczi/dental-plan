@@ -13,7 +13,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Box, Button, Callout, Skeleton, Tabs, Text } from '@radix-ui/themes';
-import { CrossCircledIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, CrossCircledIcon } from '@radix-ui/react-icons';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import { useNavGuard } from '../components/NavGuardContext';
 import PatientDetailHeader from '../components/PatientDetailHeader';
@@ -134,9 +134,32 @@ export default function PatientDetailPage() {
     }
   }
 
+  // App-chrome, nem tartalom -- ezért mind a 4 return-ágban megjelenik
+  // (betöltés/hiba/nem található/normál), és a MEGLÉVŐ dirty-guardon (D46
+  // mintája, `requestTab` analógiájára) megy át: `navigate(-1)` csendben
+  // eldobná a "Páciens adatai" tabon félbehagyott szerkesztést, ha nem a
+  // guardon keresztül navigálna. "Vissza" a felirat, nem "Páciensek" --
+  // ide a Kezdőlapról, a Pácienslistáról, a "Korábbi tervek"
+  // kereszt-linkjéről és az "Új terv indítása" keresőjéből is be lehet
+  // lépni, egy "← Páciensek" felirat ezek felében hazudna.
+  const backLink = (
+    <Button
+      type="button"
+      size="1"
+      variant="ghost"
+      color="gray"
+      mb="3"
+      onClick={() => guard.request(() => navigate(-1))}
+    >
+      <ArrowLeftIcon />
+      Vissza
+    </Button>
+  );
+
   if (loading) {
     return (
       <Box style={{ maxWidth: 900, margin: '0 auto' }}>
+        {backLink}
         <Skeleton>
           <Box height="52px" mb="4" />
         </Skeleton>
@@ -150,6 +173,7 @@ export default function PatientDetailPage() {
   if (loadError) {
     return (
       <Box style={{ maxWidth: 900, margin: '0 auto' }}>
+        {backLink}
         <Callout.Root color="red">
           <Callout.Icon>
             <CrossCircledIcon />
@@ -163,12 +187,17 @@ export default function PatientDetailPage() {
   if (!patient) {
     return (
       <Box style={{ maxWidth: 900, margin: '0 auto' }}>
+        {backLink}
         <Callout.Root color="red" mb="4">
           <Callout.Icon>
             <CrossCircledIcon />
           </Callout.Icon>
           <Callout.Text>Nincs ilyen páciens -- lehet, hogy elgépelt vagy elavult a link.</Callout.Text>
         </Callout.Root>
+        {/* A "Vissza a páciensekhez" a "← Vissza" mellett is marad: a két cél
+            eltér -- elavult/elgépelt URL esetén a navigate(-1) visszavihet
+            ugyanarra a rossz helyre, ez a fix lista a használható
+            kimenekülő. */}
         <Button variant="soft" color="gray" onClick={() => navigate('/paciensek')}>
           Vissza a páciensekhez
         </Button>
@@ -180,6 +209,7 @@ export default function PatientDetailPage() {
 
   return (
     <Box style={{ maxWidth: 900, margin: '0 auto' }}>
+      {backLink}
       <PatientDetailHeader adatok={displayedAdatok} />
 
       <Tabs.Root value={tab} onValueChange={(v) => requestTab(v === 'adatai' ? 'adatai' : 'tervek')}>
@@ -216,7 +246,7 @@ export default function PatientDetailPage() {
                 </Callout.Root>
               )}
               <Button onClick={() => void startFirstPlan()} disabled={startingPlan}>
-                Új terv
+                + Új terv
               </Button>
             </Box>
           ) : (

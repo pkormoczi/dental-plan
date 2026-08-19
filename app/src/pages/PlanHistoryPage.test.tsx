@@ -280,7 +280,7 @@ describe('PlanHistoryPage', () => {
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
 
-    expect(within(card).getByRole('button', { name: 'Új terv' })).toBeInTheDocument();
+    expect(within(card).getByRole('button', { name: '+ Új terv' })).toBeInTheDocument();
     await expandPatientBlock(user, card);
 
     // Nagy Éva 3 verzióval szerepel a seedben, 2 önálló láncban -- egy-egy
@@ -341,7 +341,7 @@ describe('PlanHistoryPage', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    const ujTervBtn = within(card).getByRole('button', { name: 'Új terv' });
+    const ujTervBtn = within(card).getByRole('button', { name: '+ Új terv' });
 
     await user.click(ujTervBtn);
 

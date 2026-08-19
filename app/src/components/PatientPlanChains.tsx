@@ -356,14 +356,18 @@ export default function PatientPlanChains({
           már kimondja mindkettőt. Az „Új terv” akciógomb mindkét változatban
           marad, és `standalone`-ban a névfejléc MELLETT van, nem benne: a
           páciensnév címke, a gomb akció -- egy Text-en belül a kettő
-          összeolvad. Balra zárva, közvetlenül a név után: a rövid "Új terv"
-          felirat nem mondja ki, hogy a páciensadatot átviszi -- ezt az
-          elhelyezés hordozza. Accent (nem szürke), a páciensnév `t.brand`
-          színével egy családban. `embedded`-ben a gomb teljes értékű CTA
-          (alap méret, solid) -- egyenrangú a terv nélküli páciens üres
-          állapotának „Új terv” gombjával, ugyanezen a tabon. */}
+          összeolvad. Balra zárva, közvetlenül a név után: a rövid "+ Új
+          terv" felirat nem mondja ki, hogy a páciensadatot átviszi -- ezt
+          az elhelyezés hordozza. Accent (nem szürke), a páciensnév
+          `t.brand` színével egy családban. `embedded`-ben a gomb teljes
+          értékű CTA (alap méret, solid) -- egyenrangú a terv nélküli
+          páciens üres állapotának „+ Új terv” gombjával, ugyanezen a
+          tabon. Cím nélkül (D44) a gomb jobbra zárva horgonyzódik a
+          tartalom-terület tetejéhez, egy vonalban a verzió-sorok jobb
+          szélével (⋯ menü / összeg) -- ezért `justify="end"` csak
+          `embedded`-ben, `standalone`-ban marad a default balra zárás. */}
       {(standalone || unreadable || latestOverall) && (
-        <Flex align="baseline" gap="3" mb="2" wrap="wrap">
+        <Flex align="baseline" gap="3" mb="2" wrap="wrap" justify={standalone ? 'start' : 'end'}>
           {standalone && (
             <Text as="div" size="3" weight="bold" style={{ color: t.brand }}>
               {patient.nev}
@@ -386,7 +390,7 @@ export default function PatientPlanChains({
                 })
               }
             >
-              Új terv
+              + Új terv
             </Button>
           )}
           {/* Kereszt-link a páciens törzsadatára (backlog-28/backlog-30, D33) --
@@ -448,7 +452,12 @@ export default function PatientPlanChains({
             const label = displayedLabel(plan);
             return (
               <Box key={plan.dirName} mb="3" data-plan={plan.dirName}>
-                <Flex align="center" gap="1" mb="1">
+                {/* mt="4" a fölötte lévő elem mb-jével kollabálva 16px teret
+                    ad a cím fölé (a szülő Box-ok itt paddig/margó nélküliek,
+                    a margó "átüt" rajtuk); mb="2" 8px-re nyitja a cím és az
+                    első verzió-sor közti rést -- így a cím egyértelműen a
+                    verziók fejléceként olvasódik, nem újabb sorként. */}
+                <Flex align="center" gap="1" mt="4" mb="2">
                   {isEditing ? (
                     <>
                       <TextField.Root

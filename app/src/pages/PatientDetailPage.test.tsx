@@ -97,11 +97,11 @@ describe('PatientDetailPage', () => {
 
     const tervekTab = await screen.findByRole('tab', { name: /Kezelési tervek/ });
     expect(tervekTab).toHaveAttribute('aria-selected', 'true');
-    // A "Kezelési tervek" tab tartalmának "Új terv" gombja csak ebben a
+    // A "Kezelési tervek" tab tartalmának "+ Új terv" gombja csak ebben a
     // tabban van jelen (a "Páciens adatai" tabon nincs, lásd lentebb) --
     // megbízható jelzés arra, hogy ténylegesen ez a tab renderel (Radix
     // Tabs.Content az inaktív tabot nem is rendereli, nem csak elrejti).
-    expect(await screen.findByRole('button', { name: 'Új terv' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '+ Új terv' })).toBeInTheDocument();
   });
 
   it('location.state.tab: "adatai" felülírja az alapértelmezett tabot, és nincs rajta Új terv gomb', async () => {
@@ -110,7 +110,7 @@ describe('PatientDetailPage', () => {
     const adataiTab = await screen.findByRole('tab', { name: /Páciens adatai/ });
     expect(adataiTab).toHaveAttribute('aria-selected', 'true');
     expect(await screen.findByRole('button', { name: 'Szerkesztés' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Új terv' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '+ Új terv' })).not.toBeInTheDocument();
   });
 
   it('a sticky fejléc a törzsadatnak megfelelő nevet, születési dátumot és telefont mutatja', async () => {
@@ -118,8 +118,9 @@ describe('PatientDetailPage', () => {
 
     const header = await screen.findByTestId('patient-detail-header');
     expect(within(header).getByText('Nagy Éva')).toBeInTheDocument();
-    expect(within(header).getByText('1990.11.02.')).toBeInTheDocument();
-    expect(within(header).getByText('+36 20 555 1234')).toBeInTheDocument();
+    // A születési dátum és a telefon egyetlen "· "-tal fűzött szövegcsomó
+    // (redesign) -- nem két külön szöveg-node, mint korábban.
+    expect(within(header).getByText('1990.11.02. · +36 20 555 1234')).toBeInTheDocument();
   });
 
   // D44: a sticky fejléc már kimondja a páciens nevét, a tabsor pedig
@@ -129,7 +130,7 @@ describe('PatientDetailPage', () => {
     renderDetail(nagyDir);
 
     const header = await screen.findByTestId('patient-detail-header');
-    await screen.findByRole('button', { name: 'Új terv' }); // a tab tartalma betöltött
+    await screen.findByRole('button', { name: '+ Új terv' }); // a tab tartalma betöltött
 
     expect(screen.getAllByText('Nagy Éva')).toHaveLength(1);
     expect(within(header).getByText('Nagy Éva')).toBeInTheDocument();
@@ -154,7 +155,7 @@ describe('PatientDetailPage', () => {
     renderDetail(folder.dirName);
 
     expect(await screen.findByText('Ennek a páciensnek még nincs kezelési terve.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Új terv' }));
+    await user.click(screen.getByRole('button', { name: '+ Új terv' }));
 
     expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Teszt Üres');
   });
@@ -165,7 +166,7 @@ describe('PatientDetailPage', () => {
     expect(
       screen.queryByText('Ennek a páciensnek még nincs kezelési terve.'),
     ).not.toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: 'Új terv' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: '+ Új terv' })).toBeInTheDocument();
   });
 
   // D38: a Radix `Tabs` unmountolja az inaktív tabot -- a "Páciens
@@ -404,5 +405,66 @@ describe('PatientDetailPage', () => {
 
     expect(await screen.findByText('Kezdőlap-próba')).toBeInTheDocument();
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
+  // A "← Vissza" `navigate(-1)`-et hív -- a teszteléshez valódi előzmény
+  // kell a MemoryRouter-ben, ezért ez a két teszt nem a `renderDetail()`
+  // harnesst használja, hanem egy előzménnyel rendelkező sajátot.
+  function renderDetailWithHistory(patientDir: string) {
+    return render(
+      <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
+        <MemoryRouter
+          initialEntries={['/paciensek', `/paciensek/${encodeURIComponent(patientDir)}`]}
+          initialIndex={1}
+        >
+          <StorageProvider>
+            <AppStateProvider>
+              <NavGuardProvider>
+                <Routes>
+                  <Route path="/paciensek" element={<div>Páciensek-próba</div>} />
+                  <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
+                </Routes>
+              </NavGuardProvider>
+            </AppStateProvider>
+          </StorageProvider>
+        </MemoryRouter>
+      </Theme>,
+    );
+  }
+
+  it('nézet módban a "← Vissza" megerősítés nélkül navigál oda, ahonnan érkeztünk', async () => {
+    const user = userEvent.setup();
+    renderDetailWithHistory(nagyDir);
+
+    await screen.findByRole('button', { name: '+ Új terv' }); // a lap betöltött
+    await user.click(screen.getByRole('button', { name: 'Vissza' }));
+
+    expect(await screen.findByText('Páciensek-próba')).toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
+  // D46 mintája (lásd fent a NavBar-teszteket): a "← Vissza" a "Páciens
+  // adatai" tabon félbehagyott szerkesztést sem hagyhatja csendben elveszni.
+  it('mentetlen módosítással a "← Vissza" is megerősítést kér -- Mégse a lapon tart', async () => {
+    const user = userEvent.setup();
+    renderDetailWithHistory(nagyDir);
+
+    await user.click(await screen.findByRole('tab', { name: /Páciens adatai/ }));
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+    const telefonMezo = await screen.findByDisplayValue('+36 20 555 1234');
+    await user.clear(telefonMezo);
+    await user.type(telefonMezo, 'ideiglenes érték');
+
+    await user.click(screen.getByRole('button', { name: 'Vissza' }));
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByText('Nem mentett módosítás')).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('ideiglenes érték')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Vissza' }));
+    await user.click(await screen.findByRole('button', { name: 'Váltás, módosítás elvetésével' }));
+    expect(await screen.findByText('Páciensek-próba')).toBeInTheDocument();
   });
 });

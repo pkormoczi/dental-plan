@@ -11,12 +11,12 @@ import { t } from '../design/tokens';
 
 export default function PatientDetailHeader({ adatok }: { adatok: PatientMasterData }) {
   const dob = adatok.szuletesiIdo ? formatShortDate(adatok.szuletesiIdo, 'hu') : null;
+  const meta = [dob, adatok.telefon].filter(Boolean).join(' · ');
 
   return (
     <Flex
-      align="baseline"
-      gap="3"
-      wrap="wrap"
+      direction="column"
+      gap="1"
       py="3"
       mb="4"
       data-testid="patient-detail-header"
@@ -24,21 +24,20 @@ export default function PatientDetailHeader({ adatok }: { adatok: PatientMasterD
         position: 'sticky',
         top: 0,
         zIndex: 1,
-        background: t.surface,
+        // t.page (nem t.surface): a sáv marad átlátszatlan -- kell, hogy a
+        // görgő tartalom ne lásszon át alatta --, de lapszínű, hogy ne
+        // üssön el "card"-ként a szürke oldalháttértől (docs/07: nincs card
+        // doboz adat körül).
+        background: t.page,
         borderBottom: `1px solid ${t.uiLine}`,
       }}
     >
       <Text size="4" weight="bold" style={{ color: t.brand }}>
         {adatok.nev || 'Névtelen páciens'}
       </Text>
-      {dob && (
-        <Text size="2" color="gray">
-          {dob}
-        </Text>
-      )}
-      {adatok.telefon && (
-        <Text size="2" color="gray">
-          {adatok.telefon}
+      {meta && (
+        <Text size="2" style={{ color: t.uiTextMuted }}>
+          {meta}
         </Text>
       )}
     </Flex>
