@@ -626,10 +626,17 @@ export default function PatientPlanChains({
                   .map((v, vi) => {
                     const ref: VersionRef = { planDir: plan.dirName, versionDir: v.dirName };
                     const total = totalsByVersion[versionDataKey(plan.dirName, v.dirName)];
+                    // D53: "Új verzió" kizárólag a lánc legfrissebb
+                    // verziósorán engedett -- egy historical sorról indítva a
+                    // doki tévesen azt hihetné, hogy a régi verziót
+                    // folytatja, valójában egy új "fejet" hozna létre a
+                    // láncon, ami a lánc-rendezésben megelőzné a tényleges
+                    // legfrissebb verziót.
+                    const isLegfrissebb = v.dirName === legfrissebb?.dirName;
                     // "Legutóbbi" badge (46. tétel, 4. döntés): csak 2+
                     // verziós láncon -- egyverziós láncon funkciótlan dísz
                     // lenne (docs/07 tiltja).
-                    const legutobbi = versions.length > 1 && v.dirName === legfrissebb?.dirName;
+                    const legutobbi = versions.length > 1 && isLegfrissebb;
                     return (
                       <Box key={v.dirName}>
                         {vi > 0 && <Separator size="4" />}
@@ -694,9 +701,11 @@ export default function PatientPlanChains({
                                   Letöltés
                                 </DropdownMenu.Item>
                                 <DropdownMenu.Separator />
-                                <DropdownMenu.Item onSelect={() => runOrConfirm({ kind: 'open', ...ref })}>
-                                  Új verzió
-                                </DropdownMenu.Item>
+                                {isLegfrissebb && (
+                                  <DropdownMenu.Item onSelect={() => runOrConfirm({ kind: 'open', ...ref })}>
+                                    Új verzió
+                                  </DropdownMenu.Item>
+                                )}
                                 <DropdownMenu.Item onSelect={() => runOrConfirm({ kind: 'copy', ...ref })}>
                                   Másolás új tervbe
                                 </DropdownMenu.Item>

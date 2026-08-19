@@ -275,5 +275,8 @@ describe('Végpontok közötti folyamat', () => {
     expect(screen.queryByText(/2026\. július 22\./)).not.toBeInTheDocument();
     // A korábbi (pillanatkép) sorok érintetlenek -- D7.
     expect(screen.getByDisplayValue('Fémkerámia')).toBeInTheDocument();
+    // D53: a forrás verzió VEGLEGES volt, a betöltött piszkozat fejléce
+    // mégis "piszkozat"-ot mutat -- a statusz a betöltéskor visszaáll.
+    expect(screen.getByText('Nagy Éva · piszkozat')).toBeInTheDocument();
   }, 20000);
 });

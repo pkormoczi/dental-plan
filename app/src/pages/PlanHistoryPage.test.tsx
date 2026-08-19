@@ -353,6 +353,30 @@ describe('PlanHistoryPage', () => {
     ]);
   });
 
+  // D53 (48. tétel): "Új verzió" kizárólag a lánc legfrissebb verziósorán
+  // engedett -- egy historical sorról indítva a doki tévesen azt hihetné,
+  // hogy a régi verziót folytatja, valójában egy új "fejet" hozna létre a
+  // láncon.
+  it('"Új verzió" a lánc historical (nem legfrissebb) verziósorán nem jelenik meg', async () => {
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const [v1] = nagyEvaMultiVersionChain;
+    const doboz = lancDoboz(card, v1.planDir);
+    await nyissLancot(user, doboz);
+
+    // A verziók fordítva listázódnak (legfrissebb elöl) -- a MÁSODIK "⋯"
+    // trigger a historical (v1) sorhoz tartozik.
+    const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+    expect(triggers).toHaveLength(2);
+    await user.click(triggers[1]);
+
+    const items = await screen.findAllByRole('menuitem');
+    expect(items.map((el) => el.textContent)).toEqual(['Megnézés', 'Letöltés', 'Másolás új tervbe']);
+  });
+
   it('"Másolás új tervbe" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Páciens adatlapon', async () => {
     const [, v2] = nagyEvaMultiVersionChain;
     const forrasSorSzam = v2.plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);

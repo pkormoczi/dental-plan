@@ -40,7 +40,9 @@ interface AppStateValue {
    * tervek"). A `patientDir` opcionális -- ahol a hívó már ismeri (D37), a
    * `DraftRecord`-ba is bekerül (a workflow-héj breadcrumb-linkjéhez és a
    * Kezdőlap "Megnyitás" utáni discard-navigációhoz), ahol nem (pl. még nem
-   * létező páciens), hiányzik, és a fallback-viselkedés lép életbe.
+   * létező páciens), hiányzik, és a fallback-viselkedés lép életbe. A
+   * betöltött terv `statusz`-a PISZKOZAT-ra áll (D53) -- a `tervId` (a
+   * lánc-hovatartozás jele) érintetlen marad.
    */
   loadPlanIntoDraft: (plan: Plan, patientDir?: string) => void;
   /**
@@ -346,7 +348,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         // betöltéskor íródik, nem véglegesítéskor -- a PreviewPage a
         // `pdfInstance`-t a `plan` state-ből rendereli, egy késői írás a
         // mentett JSON-t és a már korábban renderelt PDF-blob-ot szétcsúsztatná.
-        const friss = frissDatummal(p, settings, todayIso());
+        // D53: a `statusz` is itt áll vissza PISZKOZAT-ra -- a betöltött
+        // piszkozat a FOLYTATÁS állapotát tükrözi, nem a forrás verzió lezárt
+        // állapotát (a fejléc "véglegesítve" jelvénye és a letöltés
+        // PISZKOZAT- előtagja enélkül tévesen a forrásét mutatná).
+        const friss: Plan = { ...frissDatummal(p, settings, todayIso()), statusz: 'PISZKOZAT' };
         setPlanState(friss);
         setLoadedOsszesitokDiff(osszesitokElter(p.osszesitok, p.fazisok, p.kedvezmenyOsszeg));
         setFrissitettDatum(

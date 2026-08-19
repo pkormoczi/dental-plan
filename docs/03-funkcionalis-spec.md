@@ -614,12 +614,10 @@ a páciensmappa nevéé (`docs/02-domain-modell.md` „Mappanév szabályok"),
 hogy a fájl és a mappa neve vizuálisan párosítható legyen. A
 `PISZKOZAT-` előtag a nyers `plan.statusz !== 'VEGLEGES'`-ből jön —
 ugyanaz a jelzés, mint a szerkesztő fejlécének „véglegesítve"/„piszkozat"
-jelvényéé. Tudatos korlát: ha egy már véglegesített tervet a doki
-újranyit és módosít, de még nem véglegesíti újra, a `plan.statusz`
-`'VEGLEGES'` marad, tehát a letöltés emiatt NEM kap `PISZKOZAT-`
-előtagot, holott a tartalom már eltér a lemezen archivált változattól —
-ugyanez a hiányosság, mint a fejléc jelvényéé, nem egy második,
-pontosabb jelzés.
+jelvényéé. Egy már véglegesített terv „Új verzió" menüponttal való
+újranyitásakor a `statusz` a betöltés pillanatában PISZKOZAT-ra áll
+(D53, lásd „Korábbi terv új verzióra nyitása" lentebb) — a letöltés így
+azonnal `PISZKOZAT-` előtagot kap, amíg a doki újra nem véglegesíti.
 
 ---
 
@@ -716,7 +714,7 @@ melyik páciens-mappába, D29)** kerül:
 
 | Gomb | Hol | Mit visz át | Mentéskor |
 |---|---|---|---|
-| **„Új verzió"** | verziósor `⋯` menüjében | mindent, a `tervId`-t is | ugyanabba a terv-mappába `<ma>_v<n+1>` (D4) |
+| **„Új verzió"** | verziósor `⋯` menüjében, KIZÁRÓLAG a lánc legfrissebb során (D53) | mindent, a `tervId`-t is | ugyanabba a terv-mappába `<ma>_v<n+1>` (D4) |
 | **„Másolás új tervbe"** | verziósor `⋯` menüjében | mindent az azonosító/állapot/dátum kivételével | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
 | **„Új terv"** | a páciensnév mellett, balra | csak a `paciens` blokkot | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
 | **„+ Új kezelési terv"** | Kezdőlap, az `/uj-terv` köztes választón át (lásd „Új terv indítása — a köztes páciens-választó" lentebb) | „Meglévő páciens keresése": a kiválasztott páciens `paciens` blokkja; „Vadonatúj páciens": a quick-create dialógusban megadott név + opcionális születési dátum/telefon (D41) | **új** terv-mappa — a kiválasztott MEGLÉVŐ vagy a quick-create dialógussal frissen létrehozott páciens-mappában, `<ma>_v1` (D26/D29) |
@@ -732,13 +730,17 @@ kattintás előtt látnia kell — lásd `docs/07-felulet-rendszer.md` („a
 gombfelirat azt mondja, mi történik"). Ugyanezt mondja ki egy rövid,
 szürke magyarázó sor a lista tetején, a kereső alatt.
 
-**A verziósoron nincs látható akciógomb** — mind a négy verzió-szintű
-művelet a sor végi `⋯` menüben van, ebben a sorrendben: `Megnézés`,
-`Letöltés`, elválasztó, `Új verzió`, `Másolás új tervbe`. Elöl a két
-csak-olvasó művelet áll (a könnyebb, fájlt sem hagyó `Megnézés` a
-`Letöltés` előtt), utána a terv-létrehozók gyakoriság szerint. Egymás
-mellett több hosszú feliratú gomb zsúfolt és összetéveszthető volt; a
-menüben egymás ALATT állnak, ezért rövid feliratot is elbírnak.
+**A verziósoron nincs látható akciógomb** — a verzió-szintű műveletek a
+sor végi `⋯` menüben vannak, ebben a sorrendben: `Megnézés`, `Letöltés`,
+elválasztó, `Új verzió`, `Másolás új tervbe`. Elöl a két csak-olvasó
+művelet áll (a könnyebb, fájlt sem hagyó `Megnézés` a `Letöltés` előtt),
+utána a terv-létrehozók gyakoriság szerint. Egymás mellett több hosszú
+feliratú gomb zsúfolt és összetéveszthető volt; a menüben egymás ALATT
+állnak, ezért rövid feliratot is elbírnak. Az `Új verzió` menüpont
+KIZÁRÓLAG a lánc legfrissebb verziósorán jelenik meg (D53) — egy
+historical (nem legfrissebb) soron a menü a másik három elemre szűkül,
+mert a régi verzióból induló módosítás helyes útja a `Másolás új tervbe`
+(explicit új lánc, nem a meglévő lánc jelöletlen elágaztatása).
 
 A `Megnézés` a verzió mentett PDF-jét nyitja meg új böngészőlapon (a
 böngésző natív PDF-nézőjében, nincs beépített olvasó nézet) — ugyanazt a
@@ -767,15 +769,22 @@ beágyazva ugyanez a gomb teljes értékű CTA, névfejléc nélkül.
 
 ### Korábbi terv új verzióra nyitása
 
-Egy korábbi (jellemzően `VEGLEGES`) terv „Új verzió" menüponttal való
-megnyitásakor a `keltezes` a mai napra, az `ervenyesIg` ebből és az **aktuális**
+Egy korábbi (jellemzően `VEGLEGES`) terv „Új verzió" menüponttal — KIZÁRÓLAG
+a lánc legfrissebb verziósoráról indítható (D53) — való megnyitásakor a
+`keltezes` a mai napra, az `ervenyesIg` ebből és az **aktuális**
 `beallitasok.ervenyessegNap`-ból újraszámolva íródik — nem a régi terv
 megőrzött érvényességi ablak-hossza (D22). A bélyegzés **a betöltés
 pillanatában** történik, nem véglegesítéskor: az előnézet a `plan`
 state-ből rendereli a PDF-et, egy késői írás a mentett JSON-t és a már
-renderelt PDF-blobot szétcsúsztatná. Minden más mező (sorok ára,
-`nevSnapshot`, `listaEgysegar`, `tetelId`, `arlistaVerzio`) érintetlen
-marad — a dátumfrissítés dokumentum-metaadat, nem újraárazás (D7).
+renderelt PDF-blobot szétcsúsztatná. A sorok ára, `nevSnapshot`,
+`listaEgysegar`, `tetelId`, `arlistaVerzio` és a `tervId` (a lánc-
+hovatartozás jele) érintetlen marad — a dátumfrissítés dokumentum-
+metaadat, nem újraárazás (D7). A `statusz` viszont ugyanekkor PISZKOZAT-ra
+áll (D53): a betöltött piszkozat a folytatás állapotát tükrözi, nem a
+forrás verzió lezárt állapotát — a szerkesztő fejléce ettől kezdve
+„piszkozat”-ot mutat, és a letöltés `PISZKOZAT-` előtagot kap, amíg a
+doki újra nem véglegesíti. Közvetlenül a `Kezelések` workflow-lépésre
+navigál, a `Terv adatai` lépés a stepperen keresztül elérhető marad.
 
 A szerkesztő egy **semleges színű** tájékoztató sávban jelzi az új
 dátumot és érvényességet, és kimondja, hogy a tételek ára változatlan. Az

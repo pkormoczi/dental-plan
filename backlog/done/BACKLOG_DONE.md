@@ -1348,3 +1348,26 @@ karbantartási kör négy önálló javítása.
   javaslat) változatlan marad (docs/01-attekintes-es-dontesek.md D52,
   docs/02-domain-modell.md § Nyelv és pénznem, docs/03-funkcionalis-
   spec.md § 2. Páciens adatlap és § 5. Korábbi tervek).
+
+---
+
+### 48. Új verzió létrehozása — KÉSZ (2026-08-19)
+
+- **Méret:** ~0.5 nap.
+- **Kereteket sért?** Nem — új D53 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** "Új verzió" korábban bármelyik verziósorról
+  indulhatott, jelöletlenül a lánc fejére kerülve (félrevezető sorrend a
+  Korábbi tervek listán), és a betöltött piszkozat `statusz`-a tévesen a
+  forrás verzióé (`VEGLEGES`) maradt — ez hamis "véglegesítve" jelvényt
+  mutatott a szerkesztő fejlécén, és a letöltés elmaradt a `PISZKOZAT-`
+  előtagtól egy még el sem mentett piszkozatnál.
+- **Megvalósítás:** a `⋯` menü "Új verzió" pontja mostantól kizárólag a
+  lánc legfrissebb verziósorán jelenik meg (`components/
+  PatientPlanChains.tsx`, a `domain/planFolders.ts`
+  `legfrissebbVerzio()`-val); a betöltés (`state/AppState.tsx`
+  `loadPlanIntoDraft()`) a `statusz`-t PISZKOZAT-ra állítja, a `tervId`-t
+  (a lánc-hovatartozás jele) érintetlenül hagyva. A nyelv/pénznem-
+  zárolás feloldása és az orvos-öröklés továbbra is a 52./53. tételre vár
+  (docs/01-attekintes-es-dontesek.md D53, docs/03-funkcionalis-
+  spec.md § 4. Előnézet és véglegesítés "Letöltési fájlnév", § 5.
+  Korábbi tervek).

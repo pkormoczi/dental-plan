@@ -57,12 +57,14 @@ function makeLoadedPlan(overrides: Partial<Plan> = {}): Plan {
 }
 
 function Probe() {
-  const { settings, loadPlanIntoDraft, copyPlanIntoDraft, vanMentetlenPiszkozat, loadedOsszesitokDiff } =
+  const { plan, settings, loadPlanIntoDraft, copyPlanIntoDraft, vanMentetlenPiszkozat, loadedOsszesitokDiff } =
     useAppState();
   return (
     <div>
       <div data-testid="dirty">{String(vanMentetlenPiszkozat)}</div>
       <div data-testid="diff">{loadedOsszesitokDiff ? JSON.stringify(loadedOsszesitokDiff) : 'null'}</div>
+      <div data-testid="statusz">{plan.statusz}</div>
+      <div data-testid="tervid">{plan.tervId}</div>
       <button onClick={() => loadPlanIntoDraft(makeLoadedPlan())}>load</button>
       <button onClick={() => copyPlanIntoDraft(planMasolatKent(makeLoadedPlan(), settings, '2026-08-10'))}>
         copy
@@ -113,6 +115,21 @@ describe('copyPlanIntoDraft', () => {
     await user.click(await screen.findByRole('button', { name: 'load' }));
 
     expect(await screen.findByTestId('dirty')).toHaveTextContent('false');
+  });
+
+  // D53 (48. tétel): a betöltött piszkozat statusz-a PISZKOZAT-ra áll --
+  // enélkül a szerkesztő fejléce hamisan "véglegesítve"-t mutatna, és a
+  // letöltés elmaradna a PISZKOZAT- előtagtól, holott a forrás mai naptól
+  // nincs elmentve. A tervId (a lánc-hovatartozás jele) ezzel szemben
+  // érintetlen marad -- a mentés így is a forrás láncba kerül.
+  it('loadPlanIntoDraft után a statusz PISZKOZAT-ra áll, a tervId érintetlen marad', async () => {
+    const user = userEvent.setup();
+    renderProbe();
+
+    await user.click(await screen.findByRole('button', { name: 'load' }));
+
+    expect(await screen.findByTestId('statusz')).toHaveTextContent('PISZKOZAT');
+    expect(screen.getByTestId('tervid')).toHaveTextContent('abc123');
   });
 });
 

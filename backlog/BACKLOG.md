@@ -13,17 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 48. tétel — Új verzió létrehozása
-  (a `backlog/redesign/` redesign-döntéssorozat DP-022 tétele) — "Új
-  verzió" ma bármelyik verziósorról indítható, jelöletlenül a lánc
-  fejére kerül, és a betöltött piszkozat `statusz`-a tévesen
-  `VEGLEGES` marad (hamis "véglegesítve" jelvény, hiányzó
-  `PISZKOZAT-` letöltési előtag). Ez a tétel a legfrissebb-only
-  korlátozást és a `statusz` `PISZKOZAT`-ra állítását vezeti be; a
-  nyelv/pénznem-zárolás feloldása és az orvos-öröklés a 31./32. tételre
-  (DP-031/DP-032) vár. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-48-uj-verzio-terv.md`
-
 ### 49. tétel — Másolás új tervként
   (a `backlog/redesign/` redesign-döntéssorozat DP-023 tétele) — a
   "Másolás új tervbe" ma mindent változatlanul átvisz (árlista-
