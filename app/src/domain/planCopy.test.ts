@@ -114,6 +114,15 @@ describe('planUjPaciensselTervhez', () => {
     const uj = planUjPaciensselTervhez(plan, settings, priceList);
     expect(uj.paciensId).toBe('pac1');
   });
+
+  // D534 (47. tétel): a nyelv/pénznem-öröklés az `oroklott` paraméteren át
+  // jut el a createBlankPlan()-be, nem a forrás `plan`-ből.
+  it('az oroklott nyelvet/pénznemet veszi át, nem a forrás terv nyelvét/pénznemét', () => {
+    const plan = makePlan(); // nyelv: 'de', penznem: 'EUR'
+    const uj = planUjPaciensselTervhez(plan, settings, priceList, { nyelv: 'hu', penznem: 'EUR' });
+    expect(uj.nyelv).toBe('hu');
+    expect(uj.penznem).toBe('EUR');
+  });
 });
 
 function makeTorzsadat(overrides: Partial<PatientMasterData> = {}): PatientMasterData {
@@ -156,6 +165,14 @@ describe('planUjTorzsadattal', () => {
     const eredetiNev = adatok.nev;
     planUjTorzsadattal(adatok, settings, priceList);
     expect(adatok.nev).toBe(eredetiNev);
+  });
+
+  // D534 (47. tétel)
+  it('az oroklott nyelvet/pénznemet veszi át', () => {
+    const adatok = makeTorzsadat();
+    const uj = planUjTorzsadattal(adatok, settings, priceList, { nyelv: 'de', penznem: 'EUR' });
+    expect(uj.nyelv).toBe('de');
+    expect(uj.penznem).toBe('EUR');
   });
 });
 

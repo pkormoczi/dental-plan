@@ -303,11 +303,12 @@ segédfüggvényei, szintén ne írd újra őket:
 
 A terv másolása tétel (`docs/03-funkcionalis-spec.md` § Terv másolása új
 tervként, D26) segédfüggvényei, szintén ne írd újra őket:
-- `planUjPaciensselTervhez(plan, settings, priceList)` /
+- `planUjPaciensselTervhez(plan, settings, priceList, oroklott?)` /
   `planMasolatKent(plan, settings, ma)` (`app/src/domain/planCopy.ts`) —
   a két tiszta transzformáció egy korábbi tervből: az első csak a
-  `paciens` blokkot viszi át egy friss `createBlankPlan()` fölé, a
-  második mindent átvisz az azonosító/állapot/dátum kivételével
+  `paciens` blokkot viszi át egy friss `createBlankPlan()` fölé (az
+  opcionális `oroklott` a nyelv/pénznem-öröklés forrása, lásd D52 lentebb),
+  a második mindent átvisz az azonosító/állapot/dátum kivételével
   (`frissDatummal`-t hívja a dátumbélyeghez, `computeOsszesitok`-ot az
   `osszesitok` újraszámolásához — egyiket se írd újra itt sem)
 - `copyPlanIntoDraft(next)` (`app/src/state/AppState.tsx`) — a fenti két
@@ -424,7 +425,7 @@ szintű törzsadat, D33) segédfüggvényei, szintén ne írd újra őket:
   terv-mentéskor, hogy a `paciens.json` index nev-je a törzsadatból vagy a
   terv `paciens.nev`-jéből jön-e; `paciensTorzsadatbol(adatok)` (ugyanitt)
   emeli ki belőle a `Paciens` részhalmazt terv-előtöltéshez.
-- `planUjTorzsadattal(adatok, settings, priceList)`
+- `planUjTorzsadattal(adatok, settings, priceList, oroklott?)`
   (`app/src/domain/planCopy.ts`) — a `planUjPaciensselTervhez` (backlog-17)
   törzsadat-alapú párja. `ujTervForrasPaciensbol(storage, settings,
   priceList, patientDir)` (`app/src/state/planIndulas.ts`) a közös
@@ -434,6 +435,25 @@ szintű törzsadat, D33) segédfüggvényei, szintén ne írd újra őket:
   `PatientDetailPage.tsx` is ezen keresztül hívja, backlog-30) és a
   NewPlanPage.tsx "Meglévő páciens keresése" előtöltése is ezt hívja, hogy
   a hívási helyek ne térjenek el egymástól.
+
+Az új terv-lánc inicializálása tétel (`docs/01-attekintes-es-dontesek.md`
+D52, `docs/02-domain-modell.md` § Nyelv és pénznem, `docs/03-funkcionalis-
+spec.md` § 2. Páciens adatlap „Nyelv és pénznem”) segédfüggvényei, szintén
+ne írd újra őket:
+- `createBlankPlan(settings, priceList, oroklott?)`
+  (`app/src/domain/blankPlan.ts`) opcionális harmadik paramétere
+  (`OroklottNyelvPenznem`, csak `nyelv`/`penznem`, SOSEM `orvos`) — ha
+  megadva, felülírja a `nyelv`/`penznem` globális alapértékét, a
+  `sablonVerzio` ettől függetlenül a MEGLÉVŐ `sablonVerzioFor(nyelv)`-en
+  keresztül magától követi
+- `verziokFrissessegSzerint(plans, versionsFor)`
+  (`app/src/domain/planFolders.ts`) — az összes terv-lánc összes verziója
+  csökkenő frissesség szerint (a `rendezettLancok()` determinizmus-
+  mintáján); a `latestVersionAcrossPlans()` ennek első elemére
+  egyszerűsödött. `ujTervForrasPaciensbol()` ezen bejárva keresi meg EGY
+  körben a legfrissebb (a `paciens` pillanatkép forrása) ÉS a legfrissebb
+  `VEGLEGES` (a nyelv/pénznem-öröklés forrása) verziót — egy olvashatatlan
+  verzió nem szakítja meg a bejárást, csak kimarad
 
 A páciens detail shell tétel (`docs/03-funkcionalis-spec.md` § 10.
 Páciens részletei, D35) segédfüggvényei/komponensei, szintén ne írd újra

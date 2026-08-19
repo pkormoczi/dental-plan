@@ -5,6 +5,7 @@
 // egy meglévő láncba.
 
 import { createBlankPlan } from './blankPlan';
+import type { OroklottNyelvPenznem } from './blankPlan';
 import { paciensTorzsadatbol } from './paciensAdatok';
 import { computeOsszesitok } from './totals';
 import { frissDatummal } from './ujVerzioDatum';
@@ -14,15 +15,22 @@ import type { PatientMasterData, Plan, PriceList, Settings } from './types';
  * "Új terv" (páciensszintű) -- csak a `paciens` blokk és a `paciensId` jön a
  * forrásból (D29: ez tartja a másolatot ugyanabban a páciens-mappában, új
  * terv-láncként -- lásd `planMasolatKent` kommentjét), minden más a mai
- * `createBlankPlan()` friss alapértéke (nyelv/pénznem is), ugyanúgy, mintha
- * a doki a Kezdőlap "+ Új kezelési terv" gombját nyomta volna.
+ * `createBlankPlan()` friss alapértéke -- KIVÉVE a nyelvet/pénznemet, ha a
+ * hívó a `oroklott` paraméterrel a páciens legutóbb véglegesített tervéből
+ * adja át (D534) -- ugyanúgy, mintha a doki a Kezdőlap "+ Új kezelési terv"
+ * gombját nyomta volna, azzal a különbséggel.
  */
 export function planUjPaciensselTervhez(
   plan: Plan,
   settings: Settings,
   priceList: PriceList,
+  oroklott?: OroklottNyelvPenznem | null,
 ): Plan {
-  return { ...createBlankPlan(settings, priceList), paciens: plan.paciens, paciensId: plan.paciensId };
+  return {
+    ...createBlankPlan(settings, priceList, oroklott),
+    paciens: plan.paciens,
+    paciensId: plan.paciensId,
+  };
 }
 
 /**
@@ -30,15 +38,17 @@ export function planUjPaciensselTervhez(
  * -- a `planUjPaciensselTervhez` párja, de a forrás nem egy korábbi
  * `Plan.paciens` pillanatkép, hanem az élő törzsadat. A hívó dönti el,
  * melyiket használja (`domain/paciensAdatok.ts` `megjelenitettTorzsadat`
- * mondja ki, van-e lezárt fájl).
+ * mondja ki, van-e lezárt fájl). Az `oroklott` paraméter jelentése
+ * ugyanaz, mint `planUjPaciensselTervhez`-nél (D534).
  */
 export function planUjTorzsadattal(
   adatok: PatientMasterData,
   settings: Settings,
   priceList: PriceList,
+  oroklott?: OroklottNyelvPenznem | null,
 ): Plan {
   return {
-    ...createBlankPlan(settings, priceList),
+    ...createBlankPlan(settings, priceList, oroklott),
     paciens: paciensTorzsadatbol(adatok),
     paciensId: adatok.paciensId,
   };

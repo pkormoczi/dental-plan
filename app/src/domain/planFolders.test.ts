@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { latestVersionAcrossPlans, legfrissebbVerzio } from './planFolders';
+import { latestVersionAcrossPlans, legfrissebbVerzio, verziokFrissessegSzerint } from './planFolders';
 import type { PlanFolder, PlanVersion } from './types';
 
 function plan(dirName: string, tervId = dirName): PlanFolder {
@@ -33,6 +33,34 @@ describe('latestVersionAcrossPlans', () => {
     const versionsFor = () => [version('v1', '2026-08-01', 1), version('v2', '2026-08-01', 2)];
     const result = latestVersionAcrossPlans(plans, versionsFor);
     expect(result?.version).toEqual(version('v2', '2026-08-01', 2));
+  });
+});
+
+describe('verziokFrissessegSzerint', () => {
+  it('returns an empty list for zero plans', () => {
+    expect(verziokFrissessegSzerint([], () => [])).toEqual([]);
+  });
+
+  it('orders across chains by isoDate descending', () => {
+    const plans = [plan('a'), plan('b')];
+    const versionsFor = (planDir: string) =>
+      planDir === 'a' ? [version('v1', '2026-06-10', 1)] : [version('v1', '2026-08-01', 1)];
+    const result = verziokFrissessegSzerint(plans, versionsFor);
+    expect(result.map((r) => r.planDir)).toEqual(['b', 'a']);
+  });
+
+  it('breaks isoDate ties by the larger verzio', () => {
+    const plans = [plan('a')];
+    const versionsFor = () => [version('v1', '2026-08-01', 1), version('v2', '2026-08-01', 2)];
+    const result = verziokFrissessegSzerint(plans, versionsFor);
+    expect(result.map((r) => r.version.dirName)).toEqual(['v2', 'v1']);
+  });
+
+  it('breaks a full isoDate+verzio tie across chains by planDir', () => {
+    const plans = [plan('b'), plan('a')];
+    const versionsFor = () => [version('v1', '2026-08-01', 1)];
+    const result = verziokFrissessegSzerint(plans, versionsFor);
+    expect(result.map((r) => r.planDir)).toEqual(['a', 'b']);
   });
 });
 

@@ -126,8 +126,16 @@ Két, egymástól **független** kétállású kapcsoló:
   tételek, amiknek van áruk ebben a pénznemben) és a pénzformátum.
 
 A német páciens a legvalószínűbb ok, amiért ez a kettő szétválik: sokan
-Magyarországon, forintban fizetnek. Alapértéke ezért mindig `HUF`, még
-német nyelvű ajánlatnál is.
+Magyarországon, forintban fizetnek. Alapértéke ezért `HUF`, még német
+nyelvű ajánlatnál is — hacsak a pácienshez nincs korábbi véglegesített
+terv, lásd alább.
+
+**Öröklés meglévő pácienshez induló új láncnál (D52):** ha a pácienshez
+van legalább egy VÉGLEGESÍTETT terve, az új lánc ennek a nyelvét/
+pénznemét veszi át kiinduló értékként (a doki utólag szabadon
+módosíthatja, amíg a kártya szerkeszthető). Csak PISZKOZAT-státuszú
+tervek, vagy egyetlen korábbi terv híján a fenti globális alapérték
+marad érvényben.
 
 Mindkettő **az első mentés után fagy** (D4) — a kártya ilyenkor statikus
 szöveget mutat, chipek nélkül; új tervet kell nyitni a váltáshoz.
@@ -797,10 +805,16 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   adott — a törzsadat bevezetése óta egy csak törzsadattal rendelkező
   páciens is választható itt.
 
-  Mindkét esetben minden más mező (`nyelv`, `penznem`, `orvos`, `fazisok`,
-  `elolegSzazalek`, `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss
-  alapértéke — pontosan úgy, mintha a doki egy „Vadonatúj páciens" tervet
-  indítana, csak a páciens mezők (és a `paciensId`) már ki vannak töltve.
+  Mindkét esetben minden más mező (`orvos`, `fazisok`, `elolegSzazalek`,
+  `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss alapértéke —
+  pontosan úgy, mintha a doki egy „Vadonatúj páciens" tervet indítana,
+  csak a páciens mezők (és a `paciensId`) már ki vannak töltve. A
+  **`nyelv`/`penznem` kivétel** (D52, § 2. „Nyelv és pénznem” fent): ha a
+  pácienshez van legalább egy VÉGLEGESÍTETT terve, `ujTervForrasPaciensbol()`
+  ennek nyelvét/pénznemét adja tovább `createBlankPlan()`-nak, mindkét
+  forráságon (törzsadat és a legutóbbi `paciens` pillanatkép) egységesen —
+  a `paciens`-adatok forrásától függetlenül ugyanaz a legutóbbi
+  VÉGLEGES verzió dönti el, melyik lánchoz tartozzon is az.
 - **`planMasolatKent` — minden átjön.** Egyetlen belépési pontja a
   **„Másolás új tervbe"**, minden verzió-sor `⋯` menüjében, mert
   konkrétan AZT a verziót másolja, sorokkal együtt (egy régebbi verzió
@@ -863,7 +877,9 @@ kétértelműség, hogy melyik páciensről van szó:
   páciens: „…"" opció jelenik meg a begépelt névvel, a „Vadonatúj
   páciens" ágat indítja el, a quick-create dialógust a begépelt névvel
   előtöltve. Kiválasztás után a közös forráskiválasztáson (lásd fent,
-  D33) előtöltve nyílik a Páciens adatlap.
+  D33) előtöltve nyílik a Páciens adatlap — a nyelv/pénznem is a
+  kiválasztott páciens legutóbb véglegesített tervéből örökölve (D52,
+  fent § 2), ugyanazon a közös forráson keresztül.
 - **„Vadonatúj páciens" (D41)** — a `PaciensekPage.tsx` „+ Új páciens"-
   ével közös quick-create dialógust nyitja meg
   (`app/src/pages/paciensek/UjPaciensDialog.tsx`): kötelező név +

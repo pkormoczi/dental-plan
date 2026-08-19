@@ -314,6 +314,13 @@ tudatosan **két külön mező**, nem egy összevont: az egyik a szöveget
 (tételnevek, nyomtatvány feliratai, dátumformátum, sablon), a másik az
 ajánlható tételkört és a pénzformátumot vezérli.
 
+Egy meglévő pácienshez induló ÚJ terv-lánc kiinduló `nyelv`/`penznem`-e a
+`beallitasok.json` fenti globális mezőit csak *tartalékként* használja
+(D52): ha a pácienshez van legalább egy VÉGLEGESÍTETT terve, annak
+`nyelv`/`penznem`-e öröklődik (`app/src/domain/blankPlan.ts`
+`createBlankPlan()` opcionális harmadik paramétere,
+`app/src/state/planIndulas.ts` `ujTervForrasPaciensbol()` tölti ki).
+
 ### Miért van `nevSnapshot` és `listaEgysegar` a soron
 
 Mert **az ajánlat pillanatkép**. Ha az árlistában fél év múlva átnevezik
@@ -439,7 +446,7 @@ a fájlban lévő érték az igazság — és érdemes figyelmeztetni.
   },
   "orvosok": ["Dr. Mándoki István"],
   "ervenyessegNap": 90,
-  "alapertelmezettNyelv": "hu",    // ez lesz az új tervek nyelve, ha nemetEngedelyezve
+  "alapertelmezettNyelv": "hu",    // öröklés híján ez lesz az új tervek nyelve, ha nemetEngedelyezve (D52)
   "nemetEngedelyezve": false       // alapértéke false; a Beállításokban kapcsolható (D21)
 }
 ```

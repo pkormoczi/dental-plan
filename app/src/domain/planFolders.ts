@@ -12,6 +12,31 @@ export interface PlanVersionLocation {
 }
 
 /**
+ * Az összes terv-lánc összes verziója, a `keltezes`-t kódoló `isoDate`
+ * szerint csökkenően, holtversenynél a nagyobb `verzio`, majd a `planDir`
+ * (`localeCompare('hu')`) szerint -- a `rendezettLancok()` determinizmus-
+ * mintája (`planChainData.ts`). A 47. tétel (D534) öröklési bejárásának
+ * alapja: onnan indulva csökkenő sorrendben kell megtalálni az első
+ * VEGLEGES verziót, nem csak a legfrissebbet.
+ */
+export function verziokFrissessegSzerint(
+  plans: PlanFolder[],
+  versionsFor: (planDir: string) => PlanVersion[],
+): PlanVersionLocation[] {
+  const all: PlanVersionLocation[] = [];
+  for (const plan of plans) {
+    for (const version of versionsFor(plan.dirName)) {
+      all.push({ planDir: plan.dirName, version });
+    }
+  }
+  return all.sort((a, b) => {
+    if (a.version.isoDate !== b.version.isoDate) return a.version.isoDate < b.version.isoDate ? 1 : -1;
+    if (a.version.verzio !== b.version.verzio) return b.version.verzio - a.version.verzio;
+    return a.planDir.localeCompare(b.planDir, 'hu');
+  });
+}
+
+/**
  * Az összes terv-lánc összes verziója közül a legfrissebb (a `keltezes`-t
  * kódoló `isoDate` szerint, holtversenynél a nagyobb `verzio` szerint) --
  * `null`, ha a páciensnek még egyetlen olvasható verziója sincs.
@@ -20,19 +45,7 @@ export function latestVersionAcrossPlans(
   plans: PlanFolder[],
   versionsFor: (planDir: string) => PlanVersion[],
 ): PlanVersionLocation | null {
-  let best: PlanVersionLocation | null = null;
-  for (const plan of plans) {
-    for (const version of versionsFor(plan.dirName)) {
-      if (
-        !best ||
-        version.isoDate > best.version.isoDate ||
-        (version.isoDate === best.version.isoDate && version.verzio > best.version.verzio)
-      ) {
-        best = { planDir: plan.dirName, version };
-      }
-    }
-  }
-  return best;
+  return verziokFrissessegSzerint(plans, versionsFor)[0] ?? null;
 }
 
 /**

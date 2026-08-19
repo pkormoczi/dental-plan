@@ -13,19 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 47. tétel — Új kezelési terv (új lánc) inicializálása
-  (a `backlog/redesign/` redesign-döntéssorozat DP-021 tétele) — egy új
-  terv-lánc ma mindig a globális alapértékekkel indul (nyelv/pénznem a
-  Beállításokból, mindig HUF, első orvos), függetlenül attól, van-e a
-  pácienshez korábbi véglegesített terve. Ez a tétel a nyelv/pénznem
-  öröklését vezeti be a páciens legutóbbi véglegesített tervéből (első
-  tervnél globális default marad), és rögzíti, hogy az orvos mindig az
-  aktuális globális default marad (a tényleges orvos-törzs a 32. tétel/
-  DP-032-re vár). A tervcím-mechanizmus (élő javaslat, tárolt cím
-  nélkül) szándékosan változatlan marad. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-47-uj-terv-inicializalas-terv.md`
-
 ### 48. tétel — Új verzió létrehozása
   (a `backlog/redesign/` redesign-döntéssorozat DP-022 tétele) — "Új
   verzió" ma bármelyik verziósorról indítható, jelöletlenül a lánc

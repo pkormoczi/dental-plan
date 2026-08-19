@@ -3,7 +3,7 @@
 // első mentéskor (lásd storage/DemoStorage.ts).
 
 import { addDaysIso, todayIso } from './date';
-import type { Nyelv, Plan, PriceList, Settings } from './types';
+import type { Nyelv, Penznem, Plan, PriceList, Settings } from './types';
 
 /**
  * A nyilatkozat-sablon ideiglenes kiinduló fájlneve (kiterjesztés nélkül) egy
@@ -24,20 +24,40 @@ export function sablonVerzioFor(nyelv: Nyelv): string {
  */
 export const ELSO_FAZIS_NEV = '1. kezelés';
 
-export function createBlankPlan(settings: Settings, priceList: PriceList): Plan {
+/**
+ * A 47. tétel (D534) öröklési forrása -- egy meglévő páciens legutóbb
+ * VÉGLEGESÍTETT tervének nyelve/pénzneme, amit egy új lánc induláskor
+ * átvesz. Szűken `nyelv`/`penznem`-re szorítva (nem egy teljes `Plan`),
+ * hogy a bővítés ne nyisson csendes utat más mező (pl. `orvos`, ami a
+ * 47. tétel 3. döntése szerint SOSEM örökölt) átvételére.
+ */
+export interface OroklottNyelvPenznem {
+  nyelv: Nyelv;
+  penznem: Penznem;
+}
+
+export function createBlankPlan(
+  settings: Settings,
+  priceList: PriceList,
+  oroklott?: OroklottNyelvPenznem | null,
+): Plan {
   const today = todayIso();
   // D21: a nyelv és a pénznem független -- a német páciens Magyarországon
-  // forintban is fizethet. Az `alapertelmezettNyelv` csak akkor számít,
-  // ha a német nyelv engedélyezve van; a `nemetEngedelyezve` kikapcsolása
-  // után induló új tervek mindig magyarok, hogy a nyelv soha ne maradjon
-  // "de"-n úgy, hogy a doki sehol nem lát hozzá kapcsolót.
+  // forintban is fizethet. Öröklés híján az `alapertelmezettNyelv` csak
+  // akkor számít, ha a német nyelv engedélyezve van; a `nemetEngedelyezve`
+  // kikapcsolása után induló, öröklés NÉLKÜLI új tervek mindig magyarok,
+  // hogy a nyelv soha ne maradjon "de"-n úgy, hogy a doki sehol nem lát
+  // hozzá kapcsolót. Egy örökölt "de" ezt a gate-et felülírja (D534,
+  // user-döntés) -- a kártya `plan.nyelv === 'de'` escape-hatch-e
+  // (`PatientPage.tsx`) ilyenkor is szerkeszthetővé teszi.
   //
-  // A pénznem alapértéke MINDIG HUF, nem a nyelvtől függ: a rendelő
-  // elsődleges pénzneme forint, az EUR árak pedig ma még lektorálatlan,
-  // árfolyamból becsült kiindulóértékek (docs/06-arlista-import.md) -- a
-  // HUF alapértelmezés a biztonságosabb kiindulás. A doki egy kattintással
-  // vált a Páciens adatlapon, ha mégis EUR kell.
-  const nyelv: Nyelv = settings.nemetEngedelyezve ? settings.alapertelmezettNyelv : 'hu';
+  // A pénznem alapértéke öröklés híján MINDIG HUF, nem a nyelvtől függ: a
+  // rendelő elsődleges pénzneme forint, az EUR árak pedig ma még
+  // lektorálatlan, árfolyamból becsült kiindulóértékek
+  // (docs/06-arlista-import.md) -- a HUF alapértelmezés a biztonságosabb
+  // kiindulás. A doki egy kattintással vált a Páciens adatlapon, ha mégis
+  // EUR kell.
+  const nyelv: Nyelv = oroklott?.nyelv ?? (settings.nemetEngedelyezve ? settings.alapertelmezettNyelv : 'hu');
 
   return {
     schemaVersion: 1,
@@ -45,7 +65,7 @@ export function createBlankPlan(settings: Settings, priceList: PriceList): Plan 
     verzio: 0,
     statusz: 'PISZKOZAT',
     nyelv,
-    penznem: 'HUF',
+    penznem: oroklott?.penznem ?? 'HUF',
     keltezes: today,
     ervenyesIg: addDaysIso(today, settings.ervenyessegNap),
     arlistaVerzio: priceList.arlistaVerzio,

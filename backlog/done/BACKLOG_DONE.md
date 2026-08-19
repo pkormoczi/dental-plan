@@ -1322,3 +1322,29 @@ karbantartási kör négy önálló javítása.
   keresőszöveg is visszaáll böngésző-"vissza" navigációnál
   (`components/useListStateMemory.ts` bővítése,
   docs/03-funkcionalis-spec.md § 5. Korábbi tervek).
+
+---
+
+### 47. Új kezelési terv (új lánc) inicializálása — KÉSZ (2026-08-19)
+
+- **Méret:** ~0.5 nap.
+- **Kereteket sért?** Nem — új D52 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** egy új terv-lánc korábban mindig a globális
+  alapértékekkel indult (nyelv a Beállításokból, pénznem mindig HUF),
+  függetlenül attól, van-e a pácienshez korábbi véglegesített terve — egy
+  visszatérő, korábban németül/EUR-ban tárgyalt páciensnél ez minden
+  alkalommal felesleges, elfelejthető átállítást rótt a dokira, aminek
+  elmulasztása rossz nyelvű/pénznemű ajánlatot eredményezett.
+- **Megvalósítás:** meglévő pácienshez induló új lánc (mindhárom belépési
+  ponton: Korábbi tervek páciensszintű "Új terv", a páciens-részletoldal
+  első-terv CTA-ja, a Kezdőlap "+ Új kezelési terv" → "Meglévő páciens
+  keresése") örökli a doki által látott legutóbb VÉGLEGESÍTETT terv-
+  verzió nyelvét/pénznemét (`domain/blankPlan.ts` `createBlankPlan()`
+  opcionális harmadik paramétere, `state/planIndulas.ts`
+  `ujTervForrasPaciensbol()` tölti ki, `domain/planFolders.ts`
+  `verziokFrissessegSzerint()` a bejárás alapja) — véglegesített terv
+  híján a globális alapérték marad érvényben. Az orvos-mező (a mai
+  egyszerű `settings.orvosok[0]`) és a tervcím-mechanizmus (élő
+  javaslat) változatlan marad (docs/01-attekintes-es-dontesek.md D52,
+  docs/02-domain-modell.md § Nyelv és pénznem, docs/03-funkcionalis-
+  spec.md § 2. Páciens adatlap és § 5. Korábbi tervek).
