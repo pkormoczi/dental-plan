@@ -988,44 +988,72 @@ hossz-alapú, soha nem újrahasznosított).
 
 ## 7. Beállítások
 
-- Gyökérmappa kijelölése / váltása
-- Rendelő adatai (a nyomtatvány fejlécéhez és láblécéhez) — a mezők
-  (Név/Cím/Telefon/E-mail/Adószám/Cégjegyzékszám) minden leütésre mentenek,
-  updateren át, a mentés ELŐTT szinkron frissülő állapottal (D31,
-  `docs/05-technologia.md`) — két mező gyors, egymást követő szerkesztése
-  emiatt nem üti ki egymást, és draft-pufferelés (mint a Kezelések és
-  árak szöveges mezőin) sem kell hozzá.
-- Orvosok listája
-- Logó fájl
+Három tab (Radix `Tabs`, CONTROLLED — a tab-váltást a D38/D46
+elhagyás-guardnak el kell kapnia, `docs/07-felulet-rendszer.md` §
+Komponensek): **Rendelő adatai** (alapértelmezett) | **Nyomtatványok** |
+**Egyéb** (D49). A Radix `Tabs.Content` unmountolja az inaktív tabot,
+tehát egyszerre csak egy tab draftja él a memóriában.
+
+**Mentési modell (D49, felváltja a korábbi D31 leütésenkénti autosave-ot
+ezen a lapon)**: mindhárom tab pufferelt draftot vezet
+(`components/useDirtyDraft.ts`), saját explicit Mentés/Mégse gombpárral.
+A Rendelő adatai és az Egyéb tab Mégse gombja azonnali (nincs
+megerősítés, mert csak a látható mezőket veszíti el); a Nyomtatványok
+Mégse gombja megerősítést kér (lásd lent). Gyökérmappa kijelölése /
+váltása — a 2. fázis (`docs/05-technologia.md`) tartalma, ma nem
+implementált.
+
+Tab-váltás (vagy NavBar-navigáció, D46) nem mentett módosítással
+megerősítő dialógust nyit — megerősítés után a piszkozat **ténylegesen
+elvész**, a Radix a tab tartalmát unmountolja.
+
+### Rendelő adatai
+
+- Rendelő adatai a nyomtatvány fejlécéhez és láblécéhez
+  (Név/Cím/Telefon/E-mail/Adószám/Cégjegyzékszám)
+- Orvosok listája (egy név soronként)
+
+### Nyomtatványok
+
+Sablonszövegek szerkesztése — a nyilatkozat, a fizetési feltételek és a
+garancia, saját nyelvváltóval (Magyar/Deutsch, ha a német engedélyezve
+van). **Mentéskor új verziófájl keletkezik** (`nyilatkozat-hu-v2.md`), a
+régi marad, mert a korábbi tervek arra hivatkoznak — a mentés a
+véglegesítéskor épp aktuális (legfrissebb) verziót pinneli a tervre. A
+nyilatkozat szövegében a `{{orvos}}` helyőrző a kezelőorvos nevére
+cserélődik a nyomtatványon. A szerkesztőmezők tartalma elnavigálásig sem
+vész el: egy `dp:sablon-piszkozat` localStorage-kulcs base-enként
+cache-eli, néma visszaállítással, és sikeres mentéskor base-enként
+törlődik. **Ez tudatosan nem a `DraftStorage` bővítése** — az kizárólag
+`Plan`-ra típusozott, egyetlen felelősséggel; a `dp:` prefix miatt a
+„Minden adat törlése"/„Demó adat visszaállítása" ezt is elsöpri, külön
+kód nélkül. A „Szöveg mentése" gomb `useRef`-alapú in-flight zárat visel,
+mert a `disabled` prop önmagában megkerülhető egy render előtti második
+kattintással.
+
+**„Mégse" gomb** (D38) a „Szöveg mentése" mellett, dirty állapotban
+engedélyezett — MEGERŐSÍTÉST kér (ellentétben a Rendelő adatai/Egyéb tab
+azonnali Mégse-jével), mert egyszerre minden nyelv/szlot piszkozatát
+elveti, nem csak a jelenleg látszó nyelvet, és a `dp:sablon-piszkozat`
+cache-bejegyzést is törli minden érintett base-hez — enélkül a
+piszkozat egy F5 után visszatérne. Ugyanez a cache-törlés fut le akkor
+is, ha a doki dirty állapotban másik Beállítások-tabra vagy a NavBar-on
+át máshova navigál, és a tab-váltás/D46 megerősítő dialógusban az
+elvetést választja.
+
+### Egyéb
+
 - Ajánlat érvényessége napokban (alapérték 90)
-- Sablonszövegek szerkesztése — a nyilatkozat, a fizetési feltételek és
-  a garancia, saját nyelvváltóval (Magyar/Deutsch, ha a német engedélyezve van).
-  **Mentéskor új verziófájl keletkezik** (`nyilatkozat-hu-v2.md`), a régi
-  marad, mert a korábbi tervek arra hivatkoznak — a mentés a
-  véglegesítéskor épp aktuális (legfrissebb) verziót pinneli a tervre. A
-  nyilatkozat szövegében a `{{orvos}}` helyőrző a kezelőorvos nevére
-  cserélődik a nyomtatványon. A szerkesztőmezők tartalma elnavigálásig sem
-  vész el: egy `dp:sablon-piszkozat` localStorage-kulcs base-enként
-  cache-eli, néma visszaállítással, és sikeres mentéskor base-enként
-  törlődik. **Ez tudatosan nem a `DraftStorage` bővítése** — az
-  kizárólag `Plan`-ra típusozott, egyetlen felelősséggel; a `dp:` prefix
-  miatt a „Minden adat törlése"/„Demó adat visszaállítása" ezt is elsöpri,
-  külön kód nélkül. A „Szöveg mentése" gomb `useRef`-alapú in-flight
-  zárat visel, mert a `disabled` prop önmagában megkerülhető egy render
-  előtti második kattintással. **„Mégse" gomb** (D38) a „Szöveg mentése"
-  mellett, dirty állapotban engedélyezett — MEGERŐSÍTÉST kér (nem
-  azonnali, ellentétben pl. a Páciens adatai szerkesztőjével), mert
-  egyszerre minden nyelv/szlot piszkozatát elveti, nem csak a jelenleg
-  látszó nyelvet, és a `dp:sablon-piszkozat` cache-bejegyzést is törli
-  minden érintett base-hez — enélkül a piszkozat egy F5 után
-  visszatérne.
 - **Német nyelvű ajánlat engedélyezése** (`nemetEngedelyezve`) — checkbox.
   Bekapcsolva megjelenik az **alapértelmezett nyelv** kapcsolója (ez lesz
   az új tervek nyelve), alatta a **német tartalom készültsége**:
   hány aktív tételnek van már német neve, hány tételnek van EUR ára, és a
-  `nyilatkozat-de-v1.md`/`fizetesi-feltetelek-de-v1.md` státusza
-  (placeholder, amíg a jogi fordítás el nem készül) — link a Kezelések
-  és árak oldalra, ahol a „Nincs EUR ár" szűrő a munkalista.
+  `nyilatkozat-de-v1.md` státusza (placeholder, amíg a jogi fordítás el
+  nem készül) — link a Kezelések és árak oldalra, ahol a „Nincs EUR ár"
+  szűrő a munkalista. A készültség-blokk a MÉG NEM MENTETT
+  `nemetEngedelyezve` draft-jából jelenik meg (a checkbox bepipálására
+  azonnal látszik), a nyilatkozat státuszát a tab saját maga tölti be,
+  függetlenül a Nyomtatványok tabtól.
 
 ---
 

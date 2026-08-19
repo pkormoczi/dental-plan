@@ -14,7 +14,6 @@ const settings: Settings = {
     cegjegyzekszam: '',
   },
   orvosok: ['Dr. Teszt Elek'],
-  logoFajl: '',
   ervenyessegNap: 90,
   alapertelmezettNyelv: 'hu',
   nemetEngedelyezve: false,

@@ -244,7 +244,6 @@ export interface Settings {
   schemaVersion: 1;
   rendelo: Rendelo;
   orvosok: string[];
-  logoFajl: string;
   ervenyessegNap: number;
   alapertelmezettNyelv: Nyelv;
   nemetEngedelyezve: boolean;

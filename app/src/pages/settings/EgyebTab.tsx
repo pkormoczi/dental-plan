@@ -1,0 +1,196 @@
+// Egyéb tab -- a Beállítások tab-szerkezetének (D49) harmadik tabja: ajánlat
+// érvényessége + német nyelv engedélyezése + "A német tartalom készültsége"
+// áttekintő (tételnév-/EUR ár-lefedettség és a nyilatkozat placeholder-
+// státusza). Korábban a `SettingsPage.tsx` "Ajánlat és nyelv" Card-ja volt,
+// leütésenkénti autosave-vel (D31); a tabosítás óta pufferelt draft +
+// explicit Mentés/Mégse.
+//
+// A készültség-blokk a DRAFT `nemetEngedelyezve`-jéből jelenik meg (a
+// checkbox bepipálására azonnal látszik), nem a mentett állapotból -- a
+// `nyilatkozat-de` sablont emiatt ez a komponens tölti be saját maga,
+// FÜGGETLENÜL a `NyomtatvanyokTab`-tól (nincs megosztott state a két tab
+// között, mindkettő a `useStorage()` `loadLatestTemplateByBase`-jét hívja).
+
+import { useEffect, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Callout,
+  Card,
+  Checkbox,
+  Flex,
+  Link as RadixLink,
+  Text,
+  TextField,
+} from '@radix-ui/themes';
+import ChipGroup from '../../components/ChipGroup';
+import { useDirtyDraft } from '../../components/useDirtyDraft';
+import { Field } from '../../components/Field';
+import { lefedettseg } from '../../domain/coverage';
+import { isPlaceholderTemplate } from '../../domain/templates';
+import type { Nyelv } from '../../domain/types';
+import { t } from '../../design/tokens';
+import { stripMarkdownHeading } from '../../pdf/markdownLite';
+import { useStorage } from '../../storage/StorageContext';
+import { useAppState } from '../../state/AppState';
+
+interface EgyebDraft {
+  ervenyessegNap: number;
+  nemetEngedelyezve: boolean;
+  alapertelmezettNyelv: Nyelv;
+}
+
+function toDraft(
+  ervenyessegNap: number,
+  nemetEngedelyezve: boolean,
+  alapertelmezettNyelv: Nyelv,
+): EgyebDraft {
+  return { ervenyessegNap, nemetEngedelyezve, alapertelmezettNyelv };
+}
+
+export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
+  const { settings, saveSettings, priceList } = useAppState();
+  const { loadLatestTemplateByBase } = useStorage();
+  const { draft, setDraft, dirty, reset } = useDirtyDraft<EgyebDraft>(
+    toDraft(settings.ervenyessegNap, settings.nemetEngedelyezve, settings.alapertelmezettNyelv),
+  );
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onDirtyChange(dirty);
+  }, [dirty, onDirtyChange]);
+
+  // aktivOsszes/deNevvel függetlenek a pénznemtől -- csak az `arazott`
+  // mezőhöz kell külön az EUR nézet (lásd domain/coverage.ts).
+  const cov = lefedettseg(priceList, 'HUF');
+  const eurArazott = lefedettseg(priceList, 'EUR').arazott;
+
+  const [deNyilatkozatName, setDeNyilatkozatName] = useState<string | null>(null);
+  const [deNyilatkozatKesz, setDeNyilatkozatKesz] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!draft.nemetEngedelyezve) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { name, body } = await loadLatestTemplateByBase('nyilatkozat-de');
+        if (cancelled) return;
+        setDeNyilatkozatName(name);
+        setDeNyilatkozatKesz(!isPlaceholderTemplate(stripMarkdownHeading(body)));
+      } catch {
+        // Best-effort áttekintő -- egy sikertelen betöltés csak a
+        // készültség-sort hagyja üresen, a tab többi része használható marad.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [draft.nemetEngedelyezve, loadLatestTemplateByBase]);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await saveSettings((prev) => ({ ...prev, ...draft }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      <Card size="2" mb="4">
+        <Text as="p" size="2" weight="bold" mb="3" style={{ color: t.brand }}>
+          Ajánlat és nyelv
+        </Text>
+        <Field label="Ajánlat érvényessége (nap)">
+          <TextField.Root
+            type="number"
+            min={1}
+            value={draft.ervenyessegNap}
+            onChange={(e) =>
+              setDraft((prev) => ({ ...prev, ervenyessegNap: Math.max(1, Number(e.target.value) || 1) }))
+            }
+            style={{ maxWidth: 160 }}
+          />
+        </Field>
+
+        <Text as="label" size="2" mt="3" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Checkbox
+            checked={draft.nemetEngedelyezve}
+            onCheckedChange={(checked) =>
+              setDraft((prev) => ({ ...prev, nemetEngedelyezve: checked === true }))
+            }
+          />
+          Német nyelvű ajánlat engedélyezése
+        </Text>
+
+        {draft.nemetEngedelyezve && (
+          <>
+            <Box mt="3">
+              {/* div, nem <label> -- a ChipGroup (Radix SegmentedControl) belül
+                  gomb-csoportot renderel, egy <label> csak egyetlen "labelable"
+                  elemet jelölhetne implicit módon. */}
+              <Text as="div" size="1" color="gray" mb="1">
+                Alapértelmezett nyelv új tervnél
+              </Text>
+              <ChipGroup
+                value={draft.alapertelmezettNyelv}
+                options={[
+                  ['hu', 'Magyar'],
+                  ['de', 'Deutsch'],
+                ]}
+                onChange={(nyelv) => setDraft((prev) => ({ ...prev, alapertelmezettNyelv: nyelv }))}
+              />
+            </Box>
+
+            <Text as="div" size="1" color="gray" mt="3" style={{ lineHeight: 1.7 }}>
+              <Text weight="bold">A német tartalom készültsége</Text>
+              <br />
+              Tételnevek: {cov.deNevvel} / {cov.aktivOsszes} lefordítva
+              <br />
+              EUR árak: {eurArazott} / {cov.aktivOsszes} kitöltve
+              <br />
+              Nyilatkozat:{' '}
+              <Text style={{ fontFamily: t.mono }}>{deNyilatkozatName ?? 'nyilatkozat-de-v1.md'}</Text>
+              {deNyilatkozatKesz === false && ' — placeholder, jogi lektorálás szükséges'}
+              {deNyilatkozatKesz === true && ' — kész'}
+              <br />
+              <RadixLink asChild>
+                <RouterLink to="/arlista">Kezelések és árak megnyitása</RouterLink>
+              </RadixLink>{' '}
+              — a „Nincs EUR ár” szűrő a munkalista.
+            </Text>
+          </>
+        )}
+      </Card>
+
+      {saveError && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>A mentés nem sikerült: {saveError}</Callout.Text>
+        </Callout.Root>
+      )}
+
+      <Flex justify="end" align="center" gap="3">
+        {dirty && !saved && (
+          <Text size="1" color="gray">
+            Nem mentett módosítás
+          </Text>
+        )}
+        <Button type="button" variant="soft" color="gray" onClick={reset} disabled={saving || !dirty}>
+          Mégse
+        </Button>
+        <Button onClick={() => void handleSave()} disabled={saving || !dirty}>
+          {saving ? 'Mentés…' : saved ? 'Mentve ✓' : 'Mentés'}
+        </Button>
+      </Flex>
+    </>
+  );
+}

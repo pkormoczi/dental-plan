@@ -463,7 +463,7 @@ export default function PreviewPage() {
           <Callout.Text>
             A nyilatkozat szövege ezen a nyelven még jogi lektorálásra vár (helykitöltő szöveg) —
             emiatt a nyilatkozat és aláírás oldal nem kerülhet a nyomtatványra, a „Csak ajánlat”
-            mód kényszerítve van. A Beállítások → Nyomtatvány szövegei alatt oldható fel, a
+            mód kényszerítve van. A Beállítások → Nyomtatványok alatt oldható fel, a
             szöveg lektorálása után.
           </Callout.Text>
         </Callout.Root>

@@ -140,10 +140,11 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   böngésző-/router-szintű navigáció-blokkolás (böngésző vissza/előre, F5,
   URL-sáv átírás — ehhez data router kellene, a `HashRouter` nem
   támogatja). Hívó felületek: `components/PatientEditorPanel.tsx` (a
-  `pages/PatientDetailPage.tsx`-en át), `pages/SettingsPage.tsx`
-  „Nyomtatvány szövegei" szekció. Az
-  Árlista admin és a Beállítások többi szekciója autosave marad (D31) —
-  ezekhez a primitívek nem hívási hely, csak jövőbeli lehetőség.
+  `pages/PatientDetailPage.tsx`-en át), `pages/SettingsPage.tsx` mindhárom
+  tabja (D49 — `pages/settings/RendeloTab.tsx`/`NyomtatvanyokTab.tsx`/
+  `EgyebTab.tsx`, a lap egyetlen közös `dirty` state-jén át). Az Árlista
+  admin marad autosave (D31) — ott a primitívek nem hívási hely, csak
+  jövőbeli lehetőség.
 - Mezőnkénti összevető/szinkron-dialógus (D48, `components/TorzsadatDiffDialog.tsx`)
   — a fenti „Mezős felugró ablak” mintájának checkbox-listás változata:
   Radix Themes `Dialog`, mert tényleges mezőválasztás történik benne, nem
@@ -167,18 +168,21 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   (`components/PatientPlanChains.tsx`, `pdf/TervDocument.tsx` ugyanezt
   a jelölést használja).
 - Fülek (Radix Themes `Tabs`): a `DemoPage.tsx` (backlog-29) UNCONTROLLED
-  (`defaultValue`, nincs URL-/state-szinkron), a `PatientDetailPage.tsx`
-  (backlog-30) CONTROLLED (`value`/`onValueChange`) — utóbbi azért, mert a
-  kezdő tabot a hívó (`location.state`) vezérli, a váltást pedig a
-  tab-váltási guard (D38, lásd § 10) kell tudja elfogni, mielőtt ténylegesen
-  megtörténik. **Teszt-gotcha**: a
+  (`defaultValue`, nincs URL-/state-szinkron); a `PatientDetailPage.tsx`
+  (backlog-30) és a `SettingsPage.tsx` (D49) CONTROLLED (`value`/
+  `onValueChange`) — utóbbiak azért, mert a tab-váltási guard (D38, lásd
+  § 10) kell tudja elfogni, mielőtt ténylegesen megtörténik (a
+  `PatientDetailPage.tsx`-nél emellett a kezdő tabot is a hívó,
+  `location.state`, vezérli; a `SettingsPage.tsx` mindig a `Rendelő
+  adatai` tabon nyit). **Teszt-gotcha**: a
   `Tabs.Trigger` egy második, csak CSS-sel (`visibility: hidden`) takart
   span-t is renderel a felirat mellé (szélesség-tartalék, hogy a kijelölt/
   nem kijelölt vastagság ne tördelje újra a sávot) — a vitest-készlet nem
   tölti be a Radix Themes CSS-t, ezért az accessible name jsdom alatt
   duplázva számít ki (pl. „FunkciókFunkciók"). A `getByRole('tab', ...)`
   ezért mindig regexet kapjon névre (`{ name: /Funkciók/ }`), nem pontos
-  stringet — lásd `DemoPage.test.tsx`/`PatientDetailPage.test.tsx`.
+  stringet — lásd `DemoPage.test.tsx`/`PatientDetailPage.test.tsx`/
+  `SettingsPage.test.tsx`.
 - Több felületen közös komponens BEÁGYAZOTT példánya (pl.
   `components/PatientPlanChains.tsx` a páciens-részletoldal `Kezelési
   tervek` tabjában, D44) nem ismételheti meg azt, amit a körülvevő felület

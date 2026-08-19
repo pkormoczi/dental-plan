@@ -1241,3 +1241,30 @@ karbantartási kör négy önálló javítása.
   `masterElteresek`) a mastert újraolvasva egy INFO-szintű, nem blokkoló
   sor jelzi az eltérést — a véglegesítés emiatt sosem kér megerősítést
   (docs/03-funkcionalis-spec.md § 2. és § 4.).
+
+---
+
+### 45. Beállítások oldal tabosítása — KÉSZ (2026-08-19)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D49 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a Beállítások öt egymás alatti kártyája két,
+  egymásnak ellentmondó mentési modellt kevert: a legtöbb mező
+  leütésenként mentődött, az egyetlen alsó „Mentés" gomb viszont
+  ténylegesen csak az Orvosok mezőt commitolta, ami `onBlur`-ra amúgy is
+  megtörtént — a gomb no-op volt, miközben azt sugallta, addig semmi
+  sincs mentve. A nem konfigurálható „Logó" kártya (a `settings.logoFajl`
+  sehol nem volt ténylegesen felhasznált — a PDF és a NavBar egy statikus
+  `assets/logo.png` importot használ) holt adatot mutatott.
+- **Megvalósítás:** három tab (`Rendelő adatai` | `Nyomtatványok` |
+  `Egyéb`, `pages/settings/*Tab.tsx`), mindegyik saját pufferelt draftot
+  vezet explicit Mentés/Mégse gombpárral (`useDirtyDraft`) — a
+  leütésenkénti autosave ezen a lapon megszűnt, az Árlista admin autosave
+  marad. A Rendelő adatai/Egyéb Mégse azonnali, a Nyomtatványok Mégse
+  megerősítést kér (mindkét nyelv piszkozatát elveti egyszerre). A lap
+  egyetlen közös `dirty` state-et tart (a Radix `Tabs.Content` úgyis
+  unmountolja az inaktív tabot), amit tab-váltáskor és NavBar-navigációnál
+  is ugyanaz a megerősítő dialógus fog el; megerősítés után a
+  Nyomtatványok tab `dp:sablon-piszkozat` localStorage-cache-e is törlődik,
+  különben egy F5 a tab-váltás után visszahozná a már elvetett szöveget. A
+  Logó kártya a `Settings.logoFajl` mezővel együtt törölve.

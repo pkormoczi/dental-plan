@@ -14,7 +14,6 @@ export const seedSettings: Settings = {
     cegjegyzekszam: '',
   },
   orvosok: ['Dr. Mándoki István'],
-  logoFajl: 'logo.png',
   ervenyessegNap: 90,
   alapertelmezettNyelv: 'hu',
   nemetEngedelyezve: true,

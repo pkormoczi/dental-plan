@@ -19,7 +19,7 @@ function renderSettings() {
 }
 
 // D46: a NavBar-t IS rendereli, ugyanabban a router-fában -- a valós
-// bekötés (`useNavGuard(templatesDirty)` a SettingsPage-ben, a NavBar
+// bekötés (`useNavGuard(dirty)` a SettingsPage-ben, a NavBar
 // kattintás-elfogása) csak így igazolható, nem a `renderSettings()` szűkebb
 // harness-ével.
 function renderSettingsWithNavBar() {
@@ -42,84 +42,200 @@ function renderSettingsWithNavBar() {
   );
 }
 
+// docs/07-felulet-rendszer.md § Komponensek (Fülek): a `Tabs.Trigger`
+// jsdom alatt duplázott accessible name-et ad (a CSS-sel takart width-
+// tartalék span miatt) -- minden tab-lekérdezés regexet kap.
+async function goToTab(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
+  await user.click(await screen.findByRole('tab', { name }));
+}
+
 describe('SettingsPage', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it('shows "Mentve ✓" after a successful save', async () => {
-    const user = userEvent.setup();
-    renderSettings();
-
-    await screen.findByText('Beállítások');
-    await user.click(screen.getByRole('button', { name: 'Mentés' }));
-
-    expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
-  });
-
-  // P0-8: korábban a "Mentve ✓" a tényleges mentési eredménytől függetlenül
-  // jelent meg (`void saveSettings(...)`, nem várt be semmit).
-  it('does NOT show "Mentve ✓" when the save fails, and shows the error instead', async () => {
-    const user = userEvent.setup();
-    renderSettings();
-
-    // A kezdeti seed-írás (StorageProvider init) legyen kész, MIELŐTT a
-    // localStorage.setItem-et hibázóra állítjuk.
-    await screen.findByText('Beállítások');
-
-    const originalSetItem = localStorage.setItem.bind(localStorage);
-    vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
-      if (key === 'dp:beallitasok.json') throw new DOMException('QuotaExceededError');
-      originalSetItem(key, value);
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Mentés' }));
-
-    expect(screen.queryByRole('button', { name: 'Mentve ✓' })).not.toBeInTheDocument();
-    expect(await screen.findByText(/A mentés nem sikerült/)).toBeInTheDocument();
-
-    vi.restoreAllMocks();
-  });
-
-  // D31: a `patch()` a friss `prev`-re merge-el (AppState.tsx `saveSettings`
-  // updater-szerződése) -- két rendelő-mező gyors, ugyanabban a tickben
-  // történő szerkesztése korábban a render-idejű `settings` closure-ből
-  // épített `{ ...settings, ...fields }` miatt kiütötte volna egymást
-  // (ugyanaz a mintázat, mint a fenti dupla-kattintásos teszt, csak itt két
-  // KÜLÖNBÖZŐ mezőn, `await` nélkül a két `fireEvent.change` között).
-  it('két rendelő-mező gyors, egymást követő szerkesztése (egy tickben) mindkettőt megőrzi', async () => {
+  it('a Rendelő adatai tab aktív alapból', async () => {
     renderSettings();
     await screen.findByText('Beállítások');
-
-    fireEvent.change(screen.getByLabelText('Név'), {
-      target: { value: 'Dr. Mándoki Fogászat Kft.' },
-    });
-    fireEvent.change(screen.getByLabelText('Telefon'), { target: { value: '+36 1 234 5678' } });
-
-    await waitFor(() => {
-      const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
-        rendelo: { nev: string; telefon: string };
-      };
-      expect(s.rendelo.nev).toBe('Dr. Mándoki Fogászat Kft.');
-      expect(s.rendelo.telefon).toBe('+36 1 234 5678');
-    });
+    expect(screen.getByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('a rendelő-mezőkbe gyors gépeléskor nem esik ki karakter (D31: optimista, szinkron állapotfrissítés)', async () => {
-    const user = userEvent.setup();
-    renderSettings();
-    await screen.findByText('Beállítások');
-
-    const nev = screen.getByLabelText('Név');
-    await user.clear(nev);
-    await user.type(nev, 'Mándoki Dental Kft.');
-
-    expect(nev).toHaveValue('Mándoki Dental Kft.');
-  });
-
-  describe('Nyomtatvány szövegei', () => {
-    it('shows the real seed text (without the "# " heading) in both boxes', async () => {
+  describe('Rendelő adatai', () => {
+    it('shows "Mentve ✓" after a successful save', async () => {
+      const user = userEvent.setup();
       renderSettings();
+      await screen.findByText('Beállítások');
+
+      const nev = screen.getByLabelText('Név');
+      await user.clear(nev);
+      await user.type(nev, 'Dr. Mándoki Fogászat Kft.');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
+    });
+
+    // P0-8: korábban a "Mentve ✓" a tényleges mentési eredménytől függetlenül
+    // jelent meg (`void saveSettings(...)`, nem várt be semmit).
+    it('does NOT show "Mentve ✓" when the save fails, and shows the error instead', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      const nev = screen.getByLabelText('Név');
+      await user.clear(nev);
+      await user.type(nev, 'Dr. Mándoki Fogászat Kft.');
+
+      const originalSetItem = localStorage.setItem.bind(localStorage);
+      vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+        if (key === 'dp:beallitasok.json') throw new DOMException('QuotaExceededError');
+        originalSetItem(key, value);
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      expect(screen.queryByRole('button', { name: 'Mentve ✓' })).not.toBeInTheDocument();
+      expect(await screen.findByText(/A mentés nem sikerült/)).toBeInTheDocument();
+
+      vi.restoreAllMocks();
+    });
+
+    // D49: a tabosítás óta a rendelő-mezők pufferelt draftba írnak, egy
+    // közös Mentés commitolja őket -- a race, amit ez a teszt EREDETILEG
+    // (D31) egy render-idejű `{ ...settings, ... }` closure ellen védett,
+    // egy `setDraft`-alapú pufferelt draft mellett szerkezetileg kizárt
+    // (a functional setState mindig a legfrissebb draftra épít). A teszt
+    // most azt ellenőrzi, hogy egy Mentés mindkét, egy tickben szerkesztett
+    // mezőt megőrzi.
+    it('két rendelő-mező gyors, egymást követő szerkesztése (egy tickben) mindkettőt megőrzi Mentéskor', async () => {
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      fireEvent.change(screen.getByLabelText('Név'), {
+        target: { value: 'Dr. Mándoki Fogászat Kft.' },
+      });
+      fireEvent.change(screen.getByLabelText('Telefon'), { target: { value: '+36 1 234 5678' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      await waitFor(() => {
+        const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+          rendelo: { nev: string; telefon: string };
+        };
+        expect(s.rendelo.nev).toBe('Dr. Mándoki Fogászat Kft.');
+        expect(s.rendelo.telefon).toBe('+36 1 234 5678');
+      });
+    });
+
+    it('a rendelő-mezőkbe gyors gépeléskor nem esik ki karakter', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      const nev = screen.getByLabelText('Név');
+      await user.clear(nev);
+      await user.type(nev, 'Mándoki Dental Kft.');
+
+      expect(nev).toHaveValue('Mándoki Dental Kft.');
+    });
+  });
+
+  describe('Tab-váltás nem mentett módosítással (D49)', () => {
+    it('dirty Rendelő adatai piszkozattal tab-váltás megerősítést kér -- a dialógus Mégse-je a lapon tart, a piszkozat megmarad', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      const nev = screen.getByLabelText('Név');
+      await user.clear(nev);
+      await user.type(nev, 'Dr. Mándoki Fogászat Kft.');
+
+      await goToTab(user, /Nyomtatványok/);
+      const dialog = await screen.findByRole('alertdialog');
+      await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByLabelText('Név')).toHaveValue('Dr. Mándoki Fogászat Kft.');
+    });
+
+    it('dirty Rendelő adatai piszkozattal "Váltás, módosítás elvetésével" tényleg vált, és a piszkozat elvész', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      const originalNev = (screen.getByLabelText('Név') as HTMLInputElement).value;
+      const nev = screen.getByLabelText('Név');
+      await user.clear(nev);
+      await user.type(nev, 'Dr. Mándoki Fogászat Kft.');
+
+      await goToTab(user, /Nyomtatványok/);
+      await user.click(await screen.findByRole('button', { name: 'Váltás, módosítás elvetésével' }));
+
+      expect(screen.getByRole('tab', { name: /Nyomtatványok/ })).toHaveAttribute('aria-selected', 'true');
+
+      await goToTab(user, /Rendelő adatai/);
+      expect(screen.getByLabelText('Név')).toHaveValue(originalNev);
+    });
+
+    it('a Nyomtatványok tab elvetéses tab-váltása törli a sablon-piszkozat cache-t is (nem téríti vissza egy F5)', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await goToTab(user, /Nyomtatványok/);
+
+      const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      await user.type(nyilatkozat, ' Elmentetlen piszkozat.');
+      await waitFor(() =>
+        expect(localStorage.getItem('dp:sablon-piszkozat')).toContain('Elmentetlen piszkozat.'),
+      );
+
+      await goToTab(user, /Rendelő adatai/);
+      await user.click(await screen.findByRole('button', { name: 'Váltás, módosítás elvetésével' }));
+
+      // A shell teljesen törli a cache-kulcsot (nem csak a dirty base-eket),
+      // lásd `clearAllTemplateDraftCache` (NyomtatvanyokTab.tsx).
+      expect(localStorage.getItem('dp:sablon-piszkozat')).toBeNull();
+
+      await goToTab(user, /Nyomtatványok/);
+      const nyilatkozatAgain = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      expect(nyilatkozatAgain.value).not.toContain('Elmentetlen piszkozat.');
+    });
+  });
+
+  describe('Egyéb', () => {
+    // A seed nemetEngedelyezve:true (mockup-alapérték) -- a készültség-blokk
+    // emiatt alapból látszik, a checkbox kikapcsolása azonnal (Mentés
+    // nélkül) elrejti, mert a blokk a DRAFT-ból, nem a mentett állapotból
+    // olvas.
+    it('a német engedélyezés draftja azonnal mutatja/elrejti a "német tartalom készültsége" blokkot, Mentés nélkül', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await goToTab(user, /Egyéb/);
+
+      expect(await screen.findByText('A német tartalom készültsége')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('checkbox', { name: 'Német nyelvű ajánlat engedélyezése' }));
+      expect(screen.queryByText('A német tartalom készültsége')).not.toBeInTheDocument();
+    });
+
+    it('a német nyelv kikapcsolása + Mentés után a Nyomtatványok tabon eltűnik a HU/DE nyelvváltó', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await goToTab(user, /Egyéb/);
+
+      await user.click(screen.getByRole('checkbox', { name: 'Német nyelvű ajánlat engedélyezése' }));
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
+
+      await goToTab(user, /Nyomtatványok/);
+      await screen.findByLabelText('Nyilatkozat');
+      expect(screen.queryByRole('radio', { name: 'Deutsch' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Nyomtatványok', () => {
+    it('shows the real seed text (without the "# " heading) in both boxes', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
       expect(nyilatkozat.value.startsWith('#')).toBe(false);
@@ -132,23 +248,24 @@ describe('SettingsPage', () => {
       expect(screen.getByText('nyilatkozat-hu-v1.md')).toBeInTheDocument();
     });
 
-    // A seed nemetEngedelyezve:true (mockup-alapérték), tehát a kártya saját
+    // A seed nemetEngedelyezve:true (mockup-alapérték), tehát a tab saját
     // nyelvváltója is megjelenik -- a Deutsch chip váltás a német (AI-fordítású)
     // szöveget mutatja, a nem mentett HU piszkozat pedig visszaváltáskor megmarad.
-    it('switching the card language to Deutsch shows the DE seed text, HU draft survives switching back', async () => {
+    it('switching the tab language to Deutsch shows the DE seed text, HU draft survives switching back', async () => {
       const user = userEvent.setup();
       renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
       await user.type(nyilatkozat, ' HU piszkozat.');
 
-      const card = screen.getByText('Nyomtatvány szövegei').closest('.rt-Card') as HTMLElement;
-      await user.click(within(card).getByRole('radio', { name: 'Deutsch' }));
+      const panel = screen.getByRole('tabpanel');
+      await user.click(within(panel).getByRole('radio', { name: 'Deutsch' }));
 
       const deNyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
       expect(deNyilatkozat.value).toContain('Der Auftraggeber bestellt die im BEHANDLUNGSPLAN');
 
-      await user.click(within(card).getByRole('radio', { name: 'Magyar' }));
+      await user.click(within(panel).getByRole('radio', { name: 'Magyar' }));
       const huAgain = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
       expect(huAgain.value).toContain('HU piszkozat.');
     });
@@ -156,6 +273,7 @@ describe('SettingsPage', () => {
     it('saving an edited template creates a new -v2 file and updates the shown filename', async () => {
       const user = userEvent.setup();
       renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
       await user.type(nyilatkozat, ' Kiegészítés.');
@@ -180,6 +298,7 @@ describe('SettingsPage', () => {
     it('backlog-13: a Garancia mező alapból a placeholder szöveget mutatja, szerkesztése új -v2 fájlt hoz létre', async () => {
       const user = userEvent.setup();
       renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const garancia = (await screen.findByLabelText('Garancia')) as HTMLTextAreaElement;
       expect(garancia.value).toContain('[PLACEHOLDER');
@@ -201,6 +320,7 @@ describe('SettingsPage', () => {
     it('does NOT show "Mentve ✓" when saving a template fails, and shows the error instead', async () => {
       const user = userEvent.setup();
       renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
       await user.type(nyilatkozat, ' Kiegészítés.');
@@ -226,6 +346,7 @@ describe('SettingsPage', () => {
     it('a piszkozat túléli az elnavigálást (unmount + újrarender) mentés nélkül', async () => {
       const user = userEvent.setup();
       const { unmount } = renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
       await user.type(nyilatkozat, ' Elmentetlen piszkozat.');
@@ -235,6 +356,7 @@ describe('SettingsPage', () => {
 
       unmount();
       renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozatAgain = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
       expect(nyilatkozatAgain.value).toContain('Elmentetlen piszkozat.');
@@ -248,6 +370,7 @@ describe('SettingsPage', () => {
     it('dupla kattintás a "Szöveg mentése" gombon csak egy új verziófájlt hoz létre', async () => {
       const user = userEvent.setup();
       renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
       await user.type(nyilatkozat, ' Kiegészítés.');
@@ -267,19 +390,22 @@ describe('SettingsPage', () => {
     // D38: a szekció eddig egyedüliként nem kapott Mégse gombot,
     // holott a Save/Cancel-mintát máshol (PatientEditorPanel) már követte.
     it('a "Mégse" gomb tiltott, amíg nincs piszkozat-eltérés', async () => {
+      const user = userEvent.setup();
       renderSettings();
+      await goToTab(user, /Nyomtatványok/);
       await screen.findByLabelText('Nyilatkozat');
 
       expect(screen.getByRole('button', { name: 'Mégse' })).toBeDisabled();
     });
 
-    // A Mégse minden nyelv/szlot piszkozatát elveti -- ezért (a
-    // PatientEditorPanel azonnali Mégse-jétől eltérően) megerősítést kér,
-    // és a `dp:sablon-piszkozat` cache-t is törli, különben egy F5 után a
+    // A Mégse minden nyelv/szlot piszkozatát elveti -- ezért (a Rendelő
+    // adatai/Egyéb tab azonnali Mégse-jétől eltérően) megerősítést kér, és
+    // a `dp:sablon-piszkozat` cache-t is törli, különben egy F5 után a
     // piszkozat visszatérne.
     it('"Mégse" megerősítés után visszaállítja a mentett szöveget, és törli a piszkozat-cache-t (túléli az F5-öt is)', async () => {
       const user = userEvent.setup();
       const { unmount } = renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
       await user.type(nyilatkozat, ' Elmentetlen piszkozat.');
@@ -299,6 +425,7 @@ describe('SettingsPage', () => {
       // piszkozat NEM tér vissza.
       unmount();
       renderSettings();
+      await goToTab(user, /Nyomtatványok/);
       const nyilatkozatAgain = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
       expect(nyilatkozatAgain.value).not.toContain('Elmentetlen piszkozat.');
     });
@@ -306,6 +433,7 @@ describe('SettingsPage', () => {
     it('"Mégse" a dialóguson belüli "Mégse"-re (elvetve az elvetést) megtartja a piszkozatot', async () => {
       const user = userEvent.setup();
       renderSettings();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
       await user.type(nyilatkozat, ' Elmentetlen piszkozat.');
@@ -323,6 +451,7 @@ describe('SettingsPage', () => {
     it('mentetlen sablon-piszkozattal a NavBar-kattintás is megerősítést kér -- Mégse a lapon tart', async () => {
       const user = userEvent.setup();
       renderSettingsWithNavBar();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
       await user.type(nyilatkozat, ' Elmentetlen piszkozat.');
@@ -340,6 +469,7 @@ describe('SettingsPage', () => {
     it('mentetlen sablon-piszkozattal a NavBar-kattintás megerősítés után ténylegesen navigál', async () => {
       const user = userEvent.setup();
       renderSettingsWithNavBar();
+      await goToTab(user, /Nyomtatványok/);
 
       const nyilatkozat = await screen.findByLabelText('Nyilatkozat');
       await user.type(nyilatkozat, ' Elmentetlen piszkozat.');

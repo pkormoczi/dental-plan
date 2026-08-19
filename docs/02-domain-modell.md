@@ -429,7 +429,6 @@ a fájlban lévő érték az igazság — és érdemes figyelmeztetni.
     "cegjegyzekszam": ""           // kitöltendő
   },
   "orvosok": ["Dr. Mándoki István"],
-  "logoFajl": "logo.png",          // a gyökérmappában
   "ervenyessegNap": 90,
   "alapertelmezettNyelv": "hu",    // ez lesz az új tervek nyelve, ha nemetEngedelyezve
   "nemetEngedelyezve": false       // alapértéke false; a Beállításokban kapcsolható (D21)
