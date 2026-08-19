@@ -1445,3 +1445,29 @@ karbantartási kör négy önálló javítása.
   volt, hogy 15 sor ne fusson feleslegesen hosszúra
   (docs/01-attekintes-es-dontesek.md D40/D56, docs/03-funkcionalis-
   spec.md § "Új terv indítása" — a köztes páciens-választó).
+
+### 49. tétel: Másolás új tervként — KÉSZ (2026-08-20)
+
+- **Méret:** ~0.25 nap.
+- **Kereteket sért?** Nem — új D57 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a "Másolás új tervbe" a doki tényleges A/B
+  alku-változat munkafolyamata, de a páciensadatot eddig a forrás
+  verzió (akár hónapokkal korábbi) pillanatképéből vitte tovább, nem a
+  páciens jelenlegi adatából — a másolás pillanatában ez a friss adat a
+  releváns, nem a régi.
+- **Megvalósítás:** a tervdokumentum 7 döntéséből ténylegesen csak a
+  páciens-master-öröklés (3. döntés) volt ma elvégezhető — a többi
+  (default-following árfrissítés + hozzá tartozó markerek, "csak
+  ajánlat" öröklése, nyelvi review-metaadat öröklése) egy még nem
+  létező modellre vár, és külön útra terelődött: az orvos-öröklés az
+  53. tételhez, a többi a `backlog/redesign/` DP-044/DP-048/DP-051/
+  DP-054 tételeihez, amikor azok kidolgozásra kerülnek. A
+  `planMasolatKent()` (`app/src/domain/planCopy.ts`) opcionális
+  negyedik `master` paraméterrel bővült — ha van, a `paciens` blokkot
+  ebből építi (a meglévő `paciensTorzsadatbol()`-lal), a `paciensId`
+  változatlanul a forrás tervből jön. A `PatientPlanChains.tsx`
+  `copyVersion()` egyetlen hívási helye a `loadPatientData()`-t is
+  betölti a másolt verzió mellé; olvashatatlan törzsadatnál a másolás
+  hibaüzenettel áll meg, nem esik vissza némán a régi adatra
+  (docs/01-attekintes-es-dontesek.md D57, docs/03-funkcionalis-spec.md
+  § "Terv másolása új tervként").

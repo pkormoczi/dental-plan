@@ -737,7 +737,7 @@ melyik páciens-mappába, D29)** kerül:
 | Gomb | Hol | Mit visz át | Mentéskor |
 |---|---|---|---|
 | **„Új verzió"** | verziósor `⋯` menüjében, KIZÁRÓLAG a lánc legfrissebb során (D53) | mindent, a `tervId`-t is | ugyanabba a terv-mappába `<ma>_v<n+1>` (D4) |
-| **„Másolás új tervbe"** | verziósor `⋯` menüjében | mindent az azonosító/állapot/dátum kivételével | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
+| **„Másolás új tervbe"** | verziósor `⋯` menüjében | mindent az azonosító/állapot/dátum kivételével, PLUSZ a `paciens` blokk az ÉLŐ törzsadatból, ha van (D57) | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
 | **„Új terv"** | a páciensnév mellett, balra | csak a `paciens` blokkot | **új** terv-mappa a MEGLÉVŐ páciens-mappában, `<ma>_v1` (D26/D29) |
 | **„+ Új kezelési terv"** | Kezdőlap, az `/uj-terv` köztes választón át (lásd „Új terv indítása — a köztes páciens-választó" lentebb) | „Meglévő páciens keresése": a kiválasztott páciens `paciens` blokkja; „+ Új páciens": a quick-create dialógusban megadott név + opcionális születési dátum/telefon (D41) | **új** terv-mappa — a kiválasztott MEGLÉVŐ vagy a quick-create dialógussal frissen létrehozott páciens-mappában, `<ma>_v1` (D26/D29) |
 
@@ -857,16 +857,24 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   forráságon (törzsadat és a legutóbbi `paciens` pillanatkép) egységesen —
   a `paciens`-adatok forrásától függetlenül ugyanaz a legutóbbi
   VÉGLEGES verzió dönti el, melyik lánchoz tartozzon is az.
-- **`planMasolatKent` — minden átjön.** Egyetlen belépési pontja a
-  **„Másolás új tervbe"**, minden verzió-sor `⋯` menüjében, mert
-  konkrétan AZT a verziót másolja, sorokkal együtt (egy régebbi verzió
-  sorai eltérhetnek a legfrissebbtől). A
-  `paciens`, `paciensId`, `nyelv`, `penznem`, `orvos`, `fazisok`,
-  `elolegSzazalek`, `kedvezmenyOsszeg` és az `arlistaVerzio` is
+- **`planMasolatKent` — a szakmai tartalom átjön, a páciensadat frissül.**
+  Egyetlen belépési pontja a **„Másolás új tervbe"**, minden verzió-sor
+  `⋯` menüjében, mert konkrétan AZT a verziót másolja, sorokkal együtt
+  (egy régebbi verzió sorai eltérhetnek a legfrissebbtől). A
+  `paciensId`, `nyelv`, `penznem`, `orvos`, `fazisok`,
+  `elolegSzazalek`, `kedvezmenyOsszeg` és az `arlistaVerzio`
   változatlanul átjön — ugyanaz a snapshot-elv, mint egy meglévő terv új
   verzióra nyitásakor. Ez a valódi A/B alku-változat használati eset: a
   doki utána csak azt módosítja, ami eltér a két ajánlat között, nem
-  gépeli be újra az egészet.
+  gépeli be újra az egészet. A **`paciens` blokk KIVÉTEL** (D57): ha a
+  pácienshez van lezárt törzsadat (`paciens-adatok.json`), onnan jön,
+  nem a forrás verzió pillanatképéből — a másolás pillanatában a doki a
+  páciens JELENLEGI adatát várja az új ajánlatba, nem egy esetleg
+  elavult telefonszámot/címet. Törzsadat híján a forrás pillanatképe
+  marad. Emiatt a `/paciens` lépésre érkező másolat a D48
+  törzsadat-kártyán már egyező adatot lát, nem indul felesleges
+  ütközés-prompt. Olvashatatlan törzsadatnál a másolás hibaüzenettel áll
+  meg (D33).
 
 Mindhárom út a meglévő `frissDatummal` (D22) hívásával bélyegzi a
 `keltezes`/`ervenyesIg`-et a mai napra, és a másolat `osszesitok`-ja a

@@ -47,6 +47,9 @@ function DraftProbe() {
       <div data-testid="draft-tervid">„{plan.tervId}”</div>
       <div data-testid="draft-sorcount">{sorCount}</div>
       <div data-testid="draft-keltezes">{plan.keltezes}</div>
+      {/* D57: a telefon (nem a névvel egyező mező) igazolja, hogy a paciens
+          blokk a MASTERBŐL jön, nem csak a paciens.json index nev-jéből. */}
+      <div data-testid="draft-telefon">{plan.paciens.telefon}</div>
     </div>
   );
 }
@@ -401,6 +404,53 @@ describe('OsszesTervSection', () => {
     // A dátumbélyeg frissül (D22-mintájú, planMasolatKent) -- nem a forrás
     // 2026-07-22-es keltezése marad.
     expect(screen.getByTestId('draft-keltezes')).not.toHaveTextContent(v2.plan.keltezes);
+  });
+
+  // D57: a "Másolás új tervbe" a paciens blokkot az ÉLŐ törzsadatból veszi,
+  // nem a forrás verzió pillanatképéből -- a doki a másolás pillanatában a
+  // páciens JELENLEGI adatát akarja az új ajánlatba, nem egy régebbi
+  // telefonszámot.
+  it('"Másolás új tervbe" az ÉLŐ törzsadat telefonszámát viszi át, nem a forrás verzió pillanatképéét', async () => {
+    const [, v2] = nagyEvaMultiVersionChain;
+    expect(v2.plan.paciens.telefon).not.toBe('+36 70 111 2222');
+
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const meglevoAdatok = await seeder.loadPatientData(v2.patientDir);
+    if (!meglevoAdatok) throw new Error('Nagy Éva seed-törzsadata hiányzik a teszt előfeltételéből.');
+    await seeder.savePatientData(v2.patientDir, { ...meglevoAdatok, telefon: '+36 70 111 2222' });
+
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const doboz = lancDoboz(card, v2.planDir);
+    await nyissLancot(user, doboz);
+    await user.click(await verzioMenupont(user, doboz, 'Másolás új tervbe'));
+
+    expect(await screen.findByTestId('draft-oldal')).toHaveTextContent('PACIENS-OLDAL');
+    expect(screen.getByTestId('draft-telefon')).toHaveTextContent('+36 70 111 2222');
+  });
+
+  // D33: a paciens-adatok.json valódi system of record -- egy sérült fájl
+  // hibaként dobódik, a másolás nem eshet vissza némán a forrás régi
+  // pillanatképére.
+  it('"Másolás új tervbe" hibát jelez, ha a törzsadat sérült, és nem navigál el', async () => {
+    const [, v2] = nagyEvaMultiVersionChain;
+    localStorage.setItem(`dp:paciensek/${v2.patientDir}/paciens-adatok.json`, 'not valid json {{{');
+
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const doboz = lancDoboz(card, v2.planDir);
+    await nyissLancot(user, doboz);
+    await user.click(await verzioMenupont(user, doboz, 'Másolás új tervbe'));
+
+    expect(await within(card).findByText(/A másolás nem sikerült/)).toBeInTheDocument();
+    expect(screen.queryByTestId('draft-oldal')).not.toBeInTheDocument();
   });
 
   it('"Új terv" a páciens LEGUTÓBB MÓDOSÍTOTT láncának legfrissebb verziójából viszi át a páciensadatot, sorok nélkül', async () => {

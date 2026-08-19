@@ -198,12 +198,19 @@ export default function PatientPlanChains({
   async function copyVersion(ref: VersionRef) {
     setActionError(null);
     try {
-      const plan = await storage.loadPlan({
-        patientDir: patient.dirName,
-        planDir: ref.planDir,
-        versionDir: ref.versionDir,
-      });
-      copyPlanIntoDraft(planMasolatKent(plan, settings, todayIso()), patient.dirName);
+      // D57: a paciens blokkot az ÉLŐ törzsadatból frissítjük, nem a forrás
+      // verzió pillanatképéből -- olvashatatlan (sérült/magasabb-verziójú)
+      // törzsadatnál a loadPatientData dob (D33), a másolás nem fut le, a
+      // catch ág piros Callout-ban jelzi (nincs néma visszaesés régi adatra).
+      const [plan, master] = await Promise.all([
+        storage.loadPlan({
+          patientDir: patient.dirName,
+          planDir: ref.planDir,
+          versionDir: ref.versionDir,
+        }),
+        storage.loadPatientData(patient.dirName),
+      ]);
+      copyPlanIntoDraft(planMasolatKent(plan, settings, todayIso(), master), patient.dirName);
       navigate('/paciens');
     } catch (err) {
       setActionError({

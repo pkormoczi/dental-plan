@@ -55,16 +55,28 @@ export function planUjTorzsadattal(
 }
 
 /**
- * "Másolás új tervbe" -- mindent átvisz a forrásból, ami nem
- * azonosító/állapot/dátum (az `arlistaVerzio` is, ugyanaz a snapshot-elv,
- * mint egy meglévő terv új verzióra nyitásakor). Az `osszesitok` a saját
- * (átvett) `fazisok`-ból ÚJRASZÁMOLVA -- a forrás `osszesitok`-ja az EREDETI,
- * már mentett terv fájl-igazsága (D7), nem a most keletkező piszkozaté.
+ * "Másolás új tervbe" -- a szakmai tartalmat (fázisok, sorok, nyelv, orvos,
+ * `arlistaVerzio`, ugyanaz a snapshot-elv, mint egy meglévő terv új
+ * verzióra nyitásakor) a forrásból, az azonosító/állapot/dátum kivételével.
+ * A `paciens` blokk KIVÉTEL (D57, D25 kettős elve): a `master` -- ha van --
+ * felülírja a forrás pillanatképét, mert a másolás pillanatában a doki a
+ * páciens JELENLEGI adatait akarja az új ajánlatba tenni, nem a forrás
+ * verzió esetleg hónapokkal korábbi állapotát. Törzsadat híján (`master`
+ * hiányzik) a forrás `plan.paciens` pillanatképe marad, a mai viselkedés.
+ * Az `osszesitok` a saját (átvett) `fazisok`-ból ÚJRASZÁMOLVA -- a forrás
+ * `osszesitok`-ja az EREDETI, már mentett terv fájl-igazsága (D7), nem a
+ * most keletkező piszkozaté.
  */
-export function planMasolatKent(plan: Plan, settings: Settings, ma: string): Plan {
+export function planMasolatKent(
+  plan: Plan,
+  settings: Settings,
+  ma: string,
+  master?: PatientMasterData | null,
+): Plan {
   const friss = frissDatummal(plan, settings, ma);
   return {
     ...friss,
+    paciens: master ? paciensTorzsadatbol(master) : friss.paciens,
     tervId: '',
     verzio: 0,
     statusz: 'PISZKOZAT',

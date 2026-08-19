@@ -229,4 +229,83 @@ describe('planMasolatKent', () => {
     expect(plan.keltezes).toBe(eredetiKeltezes);
     expect(plan.osszesitok).toBe(eredetiOsszesitok);
   });
+
+  // D57: a master paraméter nélkül a mai viselkedés marad -- a forrás
+  // pillanatképe másolódik, törzsadat híján ez az egyetlen elérhető forrás.
+  it('master nélkül a forrás paciens pillanatképét viszi át', () => {
+    const plan = makePlan();
+    const masolat = planMasolatKent(plan, settings, '2026-08-10');
+    expect(masolat.paciens).toEqual(plan.paciens);
+  });
+
+  // D57: masterrel a paciens blokk minden mezője a törzsadatból jön, a
+  // forrás pillanatképe helyett.
+  it('master megadásával a paciens blokk a törzsadatból jön, nem a forrás pillanatképéből', () => {
+    const plan = makePlan();
+    const master: PatientMasterData = {
+      schemaVersion: 1,
+      paciensId: 'masik-pac-id',
+      nev: 'Nagy Éva',
+      szuletesiIdo: '1980-01-01',
+      lakcim: 'Debrecen, Friss utca 1.',
+      telefon: '+36 30 999 9999',
+      email: 'eva.friss@example.hu',
+      taj: '123 456 789',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+    };
+    const masolat = planMasolatKent(plan, settings, '2026-08-10', master);
+
+    expect(masolat.paciens).toEqual({
+      nev: master.nev,
+      szuletesiIdo: master.szuletesiIdo,
+      lakcim: master.lakcim,
+      telefon: master.telefon,
+      email: master.email,
+      taj: master.taj,
+      kiskoru: master.kiskoru,
+      torvenyesKepviselo: master.torvenyesKepviselo,
+    });
+    expect(masolat.paciens).not.toEqual(plan.paciens);
+  });
+
+  // D26: a paciensId a másolatot a FORRÁS páciens-mappájában tartja --
+  // masterrel is, a master saját paciensId-je nem veheti át a szerepét.
+  it('masterrel is a forrás paciensId-jét viszi tovább, nem a masterét', () => {
+    const plan = makePlan();
+    const master: PatientMasterData = {
+      schemaVersion: 1,
+      paciensId: 'masik-pac-id',
+      nev: 'Nagy Éva',
+      szuletesiIdo: '1980-01-01',
+      lakcim: '',
+      telefon: '',
+      email: '',
+      taj: '',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+    };
+    const masolat = planMasolatKent(plan, settings, '2026-08-10', master);
+    expect(masolat.paciensId).toBe(plan.paciensId);
+    expect(masolat.paciensId).not.toBe(master.paciensId);
+  });
+
+  it('nem mutálja a master törzsadatot', () => {
+    const plan = makePlan();
+    const master: PatientMasterData = {
+      schemaVersion: 1,
+      paciensId: 'masik-pac-id',
+      nev: 'Nagy Éva',
+      szuletesiIdo: '1980-01-01',
+      lakcim: '',
+      telefon: '',
+      email: '',
+      taj: '',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+    };
+    const eredetiNev = master.nev;
+    planMasolatKent(plan, settings, '2026-08-10', master);
+    expect(master.nev).toBe(eredetiNev);
+  });
 });

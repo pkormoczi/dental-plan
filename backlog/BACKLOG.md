@@ -13,17 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 49. tétel — Másolás új tervként
-  (a `backlog/redesign/` redesign-döntéssorozat DP-023 tétele) — a
-  "Másolás új tervbe" ma mindent változatlanul átvisz (árlista-
-  pillanatkép, sorok), és a forrás verzió páciens-pillanatképét másolja
-  az élő törzsadat helyett. Ez a tétel az élő páciens-master
-  átvételét vezeti be (a meglévő `ujTervForrasPaciensbol` mintáján);
-  a default-following árfrissítés és a hozzá tartozó figyelmeztetések
-  egy még nem létező kézi-felülírás állapotmodellre várnak (a DP-044-re).
-  A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-49-masolas-uj-tervkent-terv.md`
-
 ### 50. tétel — Verzió-szintű akciók és historical figyelmeztetések
   (a `backlog/redesign/` redesign-döntéssorozat DP-024 tétele) — ma
   minden verziósoron azonos, csupasz `⋯` menü van, nincs vizuális

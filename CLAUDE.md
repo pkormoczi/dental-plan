@@ -302,15 +302,19 @@ segédfüggvényei, szintén ne írd újra őket:
   összeg, nem a `tervVegosszeg()` eredménye)
 
 A terv másolása tétel (`docs/03-funkcionalis-spec.md` § Terv másolása új
-tervként, D26) segédfüggvényei, szintén ne írd újra őket:
+tervként, D26, D57) segédfüggvényei, szintén ne írd újra őket:
 - `planUjPaciensselTervhez(plan, settings, priceList, oroklott?)` /
-  `planMasolatKent(plan, settings, ma)` (`app/src/domain/planCopy.ts`) —
+  `planMasolatKent(plan, settings, ma, master?)` (`app/src/domain/planCopy.ts`) —
   a két tiszta transzformáció egy korábbi tervből: az első csak a
   `paciens` blokkot viszi át egy friss `createBlankPlan()` fölé (az
   opcionális `oroklott` a nyelv/pénznem-öröklés forrása, lásd D52 lentebb),
   a második mindent átvisz az azonosító/állapot/dátum kivételével
   (`frissDatummal`-t hívja a dátumbélyeghez, `computeOsszesitok`-ot az
-  `osszesitok` újraszámolásához — egyiket se írd újra itt sem)
+  `osszesitok` újraszámolásához — egyiket se írd újra itt sem). Az
+  opcionális negyedik `master` paraméter (D57) — ha a hívó átadja — a
+  `paciens` blokkot az élő törzsadatból építi (`paciensTorzsadatbol()`),
+  felülírva a forrás verzió pillanatképét; a `paciensId` ettől
+  függetlenül mindig a forrás tervből jön
 - `copyPlanIntoDraft(next)` (`app/src/state/AppState.tsx`) — a fenti két
   függvény EREDMÉNYÉT teszi be a piszkozatba a `resetPlanDraft` mintáján
   (nem a `loadPlanIntoDraft`-én): a másolat azonnal mentetlen munkának
