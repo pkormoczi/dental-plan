@@ -83,9 +83,9 @@ describe('Végpontok közötti folyamat', () => {
     // részletoldalára visz (Kezelési tervek tab), nem a globális listára --
     // egyetlen páciens látszik, nem kell kártyára szűkíteni.
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
-    // Két helyen is megjelenik a név (sticky fejléc + PatientPlanChains saját
-    // fejléce) -- findAllBy, nem findBy.
-    await screen.findAllByText('Teszt Aladár');
+    // A név csak a sticky fejlécben jelenik meg -- a PatientPlanChains
+    // beágyazott (embedded) fejléce ezen az oldalon nem ismétli meg (D44).
+    await screen.findByText('Teszt Aladár');
     expect(screen.getByText(/^v1 ·/)).toBeInTheDocument();
 
     // Új verzió -> a korábban felvitt tétel már ott van -- ezért nem kell
@@ -106,9 +106,7 @@ describe('Végpontok közötti folyamat', () => {
     await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
-    // Két helyen is megjelenik a név (sticky fejléc + PatientPlanChains saját
-    // fejléce) -- findAllBy, nem findBy.
-    await screen.findAllByText('Teszt Aladár');
+    await screen.findByText('Teszt Aladár');
     expect(screen.getByText(/^v2 ·/)).toBeInTheDocument();
     expect(screen.getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- D4
 

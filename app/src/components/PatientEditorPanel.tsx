@@ -10,10 +10,9 @@
 // ami folyamatosan autosave-el -- egy zárt fájl jön létre az első
 // mentéskor (D33).
 //
-// Az `onNavigateToHistory` prop az egyetlen hívónál mindig egyszerű
-// tab-váltást jelent (PatientDetailPage.tsx "Kezelési tervek" tabjára) --
-// a komponens ettől függetlenül callbackként kapja, nem route-navigációt
-// hardkódolva, mert nem feltételezheti, ki hívja.
+// Nincs "Korábbi tervek" kereszt-link a panel alján -- a hívó
+// (PatientDetailPage.tsx) tabsora már kínálja ugyanezt a váltást, egy
+// második, alul elhelyezett gomb csak megismételné (D44).
 //
 // Mentéskor duplikáció-ellenőrzés fut (D42, redesign D208) -- csak
 // save-time, a `UjPaciensDialog.tsx`-szel ellentétben NINCS inline
@@ -43,7 +42,6 @@ export default function PatientEditorPanel({
   fallbackError,
   onDirtyChange,
   onSaved,
-  onNavigateToHistory,
 }: {
   patient: PatientFolder;
   adatok: PatientMasterData | null;
@@ -53,7 +51,6 @@ export default function PatientEditorPanel({
   fallbackError: string | null;
   onDirtyChange: (dirty: boolean) => void;
   onSaved: (saved: PatientMasterData) => void;
-  onNavigateToHistory: () => void;
 }) {
   const { storage } = useStorage();
   const isLocked = adatok != null;
@@ -252,29 +249,24 @@ export default function PatientEditorPanel({
         </Callout.Root>
       )}
 
-      <Flex justify="between" align="center" mt="4">
-        <Button size="1" variant="ghost" color="gray" onClick={onNavigateToHistory}>
-          Korábbi tervek
+      <Flex justify="end" gap="2" mt="4">
+        <Button
+          type="button"
+          size="1"
+          variant="soft"
+          color="gray"
+          disabled={!dirty || saving}
+          onClick={handleCancel}
+        >
+          Mégse
         </Button>
-        <Flex gap="2">
-          <Button
-            type="button"
-            size="1"
-            variant="soft"
-            color="gray"
-            disabled={!dirty || saving}
-            onClick={handleCancel}
-          >
-            Mégse
-          </Button>
-          <Button
-            size="1"
-            disabled={!dirty || saving || ellenorzesFolyamatban}
-            onClick={() => void handleSave()}
-          >
-            Mentés
-          </Button>
-        </Flex>
+        <Button
+          size="1"
+          disabled={!dirty || saving || ellenorzesFolyamatban}
+          onClick={() => void handleSave()}
+        >
+          Mentés
+        </Button>
       </Flex>
 
       <AlertDialog.Root

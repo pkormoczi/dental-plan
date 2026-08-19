@@ -441,9 +441,9 @@ Páciens részletei, D35) segédfüggvényei/komponensei, szintén ne írd újra
   panel (mezők + Save/Cancel), eredetileg a `PaciensekPage.tsx` helyi
   komponense volt; a 38. tétel (D43) óta a `PatientDetailPage.tsx` "Páciens
   adatai" tabja az EGYETLEN hívási helye — a `PaciensekPage.tsx` lista
-  azóta tiszta navigációs lista, nem tartalmaz szerkesztőt. Az
-  `onNavigateToHistory` callback ettől függetlenül megmaradt prop, mert a
-  komponens nem ismerheti a hívóját.
+  azóta tiszta navigációs lista, nem tartalmaz szerkesztőt. Nincs alján
+  "Korábbi tervek" tükör-link a tabsorra — a hívó tabsora már kínálja
+  ugyanezt a váltást (D44).
 - `app/src/components/PatientPlanChains.tsx` — EGY páciens terv-lánc →
   verzió fája a hozzá tartozó akciókkal (Új verzió/Másolás új tervbe/
   Megnézés/Letöltés/Új terv/címke-szerkesztés), eredetileg a
@@ -455,7 +455,12 @@ Páciens részletei, D35) segédfüggvényei/komponensei, szintén ne írd újra
   függetlenül — a `plans`/`versionsByPlan`/`plansByVersion`/
   `totalsByVersion` a hívó tölti be és adja át, az `onLabelSaved`
   callbacken át kell a hívó saját állapotát frissítenie sikeres
-  címke-mentés után.
+  címke-mentés után. A fejléce hívónként eltér (kötelező `header` prop,
+  D44): `'standalone'` (Korábbi tervek lista) páciensnév + „Páciens
+  adatai" kereszt-link + „Új terv"; `'embedded'` (részletoldal) CSAK az
+  „Új terv" és a ⚠ jelzés — ott a sticky fejléc és a tabsor már kimondja
+  a másik kettőt. Az `onNavigateToPatientData` emiatt opcionális,
+  kizárólag `'standalone'`-ban hívódik.
 - `loadPlanChainData(storage, patientDir)` (`app/src/domain/planChainData.ts`)
   — EGY páciens terv-lánc/verzió adatainak 3-lépéses
   (`listPlans`→`listVersions`→`loadPlan`) betöltése, amit a

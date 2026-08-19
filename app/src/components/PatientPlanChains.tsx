@@ -68,8 +68,21 @@ export interface PatientPlanChainsProps {
   totalsByVersion: Record<string, VersionTotal>;
   /** Legalább egy terv-lánc vagy verzió listázása/betöltése hibázott (P1-2). */
   unreadable: boolean;
-  /** Kereszt-link a páciens törzsadatára -- lásd a fájl fejlécét, hívónként eltérő céllal. */
-  onNavigateToPatientData: () => void;
+  /**
+   * A fejlécsor alakja (D44), a hívó felület dönti el -- a komponens nem
+   * ismerheti, ki hívja, ugyanaz az elv, mint a `PatientEditorPanel`
+   * callback-propjainál. `standalone`: páciensnév + „Páciens adatai”
+   * kereszt-link + „Új terv” -- a Korábbi tervek listáján ez az EGYETLEN
+   * páciens-azonosító és az EGYETLEN út a törzsadathoz. `embedded`: csak
+   * „Új terv” (és hiba esetén a ⚠ jelzés) -- a páciens-részletoldalon,
+   * ahol a sticky fejléc már kiírja a nevet, a tabsor pedig már kínálja a
+   * `Páciens adatai`-t; mindkettő megismétlése zaj, nem
+   * redundancia-biztonság. Szándékosan nincs alapértelmezés: melyik alak
+   * a helyes, kizárólag a körülvevő felületből következik.
+   */
+  header: 'standalone' | 'embedded';
+  /** Kereszt-link a páciens törzsadatára -- kizárólag `header: 'standalone'` esetén hívódik. */
+  onNavigateToPatientData?: () => void;
   /**
    * Sikeres címke-mentés után -- a `plans` prop a HÍVÓ állapota, ezt a
    * komponens maga nem írhatja át közvetlenül. A hívó felelőssége a saját
@@ -87,6 +100,7 @@ export default function PatientPlanChains({
   plansByVersion,
   totalsByVersion,
   unreadable,
+  header,
   onNavigateToPatientData,
   onLabelSaved,
 }: PatientPlanChainsProps) {
@@ -333,45 +347,58 @@ export default function PatientPlanChains({
       : (plan.tervCim ?? ALAPERTELMEZETT_TERV_CIM);
   }
 
+  const standalone = header === 'standalone';
+
   return (
     <Box>
-      {/* Az akciógomb a névfejléc MELLETT van, nem benne: a páciensnév
-          címke, a gomb akció -- egy Text-en belül a kettő összeolvad.
-          Balra zárva, közvetlenül a név után: a rövid "Új terv" felirat
-          nem mondja ki, hogy a páciensadatot átviszi -- ezt az
+      {/* `embedded` fejlécben a páciensnév és a „Páciens adatai” kereszt-link
+          elmarad (D44): ott a körülvevő felület sticky fejléce és tab-sávja
+          már kimondja mindkettőt. Az „Új terv” akciógomb mindkét változatban
+          marad, és `standalone`-ban a névfejléc MELLETT van, nem benne: a
+          páciensnév címke, a gomb akció -- egy Text-en belül a kettő
+          összeolvad. Balra zárva, közvetlenül a név után: a rövid "Új terv"
+          felirat nem mondja ki, hogy a páciensadatot átviszi -- ezt az
           elhelyezés hordozza. Accent (nem szürke), a páciensnév `t.brand`
-          színével egy családban. */}
-      <Flex align="baseline" gap="3" mb="2" wrap="wrap">
-        <Text as="div" size="3" weight="bold" style={{ color: t.brand }}>
-          {patient.nev}
+          színével egy családban. `embedded`-ben a gomb teljes értékű CTA
+          (alap méret, solid) -- egyenrangú a terv nélküli páciens üres
+          állapotának „Új terv” gombjával, ugyanezen a tabon. */}
+      {(standalone || unreadable || latestOverall) && (
+        <Flex align="baseline" gap="3" mb="2" wrap="wrap">
+          {standalone && (
+            <Text as="div" size="3" weight="bold" style={{ color: t.brand }}>
+              {patient.nev}
+            </Text>
+          )}
           {unreadable && (
-            <Text size="1" weight="regular" ml="2" style={{ color: t.warn }}>
+            <Text size="1" style={{ color: t.warn }}>
               ⚠ néhány verziója nem olvasható
             </Text>
           )}
-        </Text>
-        {latestOverall && (
-          <Button
-            size="1"
-            variant="soft"
-            onClick={() =>
-              runOrConfirm({
-                kind: 'ujTerv',
-                planDir: latestOverall.planDir,
-                versionDir: latestOverall.version.dirName,
-              })
-            }
-          >
-            Új terv
-          </Button>
-        )}
-        {/* Kereszt-link a páciens törzsadatára (backlog-28/backlog-30, D33) --
-            gray/ghost, hogy a hangsúly az "Új terv" akción maradjon: ez csak
-            navigáció, nem terv-létrehozó. */}
-        <Button size="1" variant="ghost" color="gray" onClick={onNavigateToPatientData}>
-          Páciens adatai
-        </Button>
-      </Flex>
+          {latestOverall && (
+            <Button
+              size={standalone ? '1' : undefined}
+              variant={standalone ? 'soft' : undefined}
+              onClick={() =>
+                runOrConfirm({
+                  kind: 'ujTerv',
+                  planDir: latestOverall.planDir,
+                  versionDir: latestOverall.version.dirName,
+                })
+              }
+            >
+              Új terv
+            </Button>
+          )}
+          {/* Kereszt-link a páciens törzsadatára (backlog-28/backlog-30, D33) --
+              gray/ghost, hogy a hangsúly az "Új terv" akción maradjon: ez csak
+              navigáció, nem terv-létrehozó. */}
+          {standalone && (
+            <Button size="1" variant="ghost" color="gray" onClick={onNavigateToPatientData}>
+              Páciens adatai
+            </Button>
+          )}
+        </Flex>
+      )}
       {actionError && actionError.planDir === null && actionError.versionDir === null && (
         <Callout.Root color="red" size="1" mb="2">
           <Callout.Icon>

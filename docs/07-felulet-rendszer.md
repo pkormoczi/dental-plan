@@ -129,8 +129,9 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
 - Fülek (Radix Themes `Tabs`): a `DemoPage.tsx` (backlog-29) UNCONTROLLED
   (`defaultValue`, nincs URL-/state-szinkron), a `PatientDetailPage.tsx`
   (backlog-30) CONTROLLED (`value`/`onValueChange`) — utóbbi azért, mert a
-  kezdő tabot a hívó (`location.state`) és belső callback-ek (más tab
-  tartalmából indított váltás) is vezérlik. **Teszt-gotcha**: a
+  kezdő tabot a hívó (`location.state`) vezérli, a váltást pedig a
+  tab-váltási guard (D38, lásd § 10) kell tudja elfogni, mielőtt ténylegesen
+  megtörténik. **Teszt-gotcha**: a
   `Tabs.Trigger` egy második, csak CSS-sel (`visibility: hidden`) takart
   span-t is renderel a felirat mellé (szélesség-tartalék, hogy a kijelölt/
   nem kijelölt vastagság ne tördelje újra a sávot) — a vitest-készlet nem
@@ -138,6 +139,14 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   duplázva számít ki (pl. „FunkciókFunkciók"). A `getByRole('tab', ...)`
   ezért mindig regexet kapjon névre (`{ name: /Funkciók/ }`), nem pontos
   stringet — lásd `DemoPage.test.tsx`/`PatientDetailPage.test.tsx`.
+- Több felületen közös komponens BEÁGYAZOTT példánya (pl.
+  `components/PatientPlanChains.tsx` a páciens-részletoldal `Kezelési
+  tervek` tabjában, D44) nem ismételheti meg azt, amit a körülvevő felület
+  már kimond: az entitás nevét, ha van sticky fejléc, és egy navigációs
+  célt, ha ugyanoda a tab-sáv vagy a fő navigáció is elvisz. A változatot a
+  hívó adja meg egy explicit, KÖTELEZŐ propon — alapértelmezés nélkül,
+  mert melyik alak a helyes, kizárólag a körülvevő felületből következik —,
+  nem a komponens találgatja `useLocation()`-nel vagy hasonlóval.
 - Breadcrumb + workflow stepper (`components/TervWorkflowShell.tsx`,
   D36): a `@radix-ui/themes@3`-ban nincs Breadcrumb/Stepper primitív, ezért
   `Flex`/`Link`/`Badge`/`Text`-ből épül, nem kézzel írt HTML-ből. Mindkettő

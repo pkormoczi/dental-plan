@@ -571,8 +571,10 @@ rendelkező páciens (a Páciensek képernyőn, § 9, terv nélkül felvéve) it
 NEM jelenik meg — ez a képernyő a kezelési előzményekről szól, nem a
 törzsadatról. Minden páciensnév mellett egy „Páciens adatai” kereszt-link
 navigál a páciens-részletoldalra (§ 10), ugyanahhoz a pácienshez, a
-`Páciens adatai` tabbal előválasztva — fordítva a részletoldal `Kezelési
-tervek` tabjának saját, ugyanezt a fát renderelő blokkja linkel ide.
+`Páciens adatai` tabbal előválasztva — ezen a képernyőn a páciensnév az
+EGYETLEN páciens-címke, a kereszt-link pedig az EGYETLEN út a
+részletoldalra. Ugyanez a fa a részletoldalba beágyazva név és
+kereszt-link NÉLKÜL renderel (D44, § 10).
 
 Egy páciensnek **1 terv-lánca** esetén (a tipikus eset) a blokk alapból
 kibontva jelenik meg — nincs plusz kattintás. **2+ lánc** esetén alapból
@@ -666,7 +668,9 @@ a páciensnév mellett** — de a névfejlécen KÍVÜL, mert a páciensnév cí
 a gomb akció. A rövid felirat nem mondja ki, hogy a páciensadatot átviszi;
 ezt az elhelyezés hordozza. A gomb `soft` accent (nem szürke), a
 páciensnév `t.brand` színével egy családban; a `#f77409`-hez nem nyúlunk
-(docs/07: soha nem szövegszín).
+(docs/07: soha nem szövegszín). Ez a leírás a Korábbi tervek listájának
+`standalone` fejlécére vonatkozik (D44) — a részletoldalba (§ 10)
+beágyazva ugyanez a gomb teljes értékű CTA, névfejléc nélkül.
 
 ### Korábbi terv új verzióra nyitása
 
@@ -1064,6 +1068,8 @@ tartalmát FOGADJA BE két tabként. A `Páciens adatai` tab tartalma
 `Kezelési tervek` tab tartalma (`components/PatientPlanChains.tsx`)
 ellenben KÉT hívási helyen közös: itt ÉS a `Korábbi tervek` (§ 5)
 páciensenkénti listasorában, hogy egyik oldal se duplikálja a másikat. A
+fejléce viszont hívónként eltér (D44, lásd lent): itt beágyazva
+(`header: 'embedded'`), a listában önállóan (`header: 'standalone'`). A
 `Páciensek`/`Korábbi tervek` listák önmagukban változatlanul elérhetők
 maradnak — csak a bennük lévő kereszt-linkek mutatnak ide.
 
@@ -1092,21 +1098,21 @@ maradnak — csak a bennük lévő kereszt-linkek mutatnak ide.
   itt átnevezés, nem választás — a doki már egy konkrét, nyitott páciens
   adatlapján van).
 - **`Kezelési tervek` tab**: a `PatientPlanChains` (§ 5 fa/verzió/akció
-  szabályai szerint). Ha a páciensnek még nincs egyetlen olvasható
-  terv-verziója sem, a fa helyett egy „Új terv” CTA jelenik meg — ez az
-  EGYETLEN eset, ahol ez a képernyő ilyen üres állapotot mutat, mert a
-  Korábbi tervek listája (§ 5) egy ilyen pácienst eleve ki sem listáz.
-- A két tab közti „Korábbi tervek”/„Páciens adatai” gombja (a
-  `PatientEditorPanel`, illetve a `PatientPlanChains` saját kereszt-linkje)
-  ezen az oldalon EGYSZERŰ TAB-VÁLTÁS, nem route-navigáció — egyik
-  komponens sem ismeri a különbséget, a hívó dönti el, mit jelent a
-  callback. A `PatientPlanChains` „Páciens adatai” linkjénél ez tényleges
-  választás (a `Korábbi tervek`, § 5, MÁSIK hívójánál ugyanez route-
-  navigáció); a `PatientEditorPanel` „Korábbi tervek” linkjénél nincs
-  választás, itt az EGYETLEN hívó mindig tab-váltást jelent.
+  szabályai szerint), de a fejléce beágyazott (D44): a páciensnév és a
+  „Páciens adatai” kereszt-link elmarad, mert a sticky fejléc és a
+  tabsor már hordozza mindkettőt — csak az „Új terv” akció marad,
+  teljes értékű CTA-ként, ugyanolyan hangsúllyal, mint a lenti üres
+  állapoté. Ha a páciensnek még nincs egyetlen olvasható terv-verziója
+  sem, a fa helyett egy „Új terv” CTA jelenik meg — ez az EGYETLEN eset,
+  ahol ez a képernyő ilyen üres állapotot mutat, mert a Korábbi tervek
+  listája (§ 5) egy ilyen pácienst eleve ki sem listáz.
+- A `Páciens adatai` tab „Korábbi tervek” gombja — ami korábban a
+  `PatientEditorPanel` alján állt — megszűnt (D44): a tabok közti váltás
+  egyetlen helye a tabsor. A `Kezelési tervek` tab tartalma emiatt sem
+  tart saját „Páciens adatai” utat.
 - **Tab-váltási guard** (D38): a Radix `Tabs` unmountolja az inaktív tabot,
   tehát a `Páciens adatai` tabon félbehagyott, nem mentett szerkesztés
-  egyébként némán elveszne egy tabváltásnál (`Tabs.List` kattintás VAGY a
-  fenti kereszt-linkek). A megosztott primitíven (`useDiscardGuard`/
-  `DiscardChangesDialog`) megy át — megerősítést kér, a `Kezelési tervek`
-  tab felé váltás irányban.
+  egyébként némán elveszne egy tabváltásnál (`Tabs.List` kattintás — ez az
+  EGYETLEN útja a tab-váltásnak ezen az oldalon, D44). A megosztott
+  primitíven (`useDiscardGuard`/`DiscardChangesDialog`) megy át —
+  megerősítést kér, a `Kezelési tervek` tab felé váltás irányban.

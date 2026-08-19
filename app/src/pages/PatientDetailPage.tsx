@@ -181,7 +181,6 @@ export default function PatientDetailPage() {
             fallbackError={null}
             onDirtyChange={setDirtyAdatai}
             onSaved={setAdatok}
-            onNavigateToHistory={() => requestTab('tervek')}
           />
         </Tabs.Content>
 
@@ -211,7 +210,7 @@ export default function PatientDetailPage() {
               plansByVersion={chainData?.plansByVersion ?? {}}
               totalsByVersion={chainData?.totalsByVersion ?? {}}
               unreadable={chainData?.unreadable ?? false}
-              onNavigateToPatientData={() => requestTab('adatai')}
+              header="embedded"
               onLabelSaved={(planDir, tervCim) =>
                 setChainData((prev) =>
                   prev

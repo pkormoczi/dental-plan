@@ -67,11 +67,11 @@ describe('PatientDetailPage', () => {
 
     const tervekTab = await screen.findByRole('tab', { name: /Kezelési tervek/ });
     expect(tervekTab).toHaveAttribute('aria-selected', 'true');
-    // A PatientPlanChains saját "Páciens adatai" kereszt-linkje csak a
-    // Kezelési tervek tab tartalmában van jelen -- megbízható jelzés arra,
-    // hogy ténylegesen ez a tab renderel (Radix Tabs.Content az inaktív
-    // tabot nem is rendereli, nem csak elrejti).
-    expect(await screen.findByRole('button', { name: 'Páciens adatai' })).toBeInTheDocument();
+    // A "Kezelési tervek" tab tartalmának "Új terv" gombja csak ebben a
+    // tabban van jelen (a "Páciens adatai" tabon nincs, lásd lentebb) --
+    // megbízható jelzés arra, hogy ténylegesen ez a tab renderel (Radix
+    // Tabs.Content az inaktív tabot nem is rendereli, nem csak elrejti).
+    expect(await screen.findByRole('button', { name: 'Új terv' })).toBeInTheDocument();
   });
 
   it('location.state.tab: "adatai" felülírja az alapértelmezett tabot, és nincs rajta Új terv gomb', async () => {
@@ -79,7 +79,7 @@ describe('PatientDetailPage', () => {
 
     const adataiTab = await screen.findByRole('tab', { name: /Páciens adatai/ });
     expect(adataiTab).toHaveAttribute('aria-selected', 'true');
-    expect(await screen.findByRole('button', { name: 'Korábbi tervek' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Mentés' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Új terv' })).not.toBeInTheDocument();
   });
 
@@ -92,26 +92,27 @@ describe('PatientDetailPage', () => {
     expect(within(header).getByText('+36 20 555 1234')).toBeInTheDocument();
   });
 
-  it('a panel "Korábbi tervek" gombja tabot vált, nem navigál el az oldalról', async () => {
-    const user = userEvent.setup();
-    renderDetail(nagyDir, { tab: 'adatai' });
-
-    await user.click(await screen.findByRole('button', { name: 'Korábbi tervek' }));
-
-    const tervekTab = await screen.findByRole('tab', { name: /Kezelési tervek/ });
-    expect(tervekTab).toHaveAttribute('aria-selected', 'true');
-    expect(await screen.findByRole('button', { name: 'Páciens adatai' })).toBeInTheDocument();
-  });
-
-  it('a PatientPlanChains "Páciens adatai" gombja tabot vált', async () => {
-    const user = userEvent.setup();
+  // D44: a sticky fejléc már kimondja a páciens nevét, a tabsor pedig
+  // kínálja a "Páciens adatai" utat -- a "Kezelési tervek" tab beágyazott
+  // PatientPlanChains-fejléce egyiket sem ismételheti meg.
+  it('a Kezelési tervek tabon a páciens neve nincs duplikálva, és nincs második "Páciens adatai" út', async () => {
     renderDetail(nagyDir);
 
-    await user.click(await screen.findByRole('button', { name: 'Páciens adatai' }));
+    const header = await screen.findByTestId('patient-detail-header');
+    await screen.findByRole('button', { name: 'Új terv' }); // a tab tartalma betöltött
 
-    const adataiTab = await screen.findByRole('tab', { name: /Páciens adatai/ });
-    expect(adataiTab).toHaveAttribute('aria-selected', 'true');
-    expect(await screen.findByRole('button', { name: 'Korábbi tervek' })).toBeInTheDocument();
+    expect(screen.getAllByText('Nagy Éva')).toHaveLength(1);
+    expect(within(header).getByText('Nagy Éva')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Páciens adatai' })).not.toBeInTheDocument();
+  });
+
+  // D44: a tabsor már kínálja a "Kezelési tervek" váltást -- a
+  // PatientEditorPanel alján nincs tükör-link ugyanerre.
+  it('a Páciens adatai tabon nincs "Korábbi tervek" gomb', async () => {
+    renderDetail(nagyDir, { tab: 'adatai' });
+
+    await screen.findByRole('button', { name: 'Mentés' }); // a panel betöltött
+    expect(screen.queryByRole('button', { name: 'Korábbi tervek' })).not.toBeInTheDocument();
   });
 
   it('0 láncú páciens a Kezelési tervek tabon CTA-t mutat, és a gomb sikeresen elindít egy tervet', async () => {
@@ -171,7 +172,7 @@ describe('PatientDetailPage', () => {
     const tervekTab = await screen.findByRole('tab', { name: /Kezelési tervek/ });
     expect(tervekTab).toHaveAttribute('aria-selected', 'true');
 
-    await user.click(await screen.findByRole('button', { name: 'Páciens adatai' }));
+    await user.click(await screen.findByRole('tab', { name: /Páciens adatai/ }));
     expect(await screen.findByDisplayValue('+36 20 555 1234')).toBeInTheDocument();
   });
 

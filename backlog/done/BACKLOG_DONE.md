@@ -1100,3 +1100,23 @@ karbantartási kör négy önálló javítása.
   navigálva, majd böngésző-"vissza"-val visszatérve a keresőszöveg és a
   görgetési pozíció megmarad (`components/useListStateMemory.ts`) --
   kizárólag ezen az úton, munkamenetre szűkítve, böngészőtár nélkül.
+
+---
+
+### 42. Redundáns fejléc-elemek a páciens-részletoldal tabjain — KÉSZ (2026-08-19)
+
+- **Méret:** ~fél nap.
+- **Kereteket sért?** Nem — új D44 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a páciens-részletoldal "Kezelési tervek" tabján a
+  páciensnév és a "Páciens adatai" kereszt-link kétszer szerepelt (a
+  sticky fejlécben ÉS a beágyazott terv-lánc blokk fejlécében) -- a doki
+  screenshoten jelezte, hogy a második, halványabb példány zavaró és
+  félrevezető, mert azt sugallja, MÁS célra visz, mint a fölötte lévő tab.
+- **Megvalósítás:** a két hívóhelyű `PatientPlanChains` fejléc-elemei
+  kötelező `header: 'standalone' | 'embedded'` propon dőlnek el,
+  alapértelmezés nélkül. A Korábbi tervek listáján (`standalone`)
+  változatlan a névfejléc + kereszt-link + kis "Új terv" gomb; a
+  páciens-részletoldalon (`embedded`) csak az "Új terv" marad, teljes
+  értékű CTA-ként -- a nevet a sticky fejléc, a törzsadat felé vezető
+  utat a tabsor már hordozza. A `PatientEditorPanel` alján megszűnt a
+  tükör-"Korábbi tervek" gomb is, ugyanezen elv szerint.

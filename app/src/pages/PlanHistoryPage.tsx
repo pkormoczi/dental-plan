@@ -146,6 +146,7 @@ export default function PlanHistoryPage() {
               plansByVersion={data.plansByVersion}
               totalsByVersion={data.totalsByVersion}
               unreadable={data.unreadable}
+              header="standalone"
               onNavigateToPatientData={() =>
                 navigate(`/paciensek/${encodeURIComponent(p.dirName)}`, { state: { tab: 'adatai' } })
               }
