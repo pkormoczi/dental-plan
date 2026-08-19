@@ -3,7 +3,7 @@
 // saját "Új terv"/"Másolás új tervbe" gombjai NEM ide navigálnak -- azoknál
 // a célpáciens már adott a forrás tervből, nincs kétértelműség.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
@@ -18,27 +18,38 @@ import {
 } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
-import { norm } from '../domain/search';
+import { aktivitasSzoveg, legutobbAktivPaciensek, RECENT_PACIENS_LIMIT } from '../domain/paciensAktivitas';
+import { KERESES_MIN_KARAKTER, paciensTalalatok } from '../domain/paciensKereses';
 import type { PatientFolder } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import { ujTervForrasPaciensbol } from '../state/planIndulas';
 import { useStorage } from '../storage/StorageContext';
 
-type PendingAction = { kind: 'existing'; patient: PatientFolder } | { kind: 'new' };
+type PendingAction =
+  | { kind: 'existing'; patient: PatientFolder }
+  | { kind: 'new'; nev?: string };
 
 export default function NewPlanPage() {
   const { storage } = useStorage();
-  const { settings, priceList, resetPlanDraft, copyPlanIntoDraft, vanMentetlenPiszkozat } =
-    useAppState();
+  const {
+    settings,
+    priceList,
+    setPlan,
+    resetPlanDraft,
+    copyPlanIntoDraft,
+    vanMentetlenPiszkozat,
+  } = useAppState();
   const navigate = useNavigate();
 
   const [patients, setPatients] = useState<PatientFolder[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
   const [q, setQ] = useState('');
+  const [hi, setHi] = useState(0);
   const [selectingDir, setSelectingDir] = useState<string | null>(null);
   const [selectError, setSelectError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,9 +74,32 @@ export default function NewPlanPage() {
     };
   }, [storage]);
 
-  const filtered = patients
-    .filter((p) => !q.trim() || norm(p.nev).includes(norm(q)))
-    .sort((a, b) => a.nev.localeCompare(b.nev));
+  const most = useMemo(() => new Date(), []);
+  const trimmed = q.trim();
+  // 0-1 karakternél a legutóbbi aktivitású páciensek (a Kezdőlappal közös
+  // helper, D39/D40), 2+ karaktertől relevancia szerinti keresés
+  // (`paciensKereses.ts`) -- lásd docs/03-funkcionalis-spec.md „Új terv
+  // indítása".
+  const isSearching = trimmed.length >= KERESES_MIN_KARAKTER;
+  const recents = useMemo(
+    () => legutobbAktivPaciensek(patients, RECENT_PACIENS_LIMIT),
+    [patients],
+  );
+  const talalatok = useMemo(
+    () => (isSearching ? paciensTalalatok(patients, q) : []),
+    [isSearching, patients, q],
+  );
+  const listaTetelek = isSearching ? talalatok : recents;
+  // Nulla találatnál egy közvetlen "Új páciens" pszeudó-opció a begépelt
+  // névvel -- az ItemPicker "egyedi tétel felvétele" mintája (D40). A
+  // mindig látható "Vadonatúj páciens" gomb emellett is megmarad.
+  const ujPaciensOpcio = isSearching && talalatok.length === 0;
+  const opcioSzam = listaTetelek.length + (ujPaciensOpcio ? 1 : 0);
+
+  useEffect(() => setHi(0), [q]);
+  useEffect(() => {
+    itemRefs.current[hi]?.scrollIntoView({ block: 'nearest' });
+  }, [hi]);
 
   // A páciens ELÉRHETŐ legjobb adataiból tölti elő a Páciens adatlapot: a
   // lezárt törzsadatból (paciens-adatok.json, D33), ha van, egyébként a
@@ -90,8 +124,12 @@ export default function NewPlanPage() {
     }
   }
 
-  function startBrandNewPatient() {
+  // A `nev` a no-match ág begépelt szövege (docs/03-funkcionalis-spec.md
+  // „Új terv indítása") -- a mindig látható "Vadonatúj páciens" gomb
+  // `nev` nélkül hívja, üres draft-tal indul, változatlanul.
+  function startBrandNewPatient(nev?: string) {
     resetPlanDraft();
+    if (nev) setPlan((prev) => ({ ...prev, paciens: { ...prev.paciens, nev } }));
     navigate('/paciens');
   }
 
@@ -107,7 +145,29 @@ export default function NewPlanPage() {
     if (action.kind === 'existing') {
       void selectExistingPatient(action.patient);
     } else {
-      startBrandNewPatient();
+      startBrandNewPatient(action.nev);
+    }
+  }
+
+  // A tételkereső (ItemPicker.tsx:129-159) gépel -> nyíl -> Enter/Esc
+  // ciklusának adaptálása (D40) -- a listaTetelek + a no-match "Új
+  // páciens" pszeudó-opció közös indextartományán ([0, opcioSzam)) mozog.
+  function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Escape') {
+      setQ('');
+      return;
+    }
+    if (!opcioSzam) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHi((h) => (h + 1) % opcioSzam);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHi((h) => (h - 1 + opcioSzam) % opcioSzam);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (hi < listaTetelek.length) runOrConfirm({ kind: 'existing', patient: listaTetelek[hi] });
+      else if (ujPaciensOpcio) runOrConfirm({ kind: 'new', nev: trimmed });
     }
   }
 
@@ -153,8 +213,10 @@ export default function NewPlanPage() {
         <TextField.Root
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          onKeyDown={onKeyDown}
           placeholder="Páciens neve…"
           aria-label="Meglévő páciens keresése"
+          autoFocus
           mb="3"
         />
         {listError && (
@@ -175,27 +237,81 @@ export default function NewPlanPage() {
             Még nincs mentett terv, akihez visszatérhetnél.
           </Text>
         )}
-        {!loading && !listError && patients.length > 0 && filtered.length === 0 && (
-          <Text as="p" size="2" color="gray">
+        {!loading && !listError && patients.length > 0 && !isSearching && (
+          <>
+            <Text as="p" size="1" color="gray" mb="2">
+              Legutóbbi páciensek
+            </Text>
+            {recents.length === 0 && (
+              <Text as="p" size="2" color="gray">
+                Kezdj el gépelni a kereséshez.
+              </Text>
+            )}
+            {trimmed.length === 1 && (
+              <Text as="p" size="1" color="gray" mb="2">
+                Legalább {KERESES_MIN_KARAKTER} karakter a kereséshez.
+              </Text>
+            )}
+          </>
+        )}
+        {!loading && !listError && isSearching && talalatok.length === 0 && (
+          <Text as="p" size="2" color="gray" mb="1">
             Nincs találat erre: „{q}”.
           </Text>
         )}
-        {!loading && !listError && filtered.length > 0 && (
+        {!loading && !listError && listaTetelek.length > 0 && (
           <Flex direction="column" gap="1">
-            {filtered.map((p) => (
+            {listaTetelek.map((p, i) => (
               <Button
                 key={p.dirName}
+                ref={(el) => {
+                  itemRefs.current[i] = el;
+                }}
                 type="button"
                 variant="soft"
                 color="gray"
                 disabled={selectingDir === p.dirName}
                 onClick={() => runOrConfirm({ kind: 'existing', patient: p })}
-                style={{ justifyContent: 'flex-start' }}
+                onMouseEnter={() => setHi(i)}
+                style={{
+                  justifyContent: 'flex-start',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  height: 'auto',
+                  padding: '8px 12px',
+                  background: i === hi ? t.accentWash : undefined,
+                  boxShadow: i === hi ? `inset 3px 0 0 ${t.accent}` : undefined,
+                }}
               >
-                {p.nev}
+                <Text size="2">{p.nev}</Text>
+                {!isSearching && p.utolsoAktivitas && (
+                  <Text size="1" color="gray">
+                    {aktivitasSzoveg(p.utolsoAktivitas, most)}
+                  </Text>
+                )}
               </Button>
             ))}
           </Flex>
+        )}
+        {!loading && !listError && ujPaciensOpcio && (
+          <Button
+            ref={(el) => {
+              itemRefs.current[listaTetelek.length] = el;
+            }}
+            type="button"
+            variant="soft"
+            color="gray"
+            onClick={() => runOrConfirm({ kind: 'new', nev: trimmed })}
+            onMouseEnter={() => setHi(listaTetelek.length)}
+            style={{
+              justifyContent: 'flex-start',
+              width: '100%',
+              background: hi === listaTetelek.length ? t.accentWash : undefined,
+              boxShadow: hi === listaTetelek.length ? `inset 3px 0 0 ${t.accent}` : undefined,
+            }}
+          >
+            Új páciens: „{trimmed}”
+          </Button>
         )}
       </Card>
 

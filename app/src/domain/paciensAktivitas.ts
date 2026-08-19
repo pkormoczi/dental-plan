@@ -39,9 +39,9 @@ export const RECENT_PACIENS_LIMIT = 5;
 /**
  * A legutóbbi jelentős aktivitású páciensek, csökkenő sorrendben (D190/D191).
  * `utolsoAktivitas` nélküli páciens nem kerül a listába. Tiszta függvény --
- * nincs I/O, a hívó adja a MÁR betöltött `PatientFolder[]`-t (Home és a
- * páciensválasztó/35. tétel selectorja is ugyanezt hívja, D224). Nem
- * mutálja a bemenetet.
+ * nincs I/O, a hívó adja a MÁR betöltött `PatientFolder[]`-t (Home és az
+ * /uj-terv köztes páciensválasztó, `NewPlanPage.tsx`, is ugyanezt hívja,
+ * D224/D40). Nem mutálja a bemenetet.
  */
 export function legutobbAktivPaciensek(patients: PatientFolder[], limit: number): PatientFolder[] {
   return patients
@@ -61,9 +61,9 @@ const AKTIVITAS_CIMKE: Record<AktivitasTipus, string> = {
 
 /**
  * "Terv véglegesítve · 2 órája" -- az EGYETLEN hely, ahol egy aktivitás-sor
- * szövege eldől (D190/D225); a Home és a 35. tétel selectorja is ezt hívja,
- * a `AKTIVITAS_CIMKE` térkép modul-privát marad, hogy a két hely ne tudjon
- * egymástól eltérő szöveget komponálni.
+ * szövege eldől (D190/D225); a Home és a `NewPlanPage.tsx` (D40) is ezt
+ * hívja, a `AKTIVITAS_CIMKE` térkép modul-privát marad, hogy a két hely ne
+ * tudjon egymástól eltérő szöveget komponálni.
  */
 export function aktivitasSzoveg(aktivitas: PatientActivity, most: Date): string {
   return `${AKTIVITAS_CIMKE[aktivitas.tipus]} · ${formatRelativIdo(aktivitas.idopont, most)}`;

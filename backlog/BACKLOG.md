@@ -13,16 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 35. tétel — Új terv páciensválasztó
-  (a `backlog/redesign/` redesign-döntéssorozat DP-011 tétele) — a mai
-  `/uj-terv` kereső nem autofókuszos, 0 karakternél a TELJES listát
-  mutatja (nem recenst), mindig alfabetikus (nem relevancia szerinti),
-  és nincs billentyűzet-navigáció. Ez a tétel autofókuszt, a 34. tétel
-  megosztott recent-helperét, relevancia-rendezést és az `ItemPicker.tsx`
-  bevált gépel→nyíl→Enter/Esc mintáját vezeti be. Függ a 34. tételtől.
-  A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-35-uj-terv-paciensvalaszto-terv.md`
-
 ### 36. tétel — Quick Patient létrehozás
   (a `backlog/redesign/` redesign-döntéssorozat DP-012 tétele) — feltárás
   szerint az `/uj-terv` "Vadonatúj páciens" ága MA NEM hoz létre valódi

@@ -1004,3 +1004,24 @@ karbantartási kör négy önálló javítása.
   hozzá tartozó `reloadFromStorage()` P0-6 óvatossággal együtt; a "Korábbi
   tervek" gomb megszűnt, a globális `/tervek` lista mostantól kizárólag
   URL-ről érhető el.
+
+---
+
+### 35. Új terv páciensválasztó — KÉSZ (2026-08-19)
+
+- **Méret:** ~0,5 nap.
+- **Kereteket sért?** Nem — új D40 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** ez a képernyő minden új tervnél megnyílik, mégis
+  autofókusz és billentyűzet-navigáció nélkül, mindig teljes/alfabetikus
+  listával indult — ugyanaz a gépel → nyíl → Enter ciklus hiányzott
+  róla, amit a tételkeresőnél a CLAUDE.md kötelezővé tesz.
+- **Megvalósítás:** a keresőmező autofókuszt kapott; 0–1 karakternél a 34.
+  tétel (D39) megosztott `legutobbAktivPaciensek()` helpere adja a listát
+  (max 5, recency szerint), 2+ karaktertől egy új domain-függvény
+  (`domain/paciensKereses.ts` `paciensTalalatok`) relevancia szerint
+  rendez (teljes név eleje > szótöredék eleje > belső egyezés, azon belül
+  alfabetikus). A találati/recents sorok az `ItemPicker.tsx` bevált
+  gépel → nyíl → Enter/Esc ciklusát követik, de valódi Radix `Button`-ok
+  maradnak (Tab-sorrendből nem esnek ki). Nulla találatnál egy közvetlen
+  "Új páciens: „…"" pszeudó-opció a begépelt névvel indítja a "Vadonatúj
+  páciens" ágat, a mindig látható gomb mellett.

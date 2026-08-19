@@ -516,8 +516,9 @@ ne írd újra őket:
   `paciens.json` `utolsoAktivitas` mezője íródik, tolerálva olvasódik
   (D29: sosem dob), rendeződik/limitálódik (tiszta függvény, nincs I/O —
   a hívó adja a MÁR betöltött `PatientFolder[]`-t) és szövegesedik. A
-  Kezdőlap ÉS a 35. tétel (páciensválasztó) is ezt hívja, hogy a két
-  recent-lista ne térjen el egymástól
+  Kezdőlap ÉS az „Új terv indítása" köztes páciensválasztó
+  (`NewPlanPage.tsx`, D40) is ezt hívja, hogy a két recent-lista ne
+  térjen el egymástól
 - `formatRelativIdo(iso, most)` (`app/src/domain/date.ts`) — a
   „2 órája"/„tegnap"/„3 napja" jelzés; szándékosan NEM
   `Intl.RelativeTimeFormat` (a `hu`/`auto` "2 órával ezelőtt"-et és
@@ -529,6 +530,18 @@ ne írd újra őket:
   minden verziót betöltene), illetve a `megjelenitettTorzsadat()` (D33)
   betöltve, sosem dobva (P1-2 mintája). A Kezdőlap recent sorai ÉS a
   `PaciensekPage.tsx` sorkinyitása is ezt hívja
+
+Az „Új terv indítása" köztes páciensválasztó (`docs/01-attekintes-es-
+dontesek.md` D40, `docs/03-funkcionalis-spec.md` § Új terv indítása)
+segédfüggvénye, szintén ne írd újra:
+- `paciensTalalatok(patients, q)` / `KERESES_MIN_KARAKTER`
+  (`app/src/domain/paciensKereses.ts`) — a 2+ karakteres keresés
+  relevancia-rendezője (teljes név eleje > szótöredék eleje > belső
+  egyezés, azon belül `localeCompare('hu')`); tiszta függvény, egyszer
+  normalizál a hívó ciklus előtt (`norm()`, a `nevEgyezik()` konvenciója,
+  `domain/search.ts`), nem mutálja a bemenetet. Külön modul a
+  `search.ts`-től, mert az a kétnyelvű ártétel-név-egyezés helye, ez
+  páciensnév-rangsor — csak a `NewPlanPage.tsx` hívja
 
 ## Domain szókincs
 

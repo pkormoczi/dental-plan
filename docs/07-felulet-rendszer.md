@@ -202,6 +202,12 @@ Minden nézetnek van loading, empty és error állapota.
   Tab-sorrend, az hiba.
 - Tételkereső: gépel -> nyíl -> Enter -> a kereső kiürül és visszakapja
   a fókuszt. Ez a ciklus nem törhet el.
+- Az „Új terv indítása" köztes páciensválasztó (D40,
+  `docs/03-funkcionalis-spec.md` § Új terv indítása) ugyanezt a gépel ->
+  nyíl -> Enter/Esc ciklust követi — a találati/recents sorok viszont
+  valódi Radix `Button`-ok maradnak (nem `ItemPicker`-stílusú, Tab-
+  sorrendből kieső div-ek), a nyíl-navigáció egy vizuális kiemelés-réteg
+  fölöttük.
 - Minden interaktív elemen látható fókusz gyűrű. Ne tüntesd el outline: none-nal.
 - Escape zár dialógust és keresőt.
 - A fogtérkép (kattintható módban) EGY Tab-megállóként érhető el, nem

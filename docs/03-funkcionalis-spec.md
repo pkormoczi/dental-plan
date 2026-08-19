@@ -759,12 +759,25 @@ a doki még nem gépelt be semmit, tehát itt (és csak itt) van
 kétértelműség, hogy melyik páciensről van szó:
 
 - **„Meglévő páciens keresése…"** — névre kereső mező a páciens-index
-  (`storage.listPatients()`) alapján, ékezetfüggetlenül (`norm()`).
-  Kiválasztás után a közös forráskiválasztáson (lásd fent, D33) előtöltve
-  nyílik a Páciens adatlap.
+  (`storage.listPatients()`) alapján, ékezetfüggetlenül (`norm()`),
+  automatikusan fókuszban a lépés megnyílásakor (D40). Kétállású (D40):
+  0–1 karakternél a D39 „legutóbbi páciensek" listája (max 5, ugyanaz a
+  `legutobbAktivPaciensek()` helper, mint a Kezdőlapon); 2+ karaktertől a
+  `paciensTalalatok()` (`domain/paciensKereses.ts`) relevancia szerinti
+  rendezése (teljes név eleje > valamelyik szótöredék eleje > belső
+  egyezés, azon belül alfabetikus). A lista a tételkeresővel
+  (`ItemPicker.tsx`) azonos gépel → nyíl → Enter/Esc ciklust követi
+  (`ArrowDown`/`ArrowUp` mozgatja a kiemelést, `Enter` kiválaszt,
+  `Escape` kiüríti a keresőt). Nulla találatnál egy közvetlen „Új
+  páciens: „…"" opció jelenik meg a begépelt névvel, a „Vadonatúj
+  páciens" ágat indítja el előtöltve. Kiválasztás után a közös
+  forráskiválasztáson (lásd fent, D33) előtöltve nyílik a Páciens
+  adatlap.
 - **„Vadonatúj páciens"** — a Páciens adatlap üresen nyílik (a mai
   `resetPlanDraft()` úton), pontosan úgy, mint korábban a Kezdőlap
-  gombja közvetlenül.
+  gombja közvetlenül. A mindig látható gomb üres névvel indít; a fenti
+  no-match „Új páciens" opció ugyanezt az ágat futtatja, a begépelt
+  névvel előtöltve.
 
 A piszkozat-felülírás-őr innentől ezen a köztes lépésen fut le (mindkét
 ágon), NEM a Kezdőlap gombján — a Kezdőlap gombja feltétel nélkül
