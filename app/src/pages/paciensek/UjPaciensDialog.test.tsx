@@ -175,33 +175,39 @@ describe('UjPaciensDialog', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
-  it('ellentmondó adatú pontos találat kiválasztásakor megerősítés jelenik meg, a konkrét eltéréssel', async () => {
-    const { onUseExisting } = renderHarness(seededPatients);
-    const user = userEvent.setup();
+  // CI-n (gyengébb futtatókon, teljes tesztkészlet alatti terheléssel) a
+  // debounce (DUPLIKACIO_DEBOUNCE_MS) utáni click+render lánc mért
+  // időtartama fokozatosan derült ki: az alapértelmezett 1000ms, majd
+  // 3000ms, majd 8000ms is kevésnek bizonyult (utóbbi 8192ms-nél bukott,
+  // alig a határ fölött) -- a globális `testTimeout: 15000` (`vite.config.ts`
+  // kommentje szerint a CI mérten ~3x lassabb) itt szűken elfért volna, ezért
+  // ennek a tesztnek explicit, nagyobb saját timeout kell, hogy a belső
+  // `findByRole`-nak legyen hova nőnie a globális plafon előtt.
+  it(
+    'ellentmondó adatú pontos találat kiválasztásakor megerősítés jelenik meg, a konkrét eltéréssel',
+    async () => {
+      const { onUseExisting } = renderHarness(seededPatients);
+      const user = userEvent.setup();
 
-    await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Kovács János');
-    await user.type(screen.getByLabelText('Született'), '1990-01-01');
+      await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Kovács János');
+      await user.type(screen.getByLabelText('Született'), '1990-01-01');
 
-    const valasztomBtn = await screen.findByRole(
-      'button',
-      { name: 'Ezt a pácienst választom: Kovács János' },
-      { timeout: 3000 },
-    );
-    await user.click(valasztomBtn);
+      const valasztomBtn = await screen.findByRole(
+        'button',
+        { name: 'Ezt a pácienst választom: Kovács János' },
+        { timeout: 5000 },
+      );
+      await user.click(valasztomBtn);
 
-    // CI-n (gyengébb futtatókon, teljes tesztkészlet alatti terheléssel) a
-    // debounce (DUPLIKACIO_DEBOUNCE_MS) utáni click+render lánc az
-    // alapértelmezett 1000ms-nél, majd egy 3000ms-es próbálkozásnál is
-    // tovább tartott -- a `vite.config.ts` `testTimeout` kommentje szerint a
-    // CI mérten ~3x lassabb, itt ennél nagyobb biztonsági ráhagyás kell
-    // (a globális `testTimeout: 15000` bőven elfér).
-    const alert = await screen.findByRole('alertdialog', {}, { timeout: 8000 });
-    expect(within(alert).getByText('A megadott adatok eltérnek')).toBeInTheDocument();
-    expect(within(alert).getByText(/a születési dátum/)).toBeInTheDocument();
-    expect(onUseExisting).not.toHaveBeenCalled();
+      const alert = await screen.findByRole('alertdialog', {}, { timeout: 15000 });
+      expect(within(alert).getByText('A megadott adatok eltérnek')).toBeInTheDocument();
+      expect(within(alert).getByText(/a születési dátum/)).toBeInTheDocument();
+      expect(onUseExisting).not.toHaveBeenCalled();
 
-    await user.click(within(alert).getByRole('button', { name: 'Mégis ezt a pácienst választom' }));
-    await waitFor(() => expect(onUseExisting).toHaveBeenCalled());
-    expect(onUseExisting.mock.calls[0][0].nev).toBe('Kovács János');
-  });
+      await user.click(within(alert).getByRole('button', { name: 'Mégis ezt a pácienst választom' }));
+      await waitFor(() => expect(onUseExisting).toHaveBeenCalled());
+      expect(onUseExisting.mock.calls[0][0].nev).toBe('Kovács János');
+    },
+    20000,
+  );
 });
