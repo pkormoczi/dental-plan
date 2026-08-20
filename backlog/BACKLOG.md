@@ -13,20 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 66. tétel — Előnézet oldal layout és validation checklist
-  (a `backlog/redesign/` redesign-döntéssorozat DP-050 tétele) — a mai
-  Előnézet oldal egyoszlopos, a puha figyelmeztetések (0 Ft-os sorok,
-  hiányzó leírás stb.) a Véglegesítés gomb megnyomásáig teljesen rejtve
-  vannak, akkor szekvenciális "Folytatás" modalokkal bukkannak elő. Ez
-  a tétel a PDF mellé egy állandó, read-only checklist panelt vezet be
-  (D38/D39 szerint) — a modal-lánc user-döntéssel megszűnik, minden
-  puha tétel előre látszik. A checklist a `docs/03-funkcionalis-spec.md`
-  § 4 "Véglegesítési checklist" (D76) egységes modelljét fogyasztja
-  (`veglegesitesDiagnozis()`), amit a `PreviewPage.tsx` ma már ideiglenes,
-  egyoszlopos formában megjelenít — ez a tétel csak a végleges,
-  kéthasábos elrendezést adja. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-66-elonezet-checklist-terv.md`
-
 ### 71. tétel — Final terv részletei alapnézet és verziónavigáció
   (a `backlog/redesign/` redesign-döntéssorozat DP-060 tétele) — ma
   EGYÁLTALÁN NEM létezik strukturált, read-only "Terv részletei" nézet:
