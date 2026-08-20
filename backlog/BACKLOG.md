@@ -302,6 +302,76 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   tervdokumentumban.
   **Terv:** `backlog/plans/backlog-82-pdf-nyilatkozat-alairas-terv.md`
 
+### 83. tétel — Kezeléslista/editor: aktiválási modell és deaktiválás megerősítése
+  (a `backlog/redesign/` redesign-döntéssorozat DP-080 tétele) — a
+  jelenlegi, `docs/03`-ban dokumentált azonnali-aktiválás (Új tétel
+  dialógus után a tétel rögtön `aktiv: true`, 0 Ft-tal) helyett a
+  redesign D127–D131 óvatosabb modelljére tér át: a tétel kezdetben
+  inaktívként jön létre, és csak a HUF ár mező első commitja aktiválja
+  (automatikusan, ha >0; explicit megerősítéssel, ha 0 marad) — az
+  „még soha nem aktivált” állapot tranziens, nincs séma-bővítés. A
+  deaktiválás (aktív→inaktív) mostantól megerősítést kér (D124), a
+  reaktiválás marad azonnali. Új, puha D113 véglegesítés-figyelmeztetés
+  a deaktivált tételre hivatkozó sorokhoz, a MÁR meglévő (67. tétel)
+  egységes checklistbe kötve. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-83-kezeleslista-aktivalas-terv.md`
+
+### 84. tétel — Kategóriakezelés: mentési modell és hiányzó német név jelzése
+  (a `backlog/redesign/` redesign-döntéssorozat DP-081 tétele) — a
+  kategória-attribútumszerkesztés (név, szín, sorrend) a ma
+  dokumentált „az Árlista admin marad autosave” elvtől eltérve (D49)
+  explicit Mentés/Mégse + dirty guardra vált (D52) — a kategória
+  létrehozása/törlése marad azonnali. A panel bekapcsolódik a D46
+  `NavGuardContext`-be. A lecsukott kategória-sor is kap egy „nincs DE
+  név” jelvényt (D405), ugyanúgy mint a tétel-táblázat. A döntéseket
+  lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-84-kategoriakezeles-terv.md`
+
+### 85. tétel — Alapértelmezett dokumentum-pénznem
+  (a `backlog/redesign/` redesign-döntéssorozat DP-084 tétele) — a
+  nyelv-defaultnak már ma is van Settings-mezője és UI-ja (az 52.
+  tétel oldja fel a `nemetEngedelyezve` gate-jét), de a pénznemnek
+  nincs: a `blankPlan.ts` ma hardkódoltan mindig HUF-fal indít egy
+  vadonatúj láncot. Ez a tétel egy új, konfigurálható
+  `Settings.alapertelmezettPenznem` mezőt vezet be (alapérték HUF), az
+  Egyéb tabon egy ChipGroup-pal a nyelv-default mellett. A döntéseket
+  lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-85-penznem-default-terv.md`
+
+### 86. tétel — Nyomtatványszöveg-sablonok felülírása + markdown-bővítés
+  (a `backlog/redesign/` redesign-döntéssorozat DP-085 tétele) — a
+  C7/D573 szerint a sablon-mentés a ma dokumentált, verziózó
+  (`DemoStorage.saveTemplate()` minden mentésnél új `-vN.md` fájlt hoz
+  létre) viselkedésről felülírásra vált: a mentés a jelenlegi
+  legfrissebb fájlt írja felül, a történeti igazság innentől
+  kizárólag a mentett PDF (C9). A markdown-alrendszer
+  (`pdf/markdownLite.ts`) kiegészül félkövér (`**szöveg**`) inline
+  rendereléssel és számozott listával (D588) — a kézi
+  sortörés-megőrzés (D590/D591) explicit ELVETVE, marad a mai
+  szoft-tördelés. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-86-sablon-felulirasa-markdown-terv.md`
+
+### 87. tétel — Üres/whitespace sablon-validáció és hard-block navigáció
+  (a `backlog/redesign/` redesign-döntéssorozat DP-086 tétele) — az
+  `isPlaceholderTemplate()` ma csak a `[PLACEHOLDER`/`[PLATZHALTER`
+  jelölőt ismeri fel, üres/csak-whitespace szöveget nem (C8 hiányzó
+  fele) — egy törölt nyilatkozat-szöveg ma nem váltaná ki a D23 zárat.
+  Ez a tétel kiegészíti a predikátumot, és a nyilatkozat hard-block
+  Callout-ja valódi, kattintható linket kap a Beállítások →
+  Nyomtatványok tabra. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-87-sablon-ures-placeholder-terv.md`
+
+### 88. tétel — Tárolás tájékoztató szöveg a DEMO oldalon
+  (a `backlog/redesign/` redesign-döntéssorozat DP-087 tétele,
+  leszűkített hatókörrel) — a forrás eredeti scope-ja (valódi
+  mappa-választás, hard startup gate) a `CLAUDE.md` „Két fázisú build”
+  elve szerint a 2. fázis (`FileSystemStorage`) hatásköre; ez a tétel
+  EHELYETT egy rövid, statikus tájékoztató szöveget vezet be a DEMO →
+  Adatkezelés fülre, ami elmagyarázza a mockup `localStorage`-alapú
+  tárolását és a végleges alkalmazás mappa-modelljét — nincs
+  interaktív elem. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-88-tarolas-tajekoztato-terv.md`
+
 ---
 ## NEM FEJLESZTÉS
 
