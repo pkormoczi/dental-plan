@@ -29,6 +29,26 @@ vi.mock('@react-pdf/renderer', async (importOriginal) => {
   };
 });
 
+/** A puha megerősítő lánc (docs/03 § 4.) ismételt "Folytatás" kattintással, amíg a siker-képernyő meg nem jelenik. */
+async function finalizeThroughConfirms(user: ReturnType<typeof userEvent.setup>) {
+  for (let i = 0; i < 5; i++) {
+    if (screen.queryByText('A terv elmentve ✓')) return;
+    const folytatas = screen.queryByRole('button', { name: 'Folytatás' });
+    if (folytatas) {
+      await user.click(folytatas);
+      continue;
+    }
+    await waitFor(() => {
+      if (
+        !screen.queryByText('A terv elmentve ✓') &&
+        !screen.queryByRole('button', { name: 'Folytatás' })
+      ) {
+        throw new Error('várakozás a következő lépésre');
+      }
+    });
+  }
+}
+
 describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -472,26 +492,6 @@ describe('PreviewPage -- backlog-51: terv címe véglegesítéskor', () => {
     localStorage.clear();
     window.location.hash = '';
   });
-
-  /** A puha megerősítő lánc (docs/03 § 4.) ismételt "Folytatás" kattintással, amíg a siker-képernyő meg nem jelenik. */
-  async function finalizeThroughConfirms(user: ReturnType<typeof userEvent.setup>) {
-    for (let i = 0; i < 5; i++) {
-      if (screen.queryByText('A terv elmentve ✓')) return;
-      const folytatas = screen.queryByRole('button', { name: 'Folytatás' });
-      if (folytatas) {
-        await user.click(folytatas);
-        continue;
-      }
-      await waitFor(() => {
-        if (
-          !screen.queryByText('A terv elmentve ✓') &&
-          !screen.queryByRole('button', { name: 'Folytatás' })
-        ) {
-          throw new Error('várakozás a következő lépésre');
-        }
-      });
-    }
-  }
 
   it(
     'vadonatúj lánc véglegesítése a beírt címmel írja a terv-cimke.json-t',
@@ -1191,6 +1191,151 @@ describe('PreviewPage -- letöltési fájlnév', () => {
       expect(link).toHaveAttribute('download', 'PISZKOZAT-kezelesi-terv-Teszt-Ilona-uj-ajanlat.pdf');
     },
     10000,
+  );
+});
+
+// 70. tétel: a "Csak ajánlat" a `Plan.csakAjanlat` mezője, nem helyi
+// React state -- navigáció oda-vissza megőrzi, és a mentett terv.json is
+// tükrözi a ténylegesen kiadott PDF-et.
+describe('PreviewPage -- backlog-70: "Csak ajánlat" mező perzisztencia és véglegesített érték', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'a checkbox bepipálása túléli a Kezelések/Előnézet közti oda-vissza navigációt',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Perzisztencia Teszt');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+      await user.click(screen.getByRole('checkbox'));
+      expect(screen.getByRole('checkbox')).toBeChecked();
+
+      await user.click(screen.getByRole('link', { name: 'Kezelések' }));
+      await screen.findByDisplayValue('Fogeltávolítás');
+      await user.click(screen.getByRole('link', { name: 'Előnézet és véglegesítés' }));
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+
+      expect(screen.getByRole('checkbox')).toBeChecked();
+    },
+    15000,
+  );
+
+  it(
+    'véglegesítéskor a bepipált állapot "csakAjanlat: true"-ként mentődik a terv.json-ba',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Mentett Ajánlat Elek');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(screen.getByRole('checkbox'));
+      await user.click(finalizeBtn);
+      await finalizeThroughConfirms(user);
+      await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+
+      const storage = new DemoStorage();
+      const patient = (await storage.listPatients()).find((p) => p.nev === 'Mentett Ajánlat Elek')!;
+      const [chain] = await storage.listPlans(patient.dirName);
+      const [version] = await storage.listVersions(patient.dirName, chain.dirName);
+      const saved = await storage.loadPlan({
+        patientDir: patient.dirName,
+        planDir: chain.dirName,
+        versionDir: version.dirName,
+      });
+      expect(saved.csakAjanlat).toBe(true);
+    },
+    20000,
+  );
+
+  it(
+    'placeholder-nyilatkozat miatt kényszerített (kézzel be nem pipált) módban is "csakAjanlat: true"-ként mentődik',
+    async () => {
+      const user = userEvent.setup();
+      seedGermanPlanWithOneTranslatedItem();
+      localStorage.setItem(
+        'dp:sablonok/nyilatkozat-de-v2.md',
+        '# Erklärung\n\n[PLATZHALTER -- Übersetzung ausstehend]\n',
+      );
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Kényszerített Ajánlat Elek');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'zahnextraktion');
+      await user.click(await screen.findByText('Zahnextraktion'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      const checkbox = screen.getByRole('checkbox');
+      expect(checkbox).toBeChecked();
+      expect(checkbox).toBeDisabled();
+
+      await user.click(finalizeBtn);
+      await finalizeThroughConfirms(user);
+      await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+
+      const storage = new DemoStorage();
+      const patient = (await storage.listPatients()).find(
+        (p) => p.nev === 'Kényszerített Ajánlat Elek',
+      )!;
+      const [chain] = await storage.listPlans(patient.dirName);
+      const [version] = await storage.listVersions(patient.dirName, chain.dirName);
+      const saved = await storage.loadPlan({
+        patientDir: patient.dirName,
+        planDir: chain.dirName,
+        versionDir: version.dirName,
+      });
+      // A mezőbe a doki soha nem pipálta be kézzel a "Csak ajánlat"-ot --
+      // a kényszer (D23) mégis igazként mentődik, mert a ténylegesen
+      // kiadott PDF-ből a 4. oldal ugyanúgy kimaradt.
+      expect(saved.csakAjanlat).toBe(true);
+    },
+    20000,
   );
 });
 

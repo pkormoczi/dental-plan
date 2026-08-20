@@ -96,6 +96,10 @@ export function planMasolatKent(
     tervId: '',
     verzio: 0,
     statusz: 'PISZKOZAT',
+    // A "Csak ajánlat" állapot NEM öröklődik másoláskor (ellentétben az "Új
+    // verzió" nyitással) -- enélkül a fenti spread csendben átvinné a forrás
+    // állapotát, amit ez a mező kifejezetten kizár.
+    csakAjanlat: false,
     osszesitok: computeOsszesitok(arlistavalFriss.fazisok, arlistavalFriss.kedvezmenyOsszeg),
   };
 }

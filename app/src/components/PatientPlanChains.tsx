@@ -708,6 +708,7 @@ export default function PatientPlanChains({
                   .map((v, vi) => {
                     const ref: VersionRef = { planDir: plan.dirName, versionDir: v.dirName };
                     const total = totalsByVersion[versionDataKey(plan.dirName, v.dirName)];
+                    const versionPlan = plansByVersion[versionDataKey(plan.dirName, v.dirName)];
                     // D53: "Új verzió" kizárólag a lánc legfrissebb
                     // verziósorán engedett -- egy historical sorról indítva a
                     // doki tévesen azt hihetné, hogy a régi verziót
@@ -730,6 +731,11 @@ export default function PatientPlanChains({
                             {legutobbi && (
                               <Badge color="gray" variant="soft" size="1">
                                 Legutóbbi
+                              </Badge>
+                            )}
+                            {versionPlan?.csakAjanlat === true && (
+                              <Badge color="gray" variant="soft" size="1">
+                                Csak ajánlat
                               </Badge>
                             )}
                           </Flex>

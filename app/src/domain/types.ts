@@ -212,6 +212,15 @@ export interface Plan {
    * Additív mező, `schemaVersion` nem emelkedett.
    */
   paciensId?: string;
+  /**
+   * "Csak ajánlat" mód: a nyilatkozat + aláírás oldal kimarad a PDF-ből
+   * (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés). Additív
+   * mező, `schemaVersion` nem emelkedett -- hiányzó mező = `false`. A
+   * piszkozatban ez a doki NYERS kézi választása; a placeholder-nyilatkozat
+   * miatti kényszer (D23) sosem íródik ide szerkesztés közben, csak a
+   * véglegesítéskor mentett érték a ténylegesen kiadott PDF pillanatképe.
+   */
+  csakAjanlat?: boolean;
 }
 
 /**

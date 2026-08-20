@@ -102,5 +102,7 @@ export function createBlankPlan(
     kedvezmenyOsszeg: null,
     // Alapból bekapcsolva -- docs/02-domain-modell.md § Tétel-leírás.
     leirasokMutatasa: true,
+    // Új terv alapból teljes dokumentum -- a doki kapcsolója az Előnézet lapon.
+    csakAjanlat: false,
   };
 }

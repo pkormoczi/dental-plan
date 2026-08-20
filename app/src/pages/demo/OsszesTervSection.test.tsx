@@ -936,6 +936,30 @@ describe('OsszesTervSection', () => {
       expect(within(fogkoDoboz).queryByText('Legutóbbi')).not.toBeInTheDocument();
     });
 
+    // 70. tétel (D558): a "Csak ajánlat" jelvény a MÁR betöltött
+    // `plansByVersion`-ből olvas, a "Legutóbbi" jelvény mintáján.
+    it('"Csak ajánlat" jelvény csak azon a verziósoron jelenik meg, aminek plan.csakAjanlat === true', async () => {
+      const user = userEvent.setup();
+      const [v1, v2] = nagyEvaMultiVersionChain;
+      const key = `dp:paciensek/${v2.patientDir}/${v2.planDir}/${v2.versionDir}/terv.json`;
+      const saved = JSON.parse(localStorage.getItem(key)!);
+      saved.csakAjanlat = true;
+      localStorage.setItem(key, JSON.stringify(saved));
+
+      renderHistory();
+      await screen.findByText('Nagy Éva');
+      const card = patientCard('Nagy Éva');
+      const doboz = lancDoboz(card, v1.planDir);
+      await nyissLancot(user, doboz);
+
+      const v2Sor = within(doboz).getByText(new RegExp(`^v${v2.plan.verzio} · ${v2.plan.keltezes}`))
+        .closest('.rt-Flex') as HTMLElement;
+      const v1Sor = within(doboz).getByText(new RegExp(`^v${v1.plan.verzio} · ${v1.plan.keltezes}`))
+        .closest('.rt-Flex') as HTMLElement;
+      expect(within(v2Sor).getByText('Csak ajánlat')).toBeInTheDocument();
+      expect(within(v1Sor).queryByText('Csak ajánlat')).not.toBeInTheDocument();
+    });
+
     it('aktív draft esetén a hozzá tartozó lánc fejléce "Piszkozat" jelzést kap, a másik lánc nem, és a jelzés nem külön kattintható', async () => {
       const [v1] = nagyEvaMultiVersionChain;
       seedPersistedDraft(
