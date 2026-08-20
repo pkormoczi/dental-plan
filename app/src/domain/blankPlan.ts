@@ -95,7 +95,7 @@ export function createBlankPlan(
     fazisok: [{ sorszam: 1, megnevezes: ELSO_FAZIS_NEV, megjegyzes: '', sorok: [] }],
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
     // A doki kapcsolója a szerkesztőben -- alapból nincs előleg-sor.
-    elolegSzazalek: null,
+    elolegOsszeg: null,
     // A doki kapcsolója a szerkesztőben -- alapból nincs terv-szintű kedvezmény.
     kedvezmenyOsszeg: null,
     // Alapból bekapcsolva -- docs/02-domain-modell.md § Tétel-leírás.

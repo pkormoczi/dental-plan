@@ -17,13 +17,7 @@ import { formatLongDate, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
 import { formatTeethForPrint } from '../domain/teeth';
 import { buildToothVisualStates } from '../domain/toothVisual';
-import {
-  ELOLEG_ALAP_SZAZALEK,
-  elolegOsszegek,
-  fazisOsszeg,
-  sorokListaOsszeg,
-  tervVegosszeg,
-} from '../domain/totals';
+import { elolegOsszegek, fazisOsszeg, sorokListaOsszeg, tervVegosszeg } from '../domain/totals';
 import type { Fazis, Plan, PriceList, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
 import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
@@ -396,17 +390,23 @@ export function TervDocument({
   const showToothChart = toothChartPng != null && (fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0);
   // A sablonszövegben álló {{orvos}}/{{paciens}} helyőrzőket a tényleges
   // terv-adatok váltják fel, mielőtt bekezdésekre/felsorolásra bontanánk.
-  // Előleg (backlog-9): a százalék a terven él, az összeg élőben számol a
-  // `grand`-ból -- ugyanúgy, ahogy a Fizetendő sor, nem a mentett
-  // `osszesitok`-ból. `null` = a doki nem kapcsolta be, nincs új sor.
-  const elolegSzazalek = plan.elolegSzazalek ?? null;
-  const eloleg = elolegSzazalek == null ? null : elolegOsszegek(grand, elolegSzazalek);
+  // Előleg (D64): a `Plan`-en abszolút összeg él (korábban élőben számolt
+  // százalék volt); `null` = a doki nem kapcsolta be, nincs új sor.
+  const elolegOsszeg = plan.elolegOsszeg ?? null;
+  const eloleg = elolegOsszeg == null ? null : elolegOsszegek(grand, elolegOsszeg);
   const placeholderValues = {
     orvos: plan.orvos,
     paciens: plan.paciens.nev,
-    // Kikapcsolt kapcsolónál az alapértékre esik vissza, így a fizetési
-    // feltételek mondata szó szerint a mai, statikus szöveg marad.
-    elolegSzazalek: String(elolegSzazalek ?? ELOLEG_ALAP_SZAZALEK),
+    eloleg: L.elolegKifejezes(eloleg ? formatMoney(eloleg.eloleg, plan.penznem, plan.nyelv) : null),
+    // Legacy: egy régebbi demó-állapotban a fizetési feltételek törzse még a
+    // {{elolegSzazalek}} helyőrzőt tartalmazhatja (v1 sablon, D64 előtt) --
+    // a `fillPlaceholders` egy ismeretlen helyőrzőt SZÓ SZERINT kiírna, ami
+    // egy aláírandó PDF-en nyers `{{elolegSzazalek}}` szöveget hagyna. A
+    // kikapcsolt-előleg alapértéke (50) a régi, korábban is használt
+    // ELOLEG_ALAP_SZAZALEK értéke volt.
+    elolegSzazalek: String(
+      eloleg && grand > 0 ? Math.round((eloleg.eloleg / grand) * 100) : 50,
+    ),
   };
   const fizetesiFeltetelekBlocks = parseBlocks(
     fillPlaceholders(fizetesiFeltetelekMd, placeholderValues),
@@ -473,10 +473,14 @@ export function TervDocument({
               // Mindkét sor csillagot kap, ha a tervben van becsült árú
               // tétel: mindkettő ugyanabból a becsült Fizetendőből számol,
               // csak az egyiket jelölni félrevezető lenne (backlog-9).
+              // `fennmarado === null`: az előleg meghaladja a Fizetendőt
+              // (D64) -- a véglegesítés-őr ezt kemény blokkal megfogja, de a
+              // Csak-ajánlat előnézet a blokk előtt is renderel, ezért itt
+              // sem törhet el.
               <>
                 <View style={s.summaryLine}>
                   <Text style={s.summaryEloleg}>
-                    {L.elolegSor(elolegSzazalek!)}
+                    {L.elolegSor}
                     {hasRange && ' *'}
                   </Text>
                   <Text style={s.summaryEloleg}>
@@ -489,7 +493,7 @@ export function TervDocument({
                     {hasRange && ' *'}
                   </Text>
                   <Text style={s.summaryEloleg}>
-                    {formatMoney(eloleg.fennmarado, plan.penznem, plan.nyelv)}
+                    {eloleg.fennmarado == null ? '—' : formatMoney(eloleg.fennmarado, plan.penznem, plan.nyelv)}
                   </Text>
                 </View>
               </>

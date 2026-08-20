@@ -70,6 +70,7 @@ export default function PreviewPage() {
   const [cimkeHiba, setCimkeHiba] = useState<string | null>(null);
   const [nameMissingNotice, setNameMissingNotice] = useState(false);
   const [uresSorokNotice, setUresSorokNotice] = useState(false);
+  const [elolegTullepNotice, setElolegTullepNotice] = useState(false);
   // A webbel megegyező forrásból (design/toothChartSvg) canvason renderelt
   // fogtérkép-PNG a nyomtatványhoz -- lásd pdf/toothChartImage.ts. `null`,
   // amíg el nem készül, vagy ha a rajzolás meghiúsul (pl. jsdom teszt) --
@@ -264,6 +265,7 @@ export default function PreviewPage() {
   const {
     nameMissing,
     uresSorok,
+    elolegTullep,
     nevProblemak: { nincsForditas, elterAzArlistatol, egyedi },
     nullaSorok,
     hianyzoLeirasok,
@@ -416,6 +418,11 @@ export default function PreviewPage() {
       return;
     }
     setUresSorokNotice(false);
+    if (elolegTullep) {
+      setElolegTullepNotice(true);
+      return;
+    }
+    setElolegTullepNotice(false);
     const step = kovetkezoLepes(alkalmazhato, 0);
     if (step) {
       setConfirmStep(step);
@@ -542,6 +549,20 @@ export default function PreviewPage() {
               .join('; ')}
             . Válassz tételt a keresőben, vagy írd be egyedi néven a szerkesztőben, vagy
             töröld a sort.
+          </Callout.Text>
+          <Flex mt="2">
+            <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>
+              Vissza a szerkesztőbe
+            </Button>
+          </Flex>
+        </Callout.Root>
+      )}
+      {elolegTullepNotice && elolegTullep && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>
+            Az előleg összege nagyobb, mint a fizetendő -- ez sortörlés/módosítás után is
+            előfordulhat. Az előleg értéke megmaradt, rendezd a szerkesztőben, mielőtt
+            véglegesítenéd a tervet.
           </Callout.Text>
           <Flex mt="2">
             <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeOsszesitok, elolegOsszegek, osszesitokElter, tervVegosszeg } from './totals';
+import { computeOsszesitok, elolegOsszegek, elolegTullepi, osszesitokElter, tervVegosszeg } from './totals';
 import type { Fazis } from './types';
 
 const fazisok: Fazis[] = [
@@ -84,23 +84,37 @@ describe('osszesitokElter terv-szintű kedvezménnyel (backlog-16)', () => {
   });
 });
 
-describe('elolegOsszegek', () => {
-  it('a szokásos 50%-ot pontosan felezi', () => {
-    expect(elolegOsszegek(820000, 50)).toEqual({ eloleg: 410000, fennmarado: 410000 });
+describe('elolegOsszegek (D64: abszolút összeg)', () => {
+  it('az előleg alatt marad a fizetendőnek, a fennmaradó rész a különbség', () => {
+    expect(elolegOsszegek(820000, 410000)).toEqual({ eloleg: 410000, fennmarado: 410000 });
   });
 
-  it('egész pénznemegységre kerekít, és a két szám együtt PONTOSAN a fizetendőt adja', () => {
-    // 33% egy páratlan összegre: a kerekítés nem hozhat létre 1 Ft-os rést.
-    const { eloleg, fennmarado } = elolegOsszegek(100001, 33);
+  it('a két szám együtt PONTOSAN a fizetendőt adja páratlan összegnél is', () => {
+    const { eloleg, fennmarado } = elolegOsszegek(100001, 33000);
     expect(eloleg).toBe(33000);
-    expect(eloleg + fennmarado).toBe(100001);
+    expect(eloleg + (fennmarado ?? 0)).toBe(100001);
   });
 
-  it('0%: nincs előleg, a teljes összeg marad fenn', () => {
+  it('0 összegű előleg: a teljes összeg marad fenn', () => {
     expect(elolegOsszegek(45000, 0)).toEqual({ eloleg: 0, fennmarado: 45000 });
   });
 
-  it('100%: a teljes összeg előleg, nincs fennmaradó rész', () => {
-    expect(elolegOsszegek(45000, 100)).toEqual({ eloleg: 45000, fennmarado: 0 });
+  it('az előleg pontosan egyenlő a fizetendővel: a fennmaradó rész explicit 0', () => {
+    expect(elolegOsszegek(45000, 45000)).toEqual({ eloleg: 45000, fennmarado: 0 });
+  });
+
+  it('az előleg meghaladja a fizetendőt: a fennmaradó rész null, nem negatív szám', () => {
+    expect(elolegOsszegek(45000, 50000)).toEqual({ eloleg: 50000, fennmarado: null });
+  });
+});
+
+describe('elolegTullepi (D64)', () => {
+  it('igaz, ha az előleg nagyobb a fizetendőnél', () => {
+    expect(elolegTullepi(45000, 50000)).toBe(true);
+  });
+
+  it('hamis egyenlőségnél és az alatt', () => {
+    expect(elolegTullepi(45000, 45000)).toBe(false);
+    expect(elolegTullepi(45000, 40000)).toBe(false);
   });
 });

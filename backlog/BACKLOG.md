@@ -76,15 +76,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-63-egyedi-vegosszeg-terv.md`
 
-### 64. tétel — Előleg és fennmaradó összeg
-  (a `backlog/redesign/` redesign-döntéssorozat DP-047 tétele) — az
-  Előleg ma SZÁZALÉK-alapú, tudatos drift-mentes indoklással; a
-  redesign abszolút összeget kér, ami a mai automatikus 0-100%-os
-  védelmet megszünteti. A user a redesign mellett döntött — ez a
-  tétel a teljes deposit≤final validációs láncot nulláról építi fel.
-  A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-64-eloleg-terv.md`
-
 ### 65. tétel — Manuális szövegek nyelvi review-ja
   (a `backlog/redesign/` redesign-döntéssorozat DP-048 tétele) —
   nyelvi review-metaadat (`authoredInLanguage`/`reviewedForLanguage`)

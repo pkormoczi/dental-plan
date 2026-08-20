@@ -1602,3 +1602,28 @@ karbantartási kör négy önálló javítása.
   D21/D63, docs/02-domain-modell.md § Nyelv és pénznem, docs/03-
   funkcionalis-spec.md § 2 "Dokumentum nyelve / Pénznem", docs/04-
   nyomtatvany-spec.md § Számformátum).
+
+---
+
+### 64. tétel: Előleg és fennmaradó összeg — KÉSZ (2026-08-20)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D64 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** az Előleg tudatos, drift-mentes tervezési döntéssel
+  SZÁZALÉK-alapú volt (a 0–100%-os szorítás mellékesen strukturálisan
+  garantálta `előleg ≤ fizetendő`-t); a doki a redesign mellett döntött,
+  ami abszolút összeget kér, és ezt a strukturális védelmet megszünteti.
+- **Megvalósítás:** a `Plan.elolegSzazalek` mező `elolegOsszeg`-re váltott
+  (abszolút összeg, pénznem alapegységében), előtöltés nélkül,
+  bekapcsoláskor üres/azonnal fókuszált mezővel. A `deposit ≤ final`
+  validációt nulláról építettük fel: ha a fizetendő az előleg alá
+  csökken, az érték VÁLTOZATLAN marad, inline hard error jelzi, a
+  fennmaradó rész „—”, és ez új KEMÉNY véglegesítési blokk
+  (`domain/veglegesitesOr.ts` `elolegTullep`). Egyenlőségnél a fennmaradó
+  rész explicit `0`. Explicit `0` beírása blur/Enter után automatikusan
+  kikapcsolja a kapcsolót. A PDF összegző sora és a fizetési feltételek
+  sablon-placeholdere (`{{elolegSzazalek}}` → `{{eloleg}}`, új v2 sablon,
+  a v1 örökre változatlan marad) összeg-alapúra váltott (docs/01-
+  attekintes-es-dontesek.md D64, docs/02-domain-modell.md § Előleg,
+  docs/03-funkcionalis-spec.md § 2 "Terv adatai" és § 4 "Előnézet és
+  véglegesítés", docs/04-nyomtatvany-spec.md § "Fizetendő" blokk).

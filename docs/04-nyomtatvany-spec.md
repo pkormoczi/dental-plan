@@ -188,20 +188,26 @@ D25) számol — a terv-szintű kedvezmény önmagában, sorszintű eltérés
 nélkül is megnyitja ezt a kétsoros összegzést, ugyanúgy, mint egy
 sorszintű eltérés (`tervVegosszeg()`, `domain/totals.ts`).
 
-Ha a terven be van kapcsolva az előleg (`elolegSzazalek != null`), a
+Ha a terven be van kapcsolva az előleg (`elolegOsszeg != null`, D64), a
 `Fizetendő` alatt még két sor áll, kisebb súllyal:
 
 ```
 Fizetendő                         780 000 Ft
-Előleg (50%)                      390 000 Ft
+Előleg                            390 000 Ft
 Fennmaradó rész                   390 000 Ft
 ```
 
-Mindkettő a `Fizetendő`-ből számol, egész pénznemegységre kerekítve, és a
-kettő együtt pontosan a `Fizetendő`-t adja ki. Ha a tervben van becsült
-árú (csillagos) tétel, **mindkét** sor csillagot kap — ugyanazt a
-lábjegyzetet használva, ami a tételekre is vonatkozik (nincs második
-csillag-jelentés az oldalon).
+Az „Előleg” felirat sima, zárójeles összeg-ismétlés nélkül — az érték az
+oszlopban amúgy is ott áll. A fennmaradó rész a `Fizetendő`-ből számol,
+egész pénznemegységre kerekítve, és a kettő együtt pontosan a
+`Fizetendő`-t adja ki — KIVÉVE, ha az előleg meghaladja a `Fizetendő`-t
+(sortörlés/módosítás utóhatása); ilyenkor a fennmaradó rész helyén „—” áll.
+A szerkesztő ezt az esetet kemény véglegesítési blokkal előzi meg
+(`domain/veglegesitesOr.ts`), de a „Csak ajánlat” előnézet a blokk előtt
+is renderel, ezért a nyomtatvány maga sem törhet el egy túllépő értéken.
+Ha a tervben van becsült árú (csillagos) tétel, **mindkét** sor csillagot
+kap — ugyanazt a lábjegyzetet használva, ami a tételekre is vonatkozik
+(nincs második csillag-jelentés az oldalon).
 
 Alatta: *„Az ajánlat 2026. november 5. napjáig érvényes."* — számított
 dátum, nem „3 hónapig érvényes" szöveg. (A korábbi *„…5-ig érvényes."*

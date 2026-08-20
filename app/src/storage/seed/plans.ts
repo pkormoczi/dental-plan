@@ -7,7 +7,7 @@
 // több verzió láncként (D4 append-only), EUR pénznem, német nyelv (D21),
 // sávos ár (D15) -- természetes SAVOS tételből ÉS a doki kézzel becsültre
 // billentett jelzésével egy FIX tételen --, terv-szintű kerek végösszeg
-// kedvezmény (D25), előleg (elolegSzazalek), egyedi (árlistán kívüli) sor,
+// kedvezmény (D25), előleg (elolegOsszeg, D64), egyedi (árlistán kívüli) sor,
 // kézzel átírt/HU-visszaeső névjelvény (D21 `sorFallback`), kiskorú +
 // törvényes képviselő, valamint a törzsadat mindkét állapota (D33:
 // `paciens-adatok.json` megvan / élő fallback a legutóbbi tervből) és egy
@@ -452,7 +452,7 @@ interface VerzioTerv {
   nyelv?: Nyelv;
   penznem?: Penznem;
   kedvezmenyOsszeg?: number;
-  elolegSzazalek?: number;
+  elolegOsszeg?: number;
 }
 
 interface LancTerv {
@@ -515,7 +515,7 @@ function buildUjPaciens(spec: UjPaciensTerv): UjPaciensEredmeny {
         paciens,
         fazisok: buildFazisok(v.fazisok, penznem, nyelv),
         ...(v.kedvezmenyOsszeg != null ? { kedvezmenyOsszeg: v.kedvezmenyOsszeg } : {}),
-        ...(v.elolegSzazalek != null ? { elolegSzazalek: v.elolegSzazalek } : {}),
+        ...(v.elolegOsszeg != null ? { elolegOsszeg: v.elolegOsszeg } : {}),
       });
     });
     return toEntries(patientDir, versions);
@@ -781,8 +781,9 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
       },
     ],
   },
-  // Nagy implantációs munka, előleggel (elolegSzazalek) -- a v2-n vezetik
-  // be, amikor a doki eldönti a fogtechnikai munka előlegét. Nincs törzsadat.
+  // Nagy implantációs munka, előleggel (elolegOsszeg, D64) -- a v2-n
+  // vezetik be, amikor a doki eldönti a fogtechnikai munka előlegét (v2
+  // összege 340 000 Ft sorösszeghez képest kerekített ~30%). Nincs törzsadat.
   {
     paciensId: 'molnta',
     nev: 'Molnár Tamás',
@@ -807,7 +808,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
           },
           {
             keltezes: '2026-06-25',
-            elolegSzazalek: 30,
+            elolegOsszeg: 100000,
             fazisok: [
               {
                 megnevezes: '1. kezelés — implantáció',
@@ -867,8 +868,10 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
     ],
   },
   // Kivehető fogpótlás, 3 verzió, előleggel a lánc ELEJÉTŐL (D25/előleg
-  // pár, hogy ne csak a "menet közben bevezetett" esetet lássuk). Nincs
-  // törzsadat.
+  // pár, hogy ne csak a "menet közben bevezetett" esetet lássuk). Az összeg
+  // (D64) verziónként kerekítve követi a sorösszeg kb. felét (25 000 / 50 000;
+  // 115 000 / 230 000; 120 000 / 245 000) -- mivel abszolút összeg, nem
+  // automatikusan élő arány. Nincs törzsadat.
   {
     paciensId: 'baloda',
     nev: 'Balogh Dániel',
@@ -884,12 +887,12 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
         verziok: [
           {
             keltezes: '2025-12-05',
-            elolegSzazalek: 50,
+            elolegOsszeg: 25000,
             fazisok: [{ megnevezes: '1. kezelés — eltávolítás', sorok: [{ tetelId: 't041', fogak: '17, 27', mennyiseg: 2 }] }],
           },
           {
             keltezes: '2026-03-01',
-            elolegSzazalek: 50,
+            elolegOsszeg: 115000,
             fazisok: [
               { megnevezes: '1. kezelés — eltávolítás', sorok: [{ tetelId: 't041', fogak: '17, 27', mennyiseg: 2 }] },
               { megnevezes: '2. kezelés — fogsor', sorok: [{ tetelId: 't095' }] },
@@ -897,7 +900,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
           },
           {
             keltezes: '2026-06-10',
-            elolegSzazalek: 50,
+            elolegOsszeg: 120000,
             fazisok: [
               { megnevezes: '1. kezelés — eltávolítás', sorok: [{ tetelId: 't041', fogak: '17, 27', mennyiseg: 2 }] },
               { megnevezes: '2. kezelés — fogsor', sorok: [{ tetelId: 't095' }] },

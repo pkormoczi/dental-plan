@@ -167,34 +167,91 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(screen.queryByText(/Kedvezmény:/)).not.toBeInTheDocument();
   });
 
-  // backlog-9: a doki eddig fejben osztotta ki az előleget és kézzel írta a
-  // papír aljára.
-  it('az előleg-kapcsoló bekapcsolva 50%-ról indul, és a végösszegből számol', async () => {
-    const user = userEvent.setup();
-    renderEditor();
+  // backlog-9/D64: a doki eddig fejben osztotta ki az előleget és kézzel
+  // írta a papír aljára; az előleg mostantól abszolút összeg, nem százalék.
+  describe('az előleg-kapcsoló (D64: abszolút összeg)', () => {
+    async function felvesz(user: ReturnType<typeof userEvent.setup>) {
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+    }
 
-    const search = await screen.findByPlaceholderText(/Tétel keresése/);
-    await user.type(search, 'fogeltavolitas');
-    await user.click(await screen.findByText('Fogeltávolítás'));
-    await waitFor(() => expect(search).toHaveValue(''));
+    it('bekapcsoláskor üresen, fókuszáltan jelenik meg, előtöltés nélkül (D517)', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
 
-    // Alapból nincs előleg-blokk, csak a kapcsoló.
-    expect(screen.queryByLabelText('Előleg százaléka')).not.toBeInTheDocument();
+      // Alapból nincs előleg-blokk, csak a kapcsoló.
+      expect(screen.queryByLabelText('Előleg összege')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
 
-    // 25 000 Ft végösszeg -> 50% = 12 500 / 12 500.
-    const szazalek = await screen.findByLabelText('Előleg százaléka');
-    expect(szazalek).toHaveValue('50');
-    expect(screen.getAllByText('12 500 Ft')).toHaveLength(2);
+      const osszeg = await screen.findByLabelText('Előleg összege');
+      expect(osszeg).toHaveValue('');
+      expect(osszeg).toHaveFocus();
+    });
 
-    // Százalék átírása után mindkét szám követi (a mező blur-re commitál).
-    await user.clear(szazalek);
-    await user.type(szazalek, '30');
-    await user.tab();
+    it('összeg beírása után a fennmaradó rész a fizetendőből számol', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
 
-    expect(await screen.findByText('7500 Ft')).toBeInTheDocument();
-    expect(screen.getByText('17 500 Ft')).toBeInTheDocument();
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+      const osszeg = await screen.findByLabelText('Előleg összege');
+      // 25 000 Ft végösszeg -> 12 500 Ft előleg, 12 500 Ft fennmaradó.
+      await user.type(osszeg, '12500');
+      await user.tab();
+
+      expect(await screen.findByText('12 500 Ft')).toBeInTheDocument();
+    });
+
+    it('explicit 0 beírása után blur/Enterre a kapcsoló automatikusan kikapcsol (D519)', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+      const osszeg = await screen.findByLabelText('Előleg összege');
+      await user.type(osszeg, '0');
+      await user.tab();
+
+      await waitFor(() =>
+        expect(screen.queryByLabelText('Előleg összege')).not.toBeInTheDocument(),
+      );
+      expect(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ })).not.toBeChecked();
+    });
+
+    it('kötelező-mező hiba csak blur után jelenik meg, bekapcsoláskor még nem (D518)', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+      expect(screen.queryByText(/Add meg az előleg összegét/)).not.toBeInTheDocument();
+
+      const osszeg = await screen.findByLabelText('Előleg összege');
+      await user.click(osszeg);
+      await user.tab();
+
+      expect(await screen.findByText(/Add meg az előleg összegét/)).toBeInTheDocument();
+    });
+
+    it('a fizetendőt meghaladó előleg inline hard errort ad, az érték nem vágódik le (D326)', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+      const osszeg = await screen.findByLabelText('Előleg összege');
+      // 25 000 Ft a fizetendő, 30 000 Ft-ot írunk be.
+      await user.type(osszeg, '30000');
+      await user.tab();
+
+      expect(await screen.findByText(/Az előleg nagyobb, mint a fizetendő/)).toBeInTheDocument();
+      expect(osszeg).toHaveValue('30000');
+      expect(screen.getByText('—')).toBeInTheDocument();
+    });
   });
 
   // backlog-16: az alku lezárásakor a doki eddig fejben osztotta vissza a

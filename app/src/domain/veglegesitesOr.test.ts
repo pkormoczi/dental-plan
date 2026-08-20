@@ -97,6 +97,7 @@ describe('veglegesitesDiagnozis', () => {
 
     expect(diag.nameMissing).toBe(false);
     expect(diag.uresSorok).toEqual([]);
+    expect(diag.elolegTullep).toBe(false);
     expect(diag.nevProblemak).toEqual({ nincsForditas: [], elterAzArlistatol: [], egyedi: [] });
     expect(diag.nullaSorok).toEqual([]);
     expect(diag.hianyzoLeirasok).toEqual([]);
@@ -208,6 +209,36 @@ describe('veglegesitesDiagnozis', () => {
       });
       expect(kovetkezoLepes(diag.alkalmazhato, 0)).toBeNull();
     });
+  });
+});
+
+// D64: az előleg túllépése KEMÉNY blokk, nem a puha lánc tagja.
+describe('elolegTullep (D64)', () => {
+  it('nincs bekapcsolt előleg -- hamis', () => {
+    const plan = makePlan([[sor()]]);
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(false);
+  });
+
+  it('az előleg a fizetendő alatt -- hamis', () => {
+    const plan = makePlan([[sor()]], { elolegOsszeg: 5000 }); // fizetendő 10000
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(false);
+  });
+
+  it('az előleg pontosan egyenlő a fizetendővel -- hamis, ez legitim (D327)', () => {
+    const plan = makePlan([[sor()]], { elolegOsszeg: 10000 });
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(false);
+  });
+
+  it('az előleg meghaladja a fizetendőt -- igaz', () => {
+    const plan = makePlan([[sor()]], { elolegOsszeg: 15000 });
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(true);
+  });
+
+  it('a terv-szintű kedvezmény miatt csökkent fizetendőhöz képest is túllépést jelez', () => {
+    // Sorok összege 10000, kedvezménnyel a fizetendő 4000 -- az előleg ehhez
+    // képest, nem a nyers sorösszeghez képest lépi túl a határt.
+    const plan = makePlan([[sor()]], { elolegOsszeg: 5000, kedvezmenyOsszeg: 6000 });
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(true);
   });
 });
 
