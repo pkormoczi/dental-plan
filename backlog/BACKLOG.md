@@ -13,40 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 53. tétel — Kezelőorvos kiválasztása és öröklési szabályai
-  (a `backlog/redesign/` redesign-döntéssorozat DP-032 tétele) —
-  `Settings.orvosok` ma sima névlista, aktív/inaktív jelölés és
-  per-terv választó UI nélkül; az egyetlen írás `orvosok[0]`. Ez a
-  tétel additív módon (séma-bővítés nélkül) bevezeti az aktív/inaktív
-  és alapértelmezett-orvos fogalmát, egy választó UI-t a Terv adatai
-  lépésen, és a hozzá tartozó öröklési szabályokat (új lánc: mindig
-  default; új verzió: örökli, ha aktív; másolás: mindig default) —
-  ezzel feloldja a 47./48./49. tétel VÁRAKOZÓ orvos-döntéseit, plusz
-  egy új finalizációs hard blockot ad hiányzó/inaktív orvosra. A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-53-kezeloorvos-terv.md`
-
-### 59. tétel — Kezelés keresés, quick items és hozzáadás
-  (a `backlog/redesign/` redesign-döntéssorozat DP-042 tétele) — a
-  kereső/gyorsgombok/hozzáadás nagyrészt már megfelel a redesignnak.
-  A D99/D100 (fókusz a Fog mezőre tételhozzáadás után) EXPLICIT
-  ELVETVE, mert ütközik a `docs/07`/`CLAUDE.md` „a kereső-ciklus nem
-  törhet el" kötelező szabályával — a user ezt megkérdezve a mai
-  ciklus megtartása mellett döntött. D101 (új fázis kereső-autofókusza)
-  változatlanul bekerül. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-59-kezeles-kereses-terv.md`
-
-### 60. tétel — Kezeléssor szerkesztése
-  (a `backlog/redesign/` redesign-döntéssorozat DP-043 tétele) — az
-  egyedi név/ár-eltérés jelzés ma csak német terven működik (magyaron
-  sosem), és sehol nincs reset a névre/árra/leírásra. Ez a tétel
-  nyelvfüggetlenné teszi a markereket és reset-vezérlőket ad
-  mindháromhoz; a becsült ár `≈` widget marad (docs/07 nevesített
-  kivétele), csak pozíciót vált. A javaslat „sorrend/mozgatás" és
-  „accordion" scope-bulletjei explicit kizárva (nincs döntés mögöttük,
-  előbbi ellentmond D102-nek). A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-60-kezelessor-szerkesztes-terv.md`
-
 ### 65. tétel — Manuális szövegek nyelvi review-ja
   (a `backlog/redesign/` redesign-döntéssorozat DP-048 tétele) —
   nyelvi review-metaadat (`authoredInLanguage`/`reviewedForLanguage`)
