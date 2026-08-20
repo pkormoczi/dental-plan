@@ -538,7 +538,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     await screen.findByRole('toolbar');
     expect(screen.queryByRole('combobox', { name: /Új sor ide/ })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: '+ Új kezelési fázis' }));
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
 
     const valaszto = screen.getByRole('combobox', { name: /Új sor ide/ });
     await user.click(valaszto);
@@ -921,7 +921,7 @@ describe('PlanEditorPage -- backlog-18: fázis törlése megerősítéssel', () 
 
     // A canDelete gate (>1 fázis) miatt csak a második fázis felvétele után
     // jelenik meg a "Fázis törlése" gomb.
-    await user.click(screen.getByRole('button', { name: '+ Új kezelési fázis' }));
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
 
     const torlesGombok = screen.getAllByRole('button', { name: 'Fázis törlése' });
     expect(torlesGombok).toHaveLength(2);
@@ -948,7 +948,7 @@ describe('PlanEditorPage -- backlog-18: fázis törlése megerősítéssel', () 
     renderEditor();
 
     await screen.findByPlaceholderText(/Tétel keresése/);
-    await user.click(screen.getByRole('button', { name: '+ Új kezelési fázis' }));
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
 
     const torlesGombok = screen.getAllByRole('button', { name: 'Fázis törlése' });
     expect(torlesGombok).toHaveLength(2);
@@ -956,6 +956,155 @@ describe('PlanEditorPage -- backlog-18: fázis törlése megerősítéssel', () 
 
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Fázis törlése' })).not.toBeInTheDocument();
+  });
+});
+
+describe('PlanEditorPage -- backlog-58: fázis összecsukás', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('fázisok egymástól függetlenül csukhatók/nyithatók, csukott fejléc a darabszámot/összeget mutatja', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
+
+    // Mindkét fázis alapból nyitva (D73) -- két kereső látszik.
+    expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(2);
+
+    const csukoGombok = screen.getAllByRole('button', { name: 'Fázis összecsukása' });
+    expect(csukoGombok).toHaveLength(2);
+
+    // Az első (soros) fázis összecsukása -- a sora és a keresője eltűnik,
+    // a fejléc a darabszámot/összeget mutatja.
+    await user.click(csukoGombok[0]);
+    expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(1);
+    expect(screen.queryByDisplayValue('Fogeltávolítás')).not.toBeInTheDocument();
+    expect(await screen.findByText(/1 tétel/)).toBeInTheDocument();
+
+    // A második (üres, nyitott) fázis érintetlen marad.
+    expect(screen.getByRole('button', { name: 'Fázis összecsukása' })).toBeInTheDocument();
+
+    // Visszanyitás -- a sor újra látszik.
+    await user.click(screen.getByRole('button', { name: 'Fázis kinyitása' }));
+    expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(2);
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+  });
+});
+
+describe('PlanEditorPage -- backlog-58: fázis sorrendezés', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('nyilakkal mozgatva a sorok a helyes fázisban maradnak, a szélen a megfelelő nyíl tiltott, csak a generált név követi a pozíciót', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
+
+    // A 2. fázis nevét kézzel átírjuk -- ez utántól nem generált név, a
+    // mozgatás nem frissítheti.
+    const masodikNev = screen.getByDisplayValue('2. kezelés');
+    await user.clear(masodikNev);
+    await user.type(masodikNev, 'Röntgen fázis');
+
+    const searchInputs = screen.getAllByPlaceholderText(/Tétel keresése/);
+    await user.type(searchInputs[1], 'csatornaszam');
+    await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+    await waitFor(() => expect(searchInputs[1]).toHaveValue(''));
+
+    // Szélen a megfelelő nyíl tiltott.
+    expect(screen.getAllByRole('button', { name: 'Fázis feljebb' })[0]).toBeDisabled();
+    expect(screen.getAllByRole('button', { name: 'Fázis lejjebb' })[1]).toBeDisabled();
+
+    // A "Röntgen fázis" (2. pozíció) feljebb mozgatása -- az 1. fázis
+    // generált neve ("1. kezelés") a mozgatással "2. kezelés"-re frissül,
+    // a kézzel átírt "Röntgen fázis" érintetlen marad.
+    await user.click(screen.getAllByRole('button', { name: 'Fázis feljebb' })[1]);
+
+    // A DOM-sorrend igazolja: a "Röntgen fázis" került előre, ÉS a sora
+    // ("Gyökértömés…") vele ment -- nem a másik fázis alá "vándorolt".
+    const sorrend = screen
+      .getAllByDisplayValue(/^(Röntgen fázis|2\. kezelés|Gyökértömés csatornaszámtól függően)$/)
+      .map((el) => (el as HTMLInputElement).value);
+    expect(sorrend).toEqual(['Röntgen fázis', 'Gyökértömés csatornaszámtól függően', '2. kezelés']);
+
+    // A szélek után a tiltott nyilak is a helyes (új) pozícióra vonatkoznak.
+    expect(screen.getAllByRole('button', { name: 'Fázis feljebb' })[0]).toBeDisabled();
+    expect(screen.getAllByRole('button', { name: 'Fázis lejjebb' })[1]).toBeDisabled();
+  });
+});
+
+describe('PlanEditorPage -- backlog-58: sor törlése Undo-val', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('sor törlése után Undo-sáv jelenik meg fókusszal, a Visszavonás az eredeti pozícióba állítja vissza', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.type(search, 'csatornaszam');
+    await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(screen.queryByText(/Sor törölve/)).not.toBeInTheDocument();
+
+    // Az első ("Fogeltávolítás") sor törlése.
+    await user.click(screen.getAllByRole('button', { name: 'Sor törlése' })[0]);
+
+    expect(screen.queryByDisplayValue('Fogeltávolítás')).not.toBeInTheDocument();
+    expect(await screen.findByText(/Sor törölve: Fogeltávolítás/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Visszavonás' })).toHaveFocus();
+
+    await user.click(screen.getByRole('button', { name: 'Visszavonás' }));
+
+    expect(screen.queryByText(/Sor törölve/)).not.toBeInTheDocument();
+    // Az eredeti pozícióba került vissza, nem a lista végére.
+    const sorrend = screen
+      .getAllByDisplayValue(/^(Fogeltávolítás|Gyökértömés csatornaszámtól függően)$/)
+      .map((el) => (el as HTMLInputElement).value);
+    expect(sorrend).toEqual(['Fogeltávolítás', 'Gyökértömés csatornaszámtól függően']);
+  });
+
+  it('egy újabb sortörlés lecseréli (nem halmozza) a korábbi Undo-sávot', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.type(search, 'csatornaszam');
+    await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.click(screen.getAllByRole('button', { name: 'Sor törlése' })[0]);
+    expect(await screen.findByText(/Sor törölve: Fogeltávolítás/)).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('button', { name: 'Sor törlése' })[0]);
+
+    expect(screen.queryByText(/Sor törölve: Fogeltávolítás/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/Sor törölve: Gyökértömés csatornaszámtól függően/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Sor törölve/)).toHaveLength(1);
   });
 });
 

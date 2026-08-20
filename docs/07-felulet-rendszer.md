@@ -90,7 +90,12 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   (a Fog mező melletti fogválasztó, az Ajánlati ár melletti `≈` becsült-ár
   kapcsoló, a Db mező melletti ⟳ visszakapcsoló, D32) nem esnek e szabály
   alá — mindegyik a saját cellájának mezőjét szerkeszti, nem a sorra ható
-  akció.
+  akció. NÉVESÍTETT KIVÉTEL: a tervszerkesztő fázisfejléce (`PhaseSection`,
+  `pages/PlanEditorPage.tsx`) ↑/↓ sorrendező nyilat ÉS kuka-ikont is mutat
+  egyszerre (három látható gomb) — ez NEM lista-jellegű adatsor, hanem
+  szekciófejléc egy fix számú (jellemzően 1-3 elemű) listában, ugyanaz a
+  besorolás, mint az Árlista admin kategória-sora (`PriceListAdminPage.tsx`),
+  ami már ma is ugyanezt a hármat mutatja.
   A menü első eleme a kockázatmentes/olvasó művelet, utána — elválasztóval
   — a többi, gyakoriság szerint. Hosszú, didaktikus feliratot csak menüben
   használj (ott egymás alatt állnak); egy sorban egymás mellett rövidnek

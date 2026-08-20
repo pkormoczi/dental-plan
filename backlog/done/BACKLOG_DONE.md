@@ -1521,3 +1521,29 @@ karbantartási kör négy önálló javítása.
   ezt korábban tudatosan eltávolította
   (docs/01-attekintes-es-dontesek.md D59, docs/03-funkcionalis-spec.md
   § 3 "Fogtérkép"/"Tételkereső"/"Fázisok").
+
+### 58. tétel: Kezelési fázisok kezelése — KÉSZ (2026-08-20)
+
+- **Méret:** ~0.5 nap.
+- **Kereteket sért?** Nem — új D60 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a tervszerkesztő fázisai eddig nem voltak
+  összecsukhatók/sorrendezhetők (nulla infra a kód szintjén, a spec
+  "sorrendezhető" állítása drift volt), a sortörlésnek nem volt Undo-ja,
+  a fázismegjegyzés mindig látszott (nincs progresszív elrejtés). A
+  feltárás emellett egy hibás korábbi feltevést is talált: egy nyitott
+  tétel terve tévesen "MÁR MEGVAN"-nak jelölt egy üres-fázis
+  finalizációs blokkot, ami valójában sosem létezett — ez átkerült egy
+  másik, még nyitott tételhez, ahol a tényleges javítás helye van.
+- **Megvalósítás:** a fázisfejléc négy új vezérlőt kapott: egymástól
+  független nyitás/csukás (csukva a nevet, a sorok számát és a
+  fázisösszeget mutatja), ↑/↓ sorrendezés (a mozgatott fázis GENERÁLT
+  neve — ha még a doki nem írta át — a pozíciójára frissül, a kézzel
+  átírt név érintetlen marad), és a szöveges "Fázis törlése" gomb
+  kuka-ikonra cserélve (az üres-fázis egykattintásos gyorsút
+  változatlan). A sortörlés kuka-ikont kapott, és azonnali marad
+  (nincs megerősítés), de a törölt sor helyén egy inline "Visszavonás"
+  sáv jelenik meg rövid ideig, ami visszaállítja a sort az eredeti
+  pozíciójába. A fázismegjegyzés a sor "+ leírás" progresszív
+  elrejtés-mintáját kapta
+  (docs/01-attekintes-es-dontesek.md D60, docs/03-funkcionalis-spec.md
+  § 3 "Sor mezői"/"Fázisok").

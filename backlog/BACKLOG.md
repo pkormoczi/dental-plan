@@ -13,16 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 58. tétel — Kezelési fázisok kezelése
-  (a `backlog/redesign/` redesign-döntéssorozat DP-041 tétele) — ma
-  nincs fázis-szintű összecsukás és sorrendezés (nulla infra), a
-  sor-törlésnek nincs Undo-ja, a fázismegjegyzés mindig látszik
-  (nincs progresszív elrejtés). Ez a tétel bevezeti mindezt, megtartva
-  a mai, dokumentált üres-fázis gyors-törlési kivételt és az always-on
-  fázisnév-mezőt (D86 pencil-mintája helyett, indoklással). A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-58-fazisok-kezelese-terv.md`
-
 ### 59. tétel — Kezelés keresés, quick items és hozzáadás
   (a `backlog/redesign/` redesign-döntéssorozat DP-042 tétele) — a
   kereső/gyorsgombok/hozzáadás nagyrészt már megfelel a redesignnak.

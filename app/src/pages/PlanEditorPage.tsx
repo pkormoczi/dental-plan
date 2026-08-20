@@ -4,7 +4,7 @@
 // fókuszt -> gépel tovább, egérhasználat nélkül. Lásd CLAUDE.md
 // "A UX kritikus pontja".
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
@@ -22,13 +22,22 @@ import {
   TextArea,
   TextField,
 } from '@radix-ui/themes';
-import { Cross1Icon, InfoCircledIcon, TrashIcon, UpdateIcon } from '@radix-ui/react-icons';
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  InfoCircledIcon,
+  TrashIcon,
+  UpdateIcon,
+} from '@radix-ui/react-icons';
 import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
 import ToothChartPanel from '../components/ToothChartPanel';
 import ToothPickerPopover from '../components/ToothPickerPopover';
 import { csokkentettMozgas } from '../design/motion';
 import { t } from '../design/tokens';
+import { fazisNevGeneralt, generaltFazisNev } from '../domain/blankPlan';
 import { formatLongDate, formatPiszkozatIdo } from '../domain/date';
 import { leirasTulHosszu } from '../domain/leirasHossz';
 import { sorPatchKovetessel } from '../domain/mennyiseg';
@@ -134,6 +143,12 @@ export default function PlanEditorPage() {
   // AlertDialog) -- egy üres fázis újralétrehozása két kattintás, egy
   // 8 sorosé nem.
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
+  // Melyik fázisok vannak összecsukva (D72/73) -- a halmaz a CSUKOTT
+  // indexeket tartja, alapból üres (minden fázis nyitva). A szülőben él,
+  // NEM PhaseSection lokális state-je, hogy túlélje a `fazisResetToken`
+  // bump-ot törléskor/mozgatáskor -- lásd deletePhase/movePhase, ahol a
+  // tagság újraindexelődik/felcserélődik.
+  const [fazisCsukva, setFazisCsukva] = useState<Set<number>>(() => new Set());
   // Melyik fázisba kerüljön az új sor, ha a doki kezeletlen fogra kattint a
   // fogtérképen -- csak akkor látszik a választó, ha >1 fázis van (lásd
   // lent). Renderléskor mindig `Math.min`-nel szorítva a fázisok
@@ -195,6 +210,48 @@ export default function PlanEditorPage() {
       draft.fazisok.splice(pi, 1);
     });
     setFazisResetToken((n) => n + 1);
+    setFazisCsukva((prev) => {
+      const next = new Set<number>();
+      prev.forEach((idx) => {
+        if (idx < pi) next.add(idx);
+        else if (idx > pi) next.add(idx - 1);
+      });
+      return next;
+    });
+  }
+
+  /**
+   * Fázis-sorrendezés (D75), a PriceListAdminPage.tsx `moveCategory()`
+   * mintáján, index-alapúra igazítva (a `Fazis`-nak nincs `Kategoria`-
+   * szerű `id`-je). A `fazisCsukva` (összecsukott indexek) tagsága a két
+   * érintett indexen felcserélődik, hogy az összecsukott/nyitott állapot
+   * a fázist kövesse, ne a pozíciót.
+   */
+  function movePhase(pi: number, irany: -1 | 1) {
+    const cel = pi + irany;
+    if (cel < 0 || cel >= plan.fazisok.length) return;
+    updatePlan((draft) => {
+      const f = draft.fazisok;
+      // Csak a generált nevet (pl. "2. kezelés") frissítjük pozíció
+      // szerint -- a kézzel átírt fázisnevet a mozgatás nem bántja.
+      if (fazisNevGeneralt(f[pi].megnevezes, pi + 1)) f[pi].megnevezes = generaltFazisNev(cel + 1);
+      if (fazisNevGeneralt(f[cel].megnevezes, cel + 1)) f[cel].megnevezes = generaltFazisNev(pi + 1);
+      [f[pi], f[cel]] = [f[cel], f[pi]];
+      f.forEach((x, i) => {
+        x.sorszam = i + 1;
+      });
+    });
+    setFazisResetToken((n) => n + 1);
+    setFazisCsukva((prev) => {
+      const piCsukva = prev.has(pi);
+      const celCsukva = prev.has(cel);
+      const next = new Set(prev);
+      if (celCsukva) next.add(pi);
+      else next.delete(pi);
+      if (piCsukva) next.add(cel);
+      else next.delete(cel);
+      return next;
+    });
   }
 
   // A teljes piszkozat eldobása (6. döntés) -- a `patientDir`-t a
@@ -373,12 +430,30 @@ export default function PlanEditorPage() {
             canDelete={plan.fazisok.length > 1}
             total={fazisOsszeg(p)}
             autoFokusz={pi === 0 && ujUresPiszkozat}
+            open={!fazisCsukva.has(pi)}
+            onToggleOpen={() =>
+              setFazisCsukva((prev) => {
+                const next = new Set(prev);
+                if (next.has(pi)) next.delete(pi);
+                else next.add(pi);
+                return next;
+              })
+            }
+            canMoveUp={pi > 0}
+            canMoveDown={pi < plan.fazisok.length - 1}
+            onMoveUp={() => movePhase(pi, -1)}
+            onMoveDown={() => movePhase(pi, 1)}
             onAdd={(item) => addLine(pi, item)}
             onAddEgyedi={(nev) => addEgyediLine(pi, nev)}
             onPatchLine={(li, patch) => patchLine(pi, li, patch)}
             onRemoveLine={(li) =>
               updatePlan((draft) => {
                 draft.fazisok[pi].sorok.splice(li, 1);
+              })
+            }
+            onRestoreLine={(li, sor) =>
+              updatePlan((draft) => {
+                draft.fazisok[pi].sorok.splice(li, 0, sor);
               })
             }
             onRename={(v) =>
@@ -406,14 +481,14 @@ export default function PlanEditorPage() {
           updatePlan((draft) => {
             draft.fazisok.push({
               sorszam: draft.fazisok.length + 1,
-              megnevezes: `${draft.fazisok.length + 1}. kezelés`,
+              megnevezes: generaltFazisNev(draft.fazisok.length + 1),
               megjegyzes: '',
               sorok: [],
             });
           })
         }
       >
-        + Új kezelési fázis
+        Fázis hozzáadása
       </Button>
 
       <Box mt="6">
@@ -585,10 +660,17 @@ function PhaseSection({
   total,
   canDelete,
   autoFokusz,
+  open,
+  onToggleOpen,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
   onAdd,
   onAddEgyedi,
   onPatchLine,
   onRemoveLine,
+  onRestoreLine,
   onRename,
   onNote,
   onDelete,
@@ -605,10 +687,17 @@ function PhaseSection({
   total: number;
   canDelete: boolean;
   autoFokusz: boolean;
+  open: boolean;
+  onToggleOpen: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
   onAdd: (item: Tetel) => void;
   onAddEgyedi: (nev: string) => void;
   onPatchLine: (li: number, patch: Partial<Sor>) => void;
   onRemoveLine: (li: number) => void;
+  onRestoreLine: (li: number, sor: Sor) => void;
   onRename: (v: string) => void;
   onNote: (v: string) => void;
   onDelete: () => void;
@@ -622,111 +711,266 @@ function PhaseSection({
   // Tisztán UI-réteg felirat, nem pénzösszeg-formázás -- nem indokol közös
   // domain segédfüggvényt, lásd docs/03-funkcionalis-spec.md § Sor mezői.
   const penznemJel = currency === 'EUR' ? '€' : 'Ft';
+
+  // Sortörlés Undo-sávja (D79): a törölt sor + eredeti indexe rövid ideig
+  // helyi state-ben, NEM egy általános undo-stack -- a `LineRow` DOM-eleme
+  // eltűnik a törléssel, ezért ennek itt, a szülőjében kell élnie, hogy a
+  // sáv túlélje. Egy újabb sortörlés lecseréli (nem halmozza) a korábbit.
+  const [pendingUndo, setPendingUndo] = useState<{ index: number; sor: Sor } | null>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const undoButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (pendingUndo) undoButtonRef.current?.focus();
+  }, [pendingUndo]);
+
+  useEffect(
+    () => () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    },
+    [],
+  );
+
+  function removeWithUndo(li: number, sor: Sor) {
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    onRemoveLine(li);
+    setSorResetToken((n) => n + 1);
+    setPendingUndo({ index: li, sor });
+    // Nincs docs/07-előírás a pontos időtartamra -- ennyi idő elég a sáv
+    // észrevételéhez/elolvasásához, anélkül, hogy tartósan helyet foglalna.
+    undoTimerRef.current = setTimeout(() => setPendingUndo(null), 8000);
+  }
+
+  function undoRemove() {
+    if (!pendingUndo) return;
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    onRestoreLine(pendingUndo.index, pendingUndo.sor);
+    setSorResetToken((n) => n + 1);
+    setPendingUndo(null);
+  }
+
   return (
     <Box>
       <Flex justify="between" align="center" mb="3" gap="3">
-        <TextField.Root
-          value={phase.megnevezes}
-          onChange={(e) => onRename(e.target.value)}
-          style={{ maxWidth: 360, fontWeight: 600, color: t.brand }}
-        />
-        {canDelete && (
-          <Button variant="soft" color="gray" onClick={onDelete}>
-            Fázis törlése
-          </Button>
-        )}
-      </Flex>
-
-      {phase.sorok.length > 0 && (
-        <Table.Root size="1" mb="3">
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeaderCell>Beavatkozás</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="132px">Fog</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="88px" justify="center">
-                Db
-              </Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="104px" justify="end">
-                Listaár ({penznemJel})
-              </Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="148px" justify="end">
-                Ajánlati ár ({penznemJel})
-              </Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="112px" justify="end">
-                Összeg ({penznemJel})
-              </Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell width="32px" />
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {phase.sorok.map((l, li) => (
-              <LineRow
-                key={`${sorResetToken}-${li}`}
-                pi={pi}
-                li={li}
-                line={l}
-                currency={currency}
-                nyelv={nyelv}
-                available={available}
-                catName={catName}
-                fogterkep={fogterkep}
-                fallback={sorFallback(l, nyelv, tetelekById)}
-                csomag={tetelekById.get(l.tetelId)?.csomag ?? false}
-                onPatch={(p) => onPatchLine(li, p)}
-                onRemove={() => {
-                  onRemoveLine(li);
-                  setSorResetToken((n) => n + 1);
-                }}
-              />
-            ))}
-          </Table.Body>
-        </Table.Root>
-      )}
-
-      <ItemPicker
-        available={available}
-        catName={catName}
-        currency={currency}
-        nyelv={nyelv}
-        onPick={onAdd}
-        onPickEgyedi={onAddEgyedi}
-        autoFocus={autoFokusz}
-      />
-
-      {frequent.length > 0 && (
-        <Flex gap="2" wrap="wrap" mt="2">
-          {frequent.map((f) => (
-            <Button
-              key={f.id}
-              type="button"
-              size="1"
-              variant="soft"
-              color="gray"
-              onClick={() => onAdd(f)}
-            >
-              + {resolveNev(f.nev, nyelv).szoveg}
-            </Button>
-          ))}
+        <Flex align="center" gap="2" flexGrow="1" style={{ minWidth: 0 }}>
+          <IconButton
+            type="button"
+            variant="ghost"
+            color="gray"
+            size="1"
+            aria-expanded={open}
+            aria-controls={`fazis-panel-${pi}`}
+            aria-label={open ? 'Fázis összecsukása' : 'Fázis kinyitása'}
+            onClick={onToggleOpen}
+          >
+            {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
+          </IconButton>
+          <TextField.Root
+            value={phase.megnevezes}
+            onChange={(e) => onRename(e.target.value)}
+            style={{ maxWidth: 360, fontWeight: 600, color: t.brand }}
+          />
+          {/* Csukott fejléc-összegzés (D72): név/darabszám/összeg -- nyitva
+              a törzs ugyanezt (táblázat + lábléc) részletesen mutatja. */}
+          {!open && (
+            <Text size="2" color="gray" style={{ whiteSpace: 'nowrap' }}>
+              {phase.sorok.length} tétel · {formatMoney(total, currency)}
+            </Text>
+          )}
         </Flex>
-      )}
-
-      <TextField.Root
-        value={phase.megjegyzes}
-        onChange={(e) => onNote(e.target.value)}
-        placeholder="Megjegyzés a fázishoz (megjelenik a nyomtatványon)"
-        mt="3"
-      />
-
-      <Flex
-        justify="end"
-        mt="3"
-        pt="2"
-        style={{ borderTop: `1px solid ${t.uiLine}` }}
-      >
-        <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
-          Fázis összesen: <Text weight="bold">{formatMoney(total, currency)}</Text>
-        </Text>
+        {/* ↑ ↓ 🗑 közvetlenül a fejlécen, három látható gomb -- lásd
+            docs/07-felulet-rendszer.md névesített kivétele (a fázisfejléc
+            szekciófejléc, nem lista-jellegű adatsor; az Árlista admin
+            kategória-sora, PriceListAdminPage.tsx, ugyanezt teszi). */}
+        <Flex gap="1" align="center">
+          <IconButton
+            type="button"
+            aria-label="Fázis feljebb"
+            variant="ghost"
+            color="gray"
+            size="1"
+            disabled={!canMoveUp}
+            onClick={onMoveUp}
+          >
+            <ArrowUpIcon />
+          </IconButton>
+          <IconButton
+            type="button"
+            aria-label="Fázis lejjebb"
+            variant="ghost"
+            color="gray"
+            size="1"
+            disabled={!canMoveDown}
+            onClick={onMoveDown}
+          >
+            <ArrowDownIcon />
+          </IconButton>
+          {canDelete && (
+            <IconButton
+              type="button"
+              aria-label="Fázis törlése"
+              variant="ghost"
+              color="gray"
+              size="1"
+              onClick={onDelete}
+            >
+              <TrashIcon />
+            </IconButton>
+          )}
+        </Flex>
       </Flex>
+
+      {open && (
+        <Box id={`fazis-panel-${pi}`}>
+          {(phase.sorok.length > 0 || pendingUndo) && (
+            <Table.Root size="1" mb="3">
+              <Table.Header>
+                <Table.Row>
+                  <Table.ColumnHeaderCell>Beavatkozás</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell width="132px">Fog</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell width="88px" justify="center">
+                    Db
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell width="104px" justify="end">
+                    Listaár ({penznemJel})
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell width="148px" justify="end">
+                    Ajánlati ár ({penznemJel})
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell width="112px" justify="end">
+                    Összeg ({penznemJel})
+                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell width="32px" />
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {phase.sorok.map((l, li) => (
+                  <Fragment key={`${sorResetToken}-${li}`}>
+                    {pendingUndo?.index === li && (
+                      <UndoRow nev={pendingUndo.sor.nevSnapshot} buttonRef={undoButtonRef} onUndo={undoRemove} />
+                    )}
+                    <LineRow
+                      pi={pi}
+                      li={li}
+                      line={l}
+                      currency={currency}
+                      nyelv={nyelv}
+                      available={available}
+                      catName={catName}
+                      fogterkep={fogterkep}
+                      fallback={sorFallback(l, nyelv, tetelekById)}
+                      csomag={tetelekById.get(l.tetelId)?.csomag ?? false}
+                      onPatch={(p) => onPatchLine(li, p)}
+                      onRemove={() => removeWithUndo(li, l)}
+                    />
+                  </Fragment>
+                ))}
+                {pendingUndo?.index === phase.sorok.length && (
+                  <UndoRow nev={pendingUndo.sor.nevSnapshot} buttonRef={undoButtonRef} onUndo={undoRemove} />
+                )}
+              </Table.Body>
+            </Table.Root>
+          )}
+
+          <ItemPicker
+            available={available}
+            catName={catName}
+            currency={currency}
+            nyelv={nyelv}
+            onPick={onAdd}
+            onPickEgyedi={onAddEgyedi}
+            autoFocus={autoFokusz}
+          />
+
+          {frequent.length > 0 && (
+            <Flex gap="2" wrap="wrap" mt="2">
+              {frequent.map((f) => (
+                <Button
+                  key={f.id}
+                  type="button"
+                  size="1"
+                  variant="soft"
+                  color="gray"
+                  onClick={() => onAdd(f)}
+                >
+                  + {resolveNev(f.nev, nyelv).szoveg}
+                </Button>
+              ))}
+            </Flex>
+          )}
+
+          <FazisMegjegyzes value={phase.megjegyzes} onChange={onNote} />
+
+          <Flex
+            justify="end"
+            mt="3"
+            pt="2"
+            style={{ borderTop: `1px solid ${t.uiLine}` }}
+          >
+            <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+              Fázis összesen: <Text weight="bold">{formatMoney(total, currency)}</Text>
+            </Text>
+          </Flex>
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+/** A sortörlés inline Undo-sávja (D79) -- lásd `PhaseSection` `removeWithUndo`/`undoRemove`. */
+function UndoRow({
+  nev,
+  buttonRef,
+  onUndo,
+}: {
+  nev: string;
+  buttonRef: RefObject<HTMLButtonElement | null>;
+  onUndo: () => void;
+}) {
+  return (
+    <Table.Row style={{ backgroundColor: t.accentWash }}>
+      <Table.Cell colSpan={7}>
+        <Flex align="center" justify="between" gap="3">
+          <Text size="2" color="gray">
+            Sor törölve{nev.trim() ? `: ${nev}` : ''}
+          </Text>
+          <Button type="button" size="1" variant="soft" color="gray" ref={buttonRef} onClick={onUndo}>
+            Visszavonás
+          </Button>
+        </Flex>
+      </Table.Cell>
+    </Table.Row>
+  );
+}
+
+/**
+ * Fázismegjegyzés progresszív elrejtése (D95-97) -- a `LineRow` „+ leírás"
+ * mintáját követi (`leirasNyitva`), alapból nyitva, ha már van tartalma.
+ * A megjegyzés MINDIG nyomtatódik, függetlenül a „Tétel-leírások
+ * nyomtatása" kapcsolótól -- ez a mező nem a `Tetel.leiras` snapshotja.
+ */
+function FazisMegjegyzes({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [nyitva, setNyitva] = useState(Boolean(value.trim()));
+  return (
+    <Box mt="3">
+      <Button
+        type="button"
+        size="1"
+        variant="ghost"
+        color="gray"
+        aria-expanded={nyitva}
+        onClick={() => setNyitva((v) => !v)}
+      >
+        {value.trim() ? 'Megjegyzés' : '+ megjegyzés'}
+      </Button>
+      {nyitva && (
+        <TextField.Root
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Megjegyzés a fázishoz (megjelenik a nyomtatványon)"
+          mt="1"
+        />
+      )}
     </Box>
   );
 }
@@ -1011,7 +1255,7 @@ function LineRow({
           size="1"
           onClick={onRemove}
         >
-          <Cross1Icon />
+          <TrashIcon />
         </IconButton>
       </Table.Cell>
     </Table.Row>

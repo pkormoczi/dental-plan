@@ -770,6 +770,18 @@ A terv-lánc fa lánc-szintű összecsukása és aktív-draft blokkja
   dönti el az `id` jelentését (az `OsszesTervSection.tsx`-en
   `${patientDir}/${planDir}`)
 
+A kezelési fázisok kezelése tétel (`docs/01-attekintes-es-dontesek.md`
+D60, `docs/03-funkcionalis-spec.md` § Fázisok) segédfüggvénye, szintén ne
+írd újra:
+- `generaltFazisNev(pos)` / `fazisNevGeneralt(nev, pos)`
+  (`app/src/domain/blankPlan.ts`) — az EGYETLEN hely, ahol a generált
+  fázisnév-minta (`"N. kezelés"`) él; a „Fázis hozzáadása" gomb és a
+  fázis-sorrendezés (`PlanEditorPage.tsx` `movePhase()`, a mozgatott
+  fázis generált nevének pozíció szerinti frissítéséhez, kézzel átírt
+  nevet érintetlenül hagyva) egyaránt ezt hívja. `ELSO_FAZIS_NEV`
+  (ugyanott) `generaltFazisNev(1)`-ként van definiálva, hogy a két
+  string-literál ne driftelhessen szét
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
@@ -846,10 +858,9 @@ ugyanabban a körben, nem később:
    marad hátra kapcsolódó, de különálló munka (pl. tisztán doktori
    adatmunka, kódot nem igénylő feladat). A maradék **új, önálló
    backlog-tételként** kerül be a `backlog/BACKLOG.md`-be, saját új
-   sorszámmal és a szokásos triázs-blokkal (Méret/Kereteket sért?/Valódi
-   haszon/20%-os verzió), a leírásában egy mondattal hivatkozva arra,
-   melyik lezárt tételből vált le — ahogy a 24. tétel is a korábban lezárt
-   tételek (8., 13.) visszamaradt doktori adatmunkájából állt össze.
+   sorszámmal, a leírásában egy mondattal hivatkozva arra, melyik lezárt
+   tételből vált le — ahogy a 24. tétel is a korábban lezárt tételek
+   (8., 13.) visszamaradt doktori adatmunkájából állt össze.
 2. **Döntések átvezetése.** A tervdokumentum (`backlog/plans/backlog-N-*-terv.md`)
    döntéseiből, ami tartósan érvényes (nem feladatlista, nem elvetett
    alternatíva, nem teszt-terv), az bekerül a megfelelő `docs/02`–`07`

@@ -17,12 +17,27 @@ export function sablonVerzioFor(nyelv: Nyelv): string {
 }
 
 /**
+ * Egy generált fázisnév adott pozícióra (1-alapú), pl. `generaltFazisNev(2)`
+ * -> `"2. kezelés"`. Az EGYETLEN hely, ahol ez a minta él -- a „+ Fázis
+ * hozzáadása" gomb ÉS a fázis-sorrendezés (backlog-58, `movePhase()`) is
+ * ezt hívja, hogy a két hívóhely string-literálja ne driftelhessen szét.
+ */
+export function generaltFazisNev(pos: number): string {
+  return `${pos}. kezelés`;
+}
+
+/** Igaz, ha `nev` PONTOSAN a `pos` pozícióhoz tartozó generált fázisnév -- lásd `generaltFazisNev()`. */
+export function fazisNevGeneralt(nev: string, pos: number): boolean {
+  return nev === generaltFazisNev(pos);
+}
+
+/**
  * Az egyetlen kezdő fázis neve egy friss tervben. Exportálva, mert a
  * `piszkozat.ts` `piszkozatTartalmas()`-a ehhez hasonlítja a piszkozat
  * fázislistáját (átnevezett/extra fázis = tartalmas piszkozat) -- két
  * helyen ugyanaz a string-literál driftelne.
  */
-export const ELSO_FAZIS_NEV = '1. kezelés';
+export const ELSO_FAZIS_NEV = generaltFazisNev(1);
 
 /**
  * A 47. tétel (D534) öröklési forrása -- egy meglévő páciens legutóbb

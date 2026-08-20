@@ -321,6 +321,12 @@ eltér (kézzel pontosítva). Egyedi sor egyiket sem kaphatja, hiszen nincs
 Magyar terven egyik sem jelenik meg (a doki magyarul gépel, ott nincs mit
 jelezni, D21).
 
+Sor törlése azonnali — nincs megerősítő dialógus egyetlen sorra (szemben
+a fázis törlésével, ami több sort is elvihet egyszerre, lásd lent,
+„Fázisok") —, de a törölt sor helyén egy „Visszavonás" felirat jelenik
+meg rövid ideig, amire kattintva a sor visszakerül az eredeti
+pozíciójába (D60).
+
 ### Egyedi sor
 
 Ha a tételkeresőben nincs (megfelelő) találat, a gépelt szöveg egyedi
@@ -378,15 +384,25 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
 
 ### Fázisok
 
-- Tetszőleges számú fázis, átnevezhető, sorrendezhető, törölhető. A „Fázis
-  törlése" gomb csak akkor jelenik meg, ha 1-nél több fázis van. Sorral
-  rendelkező fázis törlése megerősítő dialógust kér (a fázis összes sora
-  vele törlődik, ez a szerkesztő egyetlen egy-kattintásos, többsoros,
-  helyreállíthatatlan adatvesztési útja); üres fázis törlése egy kattintás
-  marad, dialógus nélkül — újralétrehozása két kattintás.
+- Tetszőleges számú fázis, átnevezhető, összecsukható, sorrendezhető,
+  törölhető (D60). Minden fázis fejlécén egy chevron egymástól
+  függetlenül nyitja/csukja — alapból mind nyitva; csukott fejléc a
+  fázis nevét, a sorok számát és a fázisösszeget mutatja. Ugyanitt két
+  nyíl (↑/↓) mozgatja a fázist a listán belül — a szélen a megfelelő
+  irányú nyíl letiltva. Ha az áthelyezett fázis neve még a generált
+  „N. kezelés" mintát viseli, a szám a mozgatás után a fázis új
+  pozíciójára frissül; egy kézzel átírt fázisnevet a mozgatás nem bánt.
+  A „Fázis törlése" kuka-ikon csak akkor jelenik meg, ha 1-nél több
+  fázis van. Sorral rendelkező fázis törlése megerősítő dialógust kér
+  (a fázis összes sora vele törlődik, ez a szerkesztő egyetlen
+  egy-kattintásos, többsoros, helyreállíthatatlan adatvesztési útja);
+  üres fázis törlése egy kattintás marad, dialógus nélkül —
+  újralétrehozása két kattintás.
 - Fázisonként egy szabad szöveges **megjegyzés** sor, ami a nyomtatványon
   is megjelenik. Ide megy az időzítés: *„az implantáció beépülési ideje
-  után, kb. 3 hónappal"*.
+  után, kb. 3 hónappal"*. A mező progresszíven rejtett — alapból csukva,
+  ha üres, nyitva, ha már van tartalma —, a sor „+ leírás" jelvényének
+  mintáját követve.
 - Fázisonkénti összeg, alul mindösszesen. A „Mindösszesen" doboz eltérés
   esetén egy kisebb alszöveget mutat: kedvezménynél „Kedvezmény: X",
   **felárnál „Felár: X"** (az ajánlati árnak nincs felső korlátja, tehát a
@@ -395,7 +411,7 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
   hibajelzés, a doki dolgozhat felárral is (pl. sietős munka).
 - A terv-szintű összegzés (Mindösszesen/Kerek végösszeg/Előleg/Tétel-
   leírások nyomtatása, lásd lent) **kizárólag** a fázislista végén, a
-  „+ Új kezelési fázis" gomb alatt jelenik meg — sem a szerkesztő
+  „Fázis hozzáadása" gomb alatt jelenik meg — sem a szerkesztő
   fejlécében, sem a workflow-héjban nincs végösszeg (D59).
 
 ### Kerek végösszeg
