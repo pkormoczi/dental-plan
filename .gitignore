@@ -2,6 +2,7 @@ node_modules/
 dist/
 .idea/
 .DS_Store
+.claude/worktrees/
 
 # Zárolt eredeti (Excelben nyitva) — a rendezett másolat a data/ alatt van.
 /MINTA_MINTA_Kezelesi_Terv_frissített.xls
