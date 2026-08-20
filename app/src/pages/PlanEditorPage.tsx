@@ -38,6 +38,7 @@ import ToothChartPanel from '../components/ToothChartPanel';
 import ToothPickerPopover from '../components/ToothPickerPopover';
 import { csokkentettMozgas } from '../design/motion';
 import { t } from '../design/tokens';
+import { arFrissites, arFrissitesPatch, type ArFrissites } from '../domain/arKoveti';
 import { fazisNevGeneralt, generaltFazisNev } from '../domain/blankPlan';
 import { formatLongDate, formatPiszkozatIdo } from '../domain/date';
 import { leirasTulHosszu } from '../domain/leirasHossz';
@@ -138,6 +139,13 @@ export default function PlanEditorPage() {
   // AlertDialog) -- egy üres fázis újralétrehozása két kattintás, egy
   // 8 sorosé nem.
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
+  // Ár-frissítés megerősítő előnézete (backlog-61, D69) -- a "Hatás a
+  // tervre" számításhoz a teljes `plan`-re van szükség, ezért a state itt,
+  // a szülőben él, nem a LineRow-ban (a fázistörlés `pendingDeleteIndex`
+  // mintája).
+  const [pendingArFrissites, setPendingArFrissites] = useState<{ pi: number; li: number } | null>(
+    null,
+  );
   // Melyik fázisok vannak összecsukva (D72/73) -- a halmaz a CSUKOTT
   // indexeket tartja, alapból üres (minden fázis nyitva). A szülőben él,
   // NEM PhaseSection lokális state-je, hogy túlélje a `fazisResetToken`
@@ -320,6 +328,30 @@ export default function PlanEditorPage() {
   const listTotal = sorokListaOsszeg(plan.fazisok);
   const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
 
+  // Az ár-frissítés megerősítő dialógusának "Hatás a tervre" előnézete --
+  // a MEGLÉVŐ `sorokOsszeg`/`tervVegosszeg`-gel számolva egy, a célsoron
+  // patchelt fázis-másolaton, nem a képletet újraimplementálva.
+  const pendingSor = pendingArFrissites
+    ? plan.fazisok[pendingArFrissites.pi].sorok[pendingArFrissites.li]
+    : null;
+  const pendingFrissites: ArFrissites | null = pendingSor
+    ? arFrissites(pendingSor, currency, tetelekById)
+    : null;
+  const pendingUjFazisok =
+    pendingArFrissites && pendingFrissites
+      ? plan.fazisok.map((f, fi) =>
+          fi !== pendingArFrissites.pi
+            ? f
+            : {
+                ...f,
+                sorok: f.sorok.map((s, si) =>
+                  si !== pendingArFrissites.li ? s : { ...s, ...arFrissitesPatch(pendingFrissites) },
+                ),
+              },
+        )
+      : plan.fazisok;
+  const kedvezmenyAktiv = plan.kedvezmenyOsszeg != null;
+
   // D59: egy VADONATÚJ (még soha nem mentett -- `tervId === ''`)
   // ÉS sor nélküli piszkozaton az első fázis keresője A LAP BETÖLTÉSEKOR
   // fókuszt kap. Szándékosan NEM `piszkozatTartalmas()`: az a páciensnévre
@@ -489,6 +521,7 @@ export default function PlanEditorPage() {
             onAdd={(item) => addLine(pi, item)}
             onAddEgyedi={(nev) => addEgyediLine(pi, nev)}
             onPatchLine={(li, patch) => patchLine(pi, li, patch)}
+            onRequestArFrissites={(li) => setPendingArFrissites({ pi, li })}
             onRemoveLine={(li) =>
               updatePlan((draft) => {
                 draft.fazisok[pi].sorok.splice(li, 1);
@@ -625,6 +658,50 @@ export default function PlanEditorPage() {
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
+
+      <AlertDialog.Root
+        open={pendingArFrissites !== null}
+        onOpenChange={(open) => !open && setPendingArFrissites(null)}
+      >
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Ár frissítése az árlistából</AlertDialog.Title>
+          <AlertDialog.Description size="2" style={{ whiteSpace: 'pre-line' }}>
+            {pendingSor &&
+              pendingFrissites &&
+              [
+                `${pendingSor.nevSnapshot} — Listaár: ${formatMoney(pendingFrissites.regi, currency, nyelv)} → ${formatMoney(pendingFrissites.uj, currency, nyelv)}`,
+                pendingSor.tenylegesEgysegar !== pendingSor.listaEgysegar
+                  ? 'A kézzel megadott ajánlati ár törlődik, a sor az új listaárra áll.'
+                  : '',
+                `Hatás a tervre:\nKezelések összege: ${formatMoney(sorszintuOsszeg, currency, nyelv)} → ${formatMoney(sorokOsszeg(pendingUjFazisok), currency, nyelv)}` +
+                  (kedvezmenyAktiv
+                    ? `\nFizetendő: ${formatMoney(grand, currency, nyelv)} → ${formatMoney(tervVegosszeg(pendingUjFazisok, plan.kedvezmenyOsszeg), currency, nyelv)}`
+                    : ''),
+              ]
+                .filter(Boolean)
+                .join('\n\n')}
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                onClick={() => {
+                  if (pendingArFrissites && pendingFrissites) {
+                    patchLine(pendingArFrissites.pi, pendingArFrissites.li, arFrissitesPatch(pendingFrissites));
+                  }
+                  setPendingArFrissites(null);
+                }}
+              >
+                Frissítés
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Box>
   );
 }
@@ -701,6 +778,7 @@ function PhaseSection({
   onAdd,
   onAddEgyedi,
   onPatchLine,
+  onRequestArFrissites,
   onRemoveLine,
   onRestoreLine,
   onRename,
@@ -728,6 +806,7 @@ function PhaseSection({
   onAdd: (item: Tetel) => void;
   onAddEgyedi: (nev: string) => void;
   onPatchLine: (li: number, patch: Partial<Sor>) => void;
+  onRequestArFrissites: (li: number) => void;
   onRemoveLine: (li: number) => void;
   onRestoreLine: (li: number, sor: Sor) => void;
   onRename: (v: string) => void;
@@ -892,7 +971,9 @@ function PhaseSection({
                       fogterkep={fogterkep}
                       fallback={sorFallback(l, nyelv, tetelekById)}
                       tetel={tetelekById.get(l.tetelId)}
+                      arFrissitesJavaslat={arFrissites(l, currency, tetelekById)}
                       onPatch={(p) => onPatchLine(li, p)}
+                      onRequestArFrissites={() => onRequestArFrissites(li)}
                       onRemove={() => removeWithUndo(li, l)}
                     />
                   </Fragment>
@@ -1019,7 +1100,9 @@ function LineRow({
   fogterkep,
   fallback,
   tetel,
+  arFrissitesJavaslat,
   onPatch,
+  onRequestArFrissites,
   onRemove,
 }: {
   pi: number;
@@ -1034,7 +1117,10 @@ function LineRow({
   /** A sor mögötti árlistai tétel, ha `tetelId`-hez kötött (a `csomag`/leírás/
       név-eltérés forrása); egyedi sornál `undefined`. */
   tetel: Tetel | undefined;
+  /** `null`, ha a sor követi a mai árlistát -- lásd `domain/arKoveti.ts` (backlog-61, D69). */
+  arFrissitesJavaslat: ArFrissites | null;
   onPatch: (patch: Partial<Sor>) => void;
+  onRequestArFrissites: () => void;
   onRemove: () => void;
 }) {
   // A fogtérkép-kattintással létrehozott, még meg nem nevezett sor -- ez az
@@ -1270,10 +1356,33 @@ function LineRow({
         </Flex>
       </Table.Cell>
 
-      <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums', color: t.uiTextFaint }}>
-        {/* Egyedi sornál nincs értelmezhető árlistai referenciaár -- lásd
-            sorMezokEgyedibol. */}
-        {egyedi ? '—' : formatMoney(line.listaEgysegar, currency, nyelv)}
+      <Table.Cell justify="end">
+        <Flex align="center" gap="1" justify="end">
+          <Text
+            style={{ fontVariantNumeric: 'tabular-nums', color: t.uiTextFaint, whiteSpace: 'nowrap' }}
+          >
+            {/* Egyedi sornál nincs értelmezhető árlistai referenciaár -- lásd
+                sorMezokEgyedibol. */}
+            {egyedi ? '—' : formatMoney(line.listaEgysegar, currency, nyelv)}
+          </Text>
+          <IconButton
+            type="button"
+            variant="ghost"
+            color="gray"
+            size="1"
+            aria-label="Ár frissítése az árlistából"
+            title="Ár frissítése az árlistából – a kézzel megadott ajánlati ár törlődik"
+            onClick={onRequestArFrissites}
+            // A ⟳ mennyiség-visszakapcsoló (fent, Db cella) mintája: mindig a
+            // DOM-ban marad, csak `visibility: hidden`-nel tűnik el, hogy a
+            // cella szélessége ne ugráljon soronként.
+            tabIndex={arFrissitesJavaslat ? 0 : -1}
+            aria-hidden={arFrissitesJavaslat ? undefined : true}
+            style={{ visibility: arFrissitesJavaslat ? 'visible' : 'hidden', color: t.warn }}
+          >
+            <UpdateIcon />
+          </IconButton>
+        </Flex>
       </Table.Cell>
 
       <Table.Cell justify="end">

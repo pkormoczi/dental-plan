@@ -217,7 +217,10 @@ export default function PatientPlanChains({
         }),
         storage.loadPatientData(patient.dirName),
       ]);
-      copyPlanIntoDraft(planMasolatKent(plan, settings, todayIso(), master), patient.dirName);
+      copyPlanIntoDraft(
+        planMasolatKent(plan, settings, todayIso(), master, priceList),
+        patient.dirName,
+      );
       navigate('/paciens');
     } catch (err) {
       setActionError({

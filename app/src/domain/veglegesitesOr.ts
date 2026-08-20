@@ -12,6 +12,7 @@
 // oldal letiltása) -- ez utóbbi nem ehhez a lánchoz, hanem a 4. oldal
 // renderjéhez tartozik.
 
+import { arElteroSorok, type ArElteroSorok } from './arKoveti';
 import {
   hianyzoCsomagLeirasok,
   kitoltetlenSorok,
@@ -29,17 +30,20 @@ export type VeglegesitesLepes =
   | 'missing-fields'
   | 'de-fallback-names'
   | 'zero-price-rows'
-  | 'missing-leiras';
+  | 'missing-leiras'
+  | 'price-drift';
 
 // Rendezett lánc -- a sorrend implementációs döntés: a páciensadat és a
 // nyelvi/jogi/pénzügyi probléma megelőzi a kommunikációs jellegű
 // leírás-hiányt (docs/03-funkcionalis-spec.md § 4. Előnézet és
-// véglegesítés).
+// véglegesítés). A `price-drift` (backlog-61, D63) utolsó lépésként --
+// önmagában sosem blokkolja a többi lépés kommunikációs célját.
 export const VEGLEGESITES_LEPESEK: VeglegesitesLepes[] = [
   'missing-fields',
   'de-fallback-names',
   'zero-price-rows',
   'missing-leiras',
+  'price-drift',
 ];
 
 export interface VeglegesitesDiagnozis {
@@ -79,6 +83,13 @@ export interface VeglegesitesDiagnozis {
    * dialógust nyitna egy tényleges zár helyett.
    */
   orvosProblema: OrvosProblema | null;
+  /**
+   * Azon sorok, amik eltérnek a mai árlistától -- elavult pillanatkép
+   * ÉS/VAGY kézzel felülírt ajánlati ár (backlog-61, D69,
+   * `domain/arKoveti.ts`). PUHA figyelmeztetés: a kedvezmény/felár legitim,
+   * szándékos állapot is lehet (D9/D25), ezért nem blokkol.
+   */
+  arElteresek: ArElteroSorok;
   /** Melyik PUHA lépés alkalmazható -- ez vezérli a `kovetkezoLepes` bejárását. */
   alkalmazhato: Record<VeglegesitesLepes, boolean>;
 }
@@ -133,6 +144,7 @@ export function veglegesitesDiagnozis(
   const hianyzoLeirasok = leirasokMutatasa ? hianyzoCsomagLeirasok(plan, priceList) : [];
   const masterElteresek = master ? masterSnapshotDiff(master, plan.paciens) : [];
   const orvosProblema = szamitOrvosProblema(plan.orvos, aktivOrvosNevek);
+  const arElteresek = arElteroSorok(plan, priceList);
 
   return {
     nameMissing,
@@ -143,11 +155,13 @@ export function veglegesitesDiagnozis(
     hianyzoLeirasok,
     masterElteresek,
     orvosProblema,
+    arElteresek,
     alkalmazhato: {
       'missing-fields': otherFieldsMissing,
       'de-fallback-names': nevProblemaSzama > 0,
       'zero-price-rows': nullaSorok.length > 0,
       'missing-leiras': hianyzoLeirasok.length > 0,
+      'price-drift': arElteresek.elavult.length + arElteresek.keziAr.length > 0,
     },
   };
 }

@@ -337,3 +337,71 @@ describe('planMasolatKent', () => {
     expect(masolat.orvos).not.toBe(plan.orvos);
   });
 });
+
+// backlog-61 (D63): a 49. tétel 2. döntésének (VÁRAKOZÓ) végrehajtása --
+// a `priceList` paraméter a default-following sorokat az aktuális
+// árlistára frissíti (`domain/arKoveti.ts` `frissArlistaval()`).
+describe('planMasolatKent — priceList paraméterrel (D140)', () => {
+  const ujPriceList: PriceList = {
+    schemaVersion: 1,
+    arlistaVerzio: '2026-08-01',
+    modositva: '2026-08-01',
+    kategoriak: [],
+    tetelek: [
+      {
+        id: 't001',
+        kategoriaId: 'k1',
+        sorrend: 1,
+        aktiv: true,
+        gyakori: false,
+        nev: { hu: 'Fogeltávolítás', de: 'Zahnextraktion' },
+        ar: { HUF: null, EUR: { tipus: 'FIX', ertek: 120 } },
+      },
+    ],
+  };
+
+  it('priceList nélkül a sorok és az arlistaVerzio változatlanul másolódnak (a korábbi viselkedés)', () => {
+    const plan = makePlan();
+    const masolat = planMasolatKent(plan, settings, '2026-08-10');
+    expect(masolat.fazisok).toEqual(plan.fazisok);
+    expect(masolat.arlistaVerzio).toBe(plan.arlistaVerzio);
+  });
+
+  it('egy default-following sort az AKTUÁLIS árlistára frissít, az arlistaVerzio is átáll', () => {
+    const plan = makePlan({
+      fazisok: [
+        {
+          sorszam: 1,
+          megnevezes: '1. kezelés',
+          megjegyzes: '',
+          sorok: [
+            {
+              tetelId: 't001',
+              nevSnapshot: 'Zahnextraktion',
+              savos: false,
+              fogak: '16',
+              mennyiseg: 1,
+              listaEgysegar: 100,
+              tenylegesEgysegar: 100,
+            },
+          ],
+        },
+      ],
+    });
+    const masolat = planMasolatKent(plan, settings, '2026-08-10', null, ujPriceList);
+
+    expect(masolat.fazisok[0].sorok[0].listaEgysegar).toBe(120);
+    expect(masolat.fazisok[0].sorok[0].tenylegesEgysegar).toBe(120);
+    expect(masolat.arlistaVerzio).toBe('2026-08-01');
+    expect(masolat.osszesitok.kezelesekOsszesen).toBe(120);
+  });
+
+  it('egy kézzel felülírt (kedvezményes) sort NEM frissít, az arlistaVerzio attól még átáll', () => {
+    const plan = makePlan(); // tenylegesEgysegar 90 !== listaEgysegar 100 -- kézi ár
+    const masolat = planMasolatKent(plan, settings, '2026-08-10', null, ujPriceList);
+
+    expect(masolat.fazisok[0].sorok[0].listaEgysegar).toBe(100);
+    expect(masolat.fazisok[0].sorok[0].tenylegesEgysegar).toBe(90);
+    expect(masolat.arlistaVerzio).toBe('2026-08-01');
+  });
+});
