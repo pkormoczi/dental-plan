@@ -1929,3 +1929,23 @@ karbantartási kör négy önálló javítása.
   (docs/01-attekintes-es-dontesek.md D75, docs/02-domain-modell.md
   § "Csak ajánlat mód", docs/03-funkcionalis-spec.md § 4 "Előnézet és
   véglegesítés" és § 5 "Terv-láncok és verziók").
+
+---
+
+### 66. tétel: Előnézet oldal layout és validation checklist — KÉSZ (2026-08-20)
+
+- **Méret:** kicsi (egy fájl érdemi átalakítása + egy új komponens, nincs
+  új teszt — a meglévő `PreviewPage.test.tsx` lefedettsége változatlanul
+  a markup-átalakítás fölött is zöld maradt).
+- **Kereteket sért?** Nem — új D79 (`docs/01-attekintes-es-dontesek.md`),
+  nincs sémaváltozás.
+- **Megvalósítás:** az Előnézet oldal az addigi egyoszlopos elrendezésről
+  kéthasábosra vált: a PDF-előnézet balra (elsődleges, nagy), a
+  véglegesítési checklist (D76) jobbra, natív Radix `Grid`
+  `areas`/`gridArea` responsive propokkal — szűk viewporton a checklist
+  kerül a PDF FÖLÉ, nem alá. A „Csak ajánlat” kapcsoló és a Letöltés/
+  Véglegesítés gombsor a checklist hasáb aljára költözött. A checklist
+  renderelése önálló komponensbe (`pages/previewPage/
+  VeglegesitesChecklist.tsx`) került, kiemelve a `PreviewPage.tsx`-ből
+  (docs/01-attekintes-es-dontesek.md D79, docs/03-funkcionalis-spec.md
+  § 4 "Előnézet és véglegesítés" → "Elrendezés").

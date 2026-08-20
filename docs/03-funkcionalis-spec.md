@@ -744,6 +744,16 @@ látja, legfeljebb egy halk jelzéssel, hogy a takarítás elmaradt.
 Meglévő terv szerkesztése **soha nem írja felül** a korábbi verziómappát
 (D4).
 
+### Elrendezés (D79)
+
+Desktopon kéthasábos: a PDF-előnézet balra (elsődleges, nagy), a lenti
+véglegesítési checklist jobbra — a hasáb alján a „Csak ajánlat” kapcsolóval
+és a Letöltés/Véglegesítés gombsorral (a doki fentről lefelé olvassa
+végig a checklistet, a sor végén ott a gomb). Szűk (mobil/keskeny)
+viewporton egyoszlopos elrendezésre esik vissza — a checklist kerül a PDF
+FÖLÉ, nem alá: a validációs állapotot előbb kell látni, mint magát a
+dokumentumot.
+
 ### Véglegesítési checklist (D76)
 
 A tartalmi validáció egységes, navigálható, `hard`/`soft`/`info`

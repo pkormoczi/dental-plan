@@ -63,6 +63,18 @@ elrendezés a PDF-et és a validációs állapotot egymás alá kényszeríti,
 ami a nagy PDF-iframe (`80vh`) miatt a checklistet gyakorlatilag
 láthatatlanná tenné, ha egyszerűen a PDF alá kerülne desktopon is.
 
+**A „Csak ajánlat” checkbox és a Letöltés/Véglegesítés gombsor a jobb
+(checklist) hasáb ALJÁRA kerül, a checklist-sorok UTÁN — explicit
+megkérdezve, megerősítve.** Nem sticky, és nem marad a két hasáb fölött,
+teljes szélességben (ahogy ma). Szűk viewporton ugyanez a sorrend
+öröklődik: checklist (a PDF fölött) → checkbox + gombsor, a checklist
+alján.
+
+**Miért:** a doki fentről lefelé végigolvassa a checklistet, és a lista
+végén ott a gomb — a logikai sorrend („előbb ezt nézd át, aztán
+véglegesíts”) így vizuálisan is adott, nem egy külön, a checklisttől
+független sávban ismétlődik.
+
 ### 2. A szekvenciális „Folytatás” modal-lánc megszűnik (user-döntés)
 
 **Explicit megkérdezve, megerősítve:** a mai `AlertDialog`-alapú

@@ -469,6 +469,14 @@ véglegesítés) segédfüggvényei, szintén ne írd újra őket:
   `kitoltetlenSorok()`/`nullaOsszeguSorok()` mintáján, a 0 soros
   fázisokat sorolja fel; a véglegesítés-őr `'ures-fazis'` HARD
   tételeként jelenik meg
+- `app/src/pages/previewPage/VeglegesitesChecklist.tsx` — D79: a fenti
+  `VeglegesitesCsekklista` read-only renderelése (súlyosság→szín,
+  route→gombfelirat leképezéssel), kiemelve a `PreviewPage.tsx`-ből a
+  kéthasábos elrendezés (PDF balra, checklist jobbra, `docs/03-
+  funkcionalis-spec.md` § 4. „Elrendezés") jobb oldali hasábjaként. A
+  `nyelvi-review` tétel guided-review gombja (`NyelviReviewContext`) egy
+  opcionális `nyelviReviewAction` propon jön be — a komponens maga nem
+  ismeri a Contextet
 
 A D31 (`docs/01-attekintes-es-dontesek.md`) segédfüggvénye:
 - `savosHatarForditott(ar)` (`app/src/domain/money.ts`) — igaz, ha egy
