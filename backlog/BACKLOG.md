@@ -36,15 +36,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-67-veglegesitesi-validacio-terv.md`
 
-### 68. tétel — PDF előnézet generálás és invalidálási életciklus
-  (a `backlog/redesign/` redesign-döntéssorozat DP-052 tétele) — a
-  D598–606 tételes ellenőrzése szerint a mai `usePDF()`-alapú előnézet
-  többsége már megfelel a redesignnak (auto-generálás, stale-görgetés,
-  historical PDF elkülönítve); az egyetlen valódi hiány egy explicit
-  "Újrapróbálás" gomb PDF-render hiba esetén. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-68-pdf-elonezet-eletciklus-terv.md`
-
 ### 69. tétel — Atomikus véglegesítés (PDF+JSON)
   (a `backlog/redesign/` redesign-döntéssorozat DP-053 tétele) — kódban
   azonosított hiba: a `doFinalize()` egyetlen try blokkban futtatja a

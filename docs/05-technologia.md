@@ -161,6 +161,15 @@ el. Redundáns, és pont ezért jó.
 
 Betöltéskor: elsődlegesen a `terv.json`, fallback a PDF mellékletéből.
 
+A `@react-pdf/renderer` `usePDF()` hook-jának deklarált TypeScript-típusa
+`error: string | null`, de futásidőben a nyers `Error` objektumot adja —
+a hívónak `instanceof Error`-ral kell szöveggé alakítania, különben egy JSX
+Callout-ban renderelve összeomlik. Hibán át a hook megőrzi az utolsó
+sikeresen renderelt PDF `url`/`blob`-ját (nem törli), tehát egy render-hiba
+után is marad megjeleníthető, de már NEM aktuális előnézet — az Előnézet
+oldal (`PreviewPage.tsx`) ezt beszürkítve mutatja, letöltést és
+véglegesítést nem enged, amíg a hiba fennáll (D73).
+
 ## Fontok
 
 A nyomtatvány magyar szöveg, tehát a fontnak kell `ő` és `ű`. A
