@@ -22,16 +22,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   VÁRAKOZÓ döntését. A döntéseket lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-61-arlista-snapshot-refresh-terv.md`
 
-### 62. tétel — Többpénznemes listaár / ajánlati ár state
-  (a `backlog/redesign/` redesign-döntéssorozat DP-045 tétele) — a
-  `Sor` ma egyetlen implicit-pénznemű árpárt tart, a pénznemváltás
-  DESTRUKTÍV (törli a sorokat), miközben az árlistai `Tetel.ar` már ma
-  is mindkét pénznemet tartja. Ez a tétel additív „másik pénznem"
-  stash-mezőt ad a sorhoz, nem-destruktívvá téve a váltást, séma-
-  bővítés nélkül. A 63./64. tétel erre épül. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-62-tobbpenznemes-ar-terv.md`
-
 ### 63. tétel — Egyedi végösszeg
   (a `backlog/redesign/` redesign-döntéssorozat DP-046 tétele) — a
   „Kerek végösszeg" ma abszolút összeg (D25 szerint helyesen), de

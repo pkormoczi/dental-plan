@@ -200,7 +200,7 @@ describe('hianyzoCsomagLeirasok', () => {
 });
 
 describe('araztalanSorok', () => {
-  it('a terv pénznemében beárazatlan, 0 Ft-os, névvel ellátott sort jelez (62. tétel, D63)', () => {
+  it('a terv pénznemében beárazatlan, 0 Ft-os, névvel ellátott sort jelez (62. tétel, D69)', () => {
     const plan = { ...makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: 'All-on-4 csomag', listaEgysegar: 0, tenylegesEgysegar: 0 })]]), penznem: 'EUR' as const };
     expect(araztalanSorok(plan, priceList)).toEqual(['All-on-4 csomag']);
   });

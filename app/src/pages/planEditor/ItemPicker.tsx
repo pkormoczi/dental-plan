@@ -107,7 +107,7 @@ export default function ItemPicker({
   const egyediElerheto = Boolean(onPickEgyedi) && q.trim() !== '';
   const opcioSzam = results.length + (egyediElerheto ? 1 : 0);
 
-  // 62. tétel (D63): `available` már nem szűr `currency`-re (egy
+  // 62. tétel (D69): `available` már nem szűr `currency`-re (egy
   // beárazatlan tétel is kereshető/felvehető) -- az üres-találat jegyzet
   // ezért itt, nem az `available.length`-ből dönti el, hogy a doki egy
   // olyan pénznemben keres, amiben SEMMI sincs beárazva.

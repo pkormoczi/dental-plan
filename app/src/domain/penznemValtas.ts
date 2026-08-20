@@ -3,7 +3,7 @@
 // pénznemű, D21). Pénznemváltáskor korábban a sorok törlődtek
 // (`PatientPage.tsx` régi `applyPenznem()`), mert nem volt hova
 // "elmenteni" a másik pénznem állapotát. A `Sor.masikPenznemAr` additív
-// stash-mezője (domain/types.ts) ezt oldja fel -- lásd D63
+// stash-mezője (domain/types.ts) ezt oldja fel -- lásd D69
 // (docs/01-attekintes-es-dontesek.md).
 
 import { basePrice } from './money';

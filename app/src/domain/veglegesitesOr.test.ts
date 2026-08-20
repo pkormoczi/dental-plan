@@ -170,12 +170,12 @@ describe('veglegesitesDiagnozis', () => {
     expect(kikapcsolva.alkalmazhato['missing-leiras']).toBe(false);
   });
 
-  it('62. tétel (D63): a terv pénznemében beárazatlan, 0 Ft-os sor az araztalanSorok kemény listában jelenik meg -- a puha "zero-price-rows" lánc-tag ettől függetlenül, a 0 összeg miatt szintén jelez (nullaOsszeguSorok)', () => {
+  it('62. tétel (D69): a terv pénznemében beárazatlan, 0 Ft-os sor az araztalanSorok kemény listában jelenik meg -- a puha "zero-price-rows" lánc-tag ettől függetlenül, a 0 összeg miatt szintén jelez (nullaOsszeguSorok)', () => {
     const plan = makePlan(
       [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', listaEgysegar: 0, tenylegesEgysegar: 0 })]],
       { penznem: 'EUR' },
     );
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
 
     expect(diag.araztalanSorok).toEqual(['Fogeltávolítás']);
     expect(diag.alkalmazhato['zero-price-rows']).toBe(true);
@@ -186,7 +186,7 @@ describe('veglegesitesDiagnozis', () => {
       [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', listaEgysegar: 0, tenylegesEgysegar: 12000 })]],
       { penznem: 'EUR' },
     );
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
     expect(diag.araztalanSorok).toEqual([]);
   });
 

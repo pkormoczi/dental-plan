@@ -60,7 +60,7 @@ import ItemPicker from './planEditor/ItemPicker';
  * `domain/money.ts` `basePrice()`, CLAUDE.md "Meglévő segédfüggvények",
  * ne írd újra.
  *
- * 62. tétel (D63): egy `currency`-ben nem beárazott tétel (`ar[currency] ==
+ * 62. tétel (D69): egy `currency`-ben nem beárazott tétel (`ar[currency] ==
  * null`) is felvehető -- a keresőben ma már megjelenik (`available` a
  * PlanEditorPage-en nem szűr pénznemre). Ilyenkor a sor `listaEgysegar`/
  * `tenylegesEgysegar` `0`-n indul, "hiányzó ár" állapotban -- lásd
@@ -190,7 +190,7 @@ export default function PlanEditorPage() {
     return kat ? resolveNev(kat.nev, nyelv).szoveg : 'Egyéb';
   };
 
-  // 62. tétel (D63) C5: egy `currency`-ben nem beárazott tétel is
+  // 62. tétel (D69) C5: egy `currency`-ben nem beárazott tétel is
   // kereshető/felvehető marad -- a kereső ma nem szűr pénznemre, csak
   // aktivitásra (lásd `sorMezokTetelbol()`). A gyorsgombok (`frequent`)
   // SZÁNDÉKOSAN a beárazott részhalmazra szorítkoznak: egy kattintásra

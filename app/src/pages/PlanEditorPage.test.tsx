@@ -716,7 +716,7 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
 
   it('shows the empty-currency message in the search when NOTHING matches and the plan currency has zero priced items', async () => {
     const user = userEvent.setup();
-    seedWithGermanEnabledAndNoEurPrices();
+    seedWithNoEurPrices();
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
@@ -729,14 +729,14 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
-    // 62. tétel (D63) óta egy beárazatlan tétel is találat -- ez a jelzés
+    // 62. tétel (D69) óta egy beárazatlan tétel is találat -- ez a jelzés
     // csak akkor jelenik meg, ha a NÉVegyezés is nulla találatot ad.
     await user.type(search, 'zzznincsilyentetel');
 
     expect(await screen.findByText(/egyetlen aktív tétel sincs beárazva/)).toBeInTheDocument();
   });
 
-  it('62. tétel (D63): egy a terv pénznemében beárazatlan tétel is megtalálható és felvehető, "—" listaárral, 0-ás ajánlati árral', async () => {
+  it('62. tétel (D69): egy a terv pénznemében beárazatlan tétel is megtalálható és felvehető, "—" listaárral, 0-ás ajánlati árral', async () => {
     const user = userEvent.setup();
     seedWithNoEurPrices();
     render(<App />);

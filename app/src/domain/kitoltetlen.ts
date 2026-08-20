@@ -63,7 +63,7 @@ export function nullaOsszeguSorok(plan: Plan): string[] {
 }
 
 /**
- * KEMÉNY blokk (62. tétel, D63): névvel ellátott sorok, amiknek a tétele
+ * KEMÉNY blokk (62. tétel, D69): névvel ellátott sorok, amiknek a tétele
  * nincs beárazva a terv pénznemében (`nincsListaar()`, domain/penznemValtas.ts),
  * ÉS a doki még nem adott meg kézi ajánlati árat (`tenylegesEgysegar === 0`).
  * Szándékosan KEMÉNY, nem a `nullaOsszeguSorok` puha ágán -- egy ilyen sor

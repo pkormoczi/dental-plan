@@ -120,7 +120,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
   });
 });
 
-describe('PatientPage -- 62. tétel (D63): pénznemváltás nem törli a sorokat', () => {
+describe('PatientPage -- 62. tétel (D69): pénznemváltás nem törli a sorokat', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';

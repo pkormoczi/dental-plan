@@ -106,7 +106,7 @@ export default function PatientPage() {
     setPlan((prev) => {
       const next = structuredClone(prev);
       next.penznem = penznem;
-      // 62. tétel (D63): a kilépő pénznem árpárja soronként a
+      // 62. tétel (D69): a kilépő pénznem árpárja soronként a
       // `masikPenznemAr` stash-be kerül, nem törlődik -- lásd
       // domain/penznemValtas.ts `sorPenznemValtassal()`.
       const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));

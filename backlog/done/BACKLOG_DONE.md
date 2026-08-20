@@ -1698,3 +1698,36 @@ karbantartási kör négy önálló javítása.
   docs/02-domain-modell.md § "beallitasok.json", docs/03-funkcionalis-
   spec.md § 2 "Kezelőorvos", § 4 "Előnézet és véglegesítés", § 7
   "Rendelő adatai").
+
+---
+
+### 62. tétel: Többpénznemes listaár / ajánlati ár state — KÉSZ (2026-08-20)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D69 (`docs/01-attekintes-es-dontesek.md`),
+  additív mező, `schemaVersion` nem emelkedett.
+- **Valódi haszon:** a pénznemváltás korábban DESTRUKTÍV volt (törölte a
+  terv összes sorát), mert nem volt hova "elmenteni" a másik pénznem
+  állapotát — egy félig kész HUF-terv EUR-ra váltása a doki teljes
+  munkáját elvitte, holott az árlistában az EUR árak már ott voltak.
+  Emellett egy a kiválasztott pénznemben nem beárazott tétel a keresőben
+  meg sem jelent, így a doki nem tudott kézi ajánlati árral felvenni egy
+  legitim tételt.
+- **Megvalósítás:** a `Sor` additív `masikPenznemAr?: { listaEgysegar;
+  tenylegesEgysegar } | null` stash-mezőt kapott
+  (`domain/penznemValtas.ts` `sorPenznemValtassal()`): kilépéskor a
+  jelenlegi árpár ide kerül, belépéskor a korábban itt mentett érték
+  emelkedik elő (kézzel írt ár sosem vész el egy oda-vissza váltásban),
+  ennek hiányában az árlistából szedődik újra, egyébként a sor "hiányzó
+  ár" (`0/0`) állapotba kerül, törlés nélkül. A pénznemváltás
+  megerősítő dialógusa megmaradt, de hatás-számlálóval (hány sor kapja
+  vissza a mentett árát, hány frissül az árlistából, hány marad ár
+  nélkül) és semleges (nem piros) gombbal, mert nincs adatvesztés. A
+  kereső (`PlanEditorPage.tsx`) többé nem szűr a terv pénznemére — egy
+  beárazatlan tétel is kereshető/felvehető, `—` listaárral; a
+  beárazatlan, kézi árat sem kapott, névvel ellátott sor viszont új
+  KEMÉNY véglegesítés-blokk (`domain/kitoltetlen.ts` `araztalanSorok()`).
+  Nincs automatikus HUF↔EUR átváltás egyik ágban sem
+  (docs/01-attekintes-es-dontesek.md D11/D69, docs/02-domain-modell.md
+  § Pénznemváltás, docs/03-funkcionalis-spec.md § 2 "Dokumentum nyelve /
+  Pénznem" és § 4 "Előnézet és véglegesítés").
