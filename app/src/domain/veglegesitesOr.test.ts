@@ -107,9 +107,11 @@ describe('veglegesitesDiagnozis', () => {
     expect(diag.hianyzoLeirasok).toEqual([]);
     expect(diag.masterElteresek).toEqual([]);
     expect(diag.arElteresek).toEqual({ elavult: [], keziAr: [] });
+    expect(diag.nyelviMismatchek).toEqual([]);
     expect(diag.alkalmazhato).toEqual({
       'missing-fields': false,
       'de-fallback-names': false,
+      'nyelvi-review': false,
       'zero-price-rows': false,
       'missing-leiras': false,
       'price-drift': false,
@@ -188,6 +190,39 @@ describe('veglegesitesDiagnozis', () => {
     expect(diag.alkalmazhato['price-drift']).toBe(true);
   });
 
+  // 65. tétel (D72): a doki kézzel írt szövegeinek nyelvi review-ja --
+  // SZÁNDÉKOSAN külön a `nevProblemak`/`de-fallback-names` lépéstől (az az
+  // ÁRLISTAI fordítás hiányát jelzi), lásd `domain/nyelviReview.ts`.
+  describe('nyelviMismatchek (65. tétel, D72)', () => {
+    it('kézzel átírt sornév, ami nem a terv nyelvén íródott, a "nyelvi-review" lépést teszi alkalmazhatóvá', () => {
+      const plan = makePlan([[sor({ nevNyelv: { authoredInLanguage: 'de' } })]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
+
+      expect(diag.nyelviMismatchek).toEqual([
+        { cel: { mezo: 'sorNev', fazisIndex: 0, sorIndex: 0 }, cimke: 'Fogeltávolítás', szoveg: 'Fogeltávolítás' },
+      ]);
+      expect(diag.alkalmazhato['nyelvi-review']).toBe(true);
+    });
+
+    it('feloldott (reviewedForLanguage a terv nyelvére) szöveg nem teszi alkalmazhatóvá a lépést', () => {
+      const plan = makePlan([
+        [sor({ nevNyelv: { authoredInLanguage: 'de', reviewedForLanguage: 'hu' } })],
+      ]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
+
+      expect(diag.nyelviMismatchek).toEqual([]);
+      expect(diag.alkalmazhato['nyelvi-review']).toBe(false);
+    });
+
+    it('a `de-fallback-names`-től FÜGGETLENÜL él -- egy magyar terven is jelez, ahol a de-fallback-names sosem alkalmazható', () => {
+      const plan = makePlan([[sor({ nevNyelv: { authoredInLanguage: 'de' } })]], { nyelv: 'hu' });
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
+
+      expect(diag.alkalmazhato['de-fallback-names']).toBe(false);
+      expect(diag.alkalmazhato['nyelvi-review']).toBe(true);
+    });
+  });
+
   it('62. tétel (D71): a terv pénznemében beárazatlan, 0 Ft-os sor az araztalanSorok kemény listában jelenik meg -- a puha "zero-price-rows" lánc-tag ettől függetlenül, a 0 összeg miatt szintén jelez (nullaOsszeguSorok)', () => {
     const plan = makePlan(
       [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', listaEgysegar: 0, tenylegesEgysegar: 0 })]],
@@ -246,6 +281,7 @@ describe('veglegesitesDiagnozis', () => {
       expect(diag.alkalmazhato).toEqual({
         'missing-fields': false,
         'de-fallback-names': false,
+        'nyelvi-review': false,
         'zero-price-rows': false,
         'missing-leiras': false,
         'price-drift': false,

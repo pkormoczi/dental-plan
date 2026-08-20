@@ -259,6 +259,52 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
   });
 });
 
+describe('PatientPage -- 65. tétel (D72): nyelvváltás önmagában nem módosítja a nyelvi review-metaadatot', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('magyarul gépelt, kézzel átírt sornév nyelvváltás UTÁN mismatch-jelvényt kap a szerkesztőben -- a váltás maga nem írta át a metaadatot, csak leleplezte az eltérést', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.type(nameInput, 'Teszt Elek');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // Kézzel átír a sor nevén, MAGYAR dokumentumon -- a `sorPatchNyelvvel`
+    // ezt `authoredInLanguage: 'hu'`-ra stampeli, ami a mai (hu) nyelvvel
+    // nem mismatch, tehát a szerkesztőben MÉG nincs "DE"/"HU szöveg" jelvény.
+    const nameField = screen.getByDisplayValue('Fogeltávolítás');
+    await user.clear(nameField);
+    await user.type(nameField, 'Kihúzás megbeszélt módon');
+    expect(screen.queryByText('HU szöveg')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+    await screen.findByText('Dokumentum nyelve');
+    await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
+    await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+
+    // A nyelváltás a metaadatot NEM módosította (D466) -- a sor
+    // `authoredInLanguage`-e továbbra is 'hu', de a dokumentum most 'de',
+    // ez a mismatch, amit a szerkesztő most már jelez.
+    await user.click(screen.getByRole('link', { name: 'Kezelések' }));
+    expect(await screen.findByDisplayValue('Kihúzás megbeszélt módon')).toBeInTheDocument();
+    expect(screen.getByText('HU szöveg')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Nyelv ellenőrizve' })).toBeInTheDocument();
+  });
+});
+
 describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leírást', () => {
   beforeEach(() => {
     localStorage.clear();

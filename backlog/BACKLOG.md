@@ -13,16 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 65. tétel — Manuális szövegek nyelvi review-ja
-  (a `backlog/redesign/` redesign-döntéssorozat DP-048 tétele) —
-  nyelvi review-metaadat (`authoredInLanguage`/`reviewedForLanguage`)
-  sehol nem létezik; a meglévő `sorFallback` egy MÁSIK problémát old
-  meg (árlistai fordítás-hiány, magyar terven nem is fut). Ez a tétel
-  a doki saját, szabad szövegeinek nyelv-ellenőrzését építi ki,
-  guided review-val, a meglévő mechanizmus mellett, nem helyette. A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-65-nyelvi-review-terv.md`
-
 ### 66. tétel — Előnézet oldal layout és validation checklist
   (a `backlog/redesign/` redesign-döntéssorozat DP-050 tétele) — a mai
   Előnézet oldal egyoszlopos, a puha figyelmeztetések (0 Ft-os sorok,

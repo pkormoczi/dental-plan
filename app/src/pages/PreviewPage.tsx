@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
 import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
+import { useNyelviReview } from '../components/NyelviReviewContext';
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
 import { formatMoney } from '../domain/money';
@@ -265,6 +266,8 @@ export default function PreviewPage() {
     updatePdf,
   ]);
 
+  const nyelviReview = useNyelviReview();
+
   const {
     nameMissing,
     uresSorok,
@@ -276,6 +279,7 @@ export default function PreviewPage() {
     masterElteresek,
     orvosProblema,
     arElteresek,
+    nyelviMismatchek,
     alkalmazhato,
   } = veglegesitesDiagnozis(
     plan,
@@ -311,6 +315,29 @@ export default function PreviewPage() {
             .filter(Boolean)
             .join('\n\n') +
           '\n\nA páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?',
+      };
+    }
+    if (step === 'nyelvi-review') {
+      // 65. tétel (D72) -- SZÁNDÉKOSAN külön a fenti `de-fallback-names`
+      // szövegétől: az az ÁRLISTAI fordítás hiányát jelzi, ez a doki SAJÁT,
+      // szabadon gépelt szövegeinek nyelvét (domain/nyelviReview.ts).
+      const MEZO_CIMKE: Record<(typeof nyelviMismatchek)[number]['cel']['mezo'], string> = {
+        fazisNev: 'Fázis neve',
+        fazisMegjegyzes: 'Fázis megjegyzése',
+        sorNev: 'Sor neve',
+        sorLeiras: 'Sor leírása',
+      };
+      return {
+        cim: 'Nyelvi ellenőrzésre váró szövegek',
+        leiras:
+          'Néhány kézzel írt szöveg nem biztos, hogy a dokumentum nyelvén helyes -- ezeket ' +
+          'te gépelted, a rendszer nem tudja automatikusan ellenőrizni.\n\n' +
+          nevListaSzoveg(
+            'Ellenőrzésre vár',
+            nyelviMismatchek.map((m) => `${MEZO_CIMKE[m.cel.mezo]}: ${m.cimke}`),
+          ) +
+          '\n\nAz "Irányított ellenőrzés" gombbal végigvezetünk rajtuk a szerkesztőben, vagy ' +
+          'folytathatod a véglegesítést enélkül is.',
       };
     }
     if (step === 'zero-price-rows') {
@@ -737,6 +764,22 @@ export default function PreviewPage() {
                 Mégse
               </Button>
             </AlertDialog.Cancel>
+            {/* 65. tétel (D72): a guided review indítása -- a session-t a
+                `NyelviReviewContext` tartja, a `NyelviReviewBar.tsx` viszi
+                a szerkesztőbe a dokit; ez a gomb csak elindítja, a dialógus
+                utána a normál "Folytatás"-sal zárul. */}
+            {confirmStep === 'nyelvi-review' && nyelviMismatchek.length > 0 && (
+              <Button
+                variant="soft"
+                color="gray"
+                onClick={() => {
+                  nyelviReview.indit(nyelviMismatchek[0].cel);
+                  setConfirmStep(null);
+                }}
+              >
+                Irányított ellenőrzés
+              </Button>
+            )}
             {/* NEM `AlertDialog.Action` -- az beépítetten bezárja a dialógust
                 minden kattintásra (`onOpenChange(false)`), ami UGYANABBAN a
                 kattintás-eseményben versenyhelyzetbe kerül a

@@ -1479,6 +1479,98 @@ describe('PlanEditorPage -- backlog-60: sor-szintű eltérés-jelzés és reset'
   });
 });
 
+describe('PlanEditorPage -- 65. tétel: nyelvi review-jelvény', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  /**
+   * Magyar terv, aminek egy sora ÉS egy fázisa is kézzel írt szöveget
+   * hordoz, ami korábban NÉMET nyelven íródott (a doki nyelvet váltott a
+   * dokumentumon, de ezt a szöveget azóta nem nézte át) -- a `sorFallback`
+   * (D21) ezt hu terven sosem jelezné, a nyelvi review viszont igen.
+   */
+  function seedWithNyelviMismatch() {
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+    const plan = createBlankPlan(seedSettings, seedPriceList);
+    plan.paciens.nev = 'Teszt Elek';
+    plan.fazisok[0].megnevezes = 'Kontrolle';
+    plan.fazisok[0].megnevezesNyelv = { authoredInLanguage: 'de' };
+    plan.fazisok[0].megjegyzes = 'Nächster Termin in 6 Monaten';
+    plan.fazisok[0].megjegyzesNyelv = { authoredInLanguage: 'de' };
+    plan.fazisok[0].sorok.push({
+      tetelId: 't041',
+      nevSnapshot: 'Zahnextraktion (angepasst)',
+      savos: false,
+      fogak: '',
+      mennyiseg: 1,
+      listaEgysegar: 25000,
+      tenylegesEgysegar: 25000,
+      leirasSnapshot: 'Vor dem Eingriff besprochen',
+      nevNyelv: { authoredInLanguage: 'de' },
+      leirasNyelv: { authoredInLanguage: 'de' },
+    });
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({ schemaVersion: 1, mentve: new Date().toISOString(), plan }),
+    );
+  }
+
+  it('sor neve/leírása és fázis neve/megjegyzése is "DE szöveg" jelvényt kap; "Nyelv ellenőrizve" eltünteti, nincs sikerjelvény', async () => {
+    const user = userEvent.setup();
+    seedWithNyelviMismatch();
+    renderEditor();
+
+    await screen.findByDisplayValue('Zahnextraktion (angepasst)');
+    const jelvenyek = await screen.findAllByText('DE szöveg');
+    expect(jelvenyek).toHaveLength(4); // fázisnév + fázis-megjegyzés + sornév + sorleírás
+
+    const gombok = screen.getAllByRole('button', { name: 'Nyelv ellenőrizve' });
+    expect(gombok).toHaveLength(4);
+
+    await user.click(gombok[0]);
+    expect(screen.getAllByText('DE szöveg')).toHaveLength(3);
+    expect(screen.getAllByRole('button', { name: 'Nyelv ellenőrizve' })).toHaveLength(3);
+    // Nincs "✓ ellenőrizve" sikerjelvény -- a figyelmeztetés egyszerűen eltűnik (D465).
+    expect(screen.queryByText(/ellenőrizve/i)).not.toBeInTheDocument();
+  });
+
+  it('puszta szóköz-javítás NEM hozza vissza a jelvényt; tényleges átírás igen, de a mismatch-elt mezőn a metaadat érintetlen marad (D480)', async () => {
+    const user = userEvent.setup();
+    seedWithNyelviMismatch();
+    renderEditor();
+
+    const nameInput = await screen.findByDisplayValue('Zahnextraktion (angepasst)');
+    await user.type(nameInput, ' ');
+    await user.keyboard('{Backspace}');
+    // Whitespace-only edit -- a mismatch-jelvény továbbra is ott van (nem tűnt el, nem is duplikálódott).
+    expect(await screen.findAllByText('DE szöveg')).toHaveLength(4);
+
+    // Teljes átírás a JELENLEGI (hu) nyelven -- D480: önmagában nem old fel,
+    // a jelvény szám nem csökken (a sor jelvénye ugyanaz marad).
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Fogeltávolítás (átírva)');
+    expect(await screen.findAllByText('DE szöveg')).toHaveLength(4);
+  });
+
+  it('a név reset a "DE szöveg" jelvényt is törli a sornévről', async () => {
+    const user = userEvent.setup();
+    seedWithNyelviMismatch();
+    renderEditor();
+
+    await screen.findByDisplayValue('Zahnextraktion (angepasst)');
+    // A sornévhez tartozó "átírt" jelvény is jelen van (a snapshot eltér az
+    // árlistai magyar névtől) -- a reset mindkettőt egyszerre törli.
+    const nevReset = await screen.findByRole('button', { name: 'Név visszaállítása az árlistaira' });
+    await user.click(nevReset);
+
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+    // 3 marad: fázisnév, fázis-megjegyzés, sorleírás -- a sornév jelvénye eltűnt.
+    expect(await screen.findAllByText('DE szöveg')).toHaveLength(3);
+  });
+});
+
 describe('PlanEditorPage -- backlog-61: árlista-snapshot és explicit refresh', () => {
   beforeEach(() => {
     localStorage.clear();

@@ -12,6 +12,19 @@ export interface LokalizaltSzoveg {
   de: string | null;
 }
 
+/**
+ * Egy kézzel gépelt szabad szöveg nyelvi review-állapota (D72,
+ * `domain/nyelviReview.ts`). `authoredInLanguage`: melyik nyelven íródott a
+ * szöveg JELENLEGI tartalma. `reviewedForLanguage`: ha nem `null`/hiányzó,
+ * a doki explicit elfogadta a szöveget erre a (az `authoredInLanguage`-től
+ * eltérő) nyelvre is -- a mismatch-figyelmeztetést KIZÁRÓLAG ez oldja fel,
+ * a szöveg puszta szerkesztése soha.
+ */
+export interface NyelviReview {
+  authoredInLanguage: Nyelv;
+  reviewedForLanguage?: Nyelv | null;
+}
+
 /** FIX: `ertek` az egységár. SAVOS: `min` az alapérték, a nyomtatványon `*` jelölést kap. */
 export type Ar =
   | { tipus: 'FIX'; ertek: number }
@@ -113,6 +126,17 @@ export interface Sor {
    * `paciensId` additív mintáját követi.
    */
   masikPenznemAr?: { listaEgysegar: number; tenylegesEgysegar: number } | null;
+  /**
+   * A `nevSnapshot` nyelvi review-metaadata (D72) -- `domain/nyelviReview.ts`.
+   * `null`/hiányzó = a szöveg árlistát követ, vagy a mező bevezetése előtti
+   * sor -- egyik esetben sincs mit ellenőrizni. Csak KÉZZEL írt szövegen
+   * értelmezhető; ez az ELSŐ TÁROLT nyelvi jelző a `Sor`-on, szemben a
+   * derived komparátorokkal (`nevKoveti`/`arKoveti`, D70) -- azért tárolt,
+   * mert "milyen nyelven gépelte a doki" utólag semmiből nem vezethető le.
+   */
+  nevNyelv?: NyelviReview | null;
+  /** A `leirasSnapshot` nyelvi review-metaadata -- a `nevNyelv` párja, lásd ott. */
+  leirasNyelv?: NyelviReview | null;
 }
 
 export interface Fazis {
@@ -120,6 +144,10 @@ export interface Fazis {
   megnevezes: string;
   megjegyzes: string;
   sorok: Sor[];
+  /** A `megnevezes` nyelvi review-metaadata (D72) -- lásd `Sor.nevNyelv`. */
+  megnevezesNyelv?: NyelviReview | null;
+  /** A `megjegyzes` nyelvi review-metaadata (D72) -- lásd `Sor.nevNyelv`. */
+  megjegyzesNyelv?: NyelviReview | null;
 }
 
 export interface Osszesitok {

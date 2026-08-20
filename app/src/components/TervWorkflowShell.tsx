@@ -12,6 +12,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Badge, Box, Separator, Text } from '@radix-ui/themes';
 import { LepesGuardProvider, type LepesHandler } from './LepesGuardContext';
+import NyelviReviewBar from './NyelviReviewBar';
+import { NyelviReviewProvider } from './NyelviReviewContext';
 import { t } from '../design/tokens';
 import { WORKFLOW_LEPESEK } from '../domain/workflowLepesek';
 import { useAppState } from '../state/AppState';
@@ -151,7 +153,10 @@ export default function TervWorkflowShell() {
       <Separator size="4" mb="4" />
 
       <LepesGuardProvider value={lepesGuardValue}>
-        <Outlet />
+        <NyelviReviewProvider>
+          <NyelviReviewBar />
+          <Outlet />
+        </NyelviReviewProvider>
       </LepesGuardProvider>
     </Box>
   );

@@ -23,6 +23,7 @@ import {
 } from './kitoltetlen';
 import { masterSnapshotDiff, type MezoElteres } from './masterSnapshotDiff';
 import { fallbackSorok, type FallbackSorokEredmeny } from './nev';
+import { nyelviMismatchek, type NyelviMismatchTetel } from './nyelviReview';
 import { orvosProblema as szamitOrvosProblema, type OrvosProblema } from './orvosok';
 import { elolegTullepi, tervVegosszeg } from './totals';
 import type { Paciens, Plan, PriceList } from './types';
@@ -30,6 +31,7 @@ import type { Paciens, Plan, PriceList } from './types';
 export type VeglegesitesLepes =
   | 'missing-fields'
   | 'de-fallback-names'
+  | 'nyelvi-review'
   | 'zero-price-rows'
   | 'missing-leiras'
   | 'price-drift';
@@ -38,10 +40,15 @@ export type VeglegesitesLepes =
 // nyelvi/jogi/pénzügyi probléma megelőzi a kommunikációs jellegű
 // leírás-hiányt (docs/03-funkcionalis-spec.md § 4. Előnézet és
 // véglegesítés). A `price-drift` (backlog-61, D70) utolsó lépésként --
-// önmagában sosem blokkolja a többi lépés kommunikációs célját.
+// önmagában sosem blokkolja a többi lépés kommunikációs célját. A
+// `nyelvi-review` (65. tétel, D72) a `de-fallback-names` UTÁN áll -- két
+// egymás melletti, nyelvi jellegű lépés, a pénzügyi/kommunikációs lépések
+// ELŐTT, de a `de-fallback-names`-től SZÁNDÉKOSAN külön (más kérdés, lásd
+// `domain/nyelviReview.ts` fejlécét).
 export const VEGLEGESITES_LEPESEK: VeglegesitesLepes[] = [
   'missing-fields',
   'de-fallback-names',
+  'nyelvi-review',
   'zero-price-rows',
   'missing-leiras',
   'price-drift',
@@ -93,6 +100,14 @@ export interface VeglegesitesDiagnozis {
    * szándékos állapot is lehet (D9/D25), ezért nem blokkol.
    */
   arElteresek: ArElteroSorok;
+  /**
+   * Kézzel írt szövegek, amiknek a nyelve nem biztos, hogy a dokumentum
+   * nyelvén helyes -- PUHA figyelmeztetés (65. tétel, D72,
+   * `domain/nyelviReview.ts`). SZÁNDÉKOSAN külön a `nevProblemak`-tól: az
+   * az ÁRLISTAI fordítás hiányát jelzi, ez a doki SAJÁT szövegeinek
+   * nyelvét.
+   */
+  nyelviMismatchek: NyelviMismatchTetel[];
   /** Melyik PUHA lépés alkalmazható -- ez vezérli a `kovetkezoLepes` bejárását. */
   alkalmazhato: Record<VeglegesitesLepes, boolean>;
 }
@@ -152,6 +167,7 @@ export function veglegesitesDiagnozis(
   const masterElteresek = master ? masterSnapshotDiff(master, plan.paciens) : [];
   const orvosProblema = szamitOrvosProblema(plan.orvos, aktivOrvosNevek);
   const arElteresek = arElteroSorok(plan, priceList);
+  const nyelviMismatchekLista = nyelviMismatchek(plan);
 
   return {
     nameMissing,
@@ -164,9 +180,11 @@ export function veglegesitesDiagnozis(
     masterElteresek,
     orvosProblema,
     arElteresek,
+    nyelviMismatchek: nyelviMismatchekLista,
     alkalmazhato: {
       'missing-fields': otherFieldsMissing,
       'de-fallback-names': nevProblemaSzama > 0,
+      'nyelvi-review': nyelviMismatchekLista.length > 0,
       'zero-price-rows': nullaSorok.length > 0,
       'missing-leiras': hianyzoLeirasok.length > 0,
       'price-drift': arElteresek.elavult.length + arElteresek.keziAr.length > 0,

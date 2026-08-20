@@ -25,6 +25,7 @@ import {
 import {
   ArrowDownIcon,
   ArrowUpIcon,
+  CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   InfoCircledIcon,
@@ -34,6 +35,7 @@ import {
 } from '@radix-ui/react-icons';
 import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
+import { useNyelviReview } from '../components/NyelviReviewContext';
 import ToothChartPanel from '../components/ToothChartPanel';
 import ToothPickerPopover from '../components/ToothPickerPopover';
 import { csokkentettMozgas } from '../design/motion';
@@ -45,6 +47,7 @@ import { leirasTulHosszu } from '../domain/leirasHossz';
 import { sorPatchKovetessel } from '../domain/mennyiseg';
 import { basePrice, formatMoney } from '../domain/money';
 import { arlistaiLeiras, leirasKoveti, nevAtirt, resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
+import { nyelviMismatch, reviewElfogadva, reviewIrasUtan, sorPatchNyelvvel } from '../domain/nyelviReview';
 import { nincsListaar } from '../domain/penznemValtas';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
 import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
@@ -74,7 +77,14 @@ function sorMezokTetelbol(
   nyelv: Nyelv,
 ): Pick<
   Sor,
-  'tetelId' | 'nevSnapshot' | 'savos' | 'listaEgysegar' | 'tenylegesEgysegar' | 'leirasSnapshot'
+  | 'tetelId'
+  | 'nevSnapshot'
+  | 'savos'
+  | 'listaEgysegar'
+  | 'tenylegesEgysegar'
+  | 'leirasSnapshot'
+  | 'nevNyelv'
+  | 'leirasNyelv'
 > {
   const ar = item.ar[currency];
   const base = basePrice(ar);
@@ -86,6 +96,9 @@ function sorMezokTetelbol(
     tenylegesEgysegar: base,
     // D27 (docs/01): nincs HU-visszaesés a leírásra, hiányzó fordítás = üres.
     leirasSnapshot: arlistaiLeiras(item, nyelv),
+    // D72: árlistát követő szöveg -- nincs mit nyelvileg ellenőrizni.
+    nevNyelv: null,
+    leirasNyelv: null,
   };
 }
 
@@ -102,9 +115,17 @@ function sorMezokTetelbol(
  */
 function sorMezokEgyedibol(
   nev: string,
+  nyelv: Nyelv,
 ): Pick<
   Sor,
-  'tetelId' | 'nevSnapshot' | 'savos' | 'listaEgysegar' | 'tenylegesEgysegar' | 'leirasSnapshot'
+  | 'tetelId'
+  | 'nevSnapshot'
+  | 'savos'
+  | 'listaEgysegar'
+  | 'tenylegesEgysegar'
+  | 'leirasSnapshot'
+  | 'nevNyelv'
+  | 'leirasNyelv'
 > {
   return {
     tetelId: '',
@@ -113,8 +134,28 @@ function sorMezokEgyedibol(
     listaEgysegar: 0,
     tenylegesEgysegar: 0,
     leirasSnapshot: '',
+    // D72: a begépelt egyedi név a doki saját szövege -- ez tölti be a
+    // `sorFallback` 'egyedi' ágának deklarált vakfoltját ("nem
+    // ellenőrizhető, milyen nyelven íródott", domain/nev.ts).
+    nevNyelv: { authoredInLanguage: nyelv },
+    leirasNyelv: null,
   };
 }
+
+/**
+ * A `fokuszCel` állapot alakja -- kiemelve, hogy a `PhaseSection`/`LineRow`/
+ * `FazisMegjegyzes` is hivatkozhassa (65. tétel, D72 guided review
+ * kényszerített-nyitás propjai). Lásd a `fokuszCel` state kommentjét lent.
+ */
+type FokuszCel =
+  | { mit: 'fogak'; pi: number; li: number }
+  | { mit: 'kereso'; pi: number; li: number }
+  | { mit: 'nev'; pi: number; li: number }
+  | { mit: 'leiras'; pi: number; li: number }
+  | { mit: 'fazisKereso'; pi: number }
+  | { mit: 'fazisNev'; pi: number }
+  | { mit: 'fazisMegjegyzes'; pi: number }
+  | null;
 
 export default function PlanEditorPage() {
   const {
@@ -169,11 +210,10 @@ export default function PlanEditorPage() {
   // fel (lásd lent), mert a célelem DOM-ja (most felvett sor, most
   // hozzáadott fázis) csak a következő renderben létezik. A `fazisKereso`
   // ág (backlog-59, D64) a fázis alatti keresőnek szól, ezért nincs `li`-je.
-  const [fokuszCel, setFokuszCel] = useState<
-    | { mit: 'fogak' | 'kereso'; pi: number; li: number }
-    | { mit: 'fazisKereso'; pi: number }
-    | null
-  >(null);
+  // A `nev`/`fazisNev` (65. tétel, D72 guided review) mindig a DOM-ban van,
+  // amíg a sornak/fázisnak van neve -- szinkron fókuszálható, a
+  // `leiras`/`fazisMegjegyzes` viszont összecsukható sávban él, lásd lent.
+  const [fokuszCel, setFokuszCel] = useState<FokuszCel>(null);
   // Ismételt kattintás ugyanarra a (már kezelt) fogra a következő érintett
   // sorra lép, körbeérve -- ref, mert a körbejárás nem igényel újrarenderelést
   // önmagában, csak a fókuszváltás (lásd fokuszCel).
@@ -181,17 +221,58 @@ export default function PlanEditorPage() {
 
   useEffect(() => {
     if (!fokuszCel) return;
-    const id =
-      fokuszCel.mit === 'fazisKereso'
-        ? `kereso-fazis-${fokuszCel.pi}`
-        : fokuszCel.mit === 'fogak'
-          ? `fog-${fokuszCel.pi}-${fokuszCel.li}`
-          : `kereso-${fokuszCel.pi}-${fokuszCel.li}`;
+    // A `leiras`/`fazisMegjegyzes` cél összecsukott sávban lehet -- a
+    // `LineRow`/`FazisMegjegyzes` a lentebb tovább-adott `fokuszCel` propon
+    // keresztül kényszerítve nyitja magát, de a TextArea/TextField csak a
+    // KÖVETKEZŐ commit után létezik. A tényleges fókuszt ezért
+    // `requestAnimationFrame`-mel késleltetjük (a `PatientPlanChains.tsx`
+    // `ugrasLegfrissebbre` mintája) -- a `fokuszCel`-t csak EZUTÁN nullázzuk,
+    // hogy a gyerek addig lássa a kényszerítő propot.
+    if (fokuszCel.mit === 'leiras' || fokuszCel.mit === 'fazisMegjegyzes') {
+      const id =
+        fokuszCel.mit === 'leiras'
+          ? `leiras-${fokuszCel.pi}-${fokuszCel.li}`
+          : `fazis-megjegyzes-${fokuszCel.pi}`;
+      requestAnimationFrame(() => {
+        const el = document.getElementById(id);
+        el?.scrollIntoView({ block: 'nearest', behavior: csokkentettMozgas() ? 'auto' : 'smooth' });
+        (el as HTMLElement | null)?.focus();
+        setFokuszCel(null);
+      });
+      return;
+    }
+    let id: string;
+    if (fokuszCel.mit === 'fazisKereso') id = `kereso-fazis-${fokuszCel.pi}`;
+    else if (fokuszCel.mit === 'fazisNev') id = `fazis-nev-${fokuszCel.pi}`;
+    else if (fokuszCel.mit === 'fogak') id = `fog-${fokuszCel.pi}-${fokuszCel.li}`;
+    else if (fokuszCel.mit === 'nev') id = `nev-${fokuszCel.pi}-${fokuszCel.li}`;
+    else id = `kereso-${fokuszCel.pi}-${fokuszCel.li}`; // fokuszCel.mit === 'kereso'
     const el = document.getElementById(id);
     el?.scrollIntoView({ block: 'nearest', behavior: csokkentettMozgas() ? 'auto' : 'smooth' });
     (el as HTMLInputElement | null)?.focus();
     setFokuszCel(null);
   }, [fokuszCel]);
+
+  const nyelviReview = useNyelviReview();
+
+  // 65. tétel (D72), 5. döntés: a guided review célja (`ReviewCel`) a
+  // VALÓDI szerkesztőmezőkhöz navigál -- a fázis kinyitása + a
+  // `fokuszCel` beállítása a MEGLÉVŐ mechanizmust hajtja meg, nem egy
+  // duplikált útvonalat (D469).
+  useEffect(() => {
+    const cel = nyelviReview.cel;
+    if (!cel) return;
+    setFazisCsukva((prev) => {
+      if (!prev.has(cel.fazisIndex)) return prev;
+      const next = new Set(prev);
+      next.delete(cel.fazisIndex);
+      return next;
+    });
+    if (cel.mezo === 'fazisNev') setFokuszCel({ mit: 'fazisNev', pi: cel.fazisIndex });
+    else if (cel.mezo === 'fazisMegjegyzes') setFokuszCel({ mit: 'fazisMegjegyzes', pi: cel.fazisIndex });
+    else if (cel.mezo === 'sorNev') setFokuszCel({ mit: 'nev', pi: cel.fazisIndex, li: cel.sorIndex ?? 0 });
+    else setFokuszCel({ mit: 'leiras', pi: cel.fazisIndex, li: cel.sorIndex ?? 0 });
+  }, [nyelviReview.cel]);
 
   const catName = (id: string): string => {
     const kat = priceList.kategoriak.find((k) => k.id === id);
@@ -316,7 +397,7 @@ export default function PlanEditorPage() {
   function addEgyediLine(phaseIdx: number, nev: string) {
     updatePlan((draft) => {
       draft.fazisok[phaseIdx].sorok.push({
-        ...sorMezokEgyedibol(nev),
+        ...sorMezokEgyedibol(nev, nyelv),
         fogak: '',
         mennyiseg: 1,
         mennyisegKezi: false,
@@ -327,7 +408,7 @@ export default function PlanEditorPage() {
   function patchLine(pi: number, li: number, patch: Partial<Sor>) {
     updatePlan((draft) => {
       const sor = draft.fazisok[pi].sorok[li];
-      Object.assign(sor, sorPatchKovetessel(sor, patch));
+      Object.assign(sor, sorPatchNyelvvel(sor, sorPatchKovetessel(sor, patch), nyelv));
     });
   }
 
@@ -512,6 +593,7 @@ export default function PlanEditorPage() {
             frequent={frequent}
             tetelekById={tetelekById}
             fogterkep={fogterkep}
+            fokuszCel={fokuszCel}
             canDelete={plan.fazisok.length > 1}
             total={fazisOsszeg(p)}
             autoFokusz={pi === 0 && ujUresPiszkozat}
@@ -544,12 +626,31 @@ export default function PlanEditorPage() {
             }
             onRename={(v) =>
               updatePlan((draft) => {
-                draft.fazisok[pi].megnevezes = v;
+                const f = draft.fazisok[pi];
+                // A doki gépelése stampel -- a `generaltFazisNev()`/
+                // `movePhase()` RENDSZER-írásai (fenti :262/:299-300) nem
+                // ezen az úton mennek, azok nem érintik a review-metaadatot.
+                f.megnevezesNyelv = reviewIrasUtan(f.megnevezesNyelv, f.megnevezes, v, nyelv);
+                f.megnevezes = v;
               })
             }
             onNote={(v) =>
               updatePlan((draft) => {
-                draft.fazisok[pi].megjegyzes = v;
+                const f = draft.fazisok[pi];
+                f.megjegyzesNyelv = reviewIrasUtan(f.megjegyzesNyelv, f.megjegyzes, v, nyelv);
+                f.megjegyzes = v;
+              })
+            }
+            onReviewMegnevezes={() =>
+              updatePlan((draft) => {
+                const f = draft.fazisok[pi];
+                f.megnevezesNyelv = reviewElfogadva(f.megnevezesNyelv, nyelv);
+              })
+            }
+            onReviewMegjegyzes={() =>
+              updatePlan((draft) => {
+                const f = draft.fazisok[pi];
+                f.megjegyzesNyelv = reviewElfogadva(f.megjegyzesNyelv, nyelv);
               })
             }
             onDelete={() => {
@@ -776,6 +877,7 @@ function PhaseSection({
   frequent,
   tetelekById,
   fogterkep,
+  fokuszCel,
   total,
   canDelete,
   autoFokusz,
@@ -793,6 +895,8 @@ function PhaseSection({
   onRestoreLine,
   onRename,
   onNote,
+  onReviewMegnevezes,
+  onReviewMegjegyzes,
   onDelete,
 }: {
   pi: number;
@@ -804,6 +908,8 @@ function PhaseSection({
   frequent: Tetel[];
   tetelekById: Map<string, Tetel>;
   fogterkep: FogterkepAllapot;
+  /** 65. tétel (D72): a guided review kényszerített-nyitás jelzése -- lásd `LineRow`/`FazisMegjegyzes`. */
+  fokuszCel: FokuszCel;
   total: number;
   canDelete: boolean;
   autoFokusz: boolean;
@@ -821,6 +927,8 @@ function PhaseSection({
   onRestoreLine: (li: number, sor: Sor) => void;
   onRename: (v: string) => void;
   onNote: (v: string) => void;
+  onReviewMegnevezes: () => void;
+  onReviewMegjegyzes: () => void;
   onDelete: () => void;
 }) {
   // Sortörléskor a maradék sorok indexe (li) eltolódik -- index-kulcs
@@ -832,6 +940,11 @@ function PhaseSection({
   // Tisztán UI-réteg felirat, nem pénzösszeg-formázás -- nem indokol közös
   // domain segédfüggvényt, lásd docs/03-funkcionalis-spec.md § Sor mezői.
   const penznemJel = currency === 'EUR' ? '€' : 'Ft';
+
+  // backlog-65 (docs/01-attekintes-es-dontesek.md D72) -- lásd `LineRow`
+  // hasonló konstansait.
+  const megnevezesNyelvMismatch = nyelviMismatch(phase.megnevezesNyelv, nyelv);
+  const megjegyzesNyelvMismatch = nyelviMismatch(phase.megjegyzesNyelv, nyelv);
 
   // Sortörlés Undo-sávja (D79): a törölt sor + eredeti indexe rövid ideig
   // helyi state-ben, NEM egy általános undo-stack -- a `LineRow` DOM-eleme
@@ -887,10 +1000,29 @@ function PhaseSection({
             {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
           </IconButton>
           <TextField.Root
+            id={`fazis-nev-${pi}`}
             value={phase.megnevezes}
             onChange={(e) => onRename(e.target.value)}
             style={{ maxWidth: 360, fontWeight: 600, color: t.brand }}
           />
+          {megnevezesNyelvMismatch && (
+            <>
+              <Badge color="amber" variant="soft" size="1">
+                {phase.megnevezesNyelv?.authoredInLanguage === 'de' ? 'DE szöveg' : 'HU szöveg'}
+              </Badge>
+              <IconButton
+                type="button"
+                variant="ghost"
+                color="gray"
+                size="1"
+                aria-label="Nyelv ellenőrizve"
+                title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                onClick={onReviewMegnevezes}
+              >
+                <CheckIcon />
+              </IconButton>
+            </>
+          )}
           {/* Csukott fejléc-összegzés (D72): név/darabszám/összeg -- nyitva
               a törzs ugyanezt (táblázat + lábléc) részletesen mutatja. */}
           {!open && (
@@ -982,6 +1114,11 @@ function PhaseSection({
                       fallback={sorFallback(l, nyelv, tetelekById)}
                       tetel={tetelekById.get(l.tetelId)}
                       arFrissitesJavaslat={arFrissites(l, currency, tetelekById)}
+                      // 65. tétel (D72): a guided review a leírás-sávot
+                      // kényszerítve nyitja, ha ez a sor a jelenlegi cél.
+                      forceLeirasOpen={
+                        fokuszCel?.mit === 'leiras' && fokuszCel.pi === pi && fokuszCel.li === li
+                      }
                       onPatch={(p) => onPatchLine(li, p)}
                       onRequestArFrissites={() => onRequestArFrissites(li)}
                       onRemove={() => removeWithUndo(li, l)}
@@ -1023,7 +1160,15 @@ function PhaseSection({
             </Flex>
           )}
 
-          <FazisMegjegyzes value={phase.megjegyzes} onChange={onNote} />
+          <FazisMegjegyzes
+            pi={pi}
+            value={phase.megjegyzes}
+            onChange={onNote}
+            nyelvMismatch={megjegyzesNyelvMismatch}
+            authoredNyelv={phase.megjegyzesNyelv?.authoredInLanguage}
+            onReview={onReviewMegjegyzes}
+            forceOpen={fokuszCel?.mit === 'fazisMegjegyzes' && fokuszCel.pi === pi}
+          />
 
           <Flex
             justify="end"
@@ -1073,27 +1218,71 @@ function UndoRow({
  * A megjegyzés MINDIG nyomtatódik, függetlenül a „Tétel-leírások
  * nyomtatása" kapcsolótól -- ez a mező nem a `Tetel.leiras` snapshotja.
  */
-function FazisMegjegyzes({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function FazisMegjegyzes({
+  pi,
+  value,
+  onChange,
+  nyelvMismatch,
+  authoredNyelv,
+  onReview,
+  forceOpen,
+}: {
+  pi: number;
+  value: string;
+  onChange: (v: string) => void;
+  /** backlog-65 (docs/01-attekintes-es-dontesek.md D72) -- a mező nyelvi mismatch-e. */
+  nyelvMismatch: boolean;
+  authoredNyelv: Nyelv | undefined;
+  onReview: () => void;
+  /** 65. tétel (D72): a guided review kényszerítve nyitja a sávot -- lásd `LineRow` `forceLeirasOpen`-jét. */
+  forceOpen: boolean;
+}) {
   const [nyitva, setNyitva] = useState(Boolean(value.trim()));
+  useEffect(() => {
+    if (forceOpen) setNyitva(true);
+  }, [forceOpen]);
   return (
     <Box mt="3">
       <Button
         type="button"
         size="1"
         variant="ghost"
-        color="gray"
+        color={nyelvMismatch ? 'amber' : 'gray'}
         aria-expanded={nyitva}
+        title={nyelvMismatch ? 'A megjegyzés nyelve ellenőrzésre vár' : undefined}
         onClick={() => setNyitva((v) => !v)}
       >
         {value.trim() ? 'Megjegyzés' : '+ megjegyzés'}
       </Button>
       {nyitva && (
-        <TextField.Root
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Megjegyzés a fázishoz (megjelenik a nyomtatványon)"
-          mt="1"
-        />
+        <Flex align="center" gap="1" mt="1">
+          <Box flexGrow="1">
+            <TextField.Root
+              id={`fazis-megjegyzes-${pi}`}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="Megjegyzés a fázishoz (megjelenik a nyomtatványon)"
+            />
+          </Box>
+          {nyelvMismatch && (
+            <>
+              <Badge color="amber" variant="soft" size="1">
+                {authoredNyelv === 'de' ? 'DE szöveg' : 'HU szöveg'}
+              </Badge>
+              <IconButton
+                type="button"
+                variant="ghost"
+                color="gray"
+                size="1"
+                aria-label="Nyelv ellenőrizve"
+                title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                onClick={onReview}
+              >
+                <CheckIcon />
+              </IconButton>
+            </>
+          )}
+        </Flex>
       )}
     </Box>
   );
@@ -1111,6 +1300,7 @@ function LineRow({
   fallback,
   tetel,
   arFrissitesJavaslat,
+  forceLeirasOpen,
   onPatch,
   onRequestArFrissites,
   onRemove,
@@ -1129,6 +1319,8 @@ function LineRow({
   tetel: Tetel | undefined;
   /** `null`, ha a sor követi a mai árlistát -- lásd `domain/arKoveti.ts` (backlog-61, D70). */
   arFrissitesJavaslat: ArFrissites | null;
+  /** 65. tétel (D72): a guided review kényszerítve nyitja a leírás-sávot -- lásd lent. */
+  forceLeirasOpen: boolean;
   onPatch: (patch: Partial<Sor>) => void;
   onRequestArFrissites: () => void;
   onRemove: () => void;
@@ -1185,6 +1377,13 @@ function LineRow({
   // backlog-60, 1. döntés: a `sorFallback`-tól FÜGGETLEN, nyelvfüggetlen
   // "kézzel átírt" komparátor -- lásd `domain/nev.ts` `nevAtirt()`.
   const nevEltero = tetel != null && nevAtirt(line, tetel, nyelv);
+  // backlog-65 (D72): a `sorFallback`-tól SZÁNDÉKOSAN KÜLÖN kérdés -- nem
+  // azt nézi, hogy a szöveg követi-e az árlistát, hanem hogy a doki
+  // kézzel írt szövege a JELENLEGI dokumentumnyelven van-e. Magyar terven
+  // is működik (szemben a `sorFallback`-kal), és egyedi sornál is ad
+  // választ (szemben a `sorFallback` 'egyedi' ágával).
+  const nevNyelvMismatch = nyelviMismatch(line.nevNyelv, nyelv);
+  const leirasNyelvMismatch = nyelviMismatch(line.leirasNyelv, nyelv);
 
   // "+ leírás" összecsukható trigger (docs/02-domain-modell.md § Tétel-leírás)
   // -- ha már van tartalom, nyitva induljon; nincs "csak
@@ -1192,6 +1391,12 @@ function LineRow({
   // nincs auto-collapse kockázat.
   const leirasTartalom = (line.leirasSnapshot ?? '').trim();
   const [leirasNyitva, setLeirasNyitva] = useState(Boolean(leirasTartalom));
+  // 65. tétel (D72): a guided review kényszerítve nyitja a sávot -- CSAK
+  // nyitni szabad innen (a `keresoMod`/`azonositatlan` fenti mintája), a
+  // doki utólagos, kézi becsukását ez nem írja felül.
+  useEffect(() => {
+    if (forceLeirasOpen) setLeirasNyitva(true);
+  }, [forceLeirasOpen]);
   // Korai vizuális jelzés (15. döntés): a trigger maga jelez amber színnel,
   // hogy ne szaporodjon egy külön jelvény a már amúgy is sűrű jelvénysorban.
   const csomag = tetel?.csomag ?? false;
@@ -1221,7 +1426,7 @@ function LineRow({
               setKeresoMod(false);
             }}
             onPickEgyedi={(nev) => {
-              onPatch(sorMezokEgyedibol(nev));
+              onPatch(sorMezokEgyedibol(nev, nyelv));
               setKeresoMod(false);
             }}
           />
@@ -1229,6 +1434,7 @@ function LineRow({
           <Flex align="center" gap="1" wrap="wrap">
             <Box flexGrow="1" style={{ minWidth: 160 }}>
               <TextField.Root
+                id={`nev-${pi}-${li}`}
                 value={line.nevSnapshot}
                 onChange={(e) => onPatch({ nevSnapshot: e.target.value })}
                 aria-label="Beavatkozás megnevezése"
@@ -1260,9 +1466,32 @@ function LineRow({
                   size="1"
                   aria-label="Név visszaállítása az árlistaira"
                   title="Név visszaállítása az árlistaira"
-                  onClick={() => onPatch({ nevSnapshot: resolveNev(tetel.nev, nyelv).szoveg })}
+                  onClick={() =>
+                    // backlog-65, 7. döntés (D481): a reset a nyelvi
+                    // review-metaadatot is törli -- egy default-following
+                    // szövegnek nincs értelme review-státuszt hordoznia.
+                    onPatch({ nevSnapshot: resolveNev(tetel.nev, nyelv).szoveg, nevNyelv: null })
+                  }
                 >
                   <ResetIcon />
+                </IconButton>
+              </>
+            )}
+            {nevNyelvMismatch && (
+              <>
+                <Badge color="amber" variant="soft" size="1">
+                  {line.nevNyelv?.authoredInLanguage === 'de' ? 'DE szöveg' : 'HU szöveg'}
+                </Badge>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  size="1"
+                  aria-label="Nyelv ellenőrizve"
+                  title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                  onClick={() => onPatch({ nevNyelv: reviewElfogadva(line.nevNyelv, nyelv) })}
+                >
+                  <CheckIcon />
                 </IconButton>
               </>
             )}
@@ -1280,12 +1509,17 @@ function LineRow({
               type="button"
               size="1"
               variant="ghost"
-              color={hianyzoCsomagLeiras ? 'amber' : 'gray'}
+              // A leírás-mismatch (backlog-65) is korai amber jelzést kap a
+              // triggeren, mint a `hianyzoCsomagLeiras` -- a badge maga csak
+              // nyitott sávban látszik, összecsukva enélkül néma maradna.
+              color={hianyzoCsomagLeiras || leirasNyelvMismatch ? 'amber' : 'gray'}
               aria-expanded={leirasNyitva}
               title={
                 hianyzoCsomagLeiras
                   ? 'Csomagtétel — hiányzik a leírás'
-                  : 'Leírás (mi van benne?)'
+                  : leirasNyelvMismatch
+                    ? 'A leírás nyelve ellenőrzésre vár'
+                    : 'Leírás (mi van benne?)'
               }
               onClick={() => setLeirasNyitva((v) => !v)}
             >
@@ -1486,6 +1720,7 @@ function LineRow({
       <Table.Row>
         <Table.Cell colSpan={7}>
           <TextArea
+            id={`leiras-${pi}-${li}`}
             value={line.leirasSnapshot ?? ''}
             onChange={(e) => onPatch({ leirasSnapshot: e.target.value })}
             placeholder="pl. Implantátum, felépítmény, korona"
@@ -1512,9 +1747,31 @@ function LineRow({
                   size="1"
                   aria-label="Leírás visszaállítása az árlistaira"
                   title="Leírás visszaállítása az árlistaira"
-                  onClick={() => onPatch({ leirasSnapshot: arlistaLeirasSzoveg })}
+                  onClick={() =>
+                    // backlog-65, 7. döntés (D481): lásd a névmező reset
+                    // kommentjét fentebb.
+                    onPatch({ leirasSnapshot: arlistaLeirasSzoveg, leirasNyelv: null })
+                  }
                 >
                   <ResetIcon />
+                </IconButton>
+              </Flex>
+            )}
+            {leirasNyelvMismatch && (
+              <Flex align="center" gap="1">
+                <Badge color="amber" variant="soft" size="1">
+                  {line.leirasNyelv?.authoredInLanguage === 'de' ? 'DE szöveg' : 'HU szöveg'}
+                </Badge>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  size="1"
+                  aria-label="Nyelv ellenőrizve"
+                  title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                  onClick={() => onPatch({ leirasNyelv: reviewElfogadva(line.leirasNyelv, nyelv) })}
+                >
+                  <CheckIcon />
                 </IconButton>
               </Flex>
             )}

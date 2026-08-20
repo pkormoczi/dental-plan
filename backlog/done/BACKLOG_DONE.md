@@ -1785,3 +1785,39 @@ karbantartási kör négy önálló javítása.
   (docs/01-attekintes-es-dontesek.md D11/D71, docs/02-domain-modell.md
   § Pénznemváltás, docs/03-funkcionalis-spec.md § 2 "Dokumentum nyelve /
   Pénznem" és § 4 "Előnézet és véglegesítés").
+
+---
+
+### 65. tétel: Manuális szövegek nyelvi review-ja — KÉSZ (2026-08-20)
+
+- **Méret:** ~2 nap.
+- **Kereteket sért?** Nem — új D72 (`docs/01-attekintes-es-dontesek.md`),
+  additív mezők, `schemaVersion` nem emelkedett.
+- **Valódi haszon:** a doki kézzel gépelt szövegein (sornév, sorleírás,
+  fázisnév, fázis-megjegyzés) korábban semmi nem jelezte, ha egy szöveg
+  nem a dokumentum nyelvén íródott. A meglévő `sorFallback` egy MÁSIK
+  kérdésre válaszol (van-e árlistai fordítás), magyar terven mindig
+  `null`-t ad, és egyedi (árlistán kívüli) sornál deklaráltan tehetetlen —
+  egy magyar tervbe véletlenül vagy szándékosan németül begépelt szöveg
+  korábban teljesen láthatatlan volt, a leírásnak pedig semmilyen nyelvi
+  jelzése nem volt.
+- **Megvalósítás:** a `Sor`/`Fazis` additív, TÁROLT
+  `{ authoredInLanguage; reviewedForLanguage? } | null` review-metaadatot
+  kapott mind a négy szabad szövegén (`domain/nyelviReview.ts`) — az
+  ELSŐ tárolt nyelvi jelző a sémában, szemben a projekt eddigi derived
+  komparátoraival, mert "milyen nyelven gépelte a doki" utólag semmiből
+  nem vezethető le. Mismatch esetén a szerkesztő mezőszintű `HU szöveg`/
+  `DE szöveg` jelvényt és egy "Nyelv ellenőrizve" vezérlőt mutat — ezt
+  KIZÁRÓLAG ez az explicit akció oldja fel, a szöveg szerkesztése (akár a
+  helyes nyelvre teljesen átírva) vagy a dokumentumnyelv váltása
+  önmagában nem. A véglegesítés-őr hatodik, a `de-fallback-names` UTÁNI
+  puha lépést kapott, amiből egy nem-modális, irányított review
+  indítható (`NyelviReviewContext`/`NyelviReviewBar`,
+  `TervWorkflowShell.tsx`-ben mountolva) — a VALÓDI szerkesztőmezőkhöz
+  navigál, a meglévő fókusz-mechanizmusra építve, nem egy duplikált
+  modal-szerkesztőre. A meglévő `sorFallback`/`fallbackSorok`
+  (árlistai fordítás-hiány) mechanizmus változatlanul, egymás mellett él
+  ezzel (docs/01-attekintes-es-dontesek.md D72, docs/02-domain-modell.md
+  § "Nyelvi review a kézzel írt szövegeken", docs/03-funkcionalis-
+  spec.md § 3 "Sor mezői", § "Fázisok" és § 4 "Előnézet és
+  véglegesítés").

@@ -272,7 +272,9 @@ kerekítési hiba az összegzésben.
     {
       "sorszam": 1,
       "megnevezes": "1. kezelés — gyökérkezelés és tömések",
+      "megnevezesNyelv": null,  // opcionális, lásd "Nyelvi review a kézzel írt szövegeken" lentebb
       "megjegyzes": "",
+      "megjegyzesNyelv": null,  // opcionális, lásd "Nyelvi review a kézzel írt szövegeken" lentebb
       "sorok": [
         {
           "tetelId": "t009",
@@ -284,7 +286,9 @@ kerekítési hiba az összegzésben.
           "tenylegesEgysegar": 45000,
           "leirasSnapshot": "",     // opcionális, lásd "Tétel-leírás" lentebb
           "mennyisegKezi": false,   // opcionális, lásd "Fogszám kezelés" lentebb
-          "masikPenznemAr": null    // opcionális, lásd "Pénznemváltás" lentebb
+          "masikPenznemAr": null,   // opcionális, lásd "Pénznemváltás" lentebb
+          "nevNyelv": null,         // opcionális, lásd "Nyelvi review a kézzel írt szövegeken" lentebb
+          "leirasNyelv": null       // opcionális, lásd "Nyelvi review a kézzel írt szövegeken" lentebb
         }
       ]
     }
@@ -420,6 +424,45 @@ másoláskor öröklődik, nem nullázódik.
 Egyik mező sem emelte a `schemaVersion`-t — mind a négy additív, a hiányzó
 mező üres string/`false`/`true` alapértékkel olvasandó (a `Kategoria.szin`
 precedense szerint).
+
+### Nyelvi review a kézzel írt szövegeken (`nevNyelv`, `leirasNyelv`, `megnevezesNyelv`, `megjegyzesNyelv`, D72)
+
+A doki négy szabadon szerkeszthető szövege kerül a nyomtatványra:
+`Sor.nevSnapshot`, `Sor.leirasSnapshot`, `Fazis.megnevezes`,
+`Fazis.megjegyzes`. Mindegyik opcionálisan kap egy
+`{ authoredInLanguage: Nyelv; reviewedForLanguage?: Nyelv }`-alakú
+review-metaadatot (`domain/nyelviReview.ts`), ami jelzi, ha a szöveg NEM
+biztos, hogy a terv aktuális nyelvén helyes:
+
+```jsonc
+"nevNyelv": { "authoredInLanguage": "de", "reviewedForLanguage": "hu" }
+```
+
+`authoredInLanguage`: melyik nyelven íródott a szöveg JELENLEGI tartalma —
+minden valódi tartalmi íráskor frissül. `reviewedForLanguage`: ha jelen
+van, a doki explicit elfogadta a szöveget erre (az `authoredInLanguage`-től
+eltérő) nyelvre is. **Mismatch**, ha `authoredInLanguage` eltér a terv
+`nyelv`-étől, ÉS `reviewedForLanguage` nem egyezik a terv `nyelv`-ével —
+ilyenkor a szerkesztő mezőszintű figyelmeztetést és egy „Nyelv ellenőrizve”
+vezérlőt mutat. **A mismatch-et KIZÁRÓLAG ez az explicit akció oldja fel** —
+sem a szöveg egyszerű szerkesztése, sem egy másik nyelvre való TELJES
+átírás (akár szó szerinti fordítás), sem a dokumentumnyelv puszta váltása
+nem old fel automatikusan, nincs „jelentős változás” heurisztika. Csak
+vezető/záró whitespace nem invalidál egy meglévő review-t.
+
+**Szándékosan MÁS kérdés, mint a `sorFallback`/`fallbackSorok`** (fent, D21
+alatt) — az ÁRLISTAI fordítás hiányát/eltérését jelzi, magyar terven mindig
+`null`-t ad, és egy egyedi (árlistán kívüli) sornál deklaráltan tehetetlen
+(„nem ellenőrizhető, milyen nyelven íródott”). A nyelvi review pontosan ezt
+a rést tölti be: mindkét terv-nyelven működik, és minden kézzel írt
+szövegre (árlistai vagy egyedi sorra egyaránt) választ ad. A két mechanizmus
+EGYMÁS MELLETT él, nem összevonva.
+
+Az ár-követéssel (D70) ellentétben ez az ELSŐ **tárolt** (nem derived)
+nyelvi jelző a sémában — azért tárolt, mert „milyen nyelven gépelte a doki”
+utólag semmiből nem vezethető le. Mind a négy mező opcionális, `schemaVersion`
+nem emelkedett; a hiányzó mező azt jelenti, hogy a szöveg árlistát követ,
+vagy a mező bevezetése előtti terv, egyik esetben sincs mit ellenőrizni.
 
 ### Előleg (`elolegOsszeg`)
 
