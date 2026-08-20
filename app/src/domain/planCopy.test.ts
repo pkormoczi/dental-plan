@@ -71,7 +71,7 @@ function makePlan(overrides: Partial<Plan> = {}): Plan {
     // Szándékosan HAMIS a valós sorösszeghez (90) képest -- igazolja, hogy
     // planMasolatKent() nem ezt a mezőt másolja, hanem újraszámolja.
     osszesitok: { kezelesekOsszesen: 9999, kedvezmeny: 9999, fizetendo: 9999 },
-    elolegSzazalek: 50,
+    elolegOsszeg: 50000,
     kedvezmenyOsszeg: 5,
     ...overrides,
   };
@@ -94,7 +94,7 @@ describe('planUjPaciensselTervhez', () => {
     expect(uj.nyelv).toBe('hu');
     expect(uj.penznem).toBe('HUF');
     expect(uj.fazisok.every((f) => f.sorok.length === 0)).toBe(true);
-    expect(uj.elolegSzazalek).toBeNull();
+    expect(uj.elolegOsszeg).toBeNull();
     expect(uj.kedvezmenyOsszeg).toBeNull();
     expect(uj.tervId).toBe('');
   });
@@ -189,7 +189,7 @@ describe('planMasolatKent', () => {
     expect(masolat.orvos).toBe(plan.orvos);
     expect(masolat.fazisok).toEqual(plan.fazisok);
     expect(masolat.arlistaVerzio).toBe(plan.arlistaVerzio);
-    expect(masolat.elolegSzazalek).toBe(plan.elolegSzazalek);
+    expect(masolat.elolegOsszeg).toBe(plan.elolegOsszeg);
     expect(masolat.kedvezmenyOsszeg).toBe(plan.kedvezmenyOsszeg);
     // docs/02-domain-modell.md § Tétel-leírás: ugyanúgy pillanatkép-jellegű,
     // mint nyelv/penznem -- öröklődik, nem nullázódik.

@@ -130,7 +130,7 @@ describe('piszkozatTartalmas', () => {
   // backlog-9: a kapcsoló bekapcsolása tudatos döntés, nem gépi alapérték.
   it('is true once the előleg switch is turned on, even with nothing else filled in', () => {
     const plan = createBlankPlan(settings, priceList);
-    expect(piszkozatTartalmas({ ...plan, elolegSzazalek: 50 })).toBe(true);
+    expect(piszkozatTartalmas({ ...plan, elolegOsszeg: 50000 })).toBe(true);
   });
 
   // backlog-16: ugyanaz a minta, mint az előlegnél -- a kapcsoló bekapcsolása

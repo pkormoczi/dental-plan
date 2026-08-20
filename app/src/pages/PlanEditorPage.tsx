@@ -46,14 +46,7 @@ import { basePrice, formatMoney } from '../domain/money';
 import { arlistaiLeiras, leirasKoveti, nevAtirt, resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
 import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
-import {
-  ELOLEG_ALAP_SZAZALEK,
-  elolegOsszegek,
-  fazisOsszeg,
-  sorokListaOsszeg,
-  sorokOsszeg,
-  tervVegosszeg,
-} from '../domain/totals';
+import { elolegOsszegek, elolegTullepi, fazisOsszeg, sorokListaOsszeg, sorokOsszeg, tervVegosszeg } from '../domain/totals';
 import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import ItemPicker from './planEditor/ItemPicker';
@@ -530,10 +523,10 @@ export default function PlanEditorPage() {
               grand={grand}
               currency={currency}
               nyelv={nyelv}
-              elolegSzazalek={plan.elolegSzazalek ?? null}
+              elolegOsszeg={plan.elolegOsszeg ?? null}
               onChange={(next) =>
                 updatePlan((draft) => {
-                  draft.elolegSzazalek = next;
+                  draft.elolegOsszeg = next;
                 })
               }
             />
@@ -1515,76 +1508,122 @@ function KerekVegosszegBlokk({
 }
 
 /**
- * Előleg-kapcsoló (backlog-9). A `Summary` ALATT áll, mert az előleg a
- * végösszegből számol -- ez az a pillanat, amikor a doki amúgy is azt nézi.
+ * Előleg-kapcsoló (backlog-9, D66: abszolút összeg). A `Summary` ALATT áll,
+ * mert az előleg a végösszegből számol -- ez az a pillanat, amikor a doki
+ * amúgy is azt nézi.
  *
- * Egyetlen nullázható mező hordozza a kapcsoló állapotát ÉS az értéket:
- * `null` = nincs előleg-sor a nyomtatványon. Így nem kerülhet egymásnak
- * ellentmondó állapotba egy külön boolean és egy szám.
+ * A `Plan` továbbra is egyetlen nullázható mezőt hordoz (`elolegOsszeg`,
+ * `null` = nincs előleg-sor a nyomtatványon). A "bekapcsolva, de a doki még
+ * nem írt be összeget" állapot viszont KIZÁRÓLAG komponens-lokális (`on`) --
+ * bekapcsoláskor a mező üresen, azonnali fókusszal jelenik meg, előtöltés
+ * nélkül (D517), és amíg a doki nem commitál egy összeget, a `Plan`-en
+ * marad `null`. Ez zárja ki, hogy egy "bekapcsolt, de értelmetlen" állapot
+ * perzisztálódjon.
  */
 function ElolegBlokk({
   grand,
   currency,
   nyelv,
-  elolegSzazalek,
+  elolegOsszeg,
   onChange,
 }: {
   grand: number;
   currency: Penznem;
   nyelv: Nyelv;
-  elolegSzazalek: number | null;
+  elolegOsszeg: number | null;
   onChange: (next: number | null) => void;
 }) {
-  const be = elolegSzazalek != null;
-  const osszegek = be ? elolegOsszegek(grand, elolegSzazalek) : null;
+  const [on, setOn] = useState(() => elolegOsszeg != null);
+  // Van-e ÉRVÉNYES, commitált összeg a mezőben -- ezt nézi a kötelező-mező
+  // hiba (D518: csak blur/véglegesítési kísérlet után), NEM a prop-ot: az
+  // `onChange` a szülő state-jét frissíti, ami csak a KÖVETKEZŐ renderben ér
+  // vissza propként, az `onCommit`-tal egy tickben lefutó `onBlur` még a
+  // régi (stale) propot látná.
+  const [helyesErtek, setHelyesErtek] = useState(() => elolegOsszeg != null);
+  const [hibaLatszik, setHibaLatszik] = useState(false);
+
+  // Külső prop-változást követ (pl. terv betöltése/másolása) -- a doki
+  // épp folyamatban lévő, még nem commitált gépelését a NumberField saját
+  // `focused`-őre már megvédi, ez csak a kapcsoló ki/be állapotát.
+  useEffect(() => {
+    setOn(elolegOsszeg != null);
+    setHelyesErtek(elolegOsszeg != null);
+  }, [elolegOsszeg]);
+
+  const tullepi = on && elolegOsszeg != null && elolegTullepi(grand, elolegOsszeg);
+  const osszegek = on && elolegOsszeg != null ? elolegOsszegek(grand, elolegOsszeg) : null;
 
   return (
     <Box mt="3">
       <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Checkbox
-          checked={be}
-          onCheckedChange={(checked) => onChange(checked === true ? ELOLEG_ALAP_SZAZALEK : null)}
+          checked={on}
+          onCheckedChange={(checked) => {
+            if (checked === true) {
+              setOn(true);
+              setHelyesErtek(false);
+              setHibaLatszik(false);
+              return;
+            }
+            setOn(false);
+            setHelyesErtek(false);
+            setHibaLatszik(false);
+            onChange(null);
+          }}
         />
         Ez a terv fogtechnikai munkát tartalmaz — előleg feltüntetése
       </Text>
 
-      {be && (
+      {on && (
         <Box mt="2">
           <Flex justify="between" align="center" gap="3">
             <Text size="2" color="gray">
               Előleg
             </Text>
-            <Flex align="center" gap="2">
-              <Box style={{ width: 64 }}>
-                <NumberField
-                  value={elolegSzazalek}
-                  min={0}
-                  aria-label="Előleg százaléka"
-                  textAlign="right"
-                  // 0-100 közé szorítva: az előleg nem lehet negatív, és nem
-                  // lehet több a teljes összegnél. A `step()` nyilai is ezen
-                  // az `onCommit`-en mennek át.
-                  onCommit={(v) => onChange(Math.min(100, Math.max(0, Math.round(v))))}
-                />
-              </Box>
-              <Text size="2" color="gray">
-                %
-              </Text>
-              <Text
-                size="2"
-                weight="medium"
-                style={{ fontVariantNumeric: 'tabular-nums', minWidth: '6.5rem', textAlign: 'right' }}
-              >
-                {formatMoney(osszegek!.eloleg, currency, nyelv)}
-              </Text>
-            </Flex>
+            <Box style={{ width: 120 }}>
+              <NumberField
+                value={elolegOsszeg}
+                unit={currency}
+                min={0}
+                autoFocus
+                aria-label="Előleg összege"
+                textAlign="right"
+                onCommit={(v) => {
+                  // Explicit 0 -- canonical disable: a kapcsoló automatikusan
+                  // kikapcsol, a mező eltűnik (D519, "0 összegű előleg" nem
+                  // értelmes állapot).
+                  if (v === 0) {
+                    setOn(false);
+                    setHelyesErtek(false);
+                    setHibaLatszik(false);
+                    onChange(null);
+                    return;
+                  }
+                  setHelyesErtek(true);
+                  setHibaLatszik(false);
+                  onChange(Math.max(0, Math.round(v)));
+                }}
+                onBlur={() => setHibaLatszik(!helyesErtek)}
+              />
+            </Box>
           </Flex>
+          {hibaLatszik && (
+            <Text as="div" size="1" mt="1" style={{ color: t.danger }}>
+              Add meg az előleg összegét.
+            </Text>
+          )}
+          {tullepi && (
+            <Text as="div" size="1" mt="1" style={{ color: t.danger }}>
+              Az előleg nagyobb, mint a fizetendő. A véglegesítéshez csökkentsd az összeget, vagy
+              módosítsd a sorokat.
+            </Text>
+          )}
           <Flex justify="between" align="baseline" mt="1">
             <Text size="2" color="gray">
               Fennmaradó rész
             </Text>
             <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {formatMoney(osszegek!.fennmarado, currency, nyelv)}
+              {osszegek?.fennmarado == null ? '—' : formatMoney(osszegek.fennmarado, currency, nyelv)}
             </Text>
           </Flex>
         </Box>

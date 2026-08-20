@@ -104,6 +104,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A `PlanStorage`-t fogyasztó `savePriceList`/`saveSettings` kizárólag updatert fogad, sosem kész objektumot; a memóriabeli állapot a mentés előtt, szinkron frissül, és hibára nem gördül vissza | D31 — a render-idejű closure-be zárt régi állapot két gyors egymás utáni szerkesztésnél némán eldobja az egyiket a doki törzsadatában (árlista, rendelő-adat); a `FileSystemStorage`-váltás alatt a ma kicsi versenyablak nagyságrendekkel tágul |
 | Páciens nem törölhető, ha van véglegesített (`statusz === 'VEGLEGES'`) terve, rá mutató aktív mentetlen piszkozata, vagy olvashatatlan terv-lánca/verziója | D50 — egy aláírt/kiadott dokumentum vagy egy folyamatban lévő szerkesztés mögül a törlés adatvesztést jelentene; a `deletePatient` a teljes páciensmappát véglegesen elviszi, nincs „kuka” |
 | A terv `ervenyesIg` mezője soha nem maradhat üresen | D62 — üres érték a `formatLongDate`-en át „Invalid Date”-ként kerülne egy szerződéses dokumentumra; a „Terv adatai” lap Dátumok szekciója a mező elhagyásakor automatikusan visszaállítja az alapértékre |
+| A terv `elolegOsszeg` mezője soha nem haladhatja meg a fizetendőt egy véglegesített terven, és soha nem vágódik le némán | D66 — a százalék-alapú, strukturálisan garantált `előleg ≤ fizetendő` védelem megszűnt az abszolút összegre váltáskor; a véglegesítés-őr kemény blokkja váltja ki, a doki tudatos rendezését várva, nem automatikus levágást |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -837,6 +838,24 @@ A "Terv adatai" oldal hat szekciója + terv címe + dátumok tétel
   lánc, nem egy induló seed-írás — ez zárja ki a doki épp begépelt
   (navigációt túlélt) értéke és a storage-ból frissen betöltött címke
   közti versenyt
+
+Az előleg százalékról abszolút összegre állítása (`docs/01-attekintes-es-
+dontesek.md` D66, `docs/02-domain-modell.md` § Előleg, `docs/03-
+funkcionalis-spec.md` § 2. Terv adatai „Előleg”) segédfüggvényei, szintén
+ne írd újra őket:
+- `elolegOsszegek(fizetendo, eloleg)` / `elolegTullepi(fizetendo, eloleg)`
+  (`app/src/domain/totals.ts`) — az EGYETLEN hely, ahol az előleg és a
+  fennmaradó rész összege, illetve a `előleg > fizetendő` túllépés-határ
+  eldől. `elolegOsszegek` `fennmarado: null`-t ad, ha az előleg meghaladja
+  a fizetendőt — a hívó (szerkesztő, PDF) ekkor „—”-t jelenít meg, nem
+  negatív számot. A szerkesztő (`PlanEditorPage.tsx` `ElolegBlokk`), a
+  véglegesítés-őr (`domain/veglegesitesOr.ts` `elolegTullep` mező) és a
+  nyomtatvány (`pdf/TervDocument.tsx`) mind ezeket hívja
+- `NumberField` (`app/src/components/NumberField.tsx`) opcionális
+  `onBlur?: () => void` propja — KIZÁRÓLAG „a mező most vesztette el a
+  fókuszt” jelzéshez (pl. egy kötelező-mező hiba, ami csak blur/Enter után
+  jelenhet meg), a `commit()` lefutása UTÁN hívódik; nem helyettesíti az
+  `onCommit`-ot
 
 ## Domain szókincs
 

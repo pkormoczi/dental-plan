@@ -40,9 +40,17 @@ export interface PdfLabels {
   tejfogakPrefix: string;
   kezelesekOsszesen: string;
   fizetendo: string;
-  /** Az előleg sor felirata a százalékkal -- ragozás miatt függvény, az `ervenyessegMondat` mintájára. */
-  elolegSor: (szazalek: number) => string;
+  /** Az előleg összegző sor felirata -- D66 óta sima "Előleg"/"Anzahlung", az összeg az érték-oszlopban áll, zárójeles ismétlés nélkül. */
+  elolegSor: string;
   fennmaradoResz: string;
+  /**
+   * A fizetési feltételek sablonszövegének `{{eloleg}}` helyőrzőjét feloldó
+   * kifejezés (D66) -- `osszeg` a formázott, bekapcsolt előleg (pl.
+   * "390 000 Ft"), `null` kikapcsolt előlegnél, ilyenkor a mondat a
+   * konkrét összeg helyett a "megállapított"/"vereinbarte" előlegre utal,
+   * hogy a szöveg ne mondjon nyers helyőrzőt vagy hamis nullát.
+   */
+  elolegKifejezes: (osszeg: string | null) => string;
   /** JOGI SZÖVEG — lektorálandó, mielőtt éles németnyelvű PDF-re kerül. */
   anyagkoltseg: string;
   /** JOGI SZÖVEG — a D15 (sávos ár) jogi védelme, lektorálandó. */
@@ -83,8 +91,9 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     tejfogakPrefix: 'Tejfogak: ',
     kezelesekOsszesen: 'Kezelések összesen',
     fizetendo: 'Fizetendő',
-    elolegSor: (szazalek) => `Előleg (${szazalek}%)`,
+    elolegSor: 'Előleg',
     fennmaradoResz: 'Fennmaradó rész',
+    elolegKifejezes: (osszeg) => (osszeg == null ? 'a megállapított előleg' : `${osszeg} előleg`),
     anyagkoltseg: 'Az árak tartalmazzák az anyagköltséget.',
     savosFootnote:
       '* A csillaggal jelölt tételek ára — és a belőlük számított összegek (fizetendő, előleg, fennmaradó rész) — a kezelés során derül ki véglegesen, a megadott ár becslés.',
@@ -124,8 +133,10 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     tejfogakPrefix: 'Milchzähne: ',
     kezelesekOsszesen: 'Behandlungen gesamt',
     fizetendo: 'Zu zahlen',
-    elolegSor: (szazalek) => `Anzahlung (${szazalek}%)`,
+    elolegSor: 'Anzahlung',
     fennmaradoResz: 'Restbetrag',
+    elolegKifejezes: (osszeg) =>
+      osszeg == null ? 'die vereinbarte Anzahlung' : `eine Anzahlung von ${osszeg}`,
     anyagkoltseg: 'Die Preise beinhalten die Materialkosten.',
     savosFootnote:
       '* Der Preis der mit einem Sternchen markierten Leistungen — und die daraus berechneten Beträge (zu zahlen, Anzahlung, Restbetrag) — wird während der Behandlung endgültig festgelegt; der angegebene Preis ist eine Schätzung.',

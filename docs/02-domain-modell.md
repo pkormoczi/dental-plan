@@ -297,7 +297,7 @@ kerekítési hiba az összegzésben.
 
   // Opcionális (hiányozhat egy régi fájlból, ilyenkor `null`-ként olvasandó).
   // Lásd "Előleg" lentebb.
-  "elolegSzazalek": 50,
+  "elolegOsszeg": 390000,
 
   // Opcionális (hiányozhat egy régi fájlból, ilyenkor `null`-ként olvasandó).
   // Lásd "Terv-szintű kedvezmény" lentebb.
@@ -384,26 +384,36 @@ Egyik mező sem emelte a `schemaVersion`-t — mind a négy additív, a hiányz�
 mező üres string/`false`/`true` alapértékkel olvasandó (a `Kategoria.szin`
 precedense szerint).
 
-### Előleg (`elolegSzazalek`)
+### Előleg (`elolegOsszeg`)
 
 Fogtechnikai munkát tartalmazó kezelésnél a munka megkezdésekor fizetendő
-előleg **százaléka**. `null` (vagy hiányzó mező) = a doki nem jelölte be,
-nincs előleg-sor a nyomtatványon. Nem emelt `schemaVersion`-t: a mező
-opcionális, egy régi `terv.json` változatlanul betölthető.
+előleg **abszolút összege**, a pénznem alapegységében (HUF: forint, EUR:
+cent) — D66. `null` (vagy hiányzó mező) = a doki nem jelölte be, nincs
+előleg-sor a nyomtatványon. Nem emelt `schemaVersion`-t: a mező opcionális,
+egy régi `terv.json` változatlanul betölthető, de a benne esetleg szereplő
+korábbi, százalék-alapú `elolegSzazalek` mező betöltéskor FIGYELMEN KÍVÜL
+MARAD — nincs migráció rá, egy régi verzióból nyitott új verzión a
+kapcsoló kikapcsolva indul.
 
-**Százalék tárolódik, nem összeg.** Az előleg és a fennmaradó rész összege
-mindig élőben számol a `fazisok`-ból (a *tényleges*, kedvezménnyel
-csökkentett végösszegből), ugyanúgy, ahogy a nyomtatvány `Fizetendő` sora
-— így nem lehet elcsúszni a sorok és a belőlük számolt előleg között. A
-számítás determinisztikusan reprodukálható a perzisztált százalékból és a
-perzisztált sorokból, ezért ez nem sérti a D7 pillanatkép-elvét (a
-verziómappát amúgy sem írjuk felül, D4).
+**Fix összeg tárolódik, nem élő százalék.** A mező bevezetésekor (backlog-9)
+tudatos, drift-mentes tervezési döntés volt, hogy a százalékból az összeg
+mindig élőben számoljon a `fazisok`-ból — így nem csúszhatott el a sorok és
+a belőlük számolt előleg. A doki a redesign (D66) mellett tudatosan
+elvetette ezt a védelmet egy fix összeg javára: egy utólagos sormódosítás
+emiatt ELCSÚSZTATHATJA az eredeti arányt. Az `előleg > fizetendő` esetet
+(amikor egy sortörlés a fizetendő alá viszi a végösszeget) a
+véglegesítés-őr (`domain/veglegesitesOr.ts`, `elolegTullep` mező) KEMÉNY
+blokkal fogja meg — az érték nem vágódik le automatikusan, a doki
+tudatosan rendezi a szerkesztőben (`domain/totals.ts` `elolegTullepi`).
+Egyenlőségnél (`előleg === fizetendő`) a fennmaradó rész explicit `0`,
+ez legitim állapot.
 
-Ugyanez a százalék tölti ki a fizetési feltételek sablonszövegének
-`{{elolegSzazalek}}` helyőrzőjét, hogy az 1. oldal és a 2. oldal jogi
-szövege ne mondhasson ellent egymásnak. Kikapcsolt kapcsolónál a
-helyőrző az 50-es alapértékre esik vissza — a mondat ilyenkor szó szerint
-az eredeti, aláírt szöveggel azonos.
+Egy formázott kifejezés (`pdf/labels.ts` `elolegKifejezes`) tölti ki a
+fizetési feltételek sablonszövegének `{{eloleg}}` helyőrzőjét, hogy az 1.
+oldal és a 2. oldal jogi szövege ne mondhasson ellent egymásnak.
+Kikapcsolt kapcsolónál a helyőrző egy "a megállapított előleg"/"die
+vereinbarte Anzahlung" megfogalmazásra esik vissza — a mondat ilyenkor
+nem konkrét összeget mond, de nem is hamis nullát.
 
 ### Terv-szintű kedvezmény (`kedvezmenyOsszeg`)
 
@@ -413,7 +423,7 @@ de a `Plan`-en ez FIX kedvezmény-**összegként** (`kedvezmenyOsszeg`)
 rögzül, nem a begépelt cél-végösszegként (D25) — a sorok tiszta
 összegéből ennyi vonódik le. `null` (vagy hiányzó mező) = nincs terv-
 szintű kedvezmény, a `Fizetendő` a sorok tiszta összege (a mai
-viselkedés). Nem emelt `schemaVersion`-t, az `elolegSzazalek` precedense
+viselkedés). Nem emelt `schemaVersion`-t, az `elolegOsszeg` precedense
 szerint.
 
 **Fix összeg tárolódik, nem a cél-végösszeg.** Ha a cél-végösszeget

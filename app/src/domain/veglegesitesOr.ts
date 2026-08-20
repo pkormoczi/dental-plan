@@ -21,6 +21,7 @@ import {
 } from './kitoltetlen';
 import { masterSnapshotDiff, type MezoElteres } from './masterSnapshotDiff';
 import { fallbackSorok, type FallbackSorokEredmeny } from './nev';
+import { elolegTullepi, tervVegosszeg } from './totals';
 import type { Paciens, Plan, PriceList } from './types';
 
 export type VeglegesitesLepes =
@@ -45,6 +46,14 @@ export interface VeglegesitesDiagnozis {
   nameMissing: boolean;
   /** A fogtérkép-kattintással felvett, de be nem azonosított (nevSnapshot nélküli) sorok -- KEMÉNY blokk, nem a lánc tagja. */
   uresSorok: KitoltetlenSor[];
+  /**
+   * Az előleg (D66: abszolút összeg) meghaladja a fizetendőt -- KEMÉNY
+   * blokk, nem a lánc tagja. A mai `0-100%`-os szorítás (a százalék-alapú
+   * modell strukturális védelme) megszűnt, ezt a validációt explicit kell
+   * kikényszeríteni: az érték nem vágódik le automatikusan, a doki
+   * tudatosan rendezi (`elolegTullepi`, `domain/totals.ts`).
+   */
+  elolegTullep: boolean;
   nevProblemak: FallbackSorokEredmeny;
   nullaSorok: string[];
   hianyzoLeirasok: HianyzoCsomagLeiras[];
@@ -85,6 +94,9 @@ export function veglegesitesDiagnozis(
     !plan.paciens.email ||
     !plan.paciens.taj;
   const uresSorok = kitoltetlenSorok(plan);
+  const elolegTullep =
+    plan.elolegOsszeg != null &&
+    elolegTullepi(tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg), plan.elolegOsszeg);
   // D21/D24: a hiányzó VAGY kézzel eltérített német tételnevek soha nem
   // eshetnek/maradhatnak néma módon a terven -- a doki itt látja, mely nevek
   // érintettek, mielőtt a páciens aláírja a dokumentumot. Három külön ok
@@ -108,6 +120,7 @@ export function veglegesitesDiagnozis(
   return {
     nameMissing,
     uresSorok,
+    elolegTullep,
     nevProblemak,
     nullaSorok,
     hianyzoLeirasok,

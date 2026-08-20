@@ -43,29 +43,42 @@ export function tervVegosszeg(fazisok: Fazis[], kedvezmenyOsszeg?: number | null
   return Math.max(0, sorokOsszeg(fazisok) - (kedvezmenyOsszeg ?? 0));
 }
 
-/** Az előleg alapértelmezett százaléka, amikor a doki bekapcsolja a jelölőt. */
-export const ELOLEG_ALAP_SZAZALEK = 50;
-
 export interface ElolegOsszegek {
   eloleg: number;
-  fennmarado: number;
+  /**
+   * `null`, ha az előleg meghaladja a fizetendőt (D66) -- ilyenkor a
+   * fennmaradó rész nem értelmezhető negatív számként a nyomtatványon/
+   * szerkesztőben, a hívó „—"-t jelenít meg helyette. A véglegesítés-őr
+   * ezt az esetet kemény blokkal fogja meg (`elolegTullepi`), de a szerkesztő
+   * és a Csak-ajánlat előnézet a blokk előtt is meg kell tudja jeleníteni.
+   */
+  fennmarado: number | null;
 }
 
 /**
- * Az előleg és a fennmaradó rész összege egy adott százalékhoz.
+ * Az előleg meghaladja-e a fizetendőt -- ez az EGYETLEN hely, ahol ez a
+ * határ eldől; az `elolegOsszegek` és a véglegesítés-őr is ezt hívja (D66).
+ */
+export function elolegTullepi(fizetendo: number, eloleg: number): boolean {
+  return eloleg > fizetendo;
+}
+
+/**
+ * Az előleg és a fennmaradó rész összege egy adott (abszolút) előleg-
+ * összeghez (D66 -- korábban százalékból számolt, drift-mentes érték volt,
+ * a doki tudatosan fix összegre váltott).
  *
  * A `fizetendo` a TÉNYLEGES (kedvezménnyel csökkentett) végösszeg, nem a
  * listaáras -- a páciens ehhez képest fizet előleget (D9: a nyomtatványon
- * amúgy sem látszik a kedvezmény). Egész pénznemegységre kerekít (HUF:
- * forint, EUR: cent), és a fennmaradó részt KIVONÁSSAL adja, nem külön
- * kerekítéssel, hogy a két szám mindig pontosan a `fizetendo`-t adja ki.
+ * amúgy sem látszik a kedvezmény). A fennmaradó részt KIVONÁSSAL adja, nem
+ * külön kerekítéssel, hogy a két szám mindig pontosan a `fizetendo`-t adja
+ * ki -- kivéve, ha az előleg túllépi a fizetendőt, ott `fennmarado: null`.
  *
- * Ez az EGYETLEN hely, ahol az előleg számítása/kerekítése eldől -- a
- * szerkesztő és a nyomtatvány is ezt hívja.
+ * Ez az EGYETLEN hely, ahol az előleg számítása eldől -- a szerkesztő és a
+ * nyomtatvány is ezt hívja.
  */
-export function elolegOsszegek(fizetendo: number, szazalek: number): ElolegOsszegek {
-  const eloleg = Math.round((szazalek / 100) * fizetendo);
-  return { eloleg, fennmarado: fizetendo - eloleg };
+export function elolegOsszegek(fizetendo: number, eloleg: number): ElolegOsszegek {
+  return { eloleg, fennmarado: elolegTullepi(fizetendo, eloleg) ? null : fizetendo - eloleg };
 }
 
 export function computeOsszesitok(

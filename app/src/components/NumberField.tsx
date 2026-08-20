@@ -47,6 +47,13 @@ export interface NumberFieldProps {
    * a törzsadat írásához, azt továbbra is `onCommit` végzi blur/Enter-re.
    */
   onDraftChange?: (parsed: number | null) => void;
+  /**
+   * Blur UTÁN hívódik, a `commit()` lefutása után -- kizárólag "a mező most
+   * vesztette el a fókuszt" jelzéshez (pl. egy kötelező-mező hiba, ami csak
+   * blur/Enter után jelenhet meg, nem azonnal fókuszáláskor, backlog-64 6.
+   * döntése). NEM helyettesíti az `onCommit`-ot, ami az új értéket adja át.
+   */
+  onBlur?: () => void;
   placeholder?: string;
   textAlign?: CSSProperties['textAlign'];
   style?: CSSProperties;
@@ -73,6 +80,7 @@ export default function NumberField({
   unit = 'HUF',
   min,
   onDraftChange,
+  onBlur,
   placeholder,
   textAlign,
   style,
@@ -142,6 +150,7 @@ export default function NumberField({
         onBlur={() => {
           commit();
           setFocused(false);
+          onBlur?.();
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {

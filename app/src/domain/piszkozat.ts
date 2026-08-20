@@ -49,7 +49,7 @@ export function piszkozatTartalmas(plan: Plan): boolean {
   // Az előleg-kapcsoló bekapcsolása tudatos doki-döntés (backlog-9), nem
   // gépi alapérték -- önmagában is védendő tartalom, még üres páciensadat
   // és sorok nélkül is.
-  if (plan.elolegSzazalek != null) return true;
+  if (plan.elolegOsszeg != null) return true;
 
   // Ugyanez a terv-szintű kedvezmény kapcsolójára (backlog-16).
   if (plan.kedvezmenyOsszeg != null) return true;

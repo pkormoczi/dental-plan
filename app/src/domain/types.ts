@@ -133,13 +133,19 @@ export interface Plan {
   osszesitok: Osszesitok;
   /**
    * Fogtechnikai munkát tartalmazó kezelésnél a munka megkezdésekor
-   * fizetendő előleg százaléka. `null` (vagy hiányzó mező egy régi
+   * fizetendő előleg ABSZOLÚT ÖSSZEGE, a pénznem alapegységében (HUF:
+   * forint, EUR: cent) -- D66. `null` (vagy hiányzó mező egy régi
    * `terv.json`-ben) = a doki nem jelölte be, nincs előleg-sor a
-   * nyomtatványon. A százalék az igazság, nem a belőle számolt összeg: az
-   * mindig élőben számol a `fazisok`-ból (lásd `elolegOsszegek`), ahogy a
-   * `Fizetendő` sor is. `schemaVersion` nem emelkedett, a mező opcionális.
+   * nyomtatványon. A korábbi, százalék-alapú `elolegSzazalek` mezőt (a
+   * végösszegből élőben számolt, drift-mentes érték) a doki tudatosan
+   * elvetette egy fix összeg javára -- egy utólagos sormódosítás emiatt
+   * ELCSÚSZTATHATJA az arányt; a `előleg > fizetendő` esetet a
+   * véglegesítés-őr (`veglegesitesOr.ts`) kemény blokkja fogja meg, nem
+   * automatikus levágás. Régi `terv.json`-ból betöltve az `elolegSzazalek`
+   * mező figyelmen kívül marad, nincs migráció. `schemaVersion` nem
+   * emelkedett, a mező opcionális.
    */
-  elolegSzazalek?: number | null;
+  elolegOsszeg?: number | null;
   /**
    * Terv-szintű kedvezmény: a sorok összegéből LEVONT fix összeg, amivel a
    * doki kerek végösszegre zárja az alkut. `null` (vagy hiányzó mező egy

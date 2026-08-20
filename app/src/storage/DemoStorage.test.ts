@@ -551,7 +551,8 @@ describe('DemoStorage', () => {
       const sablonok = tree.find((n) => n.name === 'sablonok');
       expect(sablonok?.type).toBe('dir');
       if (sablonok?.type !== 'dir') throw new Error('unreachable');
-      expect(sablonok.children).toHaveLength(6);
+      // 6 alap sablon + a D66 fizetési feltételek HU/DE v2-je.
+      expect(sablonok.children).toHaveLength(8);
 
       const paciensek = tree.find((n) => n.name === 'paciensek');
       if (paciensek?.type !== 'dir') throw new Error('unreachable');

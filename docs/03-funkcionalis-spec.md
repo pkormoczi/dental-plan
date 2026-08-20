@@ -524,19 +524,35 @@ részét, ha a doki forrás szerint akarja látni. A kedvezmény összege a
 nyomtatványon itt sem jelenik meg (D9), csak a „Fizetendő" lesz kisebb; az
 előleg (lásd lent) ebből a csökkentett összegből számol.
 
-### Előleg
+### Előleg (D66)
 
 A „Mindösszesen" doboz alatt egy kapcsoló: *„Ez a terv fogtechnikai
-munkát tartalmaz — előleg feltüntetése"*. Bekapcsolva egy 50%-ról induló,
-0–100 közé szorított százalék mező jelenik meg, mellette az előleg és a
-fennmaradó rész forintban — mindkettő a **tényleges** végösszegből
-számolva, élőben követve a sorok változását.
+munkát tartalmaz — előleg feltüntetése"*. Bekapcsolva egy összeg-mező
+jelenik meg **üresen, azonnali fókusszal**, előtöltés nélkül — a doki
+tudatosan gépeli be az előleg abszolút összegét (nincs értelmes
+alapérték egy fix összegnél). A mező alatt a fennmaradó rész, a
+**tényleges** végösszegből (kedvezménnyel/felárral már csökkentett/
+növelt) kiszámolva, élőben követve a sorok változását.
 
-A kapcsoló állapotát és az értéket egyetlen mező hordozza
-(`elolegSzazalek`, `null` = kikapcsolva), így a kettő nem kerülhet
-egymásnak ellentmondó állapotba. Bekapcsolva a nyomtatvány 1. oldala két
-új sort kap, és a 2. oldal fizetési feltételeinek szövege is ugyanezt a
-százalékot mondja (lásd `docs/04-nyomtatvany-spec.md`).
+A kapcsoló állapotát és a committált értéket egyetlen mező hordozza
+(`elolegOsszeg`, `null` = kikapcsolva); a "bekapcsolva, de a doki még nem
+írt be összeget" állapot kizárólag a szerkesztő komponensének lokális
+állapota, nem kerül a `Plan`-re. A kötelező-mező hiba csak blur vagy
+véglegesítési kísérlet UTÁN jelenik meg, nem azonnal bekapcsoláskor. Ha a
+doki explicit `0`-t ír be, blur/Enter után a kapcsoló automatikusan
+kikapcsol (a mező eltűnik) — egy `0` összegű „előleg” valójában nincs
+előleg.
+
+Mivel az összeg fix (nem élőben számolt százalék), egy utólagos
+sortörlés/módosítás az előleget a fizetendő FÖLÉ viheti. Ilyenkor az érték
+NEM vágódik le automatikusan: a mezőn inline hard error jelenik meg, a
+fennmaradó rész helyén „—” áll, és ez a véglegesítés-őr KEMÉNY blokkja
+(lásd lent) — a doki tudatosan rendezi. Ha az előleg pontosan egyenlő a
+fizetendővel, a fennmaradó rész explicit `0`, ez legitim állapot.
+
+Bekapcsolva a nyomtatvány 1. oldala két új sort kap, és a 2. oldal
+fizetési feltételeinek szövege is ugyanezt az összeget mondja (lásd
+`docs/04-nyomtatvany-spec.md`).
 
 ### Tétel-leírások nyomtatása
 
@@ -646,6 +662,14 @@ folytatható — ez nem figyelmeztetés, hanem blokk, hogy névtelen, 0 Ft-os
 sor sose kerülhessen az aláírandó dokumentumra. A hibaüzenet megnevezi a
 fázist és a fogszámot; „Vissza a szerkesztőbe" gomb visz a hiányzó sorhoz.
 Az Előnézet maga nem blokkolódik, csak a véglegesítés.
+
+**Előleg meghaladja a fizetendőt (kemény blokk, D66):** ha a bekapcsolt
+előleg összege nagyobb, mint a terv tényleges (kedvezménnyel/felárral már
+csökkentett/növelt) végösszege — jellemzően egy sortörlés/módosítás
+utóhatása —, a véglegesítés blokkolva van. Az előleg értéke a szerkesztőn
+MARAD, nem vágódik le automatikusan; a hibaüzenet „Vissza a szerkesztőbe"
+gombbal visz az Előleg blokkhoz, ahol inline hard error jelzi a
+problémát (lásd fent, „Előleg").
 
 **0 összegű sor (puha megerősítés):** ha a tervben van névvel ellátott, de
 0 összegű sor (`tenylegesEgysegar * mennyiseg === 0`), a véglegesítés egy
@@ -1009,7 +1033,7 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   adott — a törzsadat bevezetése óta egy csak törzsadattal rendelkező
   páciens is választható itt.
 
-  Mindkét esetben minden más mező (`orvos`, `fazisok`, `elolegSzazalek`,
+  Mindkét esetben minden más mező (`orvos`, `fazisok`, `elolegOsszeg`,
   `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss alapértéke —
   pontosan úgy, mintha a doki egy „+ Új páciens" tervet indítana,
   csak a páciens mezők (és a `paciensId`) már ki vannak töltve. A
@@ -1024,7 +1048,7 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   `⋯` menüjében, mert konkrétan AZT a verziót másolja, sorokkal együtt
   (egy régebbi verzió sorai eltérhetnek a legfrissebbtől). A
   `paciensId`, `nyelv`, `penznem`, `orvos`, `fazisok`,
-  `elolegSzazalek`, `kedvezmenyOsszeg` és az `arlistaVerzio`
+  `elolegOsszeg`, `kedvezmenyOsszeg` és az `arlistaVerzio`
   változatlanul átjön — ugyanaz a snapshot-elv, mint egy meglévő terv új
   verzióra nyitásakor. Ez a valódi A/B alku-változat használati eset: a
   doki utána csak azt módosítja, ami eltér a két ajánlat között, nem
