@@ -174,7 +174,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('backlog-61: elavult árlistai pillanatkép a "price-drift" lépést teszi alkalmazhatóvá', () => {
     const plan = makePlan([[sor({ listaEgysegar: 9000, tenylegesEgysegar: 9000 })]]); // priceList t1 mai ára 10000
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
 
     expect(diag.arElteresek).toEqual({ elavult: ['Fogeltávolítás'], keziAr: [] });
     expect(diag.alkalmazhato['price-drift']).toBe(true);
@@ -182,7 +182,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('backlog-61: kézzel felülírt ajánlati ár is a "price-drift" lépést teszi alkalmazhatóvá', () => {
     const plan = makePlan([[sor({ tenylegesEgysegar: 8000 })]]); // listaEgysegar követi, de az ajánlati ár eltér
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
 
     expect(diag.arElteresek).toEqual({ elavult: [], keziAr: ['Fogeltávolítás'] });
     expect(diag.alkalmazhato['price-drift']).toBe(true);
