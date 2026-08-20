@@ -107,6 +107,12 @@ export default function ItemPicker({
   const egyediElerheto = Boolean(onPickEgyedi) && q.trim() !== '';
   const opcioSzam = results.length + (egyediElerheto ? 1 : 0);
 
+  // 62. tétel (D71): `available` már nem szűr `currency`-re (egy
+  // beárazatlan tétel is kereshető/felvehető) -- az üres-találat jegyzet
+  // ezért itt, nem az `available.length`-ből dönti el, hogy a doki egy
+  // olyan pénznemben keres, amiben SEMMI sincs beárazva.
+  const nincsBearazottTetel = available.every((x) => !x.ar[currency]);
+
   function finishPick() {
     if (clearOnPick) {
       setQ('');
@@ -220,7 +226,7 @@ export default function ItemPicker({
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  {formatPrice(r.ar[currency], currency, nyelv)}
+                  {formatPrice(r.ar[currency], currency, nyelv) ?? '—'}
                 </span>
               </div>
             </div>
@@ -231,10 +237,10 @@ export default function ItemPicker({
           style={{
             padding: '10px 12px',
             fontSize: 12.5,
-            color: available.length === 0 ? t.warn : t.uiTextFaint,
+            color: nincsBearazottTetel ? t.warn : t.uiTextFaint,
           }}
         >
-          {available.length === 0
+          {nincsBearazottTetel
             ? `Nincs találat. Ebben a pénznemben (${currency}) egyetlen aktív tétel sincs beárazva — az Árlistán tölthetők ki.`
             : 'Nincs találat.'}
         </div>

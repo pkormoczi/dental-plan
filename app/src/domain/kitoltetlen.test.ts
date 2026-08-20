@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hianyzoCsomagLeirasok, kitoltetlenSorok, nullaOsszeguSorok } from './kitoltetlen';
+import { araztalanSorok, hianyzoCsomagLeirasok, kitoltetlenSorok, nullaOsszeguSorok } from './kitoltetlen';
 import type { Plan, PriceList, Sor } from './types';
 
 function sor(partial: Partial<Sor>): Sor {
@@ -196,5 +196,32 @@ describe('hianyzoCsomagLeirasok', () => {
   it('egyedi (tetelId nélküli) sort nem jelez -- nincs mihez viszonyítani', () => {
     const plan = makePlan([[sor({ tetelId: '', nevSnapshot: 'Egyedi sor' })]]);
     expect(hianyzoCsomagLeirasok(plan, priceList)).toEqual([]);
+  });
+});
+
+describe('araztalanSorok', () => {
+  it('a terv pénznemében beárazatlan, 0 Ft-os, névvel ellátott sort jelez (62. tétel, D71)', () => {
+    const plan = { ...makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: 'All-on-4 csomag', listaEgysegar: 0, tenylegesEgysegar: 0 })]]), penznem: 'EUR' as const };
+    expect(araztalanSorok(plan, priceList)).toEqual(['All-on-4 csomag']);
+  });
+
+  it('kézi ajánlati árat kapott, beárazatlan sort NEM jelez -- a doki már döntött', () => {
+    const plan = { ...makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: 'All-on-4 csomag', listaEgysegar: 0, tenylegesEgysegar: 250000 })]]), penznem: 'EUR' as const };
+    expect(araztalanSorok(plan, priceList)).toEqual([]);
+  });
+
+  it('egyedi (tetelId nélküli) sort nem jelez -- nem "hiányzó ár", hanem a sor jellege', () => {
+    const plan = { ...makePlan([[sor({ tetelId: '', nevSnapshot: 'Egyedi sor', listaEgysegar: 0, tenylegesEgysegar: 0 })]]), penznem: 'EUR' as const };
+    expect(araztalanSorok(plan, priceList)).toEqual([]);
+  });
+
+  it('beárazott tételnél nem jelez, akkor sem, ha a jelenlegi ajánlati ár 0', () => {
+    const plan = { ...makePlan([[sor({ tetelId: 't-nem-csomag', nevSnapshot: 'Fognyaki tömés', listaEgysegar: 25000, tenylegesEgysegar: 0 })]]), penznem: 'HUF' as const };
+    expect(araztalanSorok(plan, priceList)).toEqual([]);
+  });
+
+  it('meg nem nevezett sort nem jelez -- azt a kitoltetlenSorok kemény blokkja fedi', () => {
+    const plan = { ...makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: '', listaEgysegar: 0, tenylegesEgysegar: 0 })]]), penznem: 'EUR' as const };
+    expect(araztalanSorok(plan, priceList)).toEqual([]);
   });
 });

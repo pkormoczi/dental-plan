@@ -283,7 +283,8 @@ kerekítési hiba az összegzésben.
           "listaEgysegar": 45000,
           "tenylegesEgysegar": 45000,
           "leirasSnapshot": "",     // opcionális, lásd "Tétel-leírás" lentebb
-          "mennyisegKezi": false    // opcionális, lásd "Fogszám kezelés" lentebb
+          "mennyisegKezi": false,   // opcionális, lásd "Fogszám kezelés" lentebb
+          "masikPenznemAr": null    // opcionális, lásd "Pénznemváltás" lentebb
         }
       ]
     }
@@ -317,8 +318,9 @@ bevezetése (D21) egyetlen új JSON-kulcsot sem igényelt, csak azt, hogy a
 kód ténylegesen olvassa/vezérelje őket. A `nyelv` és a `penznem` tudatosan
 **két külön mező**, nem egy összevont: az egyik a szöveget (tételnevek,
 nyomtatvány feliratai, dátumformátum, sablon, **pénzösszeg ezres/tizedes
-elválasztója**), a másik az ajánlható tételkört és a pénzösszeg
-tizedesjegyeit/pénznemjelét vezérli (D63).
+elválasztója**) vezérli, a másik azt, melyik `Tetel.ar` kulcsot nézi a
+szerkesztő és a pénzösszeg tizedesjegyeit/pénznemjelét (D63) — a
+kereső D71 óta NEM szűr pénznemre, lásd „Pénznemváltás" lentebb.
 
 A `beallitasok.json` korábbi `nemetEngedelyezve` mezője (a német nyelv
 engedélyező funkciókapcsolója) megszűnt (D63, 52. tétel) — a német nyelv
@@ -332,6 +334,33 @@ Egy meglévő pácienshez induló ÚJ terv-lánc kiinduló `nyelv`/`penznem`-e a
 `nyelv`/`penznem`-e öröklődik (`app/src/domain/blankPlan.ts`
 `createBlankPlan()` opcionális harmadik paramétere,
 `app/src/state/planIndulas.ts` `ujTervForrasPaciensbol()` tölti ki).
+
+### Pénznemváltás (`Sor.masikPenznemAr`, D71)
+
+A `Sor.listaEgysegar`/`tenylegesEgysegar` implicit-pénznemű: mindig a
+JELENLEGI `plan.penznem` állapotát tükrözi. Az opcionális
+`masikPenznemAr?: { listaEgysegar; tenylegesEgysegar } | null` mező a
+NEM aktív pénznemben utoljára ismert árat tárolja — ez teszi a
+pénznemváltást nem-destruktívvá, a `mennyisegKezi`/`elolegSzazalek`/
+`kedvezmenyOsszeg`/`paciensId` additív, `schemaVersion`-t nem emelő
+mintáját követve. Váltáskor (`app/src/domain/penznemValtas.ts`
+`sorPenznemValtassal()`):
+
+1. a JELENLEGI árpár a `masikPenznemAr`-be kerül,
+2. ha ott már van mentett érték az ÚJ pénznemre, az emelkedik elő a fő
+   mezőkbe (a kézzel írt ár sosem íródik felül némán az árlistával, D24
+   szelleme),
+3. egyébként az árlistából (`tetel.ar[újPénznem]` → `basePrice()`)
+   szedődik újra,
+4. ha a tétel abban a pénznemben sem beárazott (vagy a sor egyedi),
+   `0/0` — „hiányzó ár" állapot, kézzel kitöltendő
+   (`domain/kitoltetlen.ts` `araztalanSorok()`, kemény véglegesítés-
+   blokk, docs/03-funkcionalis-spec.md § 4).
+
+Nincs automatikus HUF↔EUR átváltás egyik ágban sem (D11) — minden
+pénznemben az érték vagy kézzel írt, vagy az árlistából jön. A
+`Sor.savos` mező érintetlen marad váltáskor: soronkénti, szabad,
+kétirányú doki-kapcsoló, nem pénznemből derivált érték.
 
 ### Miért van `nevSnapshot` és `listaEgysegar` a soron
 

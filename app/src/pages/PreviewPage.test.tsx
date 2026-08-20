@@ -224,6 +224,102 @@ describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', 
   );
 });
 
+// 62. tétel (D71): egy a terv pénznemében beárazatlan, kézi árat sem kapott
+// sor KEMÉNY blokk -- lásd domain/kitoltetlen.ts `araztalanSorok()`.
+describe('PreviewPage -- 62. tétel (D71): beárazatlan sor kemény véglegesítés-blokkja', () => {
+  function seedWithNoEurPriceItem() {
+    const custom = {
+      ...seedPriceList,
+      tetelek: seedPriceList.tetelek.map((x) =>
+        x.nev.hu === 'Fogeltávolítás' ? { ...x, ar: { ...x.ar, EUR: null } } : x,
+      ),
+    };
+    localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'beárazatlan, kézi árat sem kapott sorral a véglegesítés blokkolva -- kézi ár megadása után folytatható',
+    async () => {
+      const user = userEvent.setup();
+      seedWithNoEurPriceItem();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Teszt EUR');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      // Pénznemváltás EUR-ra -- a tétel EUR ára null, a sor "hiányzó ár"
+      // állapotba kerül, de nem törlődik.
+      await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+      await screen.findByText('Pénznem');
+      await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
+      const penznemDialog = await screen.findByRole('alertdialog');
+      expect(
+        within(penznemDialog).getByText(/egyik sem beárazott az új pénznemben/),
+      ).toBeInTheDocument();
+      await user.click(within(penznemDialog).getByRole('button', { name: 'Folytatás' }));
+
+      await user.click(screen.getByRole('link', { name: 'Kezelések' }));
+      await screen.findByDisplayValue('Fogeltávolítás');
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+
+      // KEMÉNY blokk -- nincs AlertDialog, a hiba a lapon jelenik meg.
+      expect(
+        await screen.findByText(/nincs beárazva a terv pénznemében/),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Fogeltávolítás/)).toBeInTheDocument();
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.queryByText('A terv elmentve ✓')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Vissza a szerkesztőbe' }));
+      const priceField = (await screen.findByLabelText('Ajánlati egységár')) as HTMLInputElement;
+      await user.clear(priceField);
+      await user.type(priceField, '30,00');
+      await user.tab();
+
+      // Most már folytatható a véglegesítés (a hiányos páciensadat miatt a
+      // szokásos, NEM blokkoló megerősítő dialóguson át). A kézzel beírt ár
+      // a listaEgysegar (0, nincs EUR listaár) és a tenylegesEgysegar közötti
+      // eltérés miatt a "price-drift" (D70) lépést is alkalmazhatóvá teszi --
+      // két egymást követő "Folytatás" dialógus.
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn2 = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn2);
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+      await waitFor(() =>
+        expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument(),
+      );
+    },
+    20000,
+  );
+});
+
 // docs/03-funkcionalis-spec.md véglegesítés-lánc 4. lépése ("A piszkozat
 // törlése") -- ha ez elmaradna, a most fájlba mentett terv azonnal
 // vissza"íródna" piszkozatként (lásd AppState.tsx markPlanSaved).

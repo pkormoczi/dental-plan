@@ -120,6 +120,72 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
   });
 });
 
+describe('PatientPage -- 62. tétel (D71): pénznemváltás nem törli a sorokat', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('HUF->EUR->HUF váltás megőrzi a sort, a dialógus a tényleges hatást írja ki, a kézzel átírt ár visszaáll', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.type(nameInput, 'Teszt Elek');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // A seedben Fogeltávolítás HUF listaára 25000 Ft -- kézzel 20000-re
+    // írjuk át, hogy a stash-precedenciát is le lehessen ellenőrizni.
+    const priceField = screen.getByLabelText('Ajánlati egységár') as HTMLInputElement;
+    expect(priceField.value).toBe('25000');
+    await user.clear(priceField);
+    await user.type(priceField, '20000');
+    await user.tab();
+
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+    await screen.findByText('Pénznem');
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(
+      within(dialog).getByText(/1 sor ára az árlistából frissül/),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText(/A sorok nem törlődnek/)).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Folytatás' }));
+
+    await user.click(screen.getByRole('link', { name: 'Kezelések' }));
+    // A sor megmaradt (nem törlődött), az árlistai EUR árra állt (69,00 €).
+    expect(await screen.findByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+    const eurPriceField = screen.getByLabelText('Ajánlati egységár') as HTMLInputElement;
+    expect(eurPriceField.value).toBe('69,00');
+
+    // Vissza HUF-ra -- a korábban kézzel átírt ár (20000) visszaáll.
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+    await screen.findByText('Pénznem');
+    await user.click(screen.getByRole('radio', { name: 'HUF — forint' }));
+
+    const dialog2 = await screen.findByRole('alertdialog');
+    expect(
+      within(dialog2).getByText(/1 sor a korábban ebben a pénznemben megadott árát kapja vissza/),
+    ).toBeInTheDocument();
+    await user.click(within(dialog2).getByRole('button', { name: 'Folytatás' }));
+
+    await user.click(screen.getByRole('link', { name: 'Kezelések' }));
+    expect(await screen.findByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+    const hufPriceField = screen.getByLabelText('Ajánlati egységár') as HTMLInputElement;
+    expect(hufPriceField.value).toBe('20000');
+  });
+});
+
 describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztett neveket', () => {
   beforeEach(() => {
     localStorage.clear();

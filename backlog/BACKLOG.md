@@ -47,16 +47,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   előbbi ellentmond D102-nek). A döntéseket lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-60-kezelessor-szerkesztes-terv.md`
 
-### 62. tétel — Többpénznemes listaár / ajánlati ár state
-  (a `backlog/redesign/` redesign-döntéssorozat DP-045 tétele) — a
-  `Sor` ma egyetlen implicit-pénznemű árpárt tart, a pénznemváltás
-  DESTRUKTÍV (törli a sorokat), miközben az árlistai `Tetel.ar` már ma
-  is mindkét pénznemet tartja. Ez a tétel additív „másik pénznem"
-  stash-mezőt ad a sorhoz, nem-destruktívvá téve a váltást, séma-
-  bővítés nélkül. A 89. tétel erre épül. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-62-tobbpenznemes-ar-terv.md`
-
 ### 65. tétel — Manuális szövegek nyelvi review-ja
   (a `backlog/redesign/` redesign-döntéssorozat DP-048 tétele) —
   nyelvi review-metaadat (`authoredInLanguage`/`reviewedForLanguage`)

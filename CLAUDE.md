@@ -106,6 +106,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A terv `ervenyesIg` mezője soha nem maradhat üresen | D62 — üres érték a `formatLongDate`-en át „Invalid Date”-ként kerülne egy szerződéses dokumentumra; a „Terv adatai” lap Dátumok szekciója a mező elhagyásakor automatikusan visszaállítja az alapértékre |
 | A terv `elolegOsszeg` mezője soha nem haladhatja meg a fizetendőt egy véglegesített terven, és soha nem vágódik le némán | D66 — a százalék-alapú, strukturálisan garantált `előleg ≤ fizetendő` védelem megszűnt az abszolút összegre váltáskor; a véglegesítés-őr kemény blokkja váltja ki, a doki tudatos rendezését várva, nem automatikus levágást |
 | A véglegesítés blokkolva, ha a terv `orvos`-a üres vagy nem szerepel a jelenleg AKTÍV orvosok között | D68 — az aláírás-blokkban szereplő név jogilag releváns; egy már véglegesített terv `plan.orvos` név-pillanatképét ez visszamenőleg nem érinti (D7) |
+| Sem a sor-, sem a tétel-szintű ár SOHA nem számolódik át automatikusan a két pénznem között; a `Sor.masikPenznemAr` kizárólag a pénznemváltás munkaállapota, sosem system of record egyetlen renderelt/nyomtatott értékhez sem | D11/D71 — minden HUF/EUR érték egymástól függetlenül, kézzel megadott; egy automatikus árfolyam-átszámítás vagy a stash-mező nyomtatványon való feltűnése a pillanatkép-elvet (D7) sértené |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -921,6 +922,25 @@ mezői" és § 4. "Előnézet és véglegesítés") segédfüggvényei
   `domain/planCopy.ts` `planMasolatKent()` opcionális ötödik `priceList`
   paramétere hívja, ha a hívó átadja
 
+A pénznemváltás tétel (`docs/01-attekintes-es-dontesek.md` D71,
+`docs/02-domain-modell.md` § Pénznemváltás, `docs/03-funkcionalis-spec.md`
+§ 2. Dokumentum nyelve / Pénznem) segédfüggvényei, szintén ne írd újra
+őket:
+- `sorPenznemValtassal(sor, ujPenznem, tetel)` / `penznemvaltasHatasa(plan,
+  priceList, ujPenznem)` / `nincsListaar(sor, tetel, penznem)`
+  (`app/src/domain/penznemValtas.ts`) — az EGYETLEN hely, ahol egy sor
+  pénznemváltása eldől (stash > árlista > „hiányzó ár" precedencia),
+  illetve a `PatientPage.tsx` pénznemváltás-megerősítő dialógusának élő
+  számlálása, a `nyelvvaltasHatasa()` (D24) mintáján. `nincsListaar()` az
+  EGYETLEN hely, ahol eldől, hogy egy sornak nincs árlistai
+  referenciaára az adott pénznemben — a `PlanEditorPage.tsx` Listaár
+  cellája és a `domain/kitoltetlen.ts` `araztalanSorok()` is ezt hívja
+- `araztalanSorok(plan, priceList)` (`app/src/domain/kitoltetlen.ts`) — a
+  `nullaOsszeguSorok()` mintájára, de KEMÉNY blokk: névvel ellátott,
+  beárazatlan ÉS kézi árat sem kapott sorok. A `veglegesitesOr.ts`
+  `VeglegesitesDiagnozis.araztalanSorok` mezőjeként, a `nameMissing`/
+  `uresSorok` mintáján a PUHA `VEGLEGESITES_LEPESEK` láncon KÍVÜL él
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
@@ -935,9 +955,10 @@ A tételfelvitel billentyűzetes ciklusa dönti el, hogy az app gyorsabb-e az Ex
 **gépel → `↑`/`↓` navigál → `Enter` hozzáad → a kereső kiürül és visszakapja a
 fókuszt → gépel tovább**, egérhasználat nélkül. Ezt kell elsőként tesztelni, a PDF
 generálás előtt. A kereső search-only, nincs kategória böngésző (D19); ékezetfüggetlen
-(`norm()`); csak `aktiv: true` és az aktuális pénznemben árazott tételeket listázza.
-Mindkét nyelven keres (`nev.hu` és `nev.de`) függetlenül a terv nyelvétől — a doki
-magyar, magyarul gépel akkor is, ha német ajánlatot állít össze (D21).
+(`norm()`); csak `aktiv: true` tételeket listáz — a pénznem NEM szűr a találatokra
+(D71), egy a terv pénznemében beárazatlan tétel is `—` listaárral, kézi ajánlati árral
+felvehető. Mindkét nyelven keres (`nev.hu` és `nev.de`) függetlenül a terv nyelvétől —
+a doki magyar, magyarul gépel akkor is, ha német ajánlatot állít össze (D21).
 
 ## Adat és ismert hiányok
 

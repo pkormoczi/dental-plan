@@ -14,6 +14,7 @@
 // `nevSnapshot`/ár pillanatkép D7 szerint továbbra is érvényes, csak a
 // mai árlistával nem egyeztethető), ez pedig egy SOSEM megnevezett sort.
 
+import { nincsListaar } from './penznemValtas';
 import { sorOsszeg } from './totals';
 import type { Plan, PriceList } from './types';
 
@@ -54,6 +55,30 @@ export function nullaOsszeguSorok(plan: Plan): string[] {
   plan.fazisok.forEach((fazis) => {
     fazis.sorok.forEach((sor) => {
       if (sor.nevSnapshot.trim() && sorOsszeg(sor) === 0) {
+        eredmeny.push(sor.nevSnapshot);
+      }
+    });
+  });
+  return eredmeny;
+}
+
+/**
+ * KEMÉNY blokk (62. tétel, D71): névvel ellátott sorok, amiknek a tétele
+ * nincs beárazva a terv pénznemében (`nincsListaar()`, domain/penznemValtas.ts),
+ * ÉS a doki még nem adott meg kézi ajánlati árat (`tenylegesEgysegar === 0`).
+ * Szándékosan KEMÉNY, nem a `nullaOsszeguSorok` puha ágán -- egy ilyen sor
+ * ára nem "elgépelés vagy elfelejtett ár" (mint a puha esetnél), hanem
+ * strukturálisan nincs honnan jönnie: a tétel az adott pénznemben nem
+ * ajánlható (`Tetel.ar[penznem] == null`), a doki kézi beavatkozása nélkül
+ * a nyomtatványra 0-ás ár kerülne egy legitim tételre.
+ */
+export function araztalanSorok(plan: Plan, priceList: PriceList): string[] {
+  const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));
+  const eredmeny: string[] = [];
+  plan.fazisok.forEach((fazis) => {
+    fazis.sorok.forEach((sor) => {
+      const tetel = tetelById.get(sor.tetelId);
+      if (sor.nevSnapshot.trim() && nincsListaar(sor, tetel, plan.penznem) && sor.tenylegesEgysegar === 0) {
         eredmeny.push(sor.nevSnapshot);
       }
     });

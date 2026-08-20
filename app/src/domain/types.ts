@@ -101,6 +101,18 @@ export interface Sor {
    * felülírás némán átírná a doki szándékos darabszámát (D24 mintája).
    */
   mennyisegKezi?: boolean;
+  /**
+   * A NEM aktív (`plan.penznem`-től eltérő) pénznemben utoljára ismert
+   * ár -- lásd `domain/penznemValtas.ts` `sorPenznemValtassal()`. Ez teszi
+   * nem-destruktívvá a pénznemváltást: kilépéskor a JELENLEGI árpár ide
+   * kerül, belépéskor pedig -- ha van itt mentett érték -- ez emelkedik elő
+   * a fő mezőkbe az árlistai újraszedés helyett. `null`/hiányzó mező = a
+   * másik pénznemben még sosem volt állapot (a mező bevezetése előtti sor,
+   * vagy a doki még sosem váltott erre a pénznemre). `schemaVersion` nem
+   * emelkedik, a `mennyisegKezi`/`elolegSzazalek`/`kedvezmenyOsszeg`/
+   * `paciensId` additív mintáját követi.
+   */
+  masikPenznemAr?: { listaEgysegar: number; tenylegesEgysegar: number } | null;
 }
 
 export interface Fazis {

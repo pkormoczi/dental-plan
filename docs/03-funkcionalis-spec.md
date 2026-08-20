@@ -160,9 +160,11 @@ szekció egymástól **független** kétállású kapcsolót tart:
   van hozzájuk fordítás), a PDF fix feliratai, a dátumformátum, a
   sablonszövegek (nyilatkozat, fizetési feltételek, garancia), és a
   pénzösszegek ezres/tizedes elválasztója (D63).
-- **Pénznem** (`HUF` / `EUR`) — az ajánlható tételkör (csak azok a
-  tételek, amiknek van áruk ebben a pénznemben), és a pénzösszeg
-  tizedesjegyeinek száma/pénznemjele.
+- **Pénznem** (`HUF` / `EUR`) — melyik `Tetel.ar` kulcsot nézi a
+  szerkesztő, és a pénzösszeg tizedesjegyeinek száma/pénznemjele. A
+  kereső MINDEN aktív tételt megmutat, függetlenül attól, van-e ára a
+  kiválasztott pénznemben (D71) — egy beárazatlan tétel `—` listaárral,
+  kézzel megadható ajánlati árral vehető fel.
 
 A német páciens a legvalószínűbb ok, amiért ez a kettő szétválik: sokan
 Magyarországon, forintban fizetnek. Alapértéke ezért `HUF`, még német
@@ -200,6 +202,19 @@ Ha a kiválasztott nyelven/pénznemen hiányos a tartalom, a kártya alatt
 figyelmeztetés jelenik meg (hány aktív tételnek nincs neve az adott
 nyelven, illetve hogy a kiválasztott pénznemben van-e egyáltalán
 beárazott tétel) — ez a „ne a szerkesztőben legyen meglepetés" elve.
+
+**Pénznemváltás NEM törli a sorokat** (D71): minden sor a másik
+pénznemben utoljára ismert árát (`Sor.masikPenznemAr`) tartja meg
+váltáskor — visszaváltáskor egy korábban kézzel átírt ajánlati ár
+változatlanul visszaáll, nem íródik felül némán az árlistával. Ha egy
+sornak még nincs mentett állapota az új pénznemben, az árlistából
+szedődik újra (`tetel.ar[újPénznem]`); ha a tétel abban a pénznemben
+nem beárazott (vagy a sor egyedi), a sor „hiányzó ár" állapotba kerül
+(`0`, kézzel kitöltendő), törlés nélkül. Ha a tervben már vannak sorok,
+a váltás megerősítő párbeszéde előre kiírja a tényleges hatást (hány sor
+kapja vissza a mentett árát, hány frissül az árlistából, hány marad ár
+nélkül) — a nyelváltás dialógusának mintájára. Nincs automatikus
+HUF↔EUR átváltás egyik irányban sem (D11).
 
 ### Páciens adatai
 
@@ -344,9 +359,10 @@ kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`
   *Esztétikus tömés*. Normalizálás:
   `s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')`
 - A találatok kategória szerint csoportosítva jelennek meg, az ár a sor
-  jobb szélén.
-- Csak `aktiv: true` tételek, és csak azok, amiknek az aktuális pénznemben
-  van áruk.
+  jobb szélén — ha a tételnek nincs ára az aktuális pénznemben, `—`
+  jelenik meg helyette (D71), a tétel attól még találat és felvehető.
+- Csak `aktiv: true` tételek — a pénznem NEM szűr a találatokra (D71):
+  egy beárazatlan tétel is megjelenik, kézi ajánlati árral vehető fel.
 - A keresés **mindkét nyelven megy, mindig** — a doki magyar, magyarul
   gépel akkor is, ha német ajánlatot állít össze. Csak a *megjelenített*
   és a felvételkor *rögzített* név nyelvfüggő (lásd alább, „Hiányzó
@@ -407,7 +423,7 @@ becsült-ár-≈, törlés).
 | Beavatkozás | **Szerkeszthető** szövegmező, alapból a felvételkor rögzített (árlistai vagy egyedi) névvel kitöltve — a doki pontosíthatja, elgépelt/rövidített árlistai nevet javíthat. Az átírás megtartja a `tetelId`-t: az ár, a fogtérkép kategória-színe és a német-fallback ellenőrzés változatlanul az árlistai tételen át működik, csak a megjelenő szöveg (`nevSnapshot`) más. Üresen a sor véglegesítéskor kemény blokk (lásd „Kitöltetlen sor" lent). Egy `tetelId`-hez kötött soron, ha a `nevSnapshot` kézzel eltér a felvételkori árlistai névtől, egy „átírt" jelvény és egy kompakt reset-vezérlő jelenik meg — a reset a `tetel.nev`-et a terv nyelvén állítja vissza (`domain/nev.ts` `nevAtirt()`, D65); ez a jelzés NYELVFÜGGETLEN (magyar terven is működik), a fordítás-hiányt jelző `HU` jelvénytől (`sorFallback`) FÜGGETLENÜL, akár egyszerre is megjelenhet mindkettő |
 | Fog | Szabad szöveg, felsorolás. Nem kötelező. A beírt *számokat* validáljuk (lásd lent), a folyószöveges jegyzet (pl. „jobb felső") változatlanul megengedett |
 | Db | Automatikusan követi a Fog mezőben felsorolt (dedupolt) fogszámot, amíg a doki kézzel be nem írja — attól kezdve a sor levált, egy ⟳ ikongomb jelenik meg a mező mellett, amire kattintva egy lépésben visszaáll a fogak számára és újra követővé válik (`Sor.mennyisegKezi`, docs/02-domain-modell.md § Fogszám kezelés, D32). Alapérték 1, minimum 1 |
-| Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve. Egyedi sornál `—` (nincs árlistai referenciaár). Ha a sor `listaEgysegar`-ja eltér a MAI árlistától, egy ⟳ ikongomb jelenik meg mellette (D70) |
+| Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve. Egyedi sornál, illetve a terv pénznemében beárazatlan tételnél `—` (nincs árlistai referenciaár, D71). Ha a sor `listaEgysegar`-ja eltér a MAI árlistától, egy ⟳ ikongomb jelenik meg mellette (D70) |
 | Ajánlati ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`). EUR pénznemű tervnél a mező **euróban** fogad be és jelenít meg szöveget (pl. `35,50`), a tárolás változatlanul centben történik — ugyanaz a `NumberField` `unit` mechanizmus, ami az árlista adminban már véd az euró/cent tévesztéstől. Ez tisztán UI-réteg felirat, nem pénzösszeg-formázás, ezért nem indokol közös `domain/money.ts` segédfüggvényt. Ha eltér a listaártól, egy kompakt reset-vezérlő állítja vissza a listaárra (D65) |
 | Becsült ár (≈) | Soronkénti, szabad és kétirányú kapcsoló az Ajánlati ár mező ALATT (ghost ikongomb, `≈` szövegglyph, D65 — korábban a mező mellett volt) — bármelyik soron be- és kikapcsolható, függetlenül attól, hogy a sor árlistai FIX, SAVOS, fogtérkép-kattintásos vagy egyedi eredetű. Bekapcsolva a nyomtatványon `*` + lábjegyzetet kap (D15). Csak megjelenítést vezérel, az összegzésbe nem szól bele; nincs eredet-nyilvántartás, a sor nem jegyzi meg, honnan jött, és az aktuális árlistából sem kérdezzük vissza (D7) |
 | Összeg | `tenylegesEgysegar * mennyiseg` |
@@ -730,6 +746,15 @@ utóhatása —, a véglegesítés blokkolva van. Az előleg értéke a szerkesz
 MARAD, nem vágódik le automatikusan; a hibaüzenet „Vissza a szerkesztőbe"
 gombbal visz az Előleg blokkhoz, ahol inline hard error jelzi a
 problémát (lásd fent, „Előleg").
+
+**Beárazatlan sor (kemény blokk, D71):** ha egy névvel ellátott sor
+tétele nincs beárazva a terv pénznemében (`Tetel.ar[penznem] == null`),
+ÉS a doki még nem adott meg hozzá kézi ajánlati árat (az ára `0`
+maradt), a véglegesítés blokkolva — a tétel strukturálisan nem
+ajánlható ebben a pénznemben ár nélkül, ez nem elgépelés, mint a lenti
+puha 0 összegű esetnél. A hibaüzenet felsorolja az érintett sorok
+nevét; „Vissza a szerkesztőbe" gomb visz a kereső/ár mezőhöz. Kézi
+ajánlati ár megadása (vagy másik pénznemre váltás) feloldja a blokkot.
 
 **0 összegű sor (puha megerősítés):** ha a tervben van névvel ellátott, de
 0 összegű sor (`tenylegesEgysegar * mennyiseg === 0`), a véglegesítés egy
