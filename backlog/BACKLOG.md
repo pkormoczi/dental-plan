@@ -50,17 +50,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   változatlanul bekerül. A döntéseket lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-59-kezeles-kereses-terv.md`
 
-### 60. tétel — Kezeléssor szerkesztése
-  (a `backlog/redesign/` redesign-döntéssorozat DP-043 tétele) — az
-  egyedi név/ár-eltérés jelzés ma csak német terven működik (magyaron
-  sosem), és sehol nincs reset a névre/árra/leírásra. Ez a tétel
-  nyelvfüggetlenné teszi a markereket és reset-vezérlőket ad
-  mindháromhoz; a becsült ár `≈` widget marad (docs/07 nevesített
-  kivétele), csak pozíciót vált. A javaslat „sorrend/mozgatás" és
-  „accordion" scope-bulletjei explicit kizárva (nincs döntés mögöttük,
-  előbbi ellentmond D102-nek). A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-60-kezelessor-szerkesztes-terv.md`
-
 ### 61. tétel — Árlista-snapshot és explicit refresh
   (a `backlog/redesign/` redesign-döntéssorozat DP-044 tétele) — a
   soron ma nincs ár-követési komparátor és semmi nem diffel egy sort

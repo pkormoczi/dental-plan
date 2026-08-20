@@ -28,6 +28,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   InfoCircledIcon,
+  ResetIcon,
   TrashIcon,
   UpdateIcon,
 } from '@radix-ui/react-icons';
@@ -42,7 +43,7 @@ import { formatLongDate, formatPiszkozatIdo } from '../domain/date';
 import { leirasTulHosszu } from '../domain/leirasHossz';
 import { sorPatchKovetessel } from '../domain/mennyiseg';
 import { basePrice, formatMoney } from '../domain/money';
-import { resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
+import { arlistaiLeiras, leirasKoveti, nevAtirt, resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
 import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
 import {
@@ -83,7 +84,7 @@ function sorMezokTetelbol(
     listaEgysegar: base,
     tenylegesEgysegar: base,
     // D27 (docs/01): nincs HU-visszaesés a leírásra, hiányzó fordítás = üres.
-    leirasSnapshot: (nyelv === 'hu' ? item.leiras?.hu : item.leiras?.de) ?? '',
+    leirasSnapshot: arlistaiLeiras(item, nyelv),
   };
 }
 
@@ -859,7 +860,7 @@ function PhaseSection({
                       catName={catName}
                       fogterkep={fogterkep}
                       fallback={sorFallback(l, nyelv, tetelekById)}
-                      csomag={tetelekById.get(l.tetelId)?.csomag ?? false}
+                      tetel={tetelekById.get(l.tetelId)}
                       onPatch={(p) => onPatchLine(li, p)}
                       onRemove={() => removeWithUndo(li, l)}
                     />
@@ -985,7 +986,7 @@ function LineRow({
   catName,
   fogterkep,
   fallback,
-  csomag,
+  tetel,
   onPatch,
   onRemove,
 }: {
@@ -998,8 +999,9 @@ function LineRow({
   catName: (id: string) => string;
   fogterkep: FogterkepAllapot;
   fallback: SorFallbackOk | null;
-  /** true, ha a sor egy `csomag: true` tételre hivatkozik (docs/02-domain-modell.md § Tétel-leírás). */
-  csomag: boolean;
+  /** A sor mögötti árlistai tétel, ha `tetelId`-hez kötött (a `csomag`/leírás/
+      név-eltérés forrása); egyedi sornál `undefined`. */
+  tetel: Tetel | undefined;
   onPatch: (patch: Partial<Sor>) => void;
   onRemove: () => void;
 }) {
@@ -1035,13 +1037,23 @@ function LineRow({
   const visszakapcsolhato = line.mennyisegKezi !== false && teeth.valid;
   // P2-4: `listaEgysegar === 0` (vagy egy jövőbeli NaN/Infinity) esetén ez a
   // képlet korábban "−Infinity%"-ot adott -- most ha az osztó nem egy
-  // pozitív véges szám, nincs kedvezmény-jelvény.
+  // pozitív véges szám, nincs kedvezmény-/felár-jelvény.
+  const listaarErvenyes = Number.isFinite(line.listaEgysegar) && line.listaEgysegar > 0;
   const discount =
-    Number.isFinite(line.listaEgysegar) &&
-    line.listaEgysegar > 0 &&
-    line.tenylegesEgysegar < line.listaEgysegar
+    listaarErvenyes && line.tenylegesEgysegar < line.listaEgysegar
       ? Math.round((1 - line.tenylegesEgysegar / line.listaEgysegar) * 100)
       : 0;
+  // A `Summary` terv-szintű felár-sorának soronkénti tükre (backlog-60,
+  // 2. döntés) -- semleges ténymegállapítás, nem hiba.
+  const surcharge =
+    listaarErvenyes && line.tenylegesEgysegar > line.listaEgysegar
+      ? Math.round((line.tenylegesEgysegar / line.listaEgysegar - 1) * 100)
+      : 0;
+  const arEltero = !egyedi && line.tenylegesEgysegar !== line.listaEgysegar;
+
+  // backlog-60, 1. döntés: a `sorFallback`-tól FÜGGETLEN, nyelvfüggetlen
+  // "kézzel átírt" komparátor -- lásd `domain/nev.ts` `nevAtirt()`.
+  const nevEltero = tetel != null && nevAtirt(line, tetel, nyelv);
 
   // "+ leírás" összecsukható trigger (docs/02-domain-modell.md § Tétel-leírás)
   // -- ha már van tartalom, nyitva induljon; nincs "csak
@@ -1051,7 +1063,13 @@ function LineRow({
   const [leirasNyitva, setLeirasNyitva] = useState(Boolean(leirasTartalom));
   // Korai vizuális jelzés (15. döntés): a trigger maga jelez amber színnel,
   // hogy ne szaporodjon egy külön jelvény a már amúgy is sűrű jelvénysorban.
+  const csomag = tetel?.csomag ?? false;
   const hianyzoCsomagLeiras = csomag && !leirasTartalom;
+  // backlog-60, 4. döntés: reset/marker csak akkor értelmes, ha VAN
+  // árlistai leírás -- D27 mintája, hiányzó fordításnál nincs mire
+  // visszaállítani.
+  const arlistaLeirasSzoveg = tetel ? arlistaiLeiras(tetel, nyelv) : '';
+  const leirasEltero = tetel != null && arlistaLeirasSzoveg !== '' && !leirasKoveti(line, tetel, nyelv);
 
   return (
     <>
@@ -1100,14 +1118,32 @@ function LineRow({
               </Badge>
             )}
             {fallback === 'nincsForditas' && <HuChip />}
-            {fallback === 'elterAzArlistatol' && (
-              <Badge color="amber" variant="soft" size="1">
-                átírt
-              </Badge>
+            {nevEltero && tetel && (
+              <>
+                <Badge color="amber" variant="soft" size="1">
+                  átírt
+                </Badge>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  size="1"
+                  aria-label="Név visszaállítása az árlistaira"
+                  title="Név visszaállítása az árlistaira"
+                  onClick={() => onPatch({ nevSnapshot: resolveNev(tetel.nev, nyelv).szoveg })}
+                >
+                  <ResetIcon />
+                </IconButton>
+              </>
             )}
             {discount > 0 && (
               <Badge color="green" variant="soft" size="1">
                 −{discount}%
+              </Badge>
+            )}
+            {surcharge > 0 && (
+              <Badge color="amber" variant="soft" size="1">
+                +{surcharge}%
               </Badge>
             )}
             <Button
@@ -1209,23 +1245,47 @@ function LineRow({
       </Table.Cell>
 
       <Table.Cell justify="end">
-        <Flex align="center" gap="1" justify="end">
-          <Box flexGrow="1">
-            <NumberField
-              value={line.tenylegesEgysegar}
-              unit={currency}
-              min={0}
-              onCommit={(v) =>
-                // Egyedi sornál nincs "listaár" mező -- a `listaEgysegar` a
-                // `tenylegesEgysegar`-ral együtt íródik, hogy sosem legyen
-                // kedvezmény-jelvény egy nem létező referenciaárhoz képest.
-                onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
-              }
-              textAlign="right"
-              style={discount ? { borderColor: t.brand } : undefined}
-              aria-label="Ajánlati egységár"
-            />
-          </Box>
+        <Flex direction="column" align="end" gap="1">
+          <Flex align="center" gap="1" justify="end" width="100%">
+            <Box flexGrow="1">
+              <NumberField
+                value={line.tenylegesEgysegar}
+                unit={currency}
+                min={0}
+                onCommit={(v) =>
+                  // Egyedi sornál nincs "listaár" mező -- a `listaEgysegar` a
+                  // `tenylegesEgysegar`-ral együtt íródik, hogy sosem legyen
+                  // kedvezmény-/felár-jelvény egy nem létező referenciaárhoz
+                  // képest.
+                  onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
+                }
+                textAlign="right"
+                style={discount || surcharge ? { borderColor: t.brand } : undefined}
+                aria-label="Ajánlati egységár"
+              />
+            </Box>
+            {/* A Db cella ⟳ gombjának mintája (fentebb): MINDIG a DOM-ban,
+                csak `visibility: hidden`-nel tűnik el -- egy feltételes
+                render soronként ugráltatná a flexGrow-os NumberField
+                szélességét. */}
+            <IconButton
+              type="button"
+              variant="ghost"
+              color="gray"
+              size="1"
+              aria-label="Ajánlati ár visszaállítása a listaárra"
+              title="Ajánlati ár visszaállítása a listaárra"
+              onClick={() => onPatch({ tenylegesEgysegar: line.listaEgysegar })}
+              tabIndex={arEltero ? 0 : -1}
+              aria-hidden={arEltero ? undefined : true}
+              style={{ visibility: arEltero ? 'visible' : 'hidden' }}
+            >
+              <ResetIcon />
+            </IconButton>
+          </Flex>
+          {/* backlog-60, 3. döntés: a widget MARAD ghost `IconButton` +
+              `≈` szövegglyph (docs/07-felulet-rendszer.md nevesített
+              kivétele) -- csak a pozíciója költözött az ár mező alá (D82). */}
           <IconButton
             type="button"
             variant="ghost"
@@ -1269,11 +1329,33 @@ function LineRow({
             rows={2}
             aria-label="Leírás (mi van benne?)"
           />
-          {leirasTulHosszu(line.leirasSnapshot ?? '') && (
-            <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
-              Hosszú leírás — ellenőrizd a nyomtatási képet.
-            </Text>
-          )}
+          <Flex justify="between" align="center" mt="1">
+            {leirasTulHosszu(line.leirasSnapshot ?? '') ? (
+              <Text as="div" size="1" style={{ color: t.warn }}>
+                Hosszú leírás — ellenőrizd a nyomtatási képet.
+              </Text>
+            ) : (
+              <Box />
+            )}
+            {leirasEltero && (
+              <Flex align="center" gap="1">
+                <Badge color="amber" variant="soft" size="1">
+                  átírt leírás
+                </Badge>
+                <IconButton
+                  type="button"
+                  variant="ghost"
+                  color="gray"
+                  size="1"
+                  aria-label="Leírás visszaállítása az árlistaira"
+                  title="Leírás visszaállítása az árlistaira"
+                  onClick={() => onPatch({ leirasSnapshot: arlistaLeirasSzoveg })}
+                >
+                  <ResetIcon />
+                </IconButton>
+              </Flex>
+            )}
+          </Flex>
         </Table.Cell>
       </Table.Row>
     )}

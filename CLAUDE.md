@@ -274,6 +274,20 @@ pénznem (D21), D24) segédfüggvényei, szintén ne írd újra őket:
   lánc `missing-fields` → `de-fallback-names` váltásával, és mindig
   átugorná a második dialógust
 
+A kezeléssor-szerkesztés (kézzel átírt név/ár/leírás marker + reset,
+`docs/03-funkcionalis-spec.md` § Sor mezői, D63) segédfüggvénye, szintén
+ne írd újra:
+- `nevAtirt(sor, tetel, nyelv)` (`app/src/domain/nev.ts`) — a `nevKoveti`
+  (D24) MELLETT, nem helyette élő, nyelvfüggetlen „kézzel eltérítve van-e"
+  komparátor: `resolveNev()` visszaesési nevéhez mér, nem az árlistai
+  nyers névhez, ezért egy DE terven, fordítás nélküli, egyébként
+  érintetlen soron NEM jelez hamisan „átírt"-at — a `sorFallback`-ot
+  (D21) TILOS úgy módosítani, hogy HU terven is fusson, a két komparátor
+  egymás mellett él, külön kérdésre válaszolva. A leírás-reset a MEGLÉVŐ
+  `leirasKoveti()`/`arlistaiLeiras()` (lásd lent, „A tétel-leírás tétel"
+  blokk) bekötése — a `LineRow` a D63 óta hívja először, korábban csak a
+  nyelváltás-szinkron
+
 A sablonszerkesztő + placeholder-őr tétel (`docs/03-funkcionalis-spec.md`
 § Sablon-placeholder őr, D23) segédfüggvénye, szintén ne írd újra:
 - `isPlaceholderTemplate(body)` (`app/src/domain/templates.ts`) — az
@@ -337,7 +351,12 @@ segédfüggvényei, szintén ne írd újra őket:
   szinkronizálásához, a hiányzó fordítást üres stringgé normalizálva (nem
   `!= null` őrrel kizárva, mint a névnél) — enélkül egy hu→de→hu oda-vissza
   nyelváltás elveszítené az eredeti magyar leírást. A `PatientPage.tsx`
-  `applyNyelv`-je hívja, a RÉGI nyelvvel
+  `applyNyelv`-je hívja, a RÉGI nyelvvel; a szerkesztő „átírt leírás"
+  jelvénye/reset-vezérlője (D63) is ezt hívja, a JELENLEGI nyelvvel
+- `arlistaiLeiras(tetel, nyelv)` (`app/src/domain/nev.ts`) — a
+  `Tetel.leiras` adott nyelvű szövege, hiányzó fordításnál üres string;
+  a `leirasKoveti()` és a `PlanEditorPage.tsx` `sorMezokTetelbol` ebből
+  emelve, a D63 leírás-reset a harmadik hívó
 - `hianyzoCsomagLeirasok(plan, priceList)` (`app/src/domain/kitoltetlen.ts`)
   — PUHA diagnosztika, szándékosan külön a `kitoltetlenSorok` kemény
   blokkjától: azon sorok, amik `csomag: true` tételre hivatkoznak, de üres

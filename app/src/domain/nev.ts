@@ -32,6 +32,20 @@ export function nevKoveti(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
   return arlistaiNev != null && sor.nevSnapshot === arlistaiNev;
 }
 
+/**
+ * Igaz, ha a sor neve kézzel eltér attól, amit a felvétel pillanatában
+ * kapott volna -- nyelvfüggetlen, a `nevKoveti`-től (D24) eltérő kérdésre
+ * válaszol. `resolveNev()`-hez mér, NEM `nevKoveti()`-hez: a `nevKoveti`
+ * DE terven `nev.de == null`-nál mindig `false`, mert a MEGLÉVŐ,
+ * fordítás-hiányt jelző kérdésre (`sorFallback`) válaszol -- ezzel a
+ * komparátorral minden fordítatlan, egyébként érintetlen sor hamisan
+ * "átírt"-nak látszana. A backlog-60 "kézzel átírt" marker/reset ezt
+ * hívja, HU terven is (`sorFallback` ott korán `null`-t ad).
+ */
+export function nevAtirt(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
+  return sor.nevSnapshot !== resolveNev(tetel.nev, nyelv).szoveg;
+}
+
 /** A `sorFallback` visszaadott oka: miért nem a terv nyelvén szerepel a sor neve. */
 export type SorFallbackOk =
   /** A tételnek nincs neve ezen a nyelven. */
@@ -103,6 +117,16 @@ export function fallbackSorok(plan: Plan, priceList: PriceList): FallbackSorokEr
 }
 
 /**
+ * A `Tetel.leiras` adott nyelvű szövege, hiányzó fordításnál üres string
+ * -- D27 (nincs HU-visszaesés a leírásra), kiemelve, mert a `leirasKoveti`
+ * és a `PlanEditorPage.tsx` `sorMezokTetelbol` mellett a backlog-60
+ * leírás-reset a harmadik hívó.
+ */
+export function arlistaiLeiras(tetel: Tetel, nyelv: Nyelv): string {
+  return (nyelv === 'hu' ? tetel.leiras?.hu : tetel.leiras?.de) ?? '';
+}
+
+/**
  * Igaz, ha a `Sor.leirasSnapshot` pontosan azt a leírást viseli, amit a
  * `Tetel.leiras` adna az adott nyelven -- a `nevKoveti` párja, de NEM ő maga:
  * a leírásnak nincs HU-visszaesése (D27, docs/01-attekintes-es-dontesek.md),
@@ -114,8 +138,7 @@ export function fallbackSorok(plan: Plan, priceList: PriceList): FallbackSorokEr
  * látná, nem szinkronizálna vissza.
  */
 export function leirasKoveti(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
-  const arlistaiLeiras = (nyelv === 'hu' ? tetel.leiras?.hu : tetel.leiras?.de) ?? '';
-  return (sor.leirasSnapshot ?? '') === arlistaiLeiras;
+  return (sor.leirasSnapshot ?? '') === arlistaiLeiras(tetel, nyelv);
 }
 
 export interface NyelvvaltasHatas {
