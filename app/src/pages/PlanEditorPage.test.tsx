@@ -1425,7 +1425,7 @@ describe('PlanEditorPage -- backlog-61: árlista-snapshot és explicit refresh',
     await user.click(refreshButton);
     const dialog = await screen.findByRole('alertdialog');
     expect(dialog.textContent).toContain(
-      `${formatMoney(20000, 'HUF')} → ${formatMoney(25000, 'HUF')}`,
+      `${formatMoney(20000, 'HUF', 'hu')} → ${formatMoney(25000, 'HUF', 'hu')}`,
     );
 
     await user.click(within(dialog).getByRole('button', { name: 'Frissítés' }));
