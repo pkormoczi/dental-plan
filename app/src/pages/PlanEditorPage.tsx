@@ -155,14 +155,15 @@ export default function PlanEditorPage() {
   // számához, hogy egy törölt fázis ne hagyjon lógó indexet.
   const [celFazisIndex, setCelFazisIndex] = useState(0);
   const celFazisIndexClamped = Math.min(celFazisIndex, plan.fazisok.length - 1);
-  // A fogtérkép-kattintás után hova kell fókuszálni/görgetni -- egy
-  // useEffect dolgozza fel renderelés UTÁN (lásd lent), mert egy most
-  // felvett sor DOM-eleme csak a következő renderben létezik.
-  const [fokuszCel, setFokuszCel] = useState<{
-    pi: number;
-    li: number;
-    mit: 'fogak' | 'kereso';
-  } | null>(null);
+  // Hova kell fókuszálni/görgetni renderelés UTÁN -- egy useEffect dolgozza
+  // fel (lásd lent), mert a célelem DOM-ja (most felvett sor, most
+  // hozzáadott fázis) csak a következő renderben létezik. A `fazisKereso`
+  // ág (backlog-59, D63) a fázis alatti keresőnek szól, ezért nincs `li`-je.
+  const [fokuszCel, setFokuszCel] = useState<
+    | { mit: 'fogak' | 'kereso'; pi: number; li: number }
+    | { mit: 'fazisKereso'; pi: number }
+    | null
+  >(null);
   // Ismételt kattintás ugyanarra a (már kezelt) fogra a következő érintett
   // sorra lép, körbeérve -- ref, mert a körbejárás nem igényel újrarenderelést
   // önmagában, csak a fókuszváltás (lásd fokuszCel).
@@ -171,7 +172,11 @@ export default function PlanEditorPage() {
   useEffect(() => {
     if (!fokuszCel) return;
     const id =
-      fokuszCel.mit === 'fogak' ? `fog-${fokuszCel.pi}-${fokuszCel.li}` : `kereso-${fokuszCel.pi}-${fokuszCel.li}`;
+      fokuszCel.mit === 'fazisKereso'
+        ? `kereso-fazis-${fokuszCel.pi}`
+        : fokuszCel.mit === 'fogak'
+          ? `fog-${fokuszCel.pi}-${fokuszCel.li}`
+          : `kereso-${fokuszCel.pi}-${fokuszCel.li}`;
     const el = document.getElementById(id);
     el?.scrollIntoView({ block: 'nearest', behavior: csokkentettMozgas() ? 'auto' : 'smooth' });
     (el as HTMLInputElement | null)?.focus();
@@ -203,6 +208,23 @@ export default function PlanEditorPage() {
       fn(next);
       return next;
     });
+  }
+
+  // Az új fázis keresője fókuszt kap és a lap odagördül (backlog-59, D63)
+  // -- a `plan.fazisok.length` a hívás pillanatában (a push ELŐTT) az új
+  // fázis leendő indexe. `fazisResetToken` szándékosan NEM bumpol: az
+  // minden fázist remountolna, elveszítve a többi kereső begépelt szövegét.
+  function addPhase() {
+    const ujIndex = plan.fazisok.length;
+    updatePlan((draft) => {
+      draft.fazisok.push({
+        sorszam: draft.fazisok.length + 1,
+        megnevezes: generaltFazisNev(draft.fazisok.length + 1),
+        megjegyzes: '',
+        sorok: [],
+      });
+    });
+    setFokuszCel({ mit: 'fazisKereso', pi: ujIndex });
   }
 
   function deletePhase(pi: number) {
@@ -304,12 +326,16 @@ export default function PlanEditorPage() {
   const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
 
   // D59: egy VADONATÚJ (még soha nem mentett -- `tervId === ''`)
-  // ÉS sor nélküli piszkozaton az első fázis keresője induláskor fókuszt kap.
-  // Szándékosan NEM `piszkozatTartalmas()`: az a páciensnévre is igazat ad,
-  // tehát a normál Terv adatai -> Kezelések úton sosem sülne el. A `tervId`
-  // fél zárja ki a betöltött "Új verzió"/"Másolás új tervbe" esetet -- ott a
-  // fókusz elvinné a figyelmet a `frissitettDatum`/`loadedOsszesitokDiff`
-  // Callout-okról egy már tartalmas (bár még mentetlen) tervnél.
+  // ÉS sor nélküli piszkozaton az első fázis keresője A LAP BETÖLTÉSEKOR
+  // fókuszt kap. Szándékosan NEM `piszkozatTartalmas()`: az a páciensnévre
+  // is igazat ad, tehát a normál Terv adatai -> Kezelések úton sosem sülne
+  // el. A `tervId` fél zárja ki a betöltött "Új verzió"/"Másolás új
+  // tervbe" esetet -- ott a fókusz elvinné a figyelmet a
+  // `frissitettDatum`/`loadedOsszesitokDiff` Callout-okról egy már
+  // tartalmas (bár még mentetlen) tervnél. Egy UTÓLAG hozzáadott fázis
+  // keresője külön úton, az `addPhase()` `fokuszCel`-jén át kap fókuszt
+  // (backlog-59, D63) -- a két eset nem ütközik, mert ez a kifejezés csak
+  // az 1. fázisra érvényesül (lásd lent, `pi === 0`).
   const ujUresPiszkozat = plan.tervId === '' && plan.fazisok.every((f) => f.sorok.length === 0);
 
   /**
@@ -474,20 +500,7 @@ export default function PlanEditorPage() {
         </Box>
       ))}
 
-      <Button
-        variant="soft"
-        color="gray"
-        onClick={() =>
-          updatePlan((draft) => {
-            draft.fazisok.push({
-              sorszam: draft.fazisok.length + 1,
-              megnevezes: generaltFazisNev(draft.fazisok.length + 1),
-              megjegyzes: '',
-              sorok: [],
-            });
-          })
-        }
-      >
+      <Button variant="soft" color="gray" onClick={addPhase}>
         Fázis hozzáadása
       </Button>
 
@@ -873,6 +886,7 @@ function PhaseSection({
           )}
 
           <ItemPicker
+            id={`kereso-fazis-${pi}`}
             available={available}
             catName={catName}
             currency={currency}

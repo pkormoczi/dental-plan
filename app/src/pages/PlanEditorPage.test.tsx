@@ -445,6 +445,28 @@ describe('PlanEditorPage -- D59 friss piszkozat autofókusza', () => {
   });
 });
 
+describe('PlanEditorPage -- backlog-59: új fázis kereső-autofókusza (D63)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('"Fázis hozzáadása" után az ÚJ fázis keresője kap fókuszt, kattintás nélkül gépelhető', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    // A vadonatúj piszkozat 1. fázisa induláskor fókuszt kap (D59) -- ez
+    // itt nem a vizsgált eset, csak a kiinduló állapot dokumentálása.
+    await screen.findByPlaceholderText(/Tétel keresése/);
+
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
+
+    const searches = await screen.findAllByPlaceholderText(/Tétel keresése/);
+    expect(searches).toHaveLength(2);
+    expect(document.getElementById('kereso-fazis-1')).toHaveFocus();
+    expect(searches[1]).toHaveFocus();
+  });
+});
+
 describe('PlanEditorPage -- kattintható fogtérkép', () => {
   beforeEach(() => {
     localStorage.clear();

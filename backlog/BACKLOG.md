@@ -40,16 +40,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   döntéseket lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-53-kezeloorvos-terv.md`
 
-### 59. tétel — Kezelés keresés, quick items és hozzáadás
-  (a `backlog/redesign/` redesign-döntéssorozat DP-042 tétele) — a
-  kereső/gyorsgombok/hozzáadás nagyrészt már megfelel a redesignnak.
-  A D99/D100 (fókusz a Fog mezőre tételhozzáadás után) EXPLICIT
-  ELVETVE, mert ütközik a `docs/07`/`CLAUDE.md` „a kereső-ciklus nem
-  törhet el" kötelező szabályával — a user ezt megkérdezve a mai
-  ciklus megtartása mellett döntött. D101 (új fázis kereső-autofókusza)
-  változatlanul bekerül. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-59-kezeles-kereses-terv.md`
-
 ### 60. tétel — Kezeléssor szerkesztése
   (a `backlog/redesign/` redesign-döntéssorozat DP-043 tétele) — az
   egyedi név/ár-eltérés jelzés ma csak német terven működik (magyaron

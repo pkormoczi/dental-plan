@@ -343,17 +343,34 @@ kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`
 - **Friss piszkozat autofókusza (D59):** egy vadonatúj, még soha nem
   mentett terv-láncon (nincs `tervId`), amíg egyetlen fázisnak sincs sora,
   az első fázis keresője a lap betöltésekor automatikusan fókuszt kap —
-  a doki egérhasználat nélkül azonnal gépelhet. Ez KIZÁRÓLAG az első fázis
-  keresőjére vonatkozik, és megszűnik, amint az első sor bekerül (egy
-  utólag hozzáadott 2., 3. stb. fázis keresője sosem kap automatikus
-  fókuszt); egy betöltött („Új verzió", „Másolás új tervbe") terven —
-  akkor is, ha még nincs sora — szintén nincs automatikus fókusz, hogy ne
-  vigye el a figyelmet a lap tetején megjelenő tájékoztató Callout-okról.
+  a doki egérhasználat nélkül azonnal gépelhet. Ez KIZÁRÓLAG a lap
+  betöltésekor, az első fázis keresőjére vonatkozik, és megszűnik, amint
+  az első sor bekerül; egy betöltött („Új verzió", „Másolás új tervbe")
+  terven — akkor is, ha még nincs sora — szintén nincs automatikus
+  fókusz, hogy ne vigye el a figyelmet a lap tetején megjelenő
+  tájékoztató Callout-okról.
+- **Új fázis autofókusza (D63):** a „Fázis hozzáadása" gombra kattintva
+  az ÚJ fázis keresője automatikusan fókuszt kap és a lap odagördül a
+  fázishoz — kattintás nélkül azonnal gépelhető a következő tétel. Ez
+  minden fázisra vonatkozik (nem csak az elsőre), és nem törli a többi
+  fázis alatt épp begépelt keresőszöveget.
+- **Hozzáadás után NEM a Fog mező kap fókuszt.** A fókusz a fenti ciklus
+  szerint a (kiürült) keresőn marad; a Fog mezőn Enter sem navigál sehova
+  — ez szándékos (D63): a fő UX-ciklus (gépel → nyíl → Enter → gépel
+  tovább) nem törhet meg. A fogszám kitöltése Tabbal érhető el.
 
 ### Gyorsgombok
 
 Az `arlista.json`-ban `gyakori: true` jelölésű tételek chipként
-megjelennek a kereső alatt. Egy kattintás = hozzáadás.
+megjelennek a kereső alatt. Egy kattintás = hozzáadás. Ugyanaz a szűrt
+halmaz (`aktiv: true` ÉS az aktuális pénznemben árazott) a forrása a
+keresőnek és a gyorsgomboknak is — egy inaktív vagy az adott pénznemben
+árazatlan tétel egyikben sem jelenik meg.
+
+Ugyanaz a tétel (kereséssel vagy gyorsgombbal) tetszőlegesen sokszor
+felvehető — a hozzáadás sosem dedup-ol, és a felvett soroknak nincs
+külön „duplikálás" akciójuk (a sor-akciók: leírás-toggle, mennyiség-⟳,
+becsült-ár-≈, törlés).
 
 ### Sor mezői
 
@@ -462,7 +479,9 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
   (a fázis összes sora vele törlődik, ez a szerkesztő egyetlen
   egy-kattintásos, többsoros, helyreállíthatatlan adatvesztési útja);
   üres fázis törlése egy kattintás marad, dialógus nélkül —
-  újralétrehozása két kattintás.
+  újralétrehozása két kattintás. A „Fázis hozzáadása" gomb az új fázis
+  keresőjére automatikusan fókuszál és odagördít (D63, lásd fent
+  „Tételkereső" § „Új fázis autofókusza").
 - Fázisonként egy szabad szöveges **megjegyzés** sor, ami a nyomtatványon
   is megjelenik. Ide megy az időzítés: *„az implantáció beépülési ideje
   után, kb. 3 hónappal"*. A mező progresszíven rejtett — alapból csukva,

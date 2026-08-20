@@ -63,7 +63,7 @@ export interface ItemPickerProps {
    * válik), ezért nincs mit kiüríteni/visszafókuszálni.
    */
   clearOnPick?: boolean;
-  /** A mező DOM `id`-ja -- a fogtérkép-kattintás fókuszkezelője (PlanEditorPage.tsx) ez alapján találja meg a soron belüli keresőt. */
+  /** A mező DOM `id`-ja -- a `fokuszCel`-effekt (PlanEditorPage.tsx) ez alapján találja meg a soron belüli VAGY a fázis alatti keresőt. */
   id?: string;
 }
 
