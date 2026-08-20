@@ -312,9 +312,8 @@ export default function PlanEditorPage() {
     });
   }
 
-  // A sorok nyers összege -- a Kerek végösszeg blokknak erre van szüksége a
-  // felső határhoz és a mező alapértékéhez, NEM a tervVegosszeg()
-  // eredményére (backlog-16).
+  // A sorok nyers összege -- az Egyedi végösszeg blokknak erre van szüksége
+  // a mező kiindulási alapjához, NEM a tervVegosszeg() eredményére (D69).
   const sorszintuOsszeg = sorokOsszeg(plan.fazisok);
   const grand = tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg);
   const listTotal = sorokListaOsszeg(plan.fazisok);
@@ -526,7 +525,7 @@ export default function PlanEditorPage() {
         <Flex mt="4" justify="end">
           <Box style={{ flex: '0 1 320px' }}>
             <Summary grand={grand} listTotal={listTotal} currency={currency} nyelv={nyelv} />
-            <KerekVegosszegBlokk
+            <EgyediVegosszegBlokk
               sorszintuOsszeg={sorszintuOsszeg}
               currency={currency}
               nyelv={nyelv}
@@ -1445,18 +1444,23 @@ function Summary({
 }
 
 /**
- * Kerek végösszeg kedvezmény (backlog-16). A `Summary` ÉS az `ElolegBlokk`
- * KÖZÖTT áll: az előleg a CSÖKKENTETT végösszegből számol, a vizuális
- * sorrend kövesse a számítási sorrendet.
+ * Egyedi végösszeg (D69, a D25 fix-összeg elvének bővítése). A `Summary` ÉS
+ * az `ElolegBlokk` KÖZÖTT áll: az előleg a CSÖKKENTETT végösszegből számol,
+ * a vizuális sorrend kövesse a számítási sorrendet.
  *
- * A doki a kívánt CÉL-VÉGÖSSZEGET gépeli be, de a `Plan`-en fix
- * `kedvezmenyOsszeg` tárolódik (D25) -- ugyanaz a "egyetlen nullázható mező
- * hordozza a kapcsoló állapotát ÉS az értéket" minta, mint az
- * `ElolegBlokk`-nál. A `NumberField`-nek nincs `max` propja (a `min` ott
- * revert, nem clamp), ezért a felső határ (a cél nem lehet nagyobb a sorok
- * összegénél) az `onCommit`-ben, ugyanúgy, ahogy az előleg 0-100 szorítása.
+ * A doki a kívánt VÉGÖSSZEGET gépeli be, de a `Plan`-en előjeles fix
+ * eltérés tárolódik (`kedvezmenyOsszeg` -- pozitív kedvezmény, negatív
+ * felár, D25/D69). A `NumberField`-nek nincs `max` propja, és a felső
+ * korlát D69 óta nincs is -- a cél a sorok összege fölé is állítható.
+ *
+ * A kapcsoló bekapcsolása KÜLÖN lokális `be` állapotot tart: a
+ * `kedvezmenyOsszeg` `null` marad, amíg a doki nem commitál (blur/Enter),
+ * hogy a mező üresen, azonnali fókusszal induljon, ne egy hamis `0`
+ * előtöltéssel. A `0` cél-végösszeg (teljes elengedés) egyszeri
+ * megerősítést kér -- a `nullaMegerositve` addig érvényes, amíg a cél `0`
+ * marad, egy 0→más→0 váltás újra kérdez.
  */
-function KerekVegosszegBlokk({
+function EgyediVegosszegBlokk({
   sorszintuOsszeg,
   currency,
   nyelv,
@@ -1469,58 +1473,146 @@ function KerekVegosszegBlokk({
   kedvezmenyOsszeg: number | null;
   onChange: (next: number | null) => void;
 }) {
-  const be = kedvezmenyOsszeg != null;
+  const [be, setBe] = useState(kedvezmenyOsszeg != null);
+  // CSAK bekapcsolni szabad innen -- ha a doki kikapcsolja, a kapcsoló
+  // állapota `onChange(null)`-on át, a propon keresztül jön vissza.
+  useEffect(() => {
+    if (kedvezmenyOsszeg != null) setBe(true);
+  }, [kedvezmenyOsszeg]);
+
   // A tényleges (0-ra padlózott) Fizetendő -- ez a mező kiinduló/megjelenő
   // értéke, nem a nyers `kedvezmenyOsszeg - sorszintuOsszeg` levonás, ami
-  // negatívba fordulhatna a sorok utólagos törlésekor (backlog-16, a terv
-  // 8. döntésétől jóváhagyott eltérés).
-  const celVegosszeg = be ? Math.max(0, sorszintuOsszeg - kedvezmenyOsszeg) : sorszintuOsszeg;
-  const tulLog = be && kedvezmenyOsszeg > sorszintuOsszeg;
+  // negatívba fordulhatna kedvezmény-ágon a sorok utólagos törlésekor.
+  // `null`, amíg a doki még nem commitált -- ez adja az üres mezőt.
+  const celVegosszeg = kedvezmenyOsszeg == null ? null : Math.max(0, sorszintuOsszeg - kedvezmenyOsszeg);
+  const tulLog = kedvezmenyOsszeg != null && kedvezmenyOsszeg > sorszintuOsszeg;
+
+  const [hiba, setHiba] = useState(false);
+  const [nullaMegerositve, setNullaMegerositve] = useState(celVegosszeg === 0);
+  useEffect(() => {
+    if (celVegosszeg !== 0) setNullaMegerositve(false);
+  }, [celVegosszeg]);
+  const [pendingZero, setPendingZero] = useState<{ kedvezmeny: number } | null>(null);
+
+  function commitCel(v: number) {
+    setHiba(false);
+    const target = Math.max(0, Math.round(v));
+    const nextKedvezmeny = sorszintuOsszeg - target;
+    if (target === 0 && !nullaMegerositve) {
+      setPendingZero({ kedvezmeny: nextKedvezmeny });
+      return;
+    }
+    onChange(nextKedvezmeny);
+  }
 
   return (
     <Box mt="3">
       <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Checkbox
           checked={be}
-          onCheckedChange={(checked) => onChange(checked === true ? 0 : null)}
+          onCheckedChange={(checked) => {
+            if (checked === true) {
+              setBe(true);
+            } else {
+              setBe(false);
+              setHiba(false);
+              setPendingZero(null);
+              onChange(null);
+            }
+          }}
         />
-        Kerek végösszeg beállítása
+        Egyedi végösszeg beállítása
       </Text>
 
       {be && (
-        <Box mt="2">
+        <Box
+          mt="2"
+          onBlur={(e) => {
+            // D521: a kötelező-mező hiba csak blur/véglegesítési kísérlet
+            // UTÁN jelenik meg, nem azonnal a kapcsoló bekapcsolásakor --
+            // és nem akkor, ha épp a 0-megerősítés dialógusa nyílik (az
+            // maga is fókuszt visz el a mezőről).
+            if (
+              !e.currentTarget.contains(e.relatedTarget as Node | null) &&
+              kedvezmenyOsszeg == null &&
+              pendingZero === null
+            ) {
+              setHiba(true);
+            }
+          }}
+        >
           <Flex justify="between" align="center" gap="3">
             <Text size="2" color="gray">
-              Cél végösszeg
+              Egyedi végösszeg
             </Text>
             <Box style={{ width: 120 }}>
               <NumberField
                 value={celVegosszeg}
                 min={0}
                 unit={currency}
-                aria-label="Cél végösszeg"
+                aria-label="Egyedi végösszeg"
                 textAlign="right"
-                // 0 <= cél <= a sorok nyers összege -- a mező kizárólag
-                // kedvezményre való, felárra nem (a terv 5. döntése).
-                onCommit={(v) =>
-                  onChange(
-                    sorszintuOsszeg - Math.min(sorszintuOsszeg, Math.max(0, Math.round(v))),
-                  )
-                }
+                // Csak friss bekapcsoláskor (még nincs commitált érték) --
+                // egy betöltött terven ez a mező már ki van töltve, ott nem
+                // szabad elvinni a fókuszt.
+                autoFocus={kedvezmenyOsszeg == null}
+                onCommit={commitCel}
               />
             </Box>
           </Flex>
-          <Text as="div" size="2" color="gray" mt="1" style={{ textAlign: 'right' }}>
-            → {formatMoney(kedvezmenyOsszeg, currency, nyelv)} kedvezmény
-          </Text>
+          {kedvezmenyOsszeg != null && (
+            <Text as="div" size="2" color="gray" mt="1" style={{ textAlign: 'right' }}>
+              {kedvezmenyOsszeg > 0 && `→ ${formatMoney(kedvezmenyOsszeg, currency, nyelv)} kedvezmény`}
+              {kedvezmenyOsszeg < 0 && `→ ${formatMoney(-kedvezmenyOsszeg, currency, nyelv)} felár`}
+              {kedvezmenyOsszeg === 0 && '→ nincs eltérés a tételek összegétől'}
+            </Text>
+          )}
           {tulLog && (
             <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
               A beállított kedvezmény nagyobb, mint a tételek összege — a fizetendő 0. Írd be
-              újra a kerek végösszeget.
+              újra az egyedi végösszeget.
+            </Text>
+          )}
+          {hiba && (
+            <Text as="div" size="1" mt="1" style={{ color: t.danger }}>
+              Add meg az egyedi végösszeget, vagy kapcsold ki a jelölőt.
             </Text>
           )}
         </Box>
       )}
+
+      <AlertDialog.Root
+        open={pendingZero !== null}
+        onOpenChange={(open) => !open && setPendingZero(null)}
+      >
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Egyedi végösszeg: {formatMoney(0, currency, nyelv)}</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            A beállított egyedi végösszeg {formatMoney(0, currency, nyelv)} — ez a tételek teljes
+            elengedését jelenti. Biztosan ezt szeretnéd?
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                onClick={() => {
+                  if (pendingZero) {
+                    onChange(pendingZero.kedvezmeny);
+                    setNullaMegerositve(true);
+                  }
+                  setPendingZero(null);
+                }}
+              >
+                Megerősítem
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Box>
   );
 }

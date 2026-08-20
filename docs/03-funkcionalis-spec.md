@@ -523,33 +523,46 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
   tényleges ár a listaár fölé is emelhető). A kettő kizárja egymást, és
   ugyanazt a zöld színt kapja — ez semleges ténymegállapítás, nem
   hibajelzés, a doki dolgozhat felárral is (pl. sietős munka).
-- A terv-szintű összegzés (Mindösszesen/Kerek végösszeg/Előleg/Tétel-
+- A terv-szintű összegzés (Mindösszesen/Egyedi végösszeg/Előleg/Tétel-
   leírások nyomtatása, lásd lent) **kizárólag** a fázislista végén, a
   „Fázis hozzáadása" gomb alatt jelenik meg — sem a szerkesztő
   fejlécében, sem a workflow-héjban nincs végösszeg (D59).
 
-### Kerek végösszeg
+### Egyedi végösszeg
 
-A „Mindösszesen" doboz alatt, még az Előleg fölött egy kapcsoló: *„Kerek
-végösszeg beállítása"*. Bekapcsolva egy „Cél végösszeg" mező jelenik meg,
-alapértéke a sorok jelenlegi (nyers) összege — a doki ide írja be, mennyi
-legyen a végösszeg, ha az alkut kerek számra zárja. A mező commitkor
-(blur/Enter) egyszer kiszámolja és fix összegként tárolja a kedvezményt
-(`kedvezmenyOsszeg`, `domain/types.ts`) — nem magát a cél-végösszeget
-(D25). A mező alatt élőben kiírva a belőle adódó kedvezmény összege. A
-mező 0 és a sorok nyers összege közé szorított — csak kedvezményre való,
-felárra nem.
+A „Mindösszesen" doboz alatt, még az Előleg fölött egy kapcsoló: *„Egyedi
+végösszeg beállítása"*. Bekapcsolva egy „Egyedi végösszeg" mező jelenik
+meg **üresen, azonnali fókusszal** — nincs `0`/a sorok nyers összegével
+való előtöltés, mert az azt sugallná, hogy a doki már eldöntött valamit
+(D69). A mező commitkor (blur/Enter) egyszer kiszámolja és fix, ELŐJELES
+eltérésként tárolja a kedvezményt (`kedvezmenyOsszeg`, `domain/types.ts`)
+— nem magát a beírt végösszeget (D25). A mező alatt élőben kiírva a
+belőle adódó kedvezmény vagy felár összege. Nincs felső korlát: a beírt
+végösszeg a sorok nyers összege fölé is állítható, ilyenkor a mező alatti
+szöveg „→ X felár"-ra vált (D69, D25 bővítése — korábban a mező csak
+kedvezményre volt szorítva).
 
-Mivel a kedvezmény fix összeg, egy utólagos sortörlés a sorok összege fölé
-emelheti — ilyenkor a „Fizetendő" 0-ra padlózódik (soha nem negatív), és a
-blokk figyelmeztet, hogy a cél végösszeget újra be kell írni.
+A kötelező-mező hiba (ha a kapcsoló be van kapcsolva, de a mező üresen
+marad) csak a mező elhagyása (blur) UTÁN jelenik meg, nem azonnal a
+kapcsoló bekapcsolásakor — a frissen bekapcsolt, még be nem gépelt mező
+nem hibaállapot.
 
-A „Mindösszesen" doboz „Kedvezmény: X" alszövege (fent) ettől a ponttól
-kezdve a sorszintű ÉS a terv-szintű kedvezmény ÖSSZEGÉT mutatja,
-összevonva — a kerek végösszeg blokk saját sora adja meg külön a saját
-részét, ha a doki forrás szerint akarja látni. A kedvezmény összege a
-nyomtatványon itt sem jelenik meg (D9), csak a „Fizetendő" lesz kisebb; az
-előleg (lásd lent) ebből a csökkentett összegből számol.
+A `0` végösszeg (a tételek teljes elengedése) üzletileg valid, de EGYSZERI
+explicit megerősítést kér egy dialóguson keresztül, elgépelés ellen védve
+— a megerősítés addig érvényes, amíg a beírt végösszeg `0` marad, egy
+`0 → más érték → 0` váltás újra megerősítést kér.
+
+Mivel a kedvezmény/felár fix összeg, egy utólagos sortörlés a sorok
+összege fölé emelheti a kedvezmény-ágat — ilyenkor a „Fizetendő" 0-ra
+padlózódik (soha nem negatív), és a blokk figyelmeztet, hogy a végösszeget
+újra be kell írni.
+
+A „Mindösszesen" doboz „Kedvezmény: X"/„Felár: X" alszövege (fent) ettől a
+ponttól kezdve a sorszintű ÉS a terv-szintű eltérés ÖSSZEGÉT mutatja,
+összevonva — az egyedi végösszeg blokk saját sora adja meg külön a saját
+részét, ha a doki forrás szerint akarja látni. A kedvezmény/felár összege
+a nyomtatványon itt sem jelenik meg (D9), csak a „Fizetendő" változik; az
+előleg (lásd lent) ebből a módosított összegből számol.
 
 ### Előleg (D66)
 

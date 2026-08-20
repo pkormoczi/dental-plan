@@ -28,19 +28,9 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   DESTRUKTÍV (törli a sorokat), miközben az árlistai `Tetel.ar` már ma
   is mindkét pénznemet tartja. Ez a tétel additív „másik pénznem"
   stash-mezőt ad a sorhoz, nem-destruktívvá téve a váltást, séma-
-  bővítés nélkül. A 63./64. tétel erre épül. A döntéseket lásd a
+  bővítés nélkül. A 89. tétel erre épül. A döntéseket lásd a
   tervdokumentumban.
   **Terv:** `backlog/plans/backlog-62-tobbpenznemes-ar-terv.md`
-
-### 63. tétel — Egyedi végösszeg
-  (a `backlog/redesign/` redesign-döntéssorozat DP-046 tétele) — a
-  „Kerek végösszeg" ma abszolút összeg (D25 szerint helyesen), de
-  csak kedvezményre korlátozva, felár nélkül. Ez a tétel átnevezi
-  „Egyedi végösszeg"-re, felár-irányt enged (önállóan eldöntve, mert a
-  mai korlát hatókör-döntés volt, nem adatvédelem), és 0-összeg
-  megerősítést + üres/autofókuszált bekapcsolást ad. A döntéseket lásd
-  a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-63-egyedi-vegosszeg-terv.md`
 
 ### 65. tétel — Manuális szövegek nyelvi review-ja
   (a `backlog/redesign/` redesign-döntéssorozat DP-048 tétele) —
@@ -314,6 +304,15 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   tárolását és a végleges alkalmazás mappa-modelljét — nincs
   interaktív elem. A döntéseket lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-88-tarolas-tajekoztato-terv.md`
+
+### 89. tétel — Egyedi végösszeg pénznemenkénti állapota
+  A 63. tételből (D69, Egyedi végösszeg) levált maradék: a redesign
+  D487/D524 döntés szerint az egyedi végösszeg (és a 0-végösszeg
+  megerősítése) pénznemenkénti ÖNÁLLÓ állapotot kell tartson, a 62.
+  tétel `masikPenznemAr`-stash mintájának analógiájára — ez a 63.
+  tételben VÁRAKOZÓ maradt, mert a 62. tétel akkor még nem készült el.
+  Nincs önálló tervdokumentum, a 62. tétel elkészülte után `/planning`
+  futtatandó hozzá.
 
 ---
 ## NEM FEJLESZTÉS

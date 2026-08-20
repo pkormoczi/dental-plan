@@ -1698,3 +1698,28 @@ karbantartási kör négy önálló javítása.
   docs/02-domain-modell.md § "beallitasok.json", docs/03-funkcionalis-
   spec.md § 2 "Kezelőorvos", § 4 "Előnézet és véglegesítés", § 7
   "Rendelő adatai").
+
+---
+
+### 63. tétel: Egyedi végösszeg — KÉSZ (2026-08-20)
+
+- **Méret:** ~fél nap.
+- **Kereteket sért?** Nem — új D69 (`docs/01-attekintes-es-dontesek.md`),
+  pontosított D25.
+- **Valódi haszon:** a terv-szintű „Kerek végösszeg" kedvezmény korábban
+  csak lefelé (kedvezményre) volt szorítható, felár nem volt megadható,
+  bekapcsoláskor hamis `0` előtöltéssel indult, és a teljes elengedést
+  jelentő `0` végösszeg megerősítés nélkül beállítható volt.
+- **Megvalósítás:** a blokk „Egyedi végösszeg"-re nevet váltott, felső
+  korlát nélkül — a `Plan.kedvezmenyOsszeg` mostantól ELŐJELES eltérés
+  (pozitív kedvezmény, negatív felár), a `tervVegosszeg()` 0-padlózása
+  (D25) változatlan. A kapcsoló bekapcsolása üres, azonnal fókuszált
+  mezőt ad a korábbi `0` előtöltés helyett; a kötelező-mező hiba csak
+  blur után jelenik meg. A `0` cél-végösszeg (teljes elengedés) egyszeri,
+  a szerkesztő saját lokális állapotában tárolt megerősítést kér, ami
+  `0 → más érték → 0` váltásnál újra megkérdez (docs/01-attekintes-
+  es-dontesek.md D25/D69, docs/02-domain-modell.md § Terv-szintű egyedi
+  végösszeg, docs/03-funkcionalis-spec.md § Egyedi végösszeg,
+  docs/04-nyomtatvany-spec.md § Pénzügyi összesítés). A redesign D487/
+  D524 szerinti pénznemenkénti dual-state a 62. tételre várva külön,
+  89. tételként vált le.

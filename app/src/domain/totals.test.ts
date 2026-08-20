@@ -57,6 +57,10 @@ describe('tervVegosszeg (backlog-16)', () => {
   it('a sorok összegét meghaladó kedvezménynél 0-ra padlóz, soha nem negatív (D25)', () => {
     expect(tervVegosszeg(fazisok, 25000)).toBe(0);
   });
+
+  it('negatív eltérésnél (felár) a sorok összege fölé emel, nincs felső korlát (D69)', () => {
+    expect(tervVegosszeg(fazisok, -5000)).toBe(25000);
+  });
 });
 
 describe('computeOsszesitok terv-szintű kedvezménnyel (backlog-16)', () => {
@@ -73,6 +77,14 @@ describe('computeOsszesitok terv-szintű kedvezménnyel (backlog-16)', () => {
       kezelesekOsszesen: 25000,
       kedvezmeny: 8000,
       fizetendo: 17000,
+    });
+  });
+
+  it('negatív eltérésnél (felár) a fizetendő nő, az osszesitok.kedvezmeny negatív (D69)', () => {
+    expect(computeOsszesitok(fazisok, -3000)).toEqual({
+      kezelesekOsszesen: 25000,
+      kedvezmeny: 2000,
+      fizetendo: 23000,
     });
   });
 });

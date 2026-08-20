@@ -415,30 +415,39 @@ Kikapcsolt kapcsolónál a helyőrző egy "a megállapított előleg"/"die
 vereinbarte Anzahlung" megfogalmazásra esik vissza — a mondat ilyenkor
 nem konkrét összeget mond, de nem is hamis nullát.
 
-### Terv-szintű kedvezmény (`kedvezmenyOsszeg`)
+### Terv-szintű egyedi végösszeg (`kedvezmenyOsszeg`)
 
-Az alku lezárásakor a doki gyakran kerek végösszegben állapodik meg a
-pácienssel. A szerkesztőben a doki a kívánt **cél-végösszeget** gépeli be,
-de a `Plan`-en ez FIX kedvezmény-**összegként** (`kedvezmenyOsszeg`)
-rögzül, nem a begépelt cél-végösszegként (D25) — a sorok tiszta
-összegéből ennyi vonódik le. `null` (vagy hiányzó mező) = nincs terv-
-szintű kedvezmény, a `Fizetendő` a sorok tiszta összege (a mai
+Az alku lezárásakor a doki gyakran egyedi végösszegben állapodik meg a
+pácienssel — akár lefelé (kedvezmény), akár felfelé (felár, D69). A
+szerkesztőben a doki a kívánt **végösszeget** gépeli be, de a `Plan`-en ez
+FIX, ELŐJELES **eltérésként** (`kedvezmenyOsszeg`) rögzül, nem a begépelt
+végösszegként (D25) — pozitív érték kedvezményt, negatív felárat jelent,
+és a sorok tiszta összegéből vonódik le. `null` (vagy hiányzó mező) =
+nincs terv-szintű eltérés, a `Fizetendő` a sorok tiszta összege (a mai
 viselkedés). Nem emelt `schemaVersion`-t, az `elolegOsszeg` precedense
-szerint.
+szerint; a séma-kulcs neve a D69 névváltás (a UI-n „Egyedi végösszeg") után
+is `kedvezmenyOsszeg` maradt.
 
-**Fix összeg tárolódik, nem a cél-végösszeg.** Ha a cél-végösszeget
-tárolnánk élőben, egy utólagos sormódosítás után a kedvezmény
-észrevétlenül változna — ez D8 szellemével (a kedvezmény mérhető,
-explicit tényállapot) ütközne, ugyanúgy, ahogy a soronkénti
-`listaEgysegar` vs `tenylegesEgysegar` sem "él" a listaár változásával. Ha
-a doki utólag módosítja a sorokat, a `Fizetendő` elcsúszhat a kerek
-számtól — ez szándékos viselkedés, a doki bármikor újra beírhatja a kerek
-számot, ami felülírja a `kedvezmenyOsszeg`-et.
+**Fix összeg tárolódik, nem a begépelt végösszeg.** Ha a begépelt
+végösszeget tárolnánk élőben, egy utólagos sormódosítás után az eltérés
+észrevétlenül változna — ez D8 szellemével (a kedvezmény mérhető, explicit
+tényállapot) ütközne, ugyanúgy, ahogy a soronkénti `listaEgysegar` vs
+`tenylegesEgysegar` sem "él" a listaár változásával. Ha a doki utólag
+módosítja a sorokat, a `Fizetendő` elcsúszhat a beírt végösszegtől — ez
+szándékos viselkedés, a doki bármikor újra beírhatja a kívánt végösszeget,
+ami felülírja a `kedvezmenyOsszeg`-et.
 
 **`tervVegosszeg(fazisok, kedvezmenyOsszeg)` soha nem ad negatívat**
-(`domain/totals.ts`): mivel a kedvezmény fix összeg, egy utólagos
-sortörlés a sorok összege fölé emelheti — ilyenkor a `Fizetendő` 0-ra
-padlózódik, nem negatív szám kerül az aláírandó papírra (D25).
+(`domain/totals.ts`): mivel az eltérés fix összeg, egy utólagos sortörlés
+a kedvezmény-ágon a sorok összege fölé emelheti — ilyenkor a `Fizetendő`
+0-ra padlózódik, nem negatív szám kerül az aláírandó papírra (D25). A
+felár-ágnak (negatív `kedvezmenyOsszeg`) nincs felső korlátja.
+
+**A `0` végösszeg (a tételek teljes elengedése) a szerkesztőben egyszeri,
+explicit megerősítést kér** — üzletileg valid állapot, de a véletlen
+elgépelés ellen a UI nem engedi csendben beállítani (D69, a szerkesztő
+saját, lokális állapotában tárolt megerősítés, ami egy `0 → más érték →
+0` váltásnál újra megkérdez).
 
 Ne keverd a `plan.osszesitok.kedvezmeny` mezővel: az a KIMENET (a sor- és
 a terv-szintű eltérés összege a listaártól, véglegesítéskor számolva), a
