@@ -83,14 +83,14 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      await user.click(finalizeBtn);
 
-      // KEMÉNY blokk -- nincs AlertDialog, a hiba a lapon jelenik meg.
+      // D73: KEMÉNY blokk -- a csekklista-tétel MINDIG látható, a
+      // gombnyomás előtt is; a gomb letiltott, amíg a hard tétel fennáll.
       expect(
         await screen.findByText(/A terv 1 kitöltetlen sort tartalmaz/),
       ).toBeInTheDocument();
       expect(screen.getByText(/1\. kezelés — 16/)).toBeInTheDocument();
-      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(finalizeBtn).toBeDisabled();
       expect(screen.queryByText('A terv elmentve ✓')).not.toBeInTheDocument();
 
       // "Vissza a szerkesztőbe" -- valóban a szerkesztőre navigál. Két
@@ -104,16 +104,16 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
       expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
       expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(1);
 
-      // Most már folytatható a véglegesítés (a hiányos páciensadat miatt a
-      // szokásos, NEM blokkoló megerősítő dialóguson át).
+      // Most már folytatható a véglegesítés -- a hiányos páciensadat csak
+      // PUHA tétel, nem blokkol, a gomb közvetlenül ment.
       await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       const finalizeBtn2 = await screen.findByRole(
         'button',
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
+      expect(finalizeBtn2).not.toBeDisabled();
       await user.click(finalizeBtn2);
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
       await waitFor(() =>
         expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument(),
       );
@@ -159,7 +159,27 @@ describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', 
             kiskoru: false,
             torvenyesKepviselo: null,
           },
-          fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+          // D103: egy 0 soros fázis önmagában is HARD blokk -- ez a teszt
+          // nem az üres fázist vizsgálja, ezért egy sort kap (a 0 Ft csak
+          // PUHA "nulla-osszegu-sor" tételt ad, nem blokkol).
+          fazisok: [
+            {
+              sorszam: 1,
+              megnevezes: '1. kezelés',
+              megjegyzes: '',
+              sorok: [
+                {
+                  tetelId: '',
+                  nevSnapshot: 'Kontroll',
+                  savos: false,
+                  fogak: '',
+                  mennyiseg: 1,
+                  listaEgysegar: 0,
+                  tenylegesEgysegar: 0,
+                },
+              ],
+            },
+          ],
           osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
         },
       }),
@@ -181,14 +201,17 @@ describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', 
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      await user.click(finalizeBtn);
 
-      // KEMÉNY blokk -- nincs AlertDialog, a hiba a lapon jelenik meg.
+      // D73: KEMÉNY blokk -- a csekklista-tétel a gombnyomás ELŐTT is
+      // látszik, a gomb letiltott.
       expect(await screen.findByText(/A tervhez nincs kezelőorvos rendelve/)).toBeInTheDocument();
-      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(finalizeBtn).toBeDisabled();
       expect(screen.queryByText('A terv elmentve ✓')).not.toBeInTheDocument();
 
-      await user.click(screen.getByRole('button', { name: 'Kezelőorvos kiválasztása' }));
+      // A hiányos páciensadat (puha) is /paciens-re routolt "Terv adatai"
+      // gombot ad -- mindkettő ugyanoda navigál.
+      const [terveAdataiGomb] = screen.getAllByRole('button', { name: 'Terv adatai' });
+      await user.click(terveAdataiGomb);
       expect(await screen.findByRole('heading', { name: 'Terv adatai' })).toBeInTheDocument();
     },
     20000,
@@ -216,15 +239,15 @@ describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', 
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      await user.click(finalizeBtn);
 
       expect(
         await screen.findByText(/A terv kezelőorvosa \(Dr\. Régi Rezső\) már nem szerepel/),
       ).toBeInTheDocument();
-      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(finalizeBtn).toBeDisabled();
       expect(screen.queryByText('A terv elmentve ✓')).not.toBeInTheDocument();
 
-      await user.click(screen.getByRole('button', { name: 'Kezelőorvos kiválasztása' }));
+      const [terveAdataiGomb] = screen.getAllByRole('button', { name: 'Terv adatai' });
+      await user.click(terveAdataiGomb);
       await screen.findByRole('heading', { name: 'Terv adatai' });
       await user.click(screen.getByRole('combobox', { name: 'Kezelőorvos (aláírás-blokk)' }));
       await user.click(await screen.findByRole('option', { name: 'Dr. Mándoki István' }));
@@ -235,10 +258,10 @@ describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', 
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      await user.click(finalizeBtn2);
       // A páciens egyéb adatai hiányosak (a `seedDraftWithOrvos` csak a
-      // nevet tölti ki) -- a puha "Hiányzó páciensadatok" lépés még jön.
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+      // nevet tölti ki), de ez csak PUHA tétel -- nem blokkol.
+      expect(finalizeBtn2).not.toBeDisabled();
+      await user.click(finalizeBtn2);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
     20000,
@@ -303,36 +326,38 @@ describe('PreviewPage -- 62. tétel (D71): beárazatlan sor kemény véglegesít
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      await user.click(finalizeBtn);
 
-      // KEMÉNY blokk -- nincs AlertDialog, a hiba a lapon jelenik meg.
+      // D73: KEMÉNY blokk -- a tétel a gombnyomás ELŐTT is látszik, a gomb
+      // letiltott. A sor egyúttal a puha "nulla-osszegu-sor" tételt is
+      // kiváltja (0/0 áru sor) -- ugyanaz a név emiatt KÉT tételben is
+      // szerepel, innen a `getAllByText`.
       expect(
         await screen.findByText(/nincs beárazva a terv pénznemében/),
       ).toBeInTheDocument();
-      expect(screen.getByText(/Fogeltávolítás/)).toBeInTheDocument();
-      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.getAllByText(/Fogeltávolítás/).length).toBeGreaterThan(0);
+      expect(finalizeBtn).toBeDisabled();
       expect(screen.queryByText('A terv elmentve ✓')).not.toBeInTheDocument();
 
-      await user.click(screen.getByRole('button', { name: 'Vissza a szerkesztőbe' }));
+      // A "nulla-osszegu-sor" puha tétel ugyanerre a sorra /terv-re
+      // routolt gombot is ad -- mindkettő ugyanoda navigál.
+      const [visszaGomb] = screen.getAllByRole('button', { name: 'Vissza a szerkesztőbe' });
+      await user.click(visszaGomb);
       const priceField = (await screen.findByLabelText('Ajánlati egységár')) as HTMLInputElement;
       await user.clear(priceField);
       await user.type(priceField, '30,00');
       await user.tab();
 
-      // Most már folytatható a véglegesítés (a hiányos páciensadat miatt a
-      // szokásos, NEM blokkoló megerősítő dialóguson át). A kézzel beírt ár
-      // a listaEgysegar (0, nincs EUR listaár) és a tenylegesEgysegar közötti
-      // eltérés miatt a "price-drift" (D70) lépést is alkalmazhatóvá teszi --
-      // két egymást követő "Folytatás" dialógus.
+      // Most már folytatható a véglegesítés -- a hiányos páciensadat és a
+      // kézzel beírt ár okozta árlista-eltérés (D70) is csak PUHA tétel,
+      // egyik sem blokkol, a gomb közvetlenül ment.
       await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       const finalizeBtn2 = await screen.findByRole(
         'button',
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
+      expect(finalizeBtn2).not.toBeDisabled();
       await user.click(finalizeBtn2);
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
       await waitFor(() =>
         expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument(),
       );
@@ -380,8 +405,8 @@ describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => 
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
+      // A hiányos páciensadat csak PUHA tétel -- nem blokkol.
       await user.click(finalizeBtn);
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
       await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
       expect(localStorage.getItem('dp:piszkozat')).toBeNull();
@@ -433,8 +458,8 @@ describe('PreviewPage -- backlog-69: piszkozat-törlés hibája nem hiúsítja m
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
+      // A hiányos páciensadat csak PUHA tétel -- nem blokkol.
       await user.click(finalizeBtn);
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
 
       await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
       expect(screen.queryByText(/A mentés nem sikerült/)).not.toBeInTheDocument();
@@ -474,7 +499,6 @@ describe('PreviewPage -- backlog-69: piszkozat-törlés hibája nem hiúsítja m
         { timeout: 10000 },
       );
       await user.click(finalizeBtn);
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
 
       await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
       expect(screen.queryByText(/A piszkozat automatikus törlése nem sikerült/)).not.toBeInTheDocument();
@@ -524,7 +548,6 @@ describe('PreviewPage -- backlog-51: terv címe véglegesítéskor', () => {
         { timeout: 10000 },
       );
       await user.click(finalizeBtn);
-      await finalizeThroughConfirms(user);
       await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
       expect(screen.queryByText(/nem mentődött/)).not.toBeInTheDocument();
 
@@ -570,7 +593,6 @@ describe('PreviewPage -- backlog-51: terv címe véglegesítéskor', () => {
         { timeout: 10000 },
       );
       await user.click(finalizeBtn);
-      await finalizeThroughConfirms(user);
 
       await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
       expect(screen.queryByText(/A mentés nem sikerült/)).not.toBeInTheDocument();
@@ -601,7 +623,6 @@ describe('PreviewPage -- backlog-51: terv címe véglegesítéskor', () => {
         { timeout: 10000 },
       );
       await user.click(finalizeBtn);
-      await finalizeThroughConfirms(user);
       await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
       expect(savePlanLabelSpy).not.toHaveBeenCalled();
@@ -633,108 +654,193 @@ function seedGermanPlanWithOneTranslatedItem() {
   );
 }
 
-// docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés: a
-// véglegesítés megerősítő dialógusa két külön okot sorol fel -- ne
-// keveredjenek egy listába.
-describe('PreviewPage -- hiányzó és eltérő tételnevek két külön listában', () => {
+/**
+ * Egy vadonatúj, német nyelvű piszkozat közvetlen localStorage-seedelése,
+ * a `sorok` paraméterrel megadott sorokkal -- ugyanaz a minta, mint a D68
+ * `seedDraftWithOrvos()`. Direkt seedelés kell, mert a D74/D133 hard
+ * blokk predikátuma (`nemetNeveIgazolt()`, `domain/nemetNev.ts`) a
+ * `Sor.nevNyelv` (D72) metaadattól függ -- ezt a szerkesztő UI-n át
+ * begépelt szöveg MINDIG a jelenlegi dokumentumnyelvre stampeli (D72),
+ * ezért a "kézzel eltérített, DE terven review nélkül maradt név" esetet
+ * csak úgy lehet reprodukálni, ha a `nevNyelv` egy KORÁBBI (nem `de`)
+ * nyelvre igazolt állapotban kerül a piszkozatba.
+ */
+function seedGermanNameDraft(sorok: Record<string, unknown>[]) {
+  const customPriceList = {
+    schemaVersion: 1,
+    arlistaVerzio: '2026-07-01',
+    modositva: '2026-07-01',
+    kategoriak: [],
+    tetelek: [
+      {
+        id: 't1',
+        kategoriaId: 'k1',
+        sorrend: 1,
+        aktiv: true,
+        gyakori: false,
+        nev: { hu: 'Fogeltávolítás', de: null },
+        ar: { HUF: { tipus: 'FIX', ertek: 10000 }, EUR: null },
+      },
+      {
+        id: 't2',
+        kategoriaId: 'k1',
+        sorrend: 2,
+        aktiv: true,
+        gyakori: false,
+        nev: { hu: 'Fogkő eltávolítás', de: 'Zahnsteinentfernung' },
+        ar: { HUF: { tipus: 'FIX', ertek: 5000 }, EUR: null },
+      },
+    ],
+  };
+  localStorage.setItem('dp:arlista.json', JSON.stringify(customPriceList));
+  localStorage.setItem(
+    'dp:beallitasok.json',
+    JSON.stringify({ ...seedSettings, orvosok: ['Dr. Mándoki István'], inaktivOrvosok: [] }),
+  );
+  localStorage.setItem(
+    'dp:piszkozat',
+    JSON.stringify({
+      schemaVersion: 1,
+      mentve: '2026-08-09T10:15:00.000Z',
+      plan: {
+        schemaVersion: 1,
+        tervId: '',
+        verzio: 0,
+        statusz: 'PISZKOZAT',
+        nyelv: 'de',
+        penznem: 'HUF',
+        keltezes: '2026-08-05',
+        ervenyesIg: '2026-11-03',
+        arlistaVerzio: '2026-07-01',
+        sablonVerzio: 'nyilatkozat-de-v1',
+        orvos: 'Dr. Mándoki István',
+        paciens: {
+          nev: 'Teszt Nemetnev',
+          szuletesiIdo: '1990-01-01',
+          lakcim: '1113 Budapest, Bartók Béla út 42. 2/5',
+          telefon: '+36 30 123 4567',
+          email: 'teszt.nemetnev@example.hu',
+          taj: '123 456 789',
+          kiskoru: false,
+          torvenyesKepviselo: null,
+        },
+        fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok }],
+        osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+      },
+    }),
+  );
+}
+
+// D74/D133 (user-döntés, lásd a tervdokumentumot): a hiányzó/eltérő német
+// tételnév PUHÁRÓL KEMÉNY blokkra emelve -- a predikátum két javítási út
+// szerint bont (`domain/nemetNev.ts` `igazolatlanNemetNevek()`).
+describe('PreviewPage -- D74/D133: német tételnév kemény blokk', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
   });
 
   it(
-    'a dialógus külön sorolja fel a fordítás nélküli és a kézzel eltérített tételneveket',
+    'fordítatlan tétel és kézzel átírt, nem review-olt tétel egyaránt hard blokkot ad, két külön csoportban',
     async () => {
-      const user = userEvent.setup();
-      seedGermanPlanWithOneTranslatedItem();
+      seedGermanNameDraft([
+        {
+          tetelId: 't1',
+          nevSnapshot: 'Fogeltávolítás',
+          savos: false,
+          fogak: '',
+          mennyiseg: 1,
+          listaEgysegar: 10000,
+          tenylegesEgysegar: 10000,
+        },
+        {
+          tetelId: 't2',
+          nevSnapshot: 'Kézzel átírt szöveg',
+          savos: false,
+          fogak: '',
+          mennyiseg: 1,
+          listaEgysegar: 5000,
+          tenylegesEgysegar: 5000,
+          nevNyelv: { authoredInLanguage: 'hu' },
+        },
+      ]);
       render(<App />);
+      window.location.hash = '#/elonezet';
 
-      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
-      const nameInput = await screen.findByPlaceholderText('Kovács János');
-      await user.type(nameInput, 'Teszt Elek');
-      await user.click(screen.getByRole('button', { name: 'Mentés' }));
-      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
-
-      const search = await screen.findByPlaceholderText(/Tétel keresése/);
-      // Fordítás nélküli tétel -- "nincsForditas".
-      await user.type(search, 'csatornaszam');
-      await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
-      await waitFor(() => expect(search).toHaveValue(''));
-
-      // Fordítással rendelkező, de kézzel eltérített tétel -- "elterAzArlistatol".
-      await user.type(search, 'zahnextraktion');
-      await user.click(await screen.findByText('Zahnextraktion'));
-      await waitFor(() => expect(search).toHaveValue(''));
-      const nameField = screen.getByDisplayValue('Zahnextraktion');
-      await user.clear(nameField);
-      await user.type(nameField, 'Kihúzás egyedi megjegyzéssel');
-
-      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       const finalizeBtn = await screen.findByRole(
         'button',
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      await user.click(finalizeBtn);
-      // A páciens hiányos (csak a név kitöltött), ezért előbb a
-      // "Hiányzó páciensadatok" dialógus jön -- a "Folytatás" a láncban a
-      // KÖVETKEZŐ dialógust nyitja meg, nem véglegesít rögtön.
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
 
-      const dialog = await screen.findByRole('alertdialog');
-      expect(within(dialog).getByText('Tételnevek nem németül')).toBeInTheDocument();
       expect(
-        within(dialog).getByText(/Nincs német nevük az árlistában \(1\)/),
+        await screen.findByText(
+          /Ez egy német nyelvű ajánlat, de néhány sor neve nem igazoltan németül kerül a nyomtatványra/,
+        ),
       ).toBeInTheDocument();
       expect(
-        within(dialog).getByText(/Kézzel átírt, eltér az árlistától \(1\)/),
+        screen.getByText(/Nincs német nevük az árlistában \(1\): Fogeltávolítás/),
       ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Kézzel írt\/átírt, nyelvileg nem ellenőrzött \(1\): Kézzel átírt szöveg/),
+      ).toBeInTheDocument();
+      expect(finalizeBtn).toBeDisabled();
     },
     20000,
   );
 
   it(
-    'backlog-23: egy valódi egyedi sor a "nyelvét te írtad" cím alatt szerepel, nem a "nincs német nevük" alatt',
+    'a "Vissza a szerkesztőbe" gomb a nemet-nev tételről a szerkesztőbe navigál',
     async () => {
       const user = userEvent.setup();
-      seedGermanPlanWithOneTranslatedItem();
+      seedGermanNameDraft([
+        {
+          tetelId: 't1',
+          nevSnapshot: 'Fogeltávolítás',
+          savos: false,
+          fogak: '',
+          mennyiseg: 1,
+          listaEgysegar: 10000,
+          tenylegesEgysegar: 10000,
+        },
+      ]);
       render(<App />);
+      window.location.hash = '#/elonezet';
 
-      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
-      const nameInput = await screen.findByPlaceholderText('Kovács János');
-      await user.type(nameInput, 'Teszt Egyedi');
-      await user.click(screen.getByRole('button', { name: 'Mentés' }));
-      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+      await user.click(screen.getByRole('button', { name: 'Vissza a szerkesztőbe' }));
+      expect(await screen.findByPlaceholderText(/Tétel keresése/)).toBeInTheDocument();
+    },
+    20000,
+  );
 
-      const search = await screen.findByPlaceholderText(/Tétel keresése/);
-      await user.type(search, 'Érzéstelenítés');
-      await screen.findByText(/Egyedi tétel felvétele/);
-      await user.keyboard('{Enter}');
-      await waitFor(() => expect(search).toHaveValue(''));
+  it(
+    'igazoltan németül írt egyedi (árlistán kívüli) sor NEM ad hard blokkot',
+    async () => {
+      seedGermanNameDraft([
+        {
+          tetelId: '',
+          nevSnapshot: 'Egyedi anyagköltség',
+          savos: false,
+          fogak: '',
+          mennyiseg: 1,
+          listaEgysegar: 0,
+          tenylegesEgysegar: 0,
+          nevNyelv: { authoredInLanguage: 'de' },
+        },
+      ]);
+      render(<App />);
+      window.location.hash = '#/elonezet';
 
-      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       const finalizeBtn = await screen.findByRole(
         'button',
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      await user.click(finalizeBtn);
-      // A páciens hiányos, ezért előbb a "Hiányzó páciensadatok" dialógus
-      // jön -- a "Folytatás" a láncban a KÖVETKEZŐ dialógust nyitja meg.
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
-
-      const dialog = await screen.findByRole('alertdialog');
-      expect(within(dialog).getByText('Tételnevek nem németül')).toBeInTheDocument();
       expect(
-        within(dialog).getByText(/Egyedi, szabad szöveges sor — a nyelvét te írtad \(1\)/),
-      ).toBeInTheDocument();
-      expect(
-        within(dialog).queryByText(/Nincs német nevük az árlistában/),
+        screen.queryByText(/nem igazoltan németül kerül a nyomtatványra/),
       ).not.toBeInTheDocument();
+      expect(finalizeBtn).not.toBeDisabled();
     },
     20000,
   );
@@ -858,11 +964,11 @@ describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
       expect(checkbox).not.toBeDisabled();
 
       const finalizeBtn = screen.getByRole('button', { name: /Véglegesítés és mentés/ });
+      // A hiányos páciensadat csak PUHA tétel, és ez az egyetlen ITT
+      // teljesen lefordított sor (Zahnextraktion) -- nincs "nemet-nev"
+      // hard tétel, a gomb közvetlenül ment.
+      expect(finalizeBtn).not.toBeDisabled();
       await user.click(finalizeBtn);
-      // Csak a hiányos páciensadat-dialógus jön -- ez az egyetlen ITT
-      // teljesen lefordított sor (Zahnextraktion), tehát nincs
-      // "de-fallback-names" lépés.
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
     20000,
@@ -915,17 +1021,13 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
+
+      // D73: PUHA tétel -- a gombnyomás ELŐTT is látszik, de NEM blokkol.
+      expect(await screen.findByText(/csomagtételre hivatkozó soron nincs leírás/)).toBeInTheDocument();
+      expect(screen.getByText(/Fogeltávolítás/)).toBeInTheDocument();
+      expect(finalizeBtn).not.toBeDisabled();
+
       await user.click(finalizeBtn);
-
-      // A páciens hiányos (csak a név kitöltött) -- előbb a "Hiányzó
-      // páciensadatok" dialógus jön, a "Folytatás" a KÖVETKEZŐ lépésre visz.
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
-
-      const dialog = await screen.findByRole('alertdialog');
-      expect(within(dialog).getByText('Hiányzó tétel-leírások')).toBeInTheDocument();
-      expect(within(dialog).getByText(/Fogeltávolítás/)).toBeInTheDocument();
-
-      await user.click(within(dialog).getByRole('button', { name: 'Folytatás' }));
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
     20000,
@@ -959,19 +1061,20 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      await user.click(finalizeBtn);
 
-      // Csak a hiányos páciensadat-dialógus jön -- nincs "missing-leiras" lépés.
-      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+      // Nincs "hianyzo-leiras" tétel; a hiányos páciensadat csak PUHA
+      // tétel -- a gomb közvetlenül ment.
+      expect(screen.queryByText(/csomagtételre hivatkozó soron nincs leírás/)).not.toBeInTheDocument();
+      await user.click(finalizeBtn);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
     20000,
   );
 });
 
-// backlog-19: névvel ellátott, de 0 Ft-os sor -- PUHA megerősítő lépés, a
-// doki egy "Folytatás" kattintással túljut rajta (a 0 ár lehet szándékos,
-// pl. ingyenes kontroll). A gépel->0 találat->Enter úton felvett egyedi sor
+// backlog-19: névvel ellátott, de 0 Ft-os sor -- PUHA csekklista-tétel
+// (D73), a gomb megnyomása előtt is látszik, de nem blokkol (a 0 ár lehet
+// szándékos, pl. ingyenes kontroll). A gépel->0 találat->Enter úton felvett egyedi sor
 // ("Érzéstelenítés", ugyanaz a minta, mint PlanEditorPage.test.tsx backlog-3
 // tesztje) 0 Ft kezdőértékkel jön létre -- ez a fantomsor-eset, amit a tétel
 // megfog.
@@ -982,7 +1085,7 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
   });
 
   it(
-    'teljesen kitöltött páciensadattal a 0 Ft-os dialógus jön egyenesen, majd folytatható',
+    'teljesen kitöltött páciensadattal a 0 Ft-os tétel a gombnyomás előtt is látszik, nem blokkol',
     async () => {
       const user = userEvent.setup();
       render(<App />);
@@ -1018,21 +1121,19 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
+
+      expect(await screen.findByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
+      expect(screen.getByText(/Érintett sorok \(1\): Érzéstelenítés/)).toBeInTheDocument();
+      expect(finalizeBtn).not.toBeDisabled();
+
       await user.click(finalizeBtn);
-
-      const dialog = await screen.findByRole('alertdialog');
-      expect(within(dialog).getByText('0 Ft-os tételek')).toBeInTheDocument();
-      expect(within(dialog).getByText(/Érintett sorok \(1\)/)).toBeInTheDocument();
-      expect(within(dialog).getByText(/Érzéstelenítés/)).toBeInTheDocument();
-
-      await user.click(within(dialog).getByRole('button', { name: 'Folytatás' }));
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
     20000,
   );
 
   it(
-    'hiányos páciensadattal a lánc előbb a hiányzó adatokat, majd a 0 Ft-os sorokat kéri megerősíteni',
+    'hiányos páciensadattal a hiányzó adatok ÉS a 0 Ft-os sorok egyszerre látszanak, egyik sem blokkol',
     async () => {
       const user = userEvent.setup();
       render(<App />);
@@ -1056,16 +1157,14 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
+
+      expect(
+        await screen.findByText(/Néhány páciensadat hiányzik/),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
+      expect(finalizeBtn).not.toBeDisabled();
+
       await user.click(finalizeBtn);
-
-      const missingFieldsDialog = await screen.findByRole('alertdialog');
-      expect(within(missingFieldsDialog).getByText('Hiányzó páciensadatok')).toBeInTheDocument();
-      await user.click(within(missingFieldsDialog).getByRole('button', { name: 'Folytatás' }));
-
-      const zeroPriceDialog = await screen.findByRole('alertdialog');
-      expect(within(zeroPriceDialog).getByText('0 Ft-os tételek')).toBeInTheDocument();
-      await user.click(within(zeroPriceDialog).getByRole('button', { name: 'Folytatás' }));
-
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
     20000,
@@ -1144,7 +1243,10 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
 
       await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       await screen.findByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/);
-      await user.click(screen.getByRole('button', { name: 'Terv adatai' }));
+      // A hiányos páciensadat (puha) is /paciens-re routolt "Terv adatai"
+      // gombot ad -- mindkettő ugyanoda navigál, elég az elsőt kattintani.
+      const [terveAdataiGomb] = screen.getAllByRole('button', { name: 'Terv adatai' });
+      await user.click(terveAdataiGomb);
 
       expect(await screen.findByDisplayValue('Teszt Info2')).toBeInTheDocument();
     },
@@ -1349,7 +1451,7 @@ describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés
   });
 
   it(
-    'kézzel felülírt ajánlati ár esetén az "Eltérés az árlistától" dialógus jelenik meg, és Folytatással a mentés lefut',
+    'kézzel felülírt ajánlati ár esetén az "ar-elteres" tétel a gombnyomás előtt is látszik, nem blokkol',
     async () => {
       const user = userEvent.setup();
       render(<App />);
@@ -1386,32 +1488,31 @@ describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
+      expect(await screen.findByText(/Néhány sor ára eltér a mai árlistától/)).toBeInTheDocument();
+      expect(screen.getByText(/Kézzel felülírt ajánlati ár \(1\): Fogeltávolítás/)).toBeInTheDocument();
+      expect(finalizeBtn).not.toBeDisabled();
+
       await user.click(finalizeBtn);
-
-      const dialog = await screen.findByRole('alertdialog');
-      expect(within(dialog).getByText('Eltérés az árlistától')).toBeInTheDocument();
-      expect(within(dialog).getByText(/Kézzel felülírt ajánlati ár/)).toBeInTheDocument();
-      expect(within(dialog).getByText(/Fogeltávolítás/)).toBeInTheDocument();
-
-      await user.click(within(dialog).getByRole('button', { name: 'Folytatás' }));
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
     20000,
   );
 });
 
-// 65. tétel (D72): a puha "nyelvi-review" lépés a "de-fallback-names" UTÁN
-// következik a láncban -- itt egyszerre fut le mindkettő (a sornév kézzel
-// átírva, ami MIND az árlistai-fordítás-hiány, MIND a nyelvi review-t
-// alkalmazhatóvá teszi), hogy a sorrend is ellenőrizhető legyen.
-describe('PreviewPage -- 65. tétel (D72): nyelvi review véglegesítési lépés', () => {
+// 65. tétel (D72) + D74/D133: a "nyelvi-review" PUHA tétel és a "nemet-nev"
+// KEMÉNY tétel egyszerre fut le (a sornév kézzel átírva, ami MIND az
+// árlistai-fordítás-hiányt, MIND a nyelvi review-t alkalmazhatóvá teszi) --
+// és a "Nyelv ellenőrizve" akció mindkettőt egyszerre oldja fel, mert a
+// D74 hard blokk predikátuma (`nemetNeveIgazolt()`) is a `nevNyelv`
+// review-metaadaton áll.
+describe('PreviewPage -- 65. tétel (D72) + D74/D133: nyelvi review és a német tételnév kemény blokk', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
   });
 
   it(
-    'a nyelvváltás után kézzel átírt (magyarul maradt) sornév "de-fallback-names" UTÁN "nyelvi-review" dialógust nyit; az "Irányított ellenőrzés" a szerkesztőbe visz, a sávval',
+    'a nyelvváltás után kézzel átírt (magyarul maradt) sornév EGYSZERRE ad "nemet-nev" hard és "nyelvi-review" soft tételt; az "Irányított ellenőrzés" a szerkesztőbe visz, a "Nyelv ellenőrizve" mindkettőt feloldja',
     async () => {
       const user = userEvent.setup();
       render(<App />);
@@ -1454,17 +1555,27 @@ describe('PreviewPage -- 65. tétel (D72): nyelvi review véglegesítési lépé
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      await user.click(finalizeBtn);
 
-      const nevekDialog = await screen.findByRole('alertdialog');
-      expect(within(nevekDialog).getByText('Tételnevek nem németül')).toBeInTheDocument();
-      await user.click(within(nevekDialog).getByRole('button', { name: 'Folytatás' }));
+      // D74/D133: KEMÉNY blokk -- a sor kézzel eltér az árlistai német
+      // névtől, és a review-metaadat nem a jelenlegi (de) nyelvre igazolt.
+      expect(
+        await screen.findByText(
+          /Ez egy német nyelvű ajánlat, de néhány sor neve nem igazoltan németül kerül a nyomtatványra/,
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Kézzel írt\/átírt, nyelvileg nem ellenőrzött \(1\): Kihúzás megbeszélt módon/),
+      ).toBeInTheDocument();
+      expect(finalizeBtn).toBeDisabled();
 
-      const nyelviDialog = await screen.findByRole('alertdialog');
-      expect(within(nyelviDialog).getByText('Nyelvi ellenőrzésre váró szövegek')).toBeInTheDocument();
-      expect(within(nyelviDialog).getByText(/Sor neve: Kihúzás megbeszélt módon/)).toBeInTheDocument();
+      // 65. tétel (D72): a SAJÁT, ettől független PUHA tétel -- ugyanarra a
+      // sorra, más okból.
+      expect(
+        screen.getByText(/1 kézzel írt szöveg nem biztos, hogy a dokumentum nyelvén helyes/),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Sor neve: Kihúzás megbeszélt módon/)).toBeInTheDocument();
 
-      await user.click(within(nyelviDialog).getByRole('button', { name: 'Irányított ellenőrzés' }));
+      await user.click(screen.getByRole('button', { name: 'Irányított ellenőrzés' }));
 
       // A guided review a szerkesztőbe navigál, a nem-modális sávval, és a
       // sornévhez fókuszál -- nem nyit külön modalt (D469).
@@ -1478,6 +1589,22 @@ describe('PreviewPage -- 65. tétel (D72): nyelvi review véglegesítési lépé
       await waitFor(() =>
         expect(screen.queryByText(/Nyelvi ellenőrzés/)).not.toBeInTheDocument(),
       );
+
+      // A "Nyelv ellenőrizve" (reviewElfogadva) EGYSZERRE oldja fel a
+      // "nyelvi-review" puha tételt ÉS a "nemet-nev" hard blokkot -- a
+      // predikátum ugyanarra a `nevNyelv` metaadatra épül (domain/nemetNev.ts).
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn2 = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      expect(
+        screen.queryByText(/nem igazoltan németül kerül a nyomtatványra/),
+      ).not.toBeInTheDocument();
+      expect(finalizeBtn2).not.toBeDisabled();
+      await user.click(finalizeBtn2);
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
     20000,
   );

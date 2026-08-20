@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { araztalanSorok, hianyzoCsomagLeirasok, kitoltetlenSorok, nullaOsszeguSorok } from './kitoltetlen';
+import {
+  araztalanSorok,
+  hianyzoCsomagLeirasok,
+  kitoltetlenSorok,
+  nullaOsszeguSorok,
+  uresFazisok,
+} from './kitoltetlen';
 import type { Plan, PriceList, Sor } from './types';
 
 function sor(partial: Partial<Sor>): Sor {
@@ -47,6 +53,29 @@ function makePlan(fazisok: Sor[][]): Plan {
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
   };
 }
+
+describe('uresFazisok (D103)', () => {
+  it('üres terven üres listát ad', () => {
+    expect(uresFazisok(makePlan([]))).toEqual([]);
+  });
+
+  it('minden fázisnak van sora -- üres lista', () => {
+    const plan = makePlan([[sor({ tetelId: 't1' })], [sor({ tetelId: 't2' })]]);
+    expect(uresFazisok(plan)).toEqual([]);
+  });
+
+  it('egy 0 soros fázist jelez a nevével', () => {
+    const plan = makePlan([[sor({ tetelId: 't1' })], []]);
+    expect(uresFazisok(plan)).toEqual([{ fazisIndex: 1, fazisNev: '2. kezelés' }]);
+  });
+
+  it('sor felvétele után a fázis eltűnik a listából', () => {
+    const uresPlan = makePlan([[]]);
+    expect(uresFazisok(uresPlan)).toEqual([{ fazisIndex: 0, fazisNev: '1. kezelés' }]);
+    const feltoltottPlan = makePlan([[sor({ tetelId: 't1' })]]);
+    expect(uresFazisok(feltoltottPlan)).toEqual([]);
+  });
+});
 
 describe('kitoltetlenSorok', () => {
   it('üres terven üres listát ad', () => {

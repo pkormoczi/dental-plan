@@ -20,21 +20,12 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   vannak, akkor szekvenciális "Folytatás" modalokkal bukkannak elő. Ez
   a tétel a PDF mellé egy állandó, read-only checklist panelt vezet be
   (D38/D39 szerint) — a modal-lánc user-döntéssel megszűnik, minden
-  puha tétel előre látszik. A 67. tételre épül (a checklist a 67.
-  tételben megszülető egységes modellt fogyasztja). A döntéseket lásd a
-  tervdokumentumban.
+  puha tétel előre látszik. A checklist a `docs/03-funkcionalis-spec.md`
+  § 4 "Véglegesítési checklist" (D76) egységes modelljét fogyasztja
+  (`veglegesitesDiagnozis()`), amit a `PreviewPage.tsx` ma már ideiglenes,
+  egyoszlopos formában megjelenít — ez a tétel csak a végleges,
+  kéthasábos elrendezést adja. A döntéseket lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-66-elonezet-checklist-terv.md`
-
-### 67. tétel — Finalization validation engine
-  (a `backlog/redesign/` redesign-döntéssorozat DP-051 tétele) — a mai
-  véglegesítés-őr (`veglegesitesOr.ts`) ad hoc, egymástól eltérő alakú
-  mezőket ad vissza; ez a tétel egységes, navigálható
-  hard/soft/info-tétel listává alakítja, emeli a hiányzó/eltérő német
-  tételnevet PUHÁRÓL KEMÉNY blokkra (D133, explicit user-döntés, a mai
-  dokumentált spec-cel szemben), és új kemény blokkot ad a fogtérképen
-  ténylegesen látszó, hiányzó német kategórianévre (D404). A döntéseket
-  lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-67-veglegesitesi-validacio-terv.md`
 
 ### 71. tétel — Final terv részletei alapnézet és verziónavigáció
   (a `backlog/redesign/` redesign-döntéssorozat DP-060 tétele) — ma

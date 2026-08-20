@@ -406,7 +406,7 @@ aktuális értékéről indul, utána szabadon átírható, és nyelvváltáskor
 **Egy ponton szándékosan eltér a névtől: nincs HU-visszaesés (D27).** Ha a
 `Tetel.leiras.de` hiányzik egy német nyelvű terven, a leírás egyszerűen nem
 jelenik meg — nincs `HU` jelvény, nem esik vissza magyar szövegre, és nem
-számít bele a `fallbackSorok`/`lefedettseg()` diagnosztikába. A leírás
+számít bele a `sorFallback`/`lefedettseg()` diagnosztikába. A leírás
 kiegészítő, díszítő tartalom, nem a sor lényege (azt a név hordozza) — a
 névhez hasonló szigorú fallback-apparátus túlkezelés lenne egy opcionális
 mezőhöz.
@@ -454,13 +454,17 @@ sem a szöveg egyszerű szerkesztése, sem egy másik nyelvre való TELJES
 nem old fel automatikusan, nincs „jelentős változás” heurisztika. Csak
 vezető/záró whitespace nem invalidál egy meglévő review-t.
 
-**Szándékosan MÁS kérdés, mint a `sorFallback`/`fallbackSorok`** (fent, D21
-alatt) — az ÁRLISTAI fordítás hiányát/eltérését jelzi, magyar terven mindig
-`null`-t ad, és egy egyedi (árlistán kívüli) sornál deklaráltan tehetetlen
-(„nem ellenőrizhető, milyen nyelven íródott”). A nyelvi review pontosan ezt
-a rést tölti be: mindkét terv-nyelven működik, és minden kézzel írt
-szövegre (árlistai vagy egyedi sorra egyaránt) választ ad. A két mechanizmus
-EGYMÁS MELLETT él, nem összevonva.
+**Szándékosan MÁS kérdés, mint a `sorFallback`** (fent, D21 alatt) — az
+ÁRLISTAI fordítás hiányát/eltérését jelzi, magyar terven mindig `null`-t
+ad, és egy egyedi (árlistán kívüli) sornál deklaráltan tehetetlen („nem
+ellenőrizhető, milyen nyelven íródott”). A nyelvi review pontosan ezt a
+rést tölti be: mindkét terv-nyelven működik, és minden kézzel írt
+szövegre (árlistai vagy egyedi sorra egyaránt) választ ad. A két
+mechanizmus EGYMÁS MELLETT él, nem összevonva — de a `Sor.nevNyelv`
+review-metaadat egyúttal a D76 kemény véglegesítés-blokk (`domain/
+nemetNev.ts` `nemetNeveIgazolt()`) egyik feloldási útja is: egy német
+terven kézzel átírt vagy egyedi sor akkor is véglegesíthető, ha a doki a
+mezőn a „Nyelv ellenőrizve” akcióval igazolta, hogy a szöveg németül van.
 
 Az ár-követéssel (D70) ellentétben ez az ELSŐ **tárolt** (nem derived)
 nyelvi jelző a sémában — azért tárolt, mert „milyen nyelven gépelte a doki”

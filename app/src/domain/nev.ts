@@ -3,8 +3,8 @@
 // nem lektorálva (lásd docs/06-arlista-import.md), ezért egy-egy tételnél
 // előfordulhat hiányzó/pontatlan `de` név; a feloldás ilyenkor magyarra esik
 // vissza. A visszaesés SOHA nem néma: lásd a `fallback` jelzőt és a
-// `fallbackSorok` diagnosztikát, amit a PlanEditorPage (kereső, felvett sor)
-// és a PreviewPage (véglegesítés-őr) is felhasznál.
+// `sorFallback` diagnosztikát, amit a PlanEditorPage (kereső, felvett sor)
+// használ.
 
 import type { LokalizaltSzoveg, Nyelv, Plan, PriceList, Sor, Tetel } from './types';
 
@@ -58,7 +58,7 @@ export type SorFallbackOk =
 /**
  * Egy sor neve miért nem a terv nyelvén szerepel -- az EGYETLEN hely, ahol
  * ez a szabály eldől (a szerkesztő `HU`/„átírt" jelvénye, `PlanEditorPage.tsx`
- * `LineRow`, és a `fallbackSorok` véglegesítés-őre is ezt hívja).
+ * `LineRow`, hívja).
  * `null`, ha a sor rendben van (követi az árlistát, vagy hu terven vagyunk).
  *
  * Egyedi (üres `tetelId`-jű) sornál nincs mit a `priceList`-ben megkeresni --
@@ -83,37 +83,6 @@ export function sorFallback(
   if (!tetel) return null;
   if (tetel.nev.de == null) return 'nincsForditas';
   return nevKoveti(sor, tetel, nyelv) ? null : 'elterAzArlistatol';
-}
-
-export interface FallbackSorokEredmeny {
-  /** Azon sorok neve, amiknek a tétele nem kapott fordítást az árlistában. */
-  nincsForditas: string[];
-  /** Azon sorok neve, amik kézzel eltérnek az árlistai (lefordított) névtől. */
-  elterAzArlistatol: string[];
-  /** Azon egyedi (árlistai tétel nélküli), kitöltött nevű sorok neve. */
-  egyedi: string[];
-}
-
-/**
- * A tervben lévő sorok közül azoknak a `nevSnapshot`-ja, amik a terv
- * nyelvén nem a várt (árlistai) formában szerepelnek -- három okra bontva
- * (lásd `SorFallbackOk`). NEM rajzolja újra a snapshotot (D7), csak
- * diagnosztikát számol a szerkesztés alatt álló piszkozatra, a
- * véglegesítés-őr (PreviewPage) és a Terv adatai lap figyelmeztetéséhez.
- */
-export function fallbackSorok(plan: Plan, priceList: PriceList): FallbackSorokEredmeny {
-  const eredmeny: FallbackSorokEredmeny = { nincsForditas: [], elterAzArlistatol: [], egyedi: [] };
-  if (plan.nyelv === 'hu') return eredmeny;
-  const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));
-  for (const fazis of plan.fazisok) {
-    for (const sor of fazis.sorok) {
-      const ok = sorFallback(sor, plan.nyelv, tetelById);
-      if (ok === 'nincsForditas') eredmeny.nincsForditas.push(sor.nevSnapshot);
-      else if (ok === 'elterAzArlistatol') eredmeny.elterAzArlistatol.push(sor.nevSnapshot);
-      else if (ok === 'egyedi') eredmeny.egyedi.push(sor.nevSnapshot);
-    }
-  }
-  return eredmeny;
 }
 
 /**

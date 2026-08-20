@@ -1,115 +1,70 @@
-// Véglegesítés-őr -- a PreviewPage.tsx kemény blokkjának és puha
-// confirmStep-láncának tiszta, React-mentes magja (docs/03-funkcionalis-spec.md
-// § 4. Előnézet és véglegesítés). Kiemelve, hogy a lánc SORRENDJE és a
-// kemény/puha megkülönböztetés unit tesztelhető legyen -- korábban csak
-// teljes `<App/>` renderen, `userEvent`-tel volt vizsgálható
-// (`PreviewPage.test.tsx`). A meglévő domain-függvényeket hívja, egyiket sem
-// írja újra -- lásd `domain/kitoltetlen.ts`, `domain/nev.ts`.
+// Véglegesítés-őr -- a PreviewPage.tsx tartalmi validációjának tiszta,
+// React-mentes magja (docs/03-funkcionalis-spec.md § 4. Előnézet és
+// véglegesítés). Egységes, navigálható `hard`/`soft`/`info` tétel-lista
+// modellt ad (D73) -- a korábbi, szekvenciális megerősítő-lánc
+// (`VEGLEGESITES_LEPESEK`/`kovetkezoLepes`) megszűnt: a puha tételek NEM
+// blokkolnak és nem kérnek "Folytatás"-t, a sorrend a checklist RENDER-
+// sorrendje, nem egy bejárt állapotgép. A meglévő domain-függvényeket
+// hívja, egyiket sem írja újra -- lásd `domain/kitoltetlen.ts`,
+// `domain/nemetNev.ts`, `domain/nev.ts`.
 //
-// A `PreviewPage.tsx`-ben marad: a React state, a dialógus-szövegek
-// (`confirmStepTartalom`, `nevListaSzoveg` -- prezentáció), a `doFinalize()`,
-// és az `isPlaceholderTemplate()`-re épülő D23-zár (a nyilatkozat+aláírás
-// oldal letiltása) -- ez utóbbi nem ehhez a lánchoz, hanem a 4. oldal
-// renderjéhez tartozik.
+// A `PreviewPage.tsx`-ben marad: a React state, a checklist RENDERelése,
+// a `doFinalize()`, és az `isPlaceholderTemplate()`-re épülő D23-zár (a
+// nyilatkozat+aláírás oldal letiltása) -- ez utóbbi nem ehhez a listához,
+// hanem a 4. oldal renderjéhez tartozik (a `nyilatkozat-placeholder` tétel
+// itt csak a TÉNYT jelzi, a kényszerített offer-only mód a hívó dolga).
 
-import { arElteroSorok, type ArElteroSorok } from './arKoveti';
-import {
-  araztalanSorok,
-  hianyzoCsomagLeirasok,
-  kitoltetlenSorok,
-  nullaOsszeguSorok,
-  type HianyzoCsomagLeiras,
-  type KitoltetlenSor,
-} from './kitoltetlen';
-import { masterSnapshotDiff, type MezoElteres } from './masterSnapshotDiff';
-import { fallbackSorok, type FallbackSorokEredmeny } from './nev';
-import { nyelviMismatchek, type NyelviMismatchTetel } from './nyelviReview';
-import { orvosProblema as szamitOrvosProblema, type OrvosProblema } from './orvosok';
+import { araztalanSorok, hianyzoCsomagLeirasok, kitoltetlenSorok, nullaOsszeguSorok, uresFazisok } from './kitoltetlen';
+import { arElteroSorok } from './arKoveti';
+import { masterSnapshotDiff } from './masterSnapshotDiff';
+import { formatMoney } from './money';
+import { igazolatlanNemetKategoriak, igazolatlanNemetNevek } from './nemetNev';
+import { nyelviMismatchek, type NyelviMismatchTetel, type ReviewMezo } from './nyelviReview';
+import { orvosProblema as szamitOrvosProblema } from './orvosok';
 import { elolegTullepi, tervVegosszeg } from './totals';
 import type { Paciens, Plan, PriceList } from './types';
 
-export type VeglegesitesLepes =
-  | 'missing-fields'
-  | 'de-fallback-names'
-  | 'nyelvi-review'
-  | 'zero-price-rows'
-  | 'missing-leiras'
-  | 'price-drift';
+export type CsekklistaSulyossag = 'hard' | 'soft' | 'info';
+export type CsekklistaRoute = '/paciens' | '/terv' | '/arlista' | '/beallitasok';
 
-// Rendezett lánc -- a sorrend implementációs döntés: a páciensadat és a
-// nyelvi/jogi/pénzügyi probléma megelőzi a kommunikációs jellegű
-// leírás-hiányt (docs/03-funkcionalis-spec.md § 4. Előnézet és
-// véglegesítés). A `price-drift` (backlog-61, D70) utolsó lépésként --
-// önmagában sosem blokkolja a többi lépés kommunikációs célját. A
-// `nyelvi-review` (65. tétel, D72) a `de-fallback-names` UTÁN áll -- két
-// egymás melletti, nyelvi jellegű lépés, a pénzügyi/kommunikációs lépések
-// ELŐTT, de a `de-fallback-names`-től SZÁNDÉKOSAN külön (más kérdés, lásd
-// `domain/nyelviReview.ts` fejlécét).
-export const VEGLEGESITES_LEPESEK: VeglegesitesLepes[] = [
-  'missing-fields',
-  'de-fallback-names',
-  'nyelvi-review',
-  'zero-price-rows',
-  'missing-leiras',
-  'price-drift',
-];
+export interface CsekklistaReszlet {
+  cim: string;
+  nevek: string[];
+}
 
-export interface VeglegesitesDiagnozis {
-  /** A név hiánya a mappanévhez kötelező (docs/03 § 2. Terv adatai) -- KEMÉNY blokk, nem a lánc tagja. */
-  nameMissing: boolean;
-  /** A fogtérkép-kattintással felvett, de be nem azonosított (nevSnapshot nélküli) sorok -- KEMÉNY blokk, nem a lánc tagja. */
-  uresSorok: KitoltetlenSor[];
-  /**
-   * Az előleg (D66: abszolút összeg) meghaladja a fizetendőt -- KEMÉNY
-   * blokk, nem a lánc tagja. A mai `0-100%`-os szorítás (a százalék-alapú
-   * modell strukturális védelme) megszűnt, ezt a validációt explicit kell
-   * kikényszeríteni: az érték nem vágódik le automatikusan, a doki
-   * tudatosan rendezi (`elolegTullepi`, `domain/totals.ts`).
-   */
-  elolegTullep: boolean;
-  /** Névvel ellátott, de a terv pénznemében beárazatlan, kézi árat sem kapott sorok -- KEMÉNY blokk (62. tétel, D71), nem a lánc tagja. */
-  araztalanSorok: string[];
-  nevProblemak: FallbackSorokEredmeny;
-  nullaSorok: string[];
-  hianyzoLeirasok: HianyzoCsomagLeiras[];
-  /**
-   * A páciens törzsadata (D33) és a terv `paciens` pillanatképe közötti
-   * mezőszintű eltérés -- INFO-szintű jelzés (backlog-40, D162), NEM tagja a
-   * PUHA `VEGLEGESITES_LEPESEK` láncnak és nem befolyásolja az
-   * `alkalmazhato`-t: az a map közvetlenül a `kovetkezoLepes` bejárását
-   * vezérli, egy ott felvett mező automatikusan megerősítő dialógust
-   * nyitna, amit a D162 kifejezetten tilt (a véglegesítés önmagában nem
-   * kényszerít szinkronizálást, D9/D33). `master: null`-nál mindig üres --
-   * a hívó (`PreviewPage.tsx`) felelőssége eldönteni, mit jelent a `null`
-   * (nincs lezárt törzsadat, vagy nem oldható fel a patientDir).
-   */
-  masterElteresek: MezoElteres[];
-  /**
-   * Hiányzó vagy már nem aktív kezelőorvos (D68) -- KEMÉNY blokk, akárcsak
-   * `nameMissing`/`uresSorok`, NEM tagja a PUHA `VEGLEGESITES_LEPESEK`
-   * láncnak és nem szerepel az `alkalmazhato`-ban, ugyanazon okból, mint a
-   * `masterElteresek`: az `alkalmazhato` közvetlenül a `kovetkezoLepes`
-   * bejárását vezérli, egy ott felvett mező automatikusan megerősítő
-   * dialógust nyitna egy tényleges zár helyett.
-   */
-  orvosProblema: OrvosProblema | null;
-  /**
-   * Azon sorok, amik eltérnek a mai árlistától -- elavult pillanatkép
-   * ÉS/VAGY kézzel felülírt ajánlati ár (backlog-61, D70,
-   * `domain/arKoveti.ts`). PUHA figyelmeztetés: a kedvezmény/felár legitim,
-   * szándékos állapot is lehet (D9/D25), ezért nem blokkol.
-   */
-  arElteresek: ArElteroSorok;
-  /**
-   * Kézzel írt szövegek, amiknek a nyelve nem biztos, hogy a dokumentum
-   * nyelvén helyes -- PUHA figyelmeztetés (65. tétel, D72,
-   * `domain/nyelviReview.ts`). SZÁNDÉKOSAN külön a `nevProblemak`-tól: az
-   * az ÁRLISTAI fordítás hiányát jelzi, ez a doki SAJÁT szövegeinek
-   * nyelvét.
-   */
-  nyelviMismatchek: NyelviMismatchTetel[];
-  /** Melyik PUHA lépés alkalmazható -- ez vezérli a `kovetkezoLepes` bejárását. */
-  alkalmazhato: Record<VeglegesitesLepes, boolean>;
+export interface CsekklistaTetel {
+  id: string;
+  sulyossag: CsekklistaSulyossag;
+  cim: string;
+  reszletek?: CsekklistaReszlet[];
+  szamlalo?: number;
+  route?: CsekklistaRoute;
+}
+
+export interface VeglegesitesCsekklista {
+  tetelek: CsekklistaTetel[];
+}
+
+/** Igaz, ha a listában van legalább egy `hard` tétel -- a Véglegesítés gomb ekkor letiltott. */
+export function vanKemenyBlokk(csekklista: VeglegesitesCsekklista): boolean {
+  return csekklista.tetelek.some((t) => t.sulyossag === 'hard');
+}
+
+const NYELVI_REVIEW_MEZO_CIMKE: Record<ReviewMezo, string> = {
+  fazisNev: 'Fázis neve',
+  fazisMegjegyzes: 'Fázis megjegyzése',
+  sorNev: 'Sor neve',
+  sorLeiras: 'Sor leírása',
+};
+
+function nyelviReviewReszletek(tetelek: NyelviMismatchTetel[]): CsekklistaReszlet[] {
+  if (tetelek.length === 0) return [];
+  return [
+    {
+      cim: 'Ellenőrzésre vár',
+      nevek: tetelek.map((m) => `${NYELVI_REVIEW_MEZO_CIMKE[m.cel.mezo]}: ${m.cimke}`),
+    },
+  ];
 }
 
 /**
@@ -118,11 +73,12 @@ export interface VeglegesitesDiagnozis {
  * ez a modul nem ismeri a `Plan` mező alapértékét, csak a kikapcsolt/
  * bekapcsolt tényt. `master` ugyanígy a hívó betöltése (`null` = nincs
  * lezárt törzsadat vagy nem ismert a patientDir). `aktivOrvosNevek` a hívó
- * MÁR feloldott aktív-orvos listája (`domain/orvosok.ts` `aktivOrvosok()`)
- * -- ez a modul csak feloldott bemenetet kap, `Settings`-et sosem lát
- * közvetlenül, ugyanaz az elv, mint a fenti két paraméternél. Szándékosan
- * kötelező, nem defaultos paraméter -- egy csendben kikapcsolt hard block
- * jogi kockázat lenne (a `ujVerzioDatum.ts` `ma` paraméterének mintája).
+ * MÁR feloldott aktív-orvos listája (`domain/orvosok.ts` `aktivOrvosok()`).
+ * `sablon` a hívó sablonbetöltésének eredménye -- ez a modul sosem tölt be
+ * sablont, csak a TÉNYt kapja meg, a fenti három paraméter mintáján.
+ * Szándékosan kötelező, nem defaultos paraméterek -- egy csendben
+ * kikapcsolt hard block jogi kockázat lenne (a `ujVerzioDatum.ts` `ma`
+ * paraméterének mintája).
  */
 export function veglegesitesDiagnozis(
   plan: Plan,
@@ -130,75 +86,239 @@ export function veglegesitesDiagnozis(
   leirasokMutatasa: boolean,
   master: Paciens | null,
   aktivOrvosNevek: string[],
-): VeglegesitesDiagnozis {
+  sablon: { sablonFallback: boolean; nyilatkozatPlaceholder: boolean },
+): VeglegesitesCsekklista {
+  const tetelek: CsekklistaTetel[] = [];
+
   const nameMissing = !plan.paciens.nev.trim();
+  if (nameMissing) {
+    tetelek.push({
+      id: 'nev-hianyzik',
+      sulyossag: 'hard',
+      cim: 'A páciens neve kötelező a véglegesítéshez.',
+      route: '/paciens',
+    });
+  }
+
+  const orvosProblema = szamitOrvosProblema(plan.orvos, aktivOrvosNevek);
+  if (orvosProblema) {
+    tetelek.push({
+      id: 'orvos',
+      sulyossag: 'hard',
+      cim:
+        orvosProblema === 'hianyzik'
+          ? 'A tervhez nincs kezelőorvos rendelve.'
+          : `A terv kezelőorvosa (${plan.orvos}) már nem szerepel az aktív orvosok között.`,
+      route: '/paciens',
+    });
+  }
+
+  const uresSorok = kitoltetlenSorok(plan);
+  if (uresSorok.length > 0) {
+    tetelek.push({
+      id: 'kitoltetlen-sor',
+      sulyossag: 'hard',
+      cim: `A terv ${uresSorok.length} kitöltetlen sort tartalmaz (nincs megnevezve a beavatkozás).`,
+      szamlalo: uresSorok.length,
+      reszletek: [
+        {
+          cim: 'Érintett sorok',
+          nevek: uresSorok.map((s) => `${s.fazisNev} — ${s.fogak.trim() || 'nincs fogszám megadva'}`),
+        },
+      ],
+      route: '/terv',
+    });
+  }
+
+  const uresFazisokLista = uresFazisok(plan);
+  if (uresFazisokLista.length > 0) {
+    tetelek.push({
+      id: 'ures-fazis',
+      sulyossag: 'hard',
+      cim: `A terv ${uresFazisokLista.length} üres (sor nélküli) fázist tartalmaz.`,
+      szamlalo: uresFazisokLista.length,
+      reszletek: [{ cim: 'Érintett fázisok', nevek: uresFazisokLista.map((f) => f.fazisNev) }],
+      route: '/terv',
+    });
+  }
+
+  const elolegTullep =
+    plan.elolegOsszeg != null &&
+    elolegTullepi(tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg), plan.elolegOsszeg);
+  if (elolegTullep) {
+    tetelek.push({
+      id: 'eloleg-tullep',
+      sulyossag: 'hard',
+      cim: 'Az előleg összege nagyobb, mint a fizetendő.',
+      route: '/terv',
+    });
+  }
+
+  // KEMÉNY blokk (62. tétel, D71): egy beárazatlan tétel 0 Ft-tal nem
+  // kerülhet aláírandó dokumentumra -- a doki vagy kézi ajánlati árat ad,
+  // vagy törli/másik pénznemre vált.
+  const araztalanSorokLista = araztalanSorok(plan, priceList);
+  if (araztalanSorokLista.length > 0) {
+    tetelek.push({
+      id: 'araztalan-sor',
+      sulyossag: 'hard',
+      cim: `A terv ${araztalanSorokLista.length} olyan sort tartalmaz, aminek a tétele nincs beárazva a terv pénznemében (${plan.penznem}).`,
+      szamlalo: araztalanSorokLista.length,
+      reszletek: [{ cim: 'Érintett sorok', nevek: araztalanSorokLista }],
+      route: '/terv',
+    });
+  }
+
+  // D74/D133: minden látható sornak legyen igazolt német neve -- árlistai
+  // nev.de-t követő VAGY D72 szerint igazoltan németül írt kézi szöveg.
+  const { nincsArlistaiNev, ellenorizetlenKeziNev } = igazolatlanNemetNevek(plan, priceList);
+  if (nincsArlistaiNev.length + ellenorizetlenKeziNev.length > 0) {
+    const reszletek: CsekklistaReszlet[] = [];
+    if (nincsArlistaiNev.length > 0) {
+      reszletek.push({ cim: 'Nincs német nevük az árlistában', nevek: nincsArlistaiNev });
+    }
+    if (ellenorizetlenKeziNev.length > 0) {
+      reszletek.push({ cim: 'Kézzel írt/átírt, nyelvileg nem ellenőrzött', nevek: ellenorizetlenKeziNev });
+    }
+    tetelek.push({
+      id: 'nemet-nev',
+      sulyossag: 'hard',
+      cim: 'Ez egy német nyelvű ajánlat, de néhány sor neve nem igazoltan németül kerül a nyomtatványra.',
+      szamlalo: nincsArlistaiNev.length + ellenorizetlenKeziNev.length,
+      reszletek,
+      route: '/terv',
+    });
+  }
+
+  // D74/D404: a fogtérkép-legendán ténylegesen megjelenő kategóriának
+  // legyen német neve.
+  const nemetKategoriak = igazolatlanNemetKategoriak(plan, priceList);
+  if (nemetKategoriak.length > 0) {
+    tetelek.push({
+      id: 'nemet-kategoria-nev',
+      sulyossag: 'hard',
+      cim: `A fogtérkép jelmagyarázatán ${nemetKategoriak.length} olyan kategória szerepel, aminek nincs német neve.`,
+      szamlalo: nemetKategoriak.length,
+      reszletek: [{ cim: 'Érintett kategóriák', nevek: nemetKategoriak }],
+      route: '/arlista',
+    });
+  }
+
   const otherFieldsMissing =
     !plan.paciens.szuletesiIdo ||
     !plan.paciens.lakcim ||
     !plan.paciens.telefon ||
     !plan.paciens.email ||
     !plan.paciens.taj;
-  const uresSorok = kitoltetlenSorok(plan);
-  const elolegTullep =
-    plan.elolegOsszeg != null &&
-    elolegTullepi(tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg), plan.elolegOsszeg);
-  // KEMÉNY blokk (62. tétel, D71): egy beárazatlan tétel 0 Ft-tal nem
-  // kerülhet aláírandó dokumentumra -- a doki vagy kézi ajánlati árat ad,
-  // vagy törli/másik pénznemre vált.
-  const araztalanSorokLista = araztalanSorok(plan, priceList);
-  // D21/D24: a hiányzó VAGY kézzel eltérített német tételnevek soha nem
-  // eshetnek/maradhatnak néma módon a terven -- a doki itt látja, mely nevek
-  // érintettek, mielőtt a páciens aláírja a dokumentumot. Három külön ok
-  // (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés).
-  const nevProblemak = fallbackSorok(plan, priceList);
-  const nevProblemaSzama =
-    nevProblemak.nincsForditas.length +
-    nevProblemak.elterAzArlistatol.length +
-    nevProblemak.egyedi.length;
-  // PUHA figyelmeztetés (backlog-19) -- névvel ellátott, de 0 összegű sorok
-  // (elgépelés + reflexes Enter az egyedi-sor-felvétel útján, vagy
-  // elfelejtett ár). Szándékosan nem kemény blokk: a 0 ár legitim is lehet
-  // (pl. ingyenes kontroll).
-  const nullaSorok = nullaOsszeguSorok(plan);
-  // PUHA figyelmeztetés (docs/02-domain-modell.md § Tétel-leírás) -- csak
-  // akkor releváns, ha a leírások ténylegesen nyomtatódnak; kikapcsolt
-  // `leirasokMutatasa` mellett a hiányuk nem érinti a nyomtatványt.
-  const hianyzoLeirasok = leirasokMutatasa ? hianyzoCsomagLeirasok(plan, priceList) : [];
-  const masterElteresek = master ? masterSnapshotDiff(master, plan.paciens) : [];
-  const orvosProblema = szamitOrvosProblema(plan.orvos, aktivOrvosNevek);
-  const arElteresek = arElteroSorok(plan, priceList);
-  const nyelviMismatchekLista = nyelviMismatchek(plan);
-
-  return {
-    nameMissing,
-    uresSorok,
-    elolegTullep,
-    araztalanSorok: araztalanSorokLista,
-    nevProblemak,
-    nullaSorok,
-    hianyzoLeirasok,
-    masterElteresek,
-    orvosProblema,
-    arElteresek,
-    nyelviMismatchek: nyelviMismatchekLista,
-    alkalmazhato: {
-      'missing-fields': otherFieldsMissing,
-      'de-fallback-names': nevProblemaSzama > 0,
-      'nyelvi-review': nyelviMismatchekLista.length > 0,
-      'zero-price-rows': nullaSorok.length > 0,
-      'missing-leiras': hianyzoLeirasok.length > 0,
-      'price-drift': arElteresek.elavult.length + arElteresek.keziAr.length > 0,
-    },
-  };
-}
-
-/** A `VEGLEGESITES_LEPESEK` láncban `fromIndex`-től kezdve az első alkalmazható lépés, vagy `null`. */
-export function kovetkezoLepes(
-  alkalmazhato: Record<VeglegesitesLepes, boolean>,
-  fromIndex: number,
-): VeglegesitesLepes | null {
-  for (let i = fromIndex; i < VEGLEGESITES_LEPESEK.length; i++) {
-    if (alkalmazhato[VEGLEGESITES_LEPESEK[i]]) return VEGLEGESITES_LEPESEK[i];
+  if (otherFieldsMissing) {
+    tetelek.push({
+      id: 'hianyzo-paciensadat',
+      sulyossag: 'soft',
+      cim: 'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad).',
+      route: '/paciens',
+    });
   }
-  return null;
+
+  // 65. tétel (D72) -- a doki SAJÁT, szabadon gépelt szövegeinek nyelve,
+  // SZÁNDÉKOSAN külön a fenti `nemet-nev` tételtől (az az ÁRLISTAI
+  // fordítás/igazolás hiányát jelzi).
+  const nyelviMismatchekLista = nyelviMismatchek(plan);
+  if (nyelviMismatchekLista.length > 0) {
+    tetelek.push({
+      id: 'nyelvi-review',
+      sulyossag: 'soft',
+      cim: `${nyelviMismatchekLista.length} kézzel írt szöveg nem biztos, hogy a dokumentum nyelvén helyes.`,
+      szamlalo: nyelviMismatchekLista.length,
+      reszletek: nyelviReviewReszletek(nyelviMismatchekLista),
+      route: '/terv',
+    });
+  }
+
+  // PUHA figyelmeztetés (backlog-19) -- névvel ellátott, de 0 összegű sorok.
+  const nullaSorok = nullaOsszeguSorok(plan);
+  if (nullaSorok.length > 0) {
+    const nullaOsszeg = formatMoney(0, plan.penznem, plan.nyelv);
+    const toldalek = plan.penznem === 'EUR' ? '-s' : '-os';
+    tetelek.push({
+      id: 'nulla-osszegu-sor',
+      sulyossag: 'soft',
+      cim: `A terv ${nullaSorok.length} ${nullaOsszeg}${toldalek} tételt tartalmaz.`,
+      szamlalo: nullaSorok.length,
+      reszletek: [{ cim: 'Érintett sorok', nevek: nullaSorok }],
+      route: '/terv',
+    });
+  }
+
+  // PUHA diagnosztika -- csak akkor releváns, ha a leírások ténylegesen
+  // nyomtatódnak.
+  const hianyzoLeirasok = leirasokMutatasa ? hianyzoCsomagLeirasok(plan, priceList) : [];
+  if (hianyzoLeirasok.length > 0) {
+    tetelek.push({
+      id: 'hianyzo-leiras',
+      sulyossag: 'soft',
+      cim: `${hianyzoLeirasok.length} csomagtételre hivatkozó soron nincs leírás.`,
+      szamlalo: hianyzoLeirasok.length,
+      reszletek: [{ cim: 'Nincs leírás', nevek: hianyzoLeirasok.map((h) => h.nev) }],
+      route: '/terv',
+    });
+  }
+
+  // PUHA figyelmeztetés (backlog-61, D70) -- utolsó tartalmi tétel: az
+  // árlista-eltérés (kedvezmény/felár vagy elavult pillanatkép) legitim
+  // állapot is lehet.
+  const arElteresek = arElteroSorok(plan, priceList);
+  if (arElteresek.elavult.length + arElteresek.keziAr.length > 0) {
+    const reszletek: CsekklistaReszlet[] = [];
+    if (arElteresek.elavult.length > 0) {
+      reszletek.push({ cim: 'Elavult árlistai pillanatkép', nevek: arElteresek.elavult });
+    }
+    if (arElteresek.keziAr.length > 0) {
+      reszletek.push({ cim: 'Kézzel felülírt ajánlati ár', nevek: arElteresek.keziAr });
+    }
+    tetelek.push({
+      id: 'ar-elteres',
+      sulyossag: 'soft',
+      cim: 'Néhány sor ára eltér a mai árlistától.',
+      szamlalo: arElteresek.elavult.length + arElteresek.keziAr.length,
+      reszletek,
+      route: '/terv',
+    });
+  }
+
+  if (sablon.sablonFallback) {
+    tetelek.push({
+      id: 'sablon-fallback',
+      sulyossag: 'soft',
+      cim:
+        'A tervhez tartozó sablon nem érhető el a megfelelő nyelven (hiányzik, vagy még jogi ' +
+        'lektorálásra vár) — helyette a magyar szöveg jelenik meg a nyomtatványon.',
+      route: '/beallitasok',
+    });
+  }
+
+  if (sablon.nyilatkozatPlaceholder) {
+    tetelek.push({
+      id: 'nyilatkozat-placeholder',
+      sulyossag: 'info',
+      cim:
+        'A nyilatkozat szövege ezen a nyelven még jogi lektorálásra vár — a nyilatkozat és ' +
+        'aláírás oldal emiatt nem kerülhet a nyomtatványra, a „Csak ajánlat” mód kényszerítve van.',
+      route: '/beallitasok',
+    });
+  }
+
+  // backlog-40 (D162/D163): a páciens törzsadata INFO-szintű, nem blokkoló
+  // jelzés -- a véglegesítés önmagában nem kényszerít szinkronizálást (D9/D33).
+  const masterElteresek = master ? masterSnapshotDiff(master, plan.paciens) : [];
+  if (masterElteresek.length > 0) {
+    tetelek.push({
+      id: 'torzsadat-elteres',
+      sulyossag: 'info',
+      cim: `A páciens törzsadata ${masterElteresek.length} mezőben eltér a terv adataitól (${masterElteresek.map((m) => m.cimke).join(', ')}).`,
+      szamlalo: masterElteresek.length,
+      route: '/paciens',
+    });
+  }
+
+  return { tetelek };
 }

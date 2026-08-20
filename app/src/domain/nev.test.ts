@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   arlistaiLeiras,
-  fallbackSorok,
   leirasKoveti,
   nevAtirt,
   nevKoveti,
@@ -227,118 +226,6 @@ function makePlan(overrides: Partial<Plan> = {}): Plan {
     ...overrides,
   };
 }
-
-describe('fallbackSorok', () => {
-  it('returns empty lists for a hu plan (never falls back)', () => {
-    const plan = makePlan({
-      nyelv: 'hu',
-      fazisok: [
-        {
-          sorszam: 1,
-          megnevezes: '1. kezelés',
-          megjegyzes: '',
-          sorok: [
-            { tetelId: 't2', nevSnapshot: 'Nincs DE', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 2000, tenylegesEgysegar: 2000 },
-          ],
-        },
-      ],
-    });
-    expect(fallbackSorok(plan, priceList)).toEqual({ nincsForditas: [], elterAzArlistatol: [], egyedi: [] });
-  });
-
-  it('lists snapshot names whose item has no de name under nincsForditas', () => {
-    const plan = makePlan({
-      fazisok: [
-        {
-          sorszam: 1,
-          megnevezes: '1. kezelés',
-          megjegyzes: '',
-          sorok: [
-            { tetelId: 't1', nevSnapshot: 'Hat DE', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 1000, tenylegesEgysegar: 1000 },
-            { tetelId: 't2', nevSnapshot: 'Nincs DE', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 2000, tenylegesEgysegar: 2000 },
-          ],
-        },
-      ],
-    });
-    expect(fallbackSorok(plan, priceList)).toEqual({
-      nincsForditas: ['Nincs DE'],
-      elterAzArlistatol: [],
-      egyedi: [],
-    });
-  });
-
-  it('backlog-3b: lists a manually diverged, has-translation row under elterAzArlistatol', () => {
-    const plan = makePlan({
-      fazisok: [
-        {
-          sorszam: 1,
-          megnevezes: '1. kezelés',
-          megjegyzes: '',
-          sorok: [
-            { tetelId: 't1', nevSnapshot: 'Kézzel átírt szöveg', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 1000, tenylegesEgysegar: 1000 },
-          ],
-        },
-      ],
-    });
-    expect(fallbackSorok(plan, priceList)).toEqual({
-      nincsForditas: [],
-      elterAzArlistatol: ['Kézzel átírt szöveg'],
-      egyedi: [],
-    });
-  });
-
-  it('does not warn for a tetelId no longer in the price list', () => {
-    const plan = makePlan({
-      fazisok: [
-        {
-          sorszam: 1,
-          megnevezes: '1. kezelés',
-          megjegyzes: '',
-          sorok: [
-            { tetelId: 'ismeretlen', nevSnapshot: 'Régi tétel', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 1000, tenylegesEgysegar: 1000 },
-          ],
-        },
-      ],
-    });
-    expect(fallbackSorok(plan, priceList)).toEqual({ nincsForditas: [], elterAzArlistatol: [], egyedi: [] });
-  });
-
-  it('backlog-3: kitöltött egyedi (tetelId nélküli) sor is bekerül de terven, egyedi alá', () => {
-    const plan = makePlan({
-      fazisok: [
-        {
-          sorszam: 1,
-          megnevezes: '1. kezelés',
-          megjegyzes: '',
-          sorok: [
-            { tetelId: '', nevSnapshot: 'Egyedi anyagköltség', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 0, tenylegesEgysegar: 0 },
-          ],
-        },
-      ],
-    });
-    expect(fallbackSorok(plan, priceList)).toEqual({
-      nincsForditas: [],
-      elterAzArlistatol: [],
-      egyedi: ['Egyedi anyagköltség'],
-    });
-  });
-
-  it('backlog-3: üres nevű egyedi sort nem jelez', () => {
-    const plan = makePlan({
-      fazisok: [
-        {
-          sorszam: 1,
-          megnevezes: '1. kezelés',
-          megjegyzes: '',
-          sorok: [
-            { tetelId: '', nevSnapshot: '', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 0, tenylegesEgysegar: 0 },
-          ],
-        },
-      ],
-    });
-    expect(fallbackSorok(plan, priceList)).toEqual({ nincsForditas: [], elterAzArlistatol: [], egyedi: [] });
-  });
-});
 
 describe('nyelvvaltasHatasa', () => {
   it('minden tetelId-hez kötött, egyező nevű sor a "frissul" számlálóba kerül', () => {

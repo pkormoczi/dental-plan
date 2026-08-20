@@ -1824,6 +1824,42 @@ karbantartási kör négy önálló javítása.
 
 ---
 
+### 67. tétel: Finalization validation engine — KÉSZ (2026-08-20)
+
+- **Méret:** ~2 nap.
+- **Kereteket sért?** Nem — új D75/D76/D77
+  (`docs/01-attekintes-es-dontesek.md`), egy új sor a `CLAUDE.md`
+  "Sérthetetlen szabályok" táblájában (D76); `schemaVersion` nem
+  emelkedett.
+- **Valódi haszon:** a véglegesítés-őr korábban tizenegy, egymástól
+  eltérő alakú mezőt adott vissza (boolean flag-ek, `string[]` listák,
+  egy `alkalmazhato` map által vezérelt szekvenciális megerősítő-lánc),
+  amit a doki csak a "Véglegesítés és mentés" gombnyomás UTÁN,
+  szekvenciális "Folytatás" dialógusokon keresztül látott. Emellett
+  kódolvasás közben kiderült: egy 0 soros fázis semmit nem blokkolt
+  finalizáláskor, és üres fejlécként kikerült a nyomtatványra.
+- **Megvalósítás:** `veglegesitesDiagnozis()` egységes, navigálható
+  `hard`/`soft`/`info` súlyosságú `CsekklistaTetel`-listát ad vissza
+  (`domain/veglegesitesOr.ts`) — a `PreviewPage.tsx` a teljes listát
+  MINDIG megjeleníti, a gombnyomás ELŐTT is; a szekvenciális modal-lánc
+  megszűnt, a gomb kizárólag `hard` tétel jelenlétekor letiltott. A
+  hiányzó/eltérő német tételnév a doki explicit döntése alapján PUHÁRÓL
+  KEMÉNY blokkra emelkedett — a predikátum (`domain/nemetNev.ts`
+  `nemetNeveIgazolt()`) az árlistai fordítást (`nevKoveti`) ÉS a D72
+  nyelvi review-metaadatot (`Sor.nevNyelv`) komponálja, hogy a kézzel
+  átírt és egyedi sorok is elháríthatók maradjanak. Új kemény blokk a
+  fogtérkép-legendán ténylegesen látszó, hiányzó német kategórianévre
+  és a 0 soros fázisra (`uresFazisok()`, `domain/kitoltetlen.ts`). A
+  meglévő domain-függvények (`kitoltetlenSorok`/`nullaOsszeguSorok`/
+  `hianyzoCsomagLeirasok`/`arElteroSorok`/`masterSnapshotDiff`/
+  `orvosProblema`/`nyelviMismatchek`) hívása változatlan (lásd
+  `docs/01-attekintes-es-dontesek.md` D75/D76/D77,
+  `docs/02-domain-modell.md` § "Nyelvi review a kézzel írt szövegeken",
+  `docs/03-funkcionalis-spec.md` § "Fázisok" és § 4 "Előnézet és
+  véglegesítés").
+
+---
+
 ### 68. tétel: PDF előnézet generálás és invalidálási életciklus — KÉSZ (2026-08-20)
 
 - **Méret:** kicsi (egy fájl érdemi módosítása + új tesztfájl).

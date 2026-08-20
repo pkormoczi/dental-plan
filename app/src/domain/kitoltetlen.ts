@@ -47,8 +47,7 @@ export function kitoltetlenSorok(plan: Plan): KitoltetlenSor[] {
  * szerinti kivétel -- egy SAVOS eredetű, épp 0 egységárú sor is bekerül,
  * ez puha figyelmeztetésnél elhanyagolható súrlódás. `string[]`-et ad
  * vissza (a `nevSnapshot`-okat), mert ezeknek a soroknak VAN nevük -- lásd
- * `nev.ts` `fallbackSorok` `nincsForditas`/`elterAzArlistatol` mezőit,
- * ugyanez a minta.
+ * `nemetNev.ts` `igazolatlanNemetNevek()` két csoportját, ugyanez a minta.
  */
 export function nullaOsszeguSorok(plan: Plan): string[] {
   const eredmeny: string[] = [];
@@ -82,6 +81,26 @@ export function araztalanSorok(plan: Plan, priceList: PriceList): string[] {
         eredmeny.push(sor.nevSnapshot);
       }
     });
+  });
+  return eredmeny;
+}
+
+export interface UresFazis {
+  fazisIndex: number;
+  fazisNev: string;
+}
+
+/**
+ * KEMÉNY blokk (D103): 0 soros fázisok, terv sorrendben -- a nyomtatvány
+ * (`pdf/TervDocument.tsx`) a `fazisok` tömböt feltétel nélkül végigrendereli,
+ * egy ilyen fázis üres fejlécként kerülne a papírra.
+ */
+export function uresFazisok(plan: Plan): UresFazis[] {
+  const eredmeny: UresFazis[] = [];
+  plan.fazisok.forEach((fazis, fazisIndex) => {
+    if (fazis.sorok.length === 0) {
+      eredmeny.push({ fazisIndex, fazisNev: fazis.megnevezes });
+    }
   });
   return eredmeny;
 }

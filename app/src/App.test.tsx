@@ -65,10 +65,9 @@ describe('Végpontok közötti folyamat', () => {
       { name: /Véglegesítés és mentés/ },
       { timeout: 10000 },
     );
+    // A páciens szándékosan hiányos (csak a név van kitöltve) -- ez csak
+    // PUHA csekklista-tétel, nem blokkol.
     await user.click(finalizeBtn1);
-    // A páciens szándékosan hiányos (csak a név van kitöltve) -- ez a nem
-    // blokkoló "hiányzó adatok" AlertDialogot váltja ki véglegesítéskor.
-    await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
     expect(await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 })).toBeInTheDocument();
 
     // A patientDir/planDir/versionDir hármas leolvasása a mentés-visszaigazolásból --
@@ -100,7 +99,6 @@ describe('Végpontok közötti folyamat', () => {
       { timeout: 10000 },
     );
     await user.click(finalizeBtn2);
-    await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
     await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
@@ -161,7 +159,6 @@ describe('Végpontok közötti folyamat', () => {
       { timeout: 10000 },
     );
     await user.click(finalizeBtn);
-    await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
     await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
     // A mentett terv.json-t a "patientDir / planDir / versionDir" kijelzőből
