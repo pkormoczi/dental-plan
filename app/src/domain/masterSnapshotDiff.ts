@@ -39,7 +39,7 @@ function ertekEgyezik(a: unknown, b: unknown): boolean {
 
 /**
  * Csak az ELTÉRŐ mezőket adja vissza (a `TorzsadatDiffDialog` táblája csak
- * ezeket listázza, docs/03-funkcionalis-spec.md § 2. Páciens adatlap). Az
+ * ezeket listázza, docs/03-funkcionalis-spec.md § 2. Terv adatai). Az
  * "üres az egyik oldalon, kitöltött a másikon" IS eltérésnek számít --
  * ellentétben a `paciensDuplikacio.ts` `AdatViszony`-jával (ahol a hiányzó
  * adat sosem "ellentmond"), itt pont az a kérdés, átvegyük-e a másik oldal
@@ -74,7 +74,7 @@ export function alkalmazMezoket(cel: Paciens, forras: Paciens, kulcsok: (keyof P
  * ÜTKÖZÉS, csak hiányzó adat kiegészítése. A lépés-elhagyási prompt
  * (backlog-40, 1. döntés) EZT használja a megjelenítés eldöntéséhez, hogy
  * egy vadonatúj páciens első adatkitöltése (a quick-create után a doki
- * kitölti a többi mezőt a Páciens adatlapon, miközben a master még csak a
+ * kitölti a többi mezőt a Terv adatai lapon, miközben a master még csak a
  * nevet tartalmazza) ne szakítsa félbe minden alkalommal a workflow-t. A
  * kártya (`TorzsadatSyncCard`) és az Előnézet info-sora ellenben a TELJES
  * `masterSnapshotDiff`-et mutatja -- ott egy üres mező pótlása is hasznos

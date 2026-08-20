@@ -42,6 +42,7 @@ export class DemoDraftStorage implements DraftStorage {
     if (typeof rec.lastRoute !== 'string' || !ISMERT_ROUTEOK.has(rec.lastRoute)) {
       delete rec.lastRoute;
     }
+    if (typeof rec.tervCim !== 'string') delete rec.tervCim;
     return rec;
   }
 
@@ -52,6 +53,8 @@ export class DemoDraftStorage implements DraftStorage {
       plan,
       ...(meta?.patientDir != null ? { patientDir: meta.patientDir } : {}),
       ...(meta?.lastRoute != null ? { lastRoute: meta.lastRoute } : {}),
+      // `!= null`, nem truthy -- az üres string valódi érték (lásd DraftStorage.ts).
+      ...(meta?.tervCim != null ? { tervCim: meta.tervCim } : {}),
     };
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(rec));

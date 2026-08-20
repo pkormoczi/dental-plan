@@ -70,7 +70,7 @@ export function createBlankPlan(
   // rendelő elsődleges pénzneme forint, az EUR árak pedig ma még
   // lektorálatlan, árfolyamból becsült kiindulóértékek
   // (docs/06-arlista-import.md) -- a HUF alapértelmezés a biztonságosabb
-  // kiindulás. A doki egy kattintással vált a Páciens adatlapon, ha mégis
+  // kiindulás. A doki egy kattintással vált a Terv adatai lapon, ha mégis
   // EUR kell.
   const nyelv: Nyelv = oroklott?.nyelv ?? (settings.nemetEngedelyezve ? settings.alapertelmezettNyelv : 'hu');
 

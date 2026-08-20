@@ -329,7 +329,7 @@ describe('NewPlanPage', () => {
 
   // D14: a "+ Új páciens" ág mostantól a quick-create dialóguson át hoz
   // létre valódi Patient-rekordot MÉG A TERV ELŐTT -- csak sikeres mentés
-  // után navigál a Páciens adatlapra.
+  // után navigál a Terv adatai lapra.
   it('"+ Új páciens" a quick-create dialógust nyitja azonnal, megerősítés nélkül -- csak sikeres mentés után navigál', async () => {
     const user = userEvent.setup();
     renderNewPlan();

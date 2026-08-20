@@ -43,7 +43,8 @@ function nevListaSzoveg(cim: string, nevek: string[]): string {
 }
 
 export default function PreviewPage() {
-  const { plan, settings, priceList, markPlanSaved, piszkozatPatientDir } = useAppState();
+  const { plan, settings, priceList, markPlanSaved, piszkozatPatientDir, piszkozatTervCim } =
+    useAppState();
   const { storage, loadLatestTemplateByBase } = useStorage();
   const navigate = useNavigate();
 
@@ -62,6 +63,11 @@ export default function PreviewPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedRef, setSavedRef] = useState<PlanRef | null>(null);
+  // backlog-51 (D61): a vadonatúj lánc "Terv adatai" lapon beírt címének
+  // véglegesítéskori írási hibája -- KÜLÖN a `saveError`-tól, mert ekkor a
+  // terv MÁR a lemezen van (lásd doFinalize). Csak a siker-képernyőn
+  // jelenik meg, amber színnel, nem piros hibaként.
+  const [cimkeHiba, setCimkeHiba] = useState<string | null>(null);
   const [nameMissingNotice, setNameMissingNotice] = useState(false);
   const [uresSorokNotice, setUresSorokNotice] = useState(false);
   // A webbel megegyező forrásból (design/toothChartSvg) canvason renderelt
@@ -323,9 +329,16 @@ export default function PreviewPage() {
   async function doFinalize() {
     if (!pdfInstance.blob) return;
 
+    // Csak vadonatúj lánchoz -- egy már mentett lánc címét a "Terv adatai"
+    // lap `TervCimField`-jének "Mentés" gombja azonnal kiírta. A closure itt,
+    // a `markPlanSaved` (ami a `piszkozatMeta`-t, benne a `tervCim`-et is
+    // nullázza) ELŐTT rögzíti az értéket.
+    const ujLancCim = plan.tervId === '' ? (piszkozatTervCim ?? '').trim() : '';
+
     savingRef.current = true;
     setSaving(true);
     setSaveError(null);
+    setCimkeHiba(null);
     try {
       // D163: a mastert véglegesítéskor újraolvassuk -- csak az info-sáv
       // frissítéséhez (D162, a `finalPlan.paciens` ettől függetlenül a
@@ -350,6 +363,22 @@ export default function PreviewPage() {
       const bytes = new Uint8Array(await pdfInstance.blob.arrayBuffer());
       const ref = await storage.savePlan(finalPlan, bytes);
       const persisted = await storage.loadPlan(ref); // tervId/verzio a storage tölti ki (D4)
+      if (ujLancCim) {
+        // KÜLÖN try/catch, NEM a közös hibazónában: a terv ekkor MÁR a
+        // lemezen van, egy itteni hiba nem jelentheti a dokinak, hogy "a
+        // mentés nem sikerült" -- az újrapróbálás fölösleges v2
+        // verziómappát hozna létre (D4). A cím a Korábbi tervek ceruza-
+        // ikonjával pótolható, lásd a siker-képernyő amber Callout-ját.
+        try {
+          await storage.savePlanLabel(ref.patientDir, ref.planDir, ujLancCim);
+        } catch (err) {
+          setCimkeHiba(
+            err instanceof Error
+              ? `A terv címe nem mentődött: ${err.message}`
+              : 'A terv címe váratlanul nem mentődött.',
+          );
+        }
+      }
       // docs/03-funkcionalis-spec.md véglegesítés-lánc 4. lépése: a
       // piszkozat törlése -- enélkül a lenti setPlan azonnal visszaírná
       // piszkozatként a most fájlba mentett tervet (markPlanSaved a
@@ -376,7 +405,7 @@ export default function PreviewPage() {
     if (savingRef.current) return;
 
     // Csak a név kötelező (a mappanévhez), a többi hiánya csak figyelmeztet,
-    // nem blokkol -- docs/03-funkcionalis-spec.md "2. Páciens adatlap".
+    // nem blokkol -- docs/03-funkcionalis-spec.md "2. Terv adatai".
     if (nameMissing) {
       setNameMissingNotice(true);
       return;
@@ -424,6 +453,14 @@ export default function PreviewPage() {
         <Text as="p" size="2" color="gray" mb="5" style={{ fontFamily: t.mono }}>
           {savedRef.patientDir} / {savedRef.planDir} / {savedRef.versionDir}
         </Text>
+        {cimkeHiba && (
+          <Callout.Root color="amber" mb="5" style={{ textAlign: 'left' }}>
+            <Callout.Text>
+              {cimkeHiba} A terv mentése ettől függetlenül sikeres volt -- a cím a Korábbi
+              tervek listáján, a ceruza-ikonnal pótolható.
+            </Callout.Text>
+          </Callout.Root>
+        )}
         <Flex gap="3" justify="center">
           <Button onClick={startNewPlan}>Új terv indítása</Button>
           {/* backlog-31, D36: a MOST mentett páciens részletoldalára visz

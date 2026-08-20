@@ -3,7 +3,8 @@
 ## Képernyők
 
 1. Indítás
-2. Páciens adatlap — itt dől el a terv nyelve és pénzneme (D21)
+2. Terv adatai — itt dől el a terv nyelve és pénzneme (D21), hat szekcióra
+   tagolva (D68)
 3. **Terv szerkesztő** — a legfontosabb
 4. Előnézet és véglegesítés
 5. Terv-láncok és verziók — elsődleges gazdája a 10. képernyő `Kezelési
@@ -37,7 +38,7 @@ terv-workflow héj (lásd alább, D36) váltotta fel, a linkek megszűntek.
 
 ### Terv-workflow héj (D36)
 
-A `Páciens adatlap`/`Terv szerkesztő`/`Előnézet és véglegesítés` (2–4.
+A `Terv adatai`/`Terv szerkesztő`/`Előnézet és véglegesítés` (2–4.
 képernyő) közös héjban él (`app/src/components/TervWorkflowShell.tsx`),
 ami mindhárom oldal fölött állandó:
 
@@ -58,12 +59,12 @@ ami mindhárom oldal fölött állandó:
   "Piszkozat folytatása" kártyája, melyik lépésre navigáljon vissza (lásd
   lent, § Autosave).
 - **Lépés-elhagyási ajánlat** (D48) — a stepper Kezelések/Előnézet linkjei
-  és a Páciens adatlap "Tovább" gombja MEGELŐZI a tényleges navigációt egy
+  és a Terv adatai lap "Tovább" gombja MEGELŐZI a tényleges navigációt egy
   elfogási ponttal (`components/LepesGuardContext.tsx`), amit KIZÁRÓLAG a
-  Páciens adatlap "Páciens törzsadata" kártyája (`TorzsadatSyncCard.tsx`)
+  Terv adatai lap "Páciens adatai" szekciója (`TorzsadatSyncCard.tsx`)
   használ, amíg mountolva van — a stepper Terv adatai (visszafelé) linkje,
   a breadcrumb és a NavBar-navigáció (D46, külön mechanizmus) nem érintett.
-  Lásd § 2. "Páciens törzsadata".
+  Lásd § 2. "Páciens adatai" alszakasz, "Páciens törzsadata (D48)" bekezdés.
 
 A sikeres véglegesítés utáni "A terv elmentve ✓" sikerpanel (lásd § 4)
 felett a héj továbbra is látszik.
@@ -109,21 +110,54 @@ oldalra költözött (D54): előbbi kettő az Adatkezelés fülre, utóbbi (a
 globális, több-pácienses terv-lánc/verzió fa) az „Összes terv" fülre
 (`/demo/tervek`), lásd fent § Fő navigáció.
 
-A nyelvválasztás nem itt, hanem a Páciens adatlapon van (2. képernyő) —
+A nyelvválasztás nem itt, hanem a Terv adatai lapon van (2. képernyő) —
 lásd ott.
 
 ---
 
-## 2. Páciens adatlap
+## 2. Terv adatai
 
-### Nyelv és pénznem (D21)
+### Szekciók (D68)
 
-A személyes adatok fölött egy kártya, ami **csak akkor jelenik meg, ha
+A lap hat, vizuálisan elkülönített szekcióra tagolódik, ebben a
+sorrendben: **Terv címe** → **Páciens adatai** (a személyes adatok +
+beágyazva a „Páciens törzsadata” diff) → **Dokumentum nyelve** →
+**Pénznem** → **Kezelőorvos** → **Dátumok**. A Dokumentum nyelve/Pénznem
+szekció ugyanazon a feltételen jelenik/tűnik el (lásd lent); a Kezelőorvos
+szekció ma egy egyszerű, csak olvasható mezőt tart (a tényleges
+orvosválasztó UI külön tétel hatóköre).
+
+### Terv címe (D61)
+
+Szerkeszthető mező, két írási útvonallal a lánc állapotától függően:
+
+- **Már mentett lánc** (`plan.tervId !== ''`): a mező a `terv-cimke.json`
+  tartalmát mutatja; ha a beírt érték eltér a tároltól, egy „Mentés” gomb
+  jelenik meg (Enter is ment) — ugyanaz a mechanizmus, mint a „Terv-láncok
+  és verziók” (5. képernyő) ceruza-ikonja, csak egy második belépési
+  ponttal. Írási hiba esetén piros hibasáv jelenik meg, ami a következő
+  mentési kísérletig látszik.
+- **Vadonatúj lánc** (`plan.tervId === ''`): nincs hova azonnal írni (a
+  `terv-cimke.json` `patientDir`+`planDir` azonosítót igényel) — a beírt
+  érték a piszkozat UI-workflow metaadatában él, túléli a `/paciens` →
+  `/terv` → `/elonezet` navigációt, és a véglegesítéskor (§ 4) íródik ki.
+  Egy ekkori írási hiba NEM jelenti azt, hogy a mentés sikertelen — a terv
+  ekkor már a lemezen van, a hiba a siker-képernyőn egy külön, amber
+  jelzésként jelenik meg, a cím utólag a „Terv-láncok és verziók” (5.
+  képernyő) ceruza-ikonjával pótolható.
+
+Mindkét ágon a mező üresen az élő auto-javaslatot (`javasoltTervCim()`,
+D27) mutatja placeholderként. A mappanév-képzés (`storage.savePlan()`)
+ettől függetlenül VÁLTOZATLANUL az élő javaslatból képződik (D29) — a
+kézzel beírt cím sosem befolyásolja a fizikai mappanevet.
+
+### Dokumentum nyelve / Pénznem (D21)
+
+Két külön szekció, ami **csak akkor jelenik meg, ha
 `beallitasok.nemetEngedelyezve === true`** — vagy ha a piszkozat már
 németül indult (hogy egy időközben kikapcsolt kapcsoló ne tegye
-szerkeszthetetlenül némává egy folyamatban lévő német tervet).
-
-Két, egymástól **független** kétállású kapcsoló:
+szerkeszthetetlenül némává egy folyamatban lévő német tervet). A két
+szekció egymástól **független** kétállású kapcsolót tart:
 
 - **Nyelv** (`hu` / `de`) — a nyomtatvány szövege: a tételnevek (ha
   van hozzájuk fordítás), a PDF fix feliratai, a dátumformátum, a
@@ -143,8 +177,11 @@ módosíthatja, amíg a kártya szerkeszthető). Csak PISZKOZAT-státuszú
 tervek, vagy egyetlen korábbi terv híján a fenti globális alapérték
 marad érvényben.
 
-Mindkettő **az első mentés után fagy** (D4) — a kártya ilyenkor statikus
-szöveget mutat, chipek nélkül; új tervet kell nyitni a váltáshoz.
+Mindkettő **az első mentés után fagy** (D4) — mindkét szekció ilyenkor
+statikus szöveget mutat, chipek nélkül; új tervet kell nyitni a
+váltáshoz. A D4 „nem módosítható” megjegyzés szándékosan csak EGYSZER
+jelenik meg, a Pénznem szekció alján, annak ellenére, hogy mindkét
+mezőre vonatkozik.
 
 **Nyelváltás (fagyás előtt) megőrzi a kézzel szerkesztett sorneveket**
 (D24): egy `tetelId`-hez kötött sor neve **csak akkor** frissül az új
@@ -163,22 +200,27 @@ figyelmeztetés jelenik meg (hány aktív tételnek nincs neve az adott
 nyelven, illetve hogy a kiválasztott pénznemben van-e egyáltalán
 beárazott tétel) — ez a „ne a szerkesztőben legyen meglepetés" elve.
 
-### Személyes adatok
+### Páciens adatai
 
-Mezők: név, születési idő, lakcím, telefon, e-mail, TAJ, „kiskorú"
-jelölő. Ha kiskorú, megjelenik a törvényes képviselő neve és elérhetősége.
+A „Páciens adatai” szekció két részből áll: a személyes adatok mezői, majd
+alattuk, elválasztóval, beágyazva a „Páciens törzsadata” eltérés-jelzés
+(lásd lent) — a kettő korábban két külön kártya volt, ma egy szekció
+(D68).
+
+**Személyes adatok.** Mezők: név, születési idő, lakcím, telefon, e-mail,
+TAJ, „kiskorú" jelölő. Ha kiskorú, megjelenik a törvényes képviselő neve
+és elérhetősége.
 
 Csak a **név** kötelező (ebből képződik a mappanév). A többi hiánya
 véglegesítéskor figyelmeztetést ad, de nem blokkol — a doki néha
 gyorsan akar árajánlatot adni.
 
-### Páciens törzsadata (D48)
-
-A Személyes adatok kártya ALATT, önálló „Páciens törzsadata” kártya — a
-`paciens-adatok.json` (D33) és az AKTUÁLIS terv-piszkozat `paciens` blokkja
-közötti mezőszintű összevetés/szinkron. Csak akkor jelenik meg, ha a
-piszkozat páciensmappája ismert (`feloldPatientDir()`,
-`app/src/domain/torzsadatBetoltes.ts`); ha nem, a kártya kimarad.
+**Páciens törzsadata (D48).** A `paciens-adatok.json` (D33) és az
+AKTUÁLIS terv-piszkozat `paciens` blokkja közötti mezőszintű
+összevetés/szinkron, kártyakeret nélkül, a személyes adatok alatt. Csak
+akkor jelenik meg, ha a piszkozat páciensmappája ismert
+(`feloldPatientDir()`, `app/src/domain/torzsadatBetoltes.ts`); ha nem, ez
+a rész kimarad.
 
 - **Lezárt törzsadatnál**: az eltérő mezők száma, és KÉT külön gomb —
   „Frissítés a törzsadatból” (master → piszkozat) és „Törzsadat frissítése a
@@ -204,6 +246,29 @@ piszkozat páciensmappája ismert (`feloldPatientDir()`,
   nyitva marad, a hibaüzenet mellett „Újra” (ugyanaz az írás újra) vagy —
   csak a lépés-elhagyási prompt módban — „Folytatás írás nélkül” (a
   piszkozat érintetlenül a workflow folytatódik) választással.
+
+### Kezelőorvos
+
+Ma egy egyszerű, csak olvasható mező (`plan.orvos` értéke) — a slotot a
+D68 sorrendje szerint tartja fenn a lap. A tényleges orvosválasztó UI
+(aktív/inaktív orvosok, alapértelmezett-orvos öröklési szabályai) külön
+tétel hatóköre.
+
+### Dátumok (D62)
+
+Két mező: **Kiadás dátuma** (`keltezes`) — marad olvasható, automatikusan
+számolt (D22, a betöltés pillanatában bélyegzett, sosem kézi); és
+**Érvényes eddig** (`ervenyesIg`) — szerkeszthető, alapértéke
+`keltezes + beallitasok.ervenyessegNap`. Kiürítve, a mező elhagyásakor
+(blur) automatikusan visszaáll az alapértékre — az `ervenyesIg` soha nem
+maradhat üresen (lásd CLAUDE.md „Sérthetetlen szabályok”). Az
+alapértéktől eltérő érték mellett egy „Vissza az alapértelmezettre”
+gomb jelenik meg; ha az érvényesség vége a kiadás dátuma elé esik, semleges
+figyelmeztetés jelzi.
+
+Egy kézzel átírt `ervenyesIg`-et a következő „Új verzió” (D22,
+`frissDatummal`) változatlanul némán felülír — a kézi ablak szándékosan
+nem öröklődik verziónyitáskor.
 
 ---
 
@@ -493,14 +558,23 @@ Sikeres mentésnél a Terv szerkesztő fejlécében egy semleges „Piszkozat
 mentve HH:MM” szöveg jelenik meg (a hiba-Callout MELLETT, nem helyette) —
 a Kezdőlap ugyanezt az időbélyeget „Utolsó módosítás” címkével mutatja.
 
-A perzisztált piszkozat két, a `Plan`-től független UI-workflow metaadatot
-hordoz (D37): melyik páciens-mappához tartozik (`patientDir`, ahol ismert)
-és melyik workflow-lépést látta utoljára a doki (`lastRoute`, a
-terv-workflow héj írja route-váltáskor, lásd fent). A Kezdőlap „Piszkozat
-folytatása” kártyájának „Megnyitás” gombja ismert `lastRoute` esetén oda
-navigál; ha nem ismert (funkció előtti piszkozat), a régi
-névkitöltés-heurisztika a fallback (üres név → Páciens adatlap, egyébként
-Terv szerkesztő).
+A perzisztált piszkozat HÁROM, a `Plan`-től független UI-workflow
+metaadatot hordoz (`DraftMeta`): melyik páciens-mappához tartozik
+(`patientDir`, ahol ismert, D37), melyik workflow-lépést látta utoljára a
+doki (`lastRoute`, a terv-workflow héj írja route-váltáskor, lásd fent),
+és — vadonatúj lánchoz — a „Terv adatai” lap Terv címe mezőjébe beírt
+érték (`tervCim`, D61). Egyik sem kerül papírra, mindhárom puha
+navigációs/UI segédlet. A Kezdőlap „Piszkozat folytatása” kártyájának
+„Megnyitás” gombja ismert `lastRoute` esetén oda navigál; ha nem ismert
+(funkció előtti piszkozat), a régi névkitöltés-heurisztika a fallback
+(üres név → Terv adatai lap, egyébként Terv szerkesztő).
+
+**Ismert rés:** egy piszkozat, amiben a doki EDDIG kizárólag a Terv címe
+mezőt töltötte ki (semmi mást), nem perzisztálódik — az autosave-őr
+(`piszkozatTartalmas()`) szándékosan nem tekinti tartalmasnak a puszta
+cím jelenlétét, mert a mező más forrásból (páciensnév, kezelések) függő
+diszkriminátorra épül. A beírt cím ettől függetlenül túléli a lapon
+belüli navigációt (memóriában marad), csak egy frissítést (F5) nem.
 
 A piszkozat két helyről dobható el:
 - A Terv szerkesztő fejlécében egy kuka-ikon a TELJES piszkozatra
@@ -572,7 +646,7 @@ kerül a nyomtatványra.
 **Páciens törzsadat-eltérés (INFO-szint, D48):** ha a páciensnek van lezárt
 törzsadata (`paciens-adatok.json`, D33), és az eltér a terv `paciens`
 pillanatképétől, egy semleges (szürke) sáv sorolja fel az eltérő mezőket, egy
-"Terv adatai" gombbal a Páciens adatlapra. Ez **nem** tagja a fenti
+"Terv adatai" gombbal a Terv adatai lapra. Ez **nem** tagja a fenti
 megerősítő-láncnak — nem kér "Folytatás"-t, nem blokkol, a véglegesítés
 önmagában nem kényszerít szinkronizálást (D9/D33 elve marad). A mastert a
 rendszer véglegesítéskor újraolvassa, hogy a sáv a legfrissebb állapotot
@@ -618,6 +692,19 @@ seed-feltöltés és a véglegesítés-őr mind ezt hívja.
   még nem adta meg), ezért a HU-visszaesés magyar nyelvű terven nem fut
   le (a placeholder szöveg magyarul nyomtatódik, sárga figyelmeztetés
   nélkül — nincs mire visszaesni), csak német nyelvű tervnél jelez.
+
+### Terv címének kiírása vadonatúj lánchoz (D61)
+
+Ha a lánc vadonatúj (`plan.tervId === ''`) ÉS a doki írt be egyedi címet a
+„Terv adatai” lap Terv címe mezőjébe, a `doFinalize()` a `storage.savePlan()`
+UTÁN, saját, a mentéstől ELKÜLÖNÍTETT try/catch-ben ír a
+`storage.savePlanLabel()`-lel. Már mentett lánchoz ez a lépés sosem fut —
+ott a cím a lapon, azonnal íródott. Az elkülönítés korrektségi kérdés, nem
+stílus: a terv EKKOR MÁR a lemezen van, egy itteni hiba nem jelentheti a
+dokinak, hogy „a mentés nem sikerült” — egy hibás értelmezésű
+újrapróbálás fölösleges, D4-et sértő üres v2 verziómappát hozna létre. A
+hiba a siker-képernyőn egy külön, amber jelzésként jelenik meg, a cím
+utólag a „Terv-láncok és verziók” (5. képernyő) ceruza-ikonjával pótolható.
 
 ### Sikeres véglegesítés
 
@@ -714,7 +801,8 @@ bármikor szabadon átírható (`terv-cimke.json`, `docs/02-domain-modell.md`
 § Páciens- és terv-mappa) — egy már véglegesített terv címkéjének
 átírása NEM hoz létre új verziót. Amíg a doki nem ír át semmit, a mező
 egy élő auto-javaslatot mutat (a terv domináns kategóriájának neve,
-`javasoltTervCim()`).
+`javasoltTervCim()`). A ceruza-ikon itt a MÁSODIK belépési pont ehhez az
+íráshoz — az első a „Terv adatai” lap Terv címe mezője (§ 2, D61).
 
 ### Aktív draft a listán
 
@@ -903,7 +991,7 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   `kedvezmenyOsszeg`) a mai `createBlankPlan()` friss alapértéke —
   pontosan úgy, mintha a doki egy „+ Új páciens" tervet indítana,
   csak a páciens mezők (és a `paciensId`) már ki vannak töltve. A
-  **`nyelv`/`penznem` kivétel** (D52, § 2. „Nyelv és pénznem” fent): ha a
+  **`nyelv`/`penznem` kivétel** (D52, § 2. „Dokumentum nyelve / Pénznem” fent): ha a
   pácienshez van legalább egy VÉGLEGESÍTETT terve, `ujTervForrasPaciensbol()`
   ennek nyelvét/pénznemét adja tovább `createBlankPlan()`-nak, mindkét
   forráságon (törzsadat és a legutóbbi `paciens` pillanatkép) egységesen —
@@ -938,7 +1026,7 @@ mentett terv fájl-igazsága (D7), nem a most keletkező piszkozaté. A
 `tervId`/`verzio`/`statusz` mindhárom esetben nullázódik/`PISZKOZAT`-ra
 áll — a másolat sosem csúszhat be verzióként egy meglévő láncba (D4).
 
-Mindhárom út a **Páciens adatlapra** navigál, nem egyenesen a
+Mindhárom út a **Terv adatai lapra** navigál, nem egyenesen a
 szerkesztőbe — ugyanúgy, mint egy teljesen új terv indításakor. A doki itt
 látja és pontosíthatja az átvett páciensadatot (pl. időközbeni
 címváltozás), és ez a tranzitív lépés önmagában is jelzi, hogy ez egy ÚJ
@@ -956,12 +1044,12 @@ már mentett terv. Mentéskor az átvitt `paciensId` miatt (D29) a
 `storage.savePlan` a MEGLÉVŐ páciens-mappában nyit új terv-mappát — nem
 egy másikban. A „+ Új páciens" ág (lásd lentebb) ettől eltérően: a
 quick-create dialógus (D41) sikeres mentése hoz létre egy ÚJ
-páciens-mappát, MIELŐTT a Páciens adatlap megnyílna — a `paciensId` ott
+páciens-mappát, MIELŐTT a Terv adatai lap megnyílna — a `paciensId` ott
 sem üres, csak a keletkezés pillanata más.
 
 ### „Új terv indítása" — a köztes páciens-választó (D29)
 
-A Kezdőlap „+ Új kezelési terv" gombja nem egyenesen a Páciens adatlapra
+A Kezdőlap „+ Új kezelési terv" gombja nem egyenesen a Terv adatai lapra
 navigál, hanem egy köztes kereső/választó lépésre (`/uj-terv`,
 `app/src/pages/NewPlanPage.tsx`) — a teljesen friss, Home-ról induló útnál
 a doki még nem gépelt be semmit, tehát itt (és csak itt) van
@@ -989,7 +1077,7 @@ hogy új vagy visszatérő páciensről van szó, csak utána a konkrét személ
   ugyanezt az ellenőrzést a végleges adatokra, mielőtt tényleg ment — ha
   talál ütközést, „Mégis új páciens létrehozása" explicit megerősítést
   kér. Csak sikeres mentés után jön létre a valódi páciensrekord ÉS
-  navigál a Páciens adatlapra — a felső, mindig látható gomb ÜRESEN nyitja
+  navigál a Terv adatai lapra — a felső, mindig látható gomb ÜRESEN nyitja
   a dialógust; a kártyán belüli no-match „Új páciens" opció (lásd lent) a
   begépelt névvel előtöltve nyitja ugyanezt.
 - Egy „vagy" feliratú vonalas elválasztó tagolja a két utat, alatta a
@@ -1011,7 +1099,7 @@ hogy új vagy visszatérő páciensről van szó, csak utána a konkrét személ
   páciens: „…"" opció jelenik meg a begépelt névvel, a fenti „+ Új
   páciens" ágat indítja el, a quick-create dialógust a begépelt névvel
   előtöltve. Kiválasztás után a közös forráskiválasztáson (lásd fent,
-  D33) előtöltve nyílik a Páciens adatlap — a nyelv/pénznem is a
+  D33) előtöltve nyílik a Terv adatai lap — a nyelv/pénznem is a
   kiválasztott páciens legutóbb véglegesített tervéből örökölve (D52,
   fent § 2), ugyanazon a közös forráson keresztül.
 

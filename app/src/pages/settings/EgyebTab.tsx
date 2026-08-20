@@ -17,7 +17,6 @@ import {
   Box,
   Button,
   Callout,
-  Card,
   Checkbox,
   Flex,
   Link as RadixLink,
@@ -27,6 +26,7 @@ import {
 import ChipGroup from '../../components/ChipGroup';
 import { useDirtyDraft } from '../../components/useDirtyDraft';
 import { Field } from '../../components/Field';
+import Section from '../../components/Section';
 import { lefedettseg } from '../../domain/coverage';
 import { isPlaceholderTemplate } from '../../domain/templates';
 import type { Nyelv } from '../../domain/types';
@@ -106,10 +106,7 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
 
   return (
     <>
-      <Card size="2" mb="4">
-        <Text as="p" size="2" weight="bold" mb="3" style={{ color: t.brand }}>
-          Ajánlat és nyelv
-        </Text>
+      <Section title="Ajánlat és nyelv">
         <Field label="Ajánlat érvényessége (nap)">
           <TextField.Root
             type="number"
@@ -170,7 +167,7 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
             </Text>
           </>
         )}
-      </Card>
+      </Section>
 
       {saveError && (
         <Callout.Root color="red" mb="3">

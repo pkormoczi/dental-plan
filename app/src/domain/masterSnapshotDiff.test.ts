@@ -1,5 +1,5 @@
 // Páciens master <-> terv-piszkozat mezőszintű összevetése -- backlog-40.
-// docs/03-funkcionalis-spec.md § 2. Páciens adatlap "Páciens törzsadata".
+// docs/03-funkcionalis-spec.md § 2. Terv adatai "Páciens törzsadata".
 
 import { describe, expect, it } from 'vitest';
 import {
@@ -108,7 +108,7 @@ describe('alkalmazMezoket', () => {
 describe('valodiUtkozesek', () => {
   it('kihagyja az üres-mező-pótlásokat -- vadonatúj páciens első adatkitöltése', () => {
     // A quick-create után a master csak a nev-et tartalmazza, a doki a
-    // Páciens adatlapon tölti ki a többit -- ez pótlás, nem ütközés.
+    // Terv adatai lapon tölti ki a többit -- ez pótlás, nem ütközés.
     const master = makePaciens({
       szuletesiIdo: '',
       lakcim: '',

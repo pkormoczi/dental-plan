@@ -76,6 +76,7 @@ a fájlrendszeres tárolás része:
 interface DraftMeta {
   patientDir?: string
   lastRoute?: '/paciens' | '/terv' | '/elonezet'
+  tervCim?: string  // a "Terv adatai" lap Terv címe mezője, D61 -- csak vadonatúj lánchoz él itt
 }
 interface DraftRecord extends DraftMeta {
   schemaVersion: 1
@@ -97,9 +98,11 @@ véglegesben ugyanezt az interfészt egy IndexedDB-alapú implementáció váltj
 Az olvasás ugyanazt a sémaverzió- és alak-ellenőrzést követi, mint a
 `PlanStorage.loadPlan()` (D18) — egy sérült/inkompatibilis piszkozatot a
 betöltés megtagad, érthető üzenettel, nem néma eldobással. A `DraftMeta`
-két mezője (D37, `docs/01-attekintes-es-dontesek.md`) PUHÁN validált — nem
-a `Plan` tartalma, csak UI-workflow navigációs tipp, ezért egy szemetes
-vagy ismeretlen érték némán elmarad, nem dobja el az egész piszkozatot.
+mindhárom mezője (D37/D61, `docs/01-attekintes-es-dontesek.md`) PUHÁN
+validált — nem a `Plan` tartalma, csak UI-workflow navigációs tipp, ezért
+egy szemetes vagy ismeretlen érték némán elmarad, nem dobja el az egész
+piszkozatot. A `tervCim`-nél az üres string LEGÁLIS érték (a doki
+kiürítette a mezőt) — csak a nem-string típus esik ki a betöltéskor.
 
 Egyetlen `dp:piszkozat` kulcs, egyetlen memóriabeli `plan` slot — több
 böngészőfül esetén last-write-wins, ütközésfeloldás nélkül. **Elfogadott

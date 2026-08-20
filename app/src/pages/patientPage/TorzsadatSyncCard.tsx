@@ -1,18 +1,19 @@
-// "Páciens törzsadata" kártya -- backlog-40 (redesign DP-016), a Páciens
-// adatlap Személyes adatok kártyája ALATT (docs/03-funkcionalis-spec.md §
-// 2. Páciens adatlap). A D33 invariánsa (nincs automatikus szinkron)
-// változatlan: ez a kártya KÉT külön, explicit irányú műveletet ad --
-// "Frissítés a törzsadatból" (master -> draft) és "Törzsadat frissítése a
-// tervből" (draft -> master), soha nem egy közös "Szinkronizálás" gomb
+// "Páciens törzsadata" eltérés-jelzés -- backlog-40 (redesign DP-016), a
+// Terv adatai lap "Páciens adatai" szekciójába ágyazva, a személyes adatok
+// mezői ALATT (docs/03-funkcionalis-spec.md § 2. Terv adatai; backlog-51
+// óta kártyakeret nélkül, lásd lent). A D33 invariánsa (nincs automatikus
+// szinkron) változatlan: ez a rész KÉT külön, explicit irányú műveletet ad
+// -- "Frissítés a törzsadatból" (master -> draft) és "Törzsadat frissítése
+// a tervből" (draft -> master), soha nem egy közös "Szinkronizálás" gomb
 // (D160) -- plusz a lépés-elhagyáskor (a "Tovább" gomb, `PatientPage.tsx`)
 // egyszer felkínált ajánlatot (D161, `components/LepesGuardContext.tsx`).
 //
 // Ha a `patientDir` nem oldható fel (`domain/torzsadatBetoltes.ts`
-// `feloldPatientDir`), a kártya EGYÁLTALÁN NEM renderelődik -- nincs mihez
+// `feloldPatientDir`), ez a rész EGYÁLTALÁN NEM renderelődik -- nincs mihez
 // hasonlítani a draftot.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertDialog, Box, Button, Callout, Card, Checkbox, Flex, Text } from '@radix-ui/themes';
+import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Separator, Text } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import TorzsadatDiffDialog from '../../components/TorzsadatDiffDialog';
 import { useLepesElhagyas, useLepesGuard } from '../../components/LepesGuardContext';
@@ -188,8 +189,9 @@ export default function TorzsadatSyncCard() {
   if (!patientDir) return null;
 
   return (
-    <Card size="2" mb="4">
-      <Text as="p" size="2" weight="bold" mb="3" style={{ color: t.brand }}>
+    <Box>
+      <Separator size="4" my="3" />
+      <Text as="p" size="1" weight="bold" mb="3" color="gray">
         Páciens törzsadata
       </Text>
 
@@ -322,6 +324,6 @@ export default function TorzsadatSyncCard() {
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
-    </Card>
+    </Box>
   );
 }

@@ -1,4 +1,4 @@
-// A német tartalom készültségének számlálása -- a Páciens adatlap
+// A német tartalom készültségének számlálása -- a Terv adatai lap
 // figyelmeztetéseihez és a Beállítások készültség-kijelzőjéhez (D21).
 //
 // Szándékosan NEM azonos a PriceListAdminPage "hiányzik az EUR ár"

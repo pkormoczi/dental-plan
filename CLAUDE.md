@@ -103,6 +103,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | Az árlista `arlistaVerzio` mezője az Árlista admin MINDEN mentésekor a mai napra áll, mezőnkénti különbségtevés nélkül | D30 — a nyomtatvány lábléce ebből mondja, „melyik árlistából készült"; egy befagyott érték hamis audit-adat lenne vitánál. A már mentett terveken lévő érték ettől függetlenül pillanatkép marad (D7) |
 | A `PlanStorage`-t fogyasztó `savePriceList`/`saveSettings` kizárólag updatert fogad, sosem kész objektumot; a memóriabeli állapot a mentés előtt, szinkron frissül, és hibára nem gördül vissza | D31 — a render-idejű closure-be zárt régi állapot két gyors egymás utáni szerkesztésnél némán eldobja az egyiket a doki törzsadatában (árlista, rendelő-adat); a `FileSystemStorage`-váltás alatt a ma kicsi versenyablak nagyságrendekkel tágul |
 | Páciens nem törölhető, ha van véglegesített (`statusz === 'VEGLEGES'`) terve, rá mutató aktív mentetlen piszkozata, vagy olvashatatlan terv-lánca/verziója | D50 — egy aláírt/kiadott dokumentum vagy egy folyamatban lévő szerkesztés mögül a törlés adatvesztést jelentene; a `deletePatient` a teljes páciensmappát véglegesen elviszi, nincs „kuka” |
+| A terv `ervenyesIg` mezője soha nem maradhat üresen | D62 — üres érték a `formatLongDate`-en át „Invalid Date”-ként kerülne egy szerződéses dokumentumra; a „Terv adatai” lap Dátumok szekciója a mező elhagyásakor automatikusan visszaállítja az alapértékre |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -164,7 +165,7 @@ D21 (nyelv/pénznem szétválasztás) hozott néhány újat, ezeket se írd újr
   (ugyanitt) a mag-összehasonlítás mindkettő, és a nyelváltás
   névmegőrzésének (`PatientPage.tsx` `applyNyelv`) forrása
 - `lefedettseg(priceList, penznem)` (`app/src/domain/coverage.ts`) — a
-  német tartalom készültsége (Beállítások, Páciens adatlap)
+  német tartalom készültsége (Beállítások, Terv adatai lap)
 - `formatLongDate(iso, nyelv)` / `formatShortDate(iso, nyelv)` (`app/src/domain/date.ts`)
 - `pdfLabels(nyelv)` (`app/src/pdf/labels.ts`) — a PDF fix feliratai; **csak
   a `pdf/` alatt importálható**, a kezelőfelület (NavBar, oldalak) végig
@@ -451,7 +452,7 @@ szintű törzsadat, D33) segédfüggvényei, szintén ne írd újra őket:
 
 Az új terv-lánc inicializálása tétel (`docs/01-attekintes-es-dontesek.md`
 D52, `docs/02-domain-modell.md` § Nyelv és pénznem, `docs/03-funkcionalis-
-spec.md` § 2. Páciens adatlap „Nyelv és pénznem”) segédfüggvényei, szintén
+spec.md` § 2. Terv adatai „Dokumentum nyelve / Pénznem”) segédfüggvényei, szintén
 ne írd újra őket:
 - `createBlankPlan(settings, priceList, oroklott?)`
   (`app/src/domain/blankPlan.ts`) opcionális harmadik paramétere
@@ -688,8 +689,9 @@ adatlap "Páciens törzsadata") segédfüggvényei/komponensei, szintén ne írd
   páciensmappa nevének feloldása, `piszkozatPatientDir` (D37, lehet
   `null`) elsőbbséggel, `plan.paciensId` → `listPatients()` tartalékkal;
   sosem dob. Hívói: `pages/patientPage/TorzsadatSyncCard.tsx`,
-  `pages/PreviewPage.tsx` és — a páciens-törlés (D50) aktív-draft
-  ellenőrzéséhez — `pages/PatientDetailPage.tsx`
+  `pages/PreviewPage.tsx`, a `feloldTervCimke()` (backlog-51, lásd lent) és
+  — a páciens-törlés (D50) aktív-draft ellenőrzéséhez —
+  `pages/PatientDetailPage.tsx`
 - `components/TorzsadatDiffDialog.tsx` — a mezőszintű, checkbox-listás
   összevető/szinkron dialógus mindhárom módhoz (master→draft kézi,
   draft→master kézi, draft→master lépés-elhagyási ajánlat, `onSkip` prop
@@ -699,11 +701,12 @@ adatlap "Páciens törzsadata") segédfüggvényei/komponensei, szintén ne írd
   ajánlat-jellegű elfogása, a `TervWorkflowShell.tsx`-ben élő state fölött;
   KÜLÖN mechanizmus a D46 `NavGuardContext`-től (más a szemantika, lásd a
   fájl fejlécét), nem építendő rá és nem keverendő össze vele
-- `pages/patientPage/TorzsadatSyncCard.tsx` — a "Páciens törzsadata" kártya
-  (a Páciens adatlap Személyes adatok kártyája alatt) — tartja a
-  master-betöltést, mindkét kézi dialógust ÉS a lépés-elhagyási handler
-  regisztrációját is; a `PatientPage.tsx` emiatt gyakorlatilag érintetlen
-  maradt
+- `pages/patientPage/TorzsadatSyncCard.tsx` — a "Páciens törzsadata"
+  eltérés-jelzés, a Terv adatai lap "Páciens adatai" szekciójába ágyazva
+  (backlog-51 óta kártyakeret NÉLKÜL, `Separator` + halvány alcím — lásd
+  lent) — tartja a master-betöltést, mindkét kézi dialógust ÉS a
+  lépés-elhagyási handler regisztrációját is; a `PatientPage.tsx` emiatt
+  gyakorlatilag érintetlen maradt
 - `veglegesitesDiagnozis(plan, priceList, leirasokMutatasa, master)`
   (`domain/veglegesitesOr.ts`) negyedik paramétere és `masterElteresek`
   mezője — az INFO-szintű, NEM blokkoló törzsadat-eltérés a
@@ -782,6 +785,36 @@ D60, `docs/03-funkcionalis-spec.md` § Fázisok) segédfüggvénye, szintén ne
   (ugyanott) `generaltFazisNev(1)`-ként van definiálva, hogy a két
   string-literál ne driftelhessen szét
 
+A "Terv adatai" oldal hat szekciója + terv címe + dátumok tétel
+(`docs/01-attekintes-es-dontesek.md` D61/D62, `docs/03-funkcionalis-spec.md`
+§ 2. Terv adatai) segédfüggvényei/komponensei, szintén ne írd újra őket:
+- `components/Section.tsx` — a szekciócímes kártya-blokk (`Card` +
+  félkövér, `t.brand` színű cím) közös primitívje, korábban öt helyen
+  másolat-beillesztve (`docs/07-felulet-rendszer.md` § Komponensek); a
+  Terv adatai lap mind a hat szekciója és a Beállítások három tabja is
+  ezt hívja
+- `feloldTervCimke(storage, piszkozatPatientDir, paciensId, tervId)`
+  (`app/src/domain/torzsadatBetoltes.ts`) — a MEGLÉVŐ `feloldPatientDir()`
+  (D48) MELLÉ, arra épülve: a lánc mappaneve + a tárolt (vagy `null`, ha
+  nincs) `terv-cimke.json`-tartalom feloldása egy `tervId`-ből. Üres
+  `tervId`-nél (vadonatúj lánc) `null`-t ad STORAGE-HÍVÁS NÉLKÜL; sosem dob
+  (P1-2 mintája)
+- `piszkozatTervCim` / `jelezTervCim(tervCim)` (`state/AppState.tsx`,
+  `useAppState()` API-ja) — a `jelezWorkflowLepes` mintája szerint: az
+  EGYETLEN hely, ahol a `piszkozatMeta.tervCim` (`DraftMeta`, D37) íródik.
+  Szándékosan nem trimmel és nem törli a kulcsot üres bemenetre — az
+  "üres = vissza az élő javaslatra" szemantika az ÍRÁSI oldalon
+  (`PlanStorage.savePlanLabel`) él
+- `pages/patientPage/TervCimField.tsx` — a Terv címe mező: már mentett
+  lánchoz a `feloldTervCimke()` eredményéből seedel, és `storage.
+  savePlanLabel`-lel azonnal ír, ha a beírt érték eltér a tárolttól
+  (Mentés gomb/Enter); vadonatúj lánchoz csak a `jelezTervCim()`-et hívja,
+  az írás a `PreviewPage.tsx` `doFinalize()`-jában történik. A
+  megjelenített érték `piszkozatTervCim ?? mentettLabel ?? ''` OLVASÁSI
+  lánc, nem egy induló seed-írás — ez zárja ki a doki épp begépelt
+  (navigációt túlélt) értéke és a storage-ból frissen betöltött címke
+  közti versenyt
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
@@ -810,7 +843,7 @@ elavulna, mert a doki az adminban éppen ezt takarítja.
 
 A hiányzó/lektorálatlan tartalom **nem blokkolja** a német nyelv
 kipróbálását (D21): hiányzó `de` név esetén magyar névre esik vissza `HU`
-jelöléssel, hiányzó ár esetén a Páciens adatlap előre jelez. A
+jelöléssel, hiányzó ár esetén a Terv adatai lap előre jelez. A
 Beállítások számszerűsíti a készültséget (`lefedettseg()`).
 
 ## Komment-szabályzat

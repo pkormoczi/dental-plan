@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DemoStorage } from '../storage/DemoStorage';
 import {
   feloldPatientDir,
+  feloldTervCimke,
   loadMegjelenitettTorzsadat,
   loadTorzsadatok,
   loadUtolsoTerv,
@@ -145,6 +146,50 @@ describe('torzsadatBetoltes', () => {
 
     it('null-t ad, ha a paciensId nem oldható fel egyetlen páciensre sem', async () => {
       expect(await feloldPatientDir(storage, null, 'ismeretlen-id')).toBeNull();
+    });
+  });
+
+  describe('feloldTervCimke', () => {
+    it('üres tervId-nél null-t ad, storage-hívás nélkül (vadonatúj lánc)', async () => {
+      const listPatientsSpy = vi.spyOn(storage, 'listPatients');
+      const listPlansSpy = vi.spyOn(storage, 'listPlans');
+      expect(await feloldTervCimke(storage, 'Ismert-Dir_x1', 'valami-id', '')).toBeNull();
+      expect(listPatientsSpy).not.toHaveBeenCalled();
+      expect(listPlansSpy).not.toHaveBeenCalled();
+    });
+
+    it('feloldja a planDir-t és a (még íratlan, null) tervCim-et a tervId szerint', async () => {
+      const nagy = (await storage.listPatients()).find((p) => p.nev === 'Nagy Éva')!;
+      const plans = await storage.listPlans(nagy.dirName);
+      const lanc = plans.find((p) => p.tervId === 'b7d2e4')!;
+
+      const ref = await feloldTervCimke(storage, nagy.dirName, nagy.paciensId, 'b7d2e4');
+      expect(ref).toEqual({ patientDir: nagy.dirName, planDir: lanc.dirName, tervCim: null });
+    });
+
+    it('a kézzel mentett terv-cimke.json tartalmát adja vissza', async () => {
+      const nagy = (await storage.listPatients()).find((p) => p.nev === 'Nagy Éva')!;
+      const plans = await storage.listPlans(nagy.dirName);
+      const lanc = plans.find((p) => p.tervId === 'b7d2e4')!;
+      await storage.savePlanLabel(nagy.dirName, lanc.dirName, 'Fogpótlás felső ívben');
+
+      const ref = await feloldTervCimke(storage, nagy.dirName, nagy.paciensId, 'b7d2e4');
+      expect(ref?.tervCim).toBe('Fogpótlás felső ívben');
+    });
+
+    it('null-t ad, ha a tervId egyetlen lánchoz sem tartozik', async () => {
+      const nagy = (await storage.listPatients()).find((p) => p.nev === 'Nagy Éva')!;
+      expect(await feloldTervCimke(storage, nagy.dirName, nagy.paciensId, 'nincs-ilyen')).toBeNull();
+    });
+
+    it('null-t ad, ha a listPlans dob (P1-2 minta, sosem propagál)', async () => {
+      const nagy = (await storage.listPatients()).find((p) => p.nev === 'Nagy Éva')!;
+      vi.spyOn(storage, 'listPlans').mockRejectedValueOnce(new Error('sérült lánc'));
+      expect(await feloldTervCimke(storage, nagy.dirName, nagy.paciensId, 'b7d2e4')).toBeNull();
+    });
+
+    it('null-t ad, ha a patientDir feloldhatatlan', async () => {
+      expect(await feloldTervCimke(storage, null, 'ismeretlen-id', 'b7d2e4')).toBeNull();
     });
   });
 });

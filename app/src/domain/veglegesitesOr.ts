@@ -41,7 +41,7 @@ export const VEGLEGESITES_LEPESEK: VeglegesitesLepes[] = [
 ];
 
 export interface VeglegesitesDiagnozis {
-  /** A név hiánya a mappanévhez kötelező (docs/03 § 2. Páciens adatlap) -- KEMÉNY blokk, nem a lánc tagja. */
+  /** A név hiánya a mappanévhez kötelező (docs/03 § 2. Terv adatai) -- KEMÉNY blokk, nem a lánc tagja. */
   nameMissing: boolean;
   /** A fogtérkép-kattintással felvett, de be nem azonosított (nevSnapshot nélküli) sorok -- KEMÉNY blokk, nem a lánc tagja. */
   uresSorok: KitoltetlenSor[];

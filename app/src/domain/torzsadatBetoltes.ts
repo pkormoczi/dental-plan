@@ -117,3 +117,37 @@ export async function feloldPatientDir(
     return null;
   }
 }
+
+export interface TervCimkeRef {
+  patientDir: string;
+  planDir: string;
+  /** `null` = nincs terv-cimke.json, a UI az élő javaslatot mutatja (D29). */
+  tervCim: string | null;
+}
+
+/**
+ * A `TervCimField` (backlog-51, D61) lánc-mappa- és tárolt-címke-feloldása,
+ * a `feloldPatientDir()` mintáján. Üres `tervId`-nél (vadonatúj, még sosem
+ * mentett lánc) `null`-t ad, STORAGE-HÍVÁS NÉLKÜL -- nincs `planDir`, amihez
+ * a `terv-cimke.json`-t keresni lehetne. Sosem dob (P1-2 minta): egy
+ * feloldhatatlan `patientDir` vagy egy dobó `listPlans` is `null`-t ad, a
+ * hívó ilyenkor a `javasoltTervCim()` élő javaslatára esik vissza.
+ */
+export async function feloldTervCimke(
+  storage: PlanStorage,
+  piszkozatPatientDir: string | null,
+  paciensId: string | undefined,
+  tervId: string,
+): Promise<TervCimkeRef | null> {
+  if (!tervId) return null;
+  const patientDir = await feloldPatientDir(storage, piszkozatPatientDir, paciensId);
+  if (!patientDir) return null;
+  try {
+    const plans = await storage.listPlans(patientDir);
+    const plan = plans.find((p) => p.tervId === tervId);
+    if (!plan) return null;
+    return { patientDir, planDir: plan.dirName, tervCim: plan.tervCim };
+  } catch {
+    return null;
+  }
+}

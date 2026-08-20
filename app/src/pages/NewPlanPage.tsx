@@ -106,7 +106,7 @@ export default function NewPlanPage() {
     itemRefs.current[hi]?.scrollIntoView({ block: 'nearest' });
   }, [hi]);
 
-  // A páciens ELÉRHETŐ legjobb adataiból tölti elő a Páciens adatlapot: a
+  // A páciens ELÉRHETŐ legjobb adataiból tölti elő a Terv adatai lapot: a
   // lezárt törzsadatból (paciens-adatok.json, D33), ha van, egyébként a
   // LEGUTÓBB MÓDOSÍTOTT terv-lánc legfrissebb verziójából -- ugyanaz a
   // közös kiválasztás, mint az OsszesTervSection páciensszintű "Új terv"

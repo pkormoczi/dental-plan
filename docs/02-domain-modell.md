@@ -84,6 +84,12 @@ igazsága változatlanul a `terv.json` (D7).
   él — D4 (verziómappát soha nem írunk felül) rá nem vonatkozik: bármikor
   szabadon átírható, egy már véglegesített tervnél is, új verzió nyitása
   nélkül.
+- KÉT belépési pont írja: a „Terv-láncok és verziók” (5. képernyő)
+  ceruza-ikonja, és a „Terv adatai” lap (2. képernyő) Terv címe mezője
+  (D61, `docs/03-funkcionalis-spec.md` § 2. „Terv címe”) — utóbbi csak MÁR
+  MENTETT lánchoz ír azonnal, egy vadonatúj lánchoz a `storage.savePlan()`
+  UTÁN, a véglegesítéskor. A mappanév-képzés (lásd lent) egyik íráson sem
+  változik: mindig az élő javaslatból képződik, sosem a kézi címkéből.
 - Ha a fájl nem létezik (a doki még nem írta át kézzel), a Korábbi tervek
   fája élő auto-javaslatot mutat helyette: a terv legnagyobb ÖSSZEGŰ
   kategóriájának neve, holtversenynél a kisebb `sorrend`-ű kategória
@@ -142,7 +148,7 @@ beleértve:
 ```
 
 - **Nincs automatikus szinkron egyik irányban sem** a `terv.json` `paciens`
-  blokkjával: egy konkrét terv Páciens adatlapján tett módosítás soha nem
+  blokkjával: egy konkrét terv Terv adatai lapján tett módosítás soha nem
   írja át ezt a fájlt, és fordítva, ennek szerkesztése soha nem nyúl vissza
   egy már mentett `terv.json`-hoz. A `terv.json` `paciens` blokkja
   változatlanul pillanatkép marad (D7); ez a fájl egy PÁRHUZAMOS, önálló
@@ -170,8 +176,8 @@ beleértve:
   forrása a PDF-nek, kizárólag a `terv.json` saját `paciens` blokkja kerül
   nyomtatásra (D7).
 - **A két adatforrás összevetése/szinkronja mindig explicit, doki-kezdeményezésű
-  (D48).** A Páciens adatlapon (`docs/03-funkcionalis-spec.md` § 2.) egy
-  külön kártya mezőszintű diffet ad a törzsadat és az AKTUÁLIS terv-piszkozat
+  (D48).** A Terv adatai lapon (`docs/03-funkcionalis-spec.md` § 2.) a
+  "Páciens adatai" szekcióba ágyazva mezőszintű diffet ad a törzsadat és az AKTUÁLIS terv-piszkozat
   `paciens` blokkja között, két külön irányú művelettel (master → draft,
   draft → master) — sosem automatikus, sosem egy közös gomb. A "Terv adatai"
   workflow-lépés ELŐRE elhagyásakor, ha van VALÓDI ütközés (mindkét oldalon

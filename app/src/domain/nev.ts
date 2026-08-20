@@ -85,7 +85,7 @@ export interface FallbackSorokEredmeny {
  * nyelvén nem a várt (árlistai) formában szerepelnek -- három okra bontva
  * (lásd `SorFallbackOk`). NEM rajzolja újra a snapshotot (D7), csak
  * diagnosztikát számol a szerkesztés alatt álló piszkozatra, a
- * véglegesítés-őr (PreviewPage) és a Páciens adatlap figyelmeztetéséhez.
+ * véglegesítés-őr (PreviewPage) és a Terv adatai lap figyelmeztetéséhez.
  */
 export function fallbackSorok(plan: Plan, priceList: PriceList): FallbackSorokEredmeny {
   const eredmeny: FallbackSorokEredmeny = { nincsForditas: [], elterAzArlistatol: [], egyedi: [] };

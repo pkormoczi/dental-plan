@@ -148,4 +148,44 @@ describe('DemoDraftStorage', () => {
       expect(loaded!.plan).toEqual(makeBlankPlan());
     });
   });
+
+  // backlog-51 (D61): a "Terv adatai" cím mező beírt értéke -- ugyanaz a
+  // puha, UI-workflow metaadat mintázat, mint a patientDir/lastRoute.
+  describe('meta (tervCim, D61)', () => {
+    it('roundtrips a non-empty tervCim', async () => {
+      const rec = await drafts.save(makeBlankPlan(), { tervCim: 'Fogpótlás felső ívben' });
+      expect(rec.tervCim).toBe('Fogpótlás felső ívben');
+
+      const loaded = await drafts.load();
+      expect(loaded!.tervCim).toBe('Fogpótlás felső ívben');
+    });
+
+    it('an empty string is a real value, not dropped (the doki cleared the field)', async () => {
+      const rec = await drafts.save(makeBlankPlan(), { tervCim: '' });
+      expect(rec.tervCim).toBe('');
+
+      const loaded = await drafts.load();
+      expect(loaded!.tervCim).toBe('');
+    });
+
+    it('missing tervCim (never touched) stays undefined, not coerced to empty string', async () => {
+      const rec = await drafts.save(makeBlankPlan());
+      expect(rec.tervCim).toBeUndefined();
+
+      const loaded = await drafts.load();
+      expect(loaded!.tervCim).toBeUndefined();
+    });
+
+    it('a garbage-typed tervCim silently drops, the rest of the draft still loads', async () => {
+      await drafts.save(makeBlankPlan());
+      const raw = JSON.parse(localStorage.getItem('dp:piszkozat')!);
+      raw.tervCim = 42;
+      localStorage.setItem('dp:piszkozat', JSON.stringify(raw));
+
+      const loaded = await drafts.load();
+      expect(loaded).not.toBeNull();
+      expect(loaded!.tervCim).toBeUndefined();
+      expect(loaded!.plan).toEqual(makeBlankPlan());
+    });
+  });
 });

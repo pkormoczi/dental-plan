@@ -57,6 +57,12 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
 
 - Minden UI elem `@radix-ui/themes` komponensből jön. Ne írj kézzel gombot,
   inputot, selectet, dialógust, táblázatot. Ha hiányzik valami, kérdezz.
+- Egy szekciócímes kártya-blokk (`Card` + félkövér, `t.brand` színű cím
+  fölötte) a `components/Section.tsx` közös primitívje — korábban öt
+  helyen volt másolat-beillesztve (Terv adatai lap mindegyik szekciója,
+  Beállítások Rendelő adatai/Orvosok/Ajánlat és nyelv tabjai). Ne írj hozzá
+  hatodik másolatot, és ne tegyél `Card`-ot egy `Section` köré (dupla
+  keret).
 - Theme beállítás (`app/src/App.tsx`): `accentColor="brown" grayColor="slate"
   radius="small" scaling="95%"`.
 - Kivételek, amik kézzel írtak maradnak: a fogtérkép (funkcionális,
@@ -173,7 +179,7 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   (`components/LepesGuardContext.tsx`) — az egy AJÁNLATOT ad
   (frissítenéd a törzsadatot, mielőtt továbblépsz?), nem adatvesztés elleni
   blokkot; a terv-piszkozat úgyis autosave-el (D37), tehát a D38 dirty-
-  fogalma itt nem értelmezhető. Csak a Páciens adatlap "Tovább" gombja és a
+  fogalma itt nem értelmezhető. Csak a Terv adatai lap "Tovább" gombja és a
   workflow-stepper Kezelések/Előnézet linkjei hívják — a NavBar-navigációt a
   D46 guard fedi, a kettő nem keveredik egy felületen.
 - Read-only label+érték adatnézet (D45): `components/Field.tsx`

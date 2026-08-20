@@ -33,7 +33,7 @@ function PaciensekProbe() {
   );
 }
 
-// backlog-17: a két "Új terv…" gomb a Páciens adatlapra navigál
+// backlog-17: a két "Új terv…" gomb a Terv adatai lapra navigál
 // (6. döntés) -- a navigáció TÉNYÉT és a
 // piszkozatba került Plan tartalmát kell látni, ezért a "/paciens" célpont
 // egy kis probe, ami a friss draftot írja ki, nem egy néma stub.
@@ -417,7 +417,7 @@ describe('OsszesTervSection', () => {
     await waitFor(() => expect(lancToggle(doboz)).toHaveFocus());
   });
 
-  it('"Másolás új tervbe" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Páciens adatlapon', async () => {
+  it('"Másolás új tervbe" a kattintott verzió soraival és páciensadatával indít új piszkozatot a Terv adatai lapon', async () => {
     const [, v2] = nagyEvaMultiVersionChain;
     const forrasSorSzam = v2.plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
     expect(forrasSorSzam).toBe(3); // v1 két sora + a v2-ben hozzáadott korona sor

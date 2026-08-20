@@ -94,6 +94,21 @@ interface AppStateValue {
    */
   jelezWorkflowLepes: (route: WorkflowRoute) => void;
   /**
+   * D61 (backlog-51): a "Terv adatai" lap cím mezőjébe beírt érték, vagy
+   * `null`, ha még nem nyúltak hozzá (a mező ilyenkor a `TervCimField`
+   * saját `mentettLabel`/`javasoltTervCim()` fallback-jét mutatja). Az üres
+   * string (a doki kiürítette a mezőt) VALÓS `''`, nem `null` -- lásd
+   * `DraftMeta.tervCim` doc-kommentjét.
+   */
+  piszkozatTervCim: string | null;
+  /**
+   * A `jelezWorkflowLepes` mintája szerint: az EGYETLEN hely, ahol a
+   * `piszkozatMeta.tervCim` íródik. Szándékosan nem trimmel és nem törli a
+   * kulcsot üres bemenetre -- az "üres = vissza az élő javaslatra" szemantika
+   * az ÍRÁSI oldalon (`PlanStorage.savePlanLabel`) él, nem itt.
+   */
+  jelezTervCim: (tervCim: string) => void;
+  /**
    * A Home "Piszkozat elvetése" gombja hívja egy nem visszaállítható
    * (sérült/inkompatibilis) perzisztált piszkozatnál (7. döntés) -- addig a
    * kulcs a helyén marad, a hiba minden indításkor visszatér.
@@ -224,7 +239,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           const rec = await drafts.load();
           if (!cancelled && rec) {
             restored = rec.plan;
-            const meta: DraftMeta = { patientDir: rec.patientDir, lastRoute: rec.lastRoute };
+            const meta: DraftMeta = {
+              patientDir: rec.patientDir,
+              lastRoute: rec.lastRoute,
+              tervCim: rec.tervCim,
+            };
             irtPiszkozatRef.current = { plan: rec.plan, meta };
             piszkozatKiirvaRef.current = true;
             setPiszkozatMeta(meta);
@@ -383,6 +402,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       piszkozatLastRoute: piszkozatMeta.lastRoute ?? null,
       jelezWorkflowLepes: (route) => {
         setPiszkozatMeta((prev) => (prev.lastRoute === route ? prev : { ...prev, lastRoute: route }));
+      },
+      piszkozatTervCim: piszkozatMeta.tervCim ?? null,
+      jelezTervCim: (tervCim) => {
+        setPiszkozatMeta((prev) => (prev.tervCim === tervCim ? prev : { ...prev, tervCim }));
       },
       discardPersistedDraft: async () => {
         await drafts.clear();

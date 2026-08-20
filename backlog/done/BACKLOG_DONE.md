@@ -1547,3 +1547,29 @@ karbantartási kör négy önálló javítása.
   elrejtés-mintáját kapta
   (docs/01-attekintes-es-dontesek.md D60, docs/03-funkcionalis-spec.md
   § 3 "Sor mezői"/"Fázisok").
+
+### 51. tétel: Terv adatai oldal layout + cím + dátumok — KÉSZ (2026-08-20)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D61/D62 (`docs/01-attekintes-es-dontesek.md`),
+  új sor a "Sérthetetlen szabályok" táblában (`ervenyesIg` soha nem
+  maradhat üresen).
+- **Valódi haszon:** a "Páciens adatlap" (a workflow-stepper már ekkor is
+  "Terv adatai"-nak hívta) három, lazán szervezett kártyából állt, cím
+  mező nélkül (a cím kizárólag a `terv-cimke.json`-ban, csak már mentett
+  lánchoz volt szerkeszthető) és szerkeszthető érvényességi dátum nélkül.
+- **Megvalósítás:** a lap fejléce "Terv adatai"-ra vált, és hat,
+  vizuálisan elkülönített szekcióra tagolódik (közös `Section`
+  komponens, korábban öt helyen másolat-beillesztve): Terv címe, Páciens
+  adatai (a személyes adatok + beágyazva a "Páciens törzsadata"
+  eltérés-jelzés, kártyakeret nélkül), Dokumentum nyelve, Pénznem,
+  Kezelőorvos (üres slot egy későbbi tételnek), Dátumok. A cím mező két
+  írási útvonalon él: már mentett lánchoz azonnal ír a meglévő
+  `storage.savePlanLabel`-lel, vadonatúj lánchoz a piszkozat UI-workflow
+  metaadatában (`DraftMeta.tervCim`) él és a véglegesítéskor íródik ki,
+  külön hibazónával (egy címke-írási hiba nem jelenti azt, hogy "a
+  mentés nem sikerült", mert a terv ekkor már a lemezen van). Az
+  "Érvényes eddig" szerkeszthetővé vált, alapértéke
+  `keltezes + ervenyessegNap`, kiürítve automatikusan visszaáll erre
+  (docs/01-attekintes-es-dontesek.md D61/D62, docs/03-funkcionalis-spec.md
+  § 2 "Terv adatai").

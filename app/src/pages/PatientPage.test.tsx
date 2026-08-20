@@ -2,12 +2,13 @@
 // CLAUDE.md "A UX kritikus pontja" -- ez a szomszédos képernyő, ahol a
 // terv nyelve/pénzneme eldől, mielőtt a doki a szerkesztőbe lép.
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import PatientPage from './PatientPage';
 import { TestProviders } from '../testUtils';
+import { addDaysIso, formatLongDate, todayIso } from '../domain/date';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 import { DemoStorage } from '../storage/DemoStorage';
@@ -68,19 +69,20 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     seedWithGermanDisabled();
     renderPatient();
     await screen.findByPlaceholderText('Kovács János');
-    expect(screen.queryByText('Az ajánlat nyelve és pénzneme')).toBeNull();
+    expect(screen.queryByText('Dokumentum nyelve')).toBeNull();
+    expect(screen.queryByText('Pénznem')).toBeNull();
   });
 
   it('shows the card once nemetEngedelyezve is true (seed default)', async () => {
     renderPatient();
-    expect(await screen.findByText('Az ajánlat nyelve és pénzneme')).toBeInTheDocument();
+    expect(await screen.findByText('Dokumentum nyelve')).toBeInTheDocument();
   });
 
   it('warns when the selected pénznem has zero priced items', async () => {
     const user = userEvent.setup();
     seedWithGermanEnabledAndNoEurPrices();
     renderPatient();
-    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await screen.findByText('Pénznem');
 
     await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
 
@@ -93,7 +95,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     const user = userEvent.setup();
     seedWithGermanEnabledAndNoGermanNames();
     renderPatient();
-    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await screen.findByText('Dokumentum nyelve');
 
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
 
@@ -130,7 +132,8 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
 
     await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
 
-    expect(await screen.findByText('Az ajánlat nyelve és pénzneme')).toBeInTheDocument();
+    expect(await screen.findByText('Dokumentum nyelve')).toBeInTheDocument();
+    expect(screen.getByText('Pénznem')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Deutsch' })).toBeNull();
     expect(screen.getByText(/nem módosítható/)).toBeInTheDocument();
   });
@@ -160,7 +163,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     await waitFor(() => expect(search).toHaveValue(''));
 
     await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
-    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await screen.findByText('Dokumentum nyelve');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
 
     const dialog = await screen.findByRole('alertdialog');
@@ -195,7 +198,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
     await user.type(nameField, 'Kihúzás megbeszélt módon');
 
     await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
-    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await screen.findByText('Dokumentum nyelve');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
 
     expect(
@@ -255,7 +258,7 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
     expect(screen.getByDisplayValue('Magyar leírás szövege')).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
-    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await screen.findByText('Dokumentum nyelve');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
     await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
 
@@ -288,7 +291,7 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
     await user.type(leirasField, 'Kézzel pontosított leírás');
 
     await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
-    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await screen.findByText('Dokumentum nyelve');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
     await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
 
@@ -297,8 +300,8 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
   });
 });
 
-// backlog-40: a "Páciens törzsadata" kártya -- docs/03-funkcionalis-spec.md
-// § 2. Páciens adatlap. A kártya csak akkor renderelődik, ha a piszkozat
+// backlog-40: a "Páciens törzsadata" eltérés-jelzés -- docs/03-funkcionalis-spec.md
+// § 2. Terv adatai. A rész csak akkor renderelődik, ha a piszkozat
 // patientDir-je ismert (D37) -- ezért itt közvetlenül a `dp:piszkozat`
 // kulcsba seedelünk, a TervWorkflowShell.test.tsx `seedActiveDraft`
 // mintáját követve, MIELŐTT a StorageProvider renderelne.
@@ -493,5 +496,184 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     // A piszkozat (a "Telefon" mező a lapon) érintetlen maradt.
     expect(screen.getByLabelText('Telefon')).toHaveValue('+36 30 000 0000');
+  });
+});
+
+// backlog-51 (D68): a lap hat, vizuálisan elkülönített szekcióra tagolódik.
+describe('PatientPage -- backlog-51: hat szekció', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('a fejléc "Terv adatai", nem "Páciens adatlap"', async () => {
+    renderPatient();
+    expect(await screen.findByRole('heading', { name: 'Terv adatai' })).toBeInTheDocument();
+  });
+
+  it('a hat szekció ebben a sorrendben jelenik meg (D68)', async () => {
+    renderPatient();
+    await screen.findByRole('heading', { name: 'Terv adatai' });
+
+    const cimek = ['Terv címe', 'Páciens adatai', 'Dokumentum nyelve', 'Pénznem', 'Kezelőorvos', 'Dátumok'];
+    const elemek = cimek.map((cim) => screen.getByText(cim));
+    for (let i = 1; i < elemek.length; i++) {
+      expect(
+        elemek[i - 1].compareDocumentPosition(elemek[i]) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+  });
+});
+
+// backlog-51 (D61): a "Terv címe" mező -- vadonatúj lánchoz a `DraftMeta`-ban
+// él és a véglegesítéskor íródik ki (lásd PreviewPage.test.tsx), mentett
+// lánchoz azonnal ír a `storage.savePlanLabel`-lel.
+describe('PatientPage -- backlog-51: terv címe mező', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('vadonatúj lánc: a placeholder az élő javaslat, gépelésre nincs Mentés gomb, az érték túléli a navigációt', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.type(nameInput, 'Cím Nav Teszt');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // Vadonatúj, üres tervnek nincs kategóriába sorolható sora -- az élő
+    // javaslat az `ALAPERTELMEZETT_TERV_CIM` ("Terv", domain/tervCim.ts).
+    const cimInput = await screen.findByRole('textbox', { name: 'Terv címe' });
+    expect(cimInput).toHaveAttribute('placeholder', 'Terv');
+
+    await user.type(cimInput, 'Egyedi cím');
+    expect(screen.queryByRole('button', { name: 'Mentés' })).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+    await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+
+    expect(await screen.findByRole('textbox', { name: 'Terv címe' })).toHaveValue('Egyedi cím');
+  });
+
+  it('mentett lánc: a mező a tárolt címkét mutatja, a Mentés gomb ír a terv-cimke.json-ba', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    window.location.hash = '#/tervek';
+    const patientNameEl = await screen.findByText('Kovács János');
+    const card = patientNameEl.closest('[data-patient]') as HTMLElement;
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
+    await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
+
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+
+    // Kovács János seed-adata sosem kapott kézi címkét (a seed nem hív
+    // savePlanLabel-t) -- a mező üresen, a Mentés gomb nélkül indul.
+    const cimInput = await screen.findByRole('textbox', { name: 'Terv címe' });
+    expect(screen.queryByRole('button', { name: 'Mentés' })).toBeNull();
+
+    await user.type(cimInput, 'Gyökérkezelés és korona');
+    expect(await screen.findByRole('button', { name: 'Mentés' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Mentés' })).toBeNull());
+
+    const storage = new DemoStorage();
+    const kovacs = (await storage.listPatients()).find((p) => p.nev === 'Kovács János')!;
+    const [chain] = await storage.listPlans(kovacs.dirName);
+    expect(chain.tervCim).toBe('Gyökérkezelés és korona');
+  });
+
+  it('mentett lánc: Enter is menti a beírt címet', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    window.location.hash = '#/tervek';
+    const patientNameEl = await screen.findByText('Kovács János');
+    const card = patientNameEl.closest('[data-patient]') as HTMLElement;
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
+    await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+
+    const cimInput = await screen.findByRole('textbox', { name: 'Terv címe' });
+    await user.type(cimInput, 'Enterrel mentve{Enter}');
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Mentés' })).toBeNull());
+
+    const storage = new DemoStorage();
+    const kovacs = (await storage.listPatients()).find((p) => p.nev === 'Kovács János')!;
+    const [chain] = await storage.listPlans(kovacs.dirName);
+    expect(chain.tervCim).toBe('Enterrel mentve');
+  });
+
+  it('mentett lánc: írási hiba esetén a Callout megjelenik és gépelés után is látszik', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(DemoStorage.prototype, 'savePlanLabel').mockRejectedValue(
+      new Error('megtelt a tárhely'),
+    );
+    render(<App />);
+
+    window.location.hash = '#/tervek';
+    const patientNameEl = await screen.findByText('Kovács János');
+    const card = patientNameEl.closest('[data-patient]') as HTMLElement;
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
+    await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+
+    const cimInput = await screen.findByRole('textbox', { name: 'Terv címe' });
+    await user.type(cimInput, 'Hibás mentés');
+    await user.click(await screen.findByRole('button', { name: 'Mentés' }));
+
+    expect(await screen.findByText(/A címke mentése nem sikerült/)).toBeInTheDocument();
+
+    // Egy nem kapcsolódó gépelés (re-render) nem tünteti el a hibát --
+    // csak egy ÚJABB mentési kísérlet.
+    await user.type(cimInput, '!');
+    expect(screen.getByText(/A címke mentése nem sikerült/)).toBeInTheDocument();
+
+    vi.restoreAllMocks();
+  });
+});
+
+// backlog-51 (D62, D22): a "Dátumok" szekció -- a `keltezes` marad
+// automatikus, az `ervenyesIg` szerkeszthető, alapértéke
+// `plan.keltezes + settings.ervenyessegNap`.
+describe('PatientPage -- backlog-51: dátumok szekció', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('a "Kiadás dátuma" nem szerkeszthető, csak olvasható hosszú dátumot mutat', async () => {
+    renderPatient();
+    await screen.findByRole('heading', { name: 'Terv adatai' });
+
+    expect(screen.queryByLabelText('Kiadás dátuma')).toBeNull();
+    expect(screen.getByText(formatLongDate(todayIso(), 'hu'))).toBeInTheDocument();
+  });
+
+  it('az "Érvényes eddig" alapértéke keltezés + ervenyessegNap, módosítható, üresen visszaáll, jelzi a hibás sorrendet', async () => {
+    renderPatient();
+    const ervenyesIgInput = (await screen.findByLabelText('Érvényes eddig')) as HTMLInputElement;
+    const alapErtek = addDaysIso(todayIso(), seedSettings.ervenyessegNap);
+    expect(ervenyesIgInput).toHaveValue(alapErtek);
+    expect(screen.queryByRole('button', { name: /Vissza az alapértelmezettre/ })).toBeNull();
+
+    fireEvent.change(ervenyesIgInput, { target: { value: '2020-01-01' } });
+    expect(ervenyesIgInput).toHaveValue('2020-01-01');
+    expect(
+      await screen.findByRole('button', { name: /Vissza az alapértelmezettre/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Az érvényesség vége a kiadás dátuma előttre esik.'),
+    ).toBeInTheDocument();
+
+    fireEvent.change(ervenyesIgInput, { target: { value: '' } });
+    fireEvent.blur(ervenyesIgInput);
+    await waitFor(() => expect(ervenyesIgInput).toHaveValue(alapErtek));
+    expect(screen.queryByRole('button', { name: /Vissza az alapértelmezettre/ })).toBeNull();
   });
 });

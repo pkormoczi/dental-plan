@@ -13,18 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 51. tétel — Terv adatai oldal layout + cím + dátumok
-  (a `backlog/redesign/` redesign-döntéssorozat DP-030 tétele) — a mai
-  "Páciens adatlap" (a workflow-stepper már "Terv adatai"-nak hívja)
-  nem stacked-section szerkezetű, nincs cím mezője (a cím kizárólag a
-  `terv-cimke.json`-ban, csak már mentett lánchoz szerkeszthető), és
-  nincs szerkeszthető érvényességi dátuma. Ez a tétel a D68 szerinti
-  hat szekcióra tagolja a lapot, bevezet egy cím mezőt (meglévő
-  lánchoz azonnal, vadonatújhoz véglegesítéskor íródik ki), és
-  szerkeszthetővé teszi az "Érvényes eddig" dátumot. A döntéseket lásd
-  a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-51-terv-adatai-oldal-terv.md`
-
 ### 52. tétel — Dokumentumnyelv és pénznem kiválasztása / öröklése
   (a `backlog/redesign/` redesign-döntéssorozat DP-031 tétele) — a
   nyelv/pénznem-kártya ma az első véglegesítés után véglegesen

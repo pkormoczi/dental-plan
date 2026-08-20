@@ -1,7 +1,7 @@
 // Kétállású (vagy több) szegmentált kapcsoló -- Radix SegmentedControl-ra
 // építve (docs/07-felulet-rendszer.md "Minden UI elem @radix-ui/themes
 // komponensből jön").
-// Közös komponens, mert a Páciens adatlap (nyelv/pénznem) és a Beállítások
+// Közös komponens, mert a Terv adatai lap (nyelv/pénznem) és a Beállítások
 // (alapértelmezett nyelv) is ugyanezt a mintát használja.
 
 import { SegmentedControl } from '@radix-ui/themes';

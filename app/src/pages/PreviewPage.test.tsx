@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
+import { DemoStorage } from '../storage/DemoStorage';
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@react-pdf/renderer')>();
@@ -144,6 +145,154 @@ describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => 
       await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
       expect(localStorage.getItem('dp:piszkozat')).toBeNull();
+    },
+    20000,
+  );
+});
+
+// backlog-51 (D61): a "Terv adatai" lap cím mezőjének (`TervCimField`) két
+// írási útvonala -- vadonatúj lánchoz a `doFinalize()` írja ki a
+// `DraftMeta.tervCim`-et, mentett lánchoz ez a második `savePlanLabel` hívás
+// SOSEM fut (a cím már korábban, a lapon íródott).
+describe('PreviewPage -- backlog-51: terv címe véglegesítéskor', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  /** A puha megerősítő lánc (docs/03 § 4.) ismételt "Folytatás" kattintással, amíg a siker-képernyő meg nem jelenik. */
+  async function finalizeThroughConfirms(user: ReturnType<typeof userEvent.setup>) {
+    for (let i = 0; i < 5; i++) {
+      if (screen.queryByText('A terv elmentve ✓')) return;
+      const folytatas = screen.queryByRole('button', { name: 'Folytatás' });
+      if (folytatas) {
+        await user.click(folytatas);
+        continue;
+      }
+      await waitFor(() => {
+        if (
+          !screen.queryByText('A terv elmentve ✓') &&
+          !screen.queryByRole('button', { name: 'Folytatás' })
+        ) {
+          throw new Error('várakozás a következő lépésre');
+        }
+      });
+    }
+  }
+
+  it(
+    'vadonatúj lánc véglegesítése a beírt címmel írja a terv-cimke.json-t',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Cím Teszt Elek');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+      const cimInput = await screen.findByRole('textbox', { name: 'Terv címe' });
+      await user.type(cimInput, 'Fogpótlás felső ívben');
+
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await screen.findByText('Fogeltávolítás');
+      await user.keyboard('{Enter}');
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+      await finalizeThroughConfirms(user);
+      await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+      expect(screen.queryByText(/nem mentődött/)).not.toBeInTheDocument();
+
+      const storage = new DemoStorage();
+      const patient = (await storage.listPatients()).find((p) => p.nev === 'Cím Teszt Elek')!;
+      const [chain] = await storage.listPlans(patient.dirName);
+      expect(chain.tervCim).toBe('Fogpótlás felső ívben');
+    },
+    20000,
+  );
+
+  it(
+    'a savePlanLabel hibája nem hiúsítja meg a mentést -- a siker-képernyőn amber jelzés jelenik meg',
+    async () => {
+      const user = userEvent.setup();
+      vi.spyOn(DemoStorage.prototype, 'savePlanLabel').mockRejectedValue(
+        new Error('megtelt a tárhely'),
+      );
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Cím Hiba Elek');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+      const cimInput = await screen.findByRole('textbox', { name: 'Terv címe' });
+      await user.type(cimInput, 'Fogpótlás felső ívben');
+
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await screen.findByText('Fogeltávolítás');
+      await user.keyboard('{Enter}');
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+      await finalizeThroughConfirms(user);
+
+      await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+      expect(screen.queryByText(/A mentés nem sikerült/)).not.toBeInTheDocument();
+      expect(await screen.findByText(/A terv címe nem mentődött/)).toBeInTheDocument();
+
+      vi.restoreAllMocks();
+    },
+    20000,
+  );
+
+  it(
+    'mentett lánc véglegesítése nem hívja a savePlanLabel-t (a cím korábban a "Terv adatai" lapon íródott)',
+    async () => {
+      const user = userEvent.setup();
+      const savePlanLabelSpy = vi.spyOn(DemoStorage.prototype, 'savePlanLabel');
+      render(<App />);
+
+      window.location.hash = '#/tervek';
+      const patientNameEl = await screen.findByText('Kovács János');
+      const card = patientNameEl.closest('[data-patient]') as HTMLElement;
+      await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
+      await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+      await finalizeThroughConfirms(user);
+      await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+
+      expect(savePlanLabelSpy).not.toHaveBeenCalled();
+      vi.restoreAllMocks();
     },
     20000,
   );
@@ -662,7 +811,7 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
   );
 
   it(
-    'a "Terv adatai" gomb a törzsadat info-sávból a Páciens adatlapra navigál',
+    'a "Terv adatai" gomb a törzsadat info-sávból a Terv adatai lapra navigál',
     async () => {
       const user = userEvent.setup();
       render(<App />);

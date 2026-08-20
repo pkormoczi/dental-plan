@@ -6,11 +6,11 @@
 // veszíti el, nem egy másik nyelvet/fület, D49).
 
 import { useEffect, useState } from 'react';
-import { Button, Callout, Card, Flex, Grid, Text, TextArea, TextField } from '@radix-ui/themes';
+import { Button, Callout, Flex, Grid, Text, TextArea, TextField } from '@radix-ui/themes';
 import { Field } from '../../components/Field';
+import Section from '../../components/Section';
 import { useDirtyDraft } from '../../components/useDirtyDraft';
 import type { Rendelo } from '../../domain/types';
-import { t } from '../../design/tokens';
 import { useAppState } from '../../state/AppState';
 
 interface RendeloDraft {
@@ -59,10 +59,7 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
 
   return (
     <>
-      <Card size="2" mb="4">
-        <Text as="p" size="2" weight="bold" mb="3" style={{ color: t.brand }}>
-          Rendelő adatai
-        </Text>
+      <Section title="Rendelő adatai">
         <Grid columns={{ initial: '1', sm: '2' }} gap="3" style={{ maxWidth: 560 }}>
           <Field label="Név">
             <TextField.Root value={draft.rendelo.nev} onChange={(e) => patchRendelo({ nev: e.target.value })} />
@@ -97,12 +94,9 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
             />
           </Field>
         </Grid>
-      </Card>
+      </Section>
 
-      <Card size="2" mb="4">
-        <Text as="p" size="2" weight="bold" mb="3" style={{ color: t.brand }}>
-          Orvosok
-        </Text>
+      <Section title="Orvosok">
         <Field label="Egy név soronként">
           <TextArea
             value={draft.orvosokText}
@@ -111,7 +105,7 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
             style={{ maxWidth: 560 }}
           />
         </Field>
-      </Card>
+      </Section>
 
       {saveError && (
         <Callout.Root color="red" mb="3">

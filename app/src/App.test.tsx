@@ -153,7 +153,7 @@ describe('Végpontok közötti folyamat', () => {
 
     // Nyelv: Deutsch. A pénznem NEM követi automatikusan -- D21 lényege,
     // hogy egy német nyelvű ajánlat is maradhat forintos.
-    await screen.findByText('Az ajánlat nyelve és pénzneme');
+    await screen.findByText('Dokumentum nyelve');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
     expect(screen.getByRole('radio', { name: 'HUF — forint' })).toBeInTheDocument();
 
