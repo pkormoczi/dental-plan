@@ -2,6 +2,24 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. augusztus 21.
+
+- Mostantól figyelmeztetést kapunk, ha egy kézzel begépelt szöveg (kezelés neve, leírása,
+  fázis neve vagy megjegyzése) nem a terv nyelvén íródott — egy irányított ellenőrzéssel
+  egyenként végig lehet menni ezeken a helyeken, és jelölni, hogy a szöveg rendben van.
+- Ha a nyomtatási előnézet nem tud elkészülni, a program most egy "Újrapróbálás" gombbal a
+  képernyőn marad, és amíg a hiba fennáll, sem letölteni, sem véglegesíteni nem lehet a tervet.
+- Javítottuk, hogy egy sikeresen elmentett terv után egy apró háttérhiba ne mutasson téves
+  "a mentés nem sikerült" üzenetet.
+- A "Csak ajánlat" beállítás mostantól megmarad a tervhez tartozóan: átöröklődik új verzió
+  nyitásakor, és a korábbi tervek listájában is látszik, melyik verzió készült ebben a módban.
+- A véglegesítés előtti ellenőrzőlista mostantól mindig látható, nem csak a "Véglegesítés"
+  gomb megnyomása után; hiányzó vagy hibás német elnevezés (akár tételnél, akár
+  fogtérkép-kategóriánál) és egy üres kezelési fázis mostantól blokkolja a véglegesítést.
+- Az Előnézet oldal új, kéthasábos elrendezést kapott: a nyomtatási kép balra, az
+  ellenőrzőlista jobbra kerül, alul a "Csak ajánlat" kapcsolóval és a Letöltés/Véglegesítés
+  gombokkal.
+
 ## 2026. augusztus 20.
 
 - Az "Új kezelési terv indítása" képernyőn a "+ Új páciens" gomb a kereső fölé, elsődleges
