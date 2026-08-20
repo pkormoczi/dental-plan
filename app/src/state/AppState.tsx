@@ -19,6 +19,7 @@ import {
 } from 'react';
 import { Box, Button, Flex, Text } from '@radix-ui/themes';
 import { createBlankPlan } from '../domain/blankPlan';
+import { ujVerzioOrvosa, type OrvosFallback } from '../domain/orvosok';
 import { piszkozatTartalmas } from '../domain/piszkozat';
 import { osszesitokElter } from '../domain/totals';
 import { frissDatummal, type UjVerzioDatum } from '../domain/ujVerzioDatum';
@@ -142,6 +143,14 @@ interface AppStateValue {
    */
   frissitettDatum: UjVerzioDatum | null;
   /**
+   * D63: a `loadPlanIntoDraft`-tal betöltött terv orvosa időközben inaktívvá
+   * vált (vagy törölték), ezért a piszkozat a globális alapértelmezett
+   * orvosra esett vissza -- a `frissitettDatum` mintájára, a
+   * `PlanEditorPage` ugyanabban a semleges info-sávban jelzi. `null`, ha
+   * nem történt visszaesés.
+   */
+  orvosFallback: OrvosFallback;
+  /**
    * D31: KIZÁRÓLAG updatert fogad, sosem kész objektumot -- a hívó a
    * JELENLEGI (a legutóbbi mentés óta esetleg már megváltozott) állapotra
    * épít, nem egy render-idejű closure-re zárt régi értékre. Az updater
@@ -182,6 +191,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [piszkozatMeta, setPiszkozatMeta] = useState<DraftMeta>({});
   const [loadedOsszesitokDiff, setLoadedOsszesitokDiff] = useState<Osszesitok | null>(null);
   const [frissitettDatum, setFrissitettDatum] = useState<UjVerzioDatum | null>(null);
+  const [orvosFallback, setOrvosFallback] = useState<OrvosFallback>(null);
   const [loadError, setLoadError] = useState<Error | null>(null);
   const [loadToken, setLoadToken] = useState(0);
   // Amit legutóbb a DraftStorage-ból olvastunk vagy oda írtunk -- csak a
@@ -321,6 +331,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setPlanState(createBlankPlan(s, pl));
     setLoadedOsszesitokDiff(null);
     setFrissitettDatum(null);
+    setOrvosFallback(null);
     // A dp: kulcsokat (a piszkozatot is) a clearAll()/resetDemoData() már
     // elsöpörte -- csak a memóriabeli piszkozat-állapotot kell nullázni.
     setMentettPlan(null);
@@ -346,6 +357,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setPlanState(createBlankPlan(settings, priceList));
         setLoadedOsszesitokDiff(null);
         setFrissitettDatum(null);
+        setOrvosFallback(null);
         setMentettPlan(null);
         setPiszkozatMentve(null);
         setPiszkozatHiba(null);
@@ -371,7 +383,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         // piszkozat a FOLYTATÁS állapotát tükrözi, nem a forrás verzió lezárt
         // állapotát (a fejléc "véglegesítve" jelvénye és a letöltés
         // PISZKOZAT- előtagja enélkül tévesen a forrásét mutatná).
-        const friss: Plan = { ...frissDatummal(p, settings, todayIso()), statusz: 'PISZKOZAT' };
+        // D63: az orvos-öröklés/fallback ugyanitt, egy önálló lépésként --
+        // NEM a `frissDatummal()`-ba építve (annak szerződése kizárólag a két
+        // dátummezőre szól, és a `planMasolatKent` is ezt hívja, ahol a
+        // szabály MÁSKÉNT dől el, lásd domain/planCopy.ts).
+        const { orvos, fallback } = ujVerzioOrvosa(p.orvos, settings);
+        const friss: Plan = {
+          ...frissDatummal(p, settings, todayIso()),
+          statusz: 'PISZKOZAT',
+          orvos,
+        };
         setPlanState(friss);
         setLoadedOsszesitokDiff(osszesitokElter(p.osszesitok, p.fazisok, p.kedvezmenyOsszeg));
         setFrissitettDatum(
@@ -379,12 +400,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             ? { keltezes: friss.keltezes, ervenyesIg: friss.ervenyesIg }
             : null,
         );
+        setOrvosFallback(fallback);
         // A betöltött terv nem "mentetlen munka", amíg hozzá nem nyúlnak --
         // az első szerkesztés után az író effekt magától felülírja a régi
         // piszkozatot, külön törlés itt nem kell (6. döntés). UGYANAZT a
         // `friss` referenciát kapja a `plan` és a `mentettPlan` is -- két
         // külön példány hamis "mentetlen munka" jelzést adna, hiszen a
-        // dátumbélyeg gépi lépés, nem doki-szerkesztés.
+        // dátumbélyeg és az orvos-fallback is gépi lépés, nem doki-szerkesztés.
         setMentettPlan(friss);
         setPiszkozatMeta(patientDir ? { patientDir } : {});
       },
@@ -392,6 +414,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setPlanState(next);
         setLoadedOsszesitokDiff(null);
         setFrissitettDatum(null);
+        setOrvosFallback(null);
         setMentettPlan(null);
         setPiszkozatMeta(patientDir ? { patientDir } : {});
       },
@@ -422,11 +445,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setPiszkozatMentve(null);
         setPiszkozatHiba(null);
         setFrissitettDatum(null);
+        setOrvosFallback(null);
         setPiszkozatMeta({});
         await drafts.clear();
       },
       loadedOsszesitokDiff,
       frissitettDatum,
+      orvosFallback,
       // D31: optimista -- a memóriabeli állapot (ref + state) a mentés
       // ELŐTT frissül, hogy egy második, ugyanabban a tickben induló hívás
       // updatere már ezt lássa. Hibára SZÁNDÉKOSAN nem gördül vissza: a
@@ -457,6 +482,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     piszkozatMeta,
     loadedOsszesitokDiff,
     frissitettDatum,
+    orvosFallback,
     storage,
     drafts,
     reloadFromStorage,

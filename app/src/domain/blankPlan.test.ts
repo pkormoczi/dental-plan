@@ -52,4 +52,27 @@ describe('createBlankPlan', () => {
     expect(plan.nyelv).toBe('hu');
     expect(plan.penznem).toBe('HUF');
   });
+
+  // D63: az orvos mindig a globális alapértelmezett orvos, a fenti
+  // nyelv/pénznem-örökléstől függetlenül -- lásd domain/orvosok.test.ts a
+  // feloldás részletes eseteire.
+  it('az orvos az explicit alapertelmezettOrvos', () => {
+    const s = { ...settings, orvosok: ['Dr. Régi', 'Dr. Új'], alapertelmezettOrvos: 'Dr. Új' };
+    expect(createBlankPlan(s, priceList).orvos).toBe('Dr. Új');
+  });
+
+  it('inaktív alapertelmezettOrvos esetén az első aktív orvosra esik', () => {
+    const s = {
+      ...settings,
+      orvosok: ['Dr. Régi', 'Dr. Új'],
+      alapertelmezettOrvos: 'Dr. Régi',
+      inaktivOrvosok: ['Dr. Régi'],
+    };
+    expect(createBlankPlan(s, priceList).orvos).toBe('Dr. Új');
+  });
+
+  it('aktív orvos híján üres orvossal indul', () => {
+    const s = { ...settings, inaktivOrvosok: settings.orvosok };
+    expect(createBlankPlan(s, priceList).orvos).toBe('');
+  });
 });

@@ -467,10 +467,21 @@ a fájlban lévő érték az igazság — és érdemes figyelmeztetni.
     "cegjegyzekszam": ""           // kitöltendő
   },
   "orvosok": ["Dr. Mándoki István"],
+  "inaktivOrvosok": [],             // hiánya/üres = minden orvos aktív (D63)
+  "alapertelmezettOrvos": "Dr. Mándoki István",  // hiányzó/inaktív érték: az első AKTÍV név (D63)
   "ervenyessegNap": 90,
   "alapertelmezettNyelv": "hu"     // öröklés híján ez lesz az új tervek nyelve (D52)
 }
 ```
+
+Az `inaktivOrvosok` és az `alapertelmezettOrvos` additív mezők (D63,
+`schemaVersion` nem emelkedett) — egy régi fájl mindkettő hiányával
+olvasódik be, ilyenkor minden `orvosok`-beli név implicit aktív, a
+default az első aktív név. A feloldás egyetlen helye
+`app/src/domain/orvosok.ts`. A `terv.json` `orvos` mezője NÉV-pillanatkép
+(egyelőre csak a NÉV, nincs komplex `doctorSnapshot` titulussal/aláírás-
+képpel, D63) — egy orvos törlése/deaktiválása a korábbi terveket nem
+érinti (D7).
 
 ## Fogszám kezelés
 

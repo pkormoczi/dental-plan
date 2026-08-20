@@ -352,6 +352,140 @@ describe('D37: piszkozat-metaadat (patientDir/lastRoute)', () => {
   });
 });
 
+// D63: a loadPlanIntoDraft orvos-öröklése/fallback-je -- a betöltött terv
+// orvosa (`makeLoadedPlan().orvos === 'Dr. Mándoki István'`, a seed egyetlen
+// orvosa) marad, HA aktív; ha időközben deaktiválták, a globális default
+// orvosra esik vissza, `orvosFallback`-ben jelezve.
+function OrvosProbe() {
+  const { plan, orvosFallback, saveSettings, loadPlanIntoDraft, resetPlanDraft, markPlanSaved, vanMentetlenPiszkozat } =
+    useAppState();
+  return (
+    <div>
+      <div data-testid="orvos">{plan.orvos}</div>
+      <div data-testid="fallback">{orvosFallback ? JSON.stringify(orvosFallback) : 'null'}</div>
+      <div data-testid="dirty">{String(vanMentetlenPiszkozat)}</div>
+      <button
+        onClick={() =>
+          void saveSettings((prev) => ({
+            ...prev,
+            orvosok: [...prev.orvosok, 'Dr. Új Orsolya'],
+            inaktivOrvosok: [...prev.orvosok],
+            alapertelmezettOrvos: 'Dr. Új Orsolya',
+          }))
+        }
+      >
+        deactivate-current-doctor
+      </button>
+      <button onClick={() => loadPlanIntoDraft(makeLoadedPlan())}>load</button>
+      <button onClick={() => resetPlanDraft()}>reset</button>
+      <button onClick={() => void markPlanSaved(makeLoadedPlan({ tervId: 'saved1' }))}>mark-saved</button>
+    </div>
+  );
+}
+
+function renderOrvosProbe() {
+  return render(
+    <TestProviders>
+      <OrvosProbe />
+    </TestProviders>,
+  );
+}
+
+describe('D63: loadPlanIntoDraft orvos-öröklés/fallback', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('aktív forrás-orvos esetén a betöltés után a plan.orvos változatlan, orvosFallback null', async () => {
+    const user = userEvent.setup();
+    renderOrvosProbe();
+    await screen.findByTestId('orvos');
+
+    await user.click(screen.getByRole('button', { name: 'load' }));
+
+    expect(await screen.findByTestId('orvos')).toHaveTextContent('Dr. Mándoki István');
+    expect(screen.getByTestId('fallback')).toHaveTextContent('null');
+  });
+
+  it('inaktivált forrás-orvos esetén a betöltés a globális defaultra vált, orvosFallback kitöltve', async () => {
+    const user = userEvent.setup();
+    renderOrvosProbe();
+    await screen.findByTestId('orvos');
+    await user.click(screen.getByRole('button', { name: 'deactivate-current-doctor' }));
+    await waitFor(() => {
+      const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+        alapertelmezettOrvos?: string;
+      };
+      expect(s.alapertelmezettOrvos).toBe('Dr. Új Orsolya');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'load' }));
+
+    expect(await screen.findByTestId('orvos')).toHaveTextContent('Dr. Új Orsolya');
+    expect(screen.getByTestId('fallback')).toHaveTextContent(
+      JSON.stringify({ regi: 'Dr. Mándoki István', uj: 'Dr. Új Orsolya' }),
+    );
+  });
+
+  // Regresszió (lásd a copyPlanIntoDraft-hoz hasonló teszt fent, `frissDatummal`
+  // mintája): a gépi orvos-fallback nem adhat hamis "mentetlen munka" jelzést.
+  it('az orvos-fallback után is vanMentetlenPiszkozat hamis', async () => {
+    const user = userEvent.setup();
+    renderOrvosProbe();
+    await screen.findByTestId('orvos');
+    await user.click(screen.getByRole('button', { name: 'deactivate-current-doctor' }));
+    await waitFor(() => {
+      const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+        alapertelmezettOrvos?: string;
+      };
+      expect(s.alapertelmezettOrvos).toBe('Dr. Új Orsolya');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'load' }));
+
+    expect(await screen.findByTestId('fallback')).not.toHaveTextContent('null');
+    expect(screen.getByTestId('dirty')).toHaveTextContent('false');
+  });
+
+  it('resetPlanDraft() nullázza az orvosFallback-et', async () => {
+    const user = userEvent.setup();
+    renderOrvosProbe();
+    await screen.findByTestId('orvos');
+    await user.click(screen.getByRole('button', { name: 'deactivate-current-doctor' }));
+    await waitFor(() => {
+      const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+        alapertelmezettOrvos?: string;
+      };
+      expect(s.alapertelmezettOrvos).toBe('Dr. Új Orsolya');
+    });
+    await user.click(screen.getByRole('button', { name: 'load' }));
+    expect(await screen.findByTestId('fallback')).not.toHaveTextContent('null');
+
+    await user.click(screen.getByRole('button', { name: 'reset' }));
+
+    expect(screen.getByTestId('fallback')).toHaveTextContent('null');
+  });
+
+  it('markPlanSaved() nullázza az orvosFallback-et', async () => {
+    const user = userEvent.setup();
+    renderOrvosProbe();
+    await screen.findByTestId('orvos');
+    await user.click(screen.getByRole('button', { name: 'deactivate-current-doctor' }));
+    await waitFor(() => {
+      const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+        alapertelmezettOrvos?: string;
+      };
+      expect(s.alapertelmezettOrvos).toBe('Dr. Új Orsolya');
+    });
+    await user.click(screen.getByRole('button', { name: 'load' }));
+    expect(await screen.findByTestId('fallback')).not.toHaveTextContent('null');
+
+    await user.click(screen.getByRole('button', { name: 'mark-saved' }));
+
+    expect(screen.getByTestId('fallback')).toHaveTextContent('null');
+  });
+});
+
 // D31: a savePriceList/saveSettings context-metódus KIZÁRÓLAG updatert fogad,
 // és a `priceList`/`settings` állapot a mentés ELŐTT, szinkron frissül
 // (`settingsRef`/`priceListRef` + `apply*`, AppState.tsx) -- ezek a tesztek

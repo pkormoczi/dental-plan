@@ -176,7 +176,10 @@ describe('planUjTorzsadattal', () => {
 });
 
 describe('planMasolatKent', () => {
-  it('az azonosító/állapot/dátum kivételével mindent átvisz a forrásból', () => {
+  // D63: az orvos NEM tartozik az "mindent átvisz" körbe -- lásd külön
+  // describe lent, saját fixture-rel (itt a forrás orvosa és a default
+  // egybeesne, ami álpozitív lenne).
+  it('az azonosító/állapot/dátum és az orvos kivételével mindent átvisz a forrásból', () => {
     const plan = makePlan();
     const masolat = planMasolatKent(plan, settings, '2026-08-10');
 
@@ -186,7 +189,6 @@ describe('planMasolatKent', () => {
     expect(masolat.paciensId).toBe(plan.paciensId);
     expect(masolat.nyelv).toBe(plan.nyelv);
     expect(masolat.penznem).toBe(plan.penznem);
-    expect(masolat.orvos).toBe(plan.orvos);
     expect(masolat.fazisok).toEqual(plan.fazisok);
     expect(masolat.arlistaVerzio).toBe(plan.arlistaVerzio);
     expect(masolat.elolegOsszeg).toBe(plan.elolegOsszeg);
@@ -306,5 +308,32 @@ describe('planMasolatKent', () => {
     const eredetiNev = master.nev;
     planMasolatKent(plan, settings, '2026-08-10', master);
     expect(master.nev).toBe(eredetiNev);
+  });
+
+  // D63: az orvos MINDIG a globális default, a forrásé sosem másolódik --
+  // a forrás orvosa itt SZÁNDÉKOSAN eltér a defaulttól, hogy a teszt ne
+  // hamis-pozitívan menjen át (lásd a fenti "mindent átvisz" teszt kommentjét).
+  it('az orvos mindig a globális default, a forrásé sosem másolódik', () => {
+    const s = {
+      ...settings,
+      orvosok: ['Dr. Régi Rezső', 'Dr. Új Orsolya'],
+      alapertelmezettOrvos: 'Dr. Új Orsolya',
+    };
+    const plan = makePlan({ orvos: 'Dr. Régi Rezső' });
+    const masolat = planMasolatKent(plan, s, '2026-08-10');
+    expect(masolat.orvos).toBe('Dr. Új Orsolya');
+  });
+
+  it('a default akkor is érvényesül, ha a forrás orvosa MÉG AKTÍV', () => {
+    const s = {
+      ...settings,
+      orvosok: ['Dr. Régi Rezső', 'Dr. Új Orsolya'],
+      alapertelmezettOrvos: 'Dr. Új Orsolya',
+    };
+    // Dr. Régi Rezső aktív -- egy "Új verzió" nyitás örökölné, a másolás nem.
+    const plan = makePlan({ orvos: 'Dr. Régi Rezső' });
+    const masolat = planMasolatKent(plan, s, '2026-08-10');
+    expect(masolat.orvos).toBe('Dr. Új Orsolya');
+    expect(masolat.orvos).not.toBe(plan.orvos);
   });
 });

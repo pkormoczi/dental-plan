@@ -115,6 +115,7 @@ export default function PlanEditorPage() {
     priceList,
     loadedOsszesitokDiff,
     frissitettDatum,
+    orvosFallback,
     piszkozatHiba,
     piszkozatMentve,
     piszkozatPatientDir,
@@ -400,6 +401,23 @@ export default function PlanEditorPage() {
             <Text weight="bold">{formatLongDate(frissitettDatum.keltezes, 'hu')}</Text>, érvényesség:{' '}
             <Text weight="bold">{formatLongDate(frissitettDatum.ervenyesIg, 'hu')}</Text>) — a korábbi
             tételek ára változatlan.
+          </Callout.Text>
+        </Callout.Root>
+      )}
+
+      {/* D63: a betöltött verzió orvosa időközben inaktívvá vált -- a
+          globális default orvosra esett vissza. Ugyanaz a semleges szín,
+          mint a fenti dátum-sávnál, ugyanazon indoklással -- nem hiba, a
+          Terv adatai lapon egy kattintással javítható. */}
+      {orvosFallback && (
+        <Callout.Root color="gray" mb="4">
+          <Callout.Icon>
+            <InfoCircledIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            A korábbi verzió kezelőorvosa (<Text weight="bold">{orvosFallback.regi}</Text>) már
+            nem aktív — az új verzió a <Text weight="bold">{orvosFallback.uj}</Text> nevére
+            készül. A Terv adatai lapon módosítható.
           </Callout.Text>
         </Callout.Root>
       )}

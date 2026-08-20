@@ -21,6 +21,7 @@ import {
 } from './kitoltetlen';
 import { masterSnapshotDiff, type MezoElteres } from './masterSnapshotDiff';
 import { fallbackSorok, type FallbackSorokEredmeny } from './nev';
+import { orvosProblema as szamitOrvosProblema, type OrvosProblema } from './orvosok';
 import { elolegTullepi, tervVegosszeg } from './totals';
 import type { Paciens, Plan, PriceList } from './types';
 
@@ -69,6 +70,15 @@ export interface VeglegesitesDiagnozis {
    * (nincs lezárt törzsadat, vagy nem oldható fel a patientDir).
    */
   masterElteresek: MezoElteres[];
+  /**
+   * Hiányzó vagy már nem aktív kezelőorvos (D68) -- KEMÉNY blokk, akárcsak
+   * `nameMissing`/`uresSorok`, NEM tagja a PUHA `VEGLEGESITES_LEPESEK`
+   * láncnak és nem szerepel az `alkalmazhato`-ban, ugyanazon okból, mint a
+   * `masterElteresek`: az `alkalmazhato` közvetlenül a `kovetkezoLepes`
+   * bejárását vezérli, egy ott felvett mező automatikusan megerősítő
+   * dialógust nyitna egy tényleges zár helyett.
+   */
+  orvosProblema: OrvosProblema | null;
   /** Melyik PUHA lépés alkalmazható -- ez vezérli a `kovetkezoLepes` bejárását. */
   alkalmazhato: Record<VeglegesitesLepes, boolean>;
 }
@@ -78,13 +88,19 @@ export interface VeglegesitesDiagnozis {
  * `leirasokMutatasa` a hívó felelőssége (`plan.leirasokMutatasa ?? true`) --
  * ez a modul nem ismeri a `Plan` mező alapértékét, csak a kikapcsolt/
  * bekapcsolt tényt. `master` ugyanígy a hívó betöltése (`null` = nincs
- * lezárt törzsadat vagy nem ismert a patientDir).
+ * lezárt törzsadat vagy nem ismert a patientDir). `aktivOrvosNevek` a hívó
+ * MÁR feloldott aktív-orvos listája (`domain/orvosok.ts` `aktivOrvosok()`)
+ * -- ez a modul csak feloldott bemenetet kap, `Settings`-et sosem lát
+ * közvetlenül, ugyanaz az elv, mint a fenti két paraméternél. Szándékosan
+ * kötelező, nem defaultos paraméter -- egy csendben kikapcsolt hard block
+ * jogi kockázat lenne (a `ujVerzioDatum.ts` `ma` paraméterének mintája).
  */
 export function veglegesitesDiagnozis(
   plan: Plan,
   priceList: PriceList,
   leirasokMutatasa: boolean,
   master: Paciens | null,
+  aktivOrvosNevek: string[],
 ): VeglegesitesDiagnozis {
   const nameMissing = !plan.paciens.nev.trim();
   const otherFieldsMissing =
@@ -116,6 +132,7 @@ export function veglegesitesDiagnozis(
   // `leirasokMutatasa` mellett a hiányuk nem érinti a nyomtatványt.
   const hianyzoLeirasok = leirasokMutatasa ? hianyzoCsomagLeirasok(plan, priceList) : [];
   const masterElteresek = master ? masterSnapshotDiff(master, plan.paciens) : [];
+  const orvosProblema = szamitOrvosProblema(plan.orvos, aktivOrvosNevek);
 
   return {
     nameMissing,
@@ -125,6 +142,7 @@ export function veglegesitesDiagnozis(
     nullaSorok,
     hianyzoLeirasok,
     masterElteresek,
+    orvosProblema,
     alkalmazhato: {
       'missing-fields': otherFieldsMissing,
       'de-fallback-names': nevProblemaSzama > 0,

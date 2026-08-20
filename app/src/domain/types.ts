@@ -250,6 +250,19 @@ export interface Settings {
   schemaVersion: 1;
   rendelo: Rendelo;
   orvosok: string[];
+  /**
+   * A jelenleg deaktivált orvosnevek. Egy név HIÁNYA ebből a listából =
+   * aktív -- egy, a mező bevezetése előtti `beallitasok.json`-ben minden
+   * orvos implicit aktív. `schemaVersion` nem emelkedett, a mező opcionális.
+   */
+  inaktivOrvosok?: string[];
+  /**
+   * A globális alapértelmezett orvos neve. Hiányzó, már nem létező vagy
+   * inaktív érték esetén az első AKTÍV név `orvosok`-ban a tényleges default
+   * (`domain/orvosok.ts` `alapertelmezettOrvosNeve()` az EGYETLEN feloldó).
+   * `schemaVersion` nem emelkedett, a mező opcionális.
+   */
+  alapertelmezettOrvos?: string;
   ervenyessegNap: number;
   alapertelmezettNyelv: Nyelv;
 }

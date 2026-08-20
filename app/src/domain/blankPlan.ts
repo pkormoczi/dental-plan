@@ -3,6 +3,7 @@
 // első mentéskor (lásd storage/DemoStorage.ts).
 
 import { addDaysIso, todayIso } from './date';
+import { alapertelmezettOrvosNeve } from './orvosok';
 import type { Nyelv, Penznem, Plan, PriceList, Settings } from './types';
 
 /**
@@ -40,11 +41,12 @@ export function fazisNevGeneralt(nev: string, pos: number): boolean {
 export const ELSO_FAZIS_NEV = generaltFazisNev(1);
 
 /**
- * A 47. tétel (D534) öröklési forrása -- egy meglévő páciens legutóbb
- * VÉGLEGESÍTETT tervének nyelve/pénzneme, amit egy új lánc induláskor
- * átvesz. Szűken `nyelv`/`penznem`-re szorítva (nem egy teljes `Plan`),
- * hogy a bővítés ne nyisson csendes utat más mező (pl. `orvos`, ami a
- * 47. tétel 3. döntése szerint SOSEM örökölt) átvételére.
+ * D52 öröklési forrása -- egy meglévő páciens legutóbb VÉGLEGESÍTETT
+ * tervének nyelve/pénzneme, amit egy új lánc induláskor átvesz. Szűken
+ * `nyelv`/`penznem`-re szorítva (nem egy teljes `Plan`), hogy a bővítés ne
+ * nyisson csendes utat más mező átvételére -- az `orvos` ezen a paraméteren
+ * SOSEM örökölhető, mert saját önálló globális default-forrása van (D63,
+ * `domain/orvosok.ts` `alapertelmezettOrvosNeve()`).
  */
 export interface OroklottNyelvPenznem {
   nyelv: Nyelv;
@@ -81,7 +83,7 @@ export function createBlankPlan(
     ervenyesIg: addDaysIso(today, settings.ervenyessegNap),
     arlistaVerzio: priceList.arlistaVerzio,
     sablonVerzio: sablonVerzioFor(nyelv),
-    orvos: settings.orvosok[0] ?? '',
+    orvos: alapertelmezettOrvosNeve(settings),
     paciens: {
       nev: '',
       szuletesiIdo: '',

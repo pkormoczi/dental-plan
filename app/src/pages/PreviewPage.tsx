@@ -9,6 +9,7 @@ import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Skeleton, Text } fro
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
 import { formatMoney } from '../domain/money';
+import { aktivOrvosok } from '../domain/orvosok';
 import { paciensTorzsadatbol } from '../domain/paciensAdatok';
 import { isPlaceholderTemplate } from '../domain/templates';
 import { computeOsszesitok } from '../domain/totals';
@@ -69,6 +70,7 @@ export default function PreviewPage() {
   // jelenik meg, amber színnel, nem piros hibaként.
   const [cimkeHiba, setCimkeHiba] = useState<string | null>(null);
   const [nameMissingNotice, setNameMissingNotice] = useState(false);
+  const [orvosNotice, setOrvosNotice] = useState(false);
   const [uresSorokNotice, setUresSorokNotice] = useState(false);
   const [elolegTullepNotice, setElolegTullepNotice] = useState(false);
   // A webbel megegyező forrásból (design/toothChartSvg) canvason renderelt
@@ -270,8 +272,15 @@ export default function PreviewPage() {
     nullaSorok,
     hianyzoLeirasok,
     masterElteresek,
+    orvosProblema,
     alkalmazhato,
-  } = veglegesitesDiagnozis(plan, priceList, plan.leirasokMutatasa ?? true, masterPaciens);
+  } = veglegesitesDiagnozis(
+    plan,
+    priceList,
+    plan.leirasokMutatasa ?? true,
+    masterPaciens,
+    aktivOrvosok(settings),
+  );
 
   /**
    * A `confirmStep`-dialógus cím/leírás szövege -- négy lépésnél a korábbi,
@@ -413,6 +422,14 @@ export default function PreviewPage() {
       return;
     }
     setNameMissingNotice(false);
+    // D68: hiányzó/nem aktív kezelőorvos -- KEMÉNY blokk, a `nameMissing`
+    // mintáján, a nyelvi/jogi tartalmi hiba (uresSorok) ELŐTT, mert
+    // ugyanúgy egy kattintással (Terv adatai lap) javítható.
+    if (orvosProblema) {
+      setOrvosNotice(true);
+      return;
+    }
+    setOrvosNotice(false);
     if (uresSorok.length > 0) {
       setUresSorokNotice(true);
       return;
@@ -537,6 +554,20 @@ export default function PreviewPage() {
       {nameMissingNotice && nameMissing && (
         <Callout.Root color="red" mb="3">
           <Callout.Text>A páciens neve kötelező a véglegesítéshez.</Callout.Text>
+        </Callout.Root>
+      )}
+      {orvosNotice && orvosProblema && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>
+            {orvosProblema === 'hianyzik'
+              ? 'A tervhez nincs kezelőorvos rendelve. A nyomtatvány aláírás-blokkja nem maradhat kitöltetlenül.'
+              : `A terv kezelőorvosa (${plan.orvos}) már nem szerepel az aktív orvosok között. Válassz aktív kezelőorvost, vagy aktiváld őt újra a Beállításokban.`}
+          </Callout.Text>
+          <Flex mt="2">
+            <Button variant="soft" color="gray" onClick={() => navigate('/paciens')}>
+              Kezelőorvos kiválasztása
+            </Button>
+          </Flex>
         </Callout.Root>
       )}
       {uresSorokNotice && uresSorok.length > 0 && (
