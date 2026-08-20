@@ -45,12 +45,15 @@ function nevListaSzoveg(cim: string, nevek: string[]): string {
 }
 
 export default function PreviewPage() {
-  const { plan, settings, priceList, markPlanSaved, piszkozatPatientDir, piszkozatTervCim } =
+  const { plan, setPlan, settings, priceList, markPlanSaved, piszkozatPatientDir, piszkozatTervCim } =
     useAppState();
   const { storage, loadLatestTemplateByBase } = useStorage();
   const navigate = useNavigate();
 
-  const [offerOnly, setOfferOnly] = useState(false);
+  // A doki nyers kézi választása -- a `Plan` mezője (docs/02-domain-modell.md
+  // § Csak ajánlat mód, D75), nem helyi state, hogy navigáció oda-vissza és
+  // az autosave is megőrizze.
+  const offerOnly = plan.csakAjanlat === true;
   const [nyilatkozatMd, setNyilatkozatMd] = useState('');
   // A ténylegesen megjelenített nyilatkozat-verzió fájlneve (kiterjesztés
   // nélkül) -- ez pinnelődik a `finalPlan.sablonVerzio`-jába véglegesítéskor
@@ -420,6 +423,11 @@ export default function PreviewPage() {
         // A most az előnézetben LÁTOTT (legfrissebb) nyilatkozat-verzió
         // pinnelődik -- lásd a fenti useEffect kommentjét.
         sablonVerzio: nyilatkozatVerzio,
+        // Az EFFEKTÍV érték mentődik, nem a nyers `plan.csakAjanlat` --
+        // placeholder-nyilatkozat miatt kényszerített esetben is a
+        // ténylegesen kiadott PDF-et kell tükröznie (a 4. oldal ekkor is
+        // kimarad), különben a verziósor D558 jelvénye hazudna.
+        csakAjanlat: effectiveOfferOnly,
         osszesitok: computeOsszesitok(plan.fazisok, plan.kedvezmenyOsszeg),
       };
       const bytes = new Uint8Array(await pdfInstance.blob.arrayBuffer());
@@ -735,7 +743,9 @@ export default function PreviewPage() {
           <Checkbox
             checked={effectiveOfferOnly}
             disabled={nyilatkozatIsPlaceholder}
-            onCheckedChange={(checked) => setOfferOnly(checked === true)}
+            onCheckedChange={(checked) =>
+              setPlan((prev) => ({ ...prev, csakAjanlat: checked === true }))
+            }
           />
           Csak ajánlat — a nyilatkozat és aláírás oldal nélkül
         </Text>

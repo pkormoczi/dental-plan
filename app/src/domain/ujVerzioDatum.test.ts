@@ -109,4 +109,12 @@ describe('frissDatummal', () => {
     expect(friss).not.toBe(plan);
     expect(plan.keltezes).toBe(eredetiKeltezes);
   });
+
+  // D75: "Új verzió" nyitásakor a "Csak ajánlat" állapot öröklődik --
+  // ellentétben a másolással (planCopy.test.ts).
+  it('a csakAjanlat változatlanul öröklődik', () => {
+    const plan = makePlan({ csakAjanlat: true });
+    const friss = frissDatummal(plan, settings, '2026-08-09');
+    expect(friss.csakAjanlat).toBe(true);
+  });
 });

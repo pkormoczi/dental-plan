@@ -75,4 +75,9 @@ describe('createBlankPlan', () => {
     const s = { ...settings, inaktivOrvosok: settings.orvosok };
     expect(createBlankPlan(s, priceList).orvos).toBe('');
   });
+
+  // D75: friss terv mindig "Csak ajánlat" nélkül indul.
+  it('a csakAjanlat alapból false', () => {
+    expect(createBlankPlan(settings, priceList).csakAjanlat).toBe(false);
+  });
 });
