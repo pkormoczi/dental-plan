@@ -170,6 +170,26 @@ describe('veglegesitesDiagnozis', () => {
     expect(kikapcsolva.alkalmazhato['missing-leiras']).toBe(false);
   });
 
+  it('62. tétel (D63): a terv pénznemében beárazatlan, 0 Ft-os sor az araztalanSorok kemény listában jelenik meg -- a puha "zero-price-rows" lánc-tag ettől függetlenül, a 0 összeg miatt szintén jelez (nullaOsszeguSorok)', () => {
+    const plan = makePlan(
+      [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', listaEgysegar: 0, tenylegesEgysegar: 0 })]],
+      { penznem: 'EUR' },
+    );
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+
+    expect(diag.araztalanSorok).toEqual(['Fogeltávolítás']);
+    expect(diag.alkalmazhato['zero-price-rows']).toBe(true);
+  });
+
+  it('kézi ajánlati árat kapott, beárazatlan sor nem kerül az araztalanSorok listába', () => {
+    const plan = makePlan(
+      [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', listaEgysegar: 0, tenylegesEgysegar: 12000 })]],
+      { penznem: 'EUR' },
+    );
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    expect(diag.araztalanSorok).toEqual([]);
+  });
+
   it('egyszerre fennálló kemény ÉS puha jelzések egymástól függetlenül jelennek meg a diagnózisban', () => {
     const plan = makePlan(
       [

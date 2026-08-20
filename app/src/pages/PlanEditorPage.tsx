@@ -44,6 +44,7 @@ import { leirasTulHosszu } from '../domain/leirasHossz';
 import { sorPatchKovetessel } from '../domain/mennyiseg';
 import { basePrice, formatMoney } from '../domain/money';
 import { arlistaiLeiras, leirasKoveti, nevAtirt, resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
+import { nincsListaar } from '../domain/penznemValtas';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
 import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
 import { elolegOsszegek, elolegTullepi, fazisOsszeg, sorokListaOsszeg, sorokOsszeg, tervVegosszeg } from '../domain/totals';
@@ -58,6 +59,13 @@ import ItemPicker from './planEditor/ItemPicker';
  * hogy az árazási logika (SAVOS -> min) egy helyen éljen -- lásd
  * `domain/money.ts` `basePrice()`, CLAUDE.md "Meglévő segédfüggvények",
  * ne írd újra.
+ *
+ * 62. tétel (D63): egy `currency`-ben nem beárazott tétel (`ar[currency] ==
+ * null`) is felvehető -- a keresőben ma már megjelenik (`available` a
+ * PlanEditorPage-en nem szűr pénznemre). Ilyenkor a sor `listaEgysegar`/
+ * `tenylegesEgysegar` `0`-n indul, "hiányzó ár" állapotban -- lásd
+ * `domain/penznemValtas.ts` `nincsListaar()` és a kemény véglegesítés-
+ * blokk (`domain/kitoltetlen.ts` `araztalanSorok()`).
  */
 function sorMezokTetelbol(
   item: Tetel,
@@ -66,14 +74,13 @@ function sorMezokTetelbol(
 ): Pick<
   Sor,
   'tetelId' | 'nevSnapshot' | 'savos' | 'listaEgysegar' | 'tenylegesEgysegar' | 'leirasSnapshot'
-> | null {
+> {
   const ar = item.ar[currency];
-  if (!ar) return null; // a hívó (available/ItemPicker) már kiszűrte, de a típusnak ez kell
   const base = basePrice(ar);
   return {
     tetelId: item.id,
     nevSnapshot: resolveNev(item.nev, nyelv).szoveg,
-    savos: ar.tipus === 'SAVOS',
+    savos: ar?.tipus === 'SAVOS',
     listaEgysegar: base,
     tenylegesEgysegar: base,
     // D27 (docs/01): nincs HU-visszaesés a leírásra, hiányzó fordítás = üres.
@@ -183,11 +190,16 @@ export default function PlanEditorPage() {
     return kat ? resolveNev(kat.nev, nyelv).szoveg : 'Egyéb';
   };
 
-  const available = useMemo(
-    () => priceList.tetelek.filter((x) => x.aktiv && x.ar[currency]),
-    [priceList, currency],
+  // 62. tétel (D63) C5: egy `currency`-ben nem beárazott tétel is
+  // kereshető/felvehető marad -- a kereső ma nem szűr pénznemre, csak
+  // aktivitásra (lásd `sorMezokTetelbol()`). A gyorsgombok (`frequent`)
+  // SZÁNDÉKOSAN a beárazott részhalmazra szorítkoznak: egy kattintásra
+  // 0 Ft-os sort felvenni rosszabb, mint elrejteni a chipet.
+  const available = useMemo(() => priceList.tetelek.filter((x) => x.aktiv), [priceList]);
+  const frequent = useMemo(
+    () => available.filter((x) => x.gyakori && x.ar[currency]),
+    [available, currency],
   );
-  const frequent = useMemo(() => available.filter((x) => x.gyakori), [available]);
 
   // A `sorFallback` (HU/„átírt" jelvény) soronként a tényleges árlistai
   // nevet nézi, ezért egy id -> Tetel lookupra van szüksége, nem csak egy
@@ -283,7 +295,6 @@ export default function PlanEditorPage() {
 
   function addLine(phaseIdx: number, item: Tetel) {
     const mezok = sorMezokTetelbol(item, currency, nyelv);
-    if (!mezok) return; // available már kiszűrte, de a típusnak ez kell
     updatePlan((draft) => {
       draft.fazisok[phaseIdx].sorok.push({
         ...mezok,
@@ -1032,7 +1043,7 @@ function LineRow({
   fogterkep: FogterkepAllapot;
   fallback: SorFallbackOk | null;
   /** A sor mögötti árlistai tétel, ha `tetelId`-hez kötött (a `csomag`/leírás/
-      név-eltérés forrása); egyedi sornál `undefined`. */
+      név-eltérés/`nincsListaar` forrása); egyedi sornál `undefined`. */
   tetel: Tetel | undefined;
   onPatch: (patch: Partial<Sor>) => void;
   onRemove: () => void;
@@ -1082,6 +1093,9 @@ function LineRow({
       ? Math.round((line.tenylegesEgysegar / line.listaEgysegar - 1) * 100)
       : 0;
   const arEltero = !egyedi && line.tenylegesEgysegar !== line.listaEgysegar;
+  // true, ha a sor tétele nincs beárazva a terv pénznemében -- lásd
+  // `domain/penznemValtas.ts` `nincsListaar()` (62. tétel, D69).
+  const araHianyzik = nincsListaar(line, tetel, currency);
 
   // backlog-60, 1. döntés: a `sorFallback`-tól FÜGGETLEN, nyelvfüggetlen
   // "kézzel átírt" komparátor -- lásd `domain/nev.ts` `nevAtirt()`.
@@ -1118,8 +1132,7 @@ function LineRow({
             clearOnPick={false}
             id={`kereso-${pi}-${li}`}
             onPick={(item) => {
-              const mezok = sorMezokTetelbol(item, currency, nyelv);
-              if (mezok) onPatch(mezok);
+              onPatch(sorMezokTetelbol(item, currency, nyelv));
               setKeresoMod(false);
             }}
             onPickEgyedi={(nev) => {
@@ -1271,9 +1284,10 @@ function LineRow({
       </Table.Cell>
 
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums', color: t.uiTextFaint }}>
-        {/* Egyedi sornál nincs értelmezhető árlistai referenciaár -- lásd
-            sorMezokEgyedibol. */}
-        {egyedi ? '—' : formatMoney(line.listaEgysegar, currency, nyelv)}
+        {/* Egyedi sornál, illetve a terv pénznemében beárazatlan tételnél
+            nincs értelmezhető árlistai referenciaár -- lásd
+            sorMezokEgyedibol / domain/penznemValtas.ts `nincsListaar()`. */}
+        {egyedi || araHianyzik ? '—' : formatMoney(line.listaEgysegar, currency, nyelv)}
       </Table.Cell>
 
       <Table.Cell justify="end">
@@ -1292,7 +1306,16 @@ function LineRow({
                   onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
                 }
                 textAlign="right"
-                style={discount || surcharge ? { borderColor: t.brand } : undefined}
+                // 62. tétel (D69): beárazatlan tétel, még kézi ár nélkül -- a
+                // kedvezmény-/felár-kiemeléssel azonos slot, csak
+                // figyelmeztető színben, hogy ide dönteni kell.
+                style={
+                  discount || surcharge
+                    ? { borderColor: t.brand }
+                    : araHianyzik && line.tenylegesEgysegar === 0
+                      ? { borderColor: t.warn }
+                      : undefined
+                }
                 aria-label="Ajánlati egységár"
               />
             </Box>

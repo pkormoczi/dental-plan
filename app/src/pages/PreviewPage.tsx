@@ -73,6 +73,7 @@ export default function PreviewPage() {
   const [orvosNotice, setOrvosNotice] = useState(false);
   const [uresSorokNotice, setUresSorokNotice] = useState(false);
   const [elolegTullepNotice, setElolegTullepNotice] = useState(false);
+  const [araztalanSorokNotice, setAraztalanSorokNotice] = useState(false);
   // A webbel megegyező forrásból (design/toothChartSvg) canvason renderelt
   // fogtérkép-PNG a nyomtatványhoz -- lásd pdf/toothChartImage.ts. `null`,
   // amíg el nem készül, vagy ha a rajzolás meghiúsul (pl. jsdom teszt) --
@@ -268,6 +269,7 @@ export default function PreviewPage() {
     nameMissing,
     uresSorok,
     elolegTullep,
+    araztalanSorok,
     nevProblemak: { nincsForditas, elterAzArlistatol, egyedi },
     nullaSorok,
     hianyzoLeirasok,
@@ -440,6 +442,14 @@ export default function PreviewPage() {
       return;
     }
     setElolegTullepNotice(false);
+    // KEMÉNY blokk (62. tétel, D69): beárazatlan, kézi árat sem kapott sor
+    // nem kerülhet aláírandó dokumentumra -- lásd domain/kitoltetlen.ts
+    // `araztalanSorok()`.
+    if (araztalanSorok.length > 0) {
+      setAraztalanSorokNotice(true);
+      return;
+    }
+    setAraztalanSorokNotice(false);
     const step = kovetkezoLepes(alkalmazhato, 0);
     if (step) {
       setConfirmStep(step);
@@ -594,6 +604,21 @@ export default function PreviewPage() {
             Az előleg összege nagyobb, mint a fizetendő -- ez sortörlés/módosítás után is
             előfordulhat. Az előleg értéke megmaradt, rendezd a szerkesztőben, mielőtt
             véglegesítenéd a tervet.
+          </Callout.Text>
+          <Flex mt="2">
+            <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>
+              Vissza a szerkesztőbe
+            </Button>
+          </Flex>
+        </Callout.Root>
+      )}
+      {araztalanSorokNotice && araztalanSorok.length > 0 && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>
+            A terv {araztalanSorok.length} olyan sort tartalmaz, aminek a tétele nincs beárazva a
+            terv pénznemében ({plan.penznem}), és kézi ajánlati árat sem kaptak:{' '}
+            {araztalanSorok.join(', ')}. Add meg az Ajánlati ár mezőt a szerkesztőben, vagy válts
+            pénznemet.
           </Callout.Text>
           <Flex mt="2">
             <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>

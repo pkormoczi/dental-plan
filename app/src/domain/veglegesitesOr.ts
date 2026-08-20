@@ -13,6 +13,7 @@
 // renderjéhez tartozik.
 
 import {
+  araztalanSorok,
   hianyzoCsomagLeirasok,
   kitoltetlenSorok,
   nullaOsszeguSorok,
@@ -55,6 +56,8 @@ export interface VeglegesitesDiagnozis {
    * tudatosan rendezi (`elolegTullepi`, `domain/totals.ts`).
    */
   elolegTullep: boolean;
+  /** Névvel ellátott, de a terv pénznemében beárazatlan, kézi árat sem kapott sorok -- KEMÉNY blokk (62. tétel, D69), nem a lánc tagja. */
+  araztalanSorok: string[];
   nevProblemak: FallbackSorokEredmeny;
   nullaSorok: string[];
   hianyzoLeirasok: HianyzoCsomagLeiras[];
@@ -113,6 +116,10 @@ export function veglegesitesDiagnozis(
   const elolegTullep =
     plan.elolegOsszeg != null &&
     elolegTullepi(tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg), plan.elolegOsszeg);
+  // KEMÉNY blokk (62. tétel, D69): egy beárazatlan tétel 0 Ft-tal nem
+  // kerülhet aláírandó dokumentumra -- a doki vagy kézi ajánlati árat ad,
+  // vagy törli/másik pénznemre vált.
+  const araztalanSorokLista = araztalanSorok(plan, priceList);
   // D21/D24: a hiányzó VAGY kézzel eltérített német tételnevek soha nem
   // eshetnek/maradhatnak néma módon a terven -- a doki itt látja, mely nevek
   // érintettek, mielőtt a páciens aláírja a dokumentumot. Három külön ok
@@ -138,6 +145,7 @@ export function veglegesitesDiagnozis(
     nameMissing,
     uresSorok,
     elolegTullep,
+    araztalanSorok: araztalanSorokLista,
     nevProblemak,
     nullaSorok,
     hianyzoLeirasok,

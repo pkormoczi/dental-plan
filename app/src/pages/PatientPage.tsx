@@ -39,6 +39,7 @@ import { lefedettseg } from '../domain/coverage';
 import { addDaysIso, formatLongDate } from '../domain/date';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import { aktivOrvosok } from '../domain/orvosok';
+import { penznemvaltasHatasa, sorPenznemValtassal } from '../domain/penznemValtas';
 import type { Nyelv, Penznem } from '../domain/types';
 import { t } from '../design/tokens';
 import TervCimField from './patientPage/TervCimField';
@@ -69,6 +70,10 @@ export default function PatientPage() {
   const sorokSzama = plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
   // A nyelváltás-megerősítő dialógus élő számlálásához -- lásd lent.
   const nyelvvaltasHatas = nyelvvaltasHatasa(plan, priceList);
+  // A pénznemváltás-megerősítő dialógus élő számlálásához -- csak a pending
+  // CÉL-pénznemre értelmes, ezért `pending?.kind === 'penznem'` mellett kell.
+  const penznemvaltasHatas =
+    pending?.kind === 'penznem' ? penznemvaltasHatasa(plan, priceList, pending.value) : null;
 
   function applyNyelv(nyelv: Nyelv) {
     setPlan((prev) => {
@@ -101,12 +106,12 @@ export default function PatientPage() {
     setPlan((prev) => {
       const next = structuredClone(prev);
       next.penznem = penznem;
-      // A meglévő sorok ára a JELENLEGI pénznem alapegységében van rögzítve
-      // (HUF forint, EUR cent, lásd domain/money.ts) -- pénznemváltás nem
-      // átváltás, hanem a számok újraértelmezése lenne rossz mértékegységben.
-      // Ezért a sorok törlődnek, nem "áthidalódnak".
-      if (sorokSzama > 0) {
-        for (const f of next.fazisok) f.sorok = [];
+      // 62. tétel (D63): a kilépő pénznem árpárja soronként a
+      // `masikPenznemAr` stash-be kerül, nem törlődik -- lásd
+      // domain/penznemValtas.ts `sorPenznemValtassal()`.
+      const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));
+      for (const f of next.fazisok) {
+        f.sorok = f.sorok.map((s) => sorPenznemValtassal(s, penznem, tetelById.get(s.tetelId)));
       }
       return next;
     });
@@ -405,9 +410,20 @@ export default function PatientPage() {
                   '(ezeket a szerkesztőben egy „átírt” jelvény jelzi). Folytatod?'
                 : `A tervben már ${sorokSzama} tétel szerepel. A nyelv váltásakor a tételnevek ` +
                   'frissülnek az új nyelvre. Folytatod?'
-              : `A tervben már ${sorokSzama} tétel szerepel, a jelenlegi pénznemben ` +
-                `(${plan.penznem}) rögzített árral. Pénznemváltáskor ezek a sorok törlődnek, ` +
-                'hogy ne maradjon rossz pénznemben rögzített ár a tervben. Folytatod?'}
+              : penznemvaltasHatas &&
+                (penznemvaltasHatas.visszaall > 0 || penznemvaltasHatas.arlistabol > 0
+                  ? `A tervben már ${sorokSzama} tétel szerepel. Pénznemváltáskor ` +
+                    `${penznemvaltasHatas.visszaall} sor a korábban ebben a pénznemben megadott ` +
+                    `árát kapja vissza, ${penznemvaltasHatas.arlistabol} sor ára az árlistából ` +
+                    `frissül` +
+                    (penznemvaltasHatas.arNelkul > 0
+                      ? `, ${penznemvaltasHatas.arNelkul} sor ár nélkül marad (kézzel kell ` +
+                        'kitölteni)'
+                      : '') +
+                    '. A sorok nem törlődnek. Folytatod?'
+                  : `A tervben már ${sorokSzama} tétel szerepel, egyik sem beárazott az új ` +
+                    'pénznemben -- ezek a sorok ár nélkül maradnak, kézzel kell kitölteni. A ' +
+                    'sorok nem törlődnek. Folytatod?')}
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
@@ -416,7 +432,7 @@ export default function PatientPage() {
               </Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action>
-              <Button color="red" onClick={confirmPending}>
+              <Button color={pending?.kind === 'nyelv' ? 'red' : undefined} onClick={confirmPending}>
                 Folytatás
               </Button>
             </AlertDialog.Action>
