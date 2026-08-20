@@ -13,6 +13,45 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
+### 51. tétel — Terv adatai oldal layout + cím + dátumok
+  (a `backlog/redesign/` redesign-döntéssorozat DP-030 tétele) — a mai
+  "Páciens adatlap" (a workflow-stepper már "Terv adatai"-nak hívja)
+  nem stacked-section szerkezetű, nincs cím mezője (a cím kizárólag a
+  `terv-cimke.json`-ban, csak már mentett lánchoz szerkeszthető), és
+  nincs szerkeszthető érvényességi dátuma. Ez a tétel a D68 szerinti
+  hat szekcióra tagolja a lapot, bevezet egy cím mezőt (meglévő
+  lánchoz azonnal, vadonatújhoz véglegesítéskor íródik ki), és
+  szerkeszthetővé teszi az "Érvényes eddig" dátumot. A döntéseket lásd
+  a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-51-terv-adatai-oldal-terv.md`
+
+### 52. tétel — Dokumentumnyelv és pénznem kiválasztása / öröklése
+  (a `backlog/redesign/` redesign-döntéssorozat DP-031 tétele) — a
+  nyelv/pénznem-kártya ma az első véglegesítés után véglegesen
+  zárolva marad ("Új verzió" drafton), a `nemetEngedelyezve`
+  funkciókapcsoló elrejti a kártyát, és a pénzformátum (`formatMoney`)
+  csak a pénznemtől függ, a nyelvtől nem (DE+HUF ma tévesen `1 234 567
+  Ft`-ot ír, nem `1.234.567 Ft`-ot). Ez a tétel feloldja a zárolást a
+  teljes piszkozat-életciklusra, teljesen eltávolítja a funkciókapcsolót,
+  és `formatMoney`/`formatPrice`-t nyelvfüggővé teszi (utóbbi kettő
+  explicit user-döntés, mert ellentmond a ma dokumentált D21-nek). Az
+  öröklési szabály (D534) feloldja a 47. tétel VÁRAKOZÓ döntését. A
+  döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-52-nyelv-penznem-terv.md`
+
+### 53. tétel — Kezelőorvos kiválasztása és öröklési szabályai
+  (a `backlog/redesign/` redesign-döntéssorozat DP-032 tétele) —
+  `Settings.orvosok` ma sima névlista, aktív/inaktív jelölés és
+  per-terv választó UI nélkül; az egyetlen írás `orvosok[0]`. Ez a
+  tétel additív módon (séma-bővítés nélkül) bevezeti az aktív/inaktív
+  és alapértelmezett-orvos fogalmát, egy választó UI-t a Terv adatai
+  lépésen, és a hozzá tartozó öröklési szabályokat (új lánc: mindig
+  default; új verzió: örökli, ha aktív; másolás: mindig default) —
+  ezzel feloldja a 47./48./49. tétel VÁRAKOZÓ orvos-döntéseit, plusz
+  egy új finalizációs hard blockot ad hiányzó/inaktív orvosra. A
+  döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-53-kezeloorvos-terv.md`
+
 ### 59. tétel — Kezelés keresés, quick items és hozzáadás
   (a `backlog/redesign/` redesign-döntéssorozat DP-042 tétele) — a
   kereső/gyorsgombok/hozzáadás nagyrészt már megfelel a redesignnak.
@@ -82,44 +121,108 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   döntéseket lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-65-nyelvi-review-terv.md`
 
-### 51. tétel — Terv adatai oldal layout + cím + dátumok
-  (a `backlog/redesign/` redesign-döntéssorozat DP-030 tétele) — a mai
-  "Páciens adatlap" (a workflow-stepper már "Terv adatai"-nak hívja)
-  nem stacked-section szerkezetű, nincs cím mezője (a cím kizárólag a
-  `terv-cimke.json`-ban, csak már mentett lánchoz szerkeszthető), és
-  nincs szerkeszthető érvényességi dátuma. Ez a tétel a D68 szerinti
-  hat szekcióra tagolja a lapot, bevezet egy cím mezőt (meglévő
-  lánchoz azonnal, vadonatújhoz véglegesítéskor íródik ki), és
-  szerkeszthetővé teszi az "Érvényes eddig" dátumot. A döntéseket lásd
-  a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-51-terv-adatai-oldal-terv.md`
+### 66. tétel — Előnézet oldal layout és validation checklist
+  (a `backlog/redesign/` redesign-döntéssorozat DP-050 tétele) — a mai
+  Előnézet oldal egyoszlopos, a puha figyelmeztetések (0 Ft-os sorok,
+  hiányzó leírás stb.) a Véglegesítés gomb megnyomásáig teljesen rejtve
+  vannak, akkor szekvenciális "Folytatás" modalokkal bukkannak elő. Ez
+  a tétel a PDF mellé egy állandó, read-only checklist panelt vezet be
+  (D38/D39 szerint) — a modal-lánc user-döntéssel megszűnik, minden
+  puha tétel előre látszik. A 67. tételre épül (a checklist a 67.
+  tételben megszülető egységes modellt fogyasztja). A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-66-elonezet-checklist-terv.md`
 
-### 52. tétel — Dokumentumnyelv és pénznem kiválasztása / öröklése
-  (a `backlog/redesign/` redesign-döntéssorozat DP-031 tétele) — a
-  nyelv/pénznem-kártya ma az első véglegesítés után véglegesen
-  zárolva marad ("Új verzió" drafton), a `nemetEngedelyezve`
-  funkciókapcsoló elrejti a kártyát, és a pénzformátum (`formatMoney`)
-  csak a pénznemtől függ, a nyelvtől nem (DE+HUF ma tévesen `1 234 567
-  Ft`-ot ír, nem `1.234.567 Ft`-ot). Ez a tétel feloldja a zárolást a
-  teljes piszkozat-életciklusra, teljesen eltávolítja a funkciókapcsolót,
-  és `formatMoney`/`formatPrice`-t nyelvfüggővé teszi (utóbbi kettő
-  explicit user-döntés, mert ellentmond a ma dokumentált D21-nek). Az
-  öröklési szabály (D534) feloldja a 47. tétel VÁRAKOZÓ döntését. A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-52-nyelv-penznem-terv.md`
+### 67. tétel — Finalization validation engine
+  (a `backlog/redesign/` redesign-döntéssorozat DP-051 tétele) — a mai
+  véglegesítés-őr (`veglegesitesOr.ts`) ad hoc, egymástól eltérő alakú
+  mezőket ad vissza; ez a tétel egységes, navigálható
+  hard/soft/info-tétel listává alakítja, emeli a hiányzó/eltérő német
+  tételnevet PUHÁRÓL KEMÉNY blokkra (D133, explicit user-döntés, a mai
+  dokumentált spec-cel szemben), és új kemény blokkot ad a fogtérképen
+  ténylegesen látszó, hiányzó német kategórianévre (D404). A döntéseket
+  lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-67-veglegesitesi-validacio-terv.md`
 
-### 53. tétel — Kezelőorvos kiválasztása és öröklési szabályai
-  (a `backlog/redesign/` redesign-döntéssorozat DP-032 tétele) —
-  `Settings.orvosok` ma sima névlista, aktív/inaktív jelölés és
-  per-terv választó UI nélkül; az egyetlen írás `orvosok[0]`. Ez a
-  tétel additív módon (séma-bővítés nélkül) bevezeti az aktív/inaktív
-  és alapértelmezett-orvos fogalmát, egy választó UI-t a Terv adatai
-  lépésen, és a hozzá tartozó öröklési szabályokat (új lánc: mindig
-  default; új verzió: örökli, ha aktív; másolás: mindig default) —
-  ezzel feloldja a 47./48./49. tétel VÁRAKOZÓ orvos-döntéseit, plusz
-  egy új finalizációs hard blockot ad hiányzó/inaktív orvosra. A
+### 68. tétel — PDF előnézet generálás és invalidálási életciklus
+  (a `backlog/redesign/` redesign-döntéssorozat DP-052 tétele) — a
+  D598–606 tételes ellenőrzése szerint a mai `usePDF()`-alapú előnézet
+  többsége már megfelel a redesignnak (auto-generálás, stale-görgetés,
+  historical PDF elkülönítve); az egyetlen valódi hiány egy explicit
+  "Újrapróbálás" gomb PDF-render hiba esetén. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-68-pdf-elonezet-eletciklus-terv.md`
+
+### 69. tétel — Atomikus véglegesítés (PDF+JSON)
+  (a `backlog/redesign/` redesign-döntéssorozat DP-053 tétele) — kódban
+  azonosított hiba: a `doFinalize()` egyetlen try blokkban futtatja a
+  tartós mentést (`savePlan`/`loadPlan`) ÉS a piszkozat best-effort
+  törlését (`markPlanSaved`) — egy sikeres mentés után hibázó törlés ma
+  hamis "A mentés nem sikerült" üzenetet mutatna, D168/D169-et sértve.
+  Ez a tétel a két hibazónát szétválasztja. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-69-atomikus-veglegesites-terv.md`
+
+### 70. tétel — „Csak ajánlat" mód
+  (a `backlog/redesign/` redesign-döntéssorozat DP-054 tétele) — a
+  "Csak ajánlat" kapcsoló ma kizárólag `PreviewPage.tsx` helyi React
+  state-je, nincs `Plan`-mezője — sem perzisztencia (navigáció
+  visszaállítja), sem öröklés Új verziónál (D554), sem badge-adat a
+  véglegesített verzióhoz (D558) nem lehetséges. Ez a tétel additív
+  `Plan.csakAjanlat` mezőt vezet be, a meglévő draft-state/autosave
+  útvonalba kötve. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-70-csak-ajanlat-terv.md`
+
+### 71. tétel — Final terv részletei alapnézet és verziónavigáció
+  (a `backlog/redesign/` redesign-döntéssorozat DP-060 tétele) — ma
+  EGYÁLTALÁN NEM létezik strukturált, read-only "Terv részletei" nézet:
+  a "Megnézés" akció a nyers, mentett PDF-blobot nyitja meg egy új
+  lapon, nincs hozzá route, a verziósorok nem linkek. Ez a tétel új
+  route-ot és oldal-héjat épít (header, historical páciens-snapshot
+  diff, verziónavigáció, akciósáv) — a 72–75. tétel mind erre épül. A
   döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-53-kezeloorvos-terv.md`
+  **Terv:** `backlog/plans/backlog-71-terv-reszletei-alapnezet-terv.md`
+
+### 72. tétel — Final fázis- és kezeléssor megjelenítés
+  (a `backlog/redesign/` redesign-döntéssorozat DP-061 tétele) — a 71.
+  tétel oldal-héjának "phases" layout-slotját tölti fel: read-only
+  fázis-szekciók, stabil oszlopok, ajánlati/listaár másodlagos
+  megjelenítés, leírás-kibontás, 4+ fázisnál ugró navigáció +
+  scrollspy. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-72-final-fazis-sor-terv.md`
+
+### 73. tétel — Final fogtérkép navigáció
+  (a `backlog/redesign/` redesign-döntéssorozat DP-062 tétele,
+  alacsonyabb prioritású, a 71./72. tételre épül) — a
+  `DentalChart`/`toothChartSvg` interaktív infrastruktúrája nagyrészt
+  MÁR MEGVAN (a plan-szintű `onToothClick` már ma is teljes
+  billentyűzet-navigációt ad ingyen); az egyetlen hiányzó darab egy
+  kis, célzott bővítés, hogy a perzisztens highlight-gyűrű `toolbar`
+  (button) módban IS működjön több egyidejűleg kijelölt fogra, nem
+  csak a soronkénti `listbox`-módban. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-73-final-fogterkep-terv.md`
+
+### 74. tétel — Final pénzügyi összesítés
+  (a `backlog/redesign/` redesign-döntéssorozat DP-063 tétele) — a
+  forrásdokumentum D307–346 tartománya nagyrészt a 62–64. tételhez van
+  rendelve, de a SOR-szintű kedvezmény/felár-jelvény (D308–311,
+  D329–341) egyik meglévő tervben sem szerepel — ez a tétel új,
+  megosztott classifiert épít rá (mellékesen a szerkesztő mai,
+  csak-kedvezményre szűkített jelvényét is kiegészítve felárral), és a
+  plan-szintű végösszeget közvetlenül `plan.osszesitok`-ból olvassa
+  (D7), az eddig csak piszkozat-betöltéskor futó `osszesitokElter()`
+  újrahasznosításával. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-74-final-penzugyi-osszesites-terv.md`
+
+### 75. tétel — Mentett PDF viewer / külön megnyitás
+  (a `backlog/redesign/` redesign-döntéssorozat DP-064 tétele) — a
+  mentett final PDF a 71. tétel oldalán beágyazva jelenik meg (a mai
+  "Megnézés"-ről ide áthuzalozott PDF-megnyitási logikával), object
+  URL életciklus-kezeléssel; a "Megnyitás külön" és "Letöltés" a
+  meglévő logika áthelyezésével/újrahasznosításával épül. A
+  döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-75-mentett-pdf-viewer-terv.md`
 
 ---
 ## KIDOLGOZÁSRA VÁR

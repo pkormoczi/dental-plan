@@ -60,6 +60,25 @@ tartalmi logikával — ez a tétel a FORMÁTUMOT, nem a mögöttes szabályokat
 listaként renderelni, ha a bemenete egységes alakú — a mai négy különböző
 mező mind saját speciális rendert igényelne.
 
+**A `masterElteresek` (patient-master diff, backlog-40, D162) explicit
+IDE tartozik, checklist-tételként, NEM marad önálló Callout.** Ma a
+`PreviewPage.tsx` egy mindig-látható szürke `Callout`-ot mutat, ha
+`masterElteresek.length > 0` (`PreviewPage.tsx:516-530`, „Terv adatai”
+linkkel) — ez az `VeglegesitesDiagnozis` ötödik, eddig a láncon KÍVÜLI
+mezője (lásd fenti Probléma szakasz). Ez a Callout MEGSZŰNIK önálló
+elemként; a `masterSnapshotDiff()` eredménye egy `info`-szintű
+`CsekklistaTetel`-ként kerül az egységes listába (`route: '/paciens'`,
+`cim` a mezők számával, `reszletek` az érintett mezőnevekkel — a mai
+Callout-szöveg tartalma, csak checklist-sor alakban).
+
+**Miért nem marad kivétel, mint a technikai Callout-ok:** a 66. tétel 3.
+döntése kifejezetten a technikai/infrastrukturális hibákat (sablon
+betöltési hiba, PDF-render hiba, mentési hiba) zárja ki a checklistből,
+mert azok „nem a DOKUMENTUM tartalmáról szólnak”. A törzsadat-eltérés
+ennek pont az ELLENKEZŐJE — a dokumentumba kerülő páciensadatról szól,
+tehát a 66. tétel saját hatókör-elve szerint is a checklistbe tartozik,
+nem a technikai kivételek közé.
+
 ### 2. D133 kemény blokká válik (user-döntés)
 
 **Explicit megkérdezve, megerősítve:** a ma PUHA „de-fallback-names”
@@ -187,7 +206,9 @@ hagyhat, ha a fázist tesztelés közben kiürítette (pl. minden sorát
 - `app/src/pages/PreviewPage.tsx` — a `confirmStepTartalom`/
   `nevListaSzoveg` szövegező logika átkerül a checklist-tétel
   `reszletek`-jébe (66. tétel scope-ja hajtja végre, de a szöveg-tartalom
-  forrása ez a tétel).
+  forrása ez a tétel); a `masterElteresek.length > 0`-nál megjelenő
+  önálló szürke `Callout` (sor 516-530) megszűnik, tartalma az `info`-
+  szintű checklist-tételbe költözik (lásd 1. döntés).
 
 ## Tesztelés (irányadó, nem kimerítő)
 
