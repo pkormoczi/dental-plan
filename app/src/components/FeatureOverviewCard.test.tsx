@@ -21,4 +21,16 @@ describe('FeatureOverviewCard', () => {
       expect(indices[i]).toBeGreaterThan(indices[i - 1]);
     }
   });
+
+  it('a Páciensek szekció "### " alcímeit is megjeleníti, a szekción belül', () => {
+    const { container } = render(<FeatureOverviewCard />);
+    const text = container.textContent ?? '';
+
+    const paciensek = text.indexOf('Páciensek');
+    const kezelesekEsArak = text.indexOf('Kezelések és árak');
+    const alcim = text.indexOf('Pácienskezelés');
+
+    expect(alcim).toBeGreaterThan(paciensek);
+    expect(alcim).toBeLessThan(kezelesekEsArak);
+  });
 });

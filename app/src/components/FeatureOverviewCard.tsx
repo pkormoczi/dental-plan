@@ -10,7 +10,7 @@ import { parseSections } from '../domain/markdownSections';
 import featuresNyers from '../../../FEATURES.md?raw';
 
 export default function FeatureOverviewCard() {
-  const szakaszok = parseSections(featuresNyers);
+  const szakaszok = parseSections(featuresNyers, { alcimek: true });
   if (szakaszok.length === 0) return null;
 
   return (
@@ -18,22 +18,37 @@ export default function FeatureOverviewCard() {
       <Heading size="3" mb="3" style={{ color: t.brand }}>
         Miben segít az alkalmazás?
       </Heading>
-      {szakaszok.map((szakasz) => (
-        <Box key={szakasz.cim} mb="4">
-          <Text as="p" size="2" weight="bold" mb="2">
-            {szakasz.cim}
-          </Text>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {szakasz.tetelek.map((tetel, i) => (
-              <li key={i}>
-                <Text as="p" size="2" color="gray" mt="0" mb="1">
-                  {tetel}
-                </Text>
-              </li>
+      {szakaszok.map((szakasz) => {
+        // Alcím nélküli szakaszoknál (nincs "### " a FEATURES.md-ben) egy
+        // névtelen csoportra esik vissza -- így a renderelés ugyanaz az út,
+        // csoportosított és lapos szakaszokra egyaránt.
+        const csoportok = szakasz.csoportok ?? [{ cim: null, tetelek: szakasz.tetelek }];
+        return (
+          <Box key={szakasz.cim} mb="4">
+            <Text as="p" size="2" weight="bold" mb="2">
+              {szakasz.cim}
+            </Text>
+            {csoportok.map((csoport, ci) => (
+              <Box key={csoport.cim ?? `_${ci}`} mb="3">
+                {csoport.cim && (
+                  <Text as="p" size="1" weight="bold" color="gray" mb="1">
+                    {csoport.cim}
+                  </Text>
+                )}
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {csoport.tetelek.map((tetel, i) => (
+                    <li key={i}>
+                      <Text as="p" size="2" color="gray" mt="0" mb="1">
+                        {tetel}
+                      </Text>
+                    </li>
+                  ))}
+                </ul>
+              </Box>
             ))}
-          </ul>
-        </Box>
-      ))}
+          </Box>
+        );
+      })}
     </Card>
   );
 }

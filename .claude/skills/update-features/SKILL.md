@@ -88,22 +88,30 @@ not the implementation — same banned-terms list as `/update-changelog`: `refak
 
 ## Step 5 — Format (hard rules, the parser is fixed)
 
-`FeatureOverviewCard.tsx` parses this file with `parseSections()`
+`FeatureOverviewCard.tsx` parses this file with `parseSections(featuresNyers, { alcimek: true })`
 (`app/src/domain/markdownSections.ts`) — the same minimal parser `ChangelogCard` uses for
-`CHANGELOG.md`. It only understands two line shapes:
+`CHANGELOG.md` (called there *without* `{ alcimek: true }`, so `CHANGELOG.md` never needs to
+know about the third line shape below). It understands three line shapes:
 
 - `## <cím>` — starts a section
+- `### <cím>` — starts a named sub-group **within** the current section, for readability when
+  a section has grown into a long, hard-to-scan list of bullets (e.g. `Páciensek` today has
+  four: `Pácienskezelés`, `Tervek és verziók`, `Terv összeállítása`, `Véglegesítés`). Optional —
+  a section with only a handful of bullets doesn't need one. A bullet appearing before the
+  first `### ` in a section that uses them renders as an unlabeled group at the top; don't rely
+  on this for anything but a short lead-in, group everything else.
 - `- <szöveg>` — starts a bullet; a bullet may continue on the following line(s) without a
   leading `-`, which get joined into the same bullet. A blank line closes the current bullet.
 
 Anything else (sub-bullets, bold, links, nested lists) renders as raw text on the card — do
 not use it.
 
-**Section titles and order must exactly match `NavBar.tsx`'s `LINKS` labels**, excluding
-"Kezdőlap": `Páciens`, `Terv szerkesztő`, `Előnézet`, `Korábbi tervek`, `Árlista`,
-`Beállítások`. No section outside this list — a capability that spans multiple screens goes
-under the section where the doctor actually meets it (e.g. language/currency choice goes
-under `Páciens`, since that's where it's set).
+**Section titles and order must exactly match `NavBar.tsx`'s `FO_LINKS` labels**, excluding
+"Kezdőlap": `Páciensek`, `Kezelések és árak`, `Beállítások`, `DEMO`. No section outside this
+list — a capability that spans multiple screens goes under the section where the doctor
+actually meets it (e.g. language/currency choice goes under `Páciensek`, since that's where
+it's set — the plan-editing/preview screens have no nav link of their own, they're reached
+through the patient workflow shell).
 
 The file opens with `# Funkciók` and a one-line explanation, exactly like `CHANGELOG.md`
 opens with `# Változásnapló` — this line is outside any `##` section, so the parser (and the

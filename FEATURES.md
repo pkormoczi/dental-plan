@@ -4,18 +4,38 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 
 ## Páciensek
 
-- Kereshető pácienslista (Név / Született / Telefon oszloppal) — a keresés a névre, a születési dátumra és a telefonszámra egyaránt működik. Új páciens terv nélkül is felvehető, csak a névvel; ha hasonló nevű, azonos születési dátumú vagy telefonszámú páciens már szerepel a rendszerben, a program figyelmeztet, mielőtt duplikátum jönne létre.
+### Pácienskezelés
+
+- Kereshető pácienslista (Név / Született / Telefon oszloppal) — a keresés a névre, a születési dátumra és a telefonszámra egyaránt működik. 
+- Új páciens terv nélkül is felvehető, csak a névvel; ha hasonló nevű, azonos születési dátumú vagy telefonszámú páciens már szerepel a rendszerben, a program figyelmeztet, mielőtt duplikátum jönne létre.
 - Minden páciensnek saját részletoldala van két füllel: „Páciens adatai” (a törzsadat — elérhetőségek, TAJ, lakcím, kiskorú páciensnél a törvényes képviselő adatai —, alapból csak megtekinthető, egy „Szerkesztés” gombbal válik szerkeszthetővé) és „Kezelési tervek” (a páciens korábbi ajánlatai). Innen indítható vagy folytatható egy új kezelési terv is.
 - Ha a páciens törzsadata eltér egy korábban mentett tervben szereplő adatoktól, a program jelzi, és felkínálja mindkét irányú frissítést (a törzsadatot a tervből, vagy fordítva); a terv véglegesítésekor egy nem kötelező figyelmeztetés is jelez ilyen eltérést.
 - Egy páciens törölhető a részletoldal menüjéből, ha nincs véglegesített terve és nincs rá mutató, még mentetlen piszkozata sem — egyéb esetben a program megmondja, miért nem törölhető. A törlés végleges, nem vonható vissza.
+
+### Tervek és verziók
+
 - Egy visszatérő páciens korábbi ajánlatainak/terveinek listája: egy verzió közvetlenül megtekinthető böngészőben (letöltés nélkül) vagy letölthető PDF-ként, verziónkénti végösszeggel. Egy páciensnek akár több, egymástól független terve is lehet, ezek külön, saját — magától javasolt, de szabadon átírható — címmel jelennek meg, a legfrissebb elöl. Régi verzió sosem íródik felül, módosításkor mindig új verzió készül, és egy tervhez csak a legfrissebb verzióról indítható újabb verzió.
 - Egy korábbi terv alapján önálló új terv is indítható: vagy csak a páciens adataival (visszatérő páciensnél nem kell újragépelni — a nyelv és a pénznem is a páciens legutóbbi véglegesített ajánlatából öröklődik), vagy a teljes tartalom átvételével, például egy árváltozat elkészítéséhez.
 - Új terv indításakor kereshető, hogy a páciens szerepel-e már korábban, keresés nélkül is felajánlva a legutóbb aktív pácienseket. Ha nincs találat, egy „Új páciens” opció azonnal indítja a felvitelét a már begépelt névvel.
-- A páciens adatlapján dől el az ajánlat nyelve (magyar/német) és pénzneme (forint/euró), a kezelőorvos (csak az aktív orvosok közül választható) és az ajánlat dátumai — ezek a teljes szerkesztés alatt szabadon módosíthatók, egy már mentett terven is. Ha a tervben már vannak felvett tételek, nyelv- vagy pénznemváltás előtt a program megkérdezi, mi történjen velük: a tételnevek frissülnek az új nyelvre, pénznemváltásnál pedig a régi pénznem árai megmaradnak a háttérben, így egy visszaváltás nem veszíti el a korábban megadott árakat. Ha a kiválasztott orvos időközben inaktívvá válik, a program jelzi, és a véglegesítés blokkolva marad, amíg nem választanak aktív orvost.
-- A kezelési terv összeállítása fázisokra bontva, gyors kereséssel az árlistából — gépeléssel, nyilakkal és Enterrel is, egérhasználat nélkül; ha egy tétel nem szerepel az árlistában, a begépelt szöveg egyedi tételként is felvehető. Kattintható fogtérkép: egy fogra kattintva közvetlenül onnan is felvehető egy kezelés, és látszik, mely fogakon milyen kezelés szerepel. Tételenként megadható a fog, a mennyiség (a felsorolt fogak számából automatikusan kitöltve, de bármikor kézzel felülírható), az ajánlati ár (kedvezménnyel vagy felárral), és jelölhető, hogy az ár csak becsült-e; hozzáadható egy leírás is arról, mi tartozik a tételhez. Ha egy tétel nevét, árát vagy leírását kézzel írták át, ezt egy jól látható jelzés mutatja a soron, és egy kattintással visszaállítható az árlistai eredetire; ha az árlistai ár időközben megváltozott, a program felajánlja a frissítést, előre megmutatva a hatását a terv végösszegére. A szerkesztés folyamatosan, automatikusan mentődik piszkozatként, és egy gombbal bármikor eldobható.
+
+### Terv összeállítása
+
+- A páciens adatlapján dől el az ajánlat nyelve (magyar/német) és pénzneme (forint/euró), a kezelőorvos (csak az aktív orvosok közül választható) és az ajánlat dátumai — ezek a teljes szerkesztés alatt szabadon módosíthatók, egy már mentett terven is.
+- Ha a tervben már vannak felvett tételek, nyelv- vagy pénznemváltás előtt a program megkérdezi, mi történjen velük: a tételnevek frissülnek az új nyelvre, pénznemváltásnál pedig a régi pénznem árai megmaradnak a háttérben, így egy visszaváltás nem veszíti el a korábban megadott árakat.
+- Ha a kiválasztott orvos időközben inaktívvá válik, a program jelzi, és a véglegesítés blokkolva marad, amíg nem választanak aktív orvost.
+- A kezelési terv összeállítása fázisokra bontva, gyors kereséssel az árlistából — gépeléssel, nyilakkal és Enterrel is, egérhasználat nélkül.
+- Ha egy tétel nem szerepel az árlistában, a begépelt szöveg egyedi tételként is felvehető.
+- Kattintható fogtérkép: egy fogra kattintva közvetlenül onnan is felvehető egy kezelés, és látszik, mely fogakon milyen kezelés szerepel.
+- Tételenként megadható a fog, a mennyiség (a felsorolt fogak számából automatikusan kitöltve, de bármikor kézzel felülírható), az ajánlati ár (kedvezménnyel vagy felárral), és jelölhető, hogy az ár csak becsült-e; hozzáadható egy leírás is arról, mi tartozik a tételhez.
+- Ha egy tétel nevét, árát vagy leírását kézzel írták át, ezt egy jól látható jelzés mutatja a soron, és egy kattintással visszaállítható az árlistai eredetire.
+- Ha az árlistai ár időközben megváltozott, a program felajánlja a frissítést, előre megmutatva a hatását a terv végösszegére.
+- A szerkesztés folyamatosan, automatikusan mentődik piszkozatként, és egy gombbal bármikor eldobható.
 - Fázisok tetszőlegesen hozzáadhatók, nyilakkal sorrendezhetők és összecsukhatók; egy törölt kezelési sor rövid ideig egy kattintással visszavonható.
 - Kerek végösszeg is beállítható a tervhez, akár kedvezmény, akár felár formájában — az eltérés összegét a program automatikusan kiszámolja a tételek árából, új vagy nullára csökkentett végösszegnél rákérdezve —, és ha a kezelés fogtechnikai munkát tartalmaz, az előleg konkrét összegben is megadható (nem csak százalékban); a program nem engedi, hogy az előleg meghaladja a fizetendő összeget.
 - Kézzel írt szövegek (fázis neve, fázis megjegyzése, tétel neve, tétel leírása) nyelvi ellenőrzése: ha egy beírt szöveg nyelve eltérni látszik a terv nyelvétől, egy jelzés figyelmezteti erre a dokit, amíg kifejezetten meg nem erősíti a „Nyelv ellenőrizve” jelöléssel; véglegesítés előtt egy végigvezető ellenőrzés is indítható, amely sorban a még ellenőrizetlen szövegekhez ugrik.
+
+### Véglegesítés
+
 - A végleges nyomtatvány megtekintése véglegesítés előtt, akár „csak ajánlat” (nyilatkozat és aláírás nélküli) változatban is — ez a választás a tervvel együtt megmarad. Ha a nyomtatvány elkészítése közben hiba történik, az utolsó sikeresen elkészült nyomtatvány marad látható (beszürkítve), „Újrapróbálás” gombbal; amíg a hiba fennáll, sem letöltés, sem véglegesítés nem lehetséges. Ha a nyilatkozat szövege még jogi lektorálásra vár, a program automatikusan „csak ajánlat” módra kényszerít, mert enélkül nem generálható aláírásra alkalmas nyomtatvány.
 - Véglegesítés előtt egy mindig látható, egységes lista sorolja fel az összes talált problémát — például kitöltetlen vagy díjmentes sort, beárazatlan vagy elavult árú tételt, ellenőrzésre váró szöveget, üres fázist, orvos- vagy törzsadat-eltérést —; van közöttük olyan, ami megakadályozza a véglegesítést, és van, ami csak figyelmeztet. Egy kattintással a probléma pontos helyére lehet ugrani a listából.
 - Innen indul a véglegesítés: ekkor készül el a letölthető PDF, és ekkor mentődik a terv új verzióként. A tervkészítés három lépése (Terv adatai → Kezelések → Előnézet és véglegesítés) fölött egy állandó, kattintható folyamatjelző mutatja, hol tart éppen a munka, és bármelyik korábbi lépésre bármikor vissza lehet lépni.
