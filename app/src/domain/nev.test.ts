@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { fallbackSorok, leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev, sorFallback } from './nev';
+import {
+  arlistaiLeiras,
+  fallbackSorok,
+  leirasKoveti,
+  nevAtirt,
+  nevKoveti,
+  nyelvvaltasHatasa,
+  resolveNev,
+  sorFallback,
+} from './nev';
 import type { Plan, PriceList, Sor, Tetel } from './types';
 
 describe('resolveNev', () => {
@@ -65,6 +74,48 @@ describe('nevKoveti', () => {
 
   it('hamis, ha a tételnek nincs neve azon a nyelven', () => {
     expect(nevKoveti(sor({ tetelId: 't2', nevSnapshot: 'Nincs DE' }), tetel2, 'de')).toBe(false);
+  });
+});
+
+describe('nevAtirt (backlog-60)', () => {
+  it('hamis, ha a sor a felvételkori (árlistai) nevet viseli', () => {
+    expect(nevAtirt(sor({ tetelId: 't1', nevSnapshot: 'Hat DE' }), tetel1, 'de')).toBe(false);
+    expect(nevAtirt(sor({ tetelId: 't1', nevSnapshot: 'Van DE' }), tetel1, 'hu')).toBe(false);
+  });
+
+  it('igaz, ha a sor neve kézzel eltér az árlistaitól -- hu terven is (a sorFallback vakfoltja)', () => {
+    expect(nevAtirt(sor({ tetelId: 't1', nevSnapshot: 'Kézzel átírt szöveg' }), tetel1, 'hu')).toBe(
+      true,
+    );
+  });
+
+  it('igaz de terven is, kézzel eltérített, fordítással rendelkező soron', () => {
+    expect(nevAtirt(sor({ tetelId: 't1', nevSnapshot: 'Kézzel átírt szöveg' }), tetel1, 'de')).toBe(
+      true,
+    );
+  });
+
+  it('regresszió: de terven, hiányzó fordítású tételnél az ÉRINTETLEN (magyar visszaesési nevet viselő) sor nem "átírt" -- a nevKoveti()-vel szemben ez a lényegi különbség', () => {
+    // nevKoveti a hiányzó de névnél mindig false-t adna -- nevAtirt viszont
+    // a resolveNev() visszaesési nevéhez mér, tehát ez a sor "rendben van".
+    expect(nevKoveti(sor({ tetelId: 't2', nevSnapshot: 'Nincs DE' }), tetel2, 'de')).toBe(false);
+    expect(nevAtirt(sor({ tetelId: 't2', nevSnapshot: 'Nincs DE' }), tetel2, 'de')).toBe(false);
+  });
+
+  it('de terven, hiányzó fordítású tétel kézzel átírt sora igaz', () => {
+    expect(
+      nevAtirt(sor({ tetelId: 't2', nevSnapshot: 'Egyedi megjegyzéssel kihúzva' }), tetel2, 'de'),
+    ).toBe(true);
+  });
+});
+
+describe('arlistaiLeiras (backlog-60)', () => {
+  it('a tétel adott nyelvű leírását adja vissza', () => {
+    expect(arlistaiLeiras(tetelLeirassal, 'hu')).toBe('Implantátum\nFelépítmény');
+  });
+
+  it('hiányzó fordításnál üres stringet ad -- D27, nincs HU-visszaesés', () => {
+    expect(arlistaiLeiras(tetelLeirassal, 'de')).toBe('');
   });
 });
 

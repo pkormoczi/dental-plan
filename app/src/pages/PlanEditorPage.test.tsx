@@ -1160,3 +1160,151 @@ describe('PlanEditorPage -- backlog-32: piszkozat-mentés jelzés és eldobás',
     await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).toBeNull());
   });
 });
+
+describe('PlanEditorPage -- backlog-60: sor-szintű eltérés-jelzés és reset', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  function seedWithLeirasItem() {
+    const custom = {
+      ...seedPriceList,
+      tetelek: seedPriceList.tetelek.map((x) =>
+        x.nev.hu === 'Fogeltávolítás'
+          ? { ...x, leiras: { hu: 'Implantátum, felépítmény, korona', de: null } }
+          : x,
+      ),
+    };
+    localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+  }
+
+  it('magyar terven egy kézzel átírt sornév "átírt" jelvényt kap (a sorFallback ezt hu-n sosem adta), a reset visszaállítja az árlistai nevet', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(screen.queryByText('átírt')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Név visszaállítása az árlistaira' }),
+    ).not.toBeInTheDocument();
+
+    const nameInput = screen.getByDisplayValue('Fogeltávolítás');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Kihúzás (rövidítve)');
+
+    expect(await screen.findByText('átírt')).toBeInTheDocument();
+    const reset = screen.getByRole('button', { name: 'Név visszaállítása az árlistaira' });
+
+    await user.click(reset);
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+    expect(screen.queryByText('átírt')).not.toBeInTheDocument();
+  });
+
+  it('az ajánlati árat a listaár fölé emelve amber "+X%" jelvényt kap a sor, a reset visszaadja a listaárat; lefelé továbbra is zöld "−X%"', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(
+      screen.queryByRole('button', { name: 'Ajánlati ár visszaállítása a listaárra' }),
+    ).not.toBeInTheDocument();
+
+    const priceInput = screen.getByLabelText('Ajánlati egységár');
+    await user.clear(priceInput);
+    await user.type(priceInput, '30000');
+    await user.tab();
+
+    expect(await screen.findByText('+20%')).toBeInTheDocument();
+    expect(screen.queryByText(/−\d+%/)).not.toBeInTheDocument();
+
+    const reset = screen.getByRole('button', { name: 'Ajánlati ár visszaállítása a listaárra' });
+    await user.click(reset);
+    expect(priceInput).toHaveValue('25000');
+    expect(screen.queryByText('+20%')).not.toBeInTheDocument();
+
+    await user.clear(priceInput);
+    await user.type(priceInput, '20000');
+    await user.tab();
+    expect(await screen.findByText('−20%')).toBeInTheDocument();
+  });
+
+  it('német terven egy érintetlen, fordítás nélküli sor csak "HU"-t kap -- "átírt"-at nem (a nevKoveti()-alapú komparátor vakfoltja); kézzel átírva mindkettő megjelenik, a reset a magyar névre áll', async () => {
+    const user = userEvent.setup();
+    seedGermanPlanWithOneTranslatedItem();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'csatornaszam');
+    await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(await screen.findByText('HU')).toBeInTheDocument();
+    expect(screen.queryByText('átírt')).not.toBeInTheDocument();
+
+    const nameInput = screen.getByDisplayValue('Gyökértömés csatornaszámtól függően');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Egyedi megjegyzéssel kihúzva');
+
+    expect(await screen.findByText('átírt')).toBeInTheDocument();
+    expect(screen.getByText('HU')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Név visszaállítása az árlistaira' }));
+    expect(screen.getByDisplayValue('Gyökértömés csatornaszámtól függően')).toBeInTheDocument();
+    expect(screen.queryByText('átírt')).not.toBeInTheDocument();
+  });
+
+  it('árlistai leírással bíró tétel átírt leírása "átírt leírás" jelvényt és resetet kap; leírás nélküli tételen egyik sem jelenik meg', async () => {
+    const user = userEvent.setup();
+    seedWithLeirasItem();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // A leírás-sáv már nyitva indul, mert az árlistai tétel felvételekor
+    // a snapshot nem üres (`leirasNyitva` kezdőértéke `Boolean(leirasTartalom)`).
+    expect(screen.getByRole('button', { name: 'Leírás' })).toBeInTheDocument();
+    const textarea = screen.getByLabelText('Leírás (mi van benne?)');
+    expect(textarea).toHaveValue('Implantátum, felépítmény, korona');
+    expect(screen.queryByText('átírt leírás')).not.toBeInTheDocument();
+
+    await user.clear(textarea);
+    await user.type(textarea, 'Kézzel írt leírás');
+    expect(await screen.findByText('átírt leírás')).toBeInTheDocument();
+
+    const reset = screen.getByRole('button', { name: 'Leírás visszaállítása az árlistaira' });
+    await user.click(reset);
+    expect(textarea).toHaveValue('Implantátum, felépítmény, korona');
+    expect(screen.queryByText('átírt leírás')).not.toBeInTheDocument();
+  });
+
+  it('egyedi (árlistán kívüli) soron egyik marker/reset sem jelenik meg', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'Érzéstelenítés');
+    await screen.findByText(/Egyedi tétel felvétele/);
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(screen.queryByText('átírt')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Név visszaállítása az árlistaira' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ajánlati ár visszaállítása a listaárra' }),
+    ).not.toBeInTheDocument();
+  });
+});

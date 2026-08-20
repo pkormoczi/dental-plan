@@ -1621,3 +1621,25 @@ karbantartási kör négy önálló javítása.
   `fokuszCel`-mechanizmusát bővítve egy fázis-szintű ággal
   (docs/01-attekintes-es-dontesek.md D64, docs/03-funkcionalis-spec.md
   § 3 "Tételkereső"/"Fázisok"/"Gyorsgombok").
+
+---
+
+### 60. tétel: Kezeléssor szerkesztése — KÉSZ (2026-08-20)
+
+- **Méret:** ~0,5 nap.
+- **Kereteket sért?** Nem — új D65 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a kézzel átírt sornév jelzése ("átírt" jelvény) csak
+  a fordítás-hiány kérdésére válaszoló komparátoron (`sorFallback`)
+  keresztül élt, ami magyar terven sosem futott le — egy magyaron kézzel
+  átírt sornév ezért jelöletlen maradt. Az ajánlati árnak sem volt
+  soronkénti felár-jelzése, és sem a névre, sem az árra, sem a leírásra
+  nem létezett reset az árlistai értékre.
+- **Megvalósítás:** egy új, nyelvfüggetlen komparátor a felvételkori
+  (nyelv-visszaesést is figyelembe vevő) névhez mér, a meglévő
+  fordítás-hiány-komparátortól függetlenül; mindhárom mezőn (név,
+  ajánlati ár, leírás) kompakt reset-vezérlő jelent meg, a leírásnál a
+  már létező, de a szerkesztőbe eddig be nem kötött összehasonlító
+  hívásával. A soron megjelent egy amber felár-jelzés a meglévő
+  kedvezmény-jelzés mellé, a becsült ár `≈` kapcsoló pedig az ajánlati ár
+  mező alá költözött (`docs/01-attekintes-es-dontesek.md` D65,
+  `docs/03-funkcionalis-spec.md` § "Sor mezői").
