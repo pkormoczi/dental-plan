@@ -43,6 +43,21 @@ Nézd meg, létezik-e már `.claude/worktrees/backlog-$1` (pl.
   `backlog/BACKLOG.md` állapota) mielőtt folytatod — ne hozz létre
   duplikátumot, és ne kezdd elölről, amit már elvégeztek benne.
 
+  Nézd meg azt is, nincs-e **félbehagyott rebase** (`git status` "rebase
+  in progress" jelzése, vagy `.git/rebase-merge`/`.git/rebase-apply`
+  jelenléte a worktree-ben). Ha van:
+  - ha még konfliktusos fájlok vannak, állj meg és kérd meg a dokit, hogy
+    oldja fel és futtassa a `git rebase --continue`-t, mielőtt újra
+    kiadja ezt a parancsot;
+  - ha a doki már lezárta a rebase-t (nincs több konfliktus, a rebase
+    kész), folytasd a 6.5. lépés "konfliktus volt" ágával (minőségi kapu
+    újrafuttatása), majd a 7. lépéssel.
+
+  Azt is ellenőrizd (`gh pr view`), van-e már nyitott PR ehhez a
+  branch-hez, és up-to-date-e a távoli branch a helyivel (nincs
+  push-olatlan commit, nincs rebase-elendő drift). Ha igen, a 6–7. lépést
+  ne futtasd újra — a 8. lépésben csak a meglévő PR URL-jét jelentsd.
+
 Ettől a ponttól **kizárólag ebben a worktree-ben dolgozz** — minden
 további fájlművelet, teszt és commit ide tartozik, a fő munkakönyvtárhoz
 innentől ne nyúlj.
@@ -116,17 +131,56 @@ tétel felhasználó-szemszögű változást hozott.
 ## 6. Commit
 
 Stage-eld a worktree-ben módosított fájlokat, és commitolj a worktree
-branch-én (`backlog-$1`) — **ne pusholj, ne nyiss PR-t**, ez a doki
-kézi lépése marad.
+branch-én (`backlog-$1`).
 
-## 7. Záró jelentés
+## 6.5. Rebase a target branch-re
+
+`git fetch origin`, majd `git rebase origin/master` — ez teszi
+fast-forward mergelhetővé a PR-t.
+
+- **Ha a rebase konfliktusba fut:** állj meg, jelentsd a konfliktusos
+  fájlokat, és **hagyd a rebase-t félbehagyott állapotban** — ne oldj fel
+  semmit automatikusan, ne futtass `--abort`-ot. A doki oldja fel kézzel
+  és futtassa a `git rebase --continue`-t, majd adja ki újra ezt a
+  parancsot (lásd a 2. lépés resume-ágát). **Ne lépj tovább a 7.
+  lépésre.**
+- **Ha a rebase konfliktusmentesen lezárult:** ugorj a 7. lépésre, a 4.
+  lépés minőségi kapujának eredménye érvényben marad, nem kell újra
+  futtatni.
+- **Ha a rebase konfliktussal zárult (akár most, akár egy korábbi,
+  megszakított futásból folytatva):** futtasd újra mindhármat az `app/`
+  alatt (`npm run build`, `npm run lint`, `npm test`) — a konfliktus
+  feloldása módosíthatta a kódot. Ha bármelyik hibázik, javítsd és
+  futtasd újra, mielőtt tovább mennél.
+
+## 7. Push + Pull Request
+
+`git push --force-with-lease` (mindig ezzel, első push esetén is
+egységesen — a rebase mindig átírja a commit-hasheket).
+
+Ellenőrizd `gh pr view`-val, van-e már nyitott PR ehhez a branch-hez.
+
+- **Ha van, és a branch már up-to-date volt (a 6.5. lépés nem talált
+  push-olandó változást):** ne hozz létre új PR-t.
+- **Egyébként** hozz létre egyet:
+  `gh pr create --base master --title "$1. tétel: <a tétel BACKLOG.md-beli
+  rövid címe>" --body "<1-2 mondatos magyar összefoglaló arról, mi
+  valósult meg — teszt­lépések NÉLKÜL, azok csak a záró jelentésben
+  szerepelnek>"`.
+
+**Ha a `gh` CLI nincs telepítve vagy nincs bejelentkezve:** a push ettől
+függetlenül fusson le rendesen; a PR-lépést hagyd ki, és a 8. lépésben
+jelezd egyértelműen, hogy a PR-t a dokinak kézzel kell létrehoznia.
+
+## 8. Záró jelentés
 
 Foglald össze:
 
 - mi valósult meg (a tervdokumentum döntéseihez igazítva),
 - egy számozott, kézi tesztelési lista a dokinak,
-- a worktree útvonala és branch-neve, és hogy push/PR indítása kézi
-  következő lépés,
+- a worktree útvonala és branch-neve,
+- a létrehozott (vagy már meglévő) PR URL-je — vagy, ha a `gh` hiánya
+  miatt nem jött létre, egyértelmű jelzés, hogy ezt kézzel kell pótolni,
 - emlékeztető a `/update-changelog`/`/update-features`-re, ha releváns.
 
 Ne hívd meg az `ExitWorktree`-t — a munkamenet a worktree-ben marad, amíg
