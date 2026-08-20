@@ -224,6 +224,96 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   döntéseket lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-75-mentett-pdf-viewer-terv.md`
 
+### 76. tétel — PDF oldalváz: fejléc/lábléc/oldalszám
+  (a `backlog/redesign/` redesign-döntéssorozat DP-070 tétele) — a mai
+  `TervDocument.tsx` négy fix `<Page>`-je három folyó blokkra vált
+  (kezelési rész / fizetési feltételek+garancia / nyilatkozat+aláírás),
+  D420/D582 szerint — mindhárom szabadon túlfolyhat, a kompakt fejléc
+  minden nem-első fizikai oldalon megjelenik (ma csak `<Page>`-kezdetnél
+  jelent meg). A lábléc névhossz-alapú, dokumentum-szintű magasságot kap
+  (D426–D428). A folytatólagos szakaszcím (D357/D363–D364/D415/D586)
+  EXPLICIT ELVETVE — a react-pdf folyam-modellje ezt nem tudja kifejezni
+  egy blokkon belüli fázis-/szakaszhatáron; helyette a natívan
+  kifejezhető keep-together szabályok (`wrap`/`break`/`minPresenceAhead`)
+  erősödnek a 78./81./82. tételben. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-76-pdf-oldalvaz-terv.md`
+
+### 77. tétel — PDF első oldal: cím + páciensadatok + fogtérkép
+  (a `backlog/redesign/` redesign-döntéssorozat DP-071 tétele) — a
+  fogtérkép elhagyja a mai kéthasábos elrendezést (ahol az összegzés
+  mellett állt) és a páciensadatok alá kerül, a fázisok elé (D387); a
+  terv címe (az 51. tétel `terv-cimke.json`-jából, séma-változás nélkül,
+  új propon át) megjelenik a page1 tartalomban (D386). A páciensblokk
+  két fix szemantikus oszlopra vált (bal: Név/Született/TAJ/Lakcím, jobb:
+  Telefon/E-mail), üres mező teljesen kimarad `—` helyett, rebalance
+  nélkül (D431/D389/D432). A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-77-pdf-elso-oldal-terv.md`
+
+### 78. tétel — PDF fázisok és kezeléstáblák
+  (a `backlog/redesign/` redesign-döntéssorozat DP-072 tétele) — üres
+  `Fog` mező `—`-t kap; a becsült-ár csillag a tételnév utánról az
+  Egységár mellé költözik (D376, explicit átállás a mai
+  `docs/04-nyomtatvany-spec.md` elhelyezéséről); a sávos lábjegyzet
+  szövege D378 magjára rövidül, a mai, a származtatott összegekre (D15
+  jogi védelme) kiterjesztett tartalommal megtartva. Új keep-together
+  szabályok: `Fázis összesen`+`Megjegyzés` egyben marad (D414), a
+  fáziscím+táblázatfejléc+első sor árva-védett (D361/D356); a tételsor
+  alapja egyben marad, de a hozzá tartozó leírás — ha nagyon hosszú —
+  törhet (D362 enyhítve). A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-78-pdf-fazisok-kezelestablak-terv.md`
+
+### 79. tétel — PDF pénzügyi összesítés
+  (a `backlog/redesign/` redesign-döntéssorozat DP-073 tétele) — az
+  Összesítés blokk `Összesítés` címet kap (C6), a PDF-feliratok
+  `Fizetendő`→`Végösszeg` és `Kezelések összesen`→`Kezelések összege`
+  (D350/D351) — a KÉPERNYŐS átnevezés már a 74. tétel hatásköre, ez
+  csak a `pdf/labels.ts`-t viszi, hogy a két felület ne csússzon szét.
+  A számítási forrás marad `tervVegosszeg()` (nincs átállás a mentett
+  `plan.osszesitok`-ra — a 74. tétel indoklása szerint ez a PDF-en
+  biztonságos). Új: három vizuális szint az Előleg/Fennmaradó rész
+  sorokhoz (D368–D369). A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-79-pdf-penzugyi-osszesites-terv.md`
+
+### 80. tétel — PDF lokalizáció, dátum- és pénzformázás
+  (a `backlog/redesign/` redesign-döntéssorozat DP-074 tétele) — a
+  nyelvfüggő ezres tagolás (C4) már az 52. tétel hatásköre, ez csak a
+  fennmaradó réseket zárja: `EUR` szöveges pénznemjel a `€` szimbólum
+  helyett (D438, `domain/money.ts`-t is érinti, koordinálandó az 52.
+  tétel implementációjával), a német TAJ-címke szó szerint `TAJ` marad
+  `TAJ-Nr.` helyett (D451), és egy új, kizárólag PDF-oldali lokalizáló
+  réteg az alapértelmezett (sosem kézzel átírt) terv-cím és fázisnév
+  német megjelenítéséhez (D454/D455) — a szerkesztő UI-ja (`javasoltTervCim`/
+  `generaltFazisNev`) MAGA változatlanul magyar marad. A döntéseket lásd
+  a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-80-pdf-lokalizacio-terv.md`
+
+### 81. tétel — PDF fizetési feltételek és garancia
+  (a `backlog/redesign/` redesign-döntéssorozat DP-075 tétele) — a
+  `Plan.sablonVerzio` mező törlődik a sémából (C7/D595–D596): a mezőt
+  ma semmi nem olvassa vissza történeti célra, a mentett final PDF a
+  történeti forrás, nem egy JSON-ba pinnelt sablonazonosító. A
+  vizsgálat során talált, a redesign-től független rés is itt záródik:
+  a placeholder-ellenőrzés (`isPlaceholderTemplate`) ma csak a
+  cross-language HU-visszaesésnél fut — egy magyar terven a még
+  placeholder-jelölésű garancia-szöveg szó szerint rákerülne a PDF-re;
+  az ellenőrzés kiterjed a terv saját nyelvére is, placeholder esetén a
+  teljes szekció kimarad címmel együtt (D581). A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-81-pdf-fizetesi-garancia-terv.md`
+
+### 82. tétel — PDF nyilatkozat és aláírásblokk
+  (a `backlog/redesign/` redesign-döntéssorozat DP-076 tétele) — a
+  `Plan.csakAjanlat` mezőre állás már a 70. tétel hatásköre, ez a
+  MEGLÉVŐ `offerOnly` prop forrását cseréli React state-ről a mentett
+  mezőre, a PDF-oldali logikát (`{!offerOnly && ...}`) változatlanul
+  hagyva. Az aláírásblokk AS-IS elrendezése, a nyilatkozat folytatólagos
+  „– folytatás" címe (D587, a react-pdf `subPageNumber`-ével — az
+  EGYETLEN hely, ahol a 76. tétel elvetett folytatólagos-cím mechanizmusa
+  mégis natívan megvalósul), és egy új árva-védelem az utolsó bekezdés és
+  az aláírásblokk között (D584) kerül be. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-82-pdf-nyilatkozat-alairas-terv.md`
+
 ---
 ## NEM FEJLESZTÉS
 
