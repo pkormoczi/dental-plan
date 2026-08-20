@@ -1723,3 +1723,32 @@ karbantartási kör négy önálló javítása.
   docs/04-nyomtatvany-spec.md § Pénzügyi összesítés). A redesign D487/
   D524 szerinti pénznemenkénti dual-state a 62. tételre várva külön,
   89. tételként vált le.
+
+---
+
+### 61. tétel: Árlista-snapshot és explicit refresh — KÉSZ (2026-08-20)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D70 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a sor `listaEgysegar`-ja pillanatkép (D7), de eddig
+  semmi nem vetette össze soha többé a mai árlistával — egy hónapokkal
+  korábbi tervet újranyitva a doki észrevétlenül dolgozhatott elavult
+  áron, és a "Másolás új tervbe" is elavult árakkal készített "friss"
+  változatot. Ez oldotta fel a 49. tétel (D57) 2./6. döntésének korábban
+  VÁRAKOZÓ állapotát.
+- **Megvalósítás:** új `domain/arKoveti.ts` modul (`nevKoveti()` mintájú
+  derived komparátor, nincs tárolt flag) adja az ár-követés magját. A
+  szerkesztő Listaár cellája minden eltérő soron egy ⟳ vezérlőt kap, ami
+  megerősítő előnézettel (régi→új listaár, a kézi felülírás törlése, a
+  "Kezelések összege"/"Fizetendő" hatása) frissíti a sort a mai
+  árlistára. A véglegesítés-őr (`veglegesitesOr.ts`) ötödik, utolsó puha
+  lépést kapott — elavult pillanatkép ÉS/VAGY kézzel felülírt ajánlati ár
+  esetén, nem blokkolva a mentést. A "Másolás új tervbe" (`planMasolatKent()`
+  opcionális ötödik `priceList` paramétere) a default-following (ár ÉS
+  név ÉS leírás is követő) sorokat az aktuális árlistára frissíti, az
+  `arlistaVerzio`-t is átbélyegezve; a kézzel felülírt sorok érintetlenek
+  maradnak. Az árlista admin-mentése változatlanul soha nem ír át
+  automatikusan egy már megnyitott/mentett tervet (docs/01-attekintes-
+  es-dontesek.md D70, docs/02-domain-modell.md § "Miért van
+  `nevSnapshot` és `listaEgysegar` a soron", docs/03-funkcionalis-
+  spec.md § 3 "Sor mezői" és § 4 "Előnézet és véglegesítés").

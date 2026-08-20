@@ -2,13 +2,14 @@
 // gépel -> nyíl -> Enter -> a kereső kiürül és visszakapja a fókuszt ->
 // gépel tovább, egérhasználat nélkül.
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import App from '../App';
 import PlanEditorPage from './PlanEditorPage';
 import { TestProviders } from '../testUtils';
 import { createBlankPlan } from '../domain/blankPlan';
+import { formatMoney } from '../domain/money';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 
@@ -61,6 +62,33 @@ function seedWithNoEurPrices() {
 function seedWithIntactPriceList() {
   localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
   localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+}
+
+/**
+ * Egy piszkozat, aminek van egy "Fogeltávolítás" (t041, mai HUF ára 25000)
+ * sora, elavult listaárral (20000) -- a backlog-61 ár-frissítés tesztjeihez.
+ * Az érintetlen árlista/beállítás mellé, a DraftStorage `dp:piszkozat`
+ * rekord-alakjában (DemoDraftStorage.ts `save()` mintája), MIELŐTT a
+ * StorageProvider renderelne.
+ */
+function seedWithStalePriceRow() {
+  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+  localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+  const plan = createBlankPlan(seedSettings, seedPriceList);
+  plan.paciens.nev = 'Teszt Elek';
+  plan.fazisok[0].sorok.push({
+    tetelId: 't041',
+    nevSnapshot: 'Fogeltávolítás',
+    savos: false,
+    fogak: '',
+    mennyiseg: 1,
+    listaEgysegar: 20000,
+    tenylegesEgysegar: 20000,
+  });
+  localStorage.setItem(
+    'dp:piszkozat',
+    JSON.stringify({ schemaVersion: 1, mentve: new Date().toISOString(), plan }),
+  );
 }
 
 describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
@@ -1418,5 +1446,67 @@ describe('PlanEditorPage -- backlog-60: sor-szintű eltérés-jelzés és reset'
     expect(
       screen.queryByRole('button', { name: 'Ajánlati ár visszaállítása a listaárra' }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('PlanEditorPage -- backlog-61: árlista-snapshot és explicit refresh', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('friss (követő) soron nincs látható ⟳ ár-frissítő gomb', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(
+      screen.queryByRole('button', { name: 'Ár frissítése az árlistából' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('elavult listaárú soron megjelenik a ⟳ gomb; elfogadás után a lista- és ajánlati ár is a mai árra vált, a kézi eltérés törlődik', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const refreshButton = await screen.findByRole('button', {
+      name: 'Ár frissítése az árlistából',
+    });
+
+    await user.click(refreshButton);
+    const dialog = await screen.findByRole('alertdialog');
+    expect(dialog.textContent).toContain(
+      `${formatMoney(20000, 'HUF', 'hu')} → ${formatMoney(25000, 'HUF', 'hu')}`,
+    );
+
+    await user.click(within(dialog).getByRole('button', { name: 'Frissítés' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+
+    expect(screen.getAllByDisplayValue('25000').length).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole('button', { name: 'Ár frissítése az árlistából' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('Mégse a dialógusban nem változtat a soron', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Ár frissítése az árlistából' }),
+    );
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+
+    expect(screen.getByDisplayValue('20000')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: 'Ár frissítése az árlistából' }),
+    ).toBeInTheDocument();
   });
 });

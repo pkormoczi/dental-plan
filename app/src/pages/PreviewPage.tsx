@@ -273,6 +273,7 @@ export default function PreviewPage() {
     hianyzoLeirasok,
     masterElteresek,
     orvosProblema,
+    arElteresek,
     alkalmazhato,
   } = veglegesitesDiagnozis(
     plan,
@@ -283,9 +284,9 @@ export default function PreviewPage() {
   );
 
   /**
-   * A `confirmStep`-dialógus cím/leírás szövege -- négy lépésnél a korábbi,
+   * A `confirmStep`-dialógus cím/leírás szövege -- öt lépésnél a korábbi,
    * egymásba ágyazott ternár-lánc olvashatatlanná vált volna. `null` lépésnél
-   * (dialógus zárva) a `missing-leiras` szöveg ágára esik, ez sosem látszik.
+   * (dialógus zárva) a `price-drift` szöveg ágára esik, ez sosem látszik.
    */
   function confirmStepTartalom(step: ConfirmStep): { cim: string; leiras: string } {
     if (step === 'missing-fields') {
@@ -324,16 +325,31 @@ export default function PreviewPage() {
           nevListaSzoveg('Érintett sorok', nullaSorok),
       };
     }
+    if (step === 'missing-leiras') {
+      return {
+        cim: 'Hiányzó tétel-leírások',
+        leiras:
+          'Néhány csomagtételre hivatkozó soron nincs leírás -- a páciens nem fogja tudni ' +
+          'otthon visszaolvasni, mi van benne.\n\n' +
+          nevListaSzoveg(
+            'Nincs leírás',
+            hianyzoLeirasok.map((h) => h.nev),
+          ) +
+          '\n\nFolytatod a véglegesítést leírás nélkül?',
+      };
+    }
     return {
-      cim: 'Hiányzó tétel-leírások',
+      cim: 'Eltérés az árlistától',
       leiras:
-        'Néhány csomagtételre hivatkozó soron nincs leírás -- a páciens nem fogja tudni ' +
-        'otthon visszaolvasni, mi van benne.\n\n' +
-        nevListaSzoveg(
-          'Nincs leírás',
-          hianyzoLeirasok.map((h) => h.nev),
-        ) +
-        '\n\nFolytatod a véglegesítést leírás nélkül?',
+        'Néhány sor ára eltér a mai árlistától -- ez lehet szándékos kedvezmény/felár, vagy ' +
+        'egy azóta megváltozott árlistai ár, amit még nem frissítettél a sorban.\n\n' +
+        [
+          nevListaSzoveg('Elavult árlistai pillanatkép', arElteresek.elavult),
+          nevListaSzoveg('Kézzel felülírt ajánlati ár', arElteresek.keziAr),
+        ]
+          .filter(Boolean)
+          .join('\n\n') +
+        '\n\nFolytatod a véglegesítést?',
     };
   }
 

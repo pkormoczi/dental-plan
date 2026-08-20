@@ -1003,3 +1003,64 @@ describe('PreviewPage -- letöltési fájlnév', () => {
     10000,
   );
 });
+
+// backlog-61 (D70): a puha "price-drift" lépés a lánc ötödik, utolsó tagja --
+// itt egyedül fut le, mert a páciensadat teljes, a terv magyar (nincs
+// de-fallback-names), a sor nem 0 összegű és nem csomagtétel.
+describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'kézzel felülírt ajánlati ár esetén az "Eltérés az árlistától" dialógus jelenik meg, és Folytatással a mentés lefut',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+
+      await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Árdrift');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      fireEvent.change(await screen.findByLabelText('Született'), { target: { value: '1990-01-01' } });
+      await user.type(screen.getByLabelText('TAJ'), '123 456 789');
+      await user.type(screen.getByLabelText('Lakcím'), '1113 Budapest, Bartók Béla út 42. 2/5');
+      await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
+      await user.type(screen.getByLabelText('E-mail'), 'teszt.ardrift@example.hu');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      // Kézi kedvezmény -- a listaár és az ajánlati ár eltér, ez a
+      // "price-drift" lépést teszi alkalmazhatóvá (nem az elavult
+      // pillanatkép ága).
+      const actualPriceInput = screen.getByDisplayValue('25000');
+      await user.clear(actualPriceInput);
+      await user.type(actualPriceInput, '20000');
+      await user.tab();
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+
+      const dialog = await screen.findByRole('alertdialog');
+      expect(within(dialog).getByText('Eltérés az árlistától')).toBeInTheDocument();
+      expect(within(dialog).getByText(/Kézzel felülírt ajánlati ár/)).toBeInTheDocument();
+      expect(within(dialog).getByText(/Fogeltávolítás/)).toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Folytatás' }));
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
+    },
+    20000,
+  );
+});

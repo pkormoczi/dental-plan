@@ -4,6 +4,7 @@
 // (D4) automatikusan új páciensmappát nyit, sosem csúszik be verzióként
 // egy meglévő láncba.
 
+import { frissArlistaval } from './arKoveti';
 import { createBlankPlan } from './blankPlan';
 import type { OroklottNyelvPenznem } from './blankPlan';
 import { alapertelmezettOrvosNeve } from './orvosok';
@@ -69,21 +70,32 @@ export function planUjTorzsadattal(
  * pillanatkép-jelleggel öröklődik). Az `osszesitok` a saját (átvett)
  * `fazisok`-ból ÚJRASZÁMOLVA -- a forrás `osszesitok`-ja az EREDETI, már
  * mentett terv fájl-igazsága (D7), nem a most keletkező piszkozaté.
+ *
+ * Az opcionális `priceList` -- ha a hívó átadja -- a `frissArlistaval()`-t
+ * (domain/arKoveti.ts, backlog-61, D70) futtatja a fázisokon: azok a
+ * sorok, amik a forrásban PONTOSAN követték az akkori árlistát (ár ÉS név
+ * ÉS leírás egyaránt), az AKTUÁLIS árlistára frissülnek, a kézzel felülírt
+ * sorok érintetlenek maradnak; a másolat `arlistaVerzio`-ja ilyenkor az
+ * aktuális árlistáé lesz. `priceList` híján (a hívó nem adja át) a forrás
+ * sorai és `arlistaVerzio`-ja változatlanul másolódnak -- a korábbi,
+ * VÁRAKOZÓ viselkedés.
  */
 export function planMasolatKent(
   plan: Plan,
   settings: Settings,
   ma: string,
   master?: PatientMasterData | null,
+  priceList?: PriceList | null,
 ): Plan {
   const friss = frissDatummal(plan, settings, ma);
+  const arlistavalFriss = priceList ? frissArlistaval(friss, priceList) : friss;
   return {
-    ...friss,
+    ...arlistavalFriss,
     orvos: alapertelmezettOrvosNeve(settings),
     paciens: master ? paciensTorzsadatbol(master) : friss.paciens,
     tervId: '',
     verzio: 0,
     statusz: 'PISZKOZAT',
-    osszesitok: computeOsszesitok(friss.fazisok, friss.kedvezmenyOsszeg),
+    osszesitok: computeOsszesitok(arlistavalFriss.fazisok, arlistavalFriss.kedvezmenyOsszeg),
   };
 }

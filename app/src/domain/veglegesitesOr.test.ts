@@ -106,11 +106,13 @@ describe('veglegesitesDiagnozis', () => {
     expect(diag.nullaSorok).toEqual([]);
     expect(diag.hianyzoLeirasok).toEqual([]);
     expect(diag.masterElteresek).toEqual([]);
+    expect(diag.arElteresek).toEqual({ elavult: [], keziAr: [] });
     expect(diag.alkalmazhato).toEqual({
       'missing-fields': false,
       'de-fallback-names': false,
       'zero-price-rows': false,
       'missing-leiras': false,
+      'price-drift': false,
     });
   });
 
@@ -170,6 +172,22 @@ describe('veglegesitesDiagnozis', () => {
     expect(kikapcsolva.alkalmazhato['missing-leiras']).toBe(false);
   });
 
+  it('backlog-61: elavult árlistai pillanatkép a "price-drift" lépést teszi alkalmazhatóvá', () => {
+    const plan = makePlan([[sor({ listaEgysegar: 9000, tenylegesEgysegar: 9000 })]]); // priceList t1 mai ára 10000
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
+
+    expect(diag.arElteresek).toEqual({ elavult: ['Fogeltávolítás'], keziAr: [] });
+    expect(diag.alkalmazhato['price-drift']).toBe(true);
+  });
+
+  it('backlog-61: kézzel felülírt ajánlati ár is a "price-drift" lépést teszi alkalmazhatóvá', () => {
+    const plan = makePlan([[sor({ tenylegesEgysegar: 8000 })]]); // listaEgysegar követi, de az ajánlati ár eltér
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
+
+    expect(diag.arElteresek).toEqual({ elavult: [], keziAr: ['Fogeltávolítás'] });
+    expect(diag.alkalmazhato['price-drift']).toBe(true);
+  });
+
   it('egyszerre fennálló kemény ÉS puha jelzések egymástól függetlenül jelennek meg a diagnózisban', () => {
     const plan = makePlan(
       [
@@ -210,6 +228,7 @@ describe('veglegesitesDiagnozis', () => {
         'de-fallback-names': false,
         'zero-price-rows': false,
         'missing-leiras': false,
+        'price-drift': false,
       });
       expect(kovetkezoLepes(diag.alkalmazhato, 0)).toBeNull();
     });

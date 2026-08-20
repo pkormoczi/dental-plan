@@ -431,9 +431,10 @@ A véglegesítés-őr kiemelése (`docs/03-funkcionalis-spec.md` § 4. Előnéze
   `kovetkezoLepes(alkalmazhato, fromIndex)` / `VEGLEGESITES_LEPESEK`
   (`app/src/domain/veglegesitesOr.ts`) — a kemény blokk (névhiány,
   kitöltetlen sorok) és a puha `confirmStep`-lánc (hiányzó adatok → német
-  névprobléma → 0 Ft-os sor → hiányzó leírás) tiszta magja, a meglévő
-  `kitoltetlenSorok`/`nullaOsszeguSorok`/`hianyzoCsomagLeirasok`/
-  `fallbackSorok` hívásával. A `PreviewPage.tsx`-ben marad a React state, a
+  névprobléma → 0 Ft-os sor → hiányzó leírás → árlista-eltérés, D70)
+  tiszta magja, a meglévő `kitoltetlenSorok`/`nullaOsszeguSorok`/
+  `hianyzoCsomagLeirasok`/`fallbackSorok`/`arElteroSorok` hívásával. A
+  `PreviewPage.tsx`-ben marad a React state, a
   dialógus-szövegek és az `isPlaceholderTemplate`-re épülő D23-zár — ez
   utóbbi a 4. oldal renderjéhez tartozik, nem a lánchoz
 
@@ -892,6 +893,33 @@ A kezelőorvos-választás és öröklési szabályok tétel
   `RadioGroup`-pal, hanem a már bevált `Select`-tel); nincs másik aktív
   orvos esetén a művelet a dialógus megnyitása nélkül, azonnal engedett,
   amber figyelmeztetéssel
+
+Az árlista-snapshot és explicit refresh tétel (`docs/01-attekintes-es-
+dontesek.md` D70, `docs/02-domain-modell.md` § "Miért van `nevSnapshot`
+és `listaEgysegar` a soron", `docs/03-funkcionalis-spec.md` § 3. "Sor
+mezői" és § 4. "Előnézet és véglegesítés") segédfüggvényei
+(`app/src/domain/arKoveti.ts`), szintén ne írd újra őket:
+- `arKoveti(sor, tetel, penznem)` — igaz, ha a sor `listaEgysegar`-ja
+  pontosan a tétel MAI árlistai alapára (`basePrice()`), a `nevKoveti()`/
+  `leirasKoveti()` (`domain/nev.ts`) mintáján; derived, nincs hozzá
+  tárolt flag
+- `arFrissites(sor, penznem, tetelById)` — egy sor konkrét ár-frissítési
+  javaslata (`{ regi, uj, savos }`) vagy `null`, ha nincs mit frissíteni
+  (egyedi sor, törölt tétel, ajánlhatatlan ár, vagy már követő sor) — a
+  `sorFallback()` tri-state mintája
+- `arFrissitesPatch(frissites)` — a javaslat sor-patchké alakítása; a
+  `tenylegesEgysegar`-t is az új értékre írja, a kézi felülírást törölve
+- `arElteroSorok(plan, priceList)` — a tervben eltérő sorok neve, két
+  bucketbe bontva (`elavult`/`keziAr`) — a `fallbackSorok()` plan-szintű
+  mintáján, a véglegesítés-őr `price-drift` puha lépéséhez
+- `frissArlistaval(plan, priceList)` — a "Másolás új tervbe" default-
+  following frissítése: a forrásban ár ÉS név ÉS leírás is követő sorokat
+  az aktuális árlistára állítja, `plan.arlistaVerzio`-t is átbélyegezve;
+  az ár-dimenzióhoz SZÁNDÉKOSAN NEM az `arKoveti()`-t használja (az a MAI
+  árlistával hasonlítana, ami driftelt soroknál mindig hamis lenne), a
+  kézi árfelülírás jele `tenylegesEgysegar !== listaEgysegar`.
+  `domain/planCopy.ts` `planMasolatKent()` opcionális ötödik `priceList`
+  paramétere hívja, ha a hívó átadja
 
 ## Domain szókincs
 
