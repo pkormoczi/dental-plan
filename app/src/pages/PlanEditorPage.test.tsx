@@ -232,6 +232,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
       await user.tab();
 
       expect(await screen.findByText('12 500 Ft')).toBeInTheDocument();
+      expect(screen.queryByText(/Add meg az előleg összegét/)).not.toBeInTheDocument();
     });
 
     it('explicit 0 beírása után blur/Enterre a kapcsoló automatikusan kikapcsol (D519)', async () => {
@@ -320,6 +321,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
 
       expect(await screen.findByText(/→ 5000 Ft kedvezmény/)).toBeInTheDocument();
       expect(screen.getByText(/Kedvezmény: 5000 Ft/)).toBeInTheDocument();
+      expect(screen.queryByText(/Add meg az egyedi végösszeget/)).not.toBeInTheDocument();
     });
 
     it('a sorok összege fölé írt cél felárat ad, nincs felső korlát (D69, 2. döntés)', async () => {

@@ -1883,10 +1883,19 @@ function EgyediVegosszegBlokk({
   }, [celVegosszeg]);
   const [pendingZero, setPendingZero] = useState<{ kedvezmeny: number } | null>(null);
 
+  // Van-e ÉRVÉNYES, commitált érték a mezőben -- ezt nézi a kötelező-mező
+  // hiba (D521: csak blur után), NEM a `kedvezmenyOsszeg` propot és NEM
+  // `hiba`-val azonos módon state-et: a NumberField saját `onBlur`-ja
+  // ugyanabban a tickben fut le, mint ami a commitot kiváltja, egy
+  // `setState` hatása csak a KÖVETKEZŐ renderben érne vissza (lásd
+  // ElolegBlokk D518-kommentje) -- ref kell, hogy a blur-kor friss legyen.
+  const helyesErtekRef = useRef(kedvezmenyOsszeg != null);
+
   function commitCel(v: number) {
     setHiba(false);
     const target = Math.max(0, Math.round(v));
     const nextKedvezmeny = sorszintuOsszeg - target;
+    helyesErtekRef.current = true;
     if (target === 0 && !nullaMegerositve) {
       setPendingZero({ kedvezmeny: nextKedvezmeny });
       return;
@@ -1902,10 +1911,12 @@ function EgyediVegosszegBlokk({
           onCheckedChange={(checked) => {
             if (checked === true) {
               setBe(true);
+              helyesErtekRef.current = false;
             } else {
               setBe(false);
               setHiba(false);
               setPendingZero(null);
+              helyesErtekRef.current = false;
               onChange(null);
             }
           }}
@@ -1914,22 +1925,7 @@ function EgyediVegosszegBlokk({
       </Text>
 
       {be && (
-        <Box
-          mt="2"
-          onBlur={(e) => {
-            // D521: a kötelező-mező hiba csak blur/véglegesítési kísérlet
-            // UTÁN jelenik meg, nem azonnal a kapcsoló bekapcsolásakor --
-            // és nem akkor, ha épp a 0-megerősítés dialógusa nyílik (az
-            // maga is fókuszt visz el a mezőről).
-            if (
-              !e.currentTarget.contains(e.relatedTarget as Node | null) &&
-              kedvezmenyOsszeg == null &&
-              pendingZero === null
-            ) {
-              setHiba(true);
-            }
-          }}
-        >
+        <Box mt="2">
           <Flex justify="between" align="center" gap="3">
             <Text size="2" color="gray">
               Egyedi végösszeg
@@ -1946,6 +1942,9 @@ function EgyediVegosszegBlokk({
                 // szabad elvinni a fókuszt.
                 autoFocus={kedvezmenyOsszeg == null}
                 onCommit={commitCel}
+                // D521: a kötelező-mező hiba csak blur/véglegesítési kísérlet
+                // UTÁN jelenik meg, nem azonnal a kapcsoló bekapcsolásakor.
+                onBlur={() => setHiba(!helyesErtekRef.current)}
               />
             </Box>
           </Flex>
@@ -2036,9 +2035,11 @@ function ElolegBlokk({
   // Van-e ÉRVÉNYES, commitált összeg a mezőben -- ezt nézi a kötelező-mező
   // hiba (D518: csak blur/véglegesítési kísérlet után), NEM a prop-ot: az
   // `onChange` a szülő state-jét frissíti, ami csak a KÖVETKEZŐ renderben ér
-  // vissza propként, az `onCommit`-tal egy tickben lefutó `onBlur` még a
-  // régi (stale) propot látná.
-  const [helyesErtek, setHelyesErtek] = useState(() => elolegOsszeg != null);
+  // vissza propként. Ugyanígy nem lehet React state sem: az `onCommit`-tal
+  // egy tickben lefutó NumberField `onBlur` a JELENLEGI render zárványát
+  // látja, egy `setState` hatása is csak a KÖVETKEZŐ renderben érne vissza
+  // -- ezért ref, nem state.
+  const helyesErtekRef = useRef(elolegOsszeg != null);
   const [hibaLatszik, setHibaLatszik] = useState(false);
 
   // Külső prop-változást követ (pl. terv betöltése/másolása) -- a doki
@@ -2046,7 +2047,7 @@ function ElolegBlokk({
   // `focused`-őre már megvédi, ez csak a kapcsoló ki/be állapotát.
   useEffect(() => {
     setOn(elolegOsszeg != null);
-    setHelyesErtek(elolegOsszeg != null);
+    helyesErtekRef.current = elolegOsszeg != null;
   }, [elolegOsszeg]);
 
   const tullepi = on && elolegOsszeg != null && elolegTullepi(grand, elolegOsszeg);
@@ -2060,12 +2061,12 @@ function ElolegBlokk({
           onCheckedChange={(checked) => {
             if (checked === true) {
               setOn(true);
-              setHelyesErtek(false);
+              helyesErtekRef.current = false;
               setHibaLatszik(false);
               return;
             }
             setOn(false);
-            setHelyesErtek(false);
+            helyesErtekRef.current = false;
             setHibaLatszik(false);
             onChange(null);
           }}
@@ -2093,16 +2094,16 @@ function ElolegBlokk({
                   // értelmes állapot).
                   if (v === 0) {
                     setOn(false);
-                    setHelyesErtek(false);
+                    helyesErtekRef.current = false;
                     setHibaLatszik(false);
                     onChange(null);
                     return;
                   }
-                  setHelyesErtek(true);
+                  helyesErtekRef.current = true;
                   setHibaLatszik(false);
                   onChange(Math.max(0, Math.round(v)));
                 }}
-                onBlur={() => setHibaLatszik(!helyesErtek)}
+                onBlur={() => setHibaLatszik(!helyesErtekRef.current)}
               />
             </Box>
           </Flex>
