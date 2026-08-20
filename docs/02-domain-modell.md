@@ -310,7 +310,11 @@ kerekítési hiba az összegzésben.
 
   // Opcionális (hiányozhat egy régi fájlból, ilyenkor `true`-ként
   // olvasandó). Lásd "Tétel-leírás" lentebb.
-  "leirasokMutatasa": true
+  "leirasokMutatasa": true,
+
+  // Opcionális (hiányozhat egy régi fájlból, ilyenkor `false`-ként
+  // olvasandó). Lásd "Csak ajánlat mód" lentebb.
+  "csakAjanlat": false
 }
 ```
 
@@ -534,6 +538,34 @@ a terv-szintű eltérés összege a listaártól, véglegesítéskor számolva),
 `kedvezmenyOsszeg` a BEMENET (a doki által beállított terv-szintű összeg).
 A kedvezmény összege — akárcsak az előlegnél — sehol nem jelenik meg a
 nyomtatványon (D9), csak a `Fizetendő` lesz kisebb.
+
+### Csak ajánlat mód (`csakAjanlat`, D75)
+
+A doki választhatja, hogy a generált PDF a hazavitt, "csak ajánlat"
+példány legyen — ilyenkor a 4. oldal (nyilatkozat + aláírás) kimarad, a
+2–3. oldal (fizetési feltételek, garancia) változatlanul nyomtatódik
+(`docs/03-funkcionalis-spec.md` § 4. Előnézet és véglegesítés). `false`
+(vagy hiányzó mező egy régi `terv.json`-ben) = teljes dokumentum. Nem
+emelt `schemaVersion`-t, a `leirasokMutatasa`/`elolegOsszeg`/
+`kedvezmenyOsszeg` mintáját követve.
+
+A mezőbe a piszkozatban mindig a doki **nyers kézi választása** kerül — a
+placeholder-jelölésű nyilatkozat miatti kényszer (D23) sosem íródik bele
+szerkesztés közben, csak a felületen jelenik meg bepipálva/letiltva
+állapotban. **Véglegesítéskor viszont az EFFEKTÍV érték mentődik** (a
+kézi választás VAGY a placeholder-kényszer): a mentett `terv.json`
+ezáltal mindig azt tükrözi, amit a ténylegesen kiadott PDF tartalmazott,
+nem azt, amit a doki elméletileg bepipálhatott volna. Egy placeholder
+miatt kényszerítve, aláírás-oldal nélkül kiadott verzió tehát
+`csakAjanlat: true`-val mentődik akkor is, ha a doki sosem kattintott a
+checkboxra.
+
+"Új verzió" nyitásakor a mező a meglévő `frissDatummal()` teljes
+spreadje miatt automatikusan öröklődik — a betöltött draft ugyanazt az
+állapotot mutatja, mint az előző verzió véglegesítésekor. "Másolás új
+tervbe" (`planMasolatKent()`) ezzel szemben EXPLICIT `false`-ra állítja:
+egy másolatból induló új terv-lánc mindig teljes dokumentumból indul,
+függetlenül attól, hogy a forrás csak ajánlat volt-e.
 
 ### Miért van `osszesitok`, ha származtatható
 

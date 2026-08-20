@@ -936,8 +936,8 @@ describe('OsszesTervSection', () => {
       expect(within(fogkoDoboz).queryByText('Legutóbbi')).not.toBeInTheDocument();
     });
 
-    // 70. tétel (D558): a "Csak ajánlat" jelvény a MÁR betöltött
-    // `plansByVersion`-ből olvas, a "Legutóbbi" jelvény mintáján.
+    // D75: a "Csak ajánlat" jelvény a MÁR betöltött `plansByVersion`-ből
+    // olvas, a "Legutóbbi" jelvény mintáján.
     it('"Csak ajánlat" jelvény csak azon a verziósoron jelenik meg, aminek plan.csakAjanlat === true', async () => {
       const user = userEvent.setup();
       const [v1, v2] = nagyEvaMultiVersionChain;

@@ -50,8 +50,9 @@ export default function PreviewPage() {
   const { storage, loadLatestTemplateByBase } = useStorage();
   const navigate = useNavigate();
 
-  // A doki nyers kézi választása -- a `Plan` mezője (70. tétel), nem helyi
-  // state, hogy navigáció oda-vissza és az autosave is megőrizze.
+  // A doki nyers kézi választása -- a `Plan` mezője (docs/02-domain-modell.md
+  // § Csak ajánlat mód, D75), nem helyi state, hogy navigáció oda-vissza és
+  // az autosave is megőrizze.
   const offerOnly = plan.csakAjanlat === true;
   const [nyilatkozatMd, setNyilatkozatMd] = useState('');
   // A ténylegesen megjelenített nyilatkozat-verzió fájlneve (kiterjesztés

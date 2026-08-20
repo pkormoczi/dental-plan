@@ -36,16 +36,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-67-veglegesitesi-validacio-terv.md`
 
-### 70. tétel — „Csak ajánlat" mód
-  (a `backlog/redesign/` redesign-döntéssorozat DP-054 tétele) — a
-  "Csak ajánlat" kapcsoló ma kizárólag `PreviewPage.tsx` helyi React
-  state-je, nincs `Plan`-mezője — sem perzisztencia (navigáció
-  visszaállítja), sem öröklés Új verziónál (D554), sem badge-adat a
-  véglegesített verzióhoz (D558) nem lehetséges. Ez a tétel additív
-  `Plan.csakAjanlat` mezőt vezet be, a meglévő draft-state/autosave
-  útvonalba kötve. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-70-csak-ajanlat-terv.md`
-
 ### 71. tétel — Final terv részletei alapnézet és verziónavigáció
   (a `backlog/redesign/` redesign-döntéssorozat DP-060 tétele) — ma
   EGYÁLTALÁN NEM létezik strukturált, read-only "Terv részletei" nézet:
@@ -176,10 +166,11 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ### 82. tétel — PDF nyilatkozat és aláírásblokk
   (a `backlog/redesign/` redesign-döntéssorozat DP-076 tétele) — a
-  `Plan.csakAjanlat` mezőre állás már a 70. tétel hatásköre, ez a
-  MEGLÉVŐ `offerOnly` prop forrását cseréli React state-ről a mentett
-  mezőre, a PDF-oldali logikát (`{!offerOnly && ...}`) változatlanul
-  hagyva. Az aláírásblokk AS-IS elrendezése, a nyilatkozat folytatólagos
+  `Plan.csakAjanlat` mezőre állás már megvan (`docs/02-domain-modell.md`
+  § Csak ajánlat mód, D75), ez a MEGLÉVŐ `offerOnly` prop forrását
+  cseréli React state-ről a mentett mezőre, a PDF-oldali logikát
+  (`{!offerOnly && ...}`) változatlanul hagyva. Az aláírásblokk AS-IS
+  elrendezése, a nyilatkozat folytatólagos
   „– folytatás" címe (D587, a react-pdf `subPageNumber`-ével — az
   EGYETLEN hely, ahol a 76. tétel elvetett folytatólagos-cím mechanizmusa
   mégis natívan megvalósul), és egy új árva-védelem az utolsó bekezdés és

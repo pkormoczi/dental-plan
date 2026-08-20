@@ -717,7 +717,14 @@ mérlegelni, mert a doki úgysem látja a tartalmát.
 - A `PrintPreview` komponens rendereli a négy oldalt.
 - Kapcsoló: **„csak ajánlat"** — ilyenkor a 4. oldal (nyilatkozat és
   aláírás) kimarad. Ez a hazavitt példány. A 3. oldal (garancia) ettől
-  függetlenül mindig megjelenik.
+  függetlenül mindig megjelenik. A kapcsoló a `Plan.csakAjanlat` mezőn él
+  (`docs/02-domain-modell.md` § Csak ajánlat mód, D75), nem helyi
+  képernyő-állapot — navigáció oda-vissza és az autosave is megőrzi,
+  „Új verzió" nyitásakor öröklődik, „Másolás új tervbe" viszont mindig
+  visszaáll kikapcsolt állapotra. Véglegesítéskor a mentett érték a
+  ténylegesen kiadott PDF-et tükrözi (a placeholder-kényszer is belekerül,
+  lásd lentebb a Sablon-placeholder őrt) — egy már véglegesített verzió
+  verziósora (§ 5) ez alapján mutat „Csak ajánlat" jelvényt.
 - Véglegesítéskor:
   1. `tervId` generálás (új terv) vagy verzió növelés (meglévő)
   2. PDF generálás, a `terv.json` beágyazásával
@@ -977,8 +984,12 @@ verziószám), csukott állapotban a lánc végösszegét is — nyitva ez az
 utóbbi elmarad, mert redundáns a lent következő legfrissebb verziósor
 azonos értékével. A lánc legfrissebb verziósora, ha a láncnak 2+ verziója
 van, „Legutóbbi” jelvényt kap (egyverziós láncon nem, funkciótlan dísz
-lenne). A böngésző-"vissza" navigációnál a lánc-nyitottság és a
-keresőszöveg is visszaáll (`components/useListStateMemory.ts`).
+lenne). Egy „csak ajánlat” módban véglegesített verzió (`plan.csakAjanlat
+=== true`, docs/02-domain-modell.md § Csak ajánlat mód, D75) során
+ugyanígy egy semleges „Csak ajánlat” jelvény jelenik meg — a MÁR
+betöltött verzió-adatból, nincs hozzá külön storage-hívás. A böngésző-
+"vissza" navigációnál a lánc-nyitottság és a keresőszöveg is visszaáll
+(`components/useListStateMemory.ts`).
 
 A láncok a bennük lévő legfrissebb VÉGLEGESÍTETT verzió dátuma szerint
 csökkenő sorrendben jelennek meg — NEM a lánc létrehozási (legkorábbi
@@ -1201,15 +1212,17 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   `kedvezmenyOsszeg` változatlanul átjön — ugyanaz a snapshot-elv, mint
   egy meglévő terv új verzióra nyitásakor. Ez a valódi A/B alku-változat
   használati eset: a doki utána csak azt módosítja, ami eltér a két
-  ajánlat között, nem gépeli be újra az egészet. Három mező KIVÉTEL: az
+  ajánlat között, nem gépeli be újra az egészet. Négy mező KIVÉTEL: az
   **`orvos`** (D67) — MINDIG a mai globális alapértelmezett orvos, a
   forrás orvosa SOSEM másolódik át; a **sorok és az `arlistaVerzio`**
   (D70) — azok a sorok, amik a forrásban PONTOSAN követték az akkori
   árlistát (ár ÉS név ÉS leírás is), a másolás pillanatában az AKTUÁLIS
   árlistára frissülnek, a kézzel felülírt sorok érintetlenek maradnak, a
   másolat `arlistaVerzio`-ja az aktuális árlistáé lesz, és nem indul
-  elavult árakkal; és a **`paciens` blokk** (D57) — ha a pácienshez van
-  lezárt törzsadat (`paciens-adatok.json`), onnan jön,
+  elavult árakkal; a **`csakAjanlat`** (D75) — MINDIG `false`-ra áll,
+  a forrás „csak ajánlat” állapota SOSEM másolódik át, a másolat mindig
+  teljes dokumentumból indul; és a **`paciens` blokk** (D57) — ha a
+  pácienshez van lezárt törzsadat (`paciens-adatok.json`), onnan jön,
   nem a forrás verzió pillanatképéből — a másolás pillanatában a doki a
   páciens JELENLEGI adatát várja az új ajánlatba, nem egy esetleg
   elavult telefonszámot/címet. Törzsadat híján a forrás pillanatképe

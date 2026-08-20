@@ -1869,3 +1869,27 @@ karbantartási kör négy önálló javítása.
   minősül mentési hibának (docs/01-attekintes-es-dontesek.md D74,
   docs/03-funkcionalis-spec.md § 4 "Előnézet és véglegesítés",
   docs/05-technologia.md § "Piszkozat-autosave").
+
+---
+
+### 70. tétel: „Csak ajánlat” mód — KÉSZ (2026-08-20)
+
+- **Méret:** kicsi (öt fájl érdemi módosítása + öt új/bővített teszt-fájl).
+- **Kereteket sért?** Nem — új D75 (`docs/01-attekintes-es-dontesek.md`),
+  additív mező, nincs sémaváltozás.
+- **Hiányzó feature:** a „Csak ajánlat” kapcsoló kizárólag a
+  `PreviewPage.tsx` helyi React state-je volt — nem élte túl a
+  navigációt, nem öröklődött „Új verzió” nyitásakor, és egy
+  véglegesített `terv.json`-ból utólag nem volt kiolvasható.
+- **Megvalósítás:** additív `Plan.csakAjanlat?: boolean` mező a meglévő
+  draft-state/autosave/`finalPlan`-spread útvonalba kötve. Friss terv
+  `false`-ból indul, „Új verzió” nyitása a meglévő `frissDatummal()`
+  spreadje miatt automatikusan örökli, „Másolás új tervbe” explicit
+  `false`-ra állítja. Véglegesítéskor a mentett érték az EFFEKTÍV
+  állapot (kézi választás VAGY a placeholder-nyilatkozat miatti
+  kényszer) — a mentett `terv.json` mindig a ténylegesen kiadott PDF-et
+  tükrözi. A véglegesített verziók sorában (`PatientPlanChains.tsx`)
+  ez alapján jelenik meg egy „Csak ajánlat” jelvény
+  (docs/01-attekintes-es-dontesek.md D75, docs/02-domain-modell.md
+  § "Csak ajánlat mód", docs/03-funkcionalis-spec.md § 4 "Előnézet és
+  véglegesítés" és § 5 "Terv-láncok és verziók").

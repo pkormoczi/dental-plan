@@ -1194,8 +1194,8 @@ describe('PreviewPage -- letöltési fájlnév', () => {
   );
 });
 
-// 70. tétel: a "Csak ajánlat" a `Plan.csakAjanlat` mezője, nem helyi
-// React state -- navigáció oda-vissza megőrzi, és a mentett terv.json is
+// D75: a "Csak ajánlat" a `Plan.csakAjanlat` mezője, nem helyi React
+// state -- navigáció oda-vissza megőrzi, és a mentett terv.json is
 // tükrözi a ténylegesen kiadott PDF-et.
 describe('PreviewPage -- backlog-70: "Csak ajánlat" mező perzisztencia és véglegesített érték', () => {
   beforeEach(() => {

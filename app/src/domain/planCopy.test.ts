@@ -337,8 +337,8 @@ describe('planMasolatKent', () => {
     expect(masolat.orvos).not.toBe(plan.orvos);
   });
 
-  // 70. tétel (D555): a "Csak ajánlat" állapot NEM öröklődik másoláskor --
-  // ellentétben az "Új verzió" nyitással (frissDatummal, ujVerzioDatum.test.ts).
+  // D75: a "Csak ajánlat" állapot NEM öröklődik másoláskor -- ellentétben
+  // az "Új verzió" nyitással (frissDatummal, ujVerzioDatum.test.ts).
   it('a csakAjanlat mindig false-ra áll, függetlenül a forrás állapotától', () => {
     const plan = makePlan({ csakAjanlat: true });
     const masolat = planMasolatKent(plan, settings, '2026-08-10');
