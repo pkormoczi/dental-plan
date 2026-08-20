@@ -220,7 +220,7 @@ export default function ItemPicker({
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  {formatPrice(r.ar[currency], currency)}
+                  {formatPrice(r.ar[currency], currency, nyelv)}
                 </span>
               </div>
             </div>

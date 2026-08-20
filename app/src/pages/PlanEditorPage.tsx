@@ -364,9 +364,12 @@ export default function PlanEditorPage() {
 
       {/* docs/03-funkcionalis-spec.md § Korábbi terv új verzióra nyitása:
           semleges szín -- ez várt, nem hiba-jellegű viselkedés, az amber az alatta lévő valódi
-          anomáliának (loadedOsszesitokDiff) van fenntartva. A `nyelv`
-          paraméter fixen 'hu': a kezelőfelület a CLAUDE.md szerint végig
-          magyar marad, a nyelvfüggő formázás csak a pdf/ alatt él. */}
+          anomáliának (loadedOsszesitokDiff) van fenntartva. A dátum-Callout
+          `formatLongDate` hívása fixen 'hu': ez UI-próza, a kezelőfelület
+          a CLAUDE.md szerint végig magyar marad -- a lentebbi
+          `formatMoney`-hívások ezzel szemben a terv nyelvét (`nyelv`)
+          követik, mert azok a dokumentum tartalmát tükrözik (1:1 a
+          generált PDF-fel, 52. tétel). */}
       {frissitettDatum && (
         <Callout.Root color="gray" mb="4">
           <Callout.Icon>
@@ -385,8 +388,10 @@ export default function PlanEditorPage() {
         <Callout.Root color="amber" mb="4">
           <Callout.Text>
             A betöltött terv mentett összesítője nem egyezik az itt újraszámolt értékkel —
-            mentett fizetendő: <Text weight="bold">{formatMoney(plan.osszesitok.fizetendo, currency)}</Text>,
-            újraszámolva: <Text weight="bold">{formatMoney(loadedOsszesitokDiff.fizetendo, currency)}</Text>.
+            mentett fizetendő:{' '}
+            <Text weight="bold">{formatMoney(plan.osszesitok.fizetendo, currency, nyelv)}</Text>,
+            újraszámolva:{' '}
+            <Text weight="bold">{formatMoney(loadedOsszesitokDiff.fizetendo, currency, nyelv)}</Text>.
             A fájlban lévő (mentett) érték az igazság — az aláírt papírral kell egyeznie —, ezt nem
             írjuk felül automatikusan.
           </Callout.Text>
@@ -495,10 +500,11 @@ export default function PlanEditorPage() {
         <Separator size="4" />
         <Flex mt="4" justify="end">
           <Box style={{ flex: '0 1 320px' }}>
-            <Summary grand={grand} listTotal={listTotal} currency={currency} />
+            <Summary grand={grand} listTotal={listTotal} currency={currency} nyelv={nyelv} />
             <KerekVegosszegBlokk
               sorszintuOsszeg={sorszintuOsszeg}
               currency={currency}
+              nyelv={nyelv}
               kedvezmenyOsszeg={plan.kedvezmenyOsszeg ?? null}
               onChange={(next) =>
                 updatePlan((draft) => {
@@ -509,6 +515,7 @@ export default function PlanEditorPage() {
             <ElolegBlokk
               grand={grand}
               currency={currency}
+              nyelv={nyelv}
               elolegSzazalek={plan.elolegSzazalek ?? null}
               onChange={(next) =>
                 updatePlan((draft) => {
@@ -774,7 +781,7 @@ function PhaseSection({
               a törzs ugyanezt (táblázat + lábléc) részletesen mutatja. */}
           {!open && (
             <Text size="2" color="gray" style={{ whiteSpace: 'nowrap' }}>
-              {phase.sorok.length} tétel · {formatMoney(total, currency)}
+              {phase.sorok.length} tétel · {formatMoney(total, currency, nyelv)}
             </Text>
           )}
         </Flex>
@@ -908,7 +915,7 @@ function PhaseSection({
             style={{ borderTop: `1px solid ${t.uiLine}` }}
           >
             <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              Fázis összesen: <Text weight="bold">{formatMoney(total, currency)}</Text>
+              Fázis összesen: <Text weight="bold">{formatMoney(total, currency, nyelv)}</Text>
             </Text>
           </Flex>
         </Box>
@@ -1205,7 +1212,7 @@ function LineRow({
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums', color: t.uiTextFaint }}>
         {/* Egyedi sornál nincs értelmezhető árlistai referenciaár -- lásd
             sorMezokEgyedibol. */}
-        {egyedi ? '—' : formatMoney(line.listaEgysegar, currency)}
+        {egyedi ? '—' : formatMoney(line.listaEgysegar, currency, nyelv)}
       </Table.Cell>
 
       <Table.Cell justify="end">
@@ -1243,7 +1250,7 @@ function LineRow({
       </Table.Cell>
 
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>
-        {formatMoney(line.tenylegesEgysegar * line.mennyiseg, currency)}
+        {formatMoney(line.tenylegesEgysegar * line.mennyiseg, currency, nyelv)}
       </Table.Cell>
 
       <Table.Cell>
@@ -1285,10 +1292,12 @@ function Summary({
   grand,
   listTotal,
   currency,
+  nyelv,
 }: {
   grand: number;
   listTotal: number;
   currency: Penznem;
+  nyelv: Nyelv;
 }) {
   // A két ág kizárja egymást (`listTotal` és `grand` közül csak az egyik
   // lehet nagyobb). A felár azonos vizuális súlyt kap, mint a kedvezmény:
@@ -1310,17 +1319,17 @@ function Summary({
           weight="bold"
           style={{ color: t.brand, fontVariantNumeric: 'tabular-nums' }}
         >
-          {formatMoney(grand, currency)}
+          {formatMoney(grand, currency, nyelv)}
         </Text>
         {discount > 0 && (
           // Csak a szerkesztőben látszik. A nyomtatványon NEM (D9).
           <Text as="div" size="2" style={{ color: t.ok }}>
-            Kedvezmény: {formatMoney(discount, currency)}
+            Kedvezmény: {formatMoney(discount, currency, nyelv)}
           </Text>
         )}
         {surcharge > 0 && (
           <Text as="div" size="2" style={{ color: t.ok }}>
-            Felár: {formatMoney(surcharge, currency)}
+            Felár: {formatMoney(surcharge, currency, nyelv)}
           </Text>
         )}
       </Box>
@@ -1343,11 +1352,13 @@ function Summary({
 function KerekVegosszegBlokk({
   sorszintuOsszeg,
   currency,
+  nyelv,
   kedvezmenyOsszeg,
   onChange,
 }: {
   sorszintuOsszeg: number;
   currency: Penznem;
+  nyelv: Nyelv;
   kedvezmenyOsszeg: number | null;
   onChange: (next: number | null) => void;
 }) {
@@ -1393,7 +1404,7 @@ function KerekVegosszegBlokk({
             </Box>
           </Flex>
           <Text as="div" size="2" color="gray" mt="1" style={{ textAlign: 'right' }}>
-            → {formatMoney(kedvezmenyOsszeg, currency)} kedvezmény
+            → {formatMoney(kedvezmenyOsszeg, currency, nyelv)} kedvezmény
           </Text>
           {tulLog && (
             <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
@@ -1418,11 +1429,13 @@ function KerekVegosszegBlokk({
 function ElolegBlokk({
   grand,
   currency,
+  nyelv,
   elolegSzazalek,
   onChange,
 }: {
   grand: number;
   currency: Penznem;
+  nyelv: Nyelv;
   elolegSzazalek: number | null;
   onChange: (next: number | null) => void;
 }) {
@@ -1466,7 +1479,7 @@ function ElolegBlokk({
                 weight="medium"
                 style={{ fontVariantNumeric: 'tabular-nums', minWidth: '6.5rem', textAlign: 'right' }}
               >
-                {formatMoney(osszegek!.eloleg, currency)}
+                {formatMoney(osszegek!.eloleg, currency, nyelv)}
               </Text>
             </Flex>
           </Flex>
@@ -1475,7 +1488,7 @@ function ElolegBlokk({
               Fennmaradó rész
             </Text>
             <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {formatMoney(osszegek!.fennmarado, currency)}
+              {formatMoney(osszegek!.fennmarado, currency, nyelv)}
             </Text>
           </Flex>
         </Box>

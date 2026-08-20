@@ -123,7 +123,7 @@ A lap hat, vizuálisan elkülönített szekcióra tagolódik, ebben a
 sorrendben: **Terv címe** → **Páciens adatai** (a személyes adatok +
 beágyazva a „Páciens törzsadata” diff) → **Dokumentum nyelve** →
 **Pénznem** → **Kezelőorvos** → **Dátumok**. A Dokumentum nyelve/Pénznem
-szekció ugyanazon a feltételen jelenik/tűnik el (lásd lent); a Kezelőorvos
+szekció mindig látszik, feltétel nélkül (52. tétel, D63); a Kezelőorvos
 szekció ma egy egyszerű, csak olvasható mezőt tart (a tényleges
 orvosválasztó UI külön tétel hatóköre).
 
@@ -151,19 +151,19 @@ D27) mutatja placeholderként. A mappanév-képzés (`storage.savePlan()`)
 ettől függetlenül VÁLTOZATLANUL az élő javaslatból képződik (D29) — a
 kézzel beírt cím sosem befolyásolja a fizikai mappanevet.
 
-### Dokumentum nyelve / Pénznem (D21)
+### Dokumentum nyelve / Pénznem (D21, D63)
 
-Két külön szekció, ami **csak akkor jelenik meg, ha
-`beallitasok.nemetEngedelyezve === true`** — vagy ha a piszkozat már
-németül indult (hogy egy időközben kikapcsolt kapcsoló ne tegye
-szerkeszthetetlenül némává egy folyamatban lévő német tervet). A két
+Két külön szekció, ami **mindig látszik**, feltétel nélkül — a német
+nyelv választásához nincs engedélyező kapcsoló (52. tétel, D63). A két
 szekció egymástól **független** kétállású kapcsolót tart:
 
 - **Nyelv** (`hu` / `de`) — a nyomtatvány szövege: a tételnevek (ha
   van hozzájuk fordítás), a PDF fix feliratai, a dátumformátum, a
-  sablonszövegek (nyilatkozat, fizetési feltételek, garancia).
+  sablonszövegek (nyilatkozat, fizetési feltételek, garancia), és a
+  pénzösszegek ezres/tizedes elválasztója (D63).
 - **Pénznem** (`HUF` / `EUR`) — az ajánlható tételkör (csak azok a
-  tételek, amiknek van áruk ebben a pénznemben) és a pénzformátum.
+  tételek, amiknek van áruk ebben a pénznemben), és a pénzösszeg
+  tizedesjegyeinek száma/pénznemjele.
 
 A német páciens a legvalószínűbb ok, amiért ez a kettő szétválik: sokan
 Magyarországon, forintban fizetnek. Alapértéke ezért `HUF`, még német
@@ -173,15 +173,16 @@ terv, lásd alább.
 **Öröklés meglévő pácienshez induló új láncnál (D52):** ha a pácienshez
 van legalább egy VÉGLEGESÍTETT terve, az új lánc ennek a nyelvét/
 pénznemét veszi át kiinduló értékként (a doki utólag szabadon
-módosíthatja, amíg a kártya szerkeszthető). Csak PISZKOZAT-státuszú
-tervek, vagy egyetlen korábbi terv híján a fenti globális alapérték
-marad érvényben.
+módosíthatja). Csak PISZKOZAT-státuszú tervek, vagy egyetlen korábbi
+terv híján a fenti globális alapérték marad érvényben.
 
-Mindkettő **az első mentés után fagy** (D4) — mindkét szekció ilyenkor
-statikus szöveget mutat, chipek nélkül; új tervet kell nyitni a
-váltáshoz. A D4 „nem módosítható” megjegyzés szándékosan csak EGYSZER
-jelenik meg, a Pénznem szekció alján, annak ellenére, hogy mindkét
-mezőre vonatkozik.
+**A teljes piszkozat-életciklus alatt szabadon módosítható** (D63) —
+a technikai autosave/mentés nem fagyasztja ezeket az értékeket, csak a
+véglegesítés hozza létre az immutable pillanatképet. Egy már
+véglegesített verzió megtekintésének nincs ezen a lapon szerkeszthető
+útja — a „Korábbi tervek” listáról induló „Megnézés” a mentett PDF-et
+nyitja meg, nem ezt a lapot; az itt szerkeszthető nyelv/pénznem mindig egy
+draft (PISZKOZAT-státuszú) tervhez tartozik.
 
 **Nyelváltás (fagyás előtt) megőrzi a kézzel szerkesztett sorneveket**
 (D24): egy `tetelId`-hez kötött sor neve **csak akkor** frissül az új
@@ -1290,16 +1291,15 @@ elvetést választja.
 ### Egyéb
 
 - Ajánlat érvényessége napokban (alapérték 90)
-- **Német nyelvű ajánlat engedélyezése** (`nemetEngedelyezve`) — checkbox.
-  Bekapcsolva megjelenik az **alapértelmezett nyelv** kapcsolója (ez lesz
-  az új tervek nyelve), alatta a **német tartalom készültsége**:
-  hány aktív tételnek van már német neve, hány tételnek van EUR ára, és a
-  `nyilatkozat-de-v1.md` státusza (placeholder, amíg a jogi fordítás el
-  nem készül) — link a Kezelések és árak oldalra, ahol a „Nincs EUR ár"
-  szűrő a munkalista. A készültség-blokk a MÉG NEM MENTETT
-  `nemetEngedelyezve` draft-jából jelenik meg (a checkbox bepipálására
-  azonnal látszik), a nyilatkozat státuszát a tab saját maga tölti be,
-  függetlenül a Nyomtatványok tabtól.
+- **Alapértelmezett nyelv** (`alapertelmezettNyelv`) kapcsolója — ez lesz
+  az új tervek nyelve, öröklés híján (D52). Feltétel nélkül látszik (D63),
+  nincs hozzá engedélyező kapcsoló. Alatta a **német tartalom
+  készültsége**, szintén feltétel nélkül: hány aktív tételnek van már
+  német neve, hány tételnek van EUR ára, és a `nyilatkozat-de-v1.md`
+  státusza (placeholder, amíg a jogi fordítás el nem készül) — link a
+  Kezelések és árak oldalra, ahol a „Nincs EUR ár" szűrő a munkalista. A
+  nyilatkozat státuszát a tab saját maga tölti be, függetlenül a
+  Nyomtatványok tabtól.
 
 ---
 

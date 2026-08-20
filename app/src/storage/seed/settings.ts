@@ -16,5 +16,4 @@ export const seedSettings: Settings = {
   orvosok: ['Dr. Mándoki István'],
   ervenyessegNap: 90,
   alapertelmezettNyelv: 'hu',
-  nemetEngedelyezve: true,
 };

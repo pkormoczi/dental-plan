@@ -201,33 +201,18 @@ describe('SettingsPage', () => {
   });
 
   describe('Egyéb', () => {
-    // A seed nemetEngedelyezve:true (mockup-alapérték) -- a készültség-blokk
-    // emiatt alapból látszik, a checkbox kikapcsolása azonnal (Mentés
-    // nélkül) elrejti, mert a blokk a DRAFT-ból, nem a mentett állapotból
-    // olvas.
-    it('a német engedélyezés draftja azonnal mutatja/elrejti a "német tartalom készültsége" blokkot, Mentés nélkül', async () => {
+    // 52. tétel: a `nemetEngedelyezve` funkciókapcsoló megszűnt -- a német
+    // tartalom készültsége blokk és az alapértelmezett nyelv váltó feltétel
+    // nélkül, gate/checkbox nélkül látszik.
+    it('a "német tartalom készültsége" blokk feltétel nélkül látszik, nincs engedélyező checkbox', async () => {
       const user = userEvent.setup();
       renderSettings();
       await goToTab(user, /Egyéb/);
 
       expect(await screen.findByText('A német tartalom készültsége')).toBeInTheDocument();
-
-      await user.click(screen.getByRole('checkbox', { name: 'Német nyelvű ajánlat engedélyezése' }));
-      expect(screen.queryByText('A német tartalom készültsége')).not.toBeInTheDocument();
-    });
-
-    it('a német nyelv kikapcsolása + Mentés után a Nyomtatványok tabon eltűnik a HU/DE nyelvváltó', async () => {
-      const user = userEvent.setup();
-      renderSettings();
-      await goToTab(user, /Egyéb/);
-
-      await user.click(screen.getByRole('checkbox', { name: 'Német nyelvű ajánlat engedélyezése' }));
-      await user.click(screen.getByRole('button', { name: 'Mentés' }));
-      expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
-
-      await goToTab(user, /Nyomtatványok/);
-      await screen.findByLabelText('Nyilatkozat');
-      expect(screen.queryByRole('radio', { name: 'Deutsch' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('checkbox', { name: 'Német nyelvű ajánlat engedélyezése' }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -248,9 +233,9 @@ describe('SettingsPage', () => {
       expect(screen.getByText('nyilatkozat-hu-v1.md')).toBeInTheDocument();
     });
 
-    // A seed nemetEngedelyezve:true (mockup-alapérték), tehát a tab saját
-    // nyelvváltója is megjelenik -- a Deutsch chip váltás a német (AI-fordítású)
-    // szöveget mutatja, a nem mentett HU piszkozat pedig visszaváltáskor megmarad.
+    // 52. tétel: a tab nyelvváltója feltétel nélkül megjelenik -- a Deutsch
+    // chip váltás a német (AI-fordítású) szöveget mutatja, a nem mentett HU
+    // piszkozat pedig visszaváltáskor megmarad.
     it('switching the tab language to Deutsch shows the DE seed text, HU draft survives switching back', async () => {
       const user = userEvent.setup();
       renderSettings();

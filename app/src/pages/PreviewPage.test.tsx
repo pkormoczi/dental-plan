@@ -316,7 +316,7 @@ function seedGermanPlanWithOneTranslatedItem() {
   localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
   localStorage.setItem(
     'dp:beallitasok.json',
-    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true, alapertelmezettNyelv: 'de' }),
+    JSON.stringify({ ...seedSettings, alapertelmezettNyelv: 'de' }),
   );
 }
 

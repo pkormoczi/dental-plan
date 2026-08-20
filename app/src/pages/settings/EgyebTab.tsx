@@ -1,15 +1,15 @@
 // Egyéb tab -- a Beállítások tab-szerkezetének (D49) harmadik tabja: ajánlat
-// érvényessége + német nyelv engedélyezése + "A német tartalom készültsége"
+// érvényessége + alapértelmezett nyelv + "A német tartalom készültsége"
 // áttekintő (tételnév-/EUR ár-lefedettség és a nyilatkozat placeholder-
 // státusza). Korábban a `SettingsPage.tsx` "Ajánlat és nyelv" Card-ja volt,
 // leütésenkénti autosave-vel (D31); a tabosítás óta pufferelt draft +
 // explicit Mentés/Mégse.
 //
-// A készültség-blokk a DRAFT `nemetEngedelyezve`-jéből jelenik meg (a
-// checkbox bepipálására azonnal látszik), nem a mentett állapotból -- a
-// `nyilatkozat-de` sablont emiatt ez a komponens tölti be saját maga,
-// FÜGGETLENÜL a `NyomtatvanyokTab`-tól (nincs megosztott state a két tab
-// között, mindkettő a `useStorage()` `loadLatestTemplateByBase`-jét hívja).
+// A készültség-blokk feltétel nélkül látszik (52. tétel: a német nyelv
+// mindig választható, nincs hozzá engedélyező kapcsoló) -- a `nyilatkozat-de`
+// sablont emiatt ez a komponens tölti be saját maga, FÜGGETLENÜL a
+// `NyomtatvanyokTab`-tól (nincs megosztott state a két tab között, mindkettő
+// a `useStorage()` `loadLatestTemplateByBase`-jét hívja).
 
 import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -17,7 +17,6 @@ import {
   Box,
   Button,
   Callout,
-  Checkbox,
   Flex,
   Link as RadixLink,
   Text,
@@ -37,23 +36,18 @@ import { useAppState } from '../../state/AppState';
 
 interface EgyebDraft {
   ervenyessegNap: number;
-  nemetEngedelyezve: boolean;
   alapertelmezettNyelv: Nyelv;
 }
 
-function toDraft(
-  ervenyessegNap: number,
-  nemetEngedelyezve: boolean,
-  alapertelmezettNyelv: Nyelv,
-): EgyebDraft {
-  return { ervenyessegNap, nemetEngedelyezve, alapertelmezettNyelv };
+function toDraft(ervenyessegNap: number, alapertelmezettNyelv: Nyelv): EgyebDraft {
+  return { ervenyessegNap, alapertelmezettNyelv };
 }
 
 export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const { settings, saveSettings, priceList } = useAppState();
   const { loadLatestTemplateByBase } = useStorage();
   const { draft, setDraft, dirty, reset } = useDirtyDraft<EgyebDraft>(
-    toDraft(settings.ervenyessegNap, settings.nemetEngedelyezve, settings.alapertelmezettNyelv),
+    toDraft(settings.ervenyessegNap, settings.alapertelmezettNyelv),
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -72,7 +66,6 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
   const [deNyilatkozatKesz, setDeNyilatkozatKesz] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!draft.nemetEngedelyezve) return;
     let cancelled = false;
     (async () => {
       try {
@@ -88,7 +81,7 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
     return () => {
       cancelled = true;
     };
-  }, [draft.nemetEngedelyezve, loadLatestTemplateByBase]);
+  }, [loadLatestTemplateByBase]);
 
   async function handleSave() {
     setSaving(true);
@@ -119,54 +112,40 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
           />
         </Field>
 
-        <Text as="label" size="2" mt="3" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Checkbox
-            checked={draft.nemetEngedelyezve}
-            onCheckedChange={(checked) =>
-              setDraft((prev) => ({ ...prev, nemetEngedelyezve: checked === true }))
-            }
+        <Box mt="3">
+          {/* div, nem <label> -- a ChipGroup (Radix SegmentedControl) belül
+              gomb-csoportot renderel, egy <label> csak egyetlen "labelable"
+              elemet jelölhetne implicit módon. */}
+          <Text as="div" size="1" color="gray" mb="1">
+            Alapértelmezett nyelv új tervnél
+          </Text>
+          <ChipGroup
+            value={draft.alapertelmezettNyelv}
+            options={[
+              ['hu', 'Magyar'],
+              ['de', 'Deutsch'],
+            ]}
+            onChange={(nyelv) => setDraft((prev) => ({ ...prev, alapertelmezettNyelv: nyelv }))}
           />
-          Német nyelvű ajánlat engedélyezése
+        </Box>
+
+        <Text as="div" size="1" color="gray" mt="3" style={{ lineHeight: 1.7 }}>
+          <Text weight="bold">A német tartalom készültsége</Text>
+          <br />
+          Tételnevek: {cov.deNevvel} / {cov.aktivOsszes} lefordítva
+          <br />
+          EUR árak: {eurArazott} / {cov.aktivOsszes} kitöltve
+          <br />
+          Nyilatkozat:{' '}
+          <Text style={{ fontFamily: t.mono }}>{deNyilatkozatName ?? 'nyilatkozat-de-v1.md'}</Text>
+          {deNyilatkozatKesz === false && ' — placeholder, jogi lektorálás szükséges'}
+          {deNyilatkozatKesz === true && ' — kész'}
+          <br />
+          <RadixLink asChild>
+            <RouterLink to="/arlista">Kezelések és árak megnyitása</RouterLink>
+          </RadixLink>{' '}
+          — a „Nincs EUR ár” szűrő a munkalista.
         </Text>
-
-        {draft.nemetEngedelyezve && (
-          <>
-            <Box mt="3">
-              {/* div, nem <label> -- a ChipGroup (Radix SegmentedControl) belül
-                  gomb-csoportot renderel, egy <label> csak egyetlen "labelable"
-                  elemet jelölhetne implicit módon. */}
-              <Text as="div" size="1" color="gray" mb="1">
-                Alapértelmezett nyelv új tervnél
-              </Text>
-              <ChipGroup
-                value={draft.alapertelmezettNyelv}
-                options={[
-                  ['hu', 'Magyar'],
-                  ['de', 'Deutsch'],
-                ]}
-                onChange={(nyelv) => setDraft((prev) => ({ ...prev, alapertelmezettNyelv: nyelv }))}
-              />
-            </Box>
-
-            <Text as="div" size="1" color="gray" mt="3" style={{ lineHeight: 1.7 }}>
-              <Text weight="bold">A német tartalom készültsége</Text>
-              <br />
-              Tételnevek: {cov.deNevvel} / {cov.aktivOsszes} lefordítva
-              <br />
-              EUR árak: {eurArazott} / {cov.aktivOsszes} kitöltve
-              <br />
-              Nyilatkozat:{' '}
-              <Text style={{ fontFamily: t.mono }}>{deNyilatkozatName ?? 'nyilatkozat-de-v1.md'}</Text>
-              {deNyilatkozatKesz === false && ' — placeholder, jogi lektorálás szükséges'}
-              {deNyilatkozatKesz === true && ' — kész'}
-              <br />
-              <RadixLink asChild>
-                <RouterLink to="/arlista">Kezelések és árak megnyitása</RouterLink>
-              </RadixLink>{' '}
-              — a „Nincs EUR ár” szűrő a munkalista.
-            </Text>
-          </>
-        )}
       </Section>
 
       {saveError && (

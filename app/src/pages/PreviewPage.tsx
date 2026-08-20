@@ -300,7 +300,7 @@ export default function PreviewPage() {
       };
     }
     if (step === 'zero-price-rows') {
-      const nullaOsszeg = formatMoney(0, plan.penznem);
+      const nullaOsszeg = formatMoney(0, plan.penznem, plan.nyelv);
       // A toldalék pénznemenként eltér ("Ft" -> "-os", "€" -> "-s") -- a
       // cím a terv pénznemét követi, hogy EUR-ban árazott tervnél ne "0
       // Ft-os" felirat jelenjen meg (backlog-19).

@@ -18,7 +18,6 @@ import { stripMarkdownHeading } from '../../pdf/markdownLite';
 import { PREFIX } from '../../storage/DemoStorage';
 import { TEMPLATE_HEADINGS } from '../../storage/seed/templates';
 import { useStorage } from '../../storage/StorageContext';
-import { useAppState } from '../../state/AppState';
 
 type TemplateSlotKey = 'nyilatkozat' | 'fizetesi-feltetelek' | 'garancia';
 
@@ -89,7 +88,6 @@ export function clearAllTemplateDraftCache(): void {
 }
 
 export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
-  const { settings } = useAppState();
   const { storage, loadLatestTemplateByBase } = useStorage();
 
   // A tárolóból betöltött szöveg base-enként ("igazság") és a jelenleg
@@ -110,9 +108,10 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
   const [templateSaving, setTemplateSaving] = useState(false);
   const [templateSaveError, setTemplateSaveError] = useState<string | null>(null);
   const [templateSaved, setTemplateSaved] = useState(false);
-  // Melyik alapneveket töltöttük már be -- így a német engedélyezésekor
-  // csak a HIÁNYZÓ (de) sablonokat kérjük le, a magyar oldalon esetleg már
-  // megkezdett, nem mentett szerkesztés nem vész el egy újratöltéssel.
+  // Melyik alapneveket töltöttük már be -- egy újramountolásnál a már
+  // betöltött (és esetleg szerkesztett) base-eket nem kérjük le újra, a
+  // magyar oldalon esetleg már megkezdett, nem mentett szerkesztés nem
+  // vész el egy újratöltéssel.
   const loadedTemplateBasesRef = useRef<Set<string>>(new Set());
   // Dupla-kattintás elleni in-flight zár, ugyanaz a minta, mint a
   // `PreviewPage.tsx` `savingRef`-je -- a `templateSaving` state önmagában
@@ -124,12 +123,8 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
   }, [templatesDirty, onDirtyChange]);
 
   useEffect(() => {
-    if (!settings.nemetEngedelyezve && templateLang === 'de') setTemplateLang('hu');
-  }, [settings.nemetEngedelyezve, templateLang]);
-
-  useEffect(() => {
     let cancelled = false;
-    const nyelvek: Nyelv[] = settings.nemetEngedelyezve ? ['hu', 'de'] : ['hu'];
+    const nyelvek: Nyelv[] = ['hu', 'de'];
     const bases = TEMPLATE_SLOTS.flatMap((slot) => nyelvek.map((nyelv) => templateBase(slot.key, nyelv)));
     const missing = bases.filter((base) => !loadedTemplateBasesRef.current.has(base));
     if (missing.length === 0) return;
@@ -183,7 +178,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
     return () => {
       cancelled = true;
     };
-  }, [settings.nemetEngedelyezve, loadLatestTemplateByBase, setTemplateDrafts]);
+  }, [loadLatestTemplateByBase, setTemplateDrafts]);
 
   function updateTemplateDraft(key: TemplateSlotKey, value: string) {
     const base = templateBase(key, templateLang);
@@ -248,22 +243,20 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
 
   return (
     <>
-      {settings.nemetEngedelyezve && (
-        <Box mb="3">
-          {/* div, nem <label> -- lásd a ChipGroup melletti megjegyzést lent. */}
-          <Text as="div" size="1" color="gray" mb="1">
-            Nyelv
-          </Text>
-          <ChipGroup
-            value={templateLang}
-            options={[
-              ['hu', 'Magyar'],
-              ['de', 'Deutsch'],
-            ]}
-            onChange={setTemplateLang}
-          />
-        </Box>
-      )}
+      <Box mb="3">
+        {/* div, nem <label> -- lásd a ChipGroup melletti megjegyzést lent. */}
+        <Text as="div" size="1" color="gray" mb="1">
+          Nyelv
+        </Text>
+        <ChipGroup
+          value={templateLang}
+          options={[
+            ['hu', 'Magyar'],
+            ['de', 'Deutsch'],
+          ]}
+          onChange={setTemplateLang}
+        />
+      </Box>
 
       {templatesLoading ? (
         <Text as="p" size="2" color="gray">

@@ -140,6 +140,22 @@ describe('TervDocument -- backlog-12: feltételes összegsor', () => {
   });
 });
 
+// 52. tétel: a pénzösszeg ezres/tizedes elválasztója a terv NYELVÉTŐL
+// függ (formatMoney/formatPrice), nem csak a pénznemétől -- egy német
+// nyelvű, forintos terven a PDF-en is pont az elválasztó, nem szóköz.
+describe('TervDocument -- 52. tétel: nyelvfüggő pénzformátum', () => {
+  it('német nyelvű, HUF pénznemű terv: pont ezres elválasztó, nem szóköz', () => {
+    renderDoc(false, 'de', { lista: 45000, tenyleges: 45000 });
+    // A testing-library normalizálja a nem törhető szóközt (U+00A0) sima
+    // szóközre -- a query-stringben ezért sima szóköz kell, ahogy a fájl
+    // többi (HU) queryje is teszi. Az összeg a fázistáblázatban (egységár +
+    // sorösszeg) ÉS a "Zu zahlen" végösszegben is megjelenik -- getAllByText,
+    // nem getByText (ami az egyértelműséget várná el).
+    expect(screen.getAllByText('45.000 Ft').length).toBeGreaterThan(0);
+    expect(screen.queryByText('45 000 Ft')).not.toBeInTheDocument();
+  });
+});
+
 describe('TervDocument -- backlog-9: előleg-sor', () => {
   function renderEloleg(elolegSzazalek: number | null, savos = false, nyelv: Nyelv = 'hu') {
     const plan = buildPlan(savos, nyelv, { lista: 45000, tenyleges: 45000 });

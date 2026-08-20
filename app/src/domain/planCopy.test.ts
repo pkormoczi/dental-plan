@@ -16,7 +16,6 @@ const settings: Settings = {
   orvosok: ['Dr. Teszt Elek'],
   ervenyessegNap: 90,
   alapertelmezettNyelv: 'hu',
-  nemetEngedelyezve: false,
 };
 
 const priceList: PriceList = {

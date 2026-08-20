@@ -5,30 +5,47 @@
 // Ez szerződéses dokumentum: ne improvizálj toLocaleString()-gel, ez a
 // docs/04-nyomtatvany-spec.md kötelező formátuma.
 
-import type { Ar, Penznem } from './types';
+import type { Ar, Nyelv, Penznem } from './types';
+
+// D21/52. tétel: az ezres/tizedes ELVÁLASZTÓ a dokumentum NYELVÉTŐL függ
+// (hu-HU szóköz, de-DE pont), a tizedesjegyek száma és a pénznemjel a
+// PÉNZNEMTŐL -- innen a Record<Nyelv, string> locale-map, a domain/date.ts
+// LONG_DATE_LOCALE mintáján. A `nyelv` paraméter szándékosan kötelező, nem
+// defaultos -- egy alapérték elrejtene egy kihagyott hívási helyet (lásd
+// formatLongDate ugyanezen indoklását).
+const PENZ_LOCALE: Record<Nyelv, string> = { hu: 'hu-HU', de: 'de-DE' };
 
 // A HUF-nál a toLocaleString('hu-HU') mar U+00A0-t (nem torheto szokoz)
 // hasznal ezres elvalasztokent, a ' Ft' es ' €' elotti szokoz is szandekosan
 // U+00A0 -- CLAUDE.md: a penzosszeg soha nem tordelheto sortoresnel.
-export function formatMoney(value: number | null | undefined, currency: Penznem): string {
+export function formatMoney(
+  value: number | null | undefined,
+  currency: Penznem,
+  nyelv: Nyelv,
+): string {
   if (value == null || !Number.isFinite(value)) return '—';
+  const locale = PENZ_LOCALE[nyelv];
   if (currency === 'EUR') {
     return (
-      (value / 100).toLocaleString('de-DE', {
+      (value / 100).toLocaleString(locale, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }) + ' €'
     );
   }
-  return Math.round(value).toLocaleString('hu-HU') + ' Ft';
+  return Math.round(value).toLocaleString(locale) + ' Ft';
 }
 
-export function formatPrice(ar: Ar | null | undefined, currency: Penznem): string | null {
+export function formatPrice(
+  ar: Ar | null | undefined,
+  currency: Penznem,
+  nyelv: Nyelv,
+): string | null {
   if (!ar) return null;
   if (ar.tipus === 'SAVOS') {
-    return formatMoney(ar.min, currency) + '–' + formatMoney(ar.max, currency);
+    return formatMoney(ar.min, currency, nyelv) + '–' + formatMoney(ar.max, currency, nyelv);
   }
-  return formatMoney(ar.ertek, currency);
+  return formatMoney(ar.ertek, currency, nyelv);
 }
 
 /** SAVOS típusnál a `min` az egységár alapértéke. */

@@ -16,7 +16,6 @@ const settings: Settings = {
   orvosok: ['Dr. Teszt Elek'],
   ervenyessegNap: 90,
   alapertelmezettNyelv: 'hu',
-  nemetEngedelyezve: false,
 };
 
 const priceList: PriceList = {
@@ -52,7 +51,6 @@ describe('piszkozatTartalmas', () => {
     const masSettings: Settings = {
       ...settings,
       orvosok: ['Dr. Más Valaki'],
-      nemetEngedelyezve: true,
       alapertelmezettNyelv: 'de',
       ervenyessegNap: 30,
     };

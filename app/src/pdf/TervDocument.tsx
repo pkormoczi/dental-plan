@@ -6,9 +6,10 @@
 // aláírás -- ez marad ki "csak ajánlat" módban, hogy a hazavitt példány
 // ne legyen aláírandó szerződés.
 //
-// D21: a fix feliratok forrása a `pdf/labels.ts` (`plan.nyelv` szerint) --
-// ez az egyetlen hely, ahol a nyomtatvány nyelve eldől, a kezelőfelület
-// (NavBar, szerkesztő stb.) végig magyar marad.
+// D21: a fix feliratok forrása a `pdf/labels.ts` (`plan.nyelv` szerint); a
+// pénzösszegek ezres/tizedes elválasztója is `plan.nyelv`-től függ
+// (`domain/money.ts`, 52. tétel) -- a kezelőfelület prózája (NavBar,
+// szerkesztő szövegei) ettől függetlenül végig magyar marad.
 
 import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
 import { t } from '../design/tokens';
@@ -234,11 +235,13 @@ function MiniHeader({ plan, L }: { plan: Plan; L: PdfLabels }) {
 function PhaseTable({
   fazis,
   currency,
+  nyelv,
   leirasokMutatasa,
   L,
 }: {
   fazis: Fazis;
   currency: Plan['penznem'];
+  nyelv: Plan['nyelv'];
   /** docs/02-domain-modell.md § Tétel-leírás -- `plan.leirasokMutatasa`. */
   leirasokMutatasa: boolean;
   L: PdfLabels;
@@ -266,9 +269,11 @@ function PhaseTable({
               </Text>
               <Text style={[s.td, s.colFog]}>{formatTeethForPrint(sor.fogak)}</Text>
               <Text style={[s.td, s.colDb]}>{sor.mennyiseg}</Text>
-              <Text style={[s.td, s.colEgysegar]}>{formatMoney(sor.tenylegesEgysegar, currency)}</Text>
+              <Text style={[s.td, s.colEgysegar]}>
+                {formatMoney(sor.tenylegesEgysegar, currency, nyelv)}
+              </Text>
               <Text style={[s.td, s.colOsszeg]}>
-                {formatMoney(sor.tenylegesEgysegar * sor.mennyiseg, currency)}
+                {formatMoney(sor.tenylegesEgysegar * sor.mennyiseg, currency, nyelv)}
               </Text>
             </View>
             {leiras && (
@@ -285,7 +290,7 @@ function PhaseTable({
       })}
       <View style={s.phaseTotalRow}>
         <Text style={s.phaseTotalLabel}>{L.fazisOsszesen}</Text>
-        <Text style={s.phaseTotalValue}>{formatMoney(fazisOsszeg(fazis), currency)}</Text>
+        <Text style={s.phaseTotalValue}>{formatMoney(fazisOsszeg(fazis), currency, nyelv)}</Text>
       </View>
       {fazis.megjegyzes ? (
         <Text style={s.phaseNote}>
@@ -429,6 +434,7 @@ export function TervDocument({
             key={i}
             fazis={fazis}
             currency={plan.penznem}
+            nyelv={plan.nyelv}
             leirasokMutatasa={leirasokMutatasa}
             L={L}
           />
@@ -454,14 +460,14 @@ export function TervDocument({
               <>
                 <View style={s.summaryLine}>
                   <Text style={s.summaryLabelMuted}>{L.kezelesekOsszesen}</Text>
-                  <Text>{formatMoney(listTotal, plan.penznem)}</Text>
+                  <Text>{formatMoney(listTotal, plan.penznem, plan.nyelv)}</Text>
                 </View>
                 <View style={s.summaryDivider} />
               </>
             )}
             <View style={s.summaryLine}>
               <Text style={s.summaryTotalLabel}>{L.fizetendo}</Text>
-              <Text style={s.summaryTotalValue}>{formatMoney(grand, plan.penznem)}</Text>
+              <Text style={s.summaryTotalValue}>{formatMoney(grand, plan.penznem, plan.nyelv)}</Text>
             </View>
             {eloleg && (
               // Mindkét sor csillagot kap, ha a tervben van becsült árú
@@ -473,14 +479,18 @@ export function TervDocument({
                     {L.elolegSor(elolegSzazalek!)}
                     {hasRange && ' *'}
                   </Text>
-                  <Text style={s.summaryEloleg}>{formatMoney(eloleg.eloleg, plan.penznem)}</Text>
+                  <Text style={s.summaryEloleg}>
+                    {formatMoney(eloleg.eloleg, plan.penznem, plan.nyelv)}
+                  </Text>
                 </View>
                 <View style={s.summaryLine}>
                   <Text style={s.summaryEloleg}>
                     {L.fennmaradoResz}
                     {hasRange && ' *'}
                   </Text>
-                  <Text style={s.summaryEloleg}>{formatMoney(eloleg.fennmarado, plan.penznem)}</Text>
+                  <Text style={s.summaryEloleg}>
+                    {formatMoney(eloleg.fennmarado, plan.penznem, plan.nyelv)}
+                  </Text>
                 </View>
               </>
             )}

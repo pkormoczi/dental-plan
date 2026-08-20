@@ -311,14 +311,20 @@ kerekítési hiba az összegzésben.
 
 ### Nyelv és pénznem — nincs sémaváltozás
 
-A `nyelv`/`penznem` mezők a tervben, a `nev.de`/`ar.EUR` kulcsok az
-árlistában és az `alapertelmezettNyelv`/`nemetEngedelyezve` a
-beállításokban **mind a `schemaVersion: 1` óta léteznek** — a német
-kapcsoló bevezetése (D21) egyetlen új JSON-kulcsot sem igényelt, csak azt,
-hogy a kód ténylegesen olvassa/vezérelje őket. A `nyelv` és a `penznem`
-tudatosan **két külön mező**, nem egy összevont: az egyik a szöveget
-(tételnevek, nyomtatvány feliratai, dátumformátum, sablon), a másik az
-ajánlható tételkört és a pénzformátumot vezérli.
+A `nyelv`/`penznem` mezők a tervben és a `nev.de`/`ar.EUR` kulcsok az
+árlistában **mind a `schemaVersion: 1` óta léteznek** — a német nyelv
+bevezetése (D21) egyetlen új JSON-kulcsot sem igényelt, csak azt, hogy a
+kód ténylegesen olvassa/vezérelje őket. A `nyelv` és a `penznem` tudatosan
+**két külön mező**, nem egy összevont: az egyik a szöveget (tételnevek,
+nyomtatvány feliratai, dátumformátum, sablon, **pénzösszeg ezres/tizedes
+elválasztója**), a másik az ajánlható tételkört és a pénzösszeg
+tizedesjegyeit/pénznemjelét vezérli (D63).
+
+A `beallitasok.json` korábbi `nemetEngedelyezve` mezője (a német nyelv
+engedélyező funkciókapcsolója) megszűnt (D63, 52. tétel) — a német nyelv
+mindig választható, nincs hozzá gate. Egy régebbi, még ezt a kulcsot
+tartalmazó `beallitasok.json` betöltésekor a mező némán figyelmen kívül
+marad (nincs validálva, nincs olvasva).
 
 Egy meglévő pácienshez induló ÚJ terv-lánc kiinduló `nyelv`/`penznem`-e a
 `beallitasok.json` fenti globális mezőit csak *tartalékként* használja
@@ -452,8 +458,7 @@ a fájlban lévő érték az igazság — és érdemes figyelmeztetni.
   },
   "orvosok": ["Dr. Mándoki István"],
   "ervenyessegNap": 90,
-  "alapertelmezettNyelv": "hu",    // öröklés híján ez lesz az új tervek nyelve, ha nemetEngedelyezve (D52)
-  "nemetEngedelyezve": false       // alapértéke false; a Beállításokban kapcsolható (D21)
+  "alapertelmezettNyelv": "hu"     // öröklés híján ez lesz az új tervek nyelve (D52)
 }
 ```
 

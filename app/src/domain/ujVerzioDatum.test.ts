@@ -15,7 +15,6 @@ const settings: Settings = {
   orvosok: ['Dr. Teszt Elek'],
   ervenyessegNap: 90,
   alapertelmezettNyelv: 'hu',
-  nemetEngedelyezve: false,
 };
 
 function makePlan(overrides: Partial<Plan> = {}): Plan {

@@ -246,7 +246,6 @@ export interface Settings {
   orvosok: string[];
   ervenyessegNap: number;
   alapertelmezettNyelv: Nyelv;
-  nemetEngedelyezve: boolean;
 }
 
 /**

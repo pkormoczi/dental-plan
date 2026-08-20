@@ -10,17 +10,16 @@ DP-084 szelete. Az itt hivatkozott `D59` a redesign saját D1–D606
 számozásából való — NEM azonos a `docs/01-attekintes-es-dontesek.md`
 D-táblájával.
 
-**Kapcsolódó, nyitott tétel:** részleges átfedés a MÁR LÉTEZŐ, nyitott
-52. tétellel (Dokumentumnyelv és pénznem, `backlog-52-nyelv-penznem-
-terv.md`) — az 52. tétel eltávolítja a nyelv-default köré épített
+**Kapcsolódó, lezárt tétel:** részleges átfedés az 52. tétellel
+(Dokumentumnyelv és pénznem, `docs/01-attekintes-es-dontesek.md` D63) —
+az 52. tétel eltávolította a nyelv-default köré épített
 `nemetEngedelyezve` gate-et, de nem ad Settings-mezőt a pénznem-
 defaultnak.
 
 ## Probléma
 
 - `Settings.alapertelmezettNyelv` már ma is létezik, UI-val (`EgyebTab
-  .tsx` ChipGroup, ma az 52. tétel lezárásáig `nemetEngedelyezve` mögé
-  kapuzva).
+  .tsx` ChipGroup, gate nélkül).
 - A pénznemnek NINCS ilyen mezője: `blankPlan.ts:83` hardkódoltan
   `penznem: oroklott?.penznem ?? 'HUF'`-ot ír, dokumentált indoklással
   (az EUR árak lektorálatlanok, a HUF biztonságosabb kiindulás).
@@ -49,23 +48,23 @@ indoklással — elvetve; a user a konfigurálhatóságot választotta.
 `blankPlan.ts` a hardkódolt `'HUF'` helyett `oroklott?.penznem ??
 settings.alapertelmezettPenznem`-et olvas — új láncnál (nincs öröklés)
 ez lesz a forrás; meglévő pácienshez induló új láncnál változatlanul a
-legutóbb véglegesített terv pénzneme örököl (52. tétel D534 döntése,
-változatlan precedencia).
+legutóbb véglegesített terv pénzneme örököl (D52, változatlan
+precedencia).
 
 **Miért:** ez a mechanikus következménye az 1. döntésnek — a meglévő
-öröklési sorrend (előbb `oroklott`, utána a globális default) a 47./52.
-tétel mintáját követi, nem vezet be új precedenciát.
+öröklési sorrend (előbb `oroklott`, utána a globális default) a D52
+mintáját követi, nem vezet be új precedenciát.
 
 ## Kapcsolódó, de ebbe a tételbe NEM tartozó dolgok
 
 - A nyelv-default ChipGroup gate-mentesítése (`nemetEngedelyezve`
-  eltávolítása) — az 52. tétel hatásköre; ez a tétel a pénznem-
+  eltávolítása) — LEZÁRVA az 52. tétellel (D63); ez a tétel a pénznem-
   ChipGroupot melléteszi, nem duplikálja a nyelv-oldali munkát.
 - `ervenyessegNap` — már ma is létezik, változatlan.
-- A nyelv/pénznem ÖRÖKLÉSI szabályai meglévő pácienshez — 52. tétel
-  D534, változatlan.
-- A tényleges nyelv/pénznem-VÁLASZTÓ a „Terv adatai” lépésen — 52.
-  tétel, változatlan.
+- A nyelv/pénznem ÖRÖKLÉSI szabályai meglévő pácienshez — D52,
+  változatlan.
+- A tényleges nyelv/pénznem-VÁLASZTÓ a „Terv adatai” lépésen — D63,
+  változatlan.
 
 ## Érintett helyek (tájékoztató, nem kimerítő)
 

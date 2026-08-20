@@ -6,13 +6,18 @@
 // (P1-2 mintája) -- a hívó dönti el, hogyan jelzi ezt (⚠ jelvény,
 // "—" az összeg helyén stb.).
 
-import type { Penznem, Plan, PlanFolder, PlanVersion } from './types';
+import type { Nyelv, Penznem, Plan, PlanFolder, PlanVersion } from './types';
 import type { PlanStorage } from '../storage/PlanStorage';
 
-/** Egy verzió végösszege a saját terv.json-jából -- a pénznem verziónként jön (D21). */
+/**
+ * Egy verzió végösszege a saját terv.json-jából -- a pénznem és a nyelv is
+ * verziónként jön (D21): a `nyelv` a `formatMoney` ezres/tizedes
+ * elválasztójához kell (52. tétel), nem csak megjelenítő metaadat.
+ */
 export interface VersionTotal {
   fizetendo: number;
   penznem: Penznem;
+  nyelv: Nyelv;
 }
 
 export interface PlanChainData {
@@ -69,7 +74,11 @@ export async function loadPlanChainData(
       // A mentett osszesitok az igazság, nincs újraszámolás -- az
       // eltérés-őr (osszesitokElter) ott fut, ahol ténylegesen
       // kockázatos: szerkesztőbe töltéskor (AppState.tsx).
-      totalsByVersion[key] = { fizetendo: res.value.osszesitok.fizetendo, penznem: res.value.penznem };
+      totalsByVersion[key] = {
+        fizetendo: res.value.osszesitok.fizetendo,
+        penznem: res.value.penznem,
+        nyelv: res.value.nyelv,
+      };
     } else {
       unreadable = true;
     }

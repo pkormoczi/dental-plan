@@ -14,8 +14,6 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
-import { seedPriceList } from './storage/seed/priceList';
-import { seedSettings } from './storage/seed/settings';
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@react-pdf/renderer')>();
@@ -132,15 +130,6 @@ describe('Végpontok közötti folyamat', () => {
   }, 20000);
 
   it('a nyelv és a pénznem egymástól függetlenül választható és marad meg mentés után (D21: német nyelv, HUF pénznem)', async () => {
-    // A DemoStorage.init() az árlista hiányában resetDemoData()-t futtatna,
-    // ami felülírná a nemetEngedelyezve:true beállítást -- ezért az
-    // árlistát is elő kell seedelni, nem csak a beállításokat.
-    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
-    localStorage.setItem(
-      'dp:beallitasok.json',
-      JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
-    );
-
     const user = userEvent.setup();
     render(<App />);
 

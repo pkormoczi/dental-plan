@@ -1573,3 +1573,32 @@ karbantartási kör négy önálló javítása.
   `keltezes + ervenyessegNap`, kiürítve automatikusan visszaáll erre
   (docs/01-attekintes-es-dontesek.md D61/D62, docs/03-funkcionalis-spec.md
   § 2 "Terv adatai").
+
+---
+
+### 52. tétel: Dokumentumnyelv és pénznem kiválasztása / öröklése — KÉSZ (2026-08-20)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D63 (`docs/01-attekintes-es-dontesek.md`),
+  pontosított D21.
+- **Valódi haszon:** a német nyelv a `nemetEngedelyezve` funkciókapcsoló
+  mögé volt zárva (ami a pénznem-szekciót is elrejtette, pedig annak
+  semmi köze a némethez), a nyelv/pénznem-kártya az első véglegesítés
+  után "Új verzió" drafton is véglegesen zárolva maradt, és a pénzformátum
+  csak a pénznemtől függött, a nyelvtől nem — egy német nyelvű, forintos
+  terven `1 234 567 Ft` jelent meg `1.234.567 Ft` helyett.
+- **Megvalósítás:** a `nemetEngedelyezve` mező teljesen eltűnt a
+  `Settings` típusból és minden rá épülő gate-ből (Terv adatai lap,
+  Beállítások Egyéb tab, Nyomtatványok tab) — a német nyelv mindig
+  választható. A nyelv/pénznem-kártya zárolása (`locked = plan.tervId
+  !== ''`) megszűnt, a teljes piszkozat-életciklus alatt szerkeszthető.
+  `formatMoney`/`formatPrice` (`domain/money.ts`) új, kötelező `nyelv`
+  paramétert kapott: az ezres/tizedes elválasztó a nyelvtől függ (`hu`
+  szóköz, `de` pont, a `domain/date.ts` `formatLongDate` mintáján), a
+  tizedesjegyek száma és a pénznemjel változatlanul a pénznemtől — a
+  képernyős összegek (szerkesztő, verzió-lista, Előnézet) is követik a
+  terv nyelvét, csak az Árlista admin (nincs `Plan` a scope-ban) és a UI
+  prózája/dátumai maradtak magyarok (docs/01-attekintes-es-dontesek.md
+  D21/D63, docs/02-domain-modell.md § Nyelv és pénznem, docs/03-
+  funkcionalis-spec.md § 2 "Dokumentum nyelve / Pénznem", docs/04-
+  nyomtatvany-spec.md § Számformátum).

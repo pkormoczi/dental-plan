@@ -13,20 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 52. tétel — Dokumentumnyelv és pénznem kiválasztása / öröklése
-  (a `backlog/redesign/` redesign-döntéssorozat DP-031 tétele) — a
-  nyelv/pénznem-kártya ma az első véglegesítés után véglegesen
-  zárolva marad ("Új verzió" drafton), a `nemetEngedelyezve`
-  funkciókapcsoló elrejti a kártyát, és a pénzformátum (`formatMoney`)
-  csak a pénznemtől függ, a nyelvtől nem (DE+HUF ma tévesen `1 234 567
-  Ft`-ot ír, nem `1.234.567 Ft`-ot). Ez a tétel feloldja a zárolást a
-  teljes piszkozat-életciklusra, teljesen eltávolítja a funkciókapcsolót,
-  és `formatMoney`/`formatPrice`-t nyelvfüggővé teszi (utóbbi kettő
-  explicit user-döntés, mert ellentmond a ma dokumentált D21-nek). Az
-  öröklési szabály (D534) feloldja a 47. tétel VÁRAKOZÓ döntését. A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-52-nyelv-penznem-terv.md`
-
 ### 53. tétel — Kezelőorvos kiválasztása és öröklési szabályai
   (a `backlog/redesign/` redesign-döntéssorozat DP-032 tétele) —
   `Settings.orvosok` ma sima névlista, aktív/inaktív jelölés és
@@ -329,9 +315,9 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 
 ### 85. tétel — Alapértelmezett dokumentum-pénznem
   (a `backlog/redesign/` redesign-döntéssorozat DP-084 tétele) — a
-  nyelv-defaultnak már ma is van Settings-mezője és UI-ja (az 52.
-  tétel oldja fel a `nemetEngedelyezve` gate-jét), de a pénznemnek
-  nincs: a `blankPlan.ts` ma hardkódoltan mindig HUF-fal indít egy
+  nyelv-defaultnak már ma is van Settings-mezője és UI-ja (feltétel
+  nélkül, engedélyező gate nélkül), de a pénznemnek nincs: a
+  `blankPlan.ts` ma hardkódoltan mindig HUF-fal indít egy
   vadonatúj láncot. Ez a tétel egy új, konfigurálható
   `Settings.alapertelmezettPenznem` mezőt vezet be (alapérték HUF), az
   Egyéb tabon egy ChipGroup-pal a nyelv-default mellett. A döntéseket

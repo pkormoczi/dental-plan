@@ -137,9 +137,13 @@ automatikusan.
 Ezek (eredetileg a törölt `ui/tokens.js` prototípusból portolva) már megvannak
 `app/src/domain/` és `app/src/design/tokens.ts` alatt:
 - `t` — design tokenek (márkaszínek, tipográfia, spacing)
-- `formatMoney(value, currency)` / `formatPrice(ar, currency)` — a
-  `docs/04-nyomtatvany-spec.md` kötelező formátuma szerint (`1 234 567 Ft`,
-  `1.234,56 €`). **Ne improvizálj `toLocaleString()`-gel**, ez szerződéses dokumentum.
+- `formatMoney(value, currency, nyelv)` / `formatPrice(ar, currency, nyelv)` —
+  a `docs/04-nyomtatvany-spec.md` kötelező formátuma szerint: az ezres/tizedes
+  elválasztó a `nyelv`-től függ (`hu` szóköz, `de` pont), a tizedesjegyek
+  száma és a pénznemjel a `currency`-től (`1 234 567 Ft`, `1.234,56 €`,
+  `1.234.567 Ft`). A képernyőn a *pénzösszegek* a terv nyelvét követik
+  (1:1 a generált PDF-fel), az UI-próza és a dátumok viszont magyarok
+  maradnak. **Ne improvizálj `toLocaleString()`-gel**, ez szerződéses dokumentum.
 - `basePrice(ar)` — `SAVOS` típusnál a `min` értéket adja vissza
 - `norm(s)` — ékezetfüggetlen kereséshez (`NFD` normalizálás)
 - `nevEgyezik(nev, nq)` (`app/src/domain/search.ts`) — egy `LokalizaltSzoveg`

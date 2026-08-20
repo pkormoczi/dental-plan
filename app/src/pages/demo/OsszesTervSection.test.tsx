@@ -94,7 +94,7 @@ function seedPersistedDraft(
 // nem tördelhető). A testing-library a DOM szövegét sima szóközre
 // normalizálja, az elvárt stringet viszont nem -- ezért itt kell átváltani.
 function penz(osszeg: number): string {
-  return formatMoney(osszeg, 'HUF').replace(/ /g, ' ');
+  return formatMoney(osszeg, 'HUF', 'hu').replace(/ /g, ' ');
 }
 
 // backlog-20: egy ténylegesen elmentett (nem seed) verzió a Letöltés

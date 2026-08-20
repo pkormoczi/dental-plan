@@ -7,10 +7,10 @@
 // kényszerített kitöltés, csak a "Tovább" gomb jelzi, ha a név üres.
 //
 // D21: itt dől el a terv nyelve és pénzneme -- itt derül ki a német páciens
-// ténye. Mindkettő az első mentés után fagy (D4), lásd a `locked` ágat. A D4
-// "nem módosítható" megjegyzés SZÁNDÉKOSAN csak egyszer jelenik meg (a
-// Pénznem szekció alján), annak ellenére, hogy mindkét mezőre vonatkozik --
-// két előfordulás kétértelművé tenné a `getByText(/nem módosítható/)` tesztet.
+// ténye. A teljes piszkozat-életciklus alatt szabadon módosítható (52.
+// tétel): a technikai autosave/mentés nem fagyasztja ezeket az értékeket,
+// csak a véglegesítés hozza létre az immutable pillanatképet -- egy már
+// lezárt verzió eleve nem ezen a lapon jelenik meg (lásd "Terv részletei").
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -56,16 +56,6 @@ export default function PatientPage() {
 
   const nameMissing = !paciens.nev.trim();
 
-  // A két szekció csak akkor látszik, ha a német engedélyezve van -- vagy ha
-  // a piszkozat már németül indult, hogy egy időközben kikapcsolt kapcsoló
-  // ne tegye szerkeszthetetlenül némává egy folyamatban lévő német tervet.
-  // A funkciókapcsoló eltávolítása az 52. tétel hatóköre.
-  const showLangCard = settings.nemetEngedelyezve || plan.nyelv === 'de';
-  // A mentett terv nyelve/pénzneme nem módosítható (D4) -- a `tervId` a jó
-  // diszkriminátor, nem a `statusz`: egy VEGLEGES tervet újra meg lehet
-  // nyitni (Korábbi tervek), hogy egy újabb verzió készüljön belőle, a
-  // tervId ilyenkor is kitöltött marad.
-  const locked = plan.tervId !== '';
   const cov = lefedettseg(priceList, plan.penznem);
   const sorokSzama = plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
   // A nyelváltás-megerősítő dialógus élő számlálásához -- lásd lent.
@@ -246,79 +236,57 @@ export default function PatientPage() {
         <TorzsadatSyncCard />
       </Section>
 
-      {showLangCard && (
-        <Section title="Dokumentum nyelve">
-          {locked ? (
-            <Text size="2">{plan.nyelv === 'de' ? 'Deutsch' : 'Magyar'}</Text>
-          ) : (
-            <>
-              <FieldGroup label="Nyelv (a nyomtatvány nyelve)">
-                <ChipGroup
-                  value={plan.nyelv}
-                  options={[
-                    ['hu', 'Magyar'],
-                    ['de', 'Deutsch'],
-                  ]}
-                  onChange={changeNyelv}
-                />
-              </FieldGroup>
+      <Section title="Dokumentum nyelve">
+        <FieldGroup label="Nyelv (a nyomtatvány nyelve)">
+          <ChipGroup
+            value={plan.nyelv}
+            options={[
+              ['hu', 'Magyar'],
+              ['de', 'Deutsch'],
+            ]}
+            onChange={changeNyelv}
+          />
+        </FieldGroup>
 
-              {plan.nyelv === 'de' && cov.deNevvel < cov.aktivOsszes && (
-                <Callout.Root color="amber" size="1" mt="2">
-                  <Callout.Icon>
-                    <ExclamationTriangleIcon />
-                  </Callout.Icon>
-                  <Callout.Text>
-                    {cov.aktivOsszes - cov.deNevvel} / {cov.aktivOsszes} aktív tételnek nincs
-                    német neve — ezek <Text weight="bold">magyarul</Text> kerülnek a
-                    nyomtatványra. Az Árlistán pótolhatók.
-                  </Callout.Text>
-                </Callout.Root>
-              )}
-            </>
-          )}
-        </Section>
-      )}
+        {plan.nyelv === 'de' && cov.deNevvel < cov.aktivOsszes && (
+          <Callout.Root color="amber" size="1" mt="2">
+            <Callout.Icon>
+              <ExclamationTriangleIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              {cov.aktivOsszes - cov.deNevvel} / {cov.aktivOsszes} aktív tételnek nincs német
+              neve — ezek <Text weight="bold">magyarul</Text> kerülnek a nyomtatványra. Az
+              Árlistán pótolhatók.
+            </Callout.Text>
+          </Callout.Root>
+        )}
+      </Section>
 
-      {showLangCard && (
-        <Section title="Pénznem">
-          {locked ? (
-            <Box>
-              <Text size="2">{plan.penznem}</Text>
-              <Text as="div" size="1" color="gray" mt="1">
-                A mentett terv nyelve és pénzneme nem módosítható (D4) — új tervet kell
-                indítani.
-              </Text>
-            </Box>
-          ) : (
-            <>
-              <FieldGroup label="Pénznem (ez dönti el, mely tételek ajánlhatók)">
-                <ChipGroup
-                  value={plan.penznem}
-                  options={[
-                    ['HUF', 'HUF — forint'],
-                    ['EUR', 'EUR — euró'],
-                  ]}
-                  onChange={changePenznem}
-                />
-              </FieldGroup>
+      <Section title="Pénznem">
+        <FieldGroup label="Pénznem (ez dönti el, mely tételek ajánlhatók)">
+          <ChipGroup
+            value={plan.penznem}
+            options={[
+              ['HUF', 'HUF — forint'],
+              ['EUR', 'EUR — euró'],
+            ]}
+            onChange={changePenznem}
+          />
+        </FieldGroup>
 
-              {cov.arazott === 0 && (
-                <Callout.Root color="amber" size="1" mt="2">
-                  <Callout.Icon>
-                    <ExclamationTriangleIcon />
-                  </Callout.Icon>
-                  <Callout.Text>
-                    Ebben a pénznemben ({plan.penznem}) egyetlen tétel sincs beárazva — a
-                    szerkesztő keresője nem fog találatot adni. Válts pénznemet, vagy töltsd ki
-                    az árakat az Árlistán.
-                  </Callout.Text>
-                </Callout.Root>
-              )}
-            </>
-          )}
-        </Section>
-      )}
+        {cov.arazott === 0 && (
+          <Callout.Root color="amber" size="1" mt="2">
+            <Callout.Icon>
+              <ExclamationTriangleIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              Ebben a pénznemben ({plan.penznem}) egyetlen tétel sincs beárazva — a szerkesztő
+              keresője nem fog találatot adni. Válts pénznemet, vagy töltsd ki az árakat az
+              Árlistán.
+            </Callout.Text>
+          </Callout.Root>
+        )}
+      </Section>
 
       <Section title="Kezelőorvos">
         <Text as="div" size="2" color={plan.orvos ? undefined : 'gray'}>

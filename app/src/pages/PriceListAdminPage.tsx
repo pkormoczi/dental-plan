@@ -529,7 +529,9 @@ export default function PriceListAdminPage() {
                       </Table.RowHeaderCell>
 
                       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {formatPrice(it.ar.HUF, 'HUF')}
+                        {/* Az admin törzsadat-felület, nincs dokumentumnyelv (nincs `Plan`
+                            a scope-ban) -- fixen 'hu', ahogy a NavBar/oldalak prózája is. */}
+                        {formatPrice(it.ar.HUF, 'HUF', 'hu')}
                       </Table.Cell>
 
                       <Table.Cell
@@ -539,7 +541,7 @@ export default function PriceListAdminPage() {
                           color: it.ar.EUR ? undefined : t.warn,
                         }}
                       >
-                        {it.ar.EUR ? formatPrice(it.ar.EUR, 'EUR') : '—'}
+                        {it.ar.EUR ? formatPrice(it.ar.EUR, 'EUR', 'hu') : '—'}
                       </Table.Cell>
 
                       <Table.Cell>

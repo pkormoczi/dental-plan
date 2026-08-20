@@ -554,6 +554,7 @@ export default function PatientPlanChains({
               : {
                   ertek: tervVegosszeg(aktivDraft.plan.fazisok, aktivDraft.plan.kedvezmenyOsszeg),
                   penznem: aktivDraft.plan.penznem,
+                  nyelv: aktivDraft.plan.nyelv,
                 }
           }
           onFolytatas={() => navigate(piszkozatCelRoute(aktivDraft.lastRoute, aktivDraft.plan))}
@@ -668,7 +669,11 @@ export default function PatientPlanChains({
                   weight="medium"
                   style={{ fontVariantNumeric: 'tabular-nums', textAlign: 'right', minWidth: '7rem' }}
                 >
-                  {formatMoney(chainTotal?.fizetendo ?? null, chainTotal?.penznem ?? 'HUF')}
+                  {formatMoney(
+                    chainTotal?.fizetendo ?? null,
+                    chainTotal?.penznem ?? 'HUF',
+                    chainTotal?.nyelv ?? 'hu',
+                  )}
                 </Text>
               )}
             </Flex>
@@ -740,7 +745,11 @@ export default function PatientPlanChains({
                                 minWidth: '7rem',
                               }}
                             >
-                              {formatMoney(total?.fizetendo ?? null, total?.penznem ?? 'HUF')}
+                              {formatMoney(
+                                total?.fizetendo ?? null,
+                                total?.penznem ?? 'HUF',
+                                total?.nyelv ?? 'hu',
+                              )}
                             </Text>
                             {/* D58 (50. tétel): a legfrissebb soron két látható gomb --
                                 elsődleges "Új verzió", másodlagos "Megnézés" (docs/07
@@ -893,7 +902,7 @@ function AktivDraftBlokk({
   paciensNev: string;
   lepesFelirat: string | null;
   mentve: string | null;
-  osszeg: { ertek: number; penznem: Plan['penznem'] } | null;
+  osszeg: { ertek: number; penznem: Plan['penznem']; nyelv: Plan['nyelv'] } | null;
   onFolytatas: () => void;
 }) {
   return (
@@ -933,7 +942,7 @@ function AktivDraftBlokk({
           mb="2"
           style={{ fontVariantNumeric: 'tabular-nums' }}
         >
-          {formatMoney(osszeg.ertek, osszeg.penznem)}
+          {formatMoney(osszeg.ertek, osszeg.penznem, osszeg.nyelv)}
         </Text>
       )}
       <Button size="1" mt="1" onClick={onFolytatas}>

@@ -348,13 +348,21 @@ mit lefordítani (lásd „3. oldal — garancia" fent).
 
 ## Számformátum
 
-| Pénznem | Formátum | Példa |
+Az ezres/tizedes **elválasztó** a dokumentum **nyelvétől** függ, a
+tizedesjegyek száma és a pénznemjel a **pénznemtől** (D21, D63) — négy
+kötelező kombináció:
+
+| Nyelv + pénznem | Formátum | Példa |
 |---|---|---|
-| HUF | egész, ezres szóközzel, utána `Ft` | `1 234 567 Ft` |
-| EUR | két tizedes, ezres ponttal, tizedes vesszővel, `€` | `1.234,56 €` |
+| HU + HUF | egész, ezres szóközzel, utána `Ft` | `1 234 567 Ft` |
+| HU + EUR | két tizedes, ezres szóközzel, tizedes vesszővel, `€` | `1 234,56 €` |
+| DE + HUF | egész, ezres ponttal, utána `Ft` | `1.234.567 Ft` |
+| DE + EUR | két tizedes, ezres ponttal, tizedes vesszővel, `€` | `1.234,56 €` |
 
-A formátum a **pénznemtől** függ, nem a nyelvtől (D21) — egy német nyelvű,
-forintos terven is `1 234 567 Ft` jelenik meg, nem `1.234.567 Ft`.
+A `hu-HU` Intl ezres-elválasztó-hiánya 4-jegyű összegeknél (`5000 Ft`, nem
+`5 000 Ft`) mindkét HU-sorban megmarad — ez a magyar tipográfiai
+konvenció, nem hiba (`app/src/domain/money.test.ts`).
 
-Ne `toLocaleString()` improvizációval — fix formázó függvény pénznemenként.
-Ez szerződéses dokumentum.
+Ne `toLocaleString()` improvizációval — fix formázó függvény
+(`formatMoney(value, currency, nyelv)`/`formatPrice(ar, currency, nyelv)`,
+`app/src/domain/money.ts`). Ez szerződéses dokumentum.

@@ -58,13 +58,9 @@ export function createBlankPlan(
 ): Plan {
   const today = todayIso();
   // D21: a nyelv és a pénznem független -- a német páciens Magyarországon
-  // forintban is fizethet. Öröklés híján az `alapertelmezettNyelv` csak
-  // akkor számít, ha a német nyelv engedélyezve van; a `nemetEngedelyezve`
-  // kikapcsolása után induló, öröklés NÉLKÜLI új tervek mindig magyarok,
-  // hogy a nyelv soha ne maradjon "de"-n úgy, hogy a doki sehol nem lát
-  // hozzá kapcsolót. Egy örökölt "de" ezt a gate-et felülírja (D534,
-  // user-döntés) -- a kártya `plan.nyelv === 'de'` escape-hatch-e
-  // (`PatientPage.tsx`) ilyenkor is szerkeszthetővé teszi.
+  // forintban is fizethet. Öröklés híján `settings.alapertelmezettNyelv`
+  // dönt (a német nyelv mindig választható, nincs hozzá engedélyező
+  // kapcsoló).
   //
   // A pénznem alapértéke öröklés híján MINDIG HUF, nem a nyelvtől függ: a
   // rendelő elsődleges pénzneme forint, az EUR árak pedig ma még
@@ -72,7 +68,7 @@ export function createBlankPlan(
   // (docs/06-arlista-import.md) -- a HUF alapértelmezés a biztonságosabb
   // kiindulás. A doki egy kattintással vált a Terv adatai lapon, ha mégis
   // EUR kell.
-  const nyelv: Nyelv = oroklott?.nyelv ?? (settings.nemetEngedelyezve ? settings.alapertelmezettNyelv : 'hu');
+  const nyelv: Nyelv = oroklott?.nyelv ?? settings.alapertelmezettNyelv;
 
   return {
     schemaVersion: 1,

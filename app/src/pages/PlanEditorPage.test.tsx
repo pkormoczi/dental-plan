@@ -39,35 +39,28 @@ function seedGermanPlanWithOneTranslatedItem() {
   localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
   localStorage.setItem(
     'dp:beallitasok.json',
-    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true, alapertelmezettNyelv: 'de' }),
+    JSON.stringify({ ...seedSettings, alapertelmezettNyelv: 'de' }),
   );
 }
 
-/** A `nemetEngedelyezve` kapcsoló + egy árlista, amiben egyetlen tételnek sincs EUR ára. */
-function seedWithGermanEnabledAndNoEurPrices() {
+/** Egy árlista, amiben egyetlen tételnek sincs EUR ára. */
+function seedWithNoEurPrices() {
   const custom = {
     ...seedPriceList,
     tetelek: seedPriceList.tetelek.map((x) => ({ ...x, ar: { ...x.ar, EUR: null } })),
   };
   localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
-  localStorage.setItem(
-    'dp:beallitasok.json',
-    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
-  );
+  localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
 }
 
 /**
- * A `nemetEngedelyezve` kapcsoló egy ÉRINTETLEN árlistával -- a
- * `seedWithGermanEnabledAndNoEurPrices`-tól eltérően itt minden tételnek
- * megvan az EUR ára, hogy egy EUR pénznemű terv szerkesztőjében ténylegesen
- * fel lehessen venni beárazott tételt (backlog-5).
+ * ÉRINTETLEN árlista -- a `seedWithNoEurPrices`-tól eltérően itt minden
+ * tételnek megvan az EUR ára, hogy egy EUR pénznemű terv szerkesztőjében
+ * ténylegesen fel lehessen venni beárazott tételt (backlog-5).
  */
-function seedWithGermanEnabled() {
+function seedWithIntactPriceList() {
   localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
-  localStorage.setItem(
-    'dp:beallitasok.json',
-    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
-  );
+  localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
 }
 
 describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
@@ -644,7 +637,7 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
 
   it('shows the empty-currency message in the search when the plan currency has zero priced items', async () => {
     const user = userEvent.setup();
-    seedWithGermanEnabledAndNoEurPrices();
+    seedWithNoEurPrices();
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
@@ -664,7 +657,7 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
 
   it('backlog-5: az "Ajánlati ár" mező euróban jelenít meg és fogad be egy EUR pénznemű tervnél, a commit centben történik', async () => {
     const user = userEvent.setup();
-    seedWithGermanEnabled();
+    seedWithIntactPriceList();
     render(<App />);
 
     await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));

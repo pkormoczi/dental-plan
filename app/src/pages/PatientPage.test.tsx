@@ -22,39 +22,24 @@ function renderPatient() {
   );
 }
 
-/** A kártya elrejtve-állapotát teszteli -- explicit `nemetEngedelyezve: false`, mert a seed alapértéke már `true`. */
-function seedWithGermanDisabled() {
-  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
-  localStorage.setItem(
-    'dp:beallitasok.json',
-    JSON.stringify({ ...seedSettings, nemetEngedelyezve: false }),
-  );
-}
-
 /** A német kártya + egy árlista, amiben egyetlen tételnek sincs EUR ára. */
-function seedWithGermanEnabledAndNoEurPrices() {
+function seedWithNoEurPrices() {
   const custom = {
     ...seedPriceList,
     tetelek: seedPriceList.tetelek.map((x) => ({ ...x, ar: { ...x.ar, EUR: null } })),
   };
   localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
-  localStorage.setItem(
-    'dp:beallitasok.json',
-    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
-  );
+  localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
 }
 
 /** A német kártya + egy árlista, amiben egyetlen tételnek sincs német neve. */
-function seedWithGermanEnabledAndNoGermanNames() {
+function seedWithNoGermanNames() {
   const custom = {
     ...seedPriceList,
     tetelek: seedPriceList.tetelek.map((x) => ({ ...x, nev: { ...x.nev, de: null } })),
   };
   localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
-  localStorage.setItem(
-    'dp:beallitasok.json',
-    JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
-  );
+  localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
 }
 
 describe('PatientPage -- nyelv/pénznem kártya', () => {
@@ -65,22 +50,15 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     window.location.hash = '';
   });
 
-  it('hides the language/currency card when nemetEngedelyezve is false', async () => {
-    seedWithGermanDisabled();
-    renderPatient();
-    await screen.findByPlaceholderText('Kovács János');
-    expect(screen.queryByText('Dokumentum nyelve')).toBeNull();
-    expect(screen.queryByText('Pénznem')).toBeNull();
-  });
-
-  it('shows the card once nemetEngedelyezve is true (seed default)', async () => {
+  it('shows the language/currency card without any enabling flag (52. tétel)', async () => {
     renderPatient();
     expect(await screen.findByText('Dokumentum nyelve')).toBeInTheDocument();
+    expect(screen.getByText('Pénznem')).toBeInTheDocument();
   });
 
   it('warns when the selected pénznem has zero priced items', async () => {
     const user = userEvent.setup();
-    seedWithGermanEnabledAndNoEurPrices();
+    seedWithNoEurPrices();
     renderPatient();
     await screen.findByText('Pénznem');
 
@@ -93,7 +71,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
 
   it('warns about missing German item names once Deutsch is selected', async () => {
     const user = userEvent.setup();
-    seedWithGermanEnabledAndNoGermanNames();
+    seedWithNoGermanNames();
     renderPatient();
     await screen.findByText('Dokumentum nyelve');
 
@@ -109,7 +87,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     ).toBeInTheDocument();
   });
 
-  it('locks the card (no chips, static text) once a plan has a tervId (D4)', async () => {
+  it('a draft opened via "Új verzió" keeps the card editable (chips, no "nem módosítható" text, 52. tétel)', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -134,8 +112,11 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
 
     expect(await screen.findByText('Dokumentum nyelve')).toBeInTheDocument();
     expect(screen.getByText('Pénznem')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Deutsch' })).toBeNull();
-    expect(screen.getByText(/nem módosítható/)).toBeInTheDocument();
+    // A teljes piszkozat-életciklus alatt szerkeszthető (52. tétel) --
+    // korábban ez az útvonal volt az EGYETLEN, ahol a mai `locked` igazra
+    // értékelődött volna ki egy draftra.
+    expect(screen.getByRole('radio', { name: 'Deutsch' })).toBeInTheDocument();
+    expect(screen.queryByText(/nem módosítható/)).toBeNull();
   });
 });
 
@@ -228,10 +209,7 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
       ),
     };
     localStorage.setItem('dp:arlista.json', JSON.stringify(custom));
-    localStorage.setItem(
-      'dp:beallitasok.json',
-      JSON.stringify({ ...seedSettings, nemetEngedelyezve: true }),
-    );
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
   }
 
   it('szerkesztetlen leírás frissül nyelváltáskor, a tétel német leírására', async () => {
