@@ -2,6 +2,59 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. augusztus 20.
+
+- Az "Új kezelési terv indítása" képernyőn a "+ Új páciens" gomb a kereső fölé, elsődleges
+  helyre költözött, és a legutóbb aktív páciensek listája 5-ről 15-re bővült, egysoros
+  elrendezésben.
+- A "Másolás új tervbe" mostantól a páciens jelenleg érvényes elérhetőségeit veszi át, nem a
+  másolt régi ajánlatban rögzített, esetleg elavult adatokat.
+- A terv-láncok legfrissebb verziósora két jól látható gombot kapott ("Új verzió" és
+  "Megnézés"), a korábbi verzióknál egy új menüpont ("Ugrás a legfrissebb verzióra") segít
+  visszatalálni a lánc tetejére. Ha egy régebbi verziót másolunk új tervbe úgy, hogy időközben
+  újabb is készült, a program most külön figyelmeztet erre.
+- A kezeléskereső mostantól automatikusan a beviteli mezőre ugrik egy vadonatúj terv első
+  fázisánál és minden újonnan hozzáadott fázisnál is — nem kell előtte rákattintani, mielőtt
+  gépelhetnénk.
+- A kezelési fázisok mostantól egyenként össze- és kinyithatók (csukva a nevet, a sorok számát
+  és az összeget mutatják), nyilakkal átrendezhetők, és egy törölt sor rövid ideig
+  "Visszavonás" gombbal visszaállítható.
+- A "Terv adatai" oldal (korábban "Páciens adatlap") hat, jól elkülönített szakaszra
+  tagolódik, saját szerkeszthető terv-cím mezővel, és az "Érvényes eddig" dátum is átírható
+  (kiürítve automatikusan visszaáll az alapértékre).
+- A német nyelv mostantól mindig választható, nem kell hozzá külön semmit bekapcsolni, és a
+  Dokumentum nyelve / Pénznem beállítás a teljes szerkesztés alatt bármikor módosítható — eddig
+  az első véglegesítés után véglegesen zárolódott. Javítottuk, hogy egy német nyelvű, forintos
+  terv a pénzösszegeket helyesen (pl. "1.234.567 Ft") jelenítse meg, ne a magyar tagolással.
+- Javítottuk, hogy egy magyar nyelvű terven a kézzel átírt sornév ne maradjon jelöletlen (eddig
+  az "átírt" jelzés csak német terven működött). A névhez, az ajánlati árhoz és a leíráshoz is
+  tartozik most egy kis "visszaállítás" gomb, ami egy kattintással visszaadja az árlistai
+  eredeti értéket, és megjelenik egy felár-jelzés is, ha egy sor ára a listaár fölé kerül.
+- Az Előleg mostantól konkrét összegként adható meg, nem százalékban. Ha a fizetendő végösszeg
+  időközben az előleg alá csökken, a program hibát jelez, és nem engedi véglegesíteni a
+  tervet, amíg ezt nem rendezzük.
+- Új "Kezelőorvos" mező jelent meg a Terv adatai oldalon — tervenként kiválasztható, kinek az
+  aláírásával készül az ajánlat. A Beállításokban az orvosok listája aktív/inaktív jelölést,
+  sorrendet és alapértelmezett-orvos kiválasztást kapott. Egy új terv mindig az
+  alapértelmezett orvossal indul, egy meglévő terv új verziója megtartja a korábbi orvost, ha
+  még aktív; véglegesítés nem lehetséges, ha a tervhez tartozó orvos hiányzik vagy már nem
+  aktív.
+- Az "Egyedi végösszeg" (korábban "Kerek végösszeg") mostantól felár irányban is használható,
+  nincs felső korlátja, és bekapcsoláskor üres, azonnal szerkeszthető mezővel indul (eddig
+  hamis 0-val töltődött ki). Ha a beírt végösszeg pontosan 0, azaz a teljes összeg elengedése,
+  a program egyszer rákérdez, mielőtt elfogadná.
+- Egy korábban mentett terv soránál, ha az árlistai ár azóta megváltozott, a Listaár mellett
+  megjelenik egy ⟳ gomb, amivel egy kattintással (megerősítés után) frissíthető a mai
+  árlistára. Véglegesítés előtt a program figyelmeztet is, ha egy sor elavult vagy kézzel
+  felülírt árat tartalmaz (ez nem blokkolja a mentést). A "Másolás új tervbe" is a mai árlista
+  áraival indítja a másolatot azoknál a soroknál, amik eddig is követték az árlistát.
+- Javítottunk egy komoly hibát: a terv pénznemének átváltása (Ft ↔ €) eddig törölte a terv
+  összes sorát. Mostantól mindkét pénznem ára megmarad soronként — oda-vissza váltva a
+  korábban beírt ár visszatér, ha pedig még nem volt megadva, az árlistából töltődik be. A
+  kereső mostantól minden tételt megtalál a terv pénznemétől függetlenül is, így egy adott
+  pénznemben még be nem árazott tétel is felvehető, kézzel megadott árral. Véglegesítés nem
+  enged tovább egy megnevezett, de árazatlan sort.
+
 ## 2026. augusztus 19.
 
 - A tervkészítés lépéseinél (Páciens adatlap → Terv szerkesztő → Előnézet) mostantól egy állandó
