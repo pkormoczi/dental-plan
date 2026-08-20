@@ -110,9 +110,15 @@ describe('PreviewPage -- 68. tétel: PDF-render hiba állapota', () => {
 
       // A hibaüzenet ténylegesen a képernyőn látszik -- ha a komponens
       // összeomlana a nyers Error-objektum JSX-gyerekként renderelésekor,
-      // ez a lekérdezés sosem találná meg.
+      // ez a lekérdezés sosem találná meg. Explicit timeout (a
+      // findByText alapértelmezett 1000ms-e a teljes csomag futtatásakor,
+      // párhuzamos worker-terhelés alatt szűknek bizonyult).
       expect(
-        await screen.findByText(/A PDF előállítása hibába futott: boom teszt hiba/),
+        await screen.findByText(
+          /A PDF előállítása hibába futott: boom teszt hiba/,
+          {},
+          { timeout: 10000 },
+        ),
       ).toBeInTheDocument();
 
       // Az auto-generálás useEffect-je (D603) a betöltés/sablonok
