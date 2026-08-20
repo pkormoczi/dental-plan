@@ -338,7 +338,7 @@ describe('planMasolatKent', () => {
   });
 });
 
-// backlog-61 (D63): a 49. tétel 2. döntésének (VÁRAKOZÓ) végrehajtása --
+// backlog-61 (D69): a 49. tétel 2. döntésének (VÁRAKOZÓ) végrehajtása --
 // a `priceList` paraméter a default-following sorokat az aktuális
 // árlistára frissíti (`domain/arKoveti.ts` `frissArlistaval()`).
 describe('planMasolatKent — priceList paraméterrel (D140)', () => {

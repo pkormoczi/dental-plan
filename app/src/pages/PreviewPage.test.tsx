@@ -1004,7 +1004,7 @@ describe('PreviewPage -- letöltési fájlnév', () => {
   );
 });
 
-// backlog-61 (D63): a puha "price-drift" lépés a lánc ötödik, utolsó tagja --
+// backlog-61 (D69): a puha "price-drift" lépés a lánc ötödik, utolsó tagja --
 // itt egyedül fut le, mert a páciensadat teljes, a terv magyar (nincs
 // de-fallback-names), a sor nem 0 összegű és nem csomagtétel.
 describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés', () => {
