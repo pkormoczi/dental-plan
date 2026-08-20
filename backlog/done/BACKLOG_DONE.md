@@ -1602,3 +1602,22 @@ karbantartási kör négy önálló javítása.
   D21/D63, docs/02-domain-modell.md § Nyelv és pénznem, docs/03-
   funkcionalis-spec.md § 2 "Dokumentum nyelve / Pénznem", docs/04-
   nyomtatvany-spec.md § Számformátum).
+
+---
+
+### 59. tétel: Kezelés keresés, quick items és hozzáadás — KÉSZ (2026-08-20)
+
+- **Méret:** ~0.25 nap.
+- **Kereteket sért?** Nem — új D64 (`docs/01-attekintes-es-dontesek.md`).
+- **Valódi haszon:** a feltárás szerint a tétel forrás-döntéseinek
+  döntő többsége már a kívánt állapotban volt: a redesign fókusz-
+  csereötlete (tételhozzáadás után a Fog mezőre ugrás) explicit
+  elvetésre került, mert ütközne a `CLAUDE.md` „A UX kritikus pontja"
+  gépel → nyíl → Enter ciklusával — ez a ciklus változatlan maradt. Az
+  egyetlen valódi hiány az volt, hogy új fázis hozzáadásakor a doki
+  kattintani kényszerült a fázis keresőjébe, mielőtt gépelhetett volna.
+- **Megvalósítás:** a „Fázis hozzáadása" gomb az új fázis keresőjére
+  automatikusan fókuszál és odagördít, a fogtérkép-kattintás meglévő
+  `fokuszCel`-mechanizmusát bővítve egy fázis-szintű ággal
+  (docs/01-attekintes-es-dontesek.md D64, docs/03-funkcionalis-spec.md
+  § 3 "Tételkereső"/"Fázisok"/"Gyorsgombok").
