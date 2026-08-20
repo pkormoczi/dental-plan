@@ -70,6 +70,11 @@ export default function PreviewPage() {
   // terv MÁR a lemezen van (lásd doFinalize). Csak a siker-képernyőn
   // jelenik meg, amber színnel, nem piros hibaként.
   const [cimkeHiba, setCimkeHiba] = useState<string | null>(null);
+  // backlog-69 (D74): a piszkozat best-effort törlésének (markPlanSaved)
+  // hibája -- KÜLÖN a `saveError`-tól, ugyanazon okból, mint a `cimkeHiba`:
+  // a terv MÁR a lemezen van, ez legfeljebb egy elmaradt takarítás, nem
+  // mentési hiba. Csak a siker-képernyőn jelenik meg, amber színnel.
+  const [piszkozatTorlesHiba, setPiszkozatTorlesHiba] = useState<string | null>(null);
   const [nameMissingNotice, setNameMissingNotice] = useState(false);
   const [orvosNotice, setOrvosNotice] = useState(false);
   const [uresSorokNotice, setUresSorokNotice] = useState(false);
@@ -395,6 +400,7 @@ export default function PreviewPage() {
     setSaving(true);
     setSaveError(null);
     setCimkeHiba(null);
+    setPiszkozatTorlesHiba(null);
     try {
       // D163: a mastert véglegesítéskor újraolvassuk -- csak az info-sáv
       // frissítéséhez (D162, a `finalPlan.paciens` ettől függetlenül a
@@ -438,8 +444,22 @@ export default function PreviewPage() {
       // docs/03-funkcionalis-spec.md véglegesítés-lánc 4. lépése: a
       // piszkozat törlése -- enélkül a lenti setPlan azonnal visszaírná
       // piszkozatként a most fájlba mentett tervet (markPlanSaved a
-      // "mentett" referenciát is frissíti, lásd AppState.tsx).
-      await markPlanSaved(persisted);
+      // "mentett" referenciát is frissíti, lásd AppState.tsx). KÜLÖN
+      // try/catch, NEM a közös hibazónában (D74, a `savePlanLabel` fenti
+      // blokkjának mintáján): a terv ekkor MÁR tartósan a lemezen van, a
+      // takarítás hibája nem jelentheti a dokinak, hogy "a mentés nem
+      // sikerült" -- markPlanSaved minden szinkron state-frissítést a
+      // `drafts.clear()` ELŐTT elvégez, tehát egy hibázó törlés után is a
+      // memóriabeli állapot már helyes (`vanMentetlenPiszkozat` false).
+      try {
+        await markPlanSaved(persisted);
+      } catch (err) {
+        setPiszkozatTorlesHiba(
+          err instanceof Error
+            ? err.message
+            : 'A piszkozat törlése váratlanul nem sikerült.',
+        );
+      }
       setSavedRef(ref);
     } catch (err) {
       // P0-1: korábban nem volt catch itt -- egy kvótahiba vagy a
@@ -535,6 +555,15 @@ export default function PreviewPage() {
             <Callout.Text>
               {cimkeHiba} A terv mentése ettől függetlenül sikeres volt -- a cím a Korábbi
               tervek listáján, a ceruza-ikonnal pótolható.
+            </Callout.Text>
+          </Callout.Root>
+        )}
+        {piszkozatTorlesHiba && (
+          <Callout.Root color="amber" mb="5" style={{ textAlign: 'left' }}>
+            <Callout.Text>
+              A piszkozat automatikus törlése nem sikerült: {piszkozatTorlesHiba} A terv
+              mentése ettől függetlenül sikeres volt -- a Kezdőlapon még megjelenhet egy
+              elavult piszkozat-kártya, ott elvethető.
             </Callout.Text>
           </Callout.Root>
         )}

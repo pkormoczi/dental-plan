@@ -36,16 +36,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   lásd a tervdokumentumban.
   **Terv:** `backlog/plans/backlog-67-veglegesitesi-validacio-terv.md`
 
-### 69. tétel — Atomikus véglegesítés (PDF+JSON)
-  (a `backlog/redesign/` redesign-döntéssorozat DP-053 tétele) — kódban
-  azonosított hiba: a `doFinalize()` egyetlen try blokkban futtatja a
-  tartós mentést (`savePlan`/`loadPlan`) ÉS a piszkozat best-effort
-  törlését (`markPlanSaved`) — egy sikeres mentés után hibázó törlés ma
-  hamis "A mentés nem sikerült" üzenetet mutatna, D168/D169-et sértve.
-  Ez a tétel a két hibazónát szétválasztja. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-69-atomikus-veglegesites-terv.md`
-
 ### 70. tétel — „Csak ajánlat" mód
   (a `backlog/redesign/` redesign-döntéssorozat DP-054 tétele) — a
   "Csak ajánlat" kapcsoló ma kizárólag `PreviewPage.tsx` helyi React

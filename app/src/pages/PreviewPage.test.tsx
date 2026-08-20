@@ -11,6 +11,7 @@ import App from '../App';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 import { DemoStorage } from '../storage/DemoStorage';
+import { DemoDraftStorage } from '../storage/DemoDraftStorage';
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@react-pdf/renderer')>();
@@ -364,6 +365,99 @@ describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => 
       await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
 
       expect(localStorage.getItem('dp:piszkozat')).toBeNull();
+    },
+    20000,
+  );
+});
+
+// backlog-69 (D74): a tartós mentés (savePlan+loadPlan) és a piszkozat
+// best-effort takarítása (markPlanSaved -> drafts.clear()) két külön
+// hibazóna -- egy sikeres mentés utáni takarítás-hiba a doki szemszögéből
+// SOHA nem "A mentés nem sikerült", legfeljebb egy halk amber jelzés a
+// siker-képernyőn (lásd PreviewPage.tsx doFinalize()).
+describe('PreviewPage -- backlog-69: piszkozat-törlés hibája nem hiúsítja meg a mentést', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'hibázó drafts.clear() mellett is a siker-képernyő jelenik meg, amber jelzéssel',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Takaritas Hiba Elek');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await screen.findByText('Fogeltávolítás');
+      await user.keyboard('{Enter}');
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      // A `clear()` csak MOST, a piszkozat-írás(ok) UTÁN kap hibát -- a
+      // fenti szerkesztés maga ne hiúsuljon meg.
+      vi.spyOn(DemoDraftStorage.prototype, 'clear').mockRejectedValue(
+        new Error('megtelt a tárhely'),
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+
+      await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+      expect(screen.queryByText(/A mentés nem sikerült/)).not.toBeInTheDocument();
+      expect(
+        await screen.findByText(/A piszkozat automatikus törlése nem sikerült/),
+      ).toBeInTheDocument();
+
+      vi.restoreAllMocks();
+    },
+    20000,
+  );
+
+  it(
+    'sikeres drafts.clear() mellett nincs amber piszkozat-jelzés',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Takaritas Sikeres Elek');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await screen.findByText('Fogeltávolítás');
+      await user.keyboard('{Enter}');
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+
+      await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+      expect(screen.queryByText(/A piszkozat automatikus törlése nem sikerült/)).not.toBeInTheDocument();
     },
     20000,
   );
