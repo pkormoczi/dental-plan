@@ -9,6 +9,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
 import { LepesGuardProvider } from './components/LepesGuardContext';
 import { NavGuardProvider } from './components/NavGuardContext';
+import { NyelviReviewProvider } from './components/NyelviReviewContext';
 import { AppStateProvider } from './state/AppState';
 import { StorageProvider } from './storage/StorageContext';
 
@@ -43,7 +44,12 @@ export function TestProviders({ children }: { children: ReactNode }) {
             {/* D46: a D38-védett lapok (pl. SettingsPage sablon-szekciója)
                 useNavGuard()-ot hívnak -- Provider nélkül dob. */}
             <NavGuardProvider>
-              <TestLepesGuardProvider>{children}</TestLepesGuardProvider>
+              <TestLepesGuardProvider>
+                {/* 65. tétel (D72): a `PlanEditorPage`/`PreviewPage`
+                    `useNyelviReview()`-t hív -- Provider nélkül dob, a
+                    `TervWorkflowShell` mintáján. */}
+                <NyelviReviewProvider>{children}</NyelviReviewProvider>
+              </TestLepesGuardProvider>
             </NavGuardProvider>
           </AppStateProvider>
         </StorageProvider>

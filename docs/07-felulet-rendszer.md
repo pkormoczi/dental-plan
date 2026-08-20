@@ -230,6 +230,14 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   `aria-label`-je a tiszta lépésfelirat — enélkül a Badge számjegye
   belefolyna az accessible name-be (pl. „1Terv adatai”), és a „Kezelések”
   lépés ütközne a NavBar „Kezelések és árak” linkjével.
+- Nem-modális, session-jellegű, több oldalon átívelő állapotsáv (pl.
+  `components/NyelviReviewBar.tsx`, 65. tétel, D72): a `TervWorkflowShell.tsx`
+  rendereli, a workflow-stepper ALATT, `position: sticky; top: 0`, `t.page`
+  háttér helyett `t.accentWash`-sal (a `PatientDetailHeader.tsx` sticky
+  mintája, de vizuálisan megkülönböztethető tőle — ez nem entitás-fejléc,
+  hanem egy folyamatban lévő, félbeszakítható munkafolyamat jelzése). SOHA
+  nem modal/AlertDialog — a normál navigáció (más route-ra kattintás)
+  végig engedett, a sáv csak követi a dokit, nem zárja el az utat.
 
 ### Szín, forma, sűrűség
 

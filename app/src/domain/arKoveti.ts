@@ -123,6 +123,10 @@ export function frissArlistaval(plan: Plan, priceList: PriceList): Plan {
         listaEgysegar: ujAr,
         tenylegesEgysegar: ujAr,
         savos: ar.tipus === 'SAVOS',
+        // D72: a sor default-following állapotba kerül (visszaáll az
+        // árlistai szövegre) -- nincs mit nyelvileg ellenőrizni rajta.
+        nevNyelv: null,
+        leirasNyelv: null,
       };
     }),
   }));

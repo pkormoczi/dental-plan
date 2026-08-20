@@ -395,6 +395,13 @@ interface SorTerv {
   /** A doki kézzel átírt neve -- a `sorFallback()` 'elterAzArlistatol' ágának demója. */
   nevOverride?: string;
   leirasSnapshot?: string;
+  /**
+   * A `nevOverride` nyelvi review-metaadata (65. tétel, D72) --
+   * `domain/nyelviReview.ts`. A `sorFallback`-tól ELTÉRŐEN ez akkor is
+   * látszik, ha a terv nyelve MAGYAR: a demó ezt mutatja meg (a
+   * `sorFallback` `hu` terven mindig `null`-t ad, D21).
+   */
+  nevNyelvOverride?: Nyelv;
 }
 
 function buildSor(terv: SorTerv, penznem: Penznem, nyelv: Nyelv): Sor {
@@ -428,6 +435,9 @@ function buildSor(terv: SorTerv, penznem: Penznem, nyelv: Nyelv): Sor {
     listaEgysegar: lista,
     tenylegesEgysegar: tenyleges,
     ...(terv.leirasSnapshot ? { leirasSnapshot: terv.leirasSnapshot } : {}),
+    ...(terv.nevNyelvOverride
+      ? { nevNyelv: { authoredInLanguage: terv.nevNyelvOverride } }
+      : {}),
   };
 }
 
@@ -708,7 +718,16 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
                   { tetelId: 't073', fogak: '46', savosOverride: true },
                 ],
               },
-              { megnevezes: '3. kezelés — kontroll', sorok: [{ tetelId: 't001' }] },
+              {
+                megnevezes: '3. kezelés — kontroll',
+                // 65. tétel (D72): a doki tévedésből németül gépelte át a
+                // sor nevét egy MAGYAR terven -- ezt a `sorFallback` (D21)
+                // sosem jelezné (hu terven mindig `null`-t ad), a nyelvi
+                // review viszont igen.
+                sorok: [
+                  { tetelId: 't001', nevOverride: 'Kontrolle nach Behandlung', nevNyelvOverride: 'de' },
+                ],
+              },
             ],
           },
         ],

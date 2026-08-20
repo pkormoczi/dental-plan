@@ -1160,3 +1160,86 @@ describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés
     20000,
   );
 });
+
+// 65. tétel (D72): a puha "nyelvi-review" lépés a "de-fallback-names" UTÁN
+// következik a láncban -- itt egyszerre fut le mindkettő (a sornév kézzel
+// átírva, ami MIND az árlistai-fordítás-hiány, MIND a nyelvi review-t
+// alkalmazhatóvá teszi), hogy a sorrend is ellenőrizhető legyen.
+describe('PreviewPage -- 65. tétel (D72): nyelvi review véglegesítési lépés', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'a nyelvváltás után kézzel átírt (magyarul maradt) sornév "de-fallback-names" UTÁN "nyelvi-review" dialógust nyit; az "Irányított ellenőrzés" a szerkesztőbe visz, a sávval',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+
+      await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Nyelvireview');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      fireEvent.change(await screen.findByLabelText('Született'), { target: { value: '1990-01-01' } });
+      await user.type(screen.getByLabelText('TAJ'), '123 456 789');
+      await user.type(screen.getByLabelText('Lakcím'), '1113 Budapest, Bartók Béla út 42. 2/5');
+      await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
+      await user.type(screen.getByLabelText('E-mail'), 'teszt.nyelvireview@example.hu');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      // Kézzel átír a sor nevén MAGYAR dokumentumon -- a metaadat
+      // `authoredInLanguage: 'hu'`-ra stampel, ami a MOSTANI (hu) nyelvvel
+      // nem mismatch (a szerkesztő ekkor még nem jelez semmit).
+      const nameField = screen.getByDisplayValue('Fogeltávolítás');
+      await user.clear(nameField);
+      await user.type(nameField, 'Kihúzás megbeszélt módon');
+
+      await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+      await screen.findByText('Dokumentum nyelve');
+      await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+
+      await user.click(screen.getByRole('link', { name: 'Kezelések' }));
+      await screen.findByDisplayValue('Kihúzás megbeszélt módon');
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+
+      const nevekDialog = await screen.findByRole('alertdialog');
+      expect(within(nevekDialog).getByText('Tételnevek nem németül')).toBeInTheDocument();
+      await user.click(within(nevekDialog).getByRole('button', { name: 'Folytatás' }));
+
+      const nyelviDialog = await screen.findByRole('alertdialog');
+      expect(within(nyelviDialog).getByText('Nyelvi ellenőrzésre váró szövegek')).toBeInTheDocument();
+      expect(within(nyelviDialog).getByText(/Sor neve: Kihúzás megbeszélt módon/)).toBeInTheDocument();
+
+      await user.click(within(nyelviDialog).getByRole('button', { name: 'Irányított ellenőrzés' }));
+
+      // A guided review a szerkesztőbe navigál, a nem-modális sávval, és a
+      // sornévhez fókuszál -- nem nyit külön modalt (D469).
+      await screen.findByText(/Nyelvi ellenőrzés — még 1 ellenőrizendő/);
+      expect(await screen.findByDisplayValue('Kihúzás megbeszélt módon')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Kihúzás megbeszélt módon')).toHaveFocus();
+
+      // "Nyelv ellenőrizve" -- a sáv automatikusan befejeződik, mert nincs
+      // több ellenőrizendő szöveg (D468).
+      await user.click(screen.getByRole('button', { name: 'Nyelv ellenőrizve' }));
+      await waitFor(() =>
+        expect(screen.queryByText(/Nyelvi ellenőrzés/)).not.toBeInTheDocument(),
+      );
+    },
+    20000,
+  );
+});

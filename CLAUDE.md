@@ -107,6 +107,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A terv `elolegOsszeg` mezője soha nem haladhatja meg a fizetendőt egy véglegesített terven, és soha nem vágódik le némán | D66 — a százalék-alapú, strukturálisan garantált `előleg ≤ fizetendő` védelem megszűnt az abszolút összegre váltáskor; a véglegesítés-őr kemény blokkja váltja ki, a doki tudatos rendezését várva, nem automatikus levágást |
 | A véglegesítés blokkolva, ha a terv `orvos`-a üres vagy nem szerepel a jelenleg AKTÍV orvosok között | D68 — az aláírás-blokkban szereplő név jogilag releváns; egy már véglegesített terv `plan.orvos` név-pillanatképét ez visszamenőleg nem érinti (D7) |
 | Sem a sor-, sem a tétel-szintű ár SOHA nem számolódik át automatikusan a két pénznem között; a `Sor.masikPenznemAr` kizárólag a pénznemváltás munkaállapota, sosem system of record egyetlen renderelt/nyomtatott értékhez sem | D11/D71 — minden HUF/EUR érték egymástól függetlenül, kézzel megadott; egy automatikus árfolyam-átszámítás vagy a stash-mező nyomtatványon való feltűnése a pillanatkép-elvet (D7) sértené |
+| Egy kézzel gépelt szöveg nyelvi mismatch-ét (`nevNyelv`/`leirasNyelv`/`megnevezesNyelv`/`megjegyzesNyelv`) KIZÁRÓLAG az explicit „Nyelv ellenőrizve” akció oldja fel — a szöveg szerkesztése, egy teljes (akár helyes) fordítás a másik nyelvre, és a dokumentumnyelv puszta váltása sosem | D72 — a páciens által aláírt dokumentumon egy egyszerű szerkesztés nem bizonyítja, hogy a doki ténylegesen ellenőrizte a szöveg nyelvi helyességét; nincs „jelentős változás” heurisztika |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -940,6 +941,41 @@ A pénznemváltás tétel (`docs/01-attekintes-es-dontesek.md` D71,
   beárazatlan ÉS kézi árat sem kapott sorok. A `veglegesitesOr.ts`
   `VeglegesitesDiagnozis.araztalanSorok` mezőjeként, a `nameMissing`/
   `uresSorok` mintáján a PUHA `VEGLEGESITES_LEPESEK` láncon KÍVÜL él
+
+A manuális szövegek nyelvi review-ja tétel (`docs/01-attekintes-es-dontesek.md`
+D72, `docs/02-domain-modell.md` § Nyelvi review a kézzel írt szövegeken,
+`docs/03-funkcionalis-spec.md` § 3. Sor mezői és § Fázisok, § 4. Előnézet
+és véglegesítés) segédfüggvényei/komponensei, szintén ne írd újra őket:
+- `nyelviMismatch(meta, nyelv)` / `reviewIrasUtan(elozo, regi, uj, nyelv)` /
+  `reviewElfogadva(meta, nyelv)` / `nyelviMismatchek(plan)`
+  (`app/src/domain/nyelviReview.ts`) — SZÁNDÉKOSAN külön modul a
+  `nev.ts` `sorFallback`-jától (az ÁRLISTAI fordítás hiányát jelzi, hu
+  terven mindig `null`; ez a doki SAJÁT szövegének nyelvét, mindkét
+  terv-nyelven). `reviewIrasUtan()` az EGYETLEN hely, ahol egy szöveg-írás
+  review-metaadatra gyakorolt hatása eldől — csak vezető/záró whitespace
+  nem invalidál, és egy MÁR mismatch-elt mezőn a tartalom bármilyen
+  átírása (akár a másik nyelvre fordítva) ÉRINTETLENÜL hagyja a
+  metaadatot, kizárólag a `reviewElfogadva()`-t hívó explicit „Nyelv
+  ellenőrizve" akció oldja fel (D72). `sorPatchNyelvvel(sor, patch, nyelv)`
+  (ugyanitt) a `PlanEditorPage.tsx` `patchLine`-jának a `sorPatchKovetessel()`
+  (mennyiség-követés) MELLÉ kötött hívása — ha a hívó patch-e már explicit
+  tartalmaz `nevNyelv`/`leirasNyelv` kulcsot (reset, „Nyelv ellenőrizve"),
+  az mindig nyer
+- `VeglegesitesDiagnozis.nyelviMismatchek` / `'nyelvi-review'`
+  (`app/src/domain/veglegesitesOr.ts`) — a puha lánc hatodik tagja, a
+  `'de-fallback-names'` UTÁN
+- `components/NyelviReviewContext.tsx` `NyelviReviewProvider`/
+  `useNyelviReview()` — a guided review tranziens SESSION-állapota
+  (`aktiv`/`cel`/`elozmeny`), a `TervWorkflowShell.tsx`-ben mountolva;
+  KÜLÖN mechanizmus a `NavGuardContext`-től (D46) és a
+  `LepesGuardContext`-től (D48), nem épül rájuk. `components/
+  NyelviReviewBar.tsx` a nem-modális sáv — a „még N ellenőrizendő" szám és
+  a következő cél MINDIG a JELENLEGI piszkozatból élőben számol
+  (`nyelviMismatchek(plan)`), nem egy a Contextben tárolt, befagyott lista.
+  A navigáció a VALÓDI szerkesztőmezőkhöz a MEGLÉVŐ `fokuszCel`
+  mechanizmusra épül (`PlanEditorPage.tsx`), nem egy duplikált
+  modal-szerkesztőre — a `nev-${pi}-${li}`/`leiras-${pi}-${li}`/
+  `fazis-nev-${pi}`/`fazis-megjegyzes-${pi}` DOM `id`-k ehhez a horgonyok
 
 ## Domain szókincs
 
