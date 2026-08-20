@@ -773,6 +773,16 @@ puha 0 összegű esetnél. A hibaüzenet felsorolja az érintett sorok
 nevét; „Vissza a szerkesztőbe" gomb visz a kereső/ár mezőhöz. Kézi
 ajánlati ár megadása (vagy másik pénznemre váltás) feloldja a blokkot.
 
+**PDF-generálási hiba (kemény blokk, D73):** ha a `@react-pdf/renderer`
+`usePDF()`-je hibára fut, az Előnézet oldal a hibaüzenettel és egy explicit
+„Újrapróbálás” gombbal marad a képernyőn — a gomb újra meghívja a PDF
+generálását ugyanazokkal a propokkal, amikkel a hiba keletkezett. A könyvtár
+a hibán át megőrzi az utolsó sikeresen renderelt PDF `url`-jét, ezért a
+korábbi előnézet beszürkítve látható marad, DE amíg a hiba fennáll, sem a
+„Letöltés” (helyette letiltott „Elavult PDF” gomb), sem a „Véglegesítés és
+mentés” nem érhető el — egy a képernyőn látott tervvel már nem egyező PDF
+nem hagyhatja el a gépet.
+
 **Nyelvi ellenőrzésre váró szövegek (puha megerősítés, D72):** ha a
 tervben van kézzel írt szöveg (sornév, sorleírás, fázisnév, fázis-
 megjegyzés), aminek a nyelvi review-ja mismatch-elt (docs/02-domain-

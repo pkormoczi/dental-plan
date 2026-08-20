@@ -1821,3 +1821,30 @@ karbantartási kör négy önálló javítása.
   § "Nyelvi review a kézzel írt szövegeken", docs/03-funkcionalis-
   spec.md § 3 "Sor mezői", § "Fázisok" és § 4 "Előnézet és
   véglegesítés").
+
+---
+
+### 68. tétel: PDF előnézet generálás és invalidálási életciklus — KÉSZ (2026-08-20)
+
+- **Méret:** kicsi (egy fájl érdemi módosítása + új tesztfájl).
+- **Kereteket sért?** Nem — új D73 (`docs/01-attekintes-es-dontesek.md`),
+  nincs sémaváltozás.
+- **Valódi haszon:** az előzetes állapotfelmérés szerint a PDF-előnézet
+  életciklusának többsége már megfelelt a kívánalmaknak (auto-generálás,
+  töltés alatti beszürkítés, a mentett historical PDF elkülönítve); a
+  kódolvasás viszont két, korábban dokumentálatlan defektust tárt fel
+  ugyanabban a hibaútvonalban: a hiba-`Callout` a `usePDF()` típusígérete
+  (`string`) és a futásidejű alakja (nyers `Error`) közti eltérés miatt
+  render-hiba esetén ténylegesen összeomlott volna, és a „Letöltés” gomb
+  hibaállapotban is aktív maradt egy már a képernyőn látott tervvel nem
+  egyező, elavult PDF-fel.
+- **Megvalósítás:** a hiba-Callout biztonságosan alakítja szöveggé a
+  `pdfInstance.error`-t (`instanceof Error` védelemmel), és egy explicit
+  „Újrapróbálás” gomb kapott helyet mellette, ami újra meghívja
+  `updatePdf(tervDocument)`-et. Amíg a hiba fennáll, a „Letöltés” helyén
+  letiltott „Elavult PDF” gomb jelenik meg, és az utolsó sikeres előnézet
+  beszürkítve (nem eltűnve) látszik — a `usePDF()` a hibán át megőrzi az
+  `url`/`blob`-ot. A „Véglegesítés és mentés” letiltása változatlan
+  maradt (docs/01-attekintes-es-dontesek.md D73, docs/03-funkcionalis-
+  spec.md § 4 "Előnézet és véglegesítés", docs/05-technologia.md
+  § "PDF generálás").

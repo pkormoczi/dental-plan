@@ -563,6 +563,16 @@ export default function PreviewPage() {
   // P1-8: a `usePDF().error`-t korábban senki nem olvasta -- render-hiba
   // esetén a gomb élőnek látszott, kattintásra némán nem történt semmi.
   const pdfError = pdfInstance.error;
+  // A `usePDF()` deklarált típusa `error: string | null`, de a könyvtár
+  // futásidőben a nyers `Error` objektumot adja (@react-pdf/renderer
+  // usePDF hook, onRenderFailed) -- a nyers érték JSX-gyerekként
+  // renderelve összeomlana ("Objects are not valid as a React child").
+  const pdfErrorMessage =
+    pdfError == null
+      ? null
+      : (pdfError as unknown) instanceof Error
+        ? (pdfError as unknown as Error).message
+        : String(pdfError);
   const busy = saving || pdfStale;
   const { cim: confirmCim, leiras: confirmLeiras } = confirmStepTartalom(confirmStep);
 
@@ -594,9 +604,14 @@ export default function PreviewPage() {
       {pdfError && (
         <Callout.Root color="red" mb="3">
           <Callout.Text>
-            A PDF előállítása hibába futott: {pdfError || 'ismeretlen hiba'}. A véglegesítés emiatt
-            le van tiltva.
+            A PDF előállítása hibába futott: {pdfErrorMessage || 'ismeretlen hiba'}. A
+            véglegesítés emiatt le van tiltva.
           </Callout.Text>
+          <Flex mt="2">
+            <Button variant="soft" color="gray" onClick={() => updatePdf(tervDocument)}>
+              Újrapróbálás
+            </Button>
+          </Flex>
         </Callout.Root>
       )}
       {saveError && (
@@ -697,7 +712,14 @@ export default function PreviewPage() {
         </Text>
         <Flex gap="3">
           {pdfInstance.url &&
-            (pdfStale ? (
+            (pdfError ? (
+              // A könyvtár hibán át megőrzi az utolsó sikeres `url`-t (lásd
+              // a `pdfError` Callout fölötti kommentet) -- letöltés nélküle
+              // egy a képernyőn látott tervvel már nem egyező PDF-et adna.
+              <Button variant="soft" color="gray" disabled>
+                Elavult PDF
+              </Button>
+            ) : pdfStale ? (
               <Button variant="soft" color="gray" disabled>
                 PDF frissítése…
               </Button>
@@ -730,7 +752,7 @@ export default function PreviewPage() {
             height: '80vh',
             border: `1px solid ${t.uiLine}`,
             borderRadius: t.radiusLg,
-            opacity: pdfStale ? 0.5 : 1,
+            opacity: pdfStale || pdfError ? 0.5 : 1,
           }}
         />
       ) : (
