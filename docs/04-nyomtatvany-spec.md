@@ -183,10 +183,10 @@ indultunk"), külön felirat vagy eltérő megfogalmazás nélkül.
 
 **Kedvezmény sor nincs** (D9) — a kedvezmény *összege* sehol nem jelenik
 meg, csak a két végösszeg. A `fizetendo` a tényleges árakból **és** egy
-esetleges terv-szintű, kerek végösszeg kedvezményből (`kedvezmenyOsszeg`,
-D25) számol — a terv-szintű kedvezmény önmagában, sorszintű eltérés
-nélkül is megnyitja ezt a kétsoros összegzést, ugyanúgy, mint egy
-sorszintű eltérés (`tervVegosszeg()`, `domain/totals.ts`).
+esetleges terv-szintű, egyedi végösszegből adódó eltérésből
+(`kedvezmenyOsszeg`, D25/D69) számol — a terv-szintű eltérés önmagában,
+sorszintű eltérés nélkül is megnyitja ezt a kétsoros összegzést, ugyanúgy,
+mint egy sorszintű eltérés (`tervVegosszeg()`, `domain/totals.ts`).
 
 Ha a terven be van kapcsolva az előleg (`elolegOsszeg != null`, D66), a
 `Fizetendő` alatt még két sor áll, kisebb súllyal:

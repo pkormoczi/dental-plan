@@ -147,14 +147,15 @@ export interface Plan {
    */
   elolegOsszeg?: number | null;
   /**
-   * Terv-szintű kedvezmény: a sorok összegéből LEVONT fix összeg, amivel a
-   * doki kerek végösszegre zárja az alkut. `null` (vagy hiányzó mező egy
-   * régi `terv.json`-ben) = nincs terv-szintű kedvezmény. FIX ÖSSZEG
-   * tárolódik, nem a begépelt cél-végösszeg (D25) -- különben egy utólagos
-   * sormódosítás némán átírná a kedvezményt. Ne keverd a
-   * `plan.osszesitok.kedvezmeny`-nyel: az a KIMENET (sor- és terv-szintű
-   * eltérés a listaártól együtt), ez a BEMENET. `schemaVersion` nem
-   * emelkedett, a mező opcionális.
+   * Terv-szintű egyedi végösszeg: a sorok összegéből LEVONT, ELŐJELES fix
+   * eltérés, amivel a doki egyedi végösszegre zárja az alkut -- pozitív =
+   * kedvezmény, negatív = felár (D69). `null` (vagy hiányzó mező egy régi
+   * `terv.json`-ben) = nincs terv-szintű eltérés. FIX ÖSSZEG tárolódik, nem
+   * a begépelt cél-végösszeg (D25) -- különben egy utólagos sormódosítás
+   * némán átírná az eltérést. Ne keverd a `plan.osszesitok.kedvezmeny`-nyel:
+   * az a KIMENET (sor- és terv-szintű eltérés a listaártól együtt), ez a
+   * BEMENET. `schemaVersion` nem emelkedett, a mező opcionális, a
+   * séma-kulcs neve a D69 névváltás után is `kedvezmenyOsszeg` maradt.
    */
   kedvezmenyOsszeg?: number | null;
   /**

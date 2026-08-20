@@ -31,13 +31,14 @@ export function sorokListaOsszeg(fazisok: Fazis[]): number {
 
 /**
  * A terv tényleges végösszege (Fizetendő): a sorok összege mínusz a
- * terv-szintű kedvezmény (backlog-16). Ez az EGYETLEN hely, ahol a
- * Fizetendő eldől -- a szerkesztő, a nyomtatvány és a `computeOsszesitok`
- * is ezt hívja.
+ * terv-szintű, ELŐJELES eltérés (`kedvezmenyOsszeg` -- pozitív kedvezmény,
+ * negatív felár, D69). Ez az EGYETLEN hely, ahol a Fizetendő eldől -- a
+ * szerkesztő, a nyomtatvány és a `computeOsszesitok` is ezt hívja.
  *
- * SOHA nem ad negatívat: a kedvezmény fix összeg (D25), tehát utólagos
- * sortörléskor a sorok összege fölé kerülhet -- ilyenkor 0 a fizetendő,
- * nem negatív szám az aláírandó papíron. A szerkesztő ezt külön jelzi.
+ * SOHA nem ad negatívat: az eltérés fix összeg (D25), tehát utólagos
+ * sortörléskor a kedvezmény-ág a sorok összege fölé kerülhet -- ilyenkor 0
+ * a fizetendő, nem negatív szám az aláírandó papíron. A szerkesztő ezt
+ * külön jelzi.
  */
 export function tervVegosszeg(fazisok: Fazis[], kedvezmenyOsszeg?: number | null): number {
   return Math.max(0, sorokOsszeg(fazisok) - (kedvezmenyOsszeg ?? 0));

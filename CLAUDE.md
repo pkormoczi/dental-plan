@@ -318,9 +318,10 @@ segédfüggvényei, szintén ne írd újra őket:
   újra, egy negyedik levonás-logika szét-driftelt volna
 - `sorokOsszeg(fazisok)` / `sorokListaOsszeg(fazisok)` (ugyanitt) — a
   `fazisOsszeg`/`fazisListaOsszeg` terv-szintű összegzői, a
-  `tervVegosszeg()` és a szerkesztő Kerek végösszeg blokkja is ezeket
-  hívja a felső határhoz (a mező alapértéke a nyers, kedvezmény előtti
-  összeg, nem a `tervVegosszeg()` eredménye)
+  `tervVegosszeg()` és a szerkesztő Egyedi végösszeg blokkja is ezeket
+  hívja a mező kiindulási alapjához (a `kedvezmenyOsszeg` a nyers, eltérés
+  előtti összeghez képest levont/hozzáadott érték, nem a
+  `tervVegosszeg()` eredménye)
 
 A terv másolása tétel (`docs/03-funkcionalis-spec.md` § Terv másolása új
 tervként, D26, D57) segédfüggvényei, szintén ne írd újra őket:

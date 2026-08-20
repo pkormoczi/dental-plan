@@ -254,9 +254,11 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     });
   });
 
-  // backlog-16: az alku lezárásakor a doki eddig fejben osztotta vissza a
-  // sorokat, hogy a papíron kerek végösszeg jöjjön ki.
-  describe('a kerek végösszeg kapcsoló', () => {
+  // D69 (redesign DP-046): az alku lezárásakor a doki eddig fejben osztotta
+  // vissza a sorokat, hogy a papíron kerek végösszeg jöjjön ki -- a mező
+  // mostantól felár-irányban is állítható, üresen/autofókuszálva indul, és a
+  // teljes elengedést (0) explicit megerősítéshez köti.
+  describe('az egyedi végösszeg kapcsoló (D69)', () => {
     async function felvesz(user: ReturnType<typeof userEvent.setup>) {
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'fogeltavolitas');
@@ -264,18 +266,18 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
       await waitFor(() => expect(search).toHaveValue(''));
     }
 
-    it('alapból ki van kapcsolva, bekapcsolva a jelenlegi végösszeget mutatja, kedvezmény nélkül', async () => {
+    it('bekapcsoláskor a mező üres és azonnal fókuszban van, nem a jelenlegi végösszeg', async () => {
       const user = userEvent.setup();
       renderEditor();
       await felvesz(user);
 
-      expect(screen.queryByLabelText('Cél végösszeg')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Egyedi végösszeg')).not.toBeInTheDocument();
 
-      await user.click(screen.getByRole('checkbox', { name: /Kerek végösszeg beállítása/ }));
+      await user.click(screen.getByRole('checkbox', { name: /Egyedi végösszeg beállítása/ }));
 
-      const cel = await screen.findByLabelText('Cél végösszeg');
-      expect(cel).toHaveValue('25000');
-      expect(screen.getByText(/→ 0 Ft kedvezmény/)).toBeInTheDocument();
+      const cel = await screen.findByLabelText('Egyedi végösszeg');
+      expect(cel).toHaveValue('');
+      expect(cel).toHaveFocus();
     });
 
     it('kisebb cél végösszeg beírása után a Summary "Kedvezmény" sora az összevont értéket mutatja', async () => {
@@ -283,31 +285,84 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
       renderEditor();
       await felvesz(user);
 
-      await user.click(screen.getByRole('checkbox', { name: /Kerek végösszeg beállítása/ }));
-      const cel = await screen.findByLabelText('Cél végösszeg');
-      await user.clear(cel);
+      await user.click(screen.getByRole('checkbox', { name: /Egyedi végösszeg beállítása/ }));
+      const cel = await screen.findByLabelText('Egyedi végösszeg');
       await user.type(cel, '20000');
       await user.tab();
 
       expect(await screen.findByText(/→ 5000 Ft kedvezmény/)).toBeInTheDocument();
-      // A Summary "Kedvezmény" sora a mai (sorszintű) számítást használja --
-      // terv-szintű kedvezménnyel automatikusan az összevont értéket mutatja.
       expect(screen.getByText(/Kedvezmény: 5000 Ft/)).toBeInTheDocument();
     });
 
-    it('a sorok összege fölé írt cél a felső határra szorítódik (nincs felár ezen az úton)', async () => {
+    it('a sorok összege fölé írt cél felárat ad, nincs felső korlát (D69, 2. döntés)', async () => {
       const user = userEvent.setup();
       renderEditor();
       await felvesz(user);
 
-      await user.click(screen.getByRole('checkbox', { name: /Kerek végösszeg beállítása/ }));
-      const cel = await screen.findByLabelText('Cél végösszeg');
-      await user.clear(cel);
+      await user.click(screen.getByRole('checkbox', { name: /Egyedi végösszeg beállítása/ }));
+      const cel = await screen.findByLabelText('Egyedi végösszeg');
       await user.type(cel, '30000');
       await user.tab();
 
-      expect(cel).toHaveValue('25000');
-      expect(screen.getByText(/→ 0 Ft kedvezmény/)).toBeInTheDocument();
+      expect(cel).toHaveValue('30000');
+      expect(await screen.findByText(/→ 5000 Ft felár/)).toBeInTheDocument();
+      expect(screen.getByText(/Felár: 5000 Ft/)).toBeInTheDocument();
+    });
+
+    it('0 cél végösszeg megerősítést kér, Mégse esetén nem alkalmazódik', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /Egyedi végösszeg beállítása/ }));
+      const cel = await screen.findByLabelText('Egyedi végösszeg');
+      await user.type(cel, '0');
+      await user.tab();
+
+      expect(await screen.findByText(/teljes elengedését/)).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Mégse' }));
+
+      await waitFor(() => expect(screen.queryByText(/teljes elengedését/)).not.toBeInTheDocument());
+      expect(screen.queryByText(/→ .* kedvezmény/)).not.toBeInTheDocument();
+    });
+
+    it('0 cél végösszeg megerősítve nullázza a Mindösszesent, 0→más→0 váltás újra kérdez', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /Egyedi végösszeg beállítása/ }));
+      const cel = await screen.findByLabelText('Egyedi végösszeg');
+      await user.type(cel, '0');
+      await user.tab();
+      await user.click(await screen.findByRole('button', { name: 'Megerősítem' }));
+
+      // 0 cél = a teljes 25 000 Ft-os sorösszeg mint kedvezmény.
+      expect(await screen.findByText(/→ 25.000 Ft kedvezmény/)).toBeInTheDocument();
+      expect(screen.getAllByText(/^0 Ft$/).length).toBeGreaterThan(0);
+
+      await user.clear(cel);
+      await user.type(cel, '10000');
+      await user.tab();
+      expect(await screen.findByText(/→ 15.000 Ft kedvezmény/)).toBeInTheDocument();
+
+      // 0 → más → 0: a megerősítés elévült, újra kérdez.
+      await user.clear(cel);
+      await user.type(cel, '0');
+      await user.tab();
+      expect(await screen.findByText(/teljes elengedését/)).toBeInTheDocument();
+    });
+
+    it('üres, kötelező mező hibája csak blur után jelenik meg, nem a bekapcsolás pillanatában (D521)', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /Egyedi végösszeg beállítása/ }));
+      expect(screen.queryByText(/Add meg az egyedi végösszeget/)).not.toBeInTheDocument();
+
+      await user.tab();
+      expect(await screen.findByText(/Add meg az egyedi végösszeget/)).toBeInTheDocument();
     });
   });
 
