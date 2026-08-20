@@ -569,6 +569,11 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
   leírások nyomtatása, lásd lent) **kizárólag** a fázislista végén, a
   „Fázis hozzáadása" gomb alatt jelenik meg — sem a szerkesztő
   fejlécében, sem a workflow-héjban nincs végösszeg (D59).
+- A szerkesztő maga nem tiltja a sor nélküli fázist (üres fázis törlése
+  egyetlen kattintás, lásd fent), de egy 0 soros fázissal a véglegesítés
+  KEMÉNY blokk (D78, lásd lent „Előnézet és véglegesítés") — a
+  nyomtatvány a `fazisok` tömböt feltétel nélkül végigrendereli, egy
+  üres fázis üres fejlécként kerülne a papírra.
 
 ### Egyedi végösszeg
 
@@ -739,125 +744,126 @@ látja, legfeljebb egy halk jelzéssel, hogy a takarítás elmaradt.
 Meglévő terv szerkesztése **soha nem írja felül** a korábbi verziómappát
 (D4).
 
-**Német terv, hiányzó/eltérő/egyedi tételnevekkel:** ha a tervben olyan sor
-van, amihez nem tartozik német tétel név, amelynek neve kézzel eltér az
-árlistától (lásd D21, D24), vagy amelyik egyedi (nincs mögötte árlistai
-tétel), a véglegesítés megerősítést kér — a páciens ezt a dokumentumot
-írja alá, ezért ez a figyelmeztetés soha nem néma. A megerősítő dialógus
-**három külön felsorolást** mutat: „N tételnek nincs német neve", „M sor
-neve eltér az árlistától (kézzel szerkesztve)" és „K egyedi, szabad
-szöveges sor — a nyelvét te írtad" — a három ok különböző dokitennivalót
-jelent, nem szabad egy lista mögé
-bújtatni.
+### Véglegesítési checklist (D76)
 
-**Hiányzó vagy nem aktív kezelőorvos (kemény blokk, D68):** ha a terv
-`orvos` mezője üres, vagy nem szerepel a jelenleg aktív orvosok között
-(a Beállításokban időközben deaktiválták vagy törölték), a véglegesítés
-**nem** kérhető meg és nem folytatható — az aláírás-blokkban szereplő
-kezelőorvos-név jogilag releváns, nem maradhat üresen vagy egy már
-érvénytelen névvel. A hibaüzenet „Kezelőorvos kiválasztása" gombbal a
-Terv adatai lapra visz. Ez a blokk a hiányzó páciensnév-blokk UTÁN, a
-kitöltetlen sor blokk ELŐTT ellenőrződik — mindkét szomszédja egy
-kattintással javítható a Terv adatai lapon, a tartalmi szerkesztést
-igénylő kitöltetlen sor marad utolsó.
+A tartalmi validáció egységes, navigálható, `hard`/`soft`/`info`
+súlyosságú tétel-lista (`veglegesitesDiagnozis()`,
+`app/src/domain/veglegesitesOr.ts`), MINDIG látható — nem csak a
+„Véglegesítés és mentés" gombnyomás UTÁN. Nincs szekvenciális
+„Folytatás" modal-lánc: a `soft`/`info` tételek nem blokkolnak és nem
+kérnek külön megerősítést, a doki már a gombnyomás ELŐTT látja őket. A
+gomb kizárólag `hard` tétel jelenlétekor letiltott. Minden tétel
+kattintható/navigálható a releváns workflow-lépésre.
 
-**Kitöltetlen sor (kemény blokk):** ha a fogtérképről kattintással felvett
-sor tétel nélkül maradt, a véglegesítés **nem** kérhető meg és nem
-folytatható — ez nem figyelmeztetés, hanem blokk, hogy névtelen, 0 Ft-os
-sor sose kerülhessen az aláírandó dokumentumra. A hibaüzenet megnevezi a
-fázist és a fogszámot; „Vissza a szerkesztőbe" gomb visz a hiányzó sorhoz.
-Az Előnézet maga nem blokkolódik, csak a véglegesítés.
+**Kemény (`hard`) tételek — blokkolják a véglegesítést:**
 
-**Előleg meghaladja a fizetendőt (kemény blokk, D66):** ha a bekapcsolt
-előleg összege nagyobb, mint a terv tényleges (kedvezménnyel/felárral már
-csökkentett/növelt) végösszege — jellemzően egy sortörlés/módosítás
-utóhatása —, a véglegesítés blokkolva van. Az előleg értéke a szerkesztőn
-MARAD, nem vágódik le automatikusan; a hibaüzenet „Vissza a szerkesztőbe"
-gombbal visz az Előleg blokkhoz, ahol inline hard error jelzi a
-problémát (lásd fent, „Előleg").
+- **Hiányzó páciensnév.**
+- **Hiányzó vagy nem aktív kezelőorvos (D68):** a terv `orvos` mezője
+  üres, vagy nem szerepel a jelenleg aktív orvosok között (a
+  Beállításokban időközben deaktiválták vagy törölték) — az
+  aláírás-blokkban szereplő kezelőorvos-név jogilag releváns, nem
+  maradhat üresen vagy egy már érvénytelen névvel. A Terv adatai lapra
+  navigál.
+- **Kitöltetlen sor:** a fogtérképről kattintással felvett sor tétel
+  nélkül maradt — névtelen, 0 Ft-os sor sose kerülhessen az aláírandó
+  dokumentumra. A tétel megnevezi a fázist és a fogszámot; a
+  szerkesztőbe navigál. Az Előnézet maga nem blokkolódik, csak a
+  véglegesítés.
+- **Üres fázis (D78):** egy 0 soros fázis üres fejlécként kerülne a
+  nyomtatványra (lásd fent „Fázisok"). A szerkesztőbe navigál.
+- **Előleg meghaladja a fizetendőt (D66):** a bekapcsolt előleg összege
+  nagyobb, mint a terv tényleges (kedvezménnyel/felárral már
+  csökkentett/növelt) végösszege — jellemzően egy sortörlés/módosítás
+  utóhatása. Az előleg értéke a szerkesztőn MARAD, nem vágódik le
+  automatikusan; a tétel az Előleg blokkhoz navigál, ahol inline hard
+  error jelzi a problémát (lásd fent, „Előleg").
+- **Beárazatlan sor (D71):** egy névvel ellátott sor tétele nincs
+  beárazva a terv pénznemében (`Tetel.ar[penznem] == null`), ÉS a doki
+  még nem adott meg hozzá kézi ajánlati árat (az ára `0` maradt) — a
+  tétel strukturálisan nem ajánlható ebben a pénznemben ár nélkül, ez
+  nem elgépelés, mint a lenti puha 0 összegű eset. Kézi ajánlati ár
+  megadása (vagy másik pénznemre váltás) feloldja a blokkot.
+- **Hiányzó/nem igazolt német tételnév (D77):** német nyelvű terven
+  minden látható sornak igazolt német neve kell legyen — vagy az
+  árlistai nevet követi (D21/D24), vagy a D72 nyelvi review-metaadat
+  szerint igazoltan németre íródott. A tétel két csoportot mutat: „nincs
+  német nevük az árlistában" és „kézzel írt/átírt, nyelvileg nem
+  ellenőrzött" — utóbbi a mezőn megjelenő „Nyelv ellenőrizve" akcióval
+  oldható fel (lásd D72), előbbi az Árlista adminban pótolható. A tétel
+  a szerkesztőbe navigál.
+- **Hiányzó német kategórianév (D77):** a fogtérkép-legendán ténylegesen
+  megjelenő kategóriának nincs `nev.de`-je — a tervben NEM használt
+  kategória hiányzó neve nem blokkol. Az Árlista adminba (Kategóriák
+  panel) navigál.
 
-**Beárazatlan sor (kemény blokk, D71):** ha egy névvel ellátott sor
-tétele nincs beárazva a terv pénznemében (`Tetel.ar[penznem] == null`),
-ÉS a doki még nem adott meg hozzá kézi ajánlati árat (az ára `0`
-maradt), a véglegesítés blokkolva — a tétel strukturálisan nem
-ajánlható ebben a pénznemben ár nélkül, ez nem elgépelés, mint a lenti
-puha 0 összegű esetnél. A hibaüzenet felsorolja az érintett sorok
-nevét; „Vissza a szerkesztőbe" gomb visz a kereső/ár mezőhöz. Kézi
-ajánlati ár megadása (vagy másik pénznemre váltás) feloldja a blokkot.
+**Puha (`soft`) tételek — látszanak, de nem blokkolnak:**
 
-**PDF-generálási hiba (kemény blokk, D73):** ha a `@react-pdf/renderer`
-`usePDF()`-je hibára fut, az Előnézet oldal a hibaüzenettel és egy explicit
-„Újrapróbálás” gombbal marad a képernyőn — a gomb újra meghívja a PDF
-generálását ugyanazokkal a propokkal, amikkel a hiba keletkezett. A könyvtár
-a hibán át megőrzi az utolsó sikeresen renderelt PDF `url`-jét, ezért a
-korábbi előnézet beszürkítve látható marad, DE amíg a hiba fennáll, sem a
-„Letöltés” (helyette letiltott „Elavult PDF” gomb), sem a „Véglegesítés és
-mentés” nem érhető el — egy a képernyőn látott tervvel már nem egyező PDF
-nem hagyhatja el a gépet.
+- **Hiányzó egyéb páciensadat** (nem kötelező, de a nyomtatványon
+  üresen marad).
+- **Nyelvi ellenőrzésre váró szövegek (D72):** a tervben van kézzel írt
+  szöveg (sornév, sorleírás, fázisnév, fázis-megjegyzés), aminek a
+  nyelvi review-ja mismatch-elt (docs/02-domain-modell.md § Nyelvi
+  review a kézzel írt szövegeken) — SZÁNDÉKOSAN külön a fenti német
+  tételnév-tételtől (az az ÁRLISTAI fordítás/igazolás hiányát jelzi, ez
+  a doki SAJÁT szövegeinek nyelvét). A tétel felsorolja az érintett
+  mezőket mezőfajtánként (Fázis neve/Fázis megjegyzése/Sor neve/Sor
+  leírása), és egy „Irányított ellenőrzés" gombot kínál — ez elindítja a
+  nem-modális guided review-t (`NyelviReviewContext`/`NyelviReviewBar`),
+  ami a szerkesztőbe navigál és sorban végigvezet a még ellenőrizetlen
+  szövegeken, a VALÓDI mezőkhöz fókuszálva (nem egy duplikált
+  modal-szerkesztőhöz).
+- **0 összegű sor:** a tervben van névvel ellátott, de 0 összegű sor
+  (`tenylegesEgysegar * mennyiseg === 0`) — jellemzően egy elgépelés +
+  reflexes Enter terméke a gépel→↑/↓→Enter cikluson (nulla találatra a
+  kereső egyedi sort vesz fel, 0 Ft kezdőértékkel), de lehet szándékos
+  is (pl. ingyenes kontroll), ezért nem kemény blokk. A tétel címe a
+  terv pénznemét követi (HUF: „0 Ft-os tétel(ek)", EUR: „0,00 €-s
+  tétel(ek)").
+- **Hiányzó csomag-leírás:** a tervben `csomag: true` tételre hivatkozó,
+  üres leírású sor van (docs/02-domain-modell.md § Tétel-leírás). Ez a
+  tétel kimarad, ha a terv `leirasokMutatasa` kapcsolója ki van
+  kapcsolva — ilyenkor a leírás úgysem kerül a nyomtatványra.
+- **Árlista-eltérés (D70):** a tervben van sor, aminek `listaEgysegar`-ja
+  eltér a mai árlistától (elavult pillanatkép), vagy aminek ajánlati ára
+  kézzel eltér a listaártól (kedvezmény/felár). A tétel a két okot külön
+  csoportban mutatja („Elavult árlistai pillanatkép" / „Kézzel felülírt
+  ajánlati ár"). Nem kemény blokk: az árlista-eltérés (szándékos
+  kedvezmény, felár, vagy egyszerűen elavult, de még nem frissített
+  pillanatkép) legitim állapot lehet.
+- **Sablon HU-visszaesés:** a tervhez tartozó nyilatkozat/fizetési
+  feltételek/garancia sablon nem érhető el a megfelelő nyelven (lásd
+  lent „Sablon-placeholder őr") — helyette a magyar szöveg jelenik meg a
+  nyomtatványon.
 
-**Nyelvi ellenőrzésre váró szövegek (puha megerősítés, D72):** ha a
-tervben van kézzel írt szöveg (sornév, sorleírás, fázisnév, fázis-
-megjegyzés), aminek a nyelvi review-ja mismatch-elt (docs/02-domain-
-modell.md § Nyelvi review a kézzel írt szövegeken), a véglegesítés egy
-megerősítő lépést kér — a „de-fallback-names" lépés UTÁN, de attól
-SZÁNDÉKOSAN külön (az az ÁRLISTAI fordítás hiányát jelzi, ez a doki SAJÁT
-szövegeinek nyelvét). A dialógus felsorolja az érintett mezőket
-mezőfajtánként (Fázis neve/Fázis megjegyzése/Sor neve/Sor leírása), és egy
-„Irányított ellenőrzés" gombot kínál — ez elindítja a nem-modális guided
-review-t (`NyelviReviewContext`/`NyelviReviewBar`), ami a szerkesztőbe
-navigál és sorban végigvezet a még ellenőrizetlen szövegeken, a VALÓDI
-mezőkhöz fókuszálva (nem egy duplikált modal-szerkesztőhöz). „Folytatás"
-gombbal a lépés a guided review nélkül is átugorható.
+**Info (`info`) tételek — csak tájékoztatnak:**
 
-**0 összegű sor (puha megerősítés):** ha a tervben van névvel ellátott, de
-0 összegű sor (`tenylegesEgysegar * mennyiseg === 0`), a véglegesítés egy
-megerősítő lépést kér — jellemzően egy elgépelés + reflexes Enter terméke a
-gépel→↑/↓→Enter cikluson (nulla találatra a kereső egyedi sort vesz fel, 0 Ft
-kezdőértékkel), de lehet szándékos is (pl. ingyenes kontroll), ezért nem
-kemény blokk. A dialógus felsorolja az érintett sorok nevét, „Folytatás"
-gombbal átugorható; a címe és a szövege a terv pénznemét követi (HUF: „0
-Ft-os tételek", EUR: „0,00 €-s tételek").
+- **Nyilatkozat még lektorálásra vár:** a MEGJELENÍTETT nyilatkozat
+  placeholder (lásd lent „Sablon-placeholder őr") — ilyenkor a
+  nyilatkozat és aláírás oldal garantáltan kimarad, a „Csak ajánlat"
+  mód kényszerítve/letiltva. Ez a tétel csak a TÉNYt jelzi; a kényszer
+  maga a D23-zár, a `PreviewPage.tsx` 4. oldal renderjéhez tartozik.
+- **Páciens törzsadat-eltérés (D48):** ha a páciensnek van lezárt
+  törzsadata (`paciens-adatok.json`, D33), és az eltér a terv `paciens`
+  pillanatképétől, a tétel felsorolja az eltérő mezőket, a Terv adatai
+  lapra navigál. A véglegesítés önmagában nem kényszerít
+  szinkronizálást (D9/D33 elve marad). A mastert a rendszer
+  véglegesítéskor újraolvassa, hogy a tétel a legfrissebb állapotot
+  mutassa — a mentett `terv.json` `paciens` blokkja ettől függetlenül a
+  piszkozat pillanatképe marad (D7).
 
-**Hiányzó csomag-leírás (puha megerősítés):** ha a tervben `csomag: true`
-tételre hivatkozó, üres leírású sor van, a véglegesítés egy megerősítő
-lépést kér — a teljes lánc sorrendje: hiányzó páciensadat → hiányzó/eltérő
-német tételnevek → nyelvi ellenőrzésre váró szövegek → 0 összegű sorok →
-hiányzó csomag-leírás → árlista-eltérés.
-A dialógus felsorolja az érintett sorokat, „Folytatás" gombbal átugorható
-(docs/02-domain-modell.md § Tétel-leírás). Ez a lépés kimarad, ha a terv
-`leirasokMutatasa` kapcsolója ki van kapcsolva — ilyenkor a leírás úgysem
-kerül a nyomtatványra.
-
-**Árlista-eltérés (puha megerősítés, D70):** ha a tervben van sor, aminek
-`listaEgysegar`-ja eltér a mai árlistától (elavult pillanatkép), vagy
-aminek ajánlati ára kézzel eltér a listaártól (kedvezmény/felár), a
-véglegesítés egy megerősítő lépést kér — a lánc UTOLSÓ tagjaként. A
-dialógus a két okot külön felsorolással mutatja („Elavult árlistai
-pillanatkép" / „Kézzel felülírt ajánlati ár"), „Folytatás" gombbal
-átugorható. Nem kemény blokk: az árlista-eltérés (szándékos kedvezmény,
-felár, vagy egyszerűen elavult, de még nem frissített pillanatkép) legitim
-állapot lehet.
-
-**Páciens törzsadat-eltérés (INFO-szint, D48):** ha a páciensnek van lezárt
-törzsadata (`paciens-adatok.json`, D33), és az eltér a terv `paciens`
-pillanatképétől, egy semleges (szürke) sáv sorolja fel az eltérő mezőket, egy
-"Terv adatai" gombbal a Terv adatai lapra. Ez **nem** tagja a fenti
-megerősítő-láncnak — nem kér "Folytatás"-t, nem blokkol, a véglegesítés
-önmagában nem kényszerít szinkronizálást (D9/D33 elve marad). A mastert a
-rendszer véglegesítéskor újraolvassa, hogy a sáv a legfrissebb állapotot
-mutassa — a mentett `terv.json` `paciens` blokkja ettől függetlenül a
-piszkozat pillanatképe marad (D7).
-
-A fenti hat lépés sorrendje és a kemény/puha megkülönböztetés tiszta,
-React-mentes függvényként él (`veglegesitesDiagnozis`/`kovetkezoLepes`,
-`app/src/domain/veglegesitesOr.ts`) — ugyanez a függvény adja vissza az
-INFO-szintű törzsadat-eltérést (`masterElteresek`), az előleg-túllépés
-KEMÉNY jelzését (`elolegTullep`, D66) és a hiányzó/nem aktív kezelőorvos
-KEMÉNY jelzését (`orvosProblema`, D68) is, mindhármat a láncon KÍVÜLI
-mezőként, hogy egy ott felvett mező ne váltson ki automatikusan
-megerősítő dialógust. A `PreviewPage.tsx` csak a React state-et, a
-dialógus-szövegeket és a fenti Sablon-placeholder őr D23-zárát tartja
-meg, a lánc bejárását innen kapja.
+A technikai/infrastrukturális hibák — sablon betöltési hiba, PDF-render
+hiba, mentési hiba — NEM checklist-tételek, hanem önálló, tranziens
+Callout-ok a `PreviewPage.tsx`-en: nem a dokumentum TARTALMÁRÓL szólnak,
+hanem az alkalmazás aktuális working-state-jéről. A PDF-generálási hiba
+(D73) ezek közül kiemelt: ha a `@react-pdf/renderer` `usePDF()`-je hibára
+fut, az Előnézet oldal a hibaüzenettel és egy explicit „Újrapróbálás”
+gombbal marad a képernyőn — a gomb újra meghívja a PDF generálását
+ugyanazokkal a propokkal, amikkel a hiba keletkezett. A könyvtár a hibán
+át megőrzi az utolsó sikeresen renderelt PDF `url`-jét, ezért a korábbi
+előnézet beszürkítve látható marad, DE amíg a hiba fennáll, sem a
+„Letöltés” (helyette letiltott „Elavult PDF” gomb), sem a „Véglegesítés
+és mentés” nem érhető el — egy a képernyőn látott tervvel már nem egyező
+PDF nem hagyhatja el a gépet.
 
 ### Sablon-placeholder őr
 

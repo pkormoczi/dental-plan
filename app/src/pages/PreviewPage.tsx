@@ -5,11 +5,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
-import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
+import { Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
 import { useNyelviReview } from '../components/NyelviReviewContext';
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
-import { formatMoney } from '../domain/money';
 import { aktivOrvosok } from '../domain/orvosok';
 import { paciensTorzsadatbol } from '../domain/paciensAdatok';
 import { isPlaceholderTemplate } from '../domain/templates';
@@ -17,11 +16,12 @@ import { computeOsszesitok } from '../domain/totals';
 import { buildToothVisualStates } from '../domain/toothVisual';
 import { feloldPatientDir } from '../domain/torzsadatBetoltes';
 import type { Paciens, PlanRef } from '../domain/types';
+import { nyelviMismatchek } from '../domain/nyelviReview';
 import {
-  kovetkezoLepes,
+  vanKemenyBlokk,
   veglegesitesDiagnozis,
-  VEGLEGESITES_LEPESEK,
-  type VeglegesitesLepes,
+  type CsekklistaRoute,
+  type CsekklistaSulyossag,
 } from '../domain/veglegesitesOr';
 import { TervDocument } from '../pdf/TervDocument';
 import { renderToothChartPng } from '../pdf/toothChartImage';
@@ -29,20 +29,20 @@ import { useAppState } from '../state/AppState';
 import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
 
-// `attemptFinalize` a lánc elején kezdi, `confirmStepContinue` a JELENLEGI
-// lépés utáni első alkalmazható lépésre ugrik (lásd lent) -- a lánc maga
-// (sorrend, kemény/puha megkülönböztetés) a `domain/veglegesitesOr.ts`-ben
-// él, tiszta függvényként.
-type ConfirmStep = VeglegesitesLepes | null;
+/** A checklist-tétel súlyossága szerinti `Callout` szín (D73: hard/soft/info a projekt Callout-konvencióján). */
+const SULYOSSAG_SZIN: Record<CsekklistaSulyossag, 'red' | 'amber' | 'gray'> = {
+  hard: 'red',
+  soft: 'amber',
+  info: 'gray',
+};
 
-/** Egy névlista szöveges blokkja a "Hiányzó/eltérő tételnevek" dialógushoz, üres listánál `''`. */
-function nevListaSzoveg(cim: string, nevek: string[]): string {
-  if (nevek.length === 0) return '';
-  return (
-    `${cim} (${nevek.length}):\n${nevek.slice(0, 8).join('\n')}` +
-    (nevek.length > 8 ? `\n… és további ${nevek.length - 8}` : '')
-  );
-}
+/** A checklist-tétel `route`-jához tartozó navigációs gomb felirata. */
+const ROUTE_GOMB_FELIRAT: Record<CsekklistaRoute, string> = {
+  '/paciens': 'Terv adatai',
+  '/terv': 'Vissza a szerkesztőbe',
+  '/arlista': 'Árlista',
+  '/beallitasok': 'Beállítások',
+};
 
 export default function PreviewPage() {
   const { plan, setPlan, settings, priceList, markPlanSaved, piszkozatPatientDir, piszkozatTervCim } =
@@ -78,20 +78,11 @@ export default function PreviewPage() {
   // a terv MÁR a lemezen van, ez legfeljebb egy elmaradt takarítás, nem
   // mentési hiba. Csak a siker-képernyőn jelenik meg, amber színnel.
   const [piszkozatTorlesHiba, setPiszkozatTorlesHiba] = useState<string | null>(null);
-  const [nameMissingNotice, setNameMissingNotice] = useState(false);
-  const [orvosNotice, setOrvosNotice] = useState(false);
-  const [uresSorokNotice, setUresSorokNotice] = useState(false);
-  const [elolegTullepNotice, setElolegTullepNotice] = useState(false);
-  const [araztalanSorokNotice, setAraztalanSorokNotice] = useState(false);
   // A webbel megegyező forrásból (design/toothChartSvg) canvason renderelt
   // fogtérkép-PNG a nyomtatványhoz -- lásd pdf/toothChartImage.ts. `null`,
   // amíg el nem készül, vagy ha a rajzolás meghiúsul (pl. jsdom teszt) --
   // ilyenkor a TervDocument a fogtérkép-blokkot egyszerűen kihagyja.
   const [toothChartPng, setToothChartPng] = useState<string | null>(null);
-  // A confirm()-lánc (hiányzó adatok -> hiányzó német nevek) Radix
-  // AlertDialogként: legfeljebb egy van nyitva egyszerre, a lépés neve
-  // dönti el, melyik szöveg/cím jelenjen meg.
-  const [confirmStep, setConfirmStep] = useState<ConfirmStep>(null);
   // P0-1: dupla kattintás elleni in-flight védelem -- a `saving` state
   // önmagában nem elég, mert egy második kattintás a state frissülése
   // (render) ELŐTT is megtörténhet.
@@ -276,119 +267,17 @@ export default function PreviewPage() {
 
   const nyelviReview = useNyelviReview();
 
-  const {
-    nameMissing,
-    uresSorok,
-    elolegTullep,
-    araztalanSorok,
-    nevProblemak: { nincsForditas, elterAzArlistatol, egyedi },
-    nullaSorok,
-    hianyzoLeirasok,
-    masterElteresek,
-    orvosProblema,
-    arElteresek,
-    nyelviMismatchek,
-    alkalmazhato,
-  } = veglegesitesDiagnozis(
+  // A csekklista a `nyilatkozatIsPlaceholder`-t (fent) csak TÉNYKÉNT kapja
+  // meg (D73) -- a kényszerített offer-only mód (`effectiveOfferOnly`,
+  // szintén fent) és a D23 jogi zár ettől függetlenül, a hívó szintjén él.
+  const csekklista = veglegesitesDiagnozis(
     plan,
     priceList,
     plan.leirasokMutatasa ?? true,
     masterPaciens,
     aktivOrvosok(settings),
+    { sablonFallback, nyilatkozatPlaceholder: nyilatkozatIsPlaceholder },
   );
-
-  /**
-   * A `confirmStep`-dialógus cím/leírás szövege -- öt lépésnél a korábbi,
-   * egymásba ágyazott ternár-lánc olvashatatlanná vált volna. `null` lépésnél
-   * (dialógus zárva) a `price-drift` szöveg ágára esik, ez sosem látszik.
-   */
-  function confirmStepTartalom(step: ConfirmStep): { cim: string; leiras: string } {
-    if (step === 'missing-fields') {
-      return {
-        cim: 'Hiányzó páciensadatok',
-        leiras:
-          'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad). Folytatod a véglegesítést?',
-      };
-    }
-    if (step === 'de-fallback-names') {
-      return {
-        cim: 'Tételnevek nem németül',
-        leiras:
-          'Ez egy német nyelvű ajánlat, de néhány sor neve nem németül kerül a nyomtatványra.\n\n' +
-          [
-            nevListaSzoveg('Nincs német nevük az árlistában', nincsForditas),
-            nevListaSzoveg('Kézzel átírt, eltér az árlistától', elterAzArlistatol),
-            nevListaSzoveg('Egyedi, szabad szöveges sor — a nyelvét te írtad', egyedi),
-          ]
-            .filter(Boolean)
-            .join('\n\n') +
-          '\n\nA páciens ezt a dokumentumot írja alá. Folytatod a véglegesítést?',
-      };
-    }
-    if (step === 'nyelvi-review') {
-      // 65. tétel (D72) -- SZÁNDÉKOSAN külön a fenti `de-fallback-names`
-      // szövegétől: az az ÁRLISTAI fordítás hiányát jelzi, ez a doki SAJÁT,
-      // szabadon gépelt szövegeinek nyelvét (domain/nyelviReview.ts).
-      const MEZO_CIMKE: Record<(typeof nyelviMismatchek)[number]['cel']['mezo'], string> = {
-        fazisNev: 'Fázis neve',
-        fazisMegjegyzes: 'Fázis megjegyzése',
-        sorNev: 'Sor neve',
-        sorLeiras: 'Sor leírása',
-      };
-      return {
-        cim: 'Nyelvi ellenőrzésre váró szövegek',
-        leiras:
-          'Néhány kézzel írt szöveg nem biztos, hogy a dokumentum nyelvén helyes -- ezeket ' +
-          'te gépelted, a rendszer nem tudja automatikusan ellenőrizni.\n\n' +
-          nevListaSzoveg(
-            'Ellenőrzésre vár',
-            nyelviMismatchek.map((m) => `${MEZO_CIMKE[m.cel.mezo]}: ${m.cimke}`),
-          ) +
-          '\n\nAz "Irányított ellenőrzés" gombbal végigvezetünk rajtuk a szerkesztőben, vagy ' +
-          'folytathatod a véglegesítést enélkül is.',
-      };
-    }
-    if (step === 'zero-price-rows') {
-      const nullaOsszeg = formatMoney(0, plan.penznem, plan.nyelv);
-      // A toldalék pénznemenként eltér ("Ft" -> "-os", "€" -> "-s") -- a
-      // cím a terv pénznemét követi, hogy EUR-ban árazott tervnél ne "0
-      // Ft-os" felirat jelenjen meg (backlog-19).
-      const toldalek = plan.penznem === 'EUR' ? '-s' : '-os';
-      return {
-        cim: `${nullaOsszeg}${toldalek} tételek`,
-        leiras:
-          `A következő, névvel ellátott sorok ${nullaOsszeg} értékkel szerepelnek a tervben. ` +
-          'Ha ez szándékos (pl. ingyenes kontroll), folytathatod a véglegesítést.\n\n' +
-          nevListaSzoveg('Érintett sorok', nullaSorok),
-      };
-    }
-    if (step === 'missing-leiras') {
-      return {
-        cim: 'Hiányzó tétel-leírások',
-        leiras:
-          'Néhány csomagtételre hivatkozó soron nincs leírás -- a páciens nem fogja tudni ' +
-          'otthon visszaolvasni, mi van benne.\n\n' +
-          nevListaSzoveg(
-            'Nincs leírás',
-            hianyzoLeirasok.map((h) => h.nev),
-          ) +
-          '\n\nFolytatod a véglegesítést leírás nélkül?',
-      };
-    }
-    return {
-      cim: 'Eltérés az árlistától',
-      leiras:
-        'Néhány sor ára eltér a mai árlistától -- ez lehet szándékos kedvezmény/felár, vagy ' +
-        'egy azóta megváltozott árlistai ár, amit még nem frissítettél a sorban.\n\n' +
-        [
-          nevListaSzoveg('Elavult árlistai pillanatkép', arElteresek.elavult),
-          nevListaSzoveg('Kézzel felülírt ajánlati ár', arElteresek.keziAr),
-        ]
-          .filter(Boolean)
-          .join('\n\n') +
-        '\n\nFolytatod a véglegesítést?',
-    };
-  }
 
   async function doFinalize() {
     if (!pdfInstance.blob) return;
@@ -486,59 +375,12 @@ export default function PreviewPage() {
   }
 
   function attemptFinalize() {
-    if (savingRef.current) return;
-
-    // Csak a név kötelező (a mappanévhez), a többi hiánya csak figyelmeztet,
-    // nem blokkol -- docs/03-funkcionalis-spec.md "2. Terv adatai".
-    if (nameMissing) {
-      setNameMissingNotice(true);
-      return;
-    }
-    setNameMissingNotice(false);
-    // D68: hiányzó/nem aktív kezelőorvos -- KEMÉNY blokk, a `nameMissing`
-    // mintáján, a nyelvi/jogi tartalmi hiba (uresSorok) ELŐTT, mert
-    // ugyanúgy egy kattintással (Terv adatai lap) javítható.
-    if (orvosProblema) {
-      setOrvosNotice(true);
-      return;
-    }
-    setOrvosNotice(false);
-    if (uresSorok.length > 0) {
-      setUresSorokNotice(true);
-      return;
-    }
-    setUresSorokNotice(false);
-    if (elolegTullep) {
-      setElolegTullepNotice(true);
-      return;
-    }
-    setElolegTullepNotice(false);
-    // KEMÉNY blokk (62. tétel, D71): beárazatlan, kézi árat sem kapott sor
-    // nem kerülhet aláírandó dokumentumra -- lásd domain/kitoltetlen.ts
-    // `araztalanSorok()`.
-    if (araztalanSorok.length > 0) {
-      setAraztalanSorokNotice(true);
-      return;
-    }
-    setAraztalanSorokNotice(false);
-    const step = kovetkezoLepes(alkalmazhato, 0);
-    if (step) {
-      setConfirmStep(step);
-      return;
-    }
-    void doFinalize();
-  }
-
-  function confirmStepContinue() {
-    // A jelenlegi lépés UTÁN a láncban a következő ALKALMAZHATÓ dialógus
-    // nyílik meg (ha van), nem a mentés fut le rögtön.
-    const idx = confirmStep ? VEGLEGESITES_LEPESEK.indexOf(confirmStep) : -1;
-    const step = kovetkezoLepes(alkalmazhato, idx + 1);
-    if (step) {
-      setConfirmStep(step);
-      return;
-    }
-    setConfirmStep(null);
+    // D73: a szekvenciális megerősítő-lánc megszűnt -- a hard blokkok a
+    // csekklisten (fent, MINDIG láthatóan) jelennek meg, és a gomb
+    // `disabled`-je (lent) már eleve letiltja a kattintást, amíg van ilyen.
+    // A puha tételek nem kérnek "Folytatás"-t, a doki már látta őket a
+    // gombnyomás ELŐTT.
+    if (savingRef.current || vanKemenyBlokk(csekklista)) return;
     void doFinalize();
   }
 
@@ -611,31 +453,18 @@ export default function PreviewPage() {
         ? (pdfError as unknown as Error).message
         : String(pdfError);
   const busy = saving || pdfStale;
-  const { cim: confirmCim, leiras: confirmLeiras } = confirmStepTartalom(confirmStep);
+  // A "Nyelvi ellenőrzésre váró szövegek" checklist-tétel guided-review
+  // gombjának célja -- a lista tartalma megegyezik a `csekklista`
+  // `nyelvi-review` tételének forrásával (domain/veglegesitesOr.ts), külön
+  // hívva, mert csak az ELSŐ cél kell ide, a domain modellbe React-callback
+  // nem kerül.
+  const nyelviMismatchLista = nyelviMismatchek(plan);
 
   return (
     <Box style={{ maxWidth: 900, margin: '0 auto' }}>
       {templateError && (
         <Callout.Root color="red" mb="3">
           <Callout.Text>A sablonok betöltése meghiúsult: {templateError}</Callout.Text>
-        </Callout.Root>
-      )}
-      {nyilatkozatIsPlaceholder && (
-        <Callout.Root color="red" mb="3">
-          <Callout.Text>
-            A nyilatkozat szövege ezen a nyelven még jogi lektorálásra vár (helykitöltő szöveg) —
-            emiatt a nyilatkozat és aláírás oldal nem kerülhet a nyomtatványra, a „Csak ajánlat”
-            mód kényszerítve van. A Beállítások → Nyomtatványok alatt oldható fel, a
-            szöveg lektorálása után.
-          </Callout.Text>
-        </Callout.Root>
-      )}
-      {sablonFallback && (
-        <Callout.Root color="amber" mb="3">
-          <Callout.Text>
-            A tervhez tartozó sablon nem érhető el a megfelelő nyelven (hiányzik, vagy még jogi
-            lektorálásra vár) — helyette a magyar szöveg jelenik meg a nyomtatványon.
-          </Callout.Text>
         </Callout.Root>
       )}
       {pdfError && (
@@ -656,86 +485,49 @@ export default function PreviewPage() {
           <Callout.Text>A mentés nem sikerült: {saveError}</Callout.Text>
         </Callout.Root>
       )}
-      {nameMissingNotice && nameMissing && (
-        <Callout.Root color="red" mb="3">
-          <Callout.Text>A páciens neve kötelező a véglegesítéshez.</Callout.Text>
-        </Callout.Root>
-      )}
-      {orvosNotice && orvosProblema && (
-        <Callout.Root color="red" mb="3">
-          <Callout.Text>
-            {orvosProblema === 'hianyzik'
-              ? 'A tervhez nincs kezelőorvos rendelve. A nyomtatvány aláírás-blokkja nem maradhat kitöltetlenül.'
-              : `A terv kezelőorvosa (${plan.orvos}) már nem szerepel az aktív orvosok között. Válassz aktív kezelőorvost, vagy aktiváld őt újra a Beállításokban.`}
-          </Callout.Text>
-          <Flex mt="2">
-            <Button variant="soft" color="gray" onClick={() => navigate('/paciens')}>
-              Kezelőorvos kiválasztása
-            </Button>
-          </Flex>
-        </Callout.Root>
-      )}
-      {uresSorokNotice && uresSorok.length > 0 && (
-        <Callout.Root color="red" mb="3">
-          <Callout.Text>
-            A terv {uresSorok.length} kitöltetlen sort tartalmaz (nincs megnevezve a
-            beavatkozás):{' '}
-            {uresSorok
-              .map((s) => `${s.fazisNev} — ${s.fogak.trim() || 'nincs fogszám megadva'}`)
-              .join('; ')}
-            . Válassz tételt a keresőben, vagy írd be egyedi néven a szerkesztőben, vagy
-            töröld a sort.
-          </Callout.Text>
-          <Flex mt="2">
-            <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>
-              Vissza a szerkesztőbe
-            </Button>
-          </Flex>
-        </Callout.Root>
-      )}
-      {elolegTullepNotice && elolegTullep && (
-        <Callout.Root color="red" mb="3">
-          <Callout.Text>
-            Az előleg összege nagyobb, mint a fizetendő -- ez sortörlés/módosítás után is
-            előfordulhat. Az előleg értéke megmaradt, rendezd a szerkesztőben, mielőtt
-            véglegesítenéd a tervet.
-          </Callout.Text>
-          <Flex mt="2">
-            <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>
-              Vissza a szerkesztőbe
-            </Button>
-          </Flex>
-        </Callout.Root>
-      )}
-      {araztalanSorokNotice && araztalanSorok.length > 0 && (
-        <Callout.Root color="red" mb="3">
-          <Callout.Text>
-            A terv {araztalanSorok.length} olyan sort tartalmaz, aminek a tétele nincs beárazva a
-            terv pénznemében ({plan.penznem}), és kézi ajánlati árat sem kaptak:{' '}
-            {araztalanSorok.join(', ')}. Add meg az Ajánlati ár mezőt a szerkesztőben, vagy válts
-            pénznemet.
-          </Callout.Text>
-          <Flex mt="2">
-            <Button variant="soft" color="gray" onClick={() => navigate('/terv')}>
-              Vissza a szerkesztőbe
-            </Button>
-          </Flex>
-        </Callout.Root>
-      )}
-      {/* backlog-40 (6. döntés, D162): INFO-szintű, NEM blokkoló jelzés --
-          a véglegesítés önmagában nem kényszerít szinkronizálást (D9/D33). */}
-      {masterElteresek.length > 0 && (
-        <Callout.Root color="gray" mb="3">
-          <Callout.Text>
-            A páciens törzsadata {masterElteresek.length} mezőben eltér a terv adataitól (
-            {masterElteresek.map((m) => m.cimke).join(', ')}).
-          </Callout.Text>
-          <Flex mt="2">
-            <Button variant="soft" color="gray" onClick={() => navigate('/paciens')}>
-              Terv adatai
-            </Button>
-          </Flex>
-        </Callout.Root>
+
+      {/* D73: egységes, MINDIG látható checklist -- a korábbi, csak a
+          gombnyomás UTÁN felbukkanó szekvenciális megerősítő-lánc
+          megszűnt. Ideiglenes, egyoszlopos megjelenítés a meglévő
+          `Callout`-konvencióval; a végleges, kéthasábos elrendezés a 66.
+          tételé. */}
+      {csekklista.tetelek.length > 0 && (
+        <Flex direction="column" gap="2" mb="4">
+          {csekklista.tetelek.map((tetel) => (
+            <Callout.Root key={tetel.id} color={SULYOSSAG_SZIN[tetel.sulyossag]}>
+              <Callout.Text>
+                {tetel.cim}
+                {tetel.reszletek?.map((reszlet) => (
+                  <Text as="p" key={reszlet.cim} size="1" mt="1">
+                    {reszlet.cim} ({reszlet.nevek.length}): {reszlet.nevek.slice(0, 8).join('; ')}
+                    {reszlet.nevek.length > 8 ? ` … és további ${reszlet.nevek.length - 8}` : ''}
+                  </Text>
+                ))}
+              </Callout.Text>
+              {(tetel.route || (tetel.id === 'nyelvi-review' && nyelviMismatchLista.length > 0)) && (
+                <Flex mt="2" gap="2">
+                  {tetel.route && (
+                    <Button variant="soft" color="gray" onClick={() => navigate(tetel.route!)}>
+                      {ROUTE_GOMB_FELIRAT[tetel.route]}
+                    </Button>
+                  )}
+                  {/* 65. tétel (D72): a guided review indítása -- a session-t a
+                      `NyelviReviewContext` tartja, a `NyelviReviewBar.tsx` viszi
+                      a szerkesztőbe a dokit. */}
+                  {tetel.id === 'nyelvi-review' && nyelviMismatchLista.length > 0 && (
+                    <Button
+                      variant="soft"
+                      color="gray"
+                      onClick={() => nyelviReview.indit(nyelviMismatchLista[0].cel)}
+                    >
+                      Irányított ellenőrzés
+                    </Button>
+                  )}
+                </Flex>
+              )}
+            </Callout.Root>
+          ))}
+        </Flex>
       )}
 
       <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
@@ -776,7 +568,7 @@ export default function PreviewPage() {
                 </a>
               </Button>
             ))}
-          <Button onClick={attemptFinalize} disabled={busy || !!pdfError}>
+          <Button onClick={attemptFinalize} disabled={busy || !!pdfError || vanKemenyBlokk(csekklista)}>
             {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
           </Button>
         </Flex>
@@ -809,54 +601,6 @@ export default function PreviewPage() {
           />
         </Skeleton>
       )}
-
-      <AlertDialog.Root
-        open={confirmStep !== null}
-        onOpenChange={(open) => !open && setConfirmStep(null)}
-      >
-        <AlertDialog.Content maxWidth="480px">
-          <AlertDialog.Title>{confirmCim}</AlertDialog.Title>
-          <AlertDialog.Description size="2" style={{ whiteSpace: 'pre-line' }}>
-            {confirmLeiras}
-          </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
-            <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">
-                Mégse
-              </Button>
-            </AlertDialog.Cancel>
-            {/* 65. tétel (D72): a guided review indítása -- a session-t a
-                `NyelviReviewContext` tartja, a `NyelviReviewBar.tsx` viszi
-                a szerkesztőbe a dokit; ez a gomb csak elindítja, a dialógus
-                utána a normál "Folytatás"-sal zárul. */}
-            {confirmStep === 'nyelvi-review' && nyelviMismatchek.length > 0 && (
-              <Button
-                variant="soft"
-                color="gray"
-                onClick={() => {
-                  nyelviReview.indit(nyelviMismatchek[0].cel);
-                  setConfirmStep(null);
-                }}
-              >
-                Irányított ellenőrzés
-              </Button>
-            )}
-            {/* NEM `AlertDialog.Action` -- az beépítetten bezárja a dialógust
-                minden kattintásra (`onOpenChange(false)`), ami UGYANABBAN a
-                kattintás-eseményben versenyhelyzetbe kerül a
-                `confirmStepContinue` lánc-váltásával (missing-fields ->
-                de-fallback-names): mindkét setConfirmStep egy React-batch-
-                ben fut, és a Radix belső bezárása mindig felülírja a mi
-                'de-fallback-names' állításunkat null-ra -- a második
-                dialógus emiatt sosem jelent meg, egyenesen véglegesített.
-                Plain Button-nal az `open` prop KIZÁRÓLAG a mi
-                setConfirmStep hívásainktól függ. */}
-            <Button color="red" onClick={confirmStepContinue}>
-              Folytatás
-            </Button>
-          </Flex>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
     </Box>
   );
 }

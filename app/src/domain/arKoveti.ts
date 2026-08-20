@@ -70,8 +70,8 @@ export interface ArElteroSorok {
 
 /**
  * A tervben lévő sorok közül azok neve, amik eltérnek a mai árlistától --
- * két okra bontva (a `fallbackSorok()`, domain/nev.ts:90-103, plan-szintű
- * mintája). A véglegesítés-őr puha `price-drift` lépéséhez.
+ * két okra bontva. A véglegesítés-őr `ar-elteres` puha csekklista-tételéhez
+ * (D73, `domain/veglegesitesOr.ts`).
  */
 export function arElteroSorok(plan: Plan, priceList: PriceList): ArElteroSorok {
   const eredmeny: ArElteroSorok = { elavult: [], keziAr: [] };

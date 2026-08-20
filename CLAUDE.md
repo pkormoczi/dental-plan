@@ -111,6 +111,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A PDF-előnézet render-hibája esetén sem letölteni, sem véglegesíteni nem lehet, amíg a hiba fennáll — az utolsó sikeres PDF csak beszürkítve látható, „Újrapróbálás” akcióval | D73 — a `usePDF()` hibán át megőrzi a korábbi `url`-t/`blob`-ot; letöltésre engedve egy a képernyőn látott tervvel már nem egyező PDF hagyhatná el a gépet |
 | Egy tartósan mentett verzió (sikeres `savePlan`+`loadPlan`) UTÁNI piszkozat-takarítási hiba SOHA nem minősül „a mentés nem sikerült"-nek — a sikerképernyő ekkor is megjelenik, a takarítás hibája legfeljebb halk jelzés | D74 — a doki különben egy valójában sikeresen, tartósan mentett dokumentumot hinne elveszettnek, és egy fölösleges újrapróbálkozással egy `_v<n+1>` duplikátumot hozna létre (D4) |
 | Egy VÉGLEGESÍTETT terv `csakAjanlat` mezője azt rögzíti, hogy a ténylegesen kiadott PDF tartalmazta-e a nyilatkozat + aláírás oldalt — a placeholder-jelölésű nyilatkozat miatti kényszer (D23) a piszkozatban sosem íródik a mezőbe, csak véglegesítéskor | D75 — enélkül egy placeholder miatt kényszerítve, aláírás nélkül kiadott verzió a mentett fájlban tévesen „teljes dokumentum"-ként (`csakAjanlat: false`) szerepelne, és a verziósor jelvénye (D558) pontosan azon az eseten hallgatna, ahol a legkevésbé engedhető meg a tévedés |
+| Német nyelvű terven a véglegesítés blokkolva, ha egy látható sor neve nem igazoltan németül van (sem árlistai `nev.de`-t nem követ, sem D72 szerint igazoltan `de`-re írt kézi szöveg), vagy ha a fogtérkép-legendán ténylegesen megjelenő kategóriának nincs `nev.de`-je | D77 — aláírandó német dokumentumon lefordítatlan magyar tételnév/kategórianév jogilag/kommunikációsan nem elfogadható |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -166,15 +167,15 @@ Ezek (eredetileg a törölt `ui/tokens.js` prototípusból portolva) már megvan
   a gyökér `CHANGELOG.md`-t és `FEATURES.md`-t olvassa `?raw` importtal
 
 D21 (nyelv/pénznem szétválasztás) hozott néhány újat, ezeket se írd újra:
-- `resolveNev(nev, nyelv)` / `fallbackSorok(plan, priceList)` (`app/src/domain/nev.ts`)
-  — a tétel nevének nyelvfüggő feloldása magyar visszaeséssel + a
-  véglegesítés-őr diagnosztikája (három listára bontva: `nincsForditas` /
-  `elterAzArlistatol` / `egyedi`, lásd alább, backlog-3b). `sorFallback(sor, nyelv,
+- `resolveNev(nev, nyelv)` (`app/src/domain/nev.ts`) — a tétel nevének
+  nyelvfüggő feloldása magyar visszaeséssel. `sorFallback(sor, nyelv,
   tetelById)` (ugyanitt) az EGYETLEN hely, ahol eldől, hogy egy SOR neve
-  miért nem a terv nyelvén szerepel — a `fallbackSorok` és a szerkesztő
-  `HU`/„átírt" jelvénye is ezt hívja. `nevKoveti(sor, tetel, nyelv)`
-  (ugyanitt) a mag-összehasonlítás mindkettő, és a nyelváltás
-  névmegőrzésének (`PatientPage.tsx` `applyNyelv`) forrása
+  miért nem a terv nyelvén szerepel (`nincsForditas`/`elterAzArlistatol`/
+  `egyedi`, lásd backlog-3b) — a szerkesztő `HU`/„átírt" jelvénye ezt
+  hívja (a véglegesítés-őr D76 óta a `domain/nemetNev.ts` KOMPONÁLT
+  predikátumát hívja, nem ezt közvetlenül, lásd lentebb). `nevKoveti(sor,
+  tetel, nyelv)` (ugyanitt) a mag-összehasonlítás mindkettő, és a
+  nyelváltás névmegőrzésének (`PatientPage.tsx` `applyNyelv`) forrása
 - `lefedettseg(priceList, penznem)` (`app/src/domain/coverage.ts`) — a
   német tartalom készültsége (Beállítások, Terv adatai lap)
 - `formatLongDate(iso, nyelv)` / `formatShortDate(iso, nyelv)` (`app/src/domain/date.ts`)
@@ -279,11 +280,6 @@ pénznem (D21), D24) segédfüggvényei, szintén ne írd újra őket:
   `tetelId`-hez kötött sor neve frissülne/maradna változatlan egy
   nyelváltáskor; a `PatientPage.tsx` nyelváltás-megerősítő `AlertDialog`-
   jának élő számlálásához, ne számold újra máshol
-- A `PreviewPage.tsx` „Tételnevek nem németül" dialógusának „Folytatás"
-  gombja SZÁNDÉKOSAN nem `AlertDialog.Action` — lásd a helyi kommentet: az
-  Action beépített auto-close-a versenyhelyzetbe kerülne a `confirmStep`-
-  lánc `missing-fields` → `de-fallback-names` váltásával, és mindig
-  átugorná a második dialógust
 
 A kezeléssor-szerkesztés (kézzel átírt név/ár/leírás marker + reset,
 `docs/03-funkcionalis-spec.md` § Sor mezői, D65) segédfüggvénye, szintén
@@ -374,8 +370,8 @@ segédfüggvényei, szintén ne írd újra őket:
 - `hianyzoCsomagLeirasok(plan, priceList)` (`app/src/domain/kitoltetlen.ts`)
   — PUHA diagnosztika, szándékosan külön a `kitoltetlenSorok` kemény
   blokkjától: azon sorok, amik `csomag: true` tételre hivatkoznak, de üres
-  a leírásuk. A `PreviewPage.tsx` `confirmStep`-láncának harmadik tagja
-  hívja, csak ha `plan.leirasokMutatasa` igaz
+  a leírásuk. A véglegesítés-őr `'hianyzo-leiras'` puha checklist-tétele
+  (D76) hívja, csak ha `plan.leirasokMutatasa` igaz
 - `leirasTulHosszu(szoveg)` / `LEIRAS_FIGYELMEZTETES_KARAKTER` /
   `LEIRAS_FIGYELMEZTETES_SOR` (`app/src/domain/leirasHossz.ts`) — a puha
   hosszkorlát-figyelmeztetés, mindkét hívó helyen (Árlista admin
@@ -430,18 +426,49 @@ véglegesítés „Letöltési fájlnév") segédfüggvényei, szintén ne írd 
   (mi számít piszkozatnak — a nyers `plan.statusz !== 'VEGLEGES'`) a hívó
   (`PreviewPage.tsx`, `OsszesTervSection.tsx`) dolga
 
-A véglegesítés-őr kiemelése (`docs/03-funkcionalis-spec.md` § 4. Előnézet
-és véglegesítés) segédfüggvénye, szintén ne írd újra:
-- `veglegesitesDiagnozis(plan, priceList, leirasokMutatasa)` /
-  `kovetkezoLepes(alkalmazhato, fromIndex)` / `VEGLEGESITES_LEPESEK`
-  (`app/src/domain/veglegesitesOr.ts`) — a kemény blokk (névhiány,
-  kitöltetlen sorok) és a puha `confirmStep`-lánc (hiányzó adatok → német
-  névprobléma → 0 Ft-os sor → hiányzó leírás → árlista-eltérés, D70)
-  tiszta magja, a meglévő `kitoltetlenSorok`/`nullaOsszeguSorok`/
-  `hianyzoCsomagLeirasok`/`fallbackSorok`/`arElteroSorok` hívásával. A
-  `PreviewPage.tsx`-ben marad a React state, a
-  dialógus-szövegek és az `isPlaceholderTemplate`-re épülő D23-zár — ez
-  utóbbi a 4. oldal renderjéhez tartozik, nem a lánchoz
+A véglegesítés-őr egységes csekklista-modellje (`docs/01-attekintes-es-
+dontesek.md` D76/D77/D78, `docs/03-funkcionalis-spec.md` § 4. Előnézet és
+véglegesítés) segédfüggvényei, szintén ne írd újra őket:
+- `veglegesitesDiagnozis(plan, priceList, leirasokMutatasa, master,
+  aktivOrvosNevek, sablon)` / `vanKemenyBlokk(csekklista)`
+  (`app/src/domain/veglegesitesOr.ts`) — egységes, navigálható
+  `VeglegesitesCsekklista { tetelek: CsekklistaTetel[] }` (D76); minden
+  tétel `sulyossag: 'hard' | 'soft' | 'info'`, stabil `id`, opcionális
+  `reszletek`/`szamlalo`/`route`. A korábbi, egymástól eltérő alakú
+  mezőkből (boolean flag-ek, `string[]` listák, egy `alkalmazhato` map
+  által vezérelt szekvenciális `VEGLEGESITES_LEPESEK` lánc) EBBE az
+  egységes alakba olvasztva — nincs többé szekvenciális "Folytatás"
+  modal-lánc, a `PreviewPage.tsx` a teljes listát MINDIG, a
+  gombnyomás ELŐTT is megjeleníti, a "Véglegesítés és mentés" gomb
+  `vanKemenyBlokk()` esetén letiltott. A meglévő `kitoltetlenSorok`/
+  `nullaOsszeguSorok`/`hianyzoCsomagLeirasok`/`arElteroSorok`/
+  `masterSnapshotDiff`/`orvosProblema`/`nyelviMismatchek` hívása
+  VÁLTOZATLAN — ez a tétel csak a BEFOGADÓ formátumot adta. A `sablon`
+  paraméter (`{ sablonFallback, nyilatkozatPlaceholder }`) a hívó MÁR
+  feloldott sablon-betöltési ténye, a modul sosem tölt be sablont maga —
+  a `leirasokMutatasa`/`master`/`aktivOrvosNevek` mintáján. A
+  technikai/infrastrukturális hibák (`templateError`/`pdfError`/
+  `saveError`) TOVÁBBRA IS a `PreviewPage.tsx` önálló, tranziens
+  `Callout`-jai, NEM checklist-tételek — nem a dokumentum tartalmáról,
+  hanem az alkalmazás working-state-jéről szólnak
+- `domain/nemetNev.ts` `nemetNeveIgazolt(sor, tetel)` /
+  `igazolatlanNemetNevek(plan, priceList)` /
+  `igazolatlanNemetKategoriak(plan, priceList)` — D77: SZÁNDÉKOSAN ÚJ,
+  külön modul, ami a `nev.ts` `sorFallback()`-ot (árlistai fordítás
+  megléte, D21) és a `nyelviReview.ts` `nyelviMismatch()`-et (a doki
+  SAJÁT szövegének nyelve, D72) KOMPONÁLJA, egyiket sem módosítja — a
+  soron VAGY az árlistai német nevet kell követnie (`nevKoveti`), VAGY a
+  `Sor.nevNyelv` review-metaadatnak igazoltan a `de` nyelvre kell szólnia;
+  ha egyik sem teljesül, a véglegesítés-őr `'nemet-nev'` HARD tételt ad
+  (a korábbi PUHA „de-fallback-names" lépés helyett). Az
+  `igazolatlanNemetKategoriak()` a MEGLÉVŐ `buildToothVisualStates()`
+  `jelmagyarazat`-jából dolgozik — csak a fogtérképen TÉNYLEGESEN
+  megjelenő, `nev.de` nélküli kategóriákat adja (`'nemet-kategoria-nev'`
+  HARD tétel), a tervben nem használt kategória hiánya nem blokkol
+- `uresFazisok(plan)` (`app/src/domain/kitoltetlen.ts`) — D78: a
+  `kitoltetlenSorok()`/`nullaOsszeguSorok()` mintáján, a 0 soros
+  fázisokat sorolja fel; a véglegesítés-őr `'ures-fazis'` HARD
+  tételeként jelenik meg
 
 A D31 (`docs/01-attekintes-es-dontesek.md`) segédfüggvénye:
 - `savosHatarForditott(ar)` (`app/src/domain/money.ts`) — igaz, ha egy
@@ -743,12 +770,11 @@ adatlap "Páciens törzsadata") segédfüggvényei/komponensei, szintén ne írd
   lent) — tartja a master-betöltést, mindkét kézi dialógust ÉS a
   lépés-elhagyási handler regisztrációját is; a `PatientPage.tsx` emiatt
   gyakorlatilag érintetlen maradt
-- `veglegesitesDiagnozis(plan, priceList, leirasokMutatasa, master)`
-  (`domain/veglegesitesOr.ts`) negyedik paramétere és `masterElteresek`
-  mezője — az INFO-szintű, NEM blokkoló törzsadat-eltérés a
-  véglegesítésnél; szándékosan KÍVÜL van a `VEGLEGESITES_LEPESEK` PUHA
-  láncán, mert az közvetlenül a `kovetkezoLepes` bejárását vezérli, egy ott
-  felvett mező automatikusan megerősítő dialógust nyitna
+- `veglegesitesDiagnozis(plan, priceList, leirasokMutatasa, master, …)`
+  (`domain/veglegesitesOr.ts`) negyedik paramétere — a `masterSnapshotDiff()`
+  eredménye a `'torzsadat-elteres'` INFO-szintű, NEM blokkoló checklist-
+  tételként jelenik meg (D76); a véglegesítés önmagában nem kényszerít
+  szinkronizálást (D9/D33)
 
 A páciens törlése tétel (`docs/01-attekintes-es-dontesek.md` D50,
 `docs/02-domain-modell.md` § Páciens- és terv-mappa,
@@ -883,8 +909,7 @@ A kezelőorvos-választás és öröklési szabályok tétel
   `fallback` mezőjét a `PlanEditorPage.tsx` a MEGLÉVŐ, dátum-frissítést
   jelző semleges `Callout` mellé, nem egy harmadik csatornába rendereli;
   a `domain/veglegesitesOr.ts` `veglegesitesDiagnozis()` az
-  `orvosProblema()`-t, a `masterElteresek` mintájában az `alkalmazhato`
-  PUHA lánc-mapon KÍVÜL (D68)
+  `orvosProblema()`-t hívja, a `'orvos'` HARD checklist-tételhez (D68/D76)
 - `pages/PatientPage.tsx` „Kezelőorvos" szekció — Radix `Select`, csak az
   aktív orvosok közül, egy árva (inaktivált/törölt) hivatkozás külön,
   elválasztó utáni `Select.Item`-ként jelenik meg, amber figyelmeztetéssel.
@@ -915,8 +940,8 @@ mezői" és § 4. "Előnézet és véglegesítés") segédfüggvényei
 - `arFrissitesPatch(frissites)` — a javaslat sor-patchké alakítása; a
   `tenylegesEgysegar`-t is az új értékre írja, a kézi felülírást törölve
 - `arElteroSorok(plan, priceList)` — a tervben eltérő sorok neve, két
-  bucketbe bontva (`elavult`/`keziAr`) — a `fallbackSorok()` plan-szintű
-  mintáján, a véglegesítés-őr `price-drift` puha lépéséhez
+  bucketbe bontva (`elavult`/`keziAr`) — a véglegesítés-őr `'ar-elteres'`
+  puha checklist-tételéhez (D76)
 - `frissArlistaval(plan, priceList)` — a "Másolás új tervbe" default-
   following frissítése: a forrásban ár ÉS név ÉS leírás is követő sorokat
   az aktuális árlistára állítja, `plan.arlistaVerzio`-t is átbélyegezve;
@@ -942,8 +967,7 @@ A pénznemváltás tétel (`docs/01-attekintes-es-dontesek.md` D71,
 - `araztalanSorok(plan, priceList)` (`app/src/domain/kitoltetlen.ts`) — a
   `nullaOsszeguSorok()` mintájára, de KEMÉNY blokk: névvel ellátott,
   beárazatlan ÉS kézi árat sem kapott sorok. A `veglegesitesOr.ts`
-  `VeglegesitesDiagnozis.araztalanSorok` mezőjeként, a `nameMissing`/
-  `uresSorok` mintáján a PUHA `VEGLEGESITES_LEPESEK` láncon KÍVÜL él
+  `'araztalan-sor'` hard checklist-tételeként (D76) jelenik meg
 
 A manuális szövegek nyelvi review-ja tétel (`docs/01-attekintes-es-dontesek.md`
 D72, `docs/02-domain-modell.md` § Nyelvi review a kézzel írt szövegeken,
@@ -964,9 +988,8 @@ D72, `docs/02-domain-modell.md` § Nyelvi review a kézzel írt szövegeken,
   (mennyiség-követés) MELLÉ kötött hívása — ha a hívó patch-e már explicit
   tartalmaz `nevNyelv`/`leirasNyelv` kulcsot (reset, „Nyelv ellenőrizve"),
   az mindig nyer
-- `VeglegesitesDiagnozis.nyelviMismatchek` / `'nyelvi-review'`
-  (`app/src/domain/veglegesitesOr.ts`) — a puha lánc hatodik tagja, a
-  `'de-fallback-names'` UTÁN
+- a `'nyelvi-review'` checklist-tétel (`app/src/domain/veglegesitesOr.ts`
+  `veglegesitesDiagnozis()`, D76) — lásd lentebb
 - `components/NyelviReviewContext.tsx` `NyelviReviewProvider`/
   `useNyelviReview()` — a guided review tranziens SESSION-állapota
   (`aktiv`/`cel`/`elozmeny`), a `TervWorkflowShell.tsx`-ben mountolva;
