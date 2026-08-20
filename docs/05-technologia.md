@@ -108,6 +108,13 @@ Egyetlen `dp:piszkozat` kulcs, egyetlen memóriabeli `plan` slot — több
 böngészőfül esetén last-write-wins, ütközésfeloldás nélkül. **Elfogadott
 kockázat**: egyszemélyes asztali eszköznél nem realisztikus munkafolyamat.
 
+A `clear()` a véglegesítés (`PreviewPage.tsx` `doFinalize()`) végén
+best-effort takarítás, NEM a tartós mentés része (D74) — a hibája nem
+minősítheti át a már sikeresen lemezre írt verziót sikertelenné. Ma
+ártalmatlan (a mockup `localStorage.removeItem`-je gyakorlatilag sosem dob),
+az IndexedDB-alapú végleges implementációnál (tranzakció-hiba, kvóta) válik
+ténylegesen releváns hibaforrássá.
+
 ### Kezdd a File System Access API-val
 
 `showDirectoryPicker()`, a doki egyszer kijelöl egy gyökérmappát.

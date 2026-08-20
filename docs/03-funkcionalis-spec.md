@@ -724,6 +724,11 @@ mérlegelni, mert a doki úgysem látja a tartalmát.
   3. `pdf` + `json` kiírás az új verziómappába
   4. A piszkozat törlése az IndexedDB-ből
 
+A 3. és a 4. lépés két külön hibazóna (D74): az 1–3. tartós mentés, a 4.
+best-effort takarítás. Ha a 3. lépés UTÁN a piszkozat törlése hibázik, a
+véglegesítés attól még SIKERESNEK számít — a doki a szokásos sikerképernyőt
+látja, legfeljebb egy halk jelzéssel, hogy a takarítás elmaradt.
+
 Meglévő terv szerkesztése **soha nem írja felül** a korábbi verziómappát
 (D4).
 

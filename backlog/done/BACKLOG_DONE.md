@@ -1848,3 +1848,24 @@ karbantartási kör négy önálló javítása.
   maradt (docs/01-attekintes-es-dontesek.md D73, docs/03-funkcionalis-
   spec.md § 4 "Előnézet és véglegesítés", docs/05-technologia.md
   § "PDF generálás").
+
+---
+
+### 69. tétel: Atomikus véglegesítés (PDF+JSON) — KÉSZ (2026-08-20)
+
+- **Méret:** kicsi (egy fájl érdemi módosítása + két új teszt).
+- **Kereteket sért?** Nem — új D74 (`docs/01-attekintes-es-dontesek.md`),
+  nincs sémaváltozás.
+- **Kódban azonosított hiba, nem csak hiányzó feature:** a véglegesítés
+  (`doFinalize()`) egyetlen try blokkban futtatta a tartós mentést
+  (`savePlan`/`loadPlan`) és a piszkozat best-effort takarítását
+  (`markPlanSaved`, ami végül `drafts.clear()`-t hív) — egy sikeres
+  mentés utáni hibázó takarítás hamis „A mentés nem sikerült” üzenetet
+  mutatott volna egy valójában tartósan mentett verzió mellett.
+- **Megvalósítás:** a takarítás saját try/catch-be került, a
+  sikerképernyő (`savedRef`) a takarítás hibájától függetlenül mindig
+  megjelenik; egy hibázó takarítás legfeljebb egy halk, amber jelzést
+  kap a sikerképernyőn (a meglévő `cimkeHiba` mintáján), soha nem
+  minősül mentési hibának (docs/01-attekintes-es-dontesek.md D74,
+  docs/03-funkcionalis-spec.md § 4 "Előnézet és véglegesítés",
+  docs/05-technologia.md § "Piszkozat-autosave").
