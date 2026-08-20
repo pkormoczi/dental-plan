@@ -72,7 +72,7 @@ export function planUjTorzsadattal(
  * mentett terv fájl-igazsága (D7), nem a most keletkező piszkozaté.
  *
  * Az opcionális `priceList` -- ha a hívó átadja -- a `frissArlistaval()`-t
- * (domain/arKoveti.ts, backlog-61, D64/D140) futtatja a fázisokon: azok a
+ * (domain/arKoveti.ts, backlog-61, D69/D140) futtatja a fázisokon: azok a
  * sorok, amik a forrásban PONTOSAN követték az akkori árlistát (ár ÉS név
  * ÉS leírás egyaránt), az AKTUÁLIS árlistára frissülnek, a kézzel felülírt
  * sorok érintetlenek maradnak; a másolat `arlistaVerzio`-ja ilyenkor az

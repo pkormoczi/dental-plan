@@ -1,4 +1,4 @@
-// Sor <-> árlista ár-követés (backlog-61, D63). A `mennyiseg.ts` mintáján
+// Sor <-> árlista ár-követés (backlog-61, D69). A `mennyiseg.ts` mintáján
 // önálló, `Sor`-tudatos modul: a `nev.ts` a névfeloldás helye, itt az árra
 // vonatkozó, ugyanolyan szerepű komparátor/diagnosztika/patch-builder él.
 //

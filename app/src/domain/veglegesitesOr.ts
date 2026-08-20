@@ -36,7 +36,7 @@ export type VeglegesitesLepes =
 // Rendezett lánc -- a sorrend implementációs döntés: a páciensadat és a
 // nyelvi/jogi/pénzügyi probléma megelőzi a kommunikációs jellegű
 // leírás-hiányt (docs/03-funkcionalis-spec.md § 4. Előnézet és
-// véglegesítés). A `price-drift` (backlog-61, D63) utolsó lépésként --
+// véglegesítés). A `price-drift` (backlog-61, D69) utolsó lépésként --
 // önmagában sosem blokkolja a többi lépés kommunikációs célját.
 export const VEGLEGESITES_LEPESEK: VeglegesitesLepes[] = [
   'missing-fields',

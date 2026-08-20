@@ -407,7 +407,7 @@ becsült-ár-≈, törlés).
 | Beavatkozás | **Szerkeszthető** szövegmező, alapból a felvételkor rögzített (árlistai vagy egyedi) névvel kitöltve — a doki pontosíthatja, elgépelt/rövidített árlistai nevet javíthat. Az átírás megtartja a `tetelId`-t: az ár, a fogtérkép kategória-színe és a német-fallback ellenőrzés változatlanul az árlistai tételen át működik, csak a megjelenő szöveg (`nevSnapshot`) más. Üresen a sor véglegesítéskor kemény blokk (lásd „Kitöltetlen sor" lent). Egy `tetelId`-hez kötött soron, ha a `nevSnapshot` kézzel eltér a felvételkori árlistai névtől, egy „átírt" jelvény és egy kompakt reset-vezérlő jelenik meg — a reset a `tetel.nev`-et a terv nyelvén állítja vissza (`domain/nev.ts` `nevAtirt()`, D65); ez a jelzés NYELVFÜGGETLEN (magyar terven is működik), a fordítás-hiányt jelző `HU` jelvénytől (`sorFallback`) FÜGGETLENÜL, akár egyszerre is megjelenhet mindkettő |
 | Fog | Szabad szöveg, felsorolás. Nem kötelező. A beírt *számokat* validáljuk (lásd lent), a folyószöveges jegyzet (pl. „jobb felső") változatlanul megengedett |
 | Db | Automatikusan követi a Fog mezőben felsorolt (dedupolt) fogszámot, amíg a doki kézzel be nem írja — attól kezdve a sor levált, egy ⟳ ikongomb jelenik meg a mező mellett, amire kattintva egy lépésben visszaáll a fogak számára és újra követővé válik (`Sor.mennyisegKezi`, docs/02-domain-modell.md § Fogszám kezelés, D32). Alapérték 1, minimum 1 |
-| Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve. Egyedi sornál `—` (nincs árlistai referenciaár) |
+| Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve. Egyedi sornál `—` (nincs árlistai referenciaár). Ha a sor `listaEgysegar`-ja eltér a MAI árlistától, egy ⟳ ikongomb jelenik meg mellette (D69) |
 | Ajánlati ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`). EUR pénznemű tervnél a mező **euróban** fogad be és jelenít meg szöveget (pl. `35,50`), a tárolás változatlanul centben történik — ugyanaz a `NumberField` `unit` mechanizmus, ami az árlista adminban már véd az euró/cent tévesztéstől. Ez tisztán UI-réteg felirat, nem pénzösszeg-formázás, ezért nem indokol közös `domain/money.ts` segédfüggvényt. Ha eltér a listaártól, egy kompakt reset-vezérlő állítja vissza a listaárra (D65) |
 | Becsült ár (≈) | Soronkénti, szabad és kétirányú kapcsoló az Ajánlati ár mező ALATT (ghost ikongomb, `≈` szövegglyph, D65 — korábban a mező mellett volt) — bármelyik soron be- és kikapcsolható, függetlenül attól, hogy a sor árlistai FIX, SAVOS, fogtérkép-kattintásos vagy egyedi eredetű. Bekapcsolva a nyomtatványon `*` + lábjegyzetet kap (D15). Csak megjelenítést vezérel, az összegzésbe nem szól bele; nincs eredet-nyilvántartás, a sor nem jegyzi meg, honnan jött, és az aktuális árlistából sem kérdezzük vissza (D7) |
 | Összeg | `tenylegesEgysegar * mennyiseg` |
@@ -424,6 +424,15 @@ nem** (D9).
 
 Sávos tételnél a listaár helyén a sáv látszik, és az ajánlati ár mező ki
 van emelve — jelzi, hogy itt dönteni kell.
+
+A Listaár ⟳ gombja megerősítő előnézetet nyit (D69): a régi→új listaár, ha
+volt kézi ajánlati ár, egy jelzés, hogy az törlődik, és egy „Hatás a
+tervre" összegzés (Kezelések összege, aktív Kerek végösszeg esetén a
+Fizetendő is, régi→új). Elfogadáskor a sor listaára ÉS ajánlati ára is a
+mai árlistai értékre áll, a kézi felülírás törlődik — a sor visszaáll a
+default-following állapotba. Az árlista admin-mentése ettől függetlenül
+SOHA nem módosít automatikusan egy már megnyitott/mentett tervet — a
+frissítés mindig a doki explicit, soronkénti döntése.
 
 Német nyelvű terven, `tetelId`-hez kötött soron a Beavatkozás mező mellett
 két, egymást kizáró jelvény jelenhet meg: `HU`, ha a tételnek nincs német
@@ -721,11 +730,21 @@ Ft-os tételek", EUR: „0,00 €-s tételek").
 **Hiányzó csomag-leírás (puha megerősítés):** ha a tervben `csomag: true`
 tételre hivatkozó, üres leírású sor van, a véglegesítés egy megerősítő
 lépést kér — a teljes lánc sorrendje: hiányzó páciensadat → hiányzó/eltérő
-német tételnevek → 0 összegű sorok → hiányzó csomag-leírás. A dialógus
-felsorolja az érintett sorokat, „Folytatás" gombbal átugorható
+német tételnevek → 0 összegű sorok → hiányzó csomag-leírás → árlista-eltérés.
+A dialógus felsorolja az érintett sorokat, „Folytatás" gombbal átugorható
 (docs/02-domain-modell.md § Tétel-leírás). Ez a lépés kimarad, ha a terv
 `leirasokMutatasa` kapcsolója ki van kapcsolva — ilyenkor a leírás úgysem
 kerül a nyomtatványra.
+
+**Árlista-eltérés (puha megerősítés, D69):** ha a tervben van sor, aminek
+`listaEgysegar`-ja eltér a mai árlistától (elavult pillanatkép), vagy
+aminek ajánlati ára kézzel eltér a listaártól (kedvezmény/felár), a
+véglegesítés egy megerősítő lépést kér — a lánc UTOLSÓ tagjaként. A
+dialógus a két okot külön felsorolással mutatja („Elavult árlistai
+pillanatkép" / „Kézzel felülírt ajánlati ár"), „Folytatás" gombbal
+átugorható. Nem kemény blokk: az árlista-eltérés (szándékos kedvezmény,
+felár, vagy egyszerűen elavult, de még nem frissített pillanatkép) legitim
+állapot lehet.
 
 **Páciens törzsadat-eltérés (INFO-szint, D48):** ha a páciensnek van lezárt
 törzsadata (`paciens-adatok.json`, D33), és az eltér a terv `paciens`
@@ -737,7 +756,7 @@ rendszer véglegesítéskor újraolvassa, hogy a sáv a legfrissebb állapotot
 mutassa — a mentett `terv.json` `paciens` blokkja ettől függetlenül a
 piszkozat pillanatképe marad (D7).
 
-A fenti négy lépés sorrendje és a kemény/puha megkülönböztetés tiszta,
+A fenti öt lépés sorrendje és a kemény/puha megkülönböztetés tiszta,
 React-mentes függvényként él (`veglegesitesDiagnozis`/`kovetkezoLepes`,
 `app/src/domain/veglegesitesOr.ts`) — ugyanez a függvény adja vissza az
 INFO-szintű törzsadat-eltérést (`masterElteresek`), az előleg-túllépés
@@ -1093,13 +1112,19 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   Egyetlen belépési pontja a **„Másolás új tervbe"**, minden verzió-sor
   `⋯` menüjében, mert konkrétan AZT a verziót másolja, sorokkal együtt
   (egy régebbi verzió sorai eltérhetnek a legfrissebbtől). A
-  `paciensId`, `nyelv`, `penznem`, `fazisok`, `elolegOsszeg`,
-  `kedvezmenyOsszeg` és az `arlistaVerzio` változatlanul átjön —
-  ugyanaz a snapshot-elv, mint egy meglévő terv új verzióra nyitásakor.
-  Ez a valódi A/B alku-változat használati eset: a doki utána csak azt
-  módosítja, ami eltér a két ajánlat között, nem gépeli be újra az
-  egészet. Két mező KIVÉTEL: a **`paciens` blokk** (D57) — ha a
-  pácienshez van lezárt törzsadat (`paciens-adatok.json`), onnan jön,
+  `paciensId`, `nyelv`, `penznem`, `elolegOsszeg` és a
+  `kedvezmenyOsszeg` változatlanul átjön — ugyanaz a snapshot-elv, mint
+  egy meglévő terv új verzióra nyitásakor. Ez a valódi A/B alku-változat
+  használati eset: a doki utána csak azt módosítja, ami eltér a két
+  ajánlat között, nem gépeli be újra az egészet. Három mező KIVÉTEL: az
+  **`orvos`** (D67) — MINDIG a mai globális alapértelmezett orvos, a
+  forrás orvosa SOSEM másolódik át; a **sorok és az `arlistaVerzio`**
+  (D69) — azok a sorok, amik a forrásban PONTOSAN követték az akkori
+  árlistát (ár ÉS név ÉS leírás is), a másolás pillanatában az AKTUÁLIS
+  árlistára frissülnek, a kézzel felülírt sorok érintetlenek maradnak, a
+  másolat `arlistaVerzio`-ja az aktuális árlistáé lesz, és nem indul
+  elavult árakkal; és a **`paciens` blokk** (D57) — ha a pácienshez van
+  lezárt törzsadat (`paciens-adatok.json`), onnan jön,
   nem a forrás verzió pillanatképéből — a másolás pillanatában a doki a
   páciens JELENLEGI adatát várja az új ajánlatba, nem egy esetleg
   elavult telefonszámot/címet. Törzsadat híján a forrás pillanatképe

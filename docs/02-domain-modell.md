@@ -346,6 +346,14 @@ egyetlen árlistai tétel sem talált rá. Ilyen soron nincs értelmezhető
 árlistai referenciaár, ezért `listaEgysegar === tenylegesEgysegar` mindig
 (az ártétel utólagos szerkesztése mindkettőt együtt írja).
 
+Az ár-**követés** DERIVED, nincs hozzá tárolt mező a sémában (D69): egy sor
+akkor „követi” az árlistát, ha `listaEgysegar` pontosan a tétel MAI
+árlistai alapára — ez mindig levezethető a meglévő két mezőből, a
+`nevKoveti()`/`leirasKoveti()` mintáján (`domain/arKoveti.ts` `arKoveti()`).
+A szerkesztő ezen a bázison mutat explicit refresh-vezérlőt a driftelt
+soron; az árlista mentése ettől függetlenül SOHA nem írja át automatikusan
+egy már megnyitott/mentett terv sorait.
+
 ### Tétel-leírás (`leiras`, `csomag`, `leirasSnapshot`, `leirasokMutatasa`)
 
 Egy összetett tétel (pl. „All-on-4 Anax csomag") egyetlen sorként megy be a
