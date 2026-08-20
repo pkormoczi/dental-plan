@@ -8,6 +8,7 @@
 **Én:**
 - majd lehetne egyből terv kiküldése mailben funkció
 - születési dátum, email, telefonszám mindig lesz egyből  
+- bug, árlista tétel kategória váltásnál a fókusz nem követi le a mozgást.
 
 **Kérdések:**
 - Istvánnak kell-e majd az összes korábbi tervet böngésznie? Vagy mindig páciensből indul-e ki? Most az alkalmazás erre épít.

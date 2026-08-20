@@ -295,3 +295,65 @@ Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
 
 ---
 
+## KIDOLGOZÁSRA VÁR
+
+1. **Ajánlat-állapot és visszahívás-jelzés.** A páciens kezelési
+   terveinek dokumentuméletciklusától (`PISZKOZAT`/`VEGLEGES`)
+   függetlenül követhető legyen, hogy egy ajánlat üzletileg hol tart, és
+   kit kell visszahívni. A kidolgozásnak kell meghatároznia az állapotokat,
+   a lejárat/visszahívás működését és a tárolási modellt; az `allapot.json`
+   csak lehetséges megoldás, nem előre rögzített követelmény.
+
+2. **A legnagyobb komponensfájlok felbontása.** A
+   `PlanEditorPage.tsx` (2132 sor), a `PriceListAdminPage.tsx` (1116 sor)
+   és a `pdf/TervDocument.tsx` (567 sor) felelősségeit jól elkülönülő
+   komponensekre, hookokra és tiszta segédfüggvényekre kell bontani. A
+   kidolgozás célja viselkedésmegőrző refaktorálás és világos modulhatárok
+   kialakítása legyen, ne önmagában a fájlok sorszámának csökkentése.
+
+3. **Betegdokumentáció és EESZT-integráció lehetőségének feltárása.** A
+   doktor által jelzett, más fogászati szoftverekben elérhető integráció
+   távlati termékbővítés lehet, de a megvalósítás előtt fel kell tárni a
+   kívánt rendelői munkafolyamatot, a szükséges adatokat, a hozzáférési és
+   megfelelőségi feltételeket, valamint a reális fejlesztési költséget. A
+   feltárás eredménye alapján dönthető el, hogy milyen konkrét fejlesztési
+   tételekre érdemes bontani.
+
+4. **Kezelési terv egyszeri elküldése e-mailben.** A már elkészült PDF-et
+   a tervben rögzített e-mail-cím felhasználásával, kevés lépésben lehessen
+   elküldeni a páciensnek. A kidolgozásnak össze kell hasonlítania az
+   alapértelmezett levelező előkészítését, a rendszermegosztást és a saját
+   levélküldést; utóbbi csak a hitelesítési, adatvédelmi és kézbesítési
+   felelősség tisztázásával választható.
+
+5. **Tömeges e-mailes emlékeztetők és automatikus utánkövetés
+   feltárása.** A felhasználói visszajelzésben felmerült az esedékes
+   kontrollok — például fogkő-eltávolítás — és a közelgő időpontok
+   automatikus jelzése. Először az emlékeztetőtípusokat és a szükséges,
+   jelenleg hiányzó adatforrásokat kell meghatározni; a későbbi megoldásnak
+   az ütemezést, hozzájárulást, leiratkozást, kézbesítési hibákat és a
+   küldési infrastruktúrát is kezelnie kell.
+
+6. **Több félretett, később folytatható kezelési terv.** Az egyetlen aktív
+   böngészős piszkozat mellett a doktor tartósan is félretehessen több
+   megszakított munkát, a meglévő append-only mentési útvonalon,
+   `PISZKOZAT` státuszú verzióként. A kidolgozásnak tisztáznia kell a
+   listázást és folytatást, a törlést/takarítást, a hiányos sorok
+   menthetőségét, valamint azt, hogy a félretett verzióhoz készüljön-e PDF.
+
+7. **Tömeges árváltoztatás az adminban.** Százalékos emeléssel vagy
+   csökkentéssel egyszerre lehessen korrigálni több ártételt — például az
+   összes EUR-árat 5%-kal —, automatikus árfolyam-szolgáltatás nélkül. A
+   kidolgozásnak rendeznie kell a módosítandó kör kiválasztását (teljes
+   árlista, kategória, pénznem vagy kijelölt tételek), a kerekítési
+   szabályokat, valamint a mentés előtti összesített előnézetet és
+   megerősítést.
+
+8. **Sémamigrációs stratégia és keretrendszer kidolgozása.** Meg kell
+   határozni, hogyan alakulnak át a rendelő meglévő JSON-fájljai, amikor az
+   alkalmazás valamelyik adatsémája megváltozik. A kidolgozás térjen ki a
+   fájltípusonkénti, egymásra épülő verziólépésekre, a mentés előtti
+   biztonsági másolatra, a validációra és részleges hiba esetén a
+   visszaállásra, valamint a régi adatokon futó migrációs tesztekre; az
+   első `schemaVersion: 2` bevezetése már ezt a módszert kövesse.
+
