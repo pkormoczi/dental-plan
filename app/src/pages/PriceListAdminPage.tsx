@@ -47,6 +47,7 @@ import {
 import { Field, FieldGroup } from '../components/Field';
 import NumberField from '../components/NumberField';
 import { t } from '../design/tokens';
+import { csokkentettMozgas } from '../design/motion';
 import { ALAP_KATEGORIA_SZIN, KATEGORIA_PALETTA } from '../design/treatmentVisuals';
 import { todayIso } from '../domain/date';
 import { leirasTulHosszu } from '../domain/leirasHossz';
@@ -157,6 +158,13 @@ export default function PriceListAdminPage() {
   // popupban csak nevet és kategóriát adott meg, a logikus következő lépés az
   // ár -- lásd a fájl tetején a panasz leírását.
   const [frissTetelId, setFrissTetelId] = useState<string | null>(null);
+  // Kategóriaváltáskor a nyitott sor a táblázat egy másik (esetleg messze
+  // görgetett) pontjára ugrik -- enélkül a doki keze alól "eltűnik" a
+  // szerkesztett tétel. Külön state a `frissTetelId`-től: az az ÚJ tétel
+  // HUF ár mezőjének is fókuszt ad (`autoFocusAr`), ami itt nem kívánt --
+  // egy kategóriaváltás a Select-en belül marad, nem szabad elrabolnia a
+  // fókuszt onnan.
+  const [atmozgatottTetelId, setAtmozgatottTetelId] = useState<string | null>(null);
   // P0-8-hoz hasonlóan (SettingsPage) -- a `savePriceList` korábban `void`-olva
   // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -184,12 +192,19 @@ export default function PriceListAdminPage() {
   }
 
   function patchItem(id: string, patch: Partial<Tetel> | ((prev: Tetel) => Partial<Tetel>)) {
+    const prevItem = priceList.tetelek.find((x) => x.id === id);
     commit((prev) => ({
       ...prev,
       tetelek: prev.tetelek.map((x) =>
         x.id === id ? { ...x, ...(typeof patch === 'function' ? patch(x) : patch) } : x,
       ),
     }));
+    if (prevItem) {
+      const resolved = typeof patch === 'function' ? patch(prevItem) : patch;
+      if (resolved.kategoriaId !== undefined && resolved.kategoriaId !== prevItem.kategoriaId) {
+        setAtmozgatottTetelId(id);
+      }
+    }
   }
 
   const sortedKategoriak = useMemo(
@@ -330,6 +345,17 @@ export default function PriceListAdminPage() {
     el.scrollIntoView({ block: 'center' });
     setFrissTetelId(null);
   }, [frissTetelId, priceList]);
+
+  // Ugyanaz a görgetés, mint fent, de kategóriaváltáskor -- a nyitott sor
+  // ilyenkor a `grouped` egy másik szakaszába kerül, `autoFocusAr` nélkül
+  // (lásd `atmozgatottTetelId` deklarációját).
+  useEffect(() => {
+    if (!atmozgatottTetelId) return;
+    const el = document.getElementById(`tetel-szerkeszto-${atmozgatottTetelId}`);
+    if (!el) return;
+    el.scrollIntoView({ block: 'center', behavior: csokkentettMozgas() ? 'auto' : 'smooth' });
+    setAtmozgatottTetelId(null);
+  }, [atmozgatottTetelId, priceList]);
 
   const keep = (x: Tetel): boolean => {
     // P0-7: a nyitott sort MINDIG megtartjuk, akkor is, ha egy időközbeni
