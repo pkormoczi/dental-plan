@@ -1,4 +1,4 @@
-// Terv adatai -- docs/03-funkcionalis-spec.md "2. Terv adatai" (D68: hat,
+// Terv adatai -- docs/03-funkcionalis-spec.md "2. Terv adatai" (D61: hat,
 // vizuálisan elkülönített szekció -- Terv címe, Páciens adatai, Dokumentum
 // nyelve, Pénznem, Kezelőorvos, Dátumok).
 //
@@ -11,6 +11,8 @@
 // tétel): a technikai autosave/mentés nem fagyasztja ezeket az értékeket,
 // csak a véglegesítés hozza létre az immutable pillanatképet -- egy már
 // lezárt verzió eleve nem ezen a lapon jelenik meg (lásd "Terv részletei").
+// A Kezelőorvos szekció (D67) ugyanígy szabadon szerkeszthető, egy mentett
+// láncon is -- itt sosem volt zárolás, ami alól ki kellene venni.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -23,6 +25,7 @@ import {
   Flex,
   Grid,
   Heading,
+  Select,
   Text,
   TextField,
 } from '@radix-ui/themes';
@@ -35,6 +38,7 @@ import { sablonVerzioFor } from '../domain/blankPlan';
 import { lefedettseg } from '../domain/coverage';
 import { addDaysIso, formatLongDate } from '../domain/date';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
+import { aktivOrvosok } from '../domain/orvosok';
 import type { Nyelv, Penznem } from '../domain/types';
 import { t } from '../design/tokens';
 import TervCimField from './patientPage/TervCimField';
@@ -49,6 +53,11 @@ export default function PatientPage() {
   const { kerLepesValtas } = useLepesGuard();
   const paciens = plan.paciens;
   const [pending, setPending] = useState<PendingChange | null>(null);
+  const aktivOrvosNevek = aktivOrvosok(settings);
+  // Egy időközben deaktivált/törölt orvosra hivatkozó, még mentetlen sor --
+  // a draft szabadon szerkeszthető marad ilyen állapotban is (D63/D537), a
+  // véglegesítés-őr blokkolja, ha a doki nem választ aktív orvost.
+  const orvosArva = !!plan.orvos && !aktivOrvosNevek.includes(plan.orvos);
 
   function patch(fields: Partial<typeof paciens>) {
     setPlan((prev) => ({ ...prev, paciens: { ...prev.paciens, ...fields } }));
@@ -289,13 +298,53 @@ export default function PatientPage() {
       </Section>
 
       <Section title="Kezelőorvos">
-        <Text as="div" size="2" color={plan.orvos ? undefined : 'gray'}>
-          {plan.orvos || '—'}
-        </Text>
-        <Text as="div" size="1" color="gray" mt="2">
-          A kezelőorvos választása a Beállításokban felvitt orvosok közül -- ezt a mezőt egy
-          későbbi tétel teszi szerkeszthetővé.
-        </Text>
+        {/* A "Kezelőorvos" felirat itt a Section címe -- ez a mezőcímke
+            SZÁNDÉKOSAN nem ismétli meg szó szerint (a PatientPage.test.tsx
+            hat-szekció tesztje `getByText('Kezelőorvos')`-szal ellenőriz,
+            ami egy azonos szövegű Field-címkével két találatot adna). */}
+        <Field label="Kezelőorvos (aláírás-blokk)">
+          <Select.Root
+            value={plan.orvos || undefined}
+            onValueChange={(v) => setPlan((prev) => ({ ...prev, orvos: v }))}
+          >
+            <Select.Trigger placeholder="Válassz kezelőorvost…" style={{ width: '100%', maxWidth: 320 }} />
+            <Select.Content>
+              {aktivOrvosNevek.map((nev) => (
+                <Select.Item key={nev} value={nev}>
+                  {nev}
+                </Select.Item>
+              ))}
+              {orvosArva && (
+                <>
+                  <Select.Separator />
+                  <Select.Item value={plan.orvos}>{plan.orvos}</Select.Item>
+                </>
+              )}
+            </Select.Content>
+          </Select.Root>
+        </Field>
+        {orvosArva && (
+          <Callout.Root color="amber" size="1" mt="2">
+            <Callout.Icon>
+              <ExclamationTriangleIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              A kiválasztott orvos ({plan.orvos}) már nem aktív. A véglegesítés blokkolva lesz,
+              amíg nem választasz aktív kezelőorvost.
+            </Callout.Text>
+          </Callout.Root>
+        )}
+        {!orvosArva && aktivOrvosNevek.length === 0 && (
+          <Callout.Root color="amber" size="1" mt="2">
+            <Callout.Icon>
+              <ExclamationTriangleIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              Nincs aktív kezelőorvos a Beállításokban -- a véglegesítés blokkolva lesz, amíg
+              nem aktiválsz egyet.
+            </Callout.Text>
+          </Callout.Root>
+        )}
       </Section>
 
       <Section title="Dátumok">

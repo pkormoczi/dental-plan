@@ -10,6 +10,10 @@ import type { Paciens, Plan, PriceList, Sor } from './types';
 /** A legtöbb teszt a master-eltérést nem vizsgálja -- lásd külön describe lent. */
 const NO_MASTER = null;
 
+/** Egyezik a lenti `makePlan()` `orvos: 'Dr. Teszt'` alapértékével -- a
+ * legtöbb teszt a kezelőorvos-blokkot nem vizsgálja, lásd külön describe lent. */
+const AKTIV_ORVOSOK = ['Dr. Teszt'];
+
 function paciens(partial: Partial<Paciens> = {}): Paciens {
   return {
     nev: 'Teszt Elek',
@@ -93,7 +97,7 @@ const priceList: PriceList = {
 describe('veglegesitesDiagnozis', () => {
   it('teljesen kitöltött magyar terven minden kemény és puha jelzés hamis/üres', () => {
     const plan = makePlan([[sor()]]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
 
     expect(diag.nameMissing).toBe(false);
     expect(diag.uresSorok).toEqual([]);
@@ -112,7 +116,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('üres páciensnév a nameMissing kemény jelzőt adja, a puha láncot nem érinti', () => {
     const plan = makePlan([[sor()]], { paciens: paciens({ nev: '  ' }) });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
 
     expect(diag.nameMissing).toBe(true);
     expect(diag.alkalmazhato['missing-fields']).toBe(false); // a NÉV külön flag, nem a "többi mező hiányzik" lépés
@@ -120,7 +124,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('meg nem nevezett sor az uresSorok kemény listában jelenik meg, a puha láncban NEM', () => {
     const plan = makePlan([[sor({ tetelId: '', nevSnapshot: '', fogak: '16' })]]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
 
     expect(diag.uresSorok).toEqual([{ fazisIndex: 0, fazisNev: '1. kezelés', sorIndex: 0, fogak: '16' }]);
     // egy névtelen sor összege is 0, de a nullaSorok CSAK a megnevezett
@@ -130,13 +134,13 @@ describe('veglegesitesDiagnozis', () => {
 
   it('hiányzó egyéb páciensadat a "missing-fields" lépést teszi alkalmazhatóvá', () => {
     const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '' }) });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
     expect(diag.alkalmazhato['missing-fields']).toBe(true);
   });
 
   it('német nyelvű terven a fordítás nélküli tétel neve a "de-fallback-names" lépést teszi alkalmazhatóvá', () => {
     const plan = makePlan([[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás' })]], { nyelv: 'de' });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
 
     expect(diag.nevProblemak.nincsForditas).toEqual(['Fogeltávolítás']);
     expect(diag.alkalmazhato['de-fallback-names']).toBe(true);
@@ -146,7 +150,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([
       [sor({ nevSnapshot: 'Ingyenes kontroll', listaEgysegar: 0, tenylegesEgysegar: 0 })],
     ]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
 
     expect(diag.nullaSorok).toEqual(['Ingyenes kontroll']);
     expect(diag.alkalmazhato['zero-price-rows']).toBe(true);
@@ -155,13 +159,13 @@ describe('veglegesitesDiagnozis', () => {
   it('hiányzó csomag-leírás a "missing-leiras" lépést teszi alkalmazhatóvá, ha a leírások mutatása be van kapcsolva', () => {
     const plan = makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: 'All-on-4 csomag' })]]);
 
-    const bekapcsolva = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const bekapcsolva = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
     expect(bekapcsolva.hianyzoLeirasok).toHaveLength(1);
     expect(bekapcsolva.alkalmazhato['missing-leiras']).toBe(true);
 
     // Kikapcsolt leirasokMutatasa mellett a hiány nem érinti a nyomtatványt
     // -- docs/02-domain-modell.md § Tétel-leírás.
-    const kikapcsolva = veglegesitesDiagnozis(plan, priceList, false, NO_MASTER);
+    const kikapcsolva = veglegesitesDiagnozis(plan, priceList, false, NO_MASTER, AKTIV_ORVOSOK);
     expect(kikapcsolva.hianyzoLeirasok).toEqual([]);
     expect(kikapcsolva.alkalmazhato['missing-leiras']).toBe(false);
   });
@@ -174,7 +178,7 @@ describe('veglegesitesDiagnozis', () => {
       ],
       { paciens: paciens({ nev: '' }) }, // kemény: nameMissing
     );
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
 
     expect(diag.nameMissing).toBe(true);
     expect(diag.uresSorok).toHaveLength(1);
@@ -185,21 +189,21 @@ describe('veglegesitesDiagnozis', () => {
   // lásd a `masterElteresek` doc-kommentjét (D162).
   describe('masterElteresek (backlog-40)', () => {
     it('master nélkül üres listát ad', () => {
-      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, null);
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, null, AKTIV_ORVOSOK);
       expect(diag.masterElteresek).toEqual([]);
     });
 
     it('eltérő masternél felsorolja az eltérő mezőket', () => {
       const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '+36 20 123 4567' }) });
       const master = paciens({ telefon: '+36 70 999 8888' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, master);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK);
       expect(diag.masterElteresek.map((m) => m.kulcs)).toEqual(['telefon']);
     });
 
     it('a master-eltérés NEM befolyásolja az alkalmazhato mapet -- nem tagja a PUHA láncnak', () => {
       const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '+36 20 123 4567' }) });
       const master = paciens({ telefon: '+36 70 999 8888' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, master);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK);
       expect(diag.masterElteresek.length).toBeGreaterThan(0);
       expect(diag.alkalmazhato).toEqual({
         'missing-fields': false,
@@ -210,35 +214,65 @@ describe('veglegesitesDiagnozis', () => {
       expect(kovetkezoLepes(diag.alkalmazhato, 0)).toBeNull();
     });
   });
+
+  // D68: a kezelőorvos-blokk KEMÉNY jelzés, a `masterElteresek` mintáján --
+  // nem tagja a PUHA láncnak, nem szerepel az `alkalmazhato`-ban.
+  describe('orvosProblema (D68)', () => {
+    it('üres orvos esetén "hianyzik"-ot ad', () => {
+      const plan = makePlan([[sor()]], { orvos: '' });
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
+      expect(diag.orvosProblema).toBe('hianyzik');
+    });
+
+    it('nem aktív orvosnál "nem-aktiv"-ot ad', () => {
+      const plan = makePlan([[sor()]], { orvos: 'Dr. Törölt' });
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
+      expect(diag.orvosProblema).toBe('nem-aktiv');
+    });
+
+    it('aktív orvosnál null-t ad', () => {
+      const plan = makePlan([[sor()]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
+      expect(diag.orvosProblema).toBeNull();
+    });
+
+    it('nem befolyásolja az alkalmazhato mapet -- nem tagja a PUHA láncnak', () => {
+      const plan = makePlan([[sor()]], { orvos: '' });
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK);
+      expect(diag.orvosProblema).toBe('hianyzik');
+      expect(Object.keys(diag.alkalmazhato)).toEqual(VEGLEGESITES_LEPESEK);
+      expect(kovetkezoLepes(diag.alkalmazhato, 0)).toBeNull();
+    });
+  });
 });
 
 // D66: az előleg túllépése KEMÉNY blokk, nem a puha lánc tagja.
 describe('elolegTullep (D66)', () => {
   it('nincs bekapcsolt előleg -- hamis', () => {
     const plan = makePlan([[sor()]]);
-    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(false);
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK).elolegTullep).toBe(false);
   });
 
   it('az előleg a fizetendő alatt -- hamis', () => {
     const plan = makePlan([[sor()]], { elolegOsszeg: 5000 }); // fizetendő 10000
-    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(false);
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK).elolegTullep).toBe(false);
   });
 
   it('az előleg pontosan egyenlő a fizetendővel -- hamis, ez legitim (D327)', () => {
     const plan = makePlan([[sor()]], { elolegOsszeg: 10000 });
-    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(false);
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK).elolegTullep).toBe(false);
   });
 
   it('az előleg meghaladja a fizetendőt -- igaz', () => {
     const plan = makePlan([[sor()]], { elolegOsszeg: 15000 });
-    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(true);
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK).elolegTullep).toBe(true);
   });
 
   it('a terv-szintű kedvezmény miatt csökkent fizetendőhöz képest is túllépést jelez', () => {
     // Sorok összege 10000, kedvezménnyel a fizetendő 4000 -- az előleg ehhez
     // képest, nem a nyers sorösszeghez képest lépi túl a határt.
     const plan = makePlan([[sor()]], { elolegOsszeg: 5000, kedvezmenyOsszeg: 6000 });
-    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER).elolegTullep).toBe(true);
+    expect(veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK).elolegTullep).toBe(true);
   });
 });
 

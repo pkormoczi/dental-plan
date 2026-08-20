@@ -13,19 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 53. tétel — Kezelőorvos kiválasztása és öröklési szabályai
-  (a `backlog/redesign/` redesign-döntéssorozat DP-032 tétele) —
-  `Settings.orvosok` ma sima névlista, aktív/inaktív jelölés és
-  per-terv választó UI nélkül; az egyetlen írás `orvosok[0]`. Ez a
-  tétel additív módon (séma-bővítés nélkül) bevezeti az aktív/inaktív
-  és alapértelmezett-orvos fogalmát, egy választó UI-t a Terv adatai
-  lépésen, és a hozzá tartozó öröklési szabályokat (új lánc: mindig
-  default; új verzió: örökli, ha aktív; másolás: mindig default) —
-  ezzel feloldja a 47./48./49. tétel VÁRAKOZÓ orvos-döntéseit, plusz
-  egy új finalizációs hard blockot ad hiányzó/inaktív orvosra. A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-53-kezeloorvos-terv.md`
-
 ### 61. tétel — Árlista-snapshot és explicit refresh
   (a `backlog/redesign/` redesign-döntéssorozat DP-044 tétele) — a
   soron ma nincs ár-követési komparátor és semmi nem diffel egy sort

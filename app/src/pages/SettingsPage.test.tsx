@@ -138,6 +138,174 @@ describe('SettingsPage', () => {
     });
   });
 
+  // D63: az "Orvosok" szekció soronkénti listája (korábban egyetlen
+  // textarea) -- a seed egyetlen orvosa 'Dr. Mándoki István'.
+  describe('Orvosok', () => {
+    it('a seed orvosa megjelenik a listában, aktívan', async () => {
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      expect(screen.getByRole('textbox', { name: '1. orvos neve' })).toHaveValue('Dr. Mándoki István');
+      expect(screen.getByRole('checkbox', { name: 'Dr. Mándoki István aktív' })).toBeChecked();
+    });
+
+    it('"+ Orvos hozzáadása" új üres sort ad, ami mentéskor némán kimarad', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      await user.click(screen.getByRole('button', { name: '+ Orvos hozzáadása' }));
+      expect(screen.getByRole('textbox', { name: '2. orvos neve' })).toHaveValue('');
+
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      await waitFor(() => {
+        const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+          orvosok: string[];
+        };
+        expect(s.orvosok).toEqual(['Dr. Mándoki István']);
+      });
+    });
+
+    it('egy második orvos felvétele és mentése perzisztálja mindkét nevet', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      await user.click(screen.getByRole('button', { name: '+ Orvos hozzáadása' }));
+      await user.type(screen.getByRole('textbox', { name: '2. orvos neve' }), 'Dr. Új Orsolya');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      await waitFor(() => {
+        const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+          orvosok: string[];
+        };
+        expect(s.orvosok).toEqual(['Dr. Mándoki István', 'Dr. Új Orsolya']);
+      });
+    });
+
+    // D540, "nincs másik aktív" ág: az egyetlen orvos deaktiválása a
+    // dialógus megnyitása NÉLKÜL engedett, figyelmeztetéssel; a Mentés
+    // lefut, az alapertelmezettOrvos kulcs nélkül.
+    it('D540: az egyetlen orvos deaktiválása figyelmeztet, de a Mentés lefut, alapertelmezettOrvos nélkül', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      await user.click(screen.getByRole('checkbox', { name: 'Dr. Mándoki István aktív' }));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(await screen.findByText(/Nincs aktív kezelőorvos/)).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      await waitFor(() => {
+        const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+          orvosok: string[];
+          inaktivOrvosok?: string[];
+          alapertelmezettOrvos?: string;
+        };
+        expect(s.orvosok).toEqual(['Dr. Mándoki István']);
+        expect(s.inaktivOrvosok).toEqual(['Dr. Mándoki István']);
+        expect(s.alapertelmezettOrvos).toBeUndefined();
+      });
+    });
+
+    // D540, "van másik aktív" ág: a jelenlegi default deaktiválása modális
+    // választót nyit; Mégse visszavonja magát a deaktiválást is.
+    it('D540: a default deaktiválása másik aktív orvos mellett modális választót nyit, Mégse visszavonja', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+      await user.click(screen.getByRole('button', { name: '+ Orvos hozzáadása' }));
+      await user.type(screen.getByRole('textbox', { name: '2. orvos neve' }), 'Dr. Új Orsolya');
+
+      await user.click(screen.getByRole('checkbox', { name: 'Dr. Mándoki István aktív' }));
+
+      const dialog = await screen.findByRole('dialog');
+      expect(within(dialog).getByText('Ki legyen az alapértelmezett orvos?')).toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: 'Dr. Mándoki István aktív' })).toBeChecked();
+    });
+
+    it('D540: a modálisban választott orvos lesz az új alapértelmezett, mentéskor perzisztálva', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+      await user.click(screen.getByRole('button', { name: '+ Orvos hozzáadása' }));
+      await user.type(screen.getByRole('textbox', { name: '2. orvos neve' }), 'Dr. Új Orsolya');
+      await user.click(screen.getByRole('checkbox', { name: 'Dr. Mándoki István aktív' }));
+      const dialog = await screen.findByRole('dialog');
+
+      // A default-lista első (és itt egyetlen) maradék aktív orvosa
+      // ('Dr. Új Orsolya') előre kiválasztva jelenik meg a modális Selecten.
+      await user.click(within(dialog).getByRole('button', { name: 'Beállítás' }));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      await waitFor(() => {
+        const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+          inaktivOrvosok?: string[];
+          alapertelmezettOrvos?: string;
+        };
+        expect(s.inaktivOrvosok).toEqual(['Dr. Mándoki István']);
+        expect(s.alapertelmezettOrvos).toBe('Dr. Új Orsolya');
+      });
+    });
+
+    it('duplikált orvosnév blokkolja a mentést, hibaszöveggel', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+      const eredetiRaw = localStorage.getItem('dp:beallitasok.json');
+      await user.click(screen.getByRole('button', { name: '+ Orvos hozzáadása' }));
+      await user.type(screen.getByRole('textbox', { name: '2. orvos neve' }), 'Dr. Mándoki István');
+
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      expect(await screen.findByText('Két orvos neve nem lehet azonos.')).toBeInTheDocument();
+      // A blokkolt Mentés nem írt -- a seed-elve meglévő tartalom változatlan.
+      expect(localStorage.getItem('dp:beallitasok.json')).toBe(eredetiRaw);
+    });
+
+    it('egy orvos törlése eltünteti a sort, mentéskor nem kerül vissza', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+      await user.click(screen.getByRole('button', { name: '+ Orvos hozzáadása' }));
+      await user.type(screen.getByRole('textbox', { name: '2. orvos neve' }), 'Dr. Új Orsolya');
+
+      await user.click(screen.getByRole('button', { name: 'Dr. Új Orsolya törlése' }));
+      expect(screen.queryByRole('textbox', { name: '2. orvos neve' })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      await waitFor(() => {
+        const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+          orvosok: string[];
+        };
+        expect(s.orvosok).toEqual(['Dr. Mándoki István']);
+      });
+    });
+
+    it('Mégse visszaállítja az orvos-listát a mentett állapotra', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+      await user.click(screen.getByRole('button', { name: '+ Orvos hozzáadása' }));
+      await user.type(screen.getByRole('textbox', { name: '2. orvos neve' }), 'Dr. Ideiglenes');
+
+      await user.click(screen.getByRole('button', { name: 'Mégse' }));
+
+      expect(screen.queryByRole('textbox', { name: '2. orvos neve' })).not.toBeInTheDocument();
+      expect(screen.getByRole('textbox', { name: '1. orvos neve' })).toHaveValue('Dr. Mándoki István');
+    });
+  });
+
   describe('Tab-váltás nem mentett módosítással (D49)', () => {
     it('dirty Rendelő adatai piszkozattal tab-váltás megerősítést kér -- a dialógus Mégse-je a lapon tart, a piszkozat megmarad', async () => {
       const user = userEvent.setup();

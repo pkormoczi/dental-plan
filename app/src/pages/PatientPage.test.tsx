@@ -503,6 +503,136 @@ describe('PatientPage -- backlog-51: hat szekció', () => {
   });
 });
 
+// D67: a Kezelőorvos szekció -- korábban csak olvasható placeholder volt,
+// mostantól Radix `Select`, csak az aktív orvosok közül, a teljes
+// piszkozat-életciklus alatt szabadon szerkeszthető.
+describe('PatientPage -- Kezelőorvos szekció (D67)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  function seedWithDoctors(
+    orvosok: string[],
+    opts: { inaktivOrvosok?: string[]; alapertelmezettOrvos?: string } = {},
+  ) {
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify({ ...seedSettings, orvosok, ...opts }));
+  }
+
+  function seedDraftWithOrvos(orvos: string, tervId = '') {
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({
+        schemaVersion: 1,
+        mentve: '2026-08-09T10:15:00.000Z',
+        plan: {
+          schemaVersion: 1,
+          tervId,
+          verzio: tervId ? 1 : 0,
+          statusz: 'PISZKOZAT',
+          nyelv: 'hu',
+          penznem: 'HUF',
+          keltezes: '2026-08-05',
+          ervenyesIg: '2026-11-03',
+          arlistaVerzio: '2026-07-01',
+          sablonVerzio: 'nyilatkozat-hu-v1',
+          orvos,
+          paciens: {
+            nev: 'Teszt Elek',
+            szuletesiIdo: '',
+            lakcim: '',
+            telefon: '',
+            email: '',
+            taj: '',
+            kiskoru: false,
+            torvenyesKepviselo: null,
+          },
+          fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+          osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+        },
+      }),
+    );
+  }
+
+  it('alapból a globális default orvos van kiválasztva', async () => {
+    renderPatient();
+    await screen.findByText('Kezelőorvos');
+
+    expect(screen.getByRole('combobox', { name: 'Kezelőorvos (aláírás-blokk)' })).toHaveTextContent(
+      'Dr. Mándoki István',
+    );
+  });
+
+  // A `piszkozatTartalmas()` (domain/piszkozat.ts) szándékosan NEM veszi
+  // figyelembe az orvos mezőt (az a beállításokból származik, mint a
+  // nyelv/pénznem) -- egy üres, vadonatúj piszkozaton önmagában az
+  // orvos-választás nem indít autosave-et, ezért a kiválasztott értéket
+  // közvetlenül a UI-n, nem a `dp:piszkozat` kulcson át ellenőrizzük.
+  it('másik aktív orvos választása frissíti a kiválasztott értéket', async () => {
+    const user = userEvent.setup();
+    seedWithDoctors(['Dr. Mándoki István', 'Dr. Új Orsolya']);
+    renderPatient();
+    await screen.findByText('Kezelőorvos');
+
+    await user.click(screen.getByRole('combobox', { name: 'Kezelőorvos (aláírás-blokk)' }));
+    await user.click(await screen.findByRole('option', { name: 'Dr. Új Orsolya' }));
+
+    expect(screen.getByRole('combobox', { name: 'Kezelőorvos (aláírás-blokk)' })).toHaveTextContent(
+      'Dr. Új Orsolya',
+    );
+  });
+
+  it('egy már mentett (tervId !== "") lánc draftján is szerkeszthető', async () => {
+    const user = userEvent.setup();
+    seedWithDoctors(['Dr. Mándoki István', 'Dr. Új Orsolya']);
+    seedDraftWithOrvos('Dr. Mándoki István', 'terv-abc123');
+    renderPatient();
+    await screen.findByText('Kezelőorvos');
+
+    const combobox = screen.getByRole('combobox', { name: 'Kezelőorvos (aláírás-blokk)' });
+    expect(combobox).not.toBeDisabled();
+
+    await user.click(combobox);
+    await user.click(await screen.findByRole('option', { name: 'Dr. Új Orsolya' }));
+
+    await waitFor(() => {
+      const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string) as { plan: Plan };
+      expect(rec.plan.orvos).toBe('Dr. Új Orsolya');
+    });
+  });
+
+  it('árva (inaktivált) orvosra hivatkozó terv a nevet mutatja, amber figyelmeztetéssel, aktívra váltható', async () => {
+    const user = userEvent.setup();
+    seedWithDoctors(['Dr. Mándoki István', 'Dr. Régi Rezső'], { inaktivOrvosok: ['Dr. Régi Rezső'] });
+    seedDraftWithOrvos('Dr. Régi Rezső');
+    renderPatient();
+    await screen.findByText('Kezelőorvos');
+
+    expect(screen.getByRole('combobox', { name: 'Kezelőorvos (aláírás-blokk)' })).toHaveTextContent(
+      'Dr. Régi Rezső',
+    );
+    expect(screen.getByText(/már nem aktív/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('combobox', { name: 'Kezelőorvos (aláírás-blokk)' }));
+    await user.click(await screen.findByRole('option', { name: 'Dr. Mándoki István' }));
+
+    expect(screen.queryByText(/már nem aktív/)).not.toBeInTheDocument();
+    await waitFor(() => {
+      const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string) as { plan: Plan };
+      expect(rec.plan.orvos).toBe('Dr. Mándoki István');
+    });
+  });
+
+  it('nincs aktív orvos esetén amber figyelmeztetést ad', async () => {
+    seedWithDoctors(['Dr. Mándoki István'], { inaktivOrvosok: ['Dr. Mándoki István'] });
+    renderPatient();
+    await screen.findByText('Kezelőorvos');
+
+    expect(await screen.findByText(/Nincs aktív kezelőorvos a Beállításokban/)).toBeInTheDocument();
+  });
+});
+
 // backlog-51 (D61): a "Terv címe" mező -- vadonatúj lánchoz a `DraftMeta`-ban
 // él és a véglegesítéskor íródik ki (lásd PreviewPage.test.tsx), mentett
 // lánchoz azonnal ír a `storage.savePlanLabel`-lel.

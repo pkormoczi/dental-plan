@@ -1668,3 +1668,33 @@ karbantartási kör négy önálló javítása.
   attekintes-es-dontesek.md D66, docs/02-domain-modell.md § Előleg,
   docs/03-funkcionalis-spec.md § 2 "Terv adatai" és § 4 "Előnézet és
   véglegesítés", docs/04-nyomtatvany-spec.md § "Fizetendő" blokk).
+
+---
+
+### 53. tétel: Kezelőorvos kiválasztása és öröklési szabályai — KÉSZ (2026-08-20)
+
+- **Méret:** ~1 nap.
+- **Kereteket sért?** Nem — új D67/D68 (`docs/01-attekintes-es-dontesek.md`),
+  új sor a "Sérthetetlen szabályok" táblában (a véglegesítés blokkolva
+  hiányzó/nem aktív kezelőorvosnál).
+- **Valódi haszon:** a `Settings.orvosok` sima névlista volt, aktív/
+  inaktív jelölés és alapértelmezett-orvos fogalom nélkül; a "Terv
+  adatai" lap Kezelőorvos szekciója csak olvasható placeholder, a doki
+  sehol nem tudott másik orvost választani egy konkrét tervhez, és a
+  véglegesítésnek nem volt orvos-őre.
+- **Megvalósítás:** additív `Settings` mezők (`inaktivOrvosok?`,
+  `alapertelmezettOrvos?`, séma-bővítés nélkül), egyetlen feloldó modul
+  (`domain/orvosok.ts`). Három öröklési szabály: új terv-lánc mindig a
+  globális default orvossal indul; "Új verzió" örökli a forrás orvosát,
+  ha még aktív, egyébként a globális defaultra esik vissza (semleges
+  info-sáv); "Másolás új tervbe" mindig a globális default orvossal
+  indul, a forrás orvosa sosem másolódik át. A "Terv adatai" lap
+  Kezelőorvos szekciója Radix `Select`-té vált, csak aktív orvosokkal.
+  A Beállítások Orvosok szekciója soronkénti listára váltott (aktív/
+  inaktív, sorrend, törlés, alapértelmezett-választó); a default
+  deaktiválása másik aktív orvos mellett modális újraválasztást
+  kényszerít. A véglegesítés harmadik kemény blokkja a hiányzó/nem
+  aktív orvost jelzi (docs/01-attekintes-es-dontesek.md D67/D68,
+  docs/02-domain-modell.md § "beallitasok.json", docs/03-funkcionalis-
+  spec.md § 2 "Kezelőorvos", § 4 "Előnézet és véglegesítés", § 7
+  "Rendelő adatai").

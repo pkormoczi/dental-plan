@@ -6,6 +6,7 @@
 
 import { createBlankPlan } from './blankPlan';
 import type { OroklottNyelvPenznem } from './blankPlan';
+import { alapertelmezettOrvosNeve } from './orvosok';
 import { paciensTorzsadatbol } from './paciensAdatok';
 import { computeOsszesitok } from './totals';
 import { frissDatummal } from './ujVerzioDatum';
@@ -55,17 +56,19 @@ export function planUjTorzsadattal(
 }
 
 /**
- * "Másolás új tervbe" -- a szakmai tartalmat (fázisok, sorok, nyelv, orvos,
- * `arlistaVerzio`, ugyanaz a snapshot-elv, mint egy meglévő terv új
- * verzióra nyitásakor) a forrásból, az azonosító/állapot/dátum kivételével.
- * A `paciens` blokk KIVÉTEL (D57, D25 kettős elve): a `master` -- ha van --
+ * "Másolás új tervbe" -- a szakmai tartalmat (fázisok, sorok, `arlistaVerzio`,
+ * ugyanaz a snapshot-elv, mint egy meglévő terv új verzióra nyitásakor) a
+ * forrásból, az azonosító/állapot/dátum kivételével. Két mező KIVÉTEL:
+ * a `paciens` blokk (D57, D25 kettős elve) -- a `master` -- ha van --
  * felülírja a forrás pillanatképét, mert a másolás pillanatában a doki a
  * páciens JELENLEGI adatait akarja az új ajánlatba tenni, nem a forrás
  * verzió esetleg hónapokkal korábbi állapotát. Törzsadat híján (`master`
  * hiányzik) a forrás `plan.paciens` pillanatképe marad, a mai viselkedés.
- * Az `osszesitok` a saját (átvett) `fazisok`-ból ÚJRASZÁMOLVA -- a forrás
- * `osszesitok`-ja az EREDETI, már mentett terv fájl-igazsága (D7), nem a
- * most keletkező piszkozaté.
+ * Az `orvos` (D63) -- MINDIG a mai globális alapértelmezett orvos, a forrás
+ * orvosa SOSEM másolódik át (ellentétben a nyelvvel/pénznemmel, ami
+ * pillanatkép-jelleggel öröklődik). Az `osszesitok` a saját (átvett)
+ * `fazisok`-ból ÚJRASZÁMOLVA -- a forrás `osszesitok`-ja az EREDETI, már
+ * mentett terv fájl-igazsága (D7), nem a most keletkező piszkozaté.
  */
 export function planMasolatKent(
   plan: Plan,
@@ -76,6 +79,7 @@ export function planMasolatKent(
   const friss = frissDatummal(plan, settings, ma);
   return {
     ...friss,
+    orvos: alapertelmezettOrvosNeve(settings),
     paciens: master ? paciensTorzsadatbol(master) : friss.paciens,
     tervId: '',
     verzio: 0,

@@ -105,6 +105,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | Páciens nem törölhető, ha van véglegesített (`statusz === 'VEGLEGES'`) terve, rá mutató aktív mentetlen piszkozata, vagy olvashatatlan terv-lánca/verziója | D50 — egy aláírt/kiadott dokumentum vagy egy folyamatban lévő szerkesztés mögül a törlés adatvesztést jelentene; a `deletePatient` a teljes páciensmappát véglegesen elviszi, nincs „kuka” |
 | A terv `ervenyesIg` mezője soha nem maradhat üresen | D62 — üres érték a `formatLongDate`-en át „Invalid Date”-ként kerülne egy szerződéses dokumentumra; a „Terv adatai” lap Dátumok szekciója a mező elhagyásakor automatikusan visszaállítja az alapértékre |
 | A terv `elolegOsszeg` mezője soha nem haladhatja meg a fizetendőt egy véglegesített terven, és soha nem vágódik le némán | D66 — a százalék-alapú, strukturálisan garantált `előleg ≤ fizetendő` védelem megszűnt az abszolút összegre váltáskor; a véglegesítés-őr kemény blokkja váltja ki, a doki tudatos rendezését várva, nem automatikus levágást |
+| A véglegesítés blokkolva, ha a terv `orvos`-a üres vagy nem szerepel a jelenleg AKTÍV orvosok között | D68 — az aláírás-blokkban szereplő név jogilag releváns; egy már véglegesített terv `plan.orvos` név-pillanatképét ez visszamenőleg nem érinti (D7) |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -328,13 +329,15 @@ tervként, D26, D57) segédfüggvényei, szintén ne írd újra őket:
   a két tiszta transzformáció egy korábbi tervből: az első csak a
   `paciens` blokkot viszi át egy friss `createBlankPlan()` fölé (az
   opcionális `oroklott` a nyelv/pénznem-öröklés forrása, lásd D52 lentebb),
-  a második mindent átvisz az azonosító/állapot/dátum kivételével
-  (`frissDatummal`-t hívja a dátumbélyeghez, `computeOsszesitok`-ot az
-  `osszesitok` újraszámolásához — egyiket se írd újra itt sem). Az
-  opcionális negyedik `master` paraméter (D57) — ha a hívó átadja — a
-  `paciens` blokkot az élő törzsadatból építi (`paciensTorzsadatbol()`),
-  felülírva a forrás verzió pillanatképét; a `paciensId` ettől
-  függetlenül mindig a forrás tervből jön
+  a második mindent átvisz az azonosító/állapot/dátum ÉS az orvos
+  kivételével (`frissDatummal`-t hívja a dátumbélyeghez,
+  `computeOsszesitok`-ot az `osszesitok` újraszámolásához,
+  `alapertelmezettOrvosNeve()`-t az orvos felülírásához — D67, a forrás
+  orvosa SOSEM másolódik át — egyiket se írd újra itt sem). Az opcionális
+  negyedik `master` paraméter (D57) — ha a hívó átadja — a `paciens`
+  blokkot az élő törzsadatból építi (`paciensTorzsadatbol()`), felülírva
+  a forrás verzió pillanatképét; a `paciensId` ettől függetlenül mindig a
+  forrás tervből jön
 - `copyPlanIntoDraft(next)` (`app/src/state/AppState.tsx`) — a fenti két
   függvény EREDMÉNYÉT teszi be a piszkozatba a `resetPlanDraft` mintáján
   (nem a `loadPlanIntoDraft`-én): a másolat azonnal mentetlen munkának
@@ -483,7 +486,9 @@ ne írd újra őket:
   (`OroklottNyelvPenznem`, csak `nyelv`/`penznem`, SOSEM `orvos`) — ha
   megadva, felülírja a `nyelv`/`penznem` globális alapértékét, a
   `sablonVerzio` ettől függetlenül a MEGLÉVŐ `sablonVerzioFor(nyelv)`-en
-  keresztül magától követi
+  keresztül magától követi. Az `orvos` ezen a paraméteren nem juthat be —
+  saját, önálló globális default-forrása van (D67,
+  `domain/orvosok.ts` `alapertelmezettOrvosNeve()`, lásd lentebb)
 - `verziokFrissessegSzerint(plans, versionsFor)`
   (`app/src/domain/planFolders.ts`) — az összes terv-lánc összes verziója
   csökkenő frissesség szerint (a `rendezettLancok()` determinizmus-
@@ -856,6 +861,36 @@ ne írd újra őket:
   fókuszt” jelzéshez (pl. egy kötelező-mező hiba, ami csak blur/Enter után
   jelenhet meg), a `commit()` lefutása UTÁN hívódik; nem helyettesíti az
   `onCommit`-ot
+
+A kezelőorvos-választás és öröklési szabályok tétel
+(`docs/01-attekintes-es-dontesek.md` D67/D68, `docs/02-domain-modell.md`
+§ `beallitasok.json`, `docs/03-funkcionalis-spec.md` § 2. Kezelőorvos, §
+4. Előnézet és véglegesítés) segédfüggvényei, szintén ne írd újra őket:
+- `aktivOrvosok(settings)` / `alapertelmezettOrvosNeve(settings)` /
+  `ujVerzioOrvosa(forrasOrvos, settings)` / `orvosProblema(orvos,
+  aktivOrvosNevek)` (`app/src/domain/orvosok.ts`) — az EGYETLEN hely,
+  ahol a `Settings.inaktivOrvosok`/`alapertelmezettOrvos` szemantikája
+  eldől. `createBlankPlan()` (új lánc) és `planMasolatKent()` (másolás)
+  az `alapertelmezettOrvosNeve()`-t hívja; `state/AppState.tsx`
+  `loadPlanIntoDraft()` (új verzió) az `ujVerzioOrvosa()`-t, aminek
+  `fallback` mezőjét a `PlanEditorPage.tsx` a MEGLÉVŐ, dátum-frissítést
+  jelző semleges `Callout` mellé, nem egy harmadik csatornába rendereli;
+  a `domain/veglegesitesOr.ts` `veglegesitesDiagnozis()` az
+  `orvosProblema()`-t, a `masterElteresek` mintájában az `alkalmazhato`
+  PUHA lánc-mapon KÍVÜL (D68)
+- `pages/PatientPage.tsx` „Kezelőorvos" szekció — Radix `Select`, csak az
+  aktív orvosok közül, egy árva (inaktivált/törölt) hivatkozás külön,
+  elválasztó utáni `Select.Item`-ként jelenik meg, amber figyelmeztetéssel.
+  A `Field` címkéje SZÁNDÉKOSAN „Kezelőorvos (aláírás-blokk)", nem puszta
+  „Kezelőorvos" — az utóbbi a `Section` címével ütközne (két azonos
+  szövegű találat egy accessible-name lekérdezésnél)
+- `pages/settings/RendeloTab.tsx` „Orvosok" szekció — soronkénti lista
+  (`Table.Root size="1"`, a `PriceListAdminPage.tsx` `KategoriaPanel`
+  mintáján), a default orvos deaktiválása/törlése MÁSIK aktív orvos
+  mellett `Dialog`-alapú azonnali újraválasztást kényszerít (nem
+  `RadioGroup`-pal, hanem a már bevált `Select`-tel); nincs másik aktív
+  orvos esetén a művelet a dialógus megnyitása nélkül, azonnal engedett,
+  amber figyelmeztetéssel
 
 ## Domain szókincs
 

@@ -92,8 +92,11 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   több sor is van, azonos accessible name-mel képernyőolvasóval
   megkülönböztethetetlenek. Ez a lista-jellegű sorokra vonatkozik (pl.
   `PatientPlanChains` verziósora), ahol a gombok a TELJES sorra ható
-  akciók. A szerkesztő `LineRow`-jának saját mezőjéhez kötött vezérlői
-  (a Fog mező melletti fogválasztó, az Ajánlati ár mező alatti `≈` becsült-ár
+  akciók — ugyanez a szabály vonatkozik egy szerkeszthető lista soronkénti
+  checkboxára is (pl. a Beállítások Orvosok listájának „Aktív" checkboxa,
+  `aria-label={\`${nev} aktív\`}`, D67), nem csak az `IconButton`-okra. A
+  szerkesztő `LineRow`-jának saját mezőjéhez kötött vezérlői (a Fog mező
+  melletti fogválasztó, az Ajánlati ár mező alatti `≈` becsült-ár
   kapcsoló, a Db mező melletti ⟳ visszakapcsoló, D32, valamint a név/ár/
   leírás mezőnkénti reset-vezérlők, D65) nem esnek e szabály alá —
   mindegyik a saját cellájának mezőjét szerkeszti, nem a sorra ható

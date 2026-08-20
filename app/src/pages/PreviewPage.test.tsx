@@ -101,6 +101,129 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
   );
 });
 
+// D68: hiányzó vagy már nem aktív kezelőorvos -- KEMÉNY blokk, a
+// kitöltetlen-sor blokk mintáján, a `nameMissing` UTÁN, az `uresSorok`
+// ELŐTT (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés).
+describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  function seedDraftWithOrvos(orvos: string) {
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({
+        schemaVersion: 1,
+        mentve: '2026-08-09T10:15:00.000Z',
+        plan: {
+          schemaVersion: 1,
+          tervId: '',
+          verzio: 0,
+          statusz: 'PISZKOZAT',
+          nyelv: 'hu',
+          penznem: 'HUF',
+          keltezes: '2026-08-05',
+          ervenyesIg: '2026-11-03',
+          arlistaVerzio: '2026-07-01',
+          sablonVerzio: 'nyilatkozat-hu-v1',
+          orvos,
+          paciens: {
+            nev: 'Teszt Orvosblokk',
+            szuletesiIdo: '',
+            lakcim: '',
+            telefon: '',
+            email: '',
+            taj: '',
+            kiskoru: false,
+            torvenyesKepviselo: null,
+          },
+          fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+          osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+        },
+      }),
+    );
+  }
+
+  it(
+    'hiányzó orvos esetén a véglegesítés blokkolva -- a "Kezelőorvos kiválasztása" gomb a Terv adatai lapra navigál',
+    async () => {
+      const user = userEvent.setup();
+      localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+      localStorage.setItem('dp:beallitasok.json', JSON.stringify({ ...seedSettings, orvosok: [] }));
+      seedDraftWithOrvos('');
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+
+      // KEMÉNY blokk -- nincs AlertDialog, a hiba a lapon jelenik meg.
+      expect(await screen.findByText(/A tervhez nincs kezelőorvos rendelve/)).toBeInTheDocument();
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.queryByText('A terv elmentve ✓')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Kezelőorvos kiválasztása' }));
+      expect(await screen.findByRole('heading', { name: 'Terv adatai' })).toBeInTheDocument();
+    },
+    20000,
+  );
+
+  it(
+    'nem aktív orvosra hivatkozó terv piros Callout-tal blokkol, aktív orvos választása után folytatható',
+    async () => {
+      const user = userEvent.setup();
+      localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+      localStorage.setItem(
+        'dp:beallitasok.json',
+        JSON.stringify({
+          ...seedSettings,
+          orvosok: ['Dr. Mándoki István', 'Dr. Régi Rezső'],
+          inaktivOrvosok: ['Dr. Régi Rezső'],
+        }),
+      );
+      seedDraftWithOrvos('Dr. Régi Rezső');
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn);
+
+      expect(
+        await screen.findByText(/A terv kezelőorvosa \(Dr\. Régi Rezső\) már nem szerepel/),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(screen.queryByText('A terv elmentve ✓')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Kezelőorvos kiválasztása' }));
+      await screen.findByRole('heading', { name: 'Terv adatai' });
+      await user.click(screen.getByRole('combobox', { name: 'Kezelőorvos (aláírás-blokk)' }));
+      await user.click(await screen.findByRole('option', { name: 'Dr. Mándoki István' }));
+
+      window.location.hash = '#/elonezet';
+      const finalizeBtn2 = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      await user.click(finalizeBtn2);
+      // A páciens egyéb adatai hiányosak (a `seedDraftWithOrvos` csak a
+      // nevet tölti ki) -- a puha "Hiányzó páciensadatok" lépés még jön.
+      await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
+    },
+    20000,
+  );
+});
+
 // docs/03-funkcionalis-spec.md véglegesítés-lánc 4. lépése ("A piszkozat
 // törlése") -- ha ez elmaradna, a most fájlba mentett terv azonnal
 // vissza"íródna" piszkozatként (lásd AppState.tsx markPlanSaved).

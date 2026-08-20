@@ -4,7 +4,7 @@
 
 1. Indítás
 2. Terv adatai — itt dől el a terv nyelve és pénzneme (D21), hat szekcióra
-   tagolva (D68)
+   tagolva (D61)
 3. **Terv szerkesztő** — a legfontosabb
 4. Előnézet és véglegesítés
 5. Terv-láncok és verziók — elsődleges gazdája a 10. képernyő `Kezelési
@@ -117,15 +117,14 @@ lásd ott.
 
 ## 2. Terv adatai
 
-### Szekciók (D68)
+### Szekciók (D61)
 
 A lap hat, vizuálisan elkülönített szekcióra tagolódik, ebben a
 sorrendben: **Terv címe** → **Páciens adatai** (a személyes adatok +
 beágyazva a „Páciens törzsadata” diff) → **Dokumentum nyelve** →
 **Pénznem** → **Kezelőorvos** → **Dátumok**. A Dokumentum nyelve/Pénznem
 szekció mindig látszik, feltétel nélkül (52. tétel, D63); a Kezelőorvos
-szekció ma egy egyszerű, csak olvasható mezőt tart (a tényleges
-orvosválasztó UI külön tétel hatóköre).
+szekció szerkeszthető választó, lásd lent (D67).
 
 ### Terv címe (D61)
 
@@ -182,7 +181,8 @@ véglegesítés hozza létre az immutable pillanatképet. Egy már
 véglegesített verzió megtekintésének nincs ezen a lapon szerkeszthető
 útja — a „Korábbi tervek” listáról induló „Megnézés” a mentett PDF-et
 nyitja meg, nem ezt a lapot; az itt szerkeszthető nyelv/pénznem mindig egy
-draft (PISZKOZAT-státuszú) tervhez tartozik.
+draft (PISZKOZAT-státuszú) tervhez tartozik. A lap Kezelőorvos szekciója
+(lásd lent, D67) ugyanígy szabadon szerkeszthető marad.
 
 **Nyelváltás (fagyás előtt) megőrzi a kézzel szerkesztett sorneveket**
 (D24): egy `tetelId`-hez kötött sor neve **csak akkor** frissül az új
@@ -206,7 +206,7 @@ beárazott tétel) — ez a „ne a szerkesztőben legyen meglepetés" elve.
 A „Páciens adatai” szekció két részből áll: a személyes adatok mezői, majd
 alattuk, elválasztóval, beágyazva a „Páciens törzsadata” eltérés-jelzés
 (lásd lent) — a kettő korábban két külön kártya volt, ma egy szekció
-(D68).
+(D61).
 
 **Személyes adatok.** Mezők: név, születési idő, lakcím, telefon, e-mail,
 TAJ, „kiskorú" jelölő. Ha kiskorú, megjelenik a törvényes képviselő neve
@@ -248,12 +248,39 @@ a rész kimarad.
   csak a lépés-elhagyási prompt módban — „Folytatás írás nélkül” (a
   piszkozat érintetlenül a workflow folytatódik) választással.
 
-### Kezelőorvos
+### Kezelőorvos (D67)
 
-Ma egy egyszerű, csak olvasható mező (`plan.orvos` értéke) — a slotot a
-D68 sorrendje szerint tartja fenn a lap. A tényleges orvosválasztó UI
-(aktív/inaktív orvosok, alapértelmezett-orvos öröklési szabályai) külön
-tétel hatóköre.
+Egy legördülő választó (`plan.orvos`), ami csak a Beállításokban
+jelenleg **aktív** orvosok neveit listázza. Ha a terv egy időközben
+deaktivált vagy törölt névre hivatkozik (árva hivatkozás), a választó
+ezt a nevet is mutatja, elkülönítve a lista alján, és egy figyelmeztető
+sáv jelzi, hogy a véglegesítés blokkolva lesz, amíg a doki nem választ
+aktív orvost — a draft ettől függetlenül szabadon szerkeszthető marad
+(lásd § 4. Előnézet és véglegesítés).
+
+A mező a fenti Dokumentum nyelve/Pénznem szekciókhoz hasonlóan a teljes
+piszkozat-életciklus alatt szabadon szerkeszthető, egy már mentett lánc
+draftján is.
+
+**Öröklési szabályok:**
+- **Új terv-lánc**: mindig a Beállításokban megjelölt globális
+  alapértelmezett orvos, a páciens korábbi tervétől függetlenül.
+- **„Új verzió”**: a forrás verzió orvosát örökli, HA az még aktív;
+  ha időközben deaktiválták, a globális alapértelmezett orvosra esik
+  vissza, és a szerkesztő a betöltéskori dátum-info sávban (§ Korábbi
+  terv új verzióra nyitása) egy második mondattal jelzi ezt.
+- **„Másolás új tervbe”**: mindig a globális alapértelmezett orvossal
+  indul — a forrás verzió orvosa SOSEM másolódik át.
+
+**Beállítások → Rendelő adatai** (§ 7.): az orvos-lista soronként tart
+egy nevet, egy aktív/inaktív kapcsolót és egy „alapértelmezett”
+jelölőt. Az éppen alapértelmezett orvos deaktiválása, ha van másik
+aktív orvos, azonnali újraválasztást kényszerít (modális választó); ha
+nincs másik aktív orvos, a deaktiválás a dialógus megnyitása nélkül,
+azonnal engedett, figyelmeztetéssel. Egy orvos név **törölhető** (nem
+csak deaktiválható) — a `plan.orvos` a mentéskor rögzült NÉV-pillanatkép,
+nem `id`-hivatkozás, ezért egy korábbi terv olvashatósága a törlés
+után is érintetlen marad.
 
 ### Dátumok (D62)
 
@@ -656,6 +683,17 @@ szöveges sor — a nyelvét te írtad" — a három ok különböző dokitenniv
 jelent, nem szabad egy lista mögé
 bújtatni.
 
+**Hiányzó vagy nem aktív kezelőorvos (kemény blokk, D68):** ha a terv
+`orvos` mezője üres, vagy nem szerepel a jelenleg aktív orvosok között
+(a Beállításokban időközben deaktiválták vagy törölték), a véglegesítés
+**nem** kérhető meg és nem folytatható — az aláírás-blokkban szereplő
+kezelőorvos-név jogilag releváns, nem maradhat üresen vagy egy már
+érvénytelen névvel. A hibaüzenet „Kezelőorvos kiválasztása" gombbal a
+Terv adatai lapra visz. Ez a blokk a hiányzó páciensnév-blokk UTÁN, a
+kitöltetlen sor blokk ELŐTT ellenőrződik — mindkét szomszédja egy
+kattintással javítható a Terv adatai lapon, a tartalmi szerkesztést
+igénylő kitöltetlen sor marad utolsó.
+
 **Kitöltetlen sor (kemény blokk):** ha a fogtérképről kattintással felvett
 sor tétel nélkül maradt, a véglegesítés **nem** kérhető meg és nem
 folytatható — ez nem figyelmeztetés, hanem blokk, hogy névtelen, 0 Ft-os
@@ -702,11 +740,13 @@ piszkozat pillanatképe marad (D7).
 A fenti négy lépés sorrendje és a kemény/puha megkülönböztetés tiszta,
 React-mentes függvényként él (`veglegesitesDiagnozis`/`kovetkezoLepes`,
 `app/src/domain/veglegesitesOr.ts`) — ugyanez a függvény adja vissza az
-INFO-szintű törzsadat-eltérést is, egy ötödik, a láncon KÍVÜLI mezőként
-(`masterElteresek`), hogy egy ott felvett mező ne váltson ki automatikusan
+INFO-szintű törzsadat-eltérést (`masterElteresek`), az előleg-túllépés
+KEMÉNY jelzését (`elolegTullep`, D66) és a hiányzó/nem aktív kezelőorvos
+KEMÉNY jelzését (`orvosProblema`, D68) is, mindhármat a láncon KÍVÜLI
+mezőként, hogy egy ott felvett mező ne váltson ki automatikusan
 megerősítő dialógust. A `PreviewPage.tsx` csak a React state-et, a
-dialógus-szövegeket és a fenti Sablon-placeholder őr D23-zárát tartja meg, a
-lánc bejárását innen kapja.
+dialógus-szövegeket és a fenti Sablon-placeholder őr D23-zárát tartja
+meg, a lánc bejárását innen kapja.
 
 ### Sablon-placeholder őr
 
@@ -1009,6 +1049,12 @@ dátumot és érvényességet, és kimondja, hogy a tételek ára változatlan. 
 amber sáv a valódi anomáliának (mentett vs. újraszámolt `osszesitok`
 eltérése) van fenntartva — ugyanaz a szín itt félrevezető lenne.
 
+**Kezelőorvos-öröklés (D67):** a forrás verzió orvosát örökli, HA az még
+aktív a Beállításokban; ha időközben deaktiválták vagy törölték, a
+globális alapértelmezett orvosra esik vissza. Ez utóbbi esetben a
+szerkesztő ugyanabba a semleges színű sávba egy második mondatot tesz
+(nem külön csatornát nyit), ami megnevezi a régi és az új orvost.
+
 ### Terv másolása új tervként
 
 Két transzformáció, három belépési ponton — a gombok/útvonalak elhelyezése
@@ -1047,12 +1093,12 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   Egyetlen belépési pontja a **„Másolás új tervbe"**, minden verzió-sor
   `⋯` menüjében, mert konkrétan AZT a verziót másolja, sorokkal együtt
   (egy régebbi verzió sorai eltérhetnek a legfrissebbtől). A
-  `paciensId`, `nyelv`, `penznem`, `orvos`, `fazisok`,
-  `elolegOsszeg`, `kedvezmenyOsszeg` és az `arlistaVerzio`
-  változatlanul átjön — ugyanaz a snapshot-elv, mint egy meglévő terv új
-  verzióra nyitásakor. Ez a valódi A/B alku-változat használati eset: a
-  doki utána csak azt módosítja, ami eltér a két ajánlat között, nem
-  gépeli be újra az egészet. A **`paciens` blokk KIVÉTEL** (D57): ha a
+  `paciensId`, `nyelv`, `penznem`, `fazisok`, `elolegOsszeg`,
+  `kedvezmenyOsszeg` és az `arlistaVerzio` változatlanul átjön —
+  ugyanaz a snapshot-elv, mint egy meglévő terv új verzióra nyitásakor.
+  Ez a valódi A/B alku-változat használati eset: a doki utána csak azt
+  módosítja, ami eltér a két ajánlat között, nem gépeli be újra az
+  egészet. Két mező KIVÉTEL: a **`paciens` blokk** (D57) — ha a
   pácienshez van lezárt törzsadat (`paciens-adatok.json`), onnan jön,
   nem a forrás verzió pillanatképéből — a másolás pillanatában a doki a
   páciens JELENLEGI adatát várja az új ajánlatba, nem egy esetleg
@@ -1062,7 +1108,9 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   ütközés-prompt. Olvashatatlan törzsadatnál a másolás hibaüzenettel áll
   meg (D33). Egy historical (nem a lánc legfrissebb) verzió másolásakor
   a doki külön figyelmeztetést kap, ha időközben újabb verzió is
-  született (D58, lásd fent § 5 „A verziósoron…").
+  született (D58, lásd fent § 5 „A verziósoron…"). Az **`orvos`** (D67)
+  — MINDIG a mai globális alapértelmezett orvos, a forrás verzió orvosa
+  SOSEM másolódik át.
 
 Mindhárom út a meglévő `frissDatummal` (D22) hívásával bélyegzi a
 `keltezes`/`ervenyesIg`-et a mai napra, és a másolat `osszesitok`-ja a
@@ -1303,7 +1351,20 @@ elvész**, a Radix a tab tartalmát unmountolja.
 
 - Rendelő adatai a nyomtatvány fejlécéhez és láblécéhez
   (Név/Cím/Telefon/E-mail/Adószám/Cégjegyzékszám)
-- Orvosok listája (egy név soronként)
+- **Orvosok** (D67): soronkénti lista — név, aktív/inaktív kapcsoló,
+  ↑/↓ sorrendezés, törlés — „+ Orvos hozzáadása" gombbal bővíthető. A
+  lista alatt egy „Alapértelmezett orvos" választó, csak az aktív
+  nevekkel. Az éppen alapértelmezett orvos deaktiválása, ha van másik
+  aktív orvos, egy modális dialógusban azonnali újraválasztást
+  kényszerít; ha nincs másik aktív orvos, a deaktiválás a dialógus
+  megnyitása nélkül, azonnal engedett, egy figyelmeztető sávval, hogy
+  az új tervek orvos nélkül indulnak és a véglegesítésük blokkolva
+  lesz. Két azonos nevű orvos nem menthető (a `plan.orvos` NÉV-
+  pillanatkép, nem `id`-hivatkozás, ezért feloldhatatlan lenne) — a
+  Mentés gomb ilyenkor nem tiltott, kattintásra mutatja a hibát. Egy
+  orvos név feltétel nélkül törölhető — explicit eltérés a D17 „csak
+  deaktiválható" szabályától (D67) —, a korábbi terveken lévő
+  név-pillanatkép ettől függetlenül érintetlen marad.
 
 ### Nyomtatványok
 
