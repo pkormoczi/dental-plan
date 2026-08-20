@@ -63,7 +63,26 @@ function seedValidDraft() {
           kiskoru: false,
           torvenyesKepviselo: null,
         },
-        fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+        // D103: egy 0 soros fázis önmagában is HARD blokk -- ez a teszt
+        // nem az üres fázist vizsgálja, ezért egy sort kap.
+        fazisok: [
+          {
+            sorszam: 1,
+            megnevezes: '1. kezelés',
+            megjegyzes: '',
+            sorok: [
+              {
+                tetelId: '',
+                nevSnapshot: 'Kontroll',
+                savos: false,
+                fogak: '',
+                mennyiseg: 1,
+                listaEgysegar: 0,
+                tenylegesEgysegar: 0,
+              },
+            ],
+          },
+        ],
         osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
       },
     }),
@@ -99,10 +118,13 @@ describe('PreviewPage -- 68. tétel: PDF-render hiba állapota', () => {
       // Az auto-generálás useEffect-je (D603) a betöltés/sablonok
       // beérkezésekor is újrahívja updatePdf-et -- a retry-gomb hatását a
       // kattintás ELŐTTI hívásszámhoz képest, nem abszolút nullához mérjük.
+      // `toBeGreaterThan` (nem pontos `+1`), mert a sablon-betöltés
+      // effektjének kései settle-je időzítésfüggően a kattintással egy
+      // act()-flush-ba eshet.
       const retryBtn = screen.getByRole('button', { name: 'Újrapróbálás' });
       const callsBeforeRetry = pdfMock.updatePdf.mock.calls.length;
       await user.click(retryBtn);
-      expect(pdfMock.updatePdf).toHaveBeenCalledTimes(callsBeforeRetry + 1);
+      expect(pdfMock.updatePdf.mock.calls.length).toBeGreaterThan(callsBeforeRetry);
 
       expect(screen.getByRole('button', { name: /Véglegesítés és mentés/ })).toBeDisabled();
       expect(screen.getByRole('button', { name: 'Elavult PDF' })).toBeDisabled();

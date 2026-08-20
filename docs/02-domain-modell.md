@@ -461,7 +461,7 @@ ellenőrizhető, milyen nyelven íródott”). A nyelvi review pontosan ezt a
 rést tölti be: mindkét terv-nyelven működik, és minden kézzel írt
 szövegre (árlistai vagy egyedi sorra egyaránt) választ ad. A két
 mechanizmus EGYMÁS MELLETT él, nem összevonva — de a `Sor.nevNyelv`
-review-metaadat egyúttal a D76 kemény véglegesítés-blokk (`domain/
+review-metaadat egyúttal a D77 kemény véglegesítés-blokk (`domain/
 nemetNev.ts` `nemetNeveIgazolt()`) egyik feloldási útja is: egy német
 terven kézzel átírt vagy egyedi sor akkor is véglegesíthető, ha a doki a
 mezőn a „Nyelv ellenőrizve” akcióval igazolta, hogy a szöveg németül van.

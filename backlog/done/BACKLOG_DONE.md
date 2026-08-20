@@ -1827,9 +1827,9 @@ karbantartási kör négy önálló javítása.
 ### 67. tétel: Finalization validation engine — KÉSZ (2026-08-20)
 
 - **Méret:** ~2 nap.
-- **Kereteket sért?** Nem — új D75/D76/D77
+- **Kereteket sért?** Nem — új D76/D77/D78
   (`docs/01-attekintes-es-dontesek.md`), egy új sor a `CLAUDE.md`
-  "Sérthetetlen szabályok" táblájában (D76); `schemaVersion` nem
+  "Sérthetetlen szabályok" táblájában (D77); `schemaVersion` nem
   emelkedett.
 - **Valódi haszon:** a véglegesítés-őr korábban tizenegy, egymástól
   eltérő alakú mezőt adott vissza (boolean flag-ek, `string[]` listák,
@@ -1853,7 +1853,7 @@ karbantartási kör négy önálló javítása.
   meglévő domain-függvények (`kitoltetlenSorok`/`nullaOsszeguSorok`/
   `hianyzoCsomagLeirasok`/`arElteroSorok`/`masterSnapshotDiff`/
   `orvosProblema`/`nyelviMismatchek`) hívása változatlan (lásd
-  `docs/01-attekintes-es-dontesek.md` D75/D76/D77,
+  `docs/01-attekintes-es-dontesek.md` D76/D77/D78,
   `docs/02-domain-modell.md` § "Nyelvi review a kézzel írt szövegeken",
   `docs/03-funkcionalis-spec.md` § "Fázisok" és § 4 "Előnézet és
   véglegesítés").

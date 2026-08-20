@@ -571,7 +571,7 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
   fejlécében, sem a workflow-héjban nincs végösszeg (D59).
 - A szerkesztő maga nem tiltja a sor nélküli fázist (üres fázis törlése
   egyetlen kattintás, lásd fent), de egy 0 soros fázissal a véglegesítés
-  KEMÉNY blokk (D77, lásd lent „Előnézet és véglegesítés") — a
+  KEMÉNY blokk (D78, lásd lent „Előnézet és véglegesítés") — a
   nyomtatvány a `fazisok` tömböt feltétel nélkül végigrendereli, egy
   üres fázis üres fejlécként kerülne a papírra.
 
@@ -744,7 +744,7 @@ látja, legfeljebb egy halk jelzéssel, hogy a takarítás elmaradt.
 Meglévő terv szerkesztése **soha nem írja felül** a korábbi verziómappát
 (D4).
 
-### Véglegesítési checklist (D75)
+### Véglegesítési checklist (D76)
 
 A tartalmi validáció egységes, navigálható, `hard`/`soft`/`info`
 súlyosságú tétel-lista (`veglegesitesDiagnozis()`,
@@ -769,7 +769,7 @@ kattintható/navigálható a releváns workflow-lépésre.
   dokumentumra. A tétel megnevezi a fázist és a fogszámot; a
   szerkesztőbe navigál. Az Előnézet maga nem blokkolódik, csak a
   véglegesítés.
-- **Üres fázis (D77):** egy 0 soros fázis üres fejlécként kerülne a
+- **Üres fázis (D78):** egy 0 soros fázis üres fejlécként kerülne a
   nyomtatványra (lásd fent „Fázisok"). A szerkesztőbe navigál.
 - **Előleg meghaladja a fizetendőt (D66):** a bekapcsolt előleg összege
   nagyobb, mint a terv tényleges (kedvezménnyel/felárral már
@@ -783,7 +783,7 @@ kattintható/navigálható a releváns workflow-lépésre.
   tétel strukturálisan nem ajánlható ebben a pénznemben ár nélkül, ez
   nem elgépelés, mint a lenti puha 0 összegű eset. Kézi ajánlati ár
   megadása (vagy másik pénznemre váltás) feloldja a blokkot.
-- **Hiányzó/nem igazolt német tételnév (D76):** német nyelvű terven
+- **Hiányzó/nem igazolt német tételnév (D77):** német nyelvű terven
   minden látható sornak igazolt német neve kell legyen — vagy az
   árlistai nevet követi (D21/D24), vagy a D72 nyelvi review-metaadat
   szerint igazoltan németre íródott. A tétel két csoportot mutat: „nincs
@@ -791,7 +791,7 @@ kattintható/navigálható a releváns workflow-lépésre.
   ellenőrzött" — utóbbi a mezőn megjelenő „Nyelv ellenőrizve" akcióval
   oldható fel (lásd D72), előbbi az Árlista adminban pótolható. A tétel
   a szerkesztőbe navigál.
-- **Hiányzó német kategórianév (D76):** a fogtérkép-legendán ténylegesen
+- **Hiányzó német kategórianév (D77):** a fogtérkép-legendán ténylegesen
   megjelenő kategóriának nincs `nev.de`-je — a tervben NEM használt
   kategória hiányzó neve nem blokkol. Az Árlista adminba (Kategóriák
   panel) navigál.

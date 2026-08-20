@@ -111,7 +111,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A PDF-előnézet render-hibája esetén sem letölteni, sem véglegesíteni nem lehet, amíg a hiba fennáll — az utolsó sikeres PDF csak beszürkítve látható, „Újrapróbálás” akcióval | D73 — a `usePDF()` hibán át megőrzi a korábbi `url`-t/`blob`-ot; letöltésre engedve egy a képernyőn látott tervvel már nem egyező PDF hagyhatná el a gépet |
 | Egy tartósan mentett verzió (sikeres `savePlan`+`loadPlan`) UTÁNI piszkozat-takarítási hiba SOHA nem minősül „a mentés nem sikerült"-nek — a sikerképernyő ekkor is megjelenik, a takarítás hibája legfeljebb halk jelzés | D74 — a doki különben egy valójában sikeresen, tartósan mentett dokumentumot hinne elveszettnek, és egy fölösleges újrapróbálkozással egy `_v<n+1>` duplikátumot hozna létre (D4) |
 | Egy VÉGLEGESÍTETT terv `csakAjanlat` mezője azt rögzíti, hogy a ténylegesen kiadott PDF tartalmazta-e a nyilatkozat + aláírás oldalt — a placeholder-jelölésű nyilatkozat miatti kényszer (D23) a piszkozatban sosem íródik a mezőbe, csak véglegesítéskor | D75 — enélkül egy placeholder miatt kényszerítve, aláírás nélkül kiadott verzió a mentett fájlban tévesen „teljes dokumentum"-ként (`csakAjanlat: false`) szerepelne, és a verziósor jelvénye (D558) pontosan azon az eseten hallgatna, ahol a legkevésbé engedhető meg a tévedés |
-| Német nyelvű terven a véglegesítés blokkolva, ha egy látható sor neve nem igazoltan németül van (sem árlistai `nev.de`-t nem követ, sem D72 szerint igazoltan `de`-re írt kézi szöveg), vagy ha a fogtérkép-legendán ténylegesen megjelenő kategóriának nincs `nev.de`-je | D76 — aláírandó német dokumentumon lefordítatlan magyar tételnév/kategórianév jogilag/kommunikációsan nem elfogadható |
+| Német nyelvű terven a véglegesítés blokkolva, ha egy látható sor neve nem igazoltan németül van (sem árlistai `nev.de`-t nem követ, sem D72 szerint igazoltan `de`-re írt kézi szöveg), vagy ha a fogtérkép-legendán ténylegesen megjelenő kategóriának nincs `nev.de`-je | D77 — aláírandó német dokumentumon lefordítatlan magyar tételnév/kategórianév jogilag/kommunikációsan nem elfogadható |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -172,7 +172,7 @@ D21 (nyelv/pénznem szétválasztás) hozott néhány újat, ezeket se írd újr
   tetelById)` (ugyanitt) az EGYETLEN hely, ahol eldől, hogy egy SOR neve
   miért nem a terv nyelvén szerepel (`nincsForditas`/`elterAzArlistatol`/
   `egyedi`, lásd backlog-3b) — a szerkesztő `HU`/„átírt" jelvénye ezt
-  hívja (a véglegesítés-őr D75 óta a `domain/nemetNev.ts` KOMPONÁLT
+  hívja (a véglegesítés-őr D76 óta a `domain/nemetNev.ts` KOMPONÁLT
   predikátumát hívja, nem ezt közvetlenül, lásd lentebb). `nevKoveti(sor,
   tetel, nyelv)` (ugyanitt) a mag-összehasonlítás mindkettő, és a
   nyelváltás névmegőrzésének (`PatientPage.tsx` `applyNyelv`) forrása
@@ -371,7 +371,7 @@ segédfüggvényei, szintén ne írd újra őket:
   — PUHA diagnosztika, szándékosan külön a `kitoltetlenSorok` kemény
   blokkjától: azon sorok, amik `csomag: true` tételre hivatkoznak, de üres
   a leírásuk. A véglegesítés-őr `'hianyzo-leiras'` puha checklist-tétele
-  (D75) hívja, csak ha `plan.leirasokMutatasa` igaz
+  (D76) hívja, csak ha `plan.leirasokMutatasa` igaz
 - `leirasTulHosszu(szoveg)` / `LEIRAS_FIGYELMEZTETES_KARAKTER` /
   `LEIRAS_FIGYELMEZTETES_SOR` (`app/src/domain/leirasHossz.ts`) — a puha
   hosszkorlát-figyelmeztetés, mindkét hívó helyen (Árlista admin
@@ -427,12 +427,12 @@ véglegesítés „Letöltési fájlnév") segédfüggvényei, szintén ne írd 
   (`PreviewPage.tsx`, `OsszesTervSection.tsx`) dolga
 
 A véglegesítés-őr egységes csekklista-modellje (`docs/01-attekintes-es-
-dontesek.md` D75/D76/D77, `docs/03-funkcionalis-spec.md` § 4. Előnézet és
+dontesek.md` D76/D77/D78, `docs/03-funkcionalis-spec.md` § 4. Előnézet és
 véglegesítés) segédfüggvényei, szintén ne írd újra őket:
 - `veglegesitesDiagnozis(plan, priceList, leirasokMutatasa, master,
   aktivOrvosNevek, sablon)` / `vanKemenyBlokk(csekklista)`
   (`app/src/domain/veglegesitesOr.ts`) — egységes, navigálható
-  `VeglegesitesCsekklista { tetelek: CsekklistaTetel[] }` (D75); minden
+  `VeglegesitesCsekklista { tetelek: CsekklistaTetel[] }` (D76); minden
   tétel `sulyossag: 'hard' | 'soft' | 'info'`, stabil `id`, opcionális
   `reszletek`/`szamlalo`/`route`. A korábbi, egymástól eltérő alakú
   mezőkből (boolean flag-ek, `string[]` listák, egy `alkalmazhato` map
@@ -453,7 +453,7 @@ véglegesítés) segédfüggvényei, szintén ne írd újra őket:
   hanem az alkalmazás working-state-jéről szólnak
 - `domain/nemetNev.ts` `nemetNeveIgazolt(sor, tetel)` /
   `igazolatlanNemetNevek(plan, priceList)` /
-  `igazolatlanNemetKategoriak(plan, priceList)` — D76: SZÁNDÉKOSAN ÚJ,
+  `igazolatlanNemetKategoriak(plan, priceList)` — D77: SZÁNDÉKOSAN ÚJ,
   külön modul, ami a `nev.ts` `sorFallback()`-ot (árlistai fordítás
   megléte, D21) és a `nyelviReview.ts` `nyelviMismatch()`-et (a doki
   SAJÁT szövegének nyelve, D72) KOMPONÁLJA, egyiket sem módosítja — a
@@ -465,7 +465,7 @@ véglegesítés) segédfüggvényei, szintén ne írd újra őket:
   `jelmagyarazat`-jából dolgozik — csak a fogtérképen TÉNYLEGESEN
   megjelenő, `nev.de` nélküli kategóriákat adja (`'nemet-kategoria-nev'`
   HARD tétel), a tervben nem használt kategória hiánya nem blokkol
-- `uresFazisok(plan)` (`app/src/domain/kitoltetlen.ts`) — D77: a
+- `uresFazisok(plan)` (`app/src/domain/kitoltetlen.ts`) — D78: a
   `kitoltetlenSorok()`/`nullaOsszeguSorok()` mintáján, a 0 soros
   fázisokat sorolja fel; a véglegesítés-őr `'ures-fazis'` HARD
   tételeként jelenik meg
@@ -773,7 +773,7 @@ adatlap "Páciens törzsadata") segédfüggvényei/komponensei, szintén ne írd
 - `veglegesitesDiagnozis(plan, priceList, leirasokMutatasa, master, …)`
   (`domain/veglegesitesOr.ts`) negyedik paramétere — a `masterSnapshotDiff()`
   eredménye a `'torzsadat-elteres'` INFO-szintű, NEM blokkoló checklist-
-  tételként jelenik meg (D75); a véglegesítés önmagában nem kényszerít
+  tételként jelenik meg (D76); a véglegesítés önmagában nem kényszerít
   szinkronizálást (D9/D33)
 
 A páciens törlése tétel (`docs/01-attekintes-es-dontesek.md` D50,
@@ -909,7 +909,7 @@ A kezelőorvos-választás és öröklési szabályok tétel
   `fallback` mezőjét a `PlanEditorPage.tsx` a MEGLÉVŐ, dátum-frissítést
   jelző semleges `Callout` mellé, nem egy harmadik csatornába rendereli;
   a `domain/veglegesitesOr.ts` `veglegesitesDiagnozis()` az
-  `orvosProblema()`-t hívja, a `'orvos'` HARD checklist-tételhez (D68/D75)
+  `orvosProblema()`-t hívja, a `'orvos'` HARD checklist-tételhez (D68/D76)
 - `pages/PatientPage.tsx` „Kezelőorvos" szekció — Radix `Select`, csak az
   aktív orvosok közül, egy árva (inaktivált/törölt) hivatkozás külön,
   elválasztó utáni `Select.Item`-ként jelenik meg, amber figyelmeztetéssel.
@@ -941,7 +941,7 @@ mezői" és § 4. "Előnézet és véglegesítés") segédfüggvényei
   `tenylegesEgysegar`-t is az új értékre írja, a kézi felülírást törölve
 - `arElteroSorok(plan, priceList)` — a tervben eltérő sorok neve, két
   bucketbe bontva (`elavult`/`keziAr`) — a véglegesítés-őr `'ar-elteres'`
-  puha checklist-tételéhez (D75)
+  puha checklist-tételéhez (D76)
 - `frissArlistaval(plan, priceList)` — a "Másolás új tervbe" default-
   following frissítése: a forrásban ár ÉS név ÉS leírás is követő sorokat
   az aktuális árlistára állítja, `plan.arlistaVerzio`-t is átbélyegezve;
@@ -967,7 +967,7 @@ A pénznemváltás tétel (`docs/01-attekintes-es-dontesek.md` D71,
 - `araztalanSorok(plan, priceList)` (`app/src/domain/kitoltetlen.ts`) — a
   `nullaOsszeguSorok()` mintájára, de KEMÉNY blokk: névvel ellátott,
   beárazatlan ÉS kézi árat sem kapott sorok. A `veglegesitesOr.ts`
-  `'araztalan-sor'` hard checklist-tételeként (D75) jelenik meg
+  `'araztalan-sor'` hard checklist-tételeként (D76) jelenik meg
 
 A manuális szövegek nyelvi review-ja tétel (`docs/01-attekintes-es-dontesek.md`
 D72, `docs/02-domain-modell.md` § Nyelvi review a kézzel írt szövegeken,
@@ -989,7 +989,7 @@ D72, `docs/02-domain-modell.md` § Nyelvi review a kézzel írt szövegeken,
   tartalmaz `nevNyelv`/`leirasNyelv` kulcsot (reset, „Nyelv ellenőrizve"),
   az mindig nyer
 - a `'nyelvi-review'` checklist-tétel (`app/src/domain/veglegesitesOr.ts`
-  `veglegesitesDiagnozis()`, D75) — lásd lentebb
+  `veglegesitesDiagnozis()`, D76) — lásd lentebb
 - `components/NyelviReviewContext.tsx` `NyelviReviewProvider`/
   `useNyelviReview()` — a guided review tranziens SESSION-állapota
   (`aktiv`/`cel`/`elozmeny`), a `TervWorkflowShell.tsx`-ben mountolva;
