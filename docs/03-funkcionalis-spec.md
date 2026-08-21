@@ -746,12 +746,11 @@ Meglévő terv szerkesztése **soha nem írja felül** a korábbi verziómappát
 
 ### Elrendezés (D79)
 
-Desktopon kéthasábos: a PDF-előnézet balra (elsődleges, nagy), a lenti
-véglegesítési checklist jobbra — a hasáb alján a „Csak ajánlat” kapcsolóval
-és a Letöltés/Véglegesítés gombsorral (a doki fentről lefelé olvassa
-végig a checklistet, a sor végén ott a gomb). Szűk (mobil/keskeny)
-viewporton egyoszlopos elrendezésre esik vissza — a checklist kerül a PDF
-FÖLÉ, nem alá: a validációs állapotot előbb kell látni, mint magát a
+Egyoszlopos, minden breakpointon: felül a véglegesítési checklist, alatta
+egy sorban a „Csak ajánlat” kapcsoló (balra) és a Letöltés/Véglegesítés
+gombsor (jobbra), legalul a PDF-előnézet — a doki fentről lefelé olvassa
+végig a checklistet, a kapcsoló/gomb ott van a végén, mielőtt a hosszú
+PDF-iframe-hez érne: a validációs állapotot előbb kell látni, mint magát a
 dokumentumot.
 
 ### Véglegesítési checklist (D76)

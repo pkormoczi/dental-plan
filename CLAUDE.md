@@ -471,9 +471,9 @@ véglegesítés) segédfüggvényei, szintén ne írd újra őket:
   tételeként jelenik meg
 - `app/src/pages/previewPage/VeglegesitesChecklist.tsx` — D79: a fenti
   `VeglegesitesCsekklista` read-only renderelése (súlyosság→szín,
-  route→gombfelirat leképezéssel), kiemelve a `PreviewPage.tsx`-ből a
-  kéthasábos elrendezés (PDF balra, checklist jobbra, `docs/03-
-  funkcionalis-spec.md` § 4. „Elrendezés") jobb oldali hasábjaként. A
+  route→gombfelirat leképezéssel), kiemelve a `PreviewPage.tsx`-ből az
+  egyoszlopos elrendezés (checklist a PDF fölött, `docs/03-
+  funkcionalis-spec.md` § 4. „Elrendezés") felső blokkjaként. A
   `nyelvi-review` tétel guided-review gombja (`NyelviReviewContext`) egy
   opcionális `nyelviReviewAction` propon jön be — a komponens maga nem
   ismeri a Contextet

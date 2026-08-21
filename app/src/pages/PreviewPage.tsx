@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
-import { Box, Button, Callout, Checkbox, Flex, Grid, Skeleton, Text } from '@radix-ui/themes';
+import { Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
 import { useNyelviReview } from '../components/NyelviReviewContext';
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
@@ -467,19 +467,76 @@ export default function PreviewPage() {
         </Callout.Root>
       )}
 
-      {/* D79: PDF balra (elsődleges, nagy), checklist jobbra -- `areas`/
-          `gridArea`-val, hogy szűk viewporton a checklist kerüljön a PDF FÖLÉ
-          ("ezt olvasd el előbb" sorrend), desktopon pedig a PDF mellé, tőle
-          jobbra. A "Csak ajánlat" kapcsoló és a Letöltés/Véglegesítés
-          gombsor a checklist hasáb ALJÁN áll: a doki fentről lefelé
-          végigolvassa a checklistet, a sor végén ott a gomb. */}
-      <Grid
-        columns={{ initial: '1', sm: '2fr 1fr' }}
-        areas={{ initial: '"checklist" "pdf"', sm: '"pdf checklist"' }}
-        gap="4"
-        align="start"
-      >
-        <Box gridArea="pdf">
+      {/* D79: egyoszlopos, minden breakpointon -- a checklist MINDIG a PDF
+          FÖLÉ kerül ("ezt olvasd el előbb" sorrend, a validációs állapotot
+          előbb kell látni, mint magát a dokumentumot). A "Csak ajánlat"
+          kapcsoló és a Letöltés/Véglegesítés gombsor a checklist ALATT, de
+          a PDF FÖLÖTT áll: a doki fentről lefelé végigolvassa a
+          checklistet, utána ott a kapcsoló és a gomb, mielőtt a hosszú
+          PDF-iframe-hez érne. */}
+      <Flex direction="column" gap="4">
+        <VeglegesitesChecklist
+          csekklista={csekklista}
+          onNavigate={navigate}
+          nyelviReviewAction={
+            nyelviMismatchLista.length > 0
+              ? {
+                  label: 'Irányított ellenőrzés',
+                  onClick: () => nyelviReview.indit(nyelviMismatchLista[0].cel),
+                }
+              : undefined
+          }
+        />
+
+        <Flex justify="between" align="center" gap="3" wrap="wrap">
+          <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Checkbox
+              checked={effectiveOfferOnly}
+              disabled={nyilatkozatIsPlaceholder}
+              onCheckedChange={(checked) =>
+                setPlan((prev) => ({ ...prev, csakAjanlat: checked === true }))
+              }
+            />
+            Csak ajánlat — a nyilatkozat és aláírás oldal nélkül
+          </Text>
+          <Flex gap="3" wrap="wrap">
+            {pdfInstance.url &&
+              (pdfError ? (
+                // A könyvtár hibán át megőrzi az utolsó sikeres `url`-t
+                // (lásd a `pdfError` Callout fölötti kommentet) --
+                // letöltés nélküle egy a képernyőn látott tervvel már
+                // nem egyező PDF-et adna.
+                <Button variant="soft" color="gray" disabled>
+                  Elavult PDF
+                </Button>
+              ) : pdfStale ? (
+                <Button variant="soft" color="gray" disabled>
+                  PDF frissítése…
+                </Button>
+              ) : (
+                <Button asChild variant="soft" color="gray">
+                  <a
+                    href={pdfInstance.url}
+                    download={buildDownloadFileName(plan.paciens.nev, {
+                      tervId: plan.tervId || 'uj',
+                      isDraft: plan.statusz !== 'VEGLEGES',
+                      suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
+                    })}
+                  >
+                    Letöltés
+                  </a>
+                </Button>
+              ))}
+            <Button
+              onClick={attemptFinalize}
+              disabled={busy || !!pdfError || vanKemenyBlokk(csekklista)}
+            >
+              {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
+            </Button>
+          </Flex>
+        </Flex>
+
+        <Box>
           {pdfInstance.url ? (
             <iframe
               title="Kezelési terv előnézet"
@@ -508,70 +565,7 @@ export default function PreviewPage() {
             </Skeleton>
           )}
         </Box>
-
-        <Box gridArea="checklist">
-          <VeglegesitesChecklist
-            csekklista={csekklista}
-            onNavigate={navigate}
-            nyelviReviewAction={
-              nyelviMismatchLista.length > 0
-                ? {
-                    label: 'Irányított ellenőrzés',
-                    onClick: () => nyelviReview.indit(nyelviMismatchLista[0].cel),
-                  }
-                : undefined
-            }
-          />
-
-          <Flex direction="column" gap="3" mt="4">
-            <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <Checkbox
-                checked={effectiveOfferOnly}
-                disabled={nyilatkozatIsPlaceholder}
-                onCheckedChange={(checked) =>
-                  setPlan((prev) => ({ ...prev, csakAjanlat: checked === true }))
-                }
-              />
-              Csak ajánlat — a nyilatkozat és aláírás oldal nélkül
-            </Text>
-            <Flex gap="3" wrap="wrap">
-              {pdfInstance.url &&
-                (pdfError ? (
-                  // A könyvtár hibán át megőrzi az utolsó sikeres `url`-t
-                  // (lásd a `pdfError` Callout fölötti kommentet) --
-                  // letöltés nélküle egy a képernyőn látott tervvel már
-                  // nem egyező PDF-et adna.
-                  <Button variant="soft" color="gray" disabled>
-                    Elavult PDF
-                  </Button>
-                ) : pdfStale ? (
-                  <Button variant="soft" color="gray" disabled>
-                    PDF frissítése…
-                  </Button>
-                ) : (
-                  <Button asChild variant="soft" color="gray">
-                    <a
-                      href={pdfInstance.url}
-                      download={buildDownloadFileName(plan.paciens.nev, {
-                        tervId: plan.tervId || 'uj',
-                        isDraft: plan.statusz !== 'VEGLEGES',
-                        suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
-                      })}
-                    >
-                      Letöltés
-                    </a>
-                  </Button>
-                ))}
-              <Button
-                onClick={attemptFinalize}
-                disabled={busy || !!pdfError || vanKemenyBlokk(csekklista)}
-              >
-                {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
-              </Button>
-            </Flex>
-          </Flex>
-        </Box>
-      </Grid>
+      </Flex>
     </Box>
   );
 }
