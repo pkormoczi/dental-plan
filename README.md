@@ -29,7 +29,6 @@ A tervezési fázis (ez a dokumentumcsomag) lezárult, az implementáció az
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek |
 | `docs/05-technologia.md` | Stack, `PlanStorage` interface, PDF generálás, deployment |
-| `docs/06-arlista-import.md` | Az Excel árlista importja, a benne lévő hibák, takarítási feladatok |
 | `docs/07-felulet-rendszer.md` | Felület- és nyomtatvány-kinézeti szabályok — kötelező, nem javaslat |
 | `backlog/BACKLOG.md` | Még fejlesztendő tételek, technikai adósság, honnan jönnek az igények |
 | `data/arlista.seed.json` | **Kész seed adat** — 118 tétel, 12 kategória, az eredeti Excelből generálva |
@@ -50,7 +49,7 @@ gépi/AI fordítás, a nyilatkozat/fizetési feltételek esetén a doki
 kifejezett, 2026-08-10-i döntése alapján lektorálás és jelölés nélkül
 élesítve (lásd lent, „Nyitott kérdések" #1). Az EUR árak
 **véglegesítése** is nyitott (ma egyszeri árfolyam-becslés, lásd
-`docs/06-arlista-import.md`). A nyomtatvány új garancia-szakaszának
+`backlog/BACKLOG.md` 24. tétel). A nyomtatvány új garancia-szakaszának
 tényleges szövege sem kész — egyelőre helykitöltő mindkét nyelven, a
 doki adja meg (lásd lent, „Nyitott kérdések" #4). Szintén nincs benne:
 automatikus darabszám a fogszámokból, statisztikák, többfelhasználós
@@ -73,7 +72,7 @@ működés, szerveroldali komponens.
    `docs/04-nyomtatvany-spec.md` „Nyelv" szakasza.)
 2. A cégadatok a lábléchez: adószám, cégjegyzékszám, és ha van ilyen
    kötelezettség, működési engedély szám.
-3. Az árlista takarítása — lásd `docs/06-arlista-import.md`.
+3. Az árlista takarítása — lásd `backlog/BACKLOG.md` 24. tétel.
 4. A nyomtatvány garancia-szakaszának tényleges tartalma —
    kezeléstípusonkénti garanciaidők, kivételek. Egyelőre helykitöltő
    szöveg mindkét nyelven (magyarul és németül is), amíg a doki meg nem

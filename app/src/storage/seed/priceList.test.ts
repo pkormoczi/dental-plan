@@ -5,7 +5,7 @@ describe('seedPriceList', () => {
   it('loads the 118-item / 13-category seed from data/arlista.seed.json', () => {
     expect(seedPriceList.schemaVersion).toBe(1);
     // +1 kategória (k13 Fogszabályozás, kiválva a korábbi k12 Egyéb
-    // kezelésekből, docs/06-arlista-import.md) -- a tételszám változatlan.
+    // kezelésekből) -- a tételszám változatlan.
     expect(seedPriceList.kategoriak).toHaveLength(13);
     expect(seedPriceList.tetelek).toHaveLength(118);
   });

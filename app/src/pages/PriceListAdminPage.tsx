@@ -5,8 +5,7 @@
 // maga a német bevezetés munkalistája.
 //
 // A sor kinyitása adja a teljes szerkesztést, benne a kategória
-// legördülővel -- ez a takarítás fő eszköze (a 11 árva tétel átmozgatása,
-// lásd docs/06-arlista-import.md). A tétel-táblázat fölötti "Kategóriák"
+// legördülővel -- ez a takarítás fő eszköze. A tétel-táblázat fölötti "Kategóriák"
 // panel (docs/03-funkcionalis-spec.md § Kategóriák panel) adja a másik
 // felet: kategória létrehozás/átnevezés/színezés/sorrendezés/törlés, egy
 // helyen a tétel-mozgatással, hogy a doki ne navigáljon oda-vissza a

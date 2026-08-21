@@ -1035,7 +1035,7 @@ a doki magyar, magyarul gépel akkor is, ha német ajánlatot állít össze (D2
 `data/arlista.seed.json` = 118 tétel, 13 kategória, az eredeti Excel `Arlista`
 lapjából importálva. A tényleges, folyamatosan változó állapot (mi van
 lektorálva, mi van bekategorizálva, hány tétel kapott `gyakori` jelölést)
-**a `docs/06-arlista-import.md`-ben él, ne itt** — ez a fájl gyorsan
+**a `backlog/BACKLOG.md` „24. tétel"-jében él, ne itt** — ez a lista gyorsan
 elavulna, mert a doki az adminban éppen ezt takarítja.
 
 A hiányzó/lektorálatlan tartalom **nem blokkolja** a német nyelv
@@ -1134,7 +1134,6 @@ ugyanabban a körben, nem később:
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, kezelések és árak, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |
 | `docs/05-technologia.md` | Stack, `PlanStorage` interface, PDF generálás, sémaverziózás, hosztolás |
-| `docs/06-arlista-import.md` | Az Excel-import szabályai, ismert szennyeződések, mit ne javíts az importban |
 | `docs/07-felulet-rendszer.md` | Felület- és nyomtatvány-kinézeti szabályok: márkatokenek, komponensek, billentyűzet, akadálymentesség — kötelező, nem javaslat |
 | `backlog/BACKLOG.md` | Még fejlesztendő tételek (priorizálva), technikai adósság, és honnan jönnek az igények |
 | `backlog/plans/backlog-N-*-terv.md` | Egy nyitott backlog-tétel részletes döntései — a `backlog/BACKLOG.md` tétel `**Terv:**` sora mutat rá; lezáráskor a `backlog/done/`-ba költözik és eltűnik a listából (lásd „Backlog-tétel lezárása") |

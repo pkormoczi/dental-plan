@@ -1,6 +1,6 @@
 // A tétel nevének nyelvfüggő feloldása. D21: a `plan.nyelv` a nyomtatvány
 // szövegét vezérli -- a 118 tétel német neve gépi/AI-fordítás, orvos által
-// nem lektorálva (lásd docs/06-arlista-import.md), ezért egy-egy tételnél
+// nem lektorálva, ezért egy-egy tételnél
 // előfordulhat hiányzó/pontatlan `de` név; a feloldás ilyenkor magyarra esik
 // vissza. A visszaesés SOHA nem néma: lásd a `fallback` jelzőt és a
 // `sorFallback` diagnosztikát, amit a PlanEditorPage (kereső, felvett sor)

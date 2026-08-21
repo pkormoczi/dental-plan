@@ -254,13 +254,24 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 **Nem kódtétel — tisztán adattisztítás és információkérés a dokitól.**
 Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
 
-- a `gyakori` csillagozás (ma mind a 118 tétel `false`)
-- a két `SAVOS` tétel alsó-határának visszaigazolása
-- a `docs/06-arlista-import.md` „Ismert szennyeződés" táblázatában maradt,
-  valódi ár-/kategorizálási döntést igénylő tételek (pl. `t072`/`t073`
-  azonos ára, `t078` „Sín" kategóriája)
+- a `gyakori` csillagozás (ma mind a 118 tétel `false`) — 8–12 tételt kell
+  megjelölni, ezek lesznek a szerkesztő gyorsgombjai
+- a két `SAVOS` tétel (`t014` Fogbél megnyitás + gyógyszeres zárás, `t016`
+  Gyökértömés csatornaszámtól függően) alsó-határának visszaigazolása —
+  az eredeti Excelben `"35-55000"` alakban szerepelt, a sáv alsó határa
+  rövidítve; jelenleg a felső határ nagyságrendjéhez igazítva egészült ki
+  (`35 000`/`38 000`), ez a doki jóváhagyására vár
+- valódi ár-/kategorizálási döntést igénylő tételek: `t072`/`t073`
+  „Fémkerámia implantátumra" azonos 95 000 Ft ára (csak a zárójeles
+  kiegészítésben térnek el, az egyik valószínűleg felesleges), `t078`
+  „Sín" jelenlegi `k10 Korona és hídpótlások` besorolása (valószínűleg
+  `k12`-be való), `t064`/`t066` „Zárt/nyitott küret foganként" azonos
+  10 000 Ft ára a kvadránsos változatuk eltérése (60 000 vs 85 000 Ft)
+  mellett, és a `t054`/`t055`/`t056` (BLX/Straumann implantátumok) eltérő
+  névforma (szórend) a három sor közt
 - a `k04`/`k05`/`k06`/`k12` fogtérkép-színe (ma mind alap szürke,
-  `docs/06-arlista-import.md`)
+  `#adb5bd`) — a kategória-karbantartó panelben egy kattintással
+  átszínezhető
 - a nyomtatvány garancia-szakaszának magyar szövege — kezeléstípusonkénti
   garanciaidők, kivételek; a `GARANCIA_HU_V1` seed egyelőre
   `[PLACEHOLDER — a garanciafeltételek még nincsenek megadva]`, a doki a
@@ -268,7 +279,7 @@ Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
   is placeholder maradt volna, most már azért is, mert nincs mit
   AI-fordítani, amíg a magyar forrás maga is helykitöltő)
 - a tétel-leírás (docs/02-domain-modell.md § Tétel-leírás) `csomag`-jelöléseinek
-  és leírás-szövegeinek begyűjtése (docs/06-arlista-import.md)
+  és leírás-szövegeinek begyűjtése — ma egyik 118 tételen sincs kitöltve
 
 ---
 
