@@ -237,7 +237,12 @@ describe('FazisokBlokk', () => {
     expect(scrollSpy).toHaveBeenCalled();
     const elsoToggle = document.getElementById('fazis-reszlet-toggle-0')!;
     await waitFor(() => expect(elsoToggle).toHaveAttribute('aria-expanded', 'true'));
-    expect(document.activeElement).toBe(elsoToggle);
+    // `ugras()` a fókuszt egy MÁSODIK, beágyazott requestAnimationFrame-ben
+    // állítja be (a scrollIntoView UTÁN) -- az `aria-expanded` szinkron
+    // state-frissítésből jön, tehát a fenti waitFor ezt jóval a fókusz
+    // előtt teljesítheti. Egy szinkron activeElement-ellenőrzés emiatt
+    // versenyhelyzetes (CI-n el is bukott) -- ez is waitFor-t kap.
+    await waitFor(() => expect(document.activeElement).toBe(elsoToggle));
   });
 
   it('0 fázisnál üres-állapot szöveg jelenik meg', () => {
