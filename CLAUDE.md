@@ -483,6 +483,15 @@ véglegesítés) segédfüggvényei, szintén ne írd újra őket:
   opcionális `nyelviReviewAction` propon jön be — a komponens maga nem
   ismeri a Contextet
 
+A Terv részletei fázis-megjelenítés (`docs/03-funkcionalis-spec.md` § 11.
+Terv részletei (véglegesített verzió) "Fázisok és kezelési sorok")
+segédfüggvénye, szintén ne írd újra:
+- `sorElemId(fazisIndex, sorIndex)` (`app/src/pages/tervReszletei/
+  SorReszlet.tsx`) — egy kezelési sor read-only nézetének stabil, egyedi
+  DOM id-je, a szerkesztő `fog-<pi>-<li>` mintájának (`PlanEditorPage.tsx`)
+  külön névterű megfelelője, hogy a két lap id-i sose ütközzenek; más
+  felület (pl. egy fogtérkép-kattintás) erre tud scroll-navigálni
+
 A D31 (`docs/01-attekintes-es-dontesek.md`) segédfüggvénye:
 - `savosHatarForditott(ar)` (`app/src/domain/money.ts`) — igaz, ha egy
   SAVOS ár `min`-je nagyobb, mint a `max`-a; puha figyelmeztetés az Árlista

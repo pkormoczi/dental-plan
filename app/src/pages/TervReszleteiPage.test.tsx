@@ -162,6 +162,18 @@ describe('TervReszleteiPage', () => {
     expect(screen.queryByText('Csak ajánlat')).not.toBeInTheDocument();
   });
 
+  it('a fázisok blokk (72. tétel) a terv fázisait mutatja, a placeholder-szöveg eltűnt', async () => {
+    renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
+    await screen.findByTestId('terv-reszletei-fejlec');
+
+    expect(
+      screen.queryByText('A fázisok és kezelési sorok a következő lépésben kerülnek ide.'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('1. kezelés — fogkő és tömés')).toBeInTheDocument();
+    expect(screen.getByText('2. kezelés — korona')).toBeInTheDocument();
+    expect(screen.getByText('Fognyaki tömés')).toBeInTheDocument();
+  });
+
   it('"Csak ajánlat" jelvényt csak a ténylegesen csakAjanlat:true-val mentett verzión mutat', async () => {
     const seeder = new DemoStorage();
     await seeder.init();

@@ -1970,3 +1970,23 @@ karbantartási kör négy önálló javítása.
   terv-lánc fából, hogy két hívó (a fa és az új oldal) ne térjen el
   egymástól. Részletek: `docs/03-funkcionalis-spec.md` § 11 "Terv
   részletei (véglegesített verzió)".
+
+---
+
+### 72. tétel: Final fázis- és kezeléssor megjelenítés — KÉSZ
+
+- **Méret:** közepes — 4 új fájl (`pages/tervReszletei/FazisokBlokk.tsx`,
+  `FazisReszlet.tsx`, `SorReszlet.tsx`, `FazisUgroNav.tsx` + saját
+  tesztfájl), 2 módosított fájl (`TervReszleteiPage.tsx`, `index.css`).
+- **Megvalósítás:** a Terv részletei nézet „fázisok és kezelési sorok”
+  slotja read-only, alapból nyitott, összecsukható fázis-szekciókkal
+  töltődött fel — stabil 5 oszlop, ajánlati ár elsődleges/listaár csak
+  eltérésnél, explicit kibontású leírás-sorok (a nyitottság a fázis-
+  összecsukást túlélő szülő-állapotban él), statikus „Becsült ár”
+  jelvény, és 4+ fázisnál egy sticky fázis-ugró legördülő scrollspy-vel.
+  A fázisonkénti sticky táblafejléc a Radix `Table.Root` belső
+  `ScrollArea`-jának overflow-feloldásával jött létre egy scoped CSS-
+  szabállyal. Minden sor stabil, egyedi DOM id-t kapott a jövőbeli
+  fogtérkép-navigáció horgonyaként. Részletek:
+  `docs/03-funkcionalis-spec.md` § 11 "Terv részletei (véglegesített
+  verzió)" → "Fázisok és kezelési sorok".

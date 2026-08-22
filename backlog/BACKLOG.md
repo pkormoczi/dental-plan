@@ -15,14 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 72. tétel — Final fázis- és kezeléssor megjelenítés
-  (a `backlog/redesign/` redesign-döntéssorozat DP-061 tétele) — a 71.
-  tétel oldal-héjának "phases" layout-slotját tölti fel: read-only
-  fázis-szekciók, stabil oszlopok, ajánlati/listaár másodlagos
-  megjelenítés, leírás-kibontás, 4+ fázisnál ugró navigáció +
-  scrollspy. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-72-final-fazis-sor-terv.md`
-
 ### 73. tétel — Final fogtérkép navigáció
   (a `backlog/redesign/` redesign-döntéssorozat DP-062 tétele,
   alacsonyabb prioritású, a 71./72. tételre épül) — a

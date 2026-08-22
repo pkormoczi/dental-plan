@@ -5,7 +5,7 @@
 // ide navigál a nyers PDF új lapon való megnyitása helyett -- az utóbbi a
 // lap saját "Megnyitás külön" akciójává vált.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Badge, Box, Button, Callout, Flex, Grid, Skeleton, Table, Text } from '@radix-ui/themes';
 import {
@@ -17,6 +17,7 @@ import {
 import Section from '../components/Section';
 import { ReadOnlyField } from '../components/Field';
 import PlanVersionActionDialog, { usePlanVersionActions } from '../components/PlanVersionActionDialog';
+import FazisokBlokk from './tervReszletei/FazisokBlokk';
 import { t } from '../design/tokens';
 import { formatLongDate, formatShortDate } from '../domain/date';
 import { MASTER_DIFF_MEZOK, masterSnapshotDiff, mezoErtekSzoveg } from '../domain/masterSnapshotDiff';
@@ -79,6 +80,8 @@ export default function TervReszleteiPage() {
   const akciok = usePlanVersionActions(patientDir);
 
   const [allapot, setAllapot] = useState<Allapot>({ fajta: 'toltes' });
+  const rootRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -179,6 +182,26 @@ export default function TervReszleteiPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [planDir, versionDir]);
+
+  // A sticky lap-fejléc magassága CSS változóként -- a fázisok blokk
+  // `.fazis-tabla` sticky szabálya (index.css) ebből számolja a saját
+  // offsetjét, hogy a két komponensnek ne kelljen ismernie egymás
+  // méretét. `headerRef` csak a 'kesz' állapotban mountol (lásd lent) --
+  // az `allapot.fajta` a függőséglistában, hogy az effekt UJRAFUSSON,
+  // amint a sticky fejléc ténylegesen megjelenik a DOM-ban.
+  useEffect(() => {
+    const root = rootRef.current;
+    const header = headerRef.current;
+    if (!root || !header) return;
+    const frissit = () => {
+      root.style.setProperty('--tr-fejlec-magassag', `${header.getBoundingClientRect().height}px`);
+    };
+    frissit();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(frissit);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, [allapot.fajta]);
 
   async function megnyitasKulon() {
     akciok.jelezHiba(null);
@@ -291,7 +314,7 @@ export default function TervReszleteiPage() {
   const dob = megjelenitett.szuletesiIdo ? formatShortDate(megjelenitett.szuletesiIdo, 'hu') : null;
 
   return (
-    <Box style={{ maxWidth: 900, margin: '0 auto' }}>
+    <Box ref={rootRef} style={{ maxWidth: 900, margin: '0 auto' }}>
       <nav
         aria-label="Hol vagyok"
         style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}
@@ -318,6 +341,7 @@ export default function TervReszleteiPage() {
       </nav>
 
       <Flex
+        ref={headerRef}
         justify="between"
         align="start"
         py="3"
@@ -428,14 +452,14 @@ export default function TervReszleteiPage() {
 
       {/* A `key` verzióváltáskor a teljes alfát unmountolja/remountolja --
           ez az oldal ALAPMINTÁJA a lokális UI-state (nyitott blokkok,
-          kijelölések) alapállapotba állítására, hogy a fázisok/fogtérkép
-          (72./73. tétel) tartalmának ne kelljen külön reset-kódot írnia. */}
+          kijelölések) alapállapotba állítására, hogy a tartalom-blokknak
+          (fázisok, jövőbeli fogtérkép-navigáció) ne kelljen külön
+          reset-kódot írnia. */}
       <Box key={`${planDir}/${versionDir}`}>
-        {/* A pénzügyi összesítés (74. tétel) és a fázisok (72. tétel) itt,
-            ebben a sorrendben kapnak tartalmat -- a metaadat/páciens-
-            pillanatkép LEGALUL marad. */}
+        {/* A pénzügyi összesítés itt, a fázisok fölött kap majd tartalmat --
+            a metaadat/páciens-pillanatkép LEGALUL marad. */}
         <PlaceholderSlot szoveg="A pénzügyi összesítés a következő lépésben kerül ide." />
-        <PlaceholderSlot szoveg="A fázisok és kezelési sorok a következő lépésben kerülnek ide." />
+        <FazisokBlokk plan={plan} />
 
         <TervMetaadatok plan={plan} tervCim={tervCim} />
         <PaciensPillanatkep

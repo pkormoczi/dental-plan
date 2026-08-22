@@ -1796,6 +1796,32 @@ UI-állapot (nyitott blokkok, kijelölések) magától alapállapotba áll,
 anélkül hogy minden új interaktív elemet külön reset-listába kellene
 kötni. A lap emellett explicit a tetejére görget verzióváltáskor.
 
+**Fázisok és kezelési sorok**: a fázis-szekciók alapból NYITVA vannak,
+összecsukhatók, a fázis-cím pedig NEM sticky, de minden fázisnak saját
+táblafejléce van, ami sticky marad görgetéskor (a globális lap-fejléc alatt
+tapad meg — 4+ fázisnál a fázis-ugró nav alatt, lásd lentebb). Az oszlopok
+stabilak: Beavatkozás / Fog / Db / Egységár / Összeg, a szöveg balra, a
+szám jobbra igazítva, tabular-nums. A darabszám mindig `×N` alakban
+jelenik meg, `N=1`-nél is. A fog mező a sor eredeti szabadszöveges
+tartalmát mutatja (nem a nyomtatvány normalizált alakját), hiányzó
+fogszámnál „—". Az egységár-cellában, ha a listaár megegyezik az ajánlati
+árral, egy érték látszik; eltérésnél az ajánlati elsődleges, a listaár
+alatta, kisebb, halványabb másodlagos érték. Egy sor leírása csak explicit
+kibontásra nyílik, egyszerre több sor leírása is nyitva lehet, és egy
+fázis összecsukása/kinyitása NEM veszíti el a már kibontott leírások
+állapotát (ez a nyitottság a szülő blokkban él, nem magában a soron belül,
+hogy a fázis-törzs feltételes renderje ne unmountolja el vele együtt). A
+`savos` sorokon egy statikus „Becsült ár" jelvény jelzi a bizonytalan
+árat — itt nincs átbillenthető kapcsoló, mert a nézet olvasásra való. A
+fázismegjegyzés nyitva mindig látszik, csukott fázis fejlécén egy halk
+jelvény jelzi a meglétét. 4 vagy több fázisnál egy fázis-ugró legördülő
+(ordinal + a tényleges fázisnév) jelenik meg, ami görgetés közben
+scrollspy-vel követi az aktuálisan látható fázist, és kattintásra a
+célfázist — ha csukva volt — kinyitja, majd oda görget és a fázis
+chevron-gombjára fókuszál. Minden sor gyökéreleme stabil, egyedi DOM
+`id`-t kap, hogy egy másik felület (pl. egy fogra kattintás) a hozzá
+tartozó sorra tudjon görgetni.
+
 **Páciens-pillanatkép**: a „Páciens adatai a véglegesítéskor" szekció
 alapból összecsukva, a `masterSnapshotDiff()`
 (`domain/masterSnapshotDiff.ts`) eltérés-számával jelezve, ha a páciens
