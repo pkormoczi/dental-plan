@@ -170,3 +170,18 @@ button {
   z-index: 1;
   background: var(--color-panel);
 }
+/*
+ * A `.rt-BaseCard` (a `Section` köré rajzolt Radix `Card`) `overflow: hidden`-t
+ * ír elő fix magasságú kártyák tartalom-levágásához -- ez a "Kezelési
+ * fázisok" kártyán belül SOHA nem kap fix magasságot, DE bármely `overflow`
+ * != `visible` ancestor a CSS spec szerint sticky-pozicionálási referenciává
+ * ("scrolling box") válik. Emiatt a fenti táblafejléc ÉS a fázis-ugró nav
+ * (`tervReszletei/FazisUgroNav.tsx`) `top`-ja nem a lapgörgetéshez, hanem a
+ * Card SAJÁT dobozához képest értelmeződött -- a fejléc/nav a kártya
+ * tetejétől számított offesettel a kártya KÖZEPÉRE csúszott, a tartalomra
+ * írva, görgetéstől függetlenül. A `.fazisok-blokk` (`FazisokBlokk.tsx`
+ * gyökér `Box`-a) alatti Card-ra szűkítve visszaadjuk a `visible`-t.
+ */
+.fazisok-blokk .rt-Card {
+  overflow: visible;
+}

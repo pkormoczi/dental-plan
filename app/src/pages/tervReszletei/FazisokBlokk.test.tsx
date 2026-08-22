@@ -111,6 +111,20 @@ describe('FazisokBlokk', () => {
     expect(screen.getByText('Részletes leírás')).toBeInTheDocument();
   });
 
+  it('kibontott leírásnál a sor saját alsó elválasztója eltűnik, hogy a két sor egy blokknak tűnjön', async () => {
+    const user = userEvent.setup();
+    renderFazisok([makeFazis({ sorok: [makeSor({ nevSnapshot: 'Tömés', leirasSnapshot: 'Részletes leírás' })] })]);
+
+    const sorTr = screen.getByText('Tömés').closest('tr')!;
+    expect(sorTr.style.getPropertyValue('--table-row-box-shadow')).toBe('');
+
+    await user.click(screen.getByRole('button', { name: 'Leírás' }));
+    expect(sorTr.style.getPropertyValue('--table-row-box-shadow')).toBe('none');
+
+    await user.click(screen.getByRole('button', { name: 'Leírás' }));
+    expect(sorTr.style.getPropertyValue('--table-row-box-shadow')).toBe('');
+  });
+
   it('egyező listaár/ajánlati ár esetén egy árat mutat, eltérésnél mindkettőt, az ajánlati elsődleges', () => {
     renderFazisok([
       makeFazis({
@@ -229,5 +243,10 @@ describe('FazisokBlokk', () => {
   it('0 fázisnál üres-állapot szöveg jelenik meg', () => {
     renderFazisok([]);
     expect(screen.getByText('Ez a verzió nem tartalmaz kezelési fázist.')).toBeInTheDocument();
+  });
+
+  it('a gyökér `fazisok-blokk` osztálya megvan -- ez a CSS-horgony a kártya overflow-jának feloldásához (index.css), hogy a sticky elemek a lapgörgetéshez, ne a kártyához tapadjanak', () => {
+    const { container } = renderFazisok([makeFazis()]);
+    expect(container.querySelector('.fazisok-blokk')).toBeInTheDocument();
   });
 });

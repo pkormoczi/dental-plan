@@ -4,6 +4,7 @@
 // (`onPatch`, `NumberField`), itt egy lezárt dokumentum pillanatképét
 // mutatjuk, mezőnkénti beviteli vezérlők nélkül.
 
+import type { CSSProperties } from 'react';
 import { Badge, Box, Button, Flex, Table, Text } from '@radix-ui/themes';
 import { t } from '../../design/tokens';
 import { formatMoney } from '../../domain/money';
@@ -44,11 +45,25 @@ export default function SorReszlet({
   const arElter = sor.listaEgysegar !== sor.tenylegesEgysegar;
   const leirasId = `sor-leiras-${fazisIndex}-${sorIndex}`;
 
+  const leirasNyitottBorderNelkul = leirasNyitva && leirasTartalom.length > 0;
+
   return (
     <>
-      <Table.Row id={sorElemId(fazisIndex, sorIndex)}>
+      <Table.Row
+        id={sorElemId(fazisIndex, sorIndex)}
+        // Kinyitott leírásnál a sor ALSÓ hajszálvonala eltűnik -- a
+        // következő (leírás-)sor felveszi ugyanezt a szerepet, így a két
+        // sor vizuálisan EGY blokként jelenik meg, csak a blokk ALJÁN van
+        // elválasztó a következő tétel felé. A `--table-row-box-shadow`
+        // Radix-változó öröklődik a saját `Table.Cell`-jeire (table.css).
+        style={
+          leirasNyitottBorderNelkul
+            ? ({ '--table-row-box-shadow': 'none' } as CSSProperties)
+            : undefined
+        }
+      >
         <Table.Cell>
-          <Flex align="start" gap="1" wrap="wrap">
+          <Flex align="center" gap="1" wrap="wrap">
             <Text as="span">{sor.nevSnapshot}</Text>
             {sor.savos && (
               <Badge color="amber" variant="soft" size="1">
@@ -97,11 +112,19 @@ export default function SorReszlet({
           {formatMoney(sorOsszeg(sor), currency, nyelv)}
         </Table.Cell>
       </Table.Row>
-      {leirasNyitva && leirasTartalom && (
+      {leirasNyitottBorderNelkul && (
         <Table.Row>
-          <Table.Cell colSpan={5}>
-            <Box id={leirasId}>
-              <Text as="p" size="2" style={{ whiteSpace: 'pre-wrap' }}>
+          {/* Halvány háttér + behúzás + kisebb, tompított szöveg -- ez
+              jelzi, hogy ez a sor a FELETTE lévő tétel részlete, nem egy
+              önálló, azzal egyenrangú sor (a `Beavatkozás`-cella
+              szövegének kezdőpontjához igazított behúzással). */}
+          <Table.Cell colSpan={5} style={{ background: t.surfaceAlt }}>
+            <Box id={leirasId} pl="4">
+              <Text
+                as="p"
+                size="2"
+                style={{ whiteSpace: 'pre-wrap', color: t.uiTextMuted }}
+              >
                 {leirasTartalom}
               </Text>
             </Box>

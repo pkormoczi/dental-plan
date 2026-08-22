@@ -121,7 +121,7 @@ export default function FazisokBlokk({ plan }: { plan: Plan }) {
   }
 
   return (
-    <Box ref={rootRef}>
+    <Box ref={rootRef} className="fazisok-blokk">
       <Section title="Kezelési fázisok">
         {fazisok.length === 0 ? (
           <Text as="p" size="2" color="gray">
