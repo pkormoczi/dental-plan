@@ -71,17 +71,27 @@ export default function SorReszlet({
               </Badge>
             )}
             {leirasTartalom && (
-              <Button
-                type="button"
-                size="1"
-                variant="ghost"
-                color="gray"
-                aria-expanded={leirasNyitva}
-                aria-controls={leirasId}
-                onClick={onToggleLeiras}
-              >
-                Leírás
-              </Button>
+              <>
+                {/* Vizuális elválasztó a névtől/jelvénytől -- a Flex `gap`
+                    önmagában túl kevés volt, a "Leírás" gomb összefolyt a
+                    névvel. `aria-hidden`: a breadcrumb "›" elválasztójának
+                    mintája (`TervReszleteiPage.tsx`) -- puszta díszítés,
+                    nem hordoz tartalmat felolvasónak. */}
+                <Text size="1" style={{ color: t.uiTextFaint }} aria-hidden="true">
+                  ·
+                </Text>
+                <Button
+                  type="button"
+                  size="1"
+                  variant="ghost"
+                  color="gray"
+                  aria-expanded={leirasNyitva}
+                  aria-controls={leirasId}
+                  onClick={onToggleLeiras}
+                >
+                  Leírás
+                </Button>
+              </>
             )}
           </Flex>
         </Table.Cell>
