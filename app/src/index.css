@@ -136,22 +136,33 @@ button {
 
 /*
  * Terv részletei (TervReszleteiPage.tsx) fázis-táblázatai -- a
- * `Table.Root` a <table>-t egy saját ScrollAreába csomagolja
- * (`overflow: hidden` a ScrollArea gyökerén és -- surface/ghost variánstól
- * függetlenül -- a `.rt-TableRootTable`-ön is), aminek belsejéből egy
- * `position: sticky` fejléc szerkezetileg NEM tud a lapgörgetéshez tapadni.
- * Ez a scoped override (a `.paciens-lista` fenti mintája) feloldja az
- * overflow-t és sticky-vé teszi a fejléccellákat -- cserébe a táblázat
- * saját vízszintes görgetése elvész, ami 900px-es lapszélességen, 5
- * oszloppal nem gyakorlati veszteség. A `top` a lap-fejléc + a fázis-ugró
- * nav magasságából áll össze (`--tr-fejlec-magassag`/`--fazis-nav-magassag`,
- * TervReszleteiPage.tsx / tervReszletei/FazisokBlokk.tsx).
+ * `Table.Root` a <table>-t egy saját ScrollAreába csomagolja. A ScrollArea
+ * gyökerén az `overflow: hidden` sima CSS-osztályból jön (felülírható), DE
+ * a belső Viewport `overflow-x`/`overflow-y: scroll`-ja a Radix
+ * `@radix-ui/react-scroll-area` forrásában (nem a Themes CSS-ben) INLINE
+ * style-ként, JS-ből íródik ki (`scrollbarXEnabled ? 'scroll' : 'hidden'`)
+ * -- ez SOHA nem lehet `visible`, és semmilyen külső osztály-szelektor nem
+ * győzheti le specificitással, mert az inline style mindig előbbre való.
+ * Emiatt itt kivételesen `!important` kell (nem specificitási verseny,
+ * hanem inline style felülbírálása) -- enélkül a Viewport marad a sticky
+ * fejléc legközelebbi GÖRGETHETŐ őse a lapgörgetés (window) helyett, és a
+ * `top` offset a Viewport SAJÁT, tartalom-magasságú dobozán belül
+ * értelmeződik, nem a képernyőn -- ez okozta, hogy a fejléc a táblázat
+ * KÖZEPÉN, a sorokra írva jelent meg, görgetéstől függetlenül. A `top` a
+ * lap-fejléc + a fázis-ugró nav magasságából áll össze
+ * (`--tr-fejlec-magassag`/`--fazis-nav-magassag`, TervReszleteiPage.tsx /
+ * tervReszletei/FazisokBlokk.tsx). Cserébe a táblázat saját vízszintes
+ * görgetése elvész, ami 900px-es lapszélességen, 5 oszloppal nem
+ * gyakorlati veszteség (a `.paciens-lista` fenti mintájának megfelelő
+ * tudatos kompromisszum).
  */
 .fazis-tabla,
 .fazis-tabla .rt-ScrollAreaRoot,
-.fazis-tabla .rt-ScrollAreaViewport,
 .fazis-tabla .rt-TableRootTable {
   overflow: visible;
+}
+.fazis-tabla .rt-ScrollAreaViewport {
+  overflow: visible !important;
 }
 .fazis-tabla thead th {
   position: sticky;
