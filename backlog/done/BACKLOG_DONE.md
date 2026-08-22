@@ -1949,3 +1949,24 @@ karbantartási kör négy önálló javítása.
   VeglegesitesChecklist.tsx`) került, kiemelve a `PreviewPage.tsx`-ből
   (docs/01-attekintes-es-dontesek.md D79, docs/03-funkcionalis-spec.md
   § 4 "Előnézet és véglegesítés" → "Elrendezés").
+
+---
+
+### 71. tétel: Final terv részletei alapnézet és verziónavigáció — KÉSZ
+
+- **Méret:** közepes — 2 új fájl (`domain/planVersionActions.ts`,
+  `components/PlanVersionActionDialog.tsx`), 1 új oldal
+  (`pages/TervReszleteiPage.tsx`), 1 új route, meglévő komponensek
+  áthuzalozása, 4 új/módosított tesztfájl.
+- **Megvalósítás:** új, URL-lel címezhető read-only nézet egy
+  véglegesített terv-verzióra
+  (`/paciensek/:patientDir/tervek/:planDir/:versionDir`) — fejléc,
+  akciósáv, verziónavigáció, historical páciens-pillanatkép read-only
+  diffje, teljes lokális state-reset verzióváltáskor. A terv-lánc fa
+  „Megnézés” akciója mostantól ide navigál a nyers PDF közvetlen
+  megnyitása helyett — az utóbbi a Terv részletei lap „Megnyitás külön”
+  akciójává vált. A verzió-linkelt akciók (Új verzió/Másolás új tervbe)
+  megosztott döntési logikája és megerősítő dialógusa kiemelve a
+  terv-lánc fából, hogy két hívó (a fa és az új oldal) ne térjen el
+  egymástól. Részletek: `docs/03-funkcionalis-spec.md` § 11 "Terv
+  részletei (véglegesített verzió)".

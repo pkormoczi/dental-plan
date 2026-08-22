@@ -165,6 +165,25 @@ async function nyissLancot(user: ReturnType<typeof userEvent.setup>, doboz: HTML
   }
 }
 
+// A "Megnézés" gomb/menüpont a Terv részletei route-ra navigál -- ezt a
+// probe-ot olvassuk vissza, a valódi TervReszleteiPage.tsx-et nem kell
+// ehhez a teszthez felhúzni.
+function TervReszleteiProbe() {
+  const { patientDir, planDir, versionDir } = useParams<{
+    patientDir: string;
+    planDir: string;
+    versionDir: string;
+  }>();
+  return (
+    <div
+      data-testid="terv-reszletei-oldal"
+      data-patientdir={patientDir}
+      data-plandir={planDir}
+      data-versiondir={versionDir}
+    />
+  );
+}
+
 function renderHistory() {
   return render(
     <TestProviders>
@@ -173,6 +192,10 @@ function renderHistory() {
         <Route path="/paciens" element={<DraftProbe />} />
         <Route path="/terv" element={<div>TERV-OLDAL</div>} />
         <Route path="/paciensek/:patientDir" element={<PaciensekProbe />} />
+        <Route
+          path="/paciensek/:patientDir/tervek/:planDir/:versionDir"
+          element={<TervReszleteiProbe />}
+        />
       </Routes>
     </TestProviders>,
   );
@@ -638,64 +661,53 @@ describe('OsszesTervSection', () => {
     );
   });
 
-  // backlog-22: "Megnézés" -- a verzió mentett PDF-jét nyitja meg új lapon,
-  // a piszkozatot egyáltalán nem érinti. A jsdom window.open()-je nincs
-  // implementálva, mockolás nélkül a teszt el sem indulna.
-  describe('"Megnézés" -- a verzió PDF-je új lapon', () => {
-    it('szinkron nyitja meg az üres lapot, majd -- csak a PDF megérkezése UTÁN -- a blob URL-re navigál', async () => {
+  // "Megnézés" a Terv részletei route-ra navigál -- a nyers PDF új lapon
+  // való megnyitása (window.open + popup-blokkoló őr) a Terv részletei lap
+  // saját "Megnyitás külön" akciójába költözött.
+  describe('"Megnézés" -- a Terv részletei route-ra navigál', () => {
+    it('a legfrissebb sor látható "Megnézés" gombja a saját verziójának route-jára navigál', async () => {
       const seeder = new DemoStorage();
       await seeder.init();
-      await seeder.savePlan(makeVeglegesPlan(), new Uint8Array([1, 2, 3]));
-
-      // A hívási sorrend igazolja a popup-blokkoló-védelmet: a window.open
-      // a KATTINTÁS pillanatában fut, a blob URL csak ezután, a loadPlanPdf
-      // megérkezésekor készül el -- nem elég, hogy mindkettő VALAMIKOR
-      // meghívódik, a sorrend maga a lényeg (2. döntés).
-      const callOrder: string[] = [];
-      const mockWin = { location: { href: '' }, close: vi.fn() };
-      const openMock = vi.fn(() => {
-        callOrder.push('open');
-        return mockWin as unknown as Window;
-      });
+      const openMock = vi.fn(() => null);
       window.open = openMock as unknown as typeof window.open;
-      URL.createObjectURL = vi.fn(() => {
-        callOrder.push('createObjectURL');
-        return 'blob:teszt';
-      }) as unknown as typeof URL.createObjectURL;
+      const plan = makeVeglegesPlan();
+      const { versionDir } = await seeder.savePlan(plan, new Uint8Array([1, 2, 3]));
 
       const user = userEvent.setup();
       renderHistory();
 
       await screen.findByText('Letöltés Teszt');
       const card = patientCard('Letöltés Teszt');
-      // 50. tétel (D58) óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
       await user.click(within(card).getByRole('button', { name: 'Megnézés' }));
 
-      expect(openMock).toHaveBeenCalledWith('', '_blank');
-      await waitFor(() => expect(mockWin.location.href).toBe('blob:teszt'));
-      expect(callOrder).toEqual(['open', 'createObjectURL']);
+      expect(openMock).not.toHaveBeenCalled();
+      const probe = await screen.findByTestId('terv-reszletei-oldal');
+      expect(probe.dataset.versiondir).toBe(versionDir);
     });
 
-    it('hiányzó PDF esetén bezárja az üres lapot, az inline hiba pedig ugyanaz, mint a Letöltésnél', async () => {
-      const mockWin = { location: { href: '' }, close: vi.fn() };
-      window.open = vi.fn(() => mockWin as unknown as Window) as unknown as typeof window.open;
-
+    it('historical soron a "⋯" "Megnézés" menüpontja a SAJÁT (nem a legfrissebb) verziójának route-jára navigál', async () => {
       const user = userEvent.setup();
       renderHistory();
 
       await screen.findByText('Nagy Éva');
       const card = patientCard('Nagy Éva');
-      // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva.
+      const multiChainPlanDir = nagyEvaMultiVersionChain[0].planDir;
+      const doboz = lancDoboz(card, multiChainPlanDir);
+      await nyissLancot(user, doboz);
 
-      // A seed-verziókhoz nincs mentett PDF -- ugyanaz az eset, mint a
-      // "Letöltés" hibaágánál (3. döntés: nincs második hiba-minta). 50.
-      // tétel (D58) óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
-      await user.click(within(card).getByRole('button', { name: 'Megnézés' }));
+      // A doboz-ra szűkítve keresünk -- Nagy Évának KÉT lánca van, a másik
+      // (egyverziós) lánc is nyitva lehet alapból, saját "⋯" triggerrel; a
+      // `verzioMenupont()` (testQueries.ts) a TELJES kártyán keres, itt a
+      // pontos lánc-hovatartozás a lényeg.
+      const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+      // triggers[0] a lánc legfrissebb (v2) sora, triggers[1] a historical (v1).
+      await user.click(triggers[1]);
+      const historicalVersion = nagyEvaMultiVersionChain[0].versionDir;
+      await user.click(await screen.findByRole('menuitem', { name: 'Megnézés' }));
 
-      await waitFor(() => expect(mockWin.close).toHaveBeenCalled());
-      expect(
-        await within(card).findByText('Ehhez a verzióhoz nincs mentett PDF.'),
-      ).toBeInTheDocument();
+      const probe = await screen.findByTestId('terv-reszletei-oldal');
+      expect(probe.dataset.plandir).toBe(multiChainPlanDir);
+      expect(probe.dataset.versiondir).toBe(historicalVersion);
     });
   });
 

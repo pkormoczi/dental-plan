@@ -12,12 +12,13 @@
 
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NavBar from '../components/NavBar';
 import { NavGuardProvider } from '../components/NavGuardContext';
 import PatientDetailPage from './PatientDetailPage';
+import { resetListStateMemoryForTests } from '../components/useListStateMemory';
 import { AppStateProvider, useAppState } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
@@ -26,6 +27,19 @@ import { seedPatients, seedPlans } from '../storage/seed/plans';
 function DraftProbe() {
   const { plan } = useAppState();
   return <div data-testid="draft-nev">{plan.paciens.nev}</div>;
+}
+
+// A verziósor "Megnézés" gombja ide navigál (71. tétel) -- a "Vissza" gomb
+// a `navigate(-1)`-es POP-visszatérést szimulálja, ugyanaz a minta, mint az
+// OsszesTervSection.test.tsx `PaciensekProbe`-ja.
+function TervReszleteiProbe() {
+  const navigate = useNavigate();
+  return (
+    <div>
+      <div data-testid="terv-reszletei-oldal" />
+      <button onClick={() => navigate(-1)}>Vissza</button>
+    </div>
+  );
 }
 
 function renderDetail(patientDir: string, state?: Record<string, unknown>) {
@@ -40,6 +54,10 @@ function renderDetail(patientDir: string, state?: Record<string, unknown>) {
               <Routes>
                 <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
                 <Route path="/paciens" element={<DraftProbe />} />
+                <Route
+                  path="/paciensek/:patientDir/tervek/:planDir/:versionDir"
+                  element={<TervReszleteiProbe />}
+                />
               </Routes>
             </NavGuardProvider>
           </AppStateProvider>
@@ -84,6 +102,10 @@ describe('PatientDetailPage', () => {
     localStorage.clear();
     const seeder = new DemoStorage();
     await seeder.init();
+    // useListStateMemory.ts fejléce: egy MemoryRouter kezdeti navigációja is
+    // POP-nak számít, tesztfájlon belüli it()-ek enélkül tévesen örökölnék
+    // egymás lánc-nyitottsági állapotát.
+    resetListStateMemoryForTests();
   });
 
   it('közvetlen URL-ről (hideg render, nem kattintva) a helyes páciens jelenik meg', async () => {
@@ -205,6 +227,37 @@ describe('PatientDetailPage', () => {
     expect(
       within(tomesekDoboz).queryByRole('button', { name: /további műveletek$/ }),
     ).not.toBeInTheDocument();
+  });
+
+  // 71. tétel: a Terv részletei lap "Összes verzió" gombja ide, POP-
+  // navigációval tér vissza -- a lánc-nyitottságnak (amit a doki a "Tömések"
+  // láncon kézzel nyitott ki, mert alapból csukva van) meg kell maradnia.
+  it('a Terv részletei lapra navigálva, majd onnan POP-pal visszatérve a lánc-nyitottság visszaáll', async () => {
+    const user = userEvent.setup();
+    renderDetail(nagyDir);
+
+    await screen.findByRole('button', { name: '+ Új terv' });
+    const nagyEvaEntries = seedPlans.filter((e) => e.plan.paciens.nev === 'Nagy Éva');
+    const nagyEvaChains = new Map<string, typeof nagyEvaEntries>();
+    for (const entry of nagyEvaEntries) {
+      const list = nagyEvaChains.get(entry.planDir) ?? [];
+      list.push(entry);
+      nagyEvaChains.set(entry.planDir, list);
+    }
+    const tomesekPlanDir = [...nagyEvaChains.values()].find((c) => c.length > 1)![0].planDir;
+    const tomesekDoboz = document.querySelector(`[data-plan="${tomesekPlanDir}"]`) as HTMLElement;
+
+    const toggle = within(tomesekDoboz).getByRole('button', { expanded: false });
+    await user.click(toggle);
+    expect(within(tomesekDoboz).getByRole('button', { expanded: true })).toBeInTheDocument();
+
+    await user.click(within(tomesekDoboz).getByRole('button', { name: 'Megnézés' }));
+    await screen.findByTestId('terv-reszletei-oldal');
+    await user.click(screen.getByRole('button', { name: 'Vissza' }));
+
+    await screen.findByRole('button', { name: '+ Új terv' });
+    const tomesekDobozAfter = document.querySelector(`[data-plan="${tomesekPlanDir}"]`) as HTMLElement;
+    expect(within(tomesekDobozAfter).getByRole('button', { expanded: true })).toBeInTheDocument();
   });
 
   // D38: a Radix `Tabs` unmountolja az inaktív tabot -- a "Páciens

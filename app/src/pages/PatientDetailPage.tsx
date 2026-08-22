@@ -27,6 +27,7 @@ import {
 import { ArrowLeftIcon, CrossCircledIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { sajatDraft, useAktivDraft } from '../components/useAktivDraft';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
+import { useListStateMemory } from '../components/useListStateMemory';
 import { useNavGuard } from '../components/NavGuardContext';
 import PatientDetailHeader from '../components/PatientDetailHeader';
 import PatientEditorPanel from '../components/PatientEditorPanel';
@@ -102,6 +103,16 @@ export default function PatientDetailPage() {
 
   const [startingPlan, setStartingPlan] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+
+  // A Terv részletei lap "Összes verzió" gombja ide, POP-navigációval tér
+  // vissza -- a lánc-nyitottság enélkül a `PatientPlanChains` helyi
+  // state-jében élne, ami a lap elhagyásakor elveszne. A kulcs
+  // páciensenkénti (nem egy közös oldal-kulcs, mint az OsszesTervSection.tsx-
+  // en): két páciens ne osztozzon lánc-nyitottságon.
+  const { nyitottak: nyitottLancok, setNyitott: setLancNyitva } = useListStateMemory(
+    `paciens-tervek/${patientDir}`,
+    !loading,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -363,6 +374,8 @@ export default function PatientDetailPage() {
               unreadable={chainData?.unreadable ?? false}
               header="embedded"
               aktivDraft={sajatAktivDraft}
+              nyitottLancok={nyitottLancok}
+              onLancValtas={setLancNyitva}
               onLabelSaved={(planDir, tervCim) =>
                 setChainData((prev) =>
                   prev

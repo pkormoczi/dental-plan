@@ -15,6 +15,8 @@
 8. Filerendszer — demó-only, a leendő fájlrendszeres architektúra vizualizációja, a DEMO oldal egyik füle
 9. Páciensek — élő, terv-mentéstől független törzsadat (D33)
 10. Páciens részletei — URL-lel címezhető, két tabbal (D35)
+11. Terv részletei — egy véglegesített verzió read-only nézete, URL-lel
+    címezhető
 
 ### Fő navigáció (D34)
 
@@ -1118,24 +1120,23 @@ elágaztatása).
 
 Egy historical verzió másolásakor, ha a láncnak van a másolt verziónál
 frissebbje, egy figyelmeztető dialógus jelzi ezt a másolás megerősítése
-előtt — a MEGLÉVŐ piszkozat-felülírás-őr (`runOrConfirm`/`AlertDialog`)
-bővítése, FÜGGETLENÜL attól, van-e mentetlen piszkozat (D58, D260). A
-pontos (exact) másolás a figyelmeztetés elfogadása után is lefut; a
-dialógus piros gombja csak akkor jelenik meg, ha VALÓBAN piszkozat vész
-el, mert a historical-másolás önmagában nem adatvesztés-kockázat.
-Az „Ugrás a legfrissebb verzióra" azonos oldalon belüli scroll+fókusz a
-lánc dobozára, majd a lánc-fejléc toggle gombjára — nincs hozzá önálló
-route (D24), a lánc a menü megnyitásához már úgyis nyitva van.
+előtt — a megosztott piszkozat-felülírás-őr
+(`domain/planVersionActions.ts` `kellMegerosites`/`megerositesTartalom` +
+`components/PlanVersionActionDialog.tsx`) bővítése, FÜGGETLENÜL attól,
+van-e mentetlen piszkozat. Ugyanezt a megosztott réteget hívja a § 11.
+Terv részletei lap is, hogy a szöveg/feltétel ne térjen el a két felület
+között. A pontos (exact) másolás a figyelmeztetés elfogadása után is
+lefut; a dialógus piros gombja csak akkor jelenik meg, ha VALÓBAN
+piszkozat vész el, mert a historical-másolás önmagában nem
+adatvesztés-kockázat. Az „Ugrás a legfrissebb verzióra" azonos oldalon
+belüli scroll+fókusz a lánc dobozára, majd a lánc-fejléc toggle gombjára —
+nincs hozzá önálló route, a lánc a menü megnyitásához már úgyis nyitva
+van.
 
-A `Megnézés` a verzió mentett PDF-jét nyitja meg új böngészőlapon (a
-böngésző natív PDF-nézőjében, nincs beépített olvasó nézet) — ugyanazt a
-`loadPlanPdf`-et hívja, mint a `Letöltés`, de nem ír fájlt a Letöltések
-mappába, és a piszkozatot egyáltalán nem érinti (nincs `loadPlanIntoDraft`,
-nincs navigáció, nincs piszkozat-felülírás-őr). A `window.open('',
-'_blank')` a kattintás pillanatában, még a PDF-lekérés előtt, szinkron fut
-— ha a lekérés után futna, a böngésző popup-blokkolója a legtöbb esetben
-elnyelné. Hiányzó mentett PDF esetén a megnyitott üres lap bezárul, és
-ugyanaz az inline hiba jelenik meg a soron, mint a `Letöltés`-nél.
+A `Megnézés` a § 11. „Terv részletei" nézetre navigál — a verzió mentett
+PDF-jének új böngészőlapon való megnyitása (`loadPlanPdf`, popup-blokkoló
+elleni szinkron `window.open`) onnan, a „Megnyitás külön" akcióval érhető
+el.
 
 A `⋯` `IconButton` `aria-label`-jében benne van a terv címkéje ÉS a
 verziószám (`Fogpótlás — v2 — további műveletek`): egy páciensblokkban
@@ -1743,3 +1744,66 @@ kereszt-linkek mutatnak ide.
   művelet végleges; megerősítés után a teljes páciensmappa törlődik
   (`storage.deletePatient()`), és a doki a Pácienslistára kerül. Nincs
   „kuka”, nincs helyreállítás, nincs páciens-összevonás.
+
+## 11. Terv részletei (véglegesített verzió)
+
+URL-lel címezhető (`/paciensek/:patientDir/tervek/:planDir/:versionDir`).
+Megvalósítás: `app/src/pages/TervReszleteiPage.tsx`. Egy KIZÁRÓLAG
+véglegesített (`statusz === 'VEGLEGES'`) verzió read-only, strukturált
+nézete — a § 5 terv-lánc fa „Megnézés" akciója ide navigál, a nyers,
+mentett PDF-blobot megnyitó korábbi viselkedés helyett (az utóbbi erről a
+lapról, „Megnyitás külön" néven érhető el). NEM a terv-workflow héj
+(`TervWorkflowShell`, § 2–4) alatt él: a héj a PISZKOZAT szerkesztés 3
+lépéséé, egy immutable, lezárt dokumentum nem workflow-lépés.
+
+**Elrendezés, fentről lefelé**: kattintható „Hol vagyok" útvonal (Páciensek
+› páciensnév › terv címke · verzió); sticky fejléc (páciensnév + születési
+dátum — SZÁNDÉKOSAN szűkebb, mint a páciens-részletoldal sticky fejléce,
+mert a telefont is tartalmazó teljes pillanatkép lejjebb, összecsukva
+jelenik meg) + akciósáv; verziónavigáció (‹ előző / „Összes verzió" /
+következő ›); majd a tényleges tartalom, ABBAN a sorrendben, ami a
+véglegesített dokumentum logikus olvasási sorrendje: pénzügyi összesítés,
+fázisok és kezelési sorok, végül a terv metaadata (cím, verzió, dátumok,
+nyelv, pénznem, kezelőorvos, „Véglegesített"/„Csak ajánlat" jelvény) és a
+páciens-pillanatkép.
+
+**Akciósáv**: a lánc legfrissebb verzióján elsődleges „Új verzió", egy
+historical verzión helyette „Ugrás a legfrissebbre" (a legfrissebb verzió
+route-jára navigál); mindkettőn „Megnyitás külön" (a mentett PDF új
+böngészőlapon, popup-blokkoló elleni szinkron `window.open`-nel, ugyanaz a
+mechanizmus, mint korábban a „Megnézés"-é) és „Másolás új tervbe". Ezek az
+akciók a `domain/planVersionActions.ts` + `components/
+PlanVersionActionDialog.tsx` megosztott réteget hívják — ugyanazt, amit a
+§ 5 terv-lánc fája is használ, hogy a piszkozat-felülírás-őr szövege/
+feltétele ne térjen el a két felület között.
+
+**Verziónavigáció**: a lánc verziói dátum/verziószám szerint csökkenő
+sorrendben; a prev/next gombok a szomszédos verzió route-jára navigálnak,
+mindig `replace`-es navigációval — a láncon belüli lépegetés oldalirányú
+mozgás egy nézeten belül, nem új „hely" a history-ban, különben az „Összes
+verzió" böngésző-visszalépése a köztes verzióra vinne vissza, nem a
+listára. „Összes verzió" a lánc listájára navigál vissza: közvetlen
+link/frissítés (nincs history-előzmény) esetén a páciens-részletoldalra, a
+`Kezelési tervek` tabbal; egyébként böngésző-"vissza" (POP) navigációval,
+amit a § 5/§ 10 meglévő `useListStateMemory`-alapú scroll-/lánc-
+nyitottság-visszaállítása is tud kezelni.
+
+**Teljes lokális state-reset verzióváltáskor**: a tartalom-blokk (pénzügyi
+összesítés, fázisok, metaadat, páciens-pillanatkép) egy `key={\`${planDir}/
+${versionDir}\`}` wrapperben él — ez az oldal alapmintája, verzióváltáskor
+a React a teljes alfát unmountolja/remountolja, így minden lokális
+UI-állapot (nyitott blokkok, kijelölések) magától alapállapotba áll,
+anélkül hogy minden új interaktív elemet külön reset-listába kellene
+kötni. A lap emellett explicit a tetejére görget verzióváltáskor.
+
+**Páciens-pillanatkép**: a „Páciens adatai a véglegesítéskor" szekció
+alapból összecsukva, a `masterSnapshotDiff()`
+(`domain/masterSnapshotDiff.ts`) eltérés-számával jelezve, ha a páciens
+jelenlegi törzsadata azóta módosult. Kibontva mind a 8 `Paciens` mező
+látszik, eltérésnél egy read-only, két-oszlopos táblázat (törzsadat vs. a
+terv adata) — SZINKRON-AKCIÓ NÉLKÜL: egy véglegesített terv `paciens`
+blokkja pillanatkép, amit a rendszer soha nem ír felül utólag, a diff itt
+tisztán tájékoztató. Ha még nincs lezárt törzsadat-fájl, a pillanatkép
+önmagához képest nem mutat eltérést. Egy olvashatatlan (sérült) törzsadat-
+fájl nem viszi el a lap egészét — a pillanatkép-szekcióban egy halk sor
+jelzi, hogy az összevetés kimaradt.

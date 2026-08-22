@@ -238,6 +238,11 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   hanem egy folyamatban lévő, félbeszakítható munkafolyamat jelzése). SOHA
   nem modal/AlertDialog — a normál navigáció (más route-ra kattintás)
   végig engedett, a sáv csak követi a dokit, nem zárja el az utat.
+- Entitás-fejléc + akciósáv EGY sticky sávban (`pages/TervReszleteiPage.tsx`,
+  § 11): a `PatientDetailHeader.tsx` mintáján (`position: sticky; top: 0`,
+  `t.page` háttér), de a fejléc mellett közvetlenül a lap akciógombjait is
+  hordozza — nem külön sáv, mert itt nincs tabsor/workflow-stepper, aminek a
+  helyet át kellene adnia.
 
 ### Szín, forma, sűrűség
 

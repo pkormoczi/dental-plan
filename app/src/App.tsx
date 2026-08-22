@@ -16,6 +16,7 @@ import PatientPage from './pages/PatientPage';
 import PlanEditorPage from './pages/PlanEditorPage';
 import PriceListAdminPage from './pages/PriceListAdminPage';
 import SettingsPage from './pages/SettingsPage';
+import TervReszleteiPage from './pages/TervReszleteiPage';
 import { AppStateProvider } from './state/AppState';
 import { StorageProvider } from './storage/StorageContext';
 
@@ -76,6 +77,14 @@ export default function App() {
                         <Route path="/tervek" element={<Navigate to="/demo/tervek" replace />} />
                         <Route path="/paciensek" element={<PaciensekPage />} />
                         <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
+                        {/* Egy véglegesített verzió read-only nézete -- lapos
+                            testvér-route, NEM a TervWorkflowShell alatt: az a
+                            PISZKOZAT workflow 3 lépéséé, egy immutable verzió
+                            nem workflow-lépés. */}
+                        <Route
+                          path="/paciensek/:patientDir/tervek/:planDir/:versionDir"
+                          element={<TervReszleteiPage />}
+                        />
                         <Route path="/arlista" element={<PriceListAdminPage />} />
                         <Route path="/beallitasok" element={<SettingsPage />} />
                         <Route path="/demo" element={<DemoPage />} />

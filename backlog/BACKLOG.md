@@ -13,16 +13,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 71. tétel — Final terv részletei alapnézet és verziónavigáció
-  (a `backlog/redesign/` redesign-döntéssorozat DP-060 tétele) — ma
-  EGYÁLTALÁN NEM létezik strukturált, read-only "Terv részletei" nézet:
-  a "Megnézés" akció a nyers, mentett PDF-blobot nyitja meg egy új
-  lapon, nincs hozzá route, a verziósorok nem linkek. Ez a tétel új
-  route-ot és oldal-héjat épít (header, historical páciens-snapshot
-  diff, verziónavigáció, akciósáv) — a 72–75. tétel mind erre épül. A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-71-terv-reszletei-alapnezet-terv.md`
-
 ### 72. tétel — Final fázis- és kezeléssor megjelenítés
   (a `backlog/redesign/` redesign-döntéssorozat DP-061 tétele) — a 71.
   tétel oldal-héjának "phases" layout-slotját tölti fel: read-only

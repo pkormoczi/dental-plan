@@ -1011,6 +1011,26 @@ D72, `docs/02-domain-modell.md` § Nyelvi review a kézzel írt szövegeken,
   modal-szerkesztőre — a `nev-${pi}-${li}`/`leiras-${pi}-${li}`/
   `fazis-nev-${pi}`/`fazis-megjegyzes-${pi}` DOM `id`-k ehhez a horgonyok
 
+A Terv részletei nézet (`docs/03-funkcionalis-spec.md` § 11. Terv
+részletei (véglegesített verzió)) segédfüggvényei/komponensei, szintén ne
+írd újra őket:
+- `domain/planVersionActions.ts` `kellMegerosites(action,
+  vanMentetlenPiszkozat)` / `megerositesTartalom(action,
+  vanMentetlenPiszkozat)` / `tervReszleteiUtvonal(patientDir, ref)` — a
+  verzió-linkelt akciók (Új verzió/Másolás új tervbe/Új terv) tiszta
+  döntési logikája: a piszkozat-felülírás-őr feltétele, a megerősítő
+  dialógus szövege és a Terv részletei útvonal encodeURIComponent-es
+  felépítése egy helyen. A `components/PatientPlanChains.tsx` verziósora
+  ÉS a `pages/TervReszleteiPage.tsx` egyaránt ezt hívja, hogy a szöveg/
+  feltétel a két felület között ne térjen el
+- `components/PlanVersionActionDialog.tsx` `usePlanVersionActions(patientDir)`
+  / `PlanVersionActionDialog` — a fenti tiszta logika React-kontextusra
+  (storage/AppState/navigáció) kötött hook+dialógus párosa, a
+  `DiscardChangesDialog.tsx` mintáján; a hiba-állapot (`hiba`/`jelezHiba`)
+  a hívó SAJÁT akcióit (pl. `downloadVersion`, „Megnyitás külön") is
+  fogadja, a megjelenítés helyét (sorhoz kötött vagy lap-szintű) a hívó
+  dönti el
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

@@ -14,6 +14,8 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
+import { DemoStorage } from './storage/DemoStorage';
+import { seedPatients, seedPlans } from './storage/seed/plans';
 
 vi.mock('@react-pdf/renderer', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@react-pdf/renderer')>();
@@ -269,4 +271,27 @@ describe('Végpontok közötti folyamat', () => {
     // mégis "piszkozat"-ot mutat -- a statusz a betöltéskor visszaáll.
     expect(screen.getByText('Nagy Éva · piszkozat')).toBeInTheDocument();
   }, 20000);
+
+  // 71. tétel: a Terv részletei route az App.tsx valódi route-táblájában is
+  // feloldódik, nem csak a saját, izolált tesztjében (TervReszleteiPage.test.tsx).
+  it('a Terv részletei route közvetlen URL-ről feloldódik az App valódi route-tábláján', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const nagyDir = seedPatients.find((p) => p.record.nev === 'Nagy Éva')!.patientDir;
+    const nagyEntries = seedPlans.filter((e) => e.patientDir === nagyDir);
+    const chains = new Map<string, typeof nagyEntries>();
+    for (const entry of nagyEntries) {
+      const list = chains.get(entry.planDir) ?? [];
+      list.push(entry);
+      chains.set(entry.planDir, list);
+    }
+    const multi = [...chains.values()].find((c) => c.length > 1)!.sort((a, b) => a.plan.verzio - b.plan.verzio);
+    const v2 = multi[multi.length - 1];
+
+    window.location.hash = `#/paciensek/${encodeURIComponent(nagyDir)}/tervek/${encodeURIComponent(v2.planDir)}/${encodeURIComponent(v2.versionDir)}`;
+    render(<App />);
+
+    expect(await screen.findByText('A terv adatai')).toBeInTheDocument();
+    expect(screen.getByText('Véglegesített')).toBeInTheDocument();
+  });
 });
