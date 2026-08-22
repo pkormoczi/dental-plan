@@ -1,7 +1,9 @@
 # Backlog
 
-A `docs/01` sérthetetlen keretei (`D<szám>` formátumban) egyik tételt sem sértik —
-ahol ez nem nyilvánvaló, a tétel maga jelzi, melyik döntéssel fut össze.
+A `docs/01` lezárt, történeti `D<szám>` döntéstáblája és a `CLAUDE.md`
+„Sérthetetlen szabályok" táblája egyik tételt sem sértik — ahol ez nem
+nyilvánvaló, a tétel maga jelzi, melyik korábbi döntéssel fut össze. Új
+tétel nem hoz létre és nem hivatkozik új D-számra.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. Lezárt
 tétel száma véglegesen nyugdíjazva, soha nem osztható ki újra — az új tételek a sorozatot onnan folytatják,

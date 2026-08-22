@@ -33,6 +33,13 @@ logóval). Az alkalmazás valódi indokai ezek:
 
 ## Döntések
 
+**Ez a tábla LE VAN ZÁRVA — történeti napló, nem bővül.** Új döntés soha
+nem kap D-számot; a tartósan érvényes szabályok prózaként a `docs/02`–`07`
+élő dokumentumokban élnek. Meglévő D-számra új helyen (forráskód,
+`CLAUDE.md`, `docs/`) hivatkozni tilos. Egy meglévő sorhoz csak akkor
+nyúlunk, ha az állítása ténylegesen hamissá vált. A tábla archiválása és a
+még érvényes tartalmának prózává írása külön, későbbi lépés.
+
 | # | Döntés | Indoklás / következmény |
 |---|---|---|
 | D1 | Egy rendelő, belső eszköz — nem termék | Nincs multi-tenancy, nincs auth a fő flow-ban |

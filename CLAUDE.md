@@ -17,18 +17,23 @@ app/      a tényleges Vite + React + TypeScript alkalmazás — IDE dolgozz
 Az `app/`-on kívüli minden más csak referencia és dokumentáció.
 
 **A `docs/` és a `backlog/` szerepe élesen elválik.** Minden tartósan
-érvényes, élő dokumentáció és döntés a `docs/`-ban él (D-tábla,
-funkcionális/nyomtatvány/technológia szakaszok) — ez az egyetlen forrás,
-aminek self-containednek kell maradnia. A `backlog/` csak munkaközi állapot:
-nyitott tervek és a lezárási napló, folyamatosan mozgó tartalommal (egy
-nyitott tétel lezáráskor eltűnik a `BACKLOG.md`-ből és átkerül a
-`done/`-ba). **Forráskód-kommentek soha nem hivatkozhatnak a `backlog/`
-mappa semelyik fájljára** — sem a `BACKLOG.md`-re, sem a `plans/`-ra, sem a
-`done/`-ra, nyitott vagy lezárt tételtől függetlenül. Ha egy kódrészlet
-mögötti döntést dokumentálni kell, az anchor mindig egy `docs/0X` szakasz
-vagy egy D-szám; ha a döntés még nincs migrálva `docs/`-ba (a tétel még
-nyitott), a komment a WHY-t írja le közvetlenül, path-hivatkozás nélkül —
-ne mutasson előre egy még be nem zárt backlog-tételre.
+érvényes, élő dokumentáció és döntés a `docs/`-ban él (funkcionális/
+nyomtatvány/technológia szakaszok) — ez az egyetlen forrás, aminek
+self-containednek kell maradnia. A `docs/01-attekintes-es-dontesek.md`
+`D<szám>` döntéstáblája **lezárt, történeti napló** — nem bővül, és nem
+hivatkozási cél (lásd a fájl elején lévő megjegyzést). A `backlog/` csak
+munkaközi állapot: nyitott tervek és a lezárási napló, folyamatosan mozgó
+tartalommal (egy nyitott tétel lezáráskor eltűnik a `BACKLOG.md`-ből és
+átkerül a `done/`-ba). **Forráskód-kommentek soha nem hivatkozhatnak a
+`backlog/` mappa semelyik fájljára** — sem a `BACKLOG.md`-re, sem a
+`plans/`-ra, sem a `done/`-ra, nyitott vagy lezárt tételtől függetlenül —
+és **soha nem hivatkoznak `D<szám>` döntési azonosítóra sem** (se meglévőre,
+se újra). Ha egy kódrészlet mögötti döntést dokumentálni kell, az anchor
+kizárólag egy néven megnevezett `docs/0X` szakasz lehet (pl. „lásd
+`docs/02-domain-modell.md` § Fogszám kezelés"); ha a döntés még nincs
+migrálva `docs/`-ba (a tétel még nyitott), a komment a WHY-t írja le
+közvetlenül, path-hivatkozás nélkül — ne mutasson előre egy még be nem zárt
+backlog-tételre.
 
 Parancsok (`app/package.json` scripts, mindig `cd app` után):
 `npm run dev` (Vite dev szerver), `npm run build` (`tsc -b && vite build`),
@@ -1079,11 +1084,16 @@ Beállítások számszerűsíti a készültséget (`lefedettseg()`).
   session-öknek minden olvasásnál be kell tölteniük, és
   szinkronban kell tartani a kóddal) — ha nem hordoz új
   információt a kód szerkezetén felül, ne írd meg.
+- Kommentbe soha nem kerül döntési azonosító (`D<szám>`, `DP-<szám>`) és
+  backlog-tételszám sem. A komment vagy a lokális WHY-t írja le közvetlenül,
+  vagy egy néven megnevezett `docs/0X` szakaszt nevez meg — sosem egy
+  azonosítót, amit a döntéstáblában kellene visszakeresni.
 
 Az architekturális/tervezési döntések forrása a `docs/*.md` fájlokban van
 (ADR-ek és döntési dokumentumok), NEM a forráskód kommentjeiben. A
-döntések (`D<szám>` formátumban) egy helyen, számozva élnek a
-`docs/01-attekintes-es-dontesek.md`-ben; egy-egy nyitott funkció tervezési
+`docs/01-attekintes-es-dontesek.md` `D<szám>` döntéstáblája lezárt,
+történeti napló — a jelenleg érvényes szabályok prózaként a megfelelő
+`docs/02`–`07` élő dokumentumban élnek; egy-egy nyitott funkció tervezési
 háttere külön fájlban, `backlog/plans/backlog-<n>-<cim>-terv.md` néven.
 Amikor egy modul vagy komponens "miért így van megcsinálva" kérdés merül
 fel, először nézd meg a `docs/` és a `backlog/` könyvtárat, mielőtt
@@ -1114,12 +1124,16 @@ ugyanabban a körben, nem később:
 2. **Döntések átvezetése.** A tervdokumentum (`backlog/plans/backlog-N-*-terv.md`)
    döntéseiből, ami tartósan érvényes (nem feladatlista, nem elvetett
    alternatíva, nem teszt-terv), az bekerül a megfelelő `docs/02`–`07`
-   szakaszba prózaként; a valóban sérthetetlen invariáns új sorként a
-   `docs/01` D-táblájába (a következő szabad D-számmal) és — ha jogi/
-   adatintegritási következménye van — a „Sérthetetlen szabályok"
-   táblába is. Ha a tétel új, újrahasznosítható segédfüggvényt vezetett
-   be, egy új bekezdés kerül a „Meglévő segédfüggvények" alá, a meglévők
-   mintájában (docs-anchorra/D-számra hivatkozva, SOHA a terv-fájlra).
+   szakaszba prózaként, önhordozóan — a szabály és az indoka egy helyen,
+   azonosító nélkül. Ha a döntés valóban sérthetetlen (jogi/
+   adatintegritási következménnyel jár), új sor a „Sérthetetlen
+   szabályok" táblába, ahol a Miért oszlop a tényleges indokot írja le,
+   nem egy hivatkozást. **A `docs/01` D-táblája le van zárva: új döntés
+   soha nem kap D-számot, és meglévő D-számra sem forráskód, sem
+   `CLAUDE.md`, sem `docs/` nem hivatkozhat új helyen.** Ha a tétel új,
+   újrahasznosítható segédfüggvényt vezetett be, egy új bekezdés kerül a
+   „Meglévő segédfüggvények" alá, a meglévők mintájában (docs-anchorra
+   hivatkozva, SOHA a terv-fájlra, SOHA D-számra).
 3. **Tervdokumentum archiválása.** `git mv backlog/plans/backlog-N-*.md
    backlog/done/`. A tétel száma (N) ezután véglegesen nyugdíjazva —
    soha nem osztható ki új tételnek, ugyanaz az elv, mint a D17
@@ -1134,8 +1148,8 @@ ugyanabban a körben, nem később:
    git history-ra.
 5. **Referencia-seprés.** Minden helyen (forráskód-kommentek, ez a fájl,
    `docs/*.md`), ahol a most archivált terv-fájlra vagy a `backlog/done/`
-   mappára mutató hivatkozás volt, át kell írni a megfelelő `docs/0X`
-   szakaszra vagy D-számra.
+   mappára mutató hivatkozás volt, át kell írni a megfelelő, néven
+   megnevezett `docs/0X` szakaszra — D-számra soha.
 6. **CHANGELOG.** Ha a tétel a pácienst/dokit érintő, felhasználó-szemszögű
    változás, a `/update-changelog` továbbra is külön, explicit lépés — ez
    a checklist nem helyettesíti. Ha a tétel megváltoztatta, mit lehet egy
@@ -1149,7 +1163,7 @@ ugyanabban a körben, nem később:
 
 | Fájl | Mikor nyisd meg |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; a `D<szám>` döntések és indoklásuk; adatvédelmi keret; kockázatok |
+| `docs/01-attekintes-es-dontesek.md` | Miért nem elég az Excelt javítani; adatvédelmi keret; kockázatok. A `D<szám>` döntéstábla **lezárt, történeti napló** — nem bővül, nem hivatkozási cél |
 | `docs/02-domain-modell.md` | Mappastruktúra, `arlista.json`/`terv.json`/`beallitasok.json` sémák, fogszám-parsolás szabályai |
 | `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés (terv szerkesztő, kezelések és árak, korábbi tervek stb.) |
 | `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek, számformátum |

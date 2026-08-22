@@ -163,10 +163,14 @@ már lezajlott az Előkészítés/Mikor fut lépéseiben, mielőtt ez elkezdődi
   Az "Érintett helyek" szakasz (lásd lent) fájl-szintű, tájékoztató jellegű
   megjegyzésekre szorítkozik, nem tervezi meg az implementációt.
 - **Nem futtatja le a `CLAUDE.md` "Backlog-tétel lezárása" checklistjét.**
-  Az egy KÉSŐBBI, implementáció utáni, önálló lépés (döntések átvezetése a
-  `docs/02`–`07`-be, D-táblabővítés, tervfájl `backlog/done/`-ba
-  mozgatása). Ez a skill csak idáig visz: implementáció-indításra kész
-  döntési összefoglaló.
+  Az egy KÉSŐBBI, implementáció utáni, önálló lépés (döntések prózaként a
+  `docs/02`–`07`-be, tervfájl `backlog/done/`-ba mozgatása). Ez a skill
+  csak idáig visz: implementáció-indításra kész döntési összefoglaló.
+- **Nem javasol és nem rendel hozzá új D-számot.** A `docs/01` D-táblája
+  lezárt, történeti napló — nem bővül. A tervdokumentum egy meglévő
+  D-pontra hivatkozhat (ütközés-ellenőrzésként, lásd "Előkészítés"), de
+  soha nem ígéri, hogy egy döntés "D-számot fog kapni", és nem ír elő a
+  megvalósítónak D-hivatkozást — a lezárás a döntést prózaként vezeti át.
 - **Nem módosítja a forrás-jegyzeteket.** A `backlog/redesign/` és a
   `backlog/ideas/` alatti fájlok mindig csak olvasásra szolgálnak — a
   skill sosem jelöli vissza bennük, hogy egy ötletből már lett tétel.

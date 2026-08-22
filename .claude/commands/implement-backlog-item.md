@@ -85,19 +85,21 @@ Kövesd a `CLAUDE.md` "Backlog-tétel lezárása" szakaszának 2–5. lépését
 teljes egészében:
 
 1. **Döntések átvezetése** — a tervdokumentum tartósan érvényes döntései
-   prózaként a megfelelő `docs/02`–`07` szakaszba, az új sérthetetlen
-   invariáns a `docs/01` D-táblájába (a következő szabad D-számmal) és
-   szükség esetén a `CLAUDE.md` "Sérthetetlen szabályok" táblájába. Ha a
+   prózaként, önhordozóan a megfelelő `docs/02`–`07` szakaszba (a szabály
+   és az indoka egy helyen, azonosító nélkül); ha az invariáns valóban
+   sérthetetlen, új sor a `CLAUDE.md` "Sérthetetlen szabályok" táblájába,
+   a Miért oszlopban a tényleges indokkal, nem hivatkozással. **A
+   `docs/01` D-táblája le van zárva: új döntés soha nem kap D-számot, és
+   meglévő D-számra sem itt, sem máshol nem hivatkozunk új helyen.** Ha a
    tétel új, újrahasznosítható segédfüggvényt vezetett be, egy új
-   bekezdés a "Meglévő segédfüggvények" alá, docs-anchorra/D-számra
-   hivatkozva.
+   bekezdés a "Meglévő segédfüggvények" alá, docs-anchorra hivatkozva
+   (SOHA D-számra).
 
    **Konkurencia-ellenőrzés, mielőtt bármit felülírnál:** futtass
    `git fetch origin`-t, és nézd meg az `origin/master` aktuális
-   `docs/01` D-táblájának legnagyobb számát és a `backlog/BACKLOG.md`
-   mai állapotát. Ha időközben máshol lezárult ez a tétel, vagy a
-   következő szabad D-szám eltolódott, **állj meg és jelentsd** — ne
-   írj felül vakon egy elavult feltételezésre építve.
+   `backlog/BACKLOG.md` mai állapotát. Ha időközben máshol lezárult ez a
+   tétel, vagy a következő szabad tételszám eltolódott, **állj meg és
+   jelentsd** — ne írj felül vakon egy elavult feltételezésre építve.
 
 2. **Tervdokumentum archiválása** — `git mv backlog/plans/backlog-$1-*.md
    backlog/done/`. A tétel száma ezután véglegesen nyugdíjazva.
@@ -111,8 +113,8 @@ teljes egészében:
 
 4. **Referencia-seprés** — minden helyen (forráskód-kommentek, `CLAUDE.md`,
    `docs/*.md`), ahol az imént archivált tervfájlra vagy a
-   `backlog/done/` mappára mutató hivatkozás volt, írd át a megfelelő
-   `docs/0X` szakaszra vagy D-számra.
+   `backlog/done/` mappára mutató hivatkozás volt, írd át a megfelelő,
+   néven megnevezett `docs/0X` szakaszra — D-számra soha.
 
 **Ne** futtasd le automatikusan a `/update-changelog`-ot vagy az
 `/update-features`-t (mindkettő kizárólag kézi hívásra fut) — csak a
