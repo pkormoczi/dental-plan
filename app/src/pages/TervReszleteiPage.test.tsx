@@ -387,6 +387,21 @@ describe('TervReszleteiPage', () => {
     expect(screen.getByRole('button', { name: 'Megjelenítés' })).toHaveAttribute('aria-expanded', 'false');
   });
 
+  it('verzióváltás után a fogtérkép-panel újra csukva, üres kijelöléssel indul (key-alapú remount, 73. tétel)', async () => {
+    const user = userEvent.setup();
+    renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
+    await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
+    const chart = await screen.findByRole('toolbar');
+    await user.click(chart.querySelector('[data-tooth="24"]') as Element);
+    expect(await screen.findByText('1 fog kijelölve')).toBeInTheDocument();
+
+    await user.click(screen.getByText(`v${nagyV1.plan.verzio} · ${formatShortDate(nagyV1.plan.keltezes, 'hu')}`));
+    await waitFor(() => expect(screen.getByText('v1')).toBeInTheDocument());
+
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
+    expect(screen.queryByText(/fog kijelölve/)).not.toBeInTheDocument();
+  });
+
   it('verzióváltáskor a lap tetejére görget', async () => {
     const scrollSpy = vi.spyOn(window, 'scrollTo');
     const user = userEvent.setup();

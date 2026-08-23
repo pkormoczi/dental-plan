@@ -220,7 +220,18 @@ A fogtérkép (kezelés-alapú fogkiemelés) segédfüggvényei, szintén ne ír
   EGYETLEN kapcsoló, ami a fogankénti `role`/`aria-label`/kurzor- és
   kijelölés-gyűrűt bekapcsolja — alapból kikapcsolva, hogy a PDF-útvonal
   bájtra változatlan maradjon; sose add át `interactive: true`-t a
-  `pdf/toothChartImage.ts` felé menő hívásban
+  `pdf/toothChartImage.ts` felé menő hívásban. A `szerep`
+  (`'button' | 'option'`) és a `selectedTeeth` EGYMÁSTÓL FÜGGETLEN
+  paraméterek: a `szerep` dönt az ARIA-szemantikáról
+  (`option` → `aria-selected`, `button` + adott `selectedTeeth` →
+  `aria-pressed`), a `selectedTeeth` a vizuális kijelölés-gyűrűről,
+  mindkét `szerep`-ben. A React-komponens (`components/DentalChart.tsx`)
+  ezt egy explicit `szerep` propon adja tovább, nem a `selectedTeeth`
+  meglétéből vezeti le — a soronkénti fogválasztó
+  (`ToothPickerPopover.tsx`) `szerep="option"`-t ad, a plan-szintű
+  térképek (a szerkesztő `ToothChartPanel.tsx` és a Terv részletei
+  `pages/tervReszletei/FogterkepPanel.tsx`) az alapértelmezett
+  `'button'`-t
 - `toggleFog(fogak, fdi)` (`app/src/domain/teeth.ts`) — egy FDI kódot
   be-/kikapcsol a szabadszöveges `fogak` felsorolásban, sorrendtartóan;
   ez az EGYETLEN írási útja a `ToothPickerPopover`-nek (soronkénti

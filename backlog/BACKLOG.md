@@ -15,18 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 73. tétel — Final fogtérkép navigáció
-  (a `backlog/redesign/` redesign-döntéssorozat DP-062 tétele,
-  alacsonyabb prioritású, a 71./72. tételre épül) — a
-  `DentalChart`/`toothChartSvg` interaktív infrastruktúrája nagyrészt
-  MÁR MEGVAN (a plan-szintű `onToothClick` már ma is teljes
-  billentyűzet-navigációt ad ingyen); az egyetlen hiányzó darab egy
-  kis, célzott bővítés, hogy a perzisztens highlight-gyűrű `toolbar`
-  (button) módban IS működjön több egyidejűleg kijelölt fogra, nem
-  csak a soronkénti `listbox`-módban. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-73-final-fogterkep-terv.md`
-
 ### 74. tétel — Final pénzügyi összesítés
   (a `backlog/redesign/` redesign-döntéssorozat DP-063 tétele) — a
   forrásdokumentum D307–346 tartománya nagyrészt a 62–64. tételhez van

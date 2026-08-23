@@ -29,6 +29,7 @@ export default function SorReszlet({
   nyelv,
   leirasNyitva,
   onToggleLeiras,
+  kiemelve,
 }: {
   sor: Sor;
   fazisIndex: number;
@@ -40,12 +41,22 @@ export default function SorReszlet({
   // elveszne csukás/nyitás között (lásd FazisokBlokk.tsx fejléckommentje).
   leirasNyitva: boolean;
   onToggleLeiras: () => void;
+  // Igaz, ha a fogtérkép-panelen kijelölt fogak érintik ezt a sort --
+  // additív kiemelés, a nem érintett sorok nincsenek elhalványítva.
+  kiemelve: boolean;
 }) {
   const leirasTartalom = (sor.leirasSnapshot ?? '').trim();
   const arElter = sor.listaEgysegar !== sor.tenylegesEgysegar;
   const leirasId = `sor-leiras-${fazisIndex}-${sorIndex}`;
 
   const leirasNyitottBorderNelkul = leirasNyitva && leirasTartalom.length > 0;
+  const rowStyle: CSSProperties | undefined =
+    leirasNyitottBorderNelkul || kiemelve
+      ? ({
+          ...(leirasNyitottBorderNelkul ? { '--table-row-box-shadow': 'none' } : {}),
+          ...(kiemelve ? { background: t.accentWash } : {}),
+        } as CSSProperties)
+      : undefined;
 
   return (
     <>
@@ -56,11 +67,7 @@ export default function SorReszlet({
         // sor vizuálisan EGY blokként jelenik meg, csak a blokk ALJÁN van
         // elválasztó a következő tétel felé. A `--table-row-box-shadow`
         // Radix-változó öröklődik a saját `Table.Cell`-jeire (table.css).
-        style={
-          leirasNyitottBorderNelkul
-            ? ({ '--table-row-box-shadow': 'none' } as CSSProperties)
-            : undefined
-        }
+        style={rowStyle}
       >
         <Table.Cell>
           <Flex align="center" gap="1" wrap="wrap">

@@ -120,5 +120,25 @@ describe('buildToothChartSvg', () => {
       const svg = buildToothChartSvg(makeAllapot({}), { interactive: true, selectedTeeth: ['16'] });
       expect(svg).not.toContain('aria-selected');
     });
+
+    it('szerep "button" + selectedTeeth: a kijelölt fog aria-pressed="true", a többi "false", aria-selected NÉLKÜL (Terv részletei -- több fogas kijelölés-navigáció)', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), {
+        interactive: true,
+        selectedTeeth: ['16'],
+      });
+      expect(svg).toContain(
+        '<g id="tooth-16" data-tooth="16" class="tooth is-picked" role="button" aria-label="16. fog – nincs kezelés" aria-pressed="true"',
+      );
+      expect(svg).not.toContain('aria-selected');
+      const trueCount = (svg.match(/aria-pressed="true"/g) ?? []).length;
+      expect(trueCount).toBe(1);
+      const falseCount = (svg.match(/aria-pressed="false"/g) ?? []).length;
+      expect(falseCount).toBe(31);
+    });
+
+    it('szerep "button" selectedTeeth NÉLKÜL (a szerkesztő plan-szintű térképe) NINCS aria-pressed -- a markup bájtra változatlan', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), { interactive: true });
+      expect(svg).not.toContain('aria-pressed');
+    });
   });
 });

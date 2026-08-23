@@ -21,6 +21,7 @@ export default function FazisReszlet({
   nyelv,
   leirasNyitvaSorok,
   onToggleLeiras,
+  kiemeltSorok,
 }: {
   fazis: Fazis;
   fazisIndex: number;
@@ -32,6 +33,9 @@ export default function FazisReszlet({
   // ide csak áthúzva jut el.
   leirasNyitvaSorok: Record<string, boolean>;
   onToggleLeiras: (sorIndex: number) => void;
+  // Kulcs: `${fazisIndex}-${sorIndex}` -- a fogtérkép-panel kijelölésének
+  // érintett sorai (FazisokBlokk.tsx), a `leirasNyitvaSorok` mintáján.
+  kiemeltSorok: Set<string>;
 }) {
   const penznemJel = currency === 'EUR' ? '€' : 'Ft';
   const total = fazisOsszeg(fazis);
@@ -115,6 +119,7 @@ export default function FazisReszlet({
                     nyelv={nyelv}
                     leirasNyitva={leirasNyitvaSorok[`${fazisIndex}-${li}`] ?? false}
                     onToggleLeiras={() => onToggleLeiras(li)}
+                    kiemelve={kiemeltSorok.has(`${fazisIndex}-${li}`)}
                   />
                 ))}
               </Table.Body>

@@ -31,12 +31,21 @@ export interface DentalChartProps {
   /** Ha nincs megadva, a fogtérkép teljesen olvasható-only (nincs kattintás/billentyűzet). */
   onToothClick?: (toothNumber: string) => void;
   /**
-   * CSAK a soron belüli választónál (ToothPickerPopover) add meg: ezek a
-   * fogak vannak kijelölve EBBEN a sorban -- ilyenkor a fogtérkép
-   * `role="listbox"`/`aria-multiselectable` szerepű, minden fog `option`,
-   * kijelölés-gyűrűvel. Ha nincs megadva (`undefined`), de van
-   * `onToothClick`, a fogtérkép `role="toolbar"` -- a terv szintű
-   * fogtérkép esete (sorugrás / új sor, nincs többszörös kijelölés).
+   * `'button'` (alap): `role="toolbar"`, minden fog `role="button"` --
+   * plan-szintű kattintás (sorugrás/új sor a szerkesztőben, VAGY több
+   * fogas kijelölés-navigáció a Terv részletei nézeten). `'option'`: CSAK
+   * a soron belüli választónál (ToothPickerPopover) add meg -- a
+   * fogtérkép `role="listbox"`/`aria-multiselectable` szerepű, minden fog
+   * `option`, `aria-selected`-del.
+   */
+  szerep?: 'button' | 'option';
+  /**
+   * Ezek a fogak kapnak kijelölés-gyűrűt -- MINDKÉT `szerep`-ben
+   * értelmes (a soron belüli választóban a sor már felvett fogai,
+   * plan-szintű `'button'` módban egy több fogas kijelölés-navigáció
+   * kiválasztása). A `szerep` FÜGGETLENÜL dönt az ARIA-szemantikáról
+   * (`option`: `aria-selected`, `button` + adott `selectedTeeth`:
+   * `aria-pressed`) -- ez csak a vizuális gyűrűt vezérli.
    */
   selectedTeeth?: readonly string[];
 }
@@ -45,10 +54,11 @@ export default function DentalChart({
   allapot,
   showToothNumbers = false,
   onToothClick,
+  szerep = 'button',
   selectedTeeth,
 }: DentalChartProps) {
   const interactive = !!onToothClick;
-  const listbox = interactive && selectedTeeth !== undefined;
+  const listbox = interactive && szerep === 'option';
 
   const [aktivFog, setAktivFog] = useState(() => {
     const elsoKijelolt = selectedTeeth?.find((fdi) => FDI_MARADO.includes(fdi));
@@ -62,12 +72,12 @@ export default function DentalChart({
         sizing: 'responsive',
         showToothNumbers,
         interactive,
-        szerep: listbox ? 'option' : 'button',
+        szerep,
         focusedTooth: interactive ? aktivFog : undefined,
-        selectedTeeth: listbox ? selectedTeeth : undefined,
+        selectedTeeth: interactive ? selectedTeeth : undefined,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedTeeth a selectedKey-jével helyettesítve (stabil string, a hívó gyakran friss tömb-referenciát ad ugyanahhoz a tartalomhoz)
-    [allapot, showToothNumbers, interactive, listbox, aktivFog, selectedKey],
+    [allapot, showToothNumbers, interactive, szerep, aktivFog, selectedKey],
   );
 
   if (!interactive) {

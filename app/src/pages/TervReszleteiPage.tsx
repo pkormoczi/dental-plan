@@ -452,14 +452,13 @@ export default function TervReszleteiPage() {
 
       {/* A `key` verzióváltáskor a teljes alfát unmountolja/remountolja --
           ez az oldal ALAPMINTÁJA a lokális UI-state (nyitott blokkok,
-          kijelölések) alapállapotba állítására, hogy a tartalom-blokknak
-          (fázisok, jövőbeli fogtérkép-navigáció) ne kelljen külön
-          reset-kódot írnia. */}
+          kijelölések, fogtérkép-navigáció) alapállapotba állítására, hogy a
+          tartalom-blokknak ne kelljen külön reset-kódot írnia. */}
       <Box key={`${planDir}/${versionDir}`}>
         {/* A pénzügyi összesítés itt, a fázisok fölött kap majd tartalmat --
             a metaadat/páciens-pillanatkép LEGALUL marad. */}
         <PlaceholderSlot szoveg="A pénzügyi összesítés a következő lépésben kerül ide." />
-        <FazisokBlokk plan={plan} />
+        <FazisokBlokk plan={plan} priceList={priceList} />
 
         <TervMetaadatok plan={plan} tervCim={tervCim} />
         <PaciensPillanatkep

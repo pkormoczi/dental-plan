@@ -73,11 +73,11 @@ export interface ToothChartSvgOptions {
    * szabad `interactive: true`-t adni.
    */
   interactive?: boolean;
-  /** Csak `interactive: true` esetén számít. `'button'` (alap): a fogtérkép sorugrás/új sor kattintása. `'option'`: a soron belüli választó, ahol több fog is kijelölhető (`aria-selected`). */
+  /** Csak `interactive: true` esetén számít. `'button'` (alap): plan-szintű kattintás (sorugrás/új sor, VAGY -- ha `selectedTeeth` is jön -- a Terv részletei több fogas kijelölés-navigációja). `'option'`: a soron belüli választó, ahol több fog is kijelölhető (`aria-selected`). A két mód egymástól FÜGGETLEN a `selectedTeeth`-től -- a `szerep` dönt az ARIA-szemantikáról, a `selectedTeeth` a vizuális gyűrűről. */
   szerep?: 'button' | 'option';
   /** Csak `interactive: true` esetén számít: ez a fog kapja az `is-active` kurzor-gyűrűt (billentyűzetes navigáció, lásd DentalChart.tsx `aria-activedescendant`). */
   focusedTooth?: string;
-  /** Csak `interactive: true` esetén számít: ezek a fogak kapnak `is-picked` kijelölés-gyűrűt (a soron belüli választóban már szereplő fogak) -- `szerep: 'option'` esetén ez adja az `aria-selected` értékét is. */
+  /** Csak `interactive: true` esetén számít: ezek a fogak kapnak `is-picked` kijelölés-gyűrűt -- `szerep: 'option'` esetén ez adja az `aria-selected` értékét is, `szerep: 'button'` esetén (ha meg van adva) az `aria-pressed` értékét. */
   selectedTeeth?: readonly string[];
 }
 
@@ -179,9 +179,15 @@ function makeInteractive(
       .filter(Boolean)
       .join(' ');
     const ariaSelected = szerep === 'option' ? ` aria-selected="${isPicked}"` : '';
+    // `button` módban csak akkor kap `aria-pressed`-et a fog, ha a hívó
+    // ténylegesen küld `selectedTeeth`-et -- a szerkesztő plan-szintű
+    // térképe (sorugrás/új sor, nincs többszörös kijelölés) ma sem ad
+    // ilyet, ott a markup emiatt bájtra változatlan marad.
+    const ariaPressed =
+      szerep === 'button' && selectedTeeth !== undefined ? ` aria-pressed="${isPicked}"` : '';
     return (
       `<g id="tooth-${fdi}" data-tooth="${fdi}" class="${classes}" role="${szerep}" ` +
-      `aria-label="${fdi}. fog – ${cimke}"${ariaSelected}${rest}>`
+      `aria-label="${fdi}. fog – ${cimke}"${ariaSelected}${ariaPressed}${rest}>`
     );
   });
 }

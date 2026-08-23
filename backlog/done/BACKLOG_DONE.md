@@ -1990,3 +1990,32 @@ karbantartási kör négy önálló javítása.
   fogtérkép-navigáció horgonyaként. Részletek:
   `docs/03-funkcionalis-spec.md` § 11 "Terv részletei (véglegesített
   verzió)" → "Fázisok és kezelési sorok".
+
+---
+
+### 73. tétel: Final fogtérkép navigáció — KÉSZ
+
+- **Méret:** kicsi — 1 új fájl
+  (`pages/tervReszletei/FogterkepPanel.tsx`), 6 módosított fájl
+  (`design/toothChartSvg.ts`, `components/DentalChart.tsx`,
+  `components/ToothPickerPopover.tsx`, `pages/tervReszletei/
+  FazisokBlokk.tsx` + `FazisReszlet.tsx` + `SorReszlet.tsx`,
+  `pages/TervReszleteiPage.tsx`), 3 tesztfájl bővítve.
+- **Megvalósítás:** a Terv részletei nézeten a „Kezelési fázisok" fölé
+  egy read-only, alapból csukva induló „Érintett fogak" fogtérkép-panel
+  került, ami a szerkesztő MEGLÉVŐ interaktív infrastruktúráját
+  (billentyűzet-navigáció, `is-picked` kijelölés-gyűrű) hasznosítja
+  újra. A `DentalChart` egy explicit `szerep: 'button' | 'option'` propot
+  kapott — korábban ezt a `selectedTeeth` megléte döntötte el, ami a
+  soronkénti fogválasztót (`ToothPickerPopover`) is átbillentette volna,
+  ha a plan-szintű térkép is kapott volna kijelölést; a szétválasztás
+  után a soronkénti választó explicit `szerep="option"`-t ad, a
+  plan-szintű térképek (a szerkesztő és a Terv részletei is) az
+  alapértelmezett `'button'`-t, `aria-pressed`-del. Több fog is
+  kijelölhető egyszerre (kezeletlen fogra kattintás hatástalan), a
+  kijelölt fogak sorainak uniója additív, semleges háttérkiemelést kap,
+  csak az első kijelölés görget a sorra, egy csukott fázisba eső
+  kijelölés automatikusan kinyitja azt. Részletek:
+  `docs/03-funkcionalis-spec.md` § 11 "Terv részletei (véglegesített
+  verzió)" → "„Érintett fogak" panel", `docs/07-felulet-rendszer.md`
+  „Komponensek".

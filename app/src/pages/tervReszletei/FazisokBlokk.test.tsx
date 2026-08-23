@@ -7,10 +7,11 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Theme } from '@radix-ui/themes';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import FazisokBlokk from './FazisokBlokk';
 import { sorElemId } from './SorReszlet';
-import type { Fazis, Plan, Sor } from '../../domain/types';
+import { t } from '../../design/tokens';
+import type { Fazis, Plan, PriceList, Sor } from '../../domain/types';
 
 function makeSor(overrides: Partial<Sor> = {}): Sor {
   return {
@@ -63,11 +64,19 @@ function makePlan(fazisok: Fazis[]): Plan {
   };
 }
 
+// Üres árlista is elég -- `buildToothVisualStates` a fog->sor
+// visszahivatkozást a sor `fogak` mezőjéből építi, a `tetelId` egy
+// hiányzó tételre `ISMERETLEN_KATEGORIA`-ra esik vissza, de a fog
+// továbbra is a `fogak` Map-be kerül (lásd domain/toothVisual.ts).
+function makePriceList(): PriceList {
+  return { schemaVersion: 1, arlistaVerzio: '2026-01-01', modositva: '2026-01-01', kategoriak: [], tetelek: [] };
+}
+
 function renderFazisok(fazisok: Fazis[]) {
   const plan = makePlan(fazisok);
   return render(
     <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
-      <FazisokBlokk plan={plan} />
+      <FazisokBlokk plan={plan} priceList={makePriceList()} />
     </Theme>,
   );
 }
@@ -253,5 +262,144 @@ describe('FazisokBlokk', () => {
   it('a gyökér `fazisok-blokk` osztálya megvan -- ez a CSS-horgony a kártya overflow-jának feloldásához (index.css), hogy a sticky elemek a lapgörgetéshez, ne a kártyához tapadjanak', () => {
     const { container } = renderFazisok([makeFazis()]);
     expect(container.querySelector('.fazisok-blokk')).toBeInTheDocument();
+  });
+});
+
+// A doki explicit kikötése az implementáció indításakor: ez a panel
+// KIZÁRÓLAG a nagy, "Érintett fogak" gomb alatti fogtérkép -- a soronkénti,
+// célkeresztes ikonnal nyíló kis fogtérkép (ToothPickerPopover) ettől
+// függetlenül, változatlanul a sor fogainak kijelölésére való (lásd
+// ToothPickerPopover.test.tsx, változtatás nélkül).
+describe('FazisokBlokk -- fogtérkép-panel (Terv részletei)', () => {
+  // A `vi.spyOn(Element.prototype, 'scrollIntoView')` teszttől tesztig
+  // felhalmozódna (a repo nem állít be globális `restoreMocks`-ot) --
+  // enélkül egy korábbi teszt kései rAF-hívása false positive-ot adna.
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function nyisdKiFogterkepet(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
+  }
+
+  function ketFazisosTerv() {
+    return [
+      makeFazis({
+        sorszam: 1,
+        megnevezes: 'Első fázis',
+        sorok: [
+          makeSor({ nevSnapshot: 'Első sor', fogak: '11' }),
+          makeSor({ nevSnapshot: 'Második sor', fogak: '21' }),
+        ],
+      }),
+      makeFazis({
+        sorszam: 2,
+        megnevezes: 'Második fázis',
+        sorok: [makeSor({ nevSnapshot: 'Harmadik sor', fogak: '31' })],
+      }),
+    ];
+  }
+
+  it('a panel alapból csukva, a kinyitás előtt nincs `toolbar`', async () => {
+    const user = userEvent.setup();
+    renderFazisok(ketFazisosTerv());
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
+
+    await nyisdKiFogterkepet(user);
+    expect(await screen.findByRole('toolbar')).toBeInTheDocument();
+  });
+
+  it('kezelt fogra kattintás kiemeli a hozzá tartozó sort és odagörget, egy második kijelölés NEM görget újra', async () => {
+    const user = userEvent.setup();
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView');
+    renderFazisok(ketFazisosTerv());
+    await nyisdKiFogterkepet(user);
+
+    const chart = screen.getByRole('toolbar');
+    await user.click(chart.querySelector('[data-tooth="11"]') as Element);
+
+    const elsoRow = document.getElementById(sorElemId(0, 0))!;
+    await waitFor(() => expect(elsoRow).toHaveStyle({ background: t.accentWash }));
+    await waitFor(() => expect(scrollSpy).toHaveBeenCalledTimes(1));
+
+    const masodikRow = document.getElementById(sorElemId(0, 1))!;
+    expect(masodikRow).not.toHaveStyle({ background: t.accentWash });
+
+    await user.click(chart.querySelector('[data-tooth="21"]') as Element);
+    await waitFor(() => expect(masodikRow).toHaveStyle({ background: t.accentWash }));
+    // A második kijelölés NEM görget újra -- a hívásszám a fentivel egyezik.
+    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    // Az elsőként kijelölt fog sora továbbra is kiemelve marad (additív).
+    expect(elsoRow).toHaveStyle({ background: t.accentWash });
+  });
+
+  it('kezeletlen fogra kattintás nem csinál semmit', async () => {
+    const user = userEvent.setup();
+    const scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView');
+    renderFazisok(ketFazisosTerv());
+    await nyisdKiFogterkepet(user);
+
+    const chart = screen.getByRole('toolbar');
+    await user.click(chart.querySelector('[data-tooth="12"]') as Element);
+
+    expect(screen.queryByText(/fog kijelölve/)).not.toBeInTheDocument();
+    expect(scrollSpy).not.toHaveBeenCalled();
+  });
+
+  it('Escape és a „Kijelölés törlése” gomb is törli a teljes kijelölést', async () => {
+    const user = userEvent.setup();
+    renderFazisok(ketFazisosTerv());
+    await nyisdKiFogterkepet(user);
+
+    const chart = screen.getByRole('toolbar');
+    await user.click(chart.querySelector('[data-tooth="11"]') as Element);
+    expect(await screen.findByText('1 fog kijelölve')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByText(/fog kijelölve/)).not.toBeInTheDocument();
+
+    await user.click(chart.querySelector('[data-tooth="11"]') as Element);
+    await user.click(await screen.findByRole('button', { name: 'Kijelölés törlése' }));
+    expect(screen.queryByText(/fog kijelölve/)).not.toBeInTheDocument();
+  });
+
+  it('a panel összecsukása/újranyitása megtartja a kijelölést, csukva is látszik a számláló', async () => {
+    const user = userEvent.setup();
+    renderFazisok(ketFazisosTerv());
+    await nyisdKiFogterkepet(user);
+
+    const chart = screen.getByRole('toolbar');
+    await user.click(chart.querySelector('[data-tooth="11"]') as Element);
+    expect(await screen.findByText('1 fog kijelölve')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Érintett fogak/ }));
+    expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
+    expect(screen.getByText('1 fog kijelölve')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Érintett fogak/ }));
+    expect(screen.getByRole('toolbar').querySelector('[data-tooth="11"]')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('csukott fázisba eső fog kijelölése kinyitja azt a fázist', async () => {
+    const user = userEvent.setup();
+    renderFazisok(ketFazisosTerv());
+
+    const [, masodikToggle] = screen.getAllByRole('button', { name: 'Fázis összecsukása' });
+    await user.click(masodikToggle);
+    expect(screen.getByRole('button', { name: 'Fázis kinyitása' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+
+    await nyisdKiFogterkepet(user);
+    const chart = screen.getByRole('toolbar');
+    await user.click(chart.querySelector('[data-tooth="31"]') as Element);
+
+    await waitFor(() =>
+      expect(screen.getAllByRole('button', { name: 'Fázis összecsukása' })).toHaveLength(2),
+    );
   });
 });

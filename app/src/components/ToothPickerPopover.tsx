@@ -72,6 +72,7 @@ export default function ToothPickerPopover({ fogak, allapot, onChange }: ToothPi
             </Text>
             <DentalChart
               allapot={allapot}
+              szerep="option"
               selectedTeeth={parsed.teeth}
               onToothClick={(fdi) => onChange(toggleFog(fogak, fdi))}
             />

@@ -1822,6 +1822,28 @@ chevron-gombjára fókuszál. Minden sor gyökéreleme stabil, egyedi DOM
 `id`-t kap, hogy egy másik felület (pl. egy fogra kattintás) a hozzá
 tartozó sorra tudjon görgetni.
 
+**„Érintett fogak" panel**: a „Kezelési fázisok" szekció tetején, a
+fázis-ugró nav fölött, alapból csukva (a szerkesztő fogtérkép-panelének
+mintája) — csak akkor jelenik meg, ha a tervben van legalább egy fogra
+térképezhető sor. Read-only: kattintással TÖBB fog is kijelölhető
+egyszerre (nem kizáró toggle), de egy kezeletlen (egyetlen sor által sem
+érintett) fogra kattintás nem csinál semmit — a panel célja a
+kezelősorokhoz navigálás, nem egy önmagában is jelentéssel bíró
+kijelölés. A kijelölt fogak UNIÓJÁHOZ tartozó sorok additív, semleges
+(`accentWash`) háttérkiemelést kapnak, a nem érintett sorok nincsenek
+elhalványítva; egy csukott fázisba eső kijelölés automatikusan kinyitja
+azt a fázist, hogy a kiemelés látható legyen. Csak az ELSŐ kijelölés
+görget a hozzá tartozó sorra — egy 3+ fogas kijelölésnél a további
+kattintások nem viszik el a nézetet a korábban kijelöltek kontextusából.
+`Escape`, illetve egy explicit „Kijelölés törlése" vezérlő törli a teljes
+kijelölést; a panel összecsukása csak vizuálisan rejti el (a kijelölés a
+szülő komponensben él, túléli), verzióváltáskor viszont a lap meglévő
+`key`-alapú remountja mindent alaphelyzetbe állít. A `DentalChart` ehhez
+egy explicit `szerep: 'button' | 'option'` propot kapott — a soronkénti
+fogválasztó (`ToothPickerPopover`) ettől függetlenül, változatlanul
+`szerep="option"`-t ad, a `listbox`/`aria-selected` szemantikáját ez a
+panel nem érinti.
+
 **Páciens-pillanatkép**: a „Páciens adatai a véglegesítéskor" szekció
 alapból összecsukva, a `masterSnapshotDiff()`
 (`domain/masterSnapshotDiff.ts`) eltérés-számával jelezve, ha a páciens

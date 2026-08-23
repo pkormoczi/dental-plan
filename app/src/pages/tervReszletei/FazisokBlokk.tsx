@@ -9,24 +9,39 @@
 // `key={`${planDir}/${versionDir}`}` wrappere unmountolja/remountolja az
 // egész alfát.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Text } from '@radix-ui/themes';
 import Section from '../../components/Section';
 import { csokkentettMozgas } from '../../design/motion';
-import type { Plan } from '../../domain/types';
+import { buildToothVisualStates } from '../../domain/toothVisual';
+import type { Plan, PriceList } from '../../domain/types';
 import FazisReszlet from './FazisReszlet';
 import FazisUgroNav from './FazisUgroNav';
+import FogterkepPanel from './FogterkepPanel';
+import { sorElemId } from './SorReszlet';
 
 const UGRO_NAV_KUSZOB = 4;
 
-export default function FazisokBlokk({ plan }: { plan: Plan }) {
+export default function FazisokBlokk({ plan, priceList }: { plan: Plan; priceList: PriceList }) {
   const fazisok = plan.fazisok;
   const mutatottNav = fazisok.length >= UGRO_NAV_KUSZOB;
+  const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
 
   const [csukva, setCsukva] = useState<Set<number>>(() => new Set());
   const [aktivFazis, setAktivFazis] = useState(0);
   // Kulcs: `${fazisIndex}-${sorIndex}`.
   const [leirasNyitva, setLeirasNyitva] = useState<Record<string, boolean>>({});
+  const [kijeloltFogak, setKijeloltFogak] = useState<string[]>([]);
+  // Kulcs: `${fazisIndex}-${sorIndex}`, a `leirasNyitva` mintáján -- a
+  // kijelölt fogak érintett sorainak uniója.
+  const kiemeltSorok = useMemo(() => {
+    const kiemelt = new Set<string>();
+    for (const fdi of kijeloltFogak) {
+      const kezelesek = fogterkep.fogak.get(fdi)?.kezelesek ?? [];
+      for (const k of kezelesek) kiemelt.add(`${k.fazisIndex}-${k.sorIndex}`);
+    }
+    return kiemelt;
+  }, [kijeloltFogak, fogterkep]);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -99,6 +114,54 @@ export default function FazisokBlokk({ plan }: { plan: Plan }) {
     setLeirasNyitva((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
+  // Kezeletlen fogra kattintás nem csinál semmit -- nincs olyan kijelölt
+  // fog, amihez ne tartozna kiemelt sor (a panel célja a sorokhoz
+  // navigálás, nem egy önmagában is jelentéssel bíró kijelölés).
+  function toggleFog(fdi: string) {
+    const kezelesek = fogterkep.fogak.get(fdi)?.kezelesek ?? [];
+    if (kezelesek.length === 0) return;
+
+    const elsoKijeloles = kijeloltFogak.length === 0;
+    setKijeloltFogak((prev) =>
+      prev.includes(fdi) ? prev.filter((f) => f !== fdi) : [...prev, fdi],
+    );
+
+    // A kijelöléssel érintett fázisokat kinyitjuk, hogy a kiemelés
+    // látható legyen -- ez nem görgetés, csak a láthatóság feltétele.
+    setCsukva((prev) => {
+      if (prev.size === 0) return prev;
+      const next = new Set(prev);
+      let valtozott = false;
+      for (const k of kezelesek) {
+        if (next.delete(k.fazisIndex)) valtozott = true;
+      }
+      return valtozott ? next : prev;
+    });
+
+    // Csak az ELSŐ kijelölés görget -- ha minden kattintás görgetne, egy
+    // 3+ fogas kijelölés mindig az utolsó kattintott fog sorára ugrana,
+    // elveszítve a korábban kijelöltek kontextusát.
+    if (elsoKijeloles) {
+      const elsoSor = kezelesek.reduce((min, k) =>
+        k.fazisIndex < min.fazisIndex || (k.fazisIndex === min.fazisIndex && k.sorIndex < min.sorIndex)
+          ? k
+          : min,
+      );
+      // rAF: a fázis épp ebben a renderben nyílhat ki -- a scrollIntoView-
+      // nak a kinyílt (immár teljes magasságú) DOM-ra kell futnia, az
+      // `ugras()` mintáján.
+      requestAnimationFrame(() => {
+        document
+          .getElementById(sorElemId(elsoSor.fazisIndex, elsoSor.sorIndex))
+          ?.scrollIntoView({ block: 'nearest', behavior: csokkentettMozgas() ? 'auto' : 'smooth' });
+      });
+    }
+  }
+
+  function clearFogak() {
+    setKijeloltFogak([]);
+  }
+
   function ugras(i: number) {
     setCsukva((prev) => {
       if (!prev.has(i)) return prev;
@@ -129,6 +192,14 @@ export default function FazisokBlokk({ plan }: { plan: Plan }) {
           </Text>
         ) : (
           <>
+            {(fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0) && (
+              <FogterkepPanel
+                allapot={fogterkep}
+                kijelolt={kijeloltFogak}
+                onToothClick={toggleFog}
+                onClear={clearFogak}
+              />
+            )}
             {mutatottNav && (
               <Box
                 ref={navRef}
@@ -162,6 +233,7 @@ export default function FazisokBlokk({ plan }: { plan: Plan }) {
                   nyelv={plan.nyelv}
                   leirasNyitvaSorok={leirasNyitva}
                   onToggleLeiras={(li) => toggleLeiras(i, li)}
+                  kiemeltSorok={kiemeltSorok}
                 />
               </div>
             ))}

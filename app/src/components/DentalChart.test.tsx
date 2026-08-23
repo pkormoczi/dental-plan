@@ -127,23 +127,56 @@ describe('DentalChart', () => {
     });
   });
 
-  describe('selectedTeeth (soron belüli választó -- role="listbox")', () => {
-    it('selectedTeeth megadásakor role="listbox", aria-multiselectable="true", a kijelölt fog aria-selected="true"', () => {
+  describe('szerep="option" + selectedTeeth (soron belüli választó -- role="listbox")', () => {
+    it('szerep="option" esetén role="listbox", aria-multiselectable="true", a kijelölt fog aria-selected="true"', () => {
       render(
-        <DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} selectedTeeth={['16']} />,
+        <DentalChart
+          allapot={makeAllapot({})}
+          onToothClick={vi.fn()}
+          szerep="option"
+          selectedTeeth={['16']}
+        />,
       );
       const root = screen.getByRole('listbox');
       expect(root).toHaveAttribute('aria-multiselectable', 'true');
       const tooth = root.querySelector('[data-tooth="16"]') as Element;
       expect(tooth).toHaveAttribute('aria-selected', 'true');
       expect(tooth).toHaveAttribute('role', 'option');
+      expect(tooth).not.toHaveAttribute('aria-pressed');
     });
 
     it('a billentyűzetes kurzor a kijelölt fogak közül az elsőn indul, ha van kijelölés', () => {
       render(
-        <DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} selectedTeeth={['24']} />,
+        <DentalChart
+          allapot={makeAllapot({})}
+          onToothClick={vi.fn()}
+          szerep="option"
+          selectedTeeth={['24']}
+        />,
       );
       expect(screen.getByRole('listbox')).toHaveAttribute('aria-activedescendant', 'tooth-24');
+    });
+  });
+
+  describe('alapértelmezett szerep="button" + selectedTeeth (Terv részletei -- több fogas kijelölés-navigáció)', () => {
+    it('marad role="toolbar", a kijelölt fog aria-pressed="true"-t kap, aria-selected NÉLKÜL', () => {
+      render(
+        <DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} selectedTeeth={['16']} />,
+      );
+      const root = screen.getByRole('toolbar');
+      const tooth = root.querySelector('[data-tooth="16"]') as Element;
+      expect(tooth).toHaveAttribute('role', 'button');
+      expect(tooth).toHaveAttribute('aria-pressed', 'true');
+      expect(tooth).not.toHaveAttribute('aria-selected');
+      const masikFog = root.querySelector('[data-tooth="17"]') as Element;
+      expect(masikFog).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('selectedTeeth nélkül (a szerkesztő plan-szintű térképe) NINCS aria-pressed -- a markup bájtra változatlan', () => {
+      render(<DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} />);
+      const root = screen.getByRole('toolbar');
+      const tooth = root.querySelector('[data-tooth="16"]') as Element;
+      expect(tooth).not.toHaveAttribute('aria-pressed');
     });
   });
 });

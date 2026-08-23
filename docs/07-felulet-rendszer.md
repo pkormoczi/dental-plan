@@ -128,14 +128,22 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   törölhető, nem csak azt, hogy nem törölhető. A destruktív menüpont
   `color="red"`.
 - Lenyíló/összecsukható panel (pl. a tervszerkesztő „Érintett fogak"
-  fogtérkép-panelje, `components/ToothChartPanel.tsx`): egy `useState`
-  boolean + feltételes render, Radix Themes `Button` triggerrel
+  fogtérkép-panelje, `components/ToothChartPanel.tsx`, és a Terv részletei
+  read-only megfelelője, `pages/tervReszletei/FogterkepPanel.tsx`): egy
+  `useState` boolean + feltételes render, Radix Themes `Button` triggerrel
   (`aria-expanded` + `aria-controls`). Nincs `@radix-ui/react-collapsible`
   vagy hasonló hozzáadva — a `@radix-ui/themes@3`-ban amúgy sincs
   Collapsible/Accordion komponens, ez a minta nem igényel újat. A trigger
   csukott/nyitott állapotot chevron ikonnal jelzi
   (`ChevronRightIcon`/`ChevronDownIcon`), nincs nyitás/csukás-animáció
-  (lásd „Amit soha ne csinálj").
+  (lásd „Amit soha ne csinálj"). A `DentalChart` (`components/
+  DentalChart.tsx`) ARIA-módját egy explicit `szerep: 'button' | 'option'`
+  prop dönti el, NEM a `selectedTeeth` megléte — a `selectedTeeth` mindkét
+  módban értelmes (a kijelölés-gyűrű vizuális, a `szerep`-től független),
+  csak az `aria-selected`/`aria-pressed` közti választás jön a `szerep`-ből.
+  A soronkénti fogválasztó (`ToothPickerPopover`) explicit `szerep="option"`-t
+  ad; a plan-szintű térképek (szerkesztő és Terv részletei) az
+  alapértelmezett `'button'`-t.
 - Mezős felugró ablak (pl. az Árlista admin „Új tétel" dialógusa,
   `pages/priceListAdmin/UjTetelDialog.tsx`): Radix Themes `Dialog`
   (`Dialog.Root/Content/Title/Description/Close`), NEM `AlertDialog` — az
