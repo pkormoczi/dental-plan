@@ -2,13 +2,18 @@
 
 Megvalósítás: `app/src/pages/PreviewPage.tsx`
 
-A4, ~18 mm margó, négy oldal. A jelenlegi Excel két dokumentumot présel
-egybe („Kezelési terv" és „Egyedi szolgáltatási szerződés"), ezért itt
-élesen elválik: **1–2. oldal a terv és az ár, 3. oldal a garancia, 4.
-oldal a nyilatkozat és az aláírás.** A szerkesztőben van egy „csak
-ajánlat" kapcsoló, ami a 4. oldalt elhagyja — így a hazavitt példány nem
-egy aláírandó szerződés (a garancia oldal ettől függetlenül mindig
-megjelenik, lásd „3. oldal — garancia" lent).
+A4, ~18 mm margó, **három folyó blokk** (nem fix oldalszám — a
+tartalomtól függően bármelyik blokk több fizikai oldalra is átfolyhat). A
+jelenlegi Excel két dokumentumot présel egybe („Kezelési terv" és „Egyedi
+szolgáltatási szerződés"), ezért itt élesen elválik: **1. blokk a terv és
+az ár, 2. blokk a fizetési feltételek és a garancia egy folyamban, 3.
+blokk a nyilatkozat és az aláírás.** Blokkhatár mindig fizikai
+oldaltörés; egy blokkon belül a tartalom szabadon folyik tovább, a
+lábléc oldalszáma a valóságos, futásidőben renderelt oldalszámból jön,
+nincs a kódban feltételezett érték. A szerkesztőben van egy „csak
+ajánlat" kapcsoló, ami a 3. blokkot elhagyja — így a hazavitt példány nem
+egy aláírandó szerződés (a garancia ettől függetlenül mindig megjelenik,
+lásd „2. blokk — fizetési feltételek és garancia" lent).
 
 ## Márka
 
@@ -69,15 +74,29 @@ a fejlécben. A cégnév a lábléc jogi blokkjába kerül.
 A `│` egy 2 px-es `#f77409` függőleges vonal — ez az egyetlen díszítő
 elem a dokumentumon.
 
-A 2–4. oldal egysoros minifejlécet kap (kis logó + „Kezelési terv ·
-<páciensnév>"), hogy ne vesszen el 3 cm minden oldal tetején.
+A nagy fejléc a dokumentumon **pontosan egyszer**, a legelső fizikai
+oldalon jelenik meg. Minden további fizikai oldal — az 1. blokk saját
+túlcsordulásából adódó folytatólagos oldalak is — az egysoros
+minifejlécet kapja (kis logó + „Kezelési terv · <páciensnév>"), hogy ne
+vesszen el 3 cm minden oldal tetején, és hogy egy fejléc nélküli oldal
+sose maradjon a dokumentumhoz köthetetlenül.
+
+A nyilatkozat blokkban a minifejléc alatt a szakaszcím is megismétlődik:
+az első fizikai oldalon sima „Nyilatkozat", a második és minden további
+fizikai oldalon „Nyilatkozat – folytatás", hogy egy szöveg közepén
+kezdődő oldal ne olvasódjon új szakasz kezdeteként. A terv és ár, illetve
+a fizetési feltételek/garancia blokkban SZÁNDÉKOSAN nincs ilyen
+folytatólagos cím: azok több fázist/szakaszt tartalmaznak egy folyamban,
+és abból az egy adatból, hogy „hányadik fizikai oldala a blokknak", nem
+vezethető le, melyik fázishoz/szakaszhoz tartozik éppen az adott oldal —
+ehhez saját lapozómotor kellene.
 
 ## Lábléc — minden oldalon
 
 ```
 ────────────────────────────────────────────────────────────────────────────────────────
 Mándoki Dental Kft. · 1114 Budapest, Móricz Zsigmond körtér 15. 3/8   Kovács János · a3f9c1
-Adószám: … · Cégjegyzékszám: …                                  árlista 2026.07.01. · 1 / 4
+Adószám: … · Cégjegyzékszám: …                                  árlista 2026.07.01. · 3 / 7
 ```
 
 Miért fontos:
@@ -90,9 +109,23 @@ Miért fontos:
 - Az **árlista verziója** megmondja, melyik árlistából készült, ha fél év
   múlva vita van.
 
-## 1. oldal
+A lábléc jobb blokkja (páciensnév + tervId, alatta az árlista-dátum és az
+oldalszám) fix szélességű. A neki fenntartott függőleges hely a
+páciensnév hosszából egyszer, a renderelés előtt kiszámolt, **a
+dokumentum minden oldalán azonos érték** — nem oldalanként újraszámolt,
+mert a lábléc a lap aljához van rögzítve, és egy oldalanként eltérő
+tartalék szét-csúsztatná a törzsszöveg alsó élét. A név legfeljebb két
+sorba törhet, ellipszis nélkül; hosszú névnél az árlista-dátum és az
+oldalszám külön sorra kerül a név alá. A `@react-pdf/renderer` nem ad
+szövegmérést, ezért a becslés karakterszám-heurisztika — a számok
+egyetlen forrása `app/src/pdf/footerLayout.ts`; a szélsőségesen hosszú
+névnél a helyes tördelés csak böngészős vizuális ellenőrzéssel
+igazolható.
 
-1. Fejléc
+## 1. blokk — kezelési terv és ár
+
+1. Fejléc (a nagy fejléc, kizárólag a blokk első fizikai oldalán — lásd
+   „Fejléc" fent)
 2. Pácienstömb — két oszlop: név / telefon, született / e-mail, lakcím
    teljes szélességben, TAJ
 3. Fázisonként: cím, tételtáblázat, fázisösszeg, majd a fázis megjegyzése
@@ -214,7 +247,14 @@ dátum, nem „3 hónapig érvényes" szöveg. (A korábbi *„…5-ig érvénye
 megfogalmazás a magyar hosszú dátum záró pontjával kétértelmű/hibás
 tipográfiát adott — lásd a „Nyelv" szakaszt lentebb.)
 
-## 2. oldal — fizetési feltételek
+## 2. blokk — fizetési feltételek és garancia
+
+A blokk mindig új fizikai oldalon indul; a fizetési feltételek és a
+garancia egy folyamban tördelődik, a garancia közvetlenül a fizetési
+feltételek szövege után folytatódik ugyanazon az oldalon, ha van hely —
+soha nem külön blokk vagy fix oldaltörés a kettő között.
+
+### Fizetési feltételek
 
 A jelenlegi Excelben ez a jogi szövegfal közepén van elrejtve, pedig ez
 az, ami a pácienst valóban érdekli. Külön címmel, olvasható tördelésben:
@@ -231,11 +271,8 @@ egy bevezető bekezdés, utána a felsorolás. A szöveg forrása
 - A munka átadásának feltétele a kiegyenlített számla.
 - Fizetési mód: készpénz, egészségpénztári kártya, bankkártya.
 
-Ha itt még van hely, a fázisok folytatódhatnak róla — a fizetési
-feltételek a tartalom után jönnek.
-
-Ez az oldal a „csak ajánlat" módban is **mindig** nyomtatódik (szemben a
-4. oldallal) — ezért kezeli a placeholder-őr a fizetési feltételek (és a
+Ez a szakasz a „csak ajánlat" módban is **mindig** nyomtatódik (szemben a
+3. blokkal) — ezért kezeli a placeholder-őr a fizetési feltételek (és a
 garancia, lásd lent) lezáratlan állapotát eltérően, mint a nyilatkozatét:
 itt HU-visszaesés, nem zár (lásd `03-funkcionalis-spec.md` § Sablon-
 placeholder őr).
@@ -246,7 +283,7 @@ A sablon-markdown egyszerű: üres sorokkal elválasztott bekezdések, és
 `{{orvos}}` helyőrző, amit a PDF generáláskor a terv kezelőorvosának
 neve vált fel.
 
-## 3. oldal — garancia
+### Garancia
 
 A jelenlegi Excelben nincs garancia-tartalom — ez egy új szakasz. A
 szöveg forrása `sablonok/garancia-hu-vN.md`, ugyanazzal a mechanizmussal
@@ -260,13 +297,13 @@ Stílusa a fizetési feltételekével egyezik (normál, nem a nyilatkozat
 szorosabb, jogi kinézetű betűje) — a garancia tájékoztató jellegű, nem
 maga az aláírás tárgya.
 
-Ez az oldal a „csak ajánlat" módban is **mindig** nyomtatódik, ugyanúgy,
+Ez a szakasz a „csak ajánlat" módban is **mindig** nyomtatódik, ugyanúgy,
 mint a fizetési feltételek — a garancia a hazavitt példányon is
 hasznos, a páciens pont ott kérdezne rá legvalószínűbben. A
 placeholder-őr ugyanúgy HU-visszaesésként kezeli, nem zárként (lásd
 fent és `03-funkcionalis-spec.md` § Sablon-placeholder őr).
 
-## 4. oldal — nyilatkozat és aláírás
+## 3. blokk — nyilatkozat és aláírás
 
 A jogi szövegfal (`sablonok/nyilatkozat-hu-vN.md`) kisebb betűvel,
 1.5-es sorközzel, bekezdésekre tördelve. A szöveg szó szerint az
@@ -290,10 +327,14 @@ Dr. Mándoki István
 `paciens.kiskoru === true`.** A jelenlegi Excel minden felnőttnek
 kinyomtatja, feleslegesen.
 
-Ha a tervhez tartozó nyilatkozat-sablon még placeholder-jelölésű, ez az
-oldal **nem nyomtatható** — a „csak ajánlat" mód ilyenkor kényszerített
+Ha a tervhez tartozó nyilatkozat-sablon még placeholder-jelölésű, ez a
+blokk **nem nyomtatható** — a „csak ajánlat" mód ilyenkor kényszerített
 és letiltott (D23), lásd `03-funkcionalis-spec.md` § Sablon-placeholder
 őr.
+
+A blokk mindig új fizikai oldalon indul. Ha a jogi szöveg több oldalra
+fut, a minifejléc alatt a szakaszcím a második és minden további fizikai
+oldalon „Nyilatkozat – folytatás" alakban ismétlődik (lásd „Fejléc" fent).
 
 ## Nyelv (D21)
 
@@ -314,6 +355,7 @@ németnyelvű PDF-re kerülne.
 | Érintett fogak | Betroffene Zähne |
 | Kezelések összesen / Fizetendő | Behandlungen gesamt / Zu zahlen |
 | Fizetési feltételek / Nyilatkozat | Zahlungsbedingungen / Erklärung |
+| Nyilatkozat – folytatás | Erklärung – Fortsetzung |
 | Megbízott: / Megrendelő: | Auftragnehmer: / Auftraggeber: |
 
 Három mondat **ragozás miatt függvény**, nem sablon-behelyettesítés
@@ -350,7 +392,8 @@ jogi lektorálás nélkül (lásd `README.md` „Nyitott kérdések" #1) — ez 
 nem a korábbi placeholder szöveg, de nem is lektorált végleges szöveg.
 A `garancia-de-v1.md` **más eset**: nem AI-fordítás, hanem szándékos
 placeholder marad — a magyar forrás maga sem valódi tartalom még, nincs
-mit lefordítani (lásd „3. oldal — garancia" fent).
+mit lefordítani (lásd „2. blokk — fizetési feltételek és garancia" §
+„Garancia" fent).
 
 ## Számformátum
 

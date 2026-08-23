@@ -2065,3 +2065,30 @@ karbantartási kör négy önálló javítása.
   meg, a lap többi, JSON-ból származó tartalma érintetlen. Részletek:
   `docs/03-funkcionalis-spec.md` § 11 "Terv részletei (véglegesített
   verzió)" → "Mentett PDF".
+
+---
+
+### 76. tétel: PDF oldalváz — fejléc/lábléc/oldalszám — KÉSZ
+
+- **Méret:** kicsi-közepes — 2 új fájl (`pdf/footerLayout.ts` +
+  tesztje), 1 érdemben átalakított fájl (`pdf/TervDocument.tsx`), a
+  kísérő teszt és a `pdf/labels.ts` bővítve, a nyomtatvány-spec és
+  néhány kereszthivatkozó komment frissítve.
+- **Megvalósítás:** a nyomtatvány mai négy fix `<Page>`-je három folyó
+  blokkra vált (terv és ár / fizetési feltételek + garancia egy
+  folyamban / nyilatkozat és aláírás) — mindegyik szabadon túlfolyhat
+  több fizikai oldalra. A kompakt fejléc mostantól minden nem-első
+  fizikai oldalon megjelenik (a nagy fejléc kizárólag a dokumentum
+  legelső oldalán), a react-pdf `fixed`+`render` mechanizmusára építve,
+  a pagináció tényleges viselkedésének megfelelően. A nyilatkozat blokk
+  többoldalas tördelésekor a második és minden további fizikai oldal
+  "Nyilatkozat – folytatás" címet kap. A lábléc jobb blokkja
+  (páciensnév + tervId) névhossz-alapú, a dokumentum elején egyszer
+  számolt, minden oldalon azonos magasságot kap (`pdf/footerLayout.ts`,
+  karakterszám-heurisztika — a `@react-pdf/renderer` nem ad
+  szövegmérést). A fázis-/szakaszszintű folytatólagos cím a fázisokra
+  és a fizetési feltételekre/garanciára szándékosan nem valósult meg —
+  a react-pdf folyam-modellje ezt egy blokkon belüli szakaszhatáron nem
+  tudja natívan kifejezni. Részletek: `docs/04-nyomtatvany-spec.md` §
+  "Fejléc", "Lábléc — minden oldalon", "2. blokk — fizetési feltételek
+  és garancia", "3. blokk — nyilatkozat és aláírás".

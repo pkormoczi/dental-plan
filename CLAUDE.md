@@ -516,6 +516,18 @@ segédfüggvénye, szintén ne írd újra:
   lap beágyazott viewere és a Filerendszer nézet `FileContentPanel.tsx`-e
   — ne hozz létre harmadik, egyedi blob-URL-effektet PDF-bájtokhoz.
 
+A nyomtatvány dokumentum-szintű lábléc-magassága (`docs/04-nyomtatvany-
+spec.md` § "Lábléc — minden oldalon") segédfüggvényei, szintén ne írd
+újra őket:
+- `footerNevSorok(nev, tervId)` / `footerExtraMagassag(nev, tervId)`
+  (`app/src/pdf/footerLayout.ts`) — a lábléc jobb blokkjának
+  (páciensnév + tervId) karakterszám-alapú sorbecslése, illetve az
+  ebből adódó extra `paddingBottom`; a `pdf/TervDocument.tsx` a
+  dokumentum ELEJÉN, egyszer hívja, és ugyanazt az értéket alkalmazza
+  mindhárom blokk `<Page>` stílusán — a `@react-pdf/renderer` nem ad
+  szövegmérést, ezért ez heurisztika, böngészős vizuális ellenőrzést
+  igényel szélsőségesen hosszú névvel
+
 A D31 (`docs/01-attekintes-es-dontesek.md`) segédfüggvénye:
 - `savosHatarForditott(ar)` (`app/src/domain/money.ts`) — igaz, ha egy
   SAVOS ár `min`-je nagyobb, mint a `max`-a; puha figyelmeztetés az Árlista

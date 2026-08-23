@@ -15,20 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 76. tétel — PDF oldalváz: fejléc/lábléc/oldalszám
-  (a `backlog/redesign/` redesign-döntéssorozat DP-070 tétele) — a mai
-  `TervDocument.tsx` négy fix `<Page>`-je három folyó blokkra vált
-  (kezelési rész / fizetési feltételek+garancia / nyilatkozat+aláírás),
-  D420/D582 szerint — mindhárom szabadon túlfolyhat, a kompakt fejléc
-  minden nem-első fizikai oldalon megjelenik (ma csak `<Page>`-kezdetnél
-  jelent meg). A lábléc névhossz-alapú, dokumentum-szintű magasságot kap
-  (D426–D428). A folytatólagos szakaszcím (D357/D363–D364/D415/D586)
-  EXPLICIT ELVETVE — a react-pdf folyam-modellje ezt nem tudja kifejezni
-  egy blokkon belüli fázis-/szakaszhatáron; helyette a natívan
-  kifejezhető keep-together szabályok (`wrap`/`break`/`minPresenceAhead`)
-  erősödnek a 78./81./82. tételben. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-76-pdf-oldalvaz-terv.md`
-
 ### 77. tétel — PDF első oldal: cím + páciensadatok + fogtérkép
   (a `backlog/redesign/` redesign-döntéssorozat DP-071 tétele) — a
   fogtérkép elhagyja a mai kéthasábos elrendezést (ahol az összegzés

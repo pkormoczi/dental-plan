@@ -639,8 +639,8 @@ fennmaradó rész helyén „—” áll, és ez a véglegesítés-őr KEMÉNY b
 (lásd lent) — a doki tudatosan rendezi. Ha az előleg pontosan egyenlő a
 fizetendővel, a fennmaradó rész explicit `0`, ez legitim állapot.
 
-Bekapcsolva a nyomtatvány 1. oldala két új sort kap, és a 2. oldal
-fizetési feltételeinek szövege is ugyanezt az összeget mondja (lásd
+Bekapcsolva a nyomtatvány terv-és-ár blokkja két új sort kap, és a
+fizetési feltételek szövege is ugyanezt az összeget mondja (lásd
 `docs/04-nyomtatvany-spec.md`).
 
 ### Tétel-leírások nyomtatása
@@ -721,10 +721,10 @@ mérlegelni, mert a doki úgysem látja a tartalmát.
 
 ## 4. Előnézet és véglegesítés
 
-- A `PrintPreview` komponens rendereli a négy oldalt.
-- Kapcsoló: **„csak ajánlat"** — ilyenkor a 4. oldal (nyilatkozat és
-  aláírás) kimarad. Ez a hazavitt példány. A 3. oldal (garancia) ettől
-  függetlenül mindig megjelenik. A kapcsoló a `Plan.csakAjanlat` mezőn él
+- A `PrintPreview` komponens rendereli a három blokkot.
+- Kapcsoló: **„csak ajánlat"** — ilyenkor a nyilatkozat és aláírás blokk
+  kimarad. Ez a hazavitt példány. A garancia blokk ettől függetlenül
+  mindig megjelenik. A kapcsoló a `Plan.csakAjanlat` mezőn él
   (`docs/02-domain-modell.md` § Csak ajánlat mód, D75), nem helyi
   képernyő-állapot — navigáció oda-vissza és az autosave is megőrzi,
   „Új verzió" nyitásakor öröklődik, „Másolás új tervbe" viszont mindig
@@ -850,9 +850,10 @@ kattintható/navigálható a releváns workflow-lépésre.
 
 - **Nyilatkozat még lektorálásra vár:** a MEGJELENÍTETT nyilatkozat
   placeholder (lásd lent „Sablon-placeholder őr") — ilyenkor a
-  nyilatkozat és aláírás oldal garantáltan kimarad, a „Csak ajánlat"
+  nyilatkozat és aláírás blokk garantáltan kimarad, a „Csak ajánlat"
   mód kényszerítve/letiltva. Ez a tétel csak a TÉNYt jelzi; a kényszer
-  maga a D23-zár, a `PreviewPage.tsx` 4. oldal renderjéhez tartozik.
+  maga a D23-zár, a `PreviewPage.tsx` nyilatkozat blokk renderjéhez
+  tartozik.
 - **Páciens törzsadat-eltérés (D48):** ha a páciensnek van lezárt
   törzsadata (`paciens-adatok.json`, D33), és az eltér a terv `paciens`
   pillanatképétől, a tétel felsorolja az eltérő mezőket, a Terv adatai
@@ -887,20 +888,20 @@ seed-feltöltés és a véglegesítés-őr mind ezt hívja.
 
 - **Nyilatkozat placeholder → kemény zár.** Ha a ténylegesen betöltött
   nyilatkozat placeholder, a „csak ajánlat" kapcsoló automatikusan
-  bepipálva és **letiltva** jelenik meg, tehát a 4. oldal (nyilatkozat +
-  aláírás) garantáltan kimarad minden PDF-ből — letöltésből és
+  bepipálva és **letiltva** jelenik meg, tehát a nyilatkozat és aláírás
+  blokk garantáltan kimarad minden PDF-ből — letöltésből és
   véglegesítésből egyaránt, mert mindkettő ugyanabból a renderelt
   példányból dolgozik. Piros figyelmeztetés jelzi az okot és hogy hol
   kell javítani (Beállítások → Nyomtatvány szövegei). **Nincs „Folytatás
   mindenképp"** — ez blokk, ugyanabban a súlyban, mint a kitöltetlen sor
   (D23).
-- **Fizetési feltételek placeholder → HU-visszaesés, nem zár.** A 2.
-  oldal „csak ajánlat" módban is mindig nyomtatódik, ezért ott a
-  kényszerített ajánlat-mód nulla védelmet adna; helyette a hiányzó
-  sablonnál is használt HU-visszaesés fut le (a magyar szöveg jelenik
-  meg), sárga figyelmeztetéssel.
+- **Fizetési feltételek placeholder → HU-visszaesés, nem zár.** A
+  fizetési feltételek szakasz „csak ajánlat" módban is mindig
+  nyomtatódik, ezért ott a kényszerített ajánlat-mód nulla védelmet
+  adna; helyette a hiányzó sablonnál is használt HU-visszaesés fut le (a
+  magyar szöveg jelenik meg), sárga figyelmeztetéssel.
 - **Garancia placeholder → HU-visszaesés, nem zár.** Ugyanaz a viselkedés,
-  mint a fizetési feltételeknél — a 3. oldal (garancia) „csak ajánlat"
+  mint a fizetési feltételeknél — a garancia szakasz „csak ajánlat"
   módban is mindig nyomtatódik, tehát nála sincs mit védeni egy
   kényszerített ajánlat-móddal. A magyar szöveg ma is placeholder (a doki
   még nem adta meg), ezért a HU-visszaesés magyar nyelvű terven nem fut

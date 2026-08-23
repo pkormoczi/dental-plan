@@ -848,7 +848,7 @@ describe('PreviewPage -- D74/D133: német tételnév kemény blokk', () => {
 
 // docs/03-funkcionalis-spec.md § Sablon-placeholder őr (D23): a betöltött
 // nyilatkozat placeholder (jogilag még nincs lezárva) esetén a "Csak
-// ajánlat" mód kényszerítve/letiltva -- a 4. oldal (nyilatkozat + aláírás)
+// ajánlat" mód kényszerítve/letiltva -- a nyilatkozat és aláírás blokk
 // garantáltan kimarad a PDF-ből.
 describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
   beforeEach(() => {
@@ -1434,7 +1434,7 @@ describe('PreviewPage -- backlog-70: "Csak ajánlat" mező perzisztencia és vé
       });
       // A mezőbe a doki soha nem pipálta be kézzel a "Csak ajánlat"-ot --
       // a kényszer (D23) mégis igazként mentődik, mert a ténylegesen
-      // kiadott PDF-ből a 4. oldal ugyanúgy kimaradt.
+      // kiadott PDF-ből a nyilatkozat és aláírás blokk ugyanúgy kimaradt.
       expect(saved.csakAjanlat).toBe(true);
     },
     20000,

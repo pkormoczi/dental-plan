@@ -1,10 +1,11 @@
 // A generált PDF -- portolva ui/PrintPreview.jsx-ből react-pdf primitívekre.
 // Lásd docs/04-nyomtatvany-spec.md a teljes specifikációért.
 //
-// 1-2. oldal: terv és ár, majd fizetési feltételek. 3. oldal: garancia --
-// "csak ajánlat" módban is mindig megjelenik. 4. oldal: nyilatkozat és
-// aláírás -- ez marad ki "csak ajánlat" módban, hogy a hazavitt példány
-// ne legyen aláírandó szerződés.
+// Három folyó blokk, mindegyik szabadon túlcsordulhat több fizikai oldalra:
+// A blokk (terv és ár), B blokk (fizetési feltételek + garancia, egy
+// folyamban), C blokk (nyilatkozat és aláírás) -- ez utóbbi marad ki "csak
+// ajánlat" módban, hogy a hazavitt példány ne legyen aláírandó szerződés.
+// A garancia a B blokk része, "csak ajánlat" módban is mindig megjelenik.
 //
 // D21: a fix feliratok forrása a `pdf/labels.ts` (`plan.nyelv` szerint); a
 // pénzösszegek ezres/tizedes elválasztója is `plan.nyelv`-től függ
@@ -20,6 +21,7 @@ import { buildToothVisualStates } from '../domain/toothVisual';
 import { elolegOsszegek, fazisOsszeg, sorokListaOsszeg, tervVegosszeg } from '../domain/totals';
 import type { Fazis, Plan, PriceList, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
+import { FOOTER_JOBB_SZELESSEG, footerExtraMagassag } from './footerLayout';
 import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
 import { fillPlaceholders, parseBlocks, type MdBlock } from './markdownLite';
 import { ToothChartPdf } from './ToothChartPdf';
@@ -145,6 +147,10 @@ const s = {
   validityNote: { fontSize: 8, color: t.textMuted, marginTop: 6, lineHeight: 1.5 },
 
   h2: { fontSize: 12.5, fontWeight: 600, color: t.brand, marginBottom: 10 },
+  // A B blokkban (fizetési feltételek + garancia egy folyamban) a Garancia
+  // cím közvetlenül az előző szakasz szövege után jön, nem friss oldal
+  // tetején -- kell fölé levegő, amit korábban az oldalhatár adott.
+  h2Kovetkezo: { marginTop: 18 },
   paragraph: { fontSize: 9.5, lineHeight: 1.5, marginBottom: 8 },
   legalParagraph: { fontSize: 8.5, lineHeight: 1.6, marginBottom: 8 },
   bulletRow: { flexDirection: 'row' as const, marginBottom: 5 },
@@ -171,6 +177,11 @@ const s = {
     paddingTop: 8,
   },
   footerRow: { flexDirection: 'row' as const, justifyContent: 'space-between' as const },
+  // A bal blokk engedi magát összenyomni (a mainHeaderLeft mintáján), a
+  // jobb blokk fix szélessége a footerLayout.ts névhossz-becslésének alapja
+  // -- enélkül a becslés karakter/sor számítása nem lenne értelmezhető.
+  footerLeft: { flexShrink: 1, flexGrow: 1, flexBasis: 0 },
+  footerRight: { width: FOOTER_JOBB_SZELESSEG },
   footerText: { fontSize: 7.5, color: t.textFaint, lineHeight: 1.5 },
   footerTextRight: { fontSize: 7.5, color: t.textFaint, lineHeight: 1.5, textAlign: 'right' as const },
   // KÜLÖN stílus, `lineHeight` NÉLKÜL: a @react-pdf/renderer 4.5.1-ben egy
@@ -214,9 +225,9 @@ function MainHeader({ plan, settings, L }: { plan: Plan; settings: Settings; L: 
   );
 }
 
-function MiniHeader({ plan, L }: { plan: Plan; L: PdfLabels }) {
+function MiniHeader({ plan, L, fixed }: { plan: Plan; L: PdfLabels; fixed?: boolean }) {
   return (
-    <View style={s.miniHeader}>
+    <View style={s.miniHeader} fixed={fixed}>
       <Image src={logoUrl} style={s.logoMini} />
       <Text style={s.miniHeaderText}>
         {L.miniHeaderPrefix}
@@ -300,7 +311,7 @@ function Footer({ plan, settings, L }: { plan: Plan; settings: Settings; L: PdfL
   return (
     <View style={s.footer} fixed>
       <View style={s.footerRow}>
-        <View>
+        <View style={s.footerLeft}>
           <Text style={s.footerText}>
             {settings.rendelo.nev} · {settings.rendelo.cim}
           </Text>
@@ -309,14 +320,14 @@ function Footer({ plan, settings, L }: { plan: Plan; settings: Settings; L: PdfL
             {settings.rendelo.cegjegyzekszam || '—'}
           </Text>
         </View>
-        <View>
+        <View style={s.footerRight}>
           <Text style={s.footerTextRight}>
             {plan.paciens.nev} · {plan.tervId}
           </Text>
           {/* Az oldalszám a tényleges renderelt oldalszámból jön (nem a
               szerkesztő komponens `pages`-becsléséből) -- egy hosszú,
-              szerkeszthető nyilatkozat átfolyhat a 4. oldalon túlra is,
-              ilyenkor a fix "4/4" hazudna. */}
+              szerkeszthető nyilatkozat több fizikai oldalra is átfolyhat,
+              ilyenkor egy fix "4/4" hazudna. */}
           <Text
             style={s.footerTextRightDynamic}
             render={({ pageNumber, totalPages }) =>
@@ -414,9 +425,20 @@ export function TervDocument({
   const garanciaBlocks = parseBlocks(fillPlaceholders(garanciaMd, placeholderValues));
   const nyilatkozatBlocks = parseBlocks(fillPlaceholders(nyilatkozatMd, placeholderValues));
 
+  // Dokumentum-szinten egyszer számolt, minden oldalon azonos lábléc-
+  // magasság (lásd footerLayout.ts) -- nem oldalanként újraszámolt, mert a
+  // lábléc jobb blokkjának mérete a teljes dokumentumon egységes kell legyen.
+  const footerExtra = footerExtraMagassag(plan.paciens.nev, plan.tervId);
+  const pageStyle = footerExtra > 0 ? [s.page, { paddingBottom: s.page.paddingBottom + footerExtra }] : s.page;
+
   return (
     <Document>
-      <Page size="A4" style={s.page}>
+      {/* ---------- A blokk -- terv és ár ---------- */}
+      <Page size="A4" style={pageStyle}>
+        {/* A nagy fejléc csak a dokumentum ELSŐ fizikai oldalán jelenik meg
+            (a folyamban van, nem `fixed`); minden további -- a blokk saját
+            túlcsordulásából adódó -- fizikai oldal a kompakt fejlécet kapja. */}
+        <View fixed render={({ pageNumber }) => (pageNumber === 1 ? null : <MiniHeader plan={plan} L={L} />)} />
         <MainHeader plan={plan} settings={settings} L={L} />
 
         <View style={s.patientGrid}>
@@ -509,27 +531,31 @@ export function TervDocument({
         <Footer plan={plan} settings={settings} L={L} />
       </Page>
 
-      {/* ---------- 2. oldal -- fizetési feltételek ---------- */}
-      <Page size="A4" style={s.page}>
-        <MiniHeader plan={plan} L={L} />
+      {/* ---------- B blokk -- fizetési feltételek + garancia, egy folyamban ---------- */}
+      <Page size="A4" style={pageStyle}>
+        <MiniHeader plan={plan} L={L} fixed />
         <Text style={s.h2}>{L.fizetesiFeltetelekCim}</Text>
         <MdBlocks blocks={fizetesiFeltetelekBlocks} />
-        <Footer plan={plan} settings={settings} L={L} />
-      </Page>
-
-      {/* ---------- 3. oldal -- garancia ---------- */}
-      <Page size="A4" style={s.page}>
-        <MiniHeader plan={plan} L={L} />
-        <Text style={s.h2}>{L.garanciaCim}</Text>
+        <Text style={[s.h2, s.h2Kovetkezo]}>{L.garanciaCim}</Text>
         <MdBlocks blocks={garanciaBlocks} />
         <Footer plan={plan} settings={settings} L={L} />
       </Page>
 
-      {/* ---------- 4. oldal -- nyilatkozat és aláírás ---------- */}
+      {/* ---------- C blokk -- nyilatkozat és aláírás ---------- */}
       {!offerOnly && (
-        <Page size="A4" style={s.page}>
-          <MiniHeader plan={plan} L={L} />
-          <Text style={s.h2}>{L.nyilatkozatCim}</Text>
+        <Page size="A4" style={pageStyle}>
+          <MiniHeader plan={plan} L={L} fixed />
+          {/* A cím `fixed`, minden fizikai oldalon ismétlődik: az első a
+              sima címet kapja, a folytatólagosak a "– folytatás" változatot.
+              A két ág egysoros és azonos stílusú -- react-pdf-ben a
+              `subPageNumber` csak a végleges tördelés után ismert, tehát a
+              render-ág NEM okozhat magasságkülönbséget a szétvágás
+              pillanatában, csak szövegcserét. */}
+          <Text
+            style={s.h2}
+            fixed
+            render={({ subPageNumber }) => (subPageNumber > 1 ? L.nyilatkozatCimFolytatas : L.nyilatkozatCim)}
+          />
           <MdBlocks blocks={nyilatkozatBlocks} legal />
 
           <View style={s.signatureBlock} wrap={false}>

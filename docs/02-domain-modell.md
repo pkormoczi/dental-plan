@@ -524,8 +524,9 @@ Egyenlőségnél (`előleg === fizetendő`) a fennmaradó rész explicit `0`,
 ez legitim állapot.
 
 Egy formázott kifejezés (`pdf/labels.ts` `elolegKifejezes`) tölti ki a
-fizetési feltételek sablonszövegének `{{eloleg}}` helyőrzőjét, hogy az 1.
-oldal és a 2. oldal jogi szövege ne mondhasson ellent egymásnak.
+fizetési feltételek sablonszövegének `{{eloleg}}` helyőrzőjét, hogy az
+összegzés és a fizetési feltételek jogi szövege ne mondhasson ellent
+egymásnak.
 Kikapcsolt kapcsolónál a helyőrző egy "a megállapított előleg"/"die
 vereinbarte Anzahlung" megfogalmazásra esik vissza — a mondat ilyenkor
 nem konkrét összeget mond, de nem is hamis nullát.
@@ -573,8 +574,8 @@ nyomtatványon (D9), csak a `Fizetendő` lesz kisebb.
 ### Csak ajánlat mód (`csakAjanlat`, D75)
 
 A doki választhatja, hogy a generált PDF a hazavitt, "csak ajánlat"
-példány legyen — ilyenkor a 4. oldal (nyilatkozat + aláírás) kimarad, a
-2–3. oldal (fizetési feltételek, garancia) változatlanul nyomtatódik
+példány legyen — ilyenkor a nyilatkozat és aláírás blokk kimarad, a
+fizetési feltételek és a garancia blokk változatlanul nyomtatódik
 (`docs/03-funkcionalis-spec.md` § 4. Előnézet és véglegesítés). `false`
 (vagy hiányzó mező egy régi `terv.json`-ben) = teljes dokumentum. Nem
 emelt `schemaVersion`-t, a `leirasokMutatasa`/`elolegOsszeg`/

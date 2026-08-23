@@ -12,27 +12,44 @@
 // `TervDocument` komponenst rendereljük, ezért a react-pdf primitíveket
 // egyszerű DOM-elemekre képezzük le, minden propot eldobva a `children`
 // kivételével -- a `style` tömb-alak és a react-pdf-specifikus
-// `render`/`fixed`/`wrap` propok másképp React-hibát/figyelmeztetést
-// adnának egy sima <div>-en.
+// `wrap` prop másképp React-hibát/figyelmeztetést adnának egy sima <div>-en.
+//
+// A `render` propot (dinamikus fejléc/cím, lásd TervDocument.tsx A/C blokk)
+// a mock TÉNYLEGESEN meghívja, a `pageState`-tel -- a valódi react-pdf
+// pagination szimulálása nélkül csak így tesztelhető, hogy egy adott
+// (pageNumber, subPageNumber) kombinációra mi jelenne meg. `pageState`
+// egy `vi.hoisted` mutálható objektum (a PreviewPage.pdfHiba.test.tsx
+// mintája), mert a `vi.mock` factory a fájl tetejére hoistolódik.
 
 import type { ReactNode } from 'react';
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createBlankPlan } from '../domain/blankPlan';
 import type { Nyelv, Plan, Sor } from '../domain/types';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 
+const pageState = vi.hoisted(() => ({
+  pageNumber: 1,
+  totalPages: 1,
+  subPageNumber: 1,
+  subPageTotalPages: 1,
+}));
+
+type RenderProp = (props: typeof pageState) => ReactNode;
+
 vi.mock('@react-pdf/renderer', () => {
   const dom = (tag: string) =>
-    function Mock({ children }: { children?: ReactNode }) {
-      return <div data-mock-tag={tag}>{children}</div>;
+    function Mock({ children, render }: { children?: ReactNode; render?: RenderProp }) {
+      return <div data-mock-tag={tag}>{render ? render(pageState) : children}</div>;
     };
   return {
     Document: dom('document'),
     Page: dom('page'),
     View: dom('view'),
-    Text: (props: { children?: ReactNode }) => <span>{props.children}</span>,
+    Text: (props: { children?: ReactNode; render?: RenderProp }) => (
+      <span>{props.render ? props.render(pageState) : props.children}</span>
+    ),
     Image: () => null,
     Font: { register: () => {} },
   };
@@ -41,6 +58,16 @@ vi.mock('@react-pdf/renderer', () => {
 // A vi.mock hívás hoistolódik a fájl tetejére, tehát az itt importált
 // TervDocument már a fenti mockot látja.
 import { TervDocument } from './TervDocument';
+
+// A `pageState` a fájl összes tesztje között megosztott, mutálható mock-
+// állapot -- teszt előtt mindig alapállapotra (1/1/1/1) reset, hogy egy
+// korábbi teszt oldalszám-módosítása ne szivárogjon át a következőbe.
+beforeEach(() => {
+  pageState.pageNumber = 1;
+  pageState.totalPages = 1;
+  pageState.subPageNumber = 1;
+  pageState.subPageTotalPages = 1;
+});
 
 interface Arak {
   lista: number;
@@ -390,27 +417,103 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
     expect(screen.getByText('Nyilatkozat szövege.')).toBeInTheDocument();
   });
 
-  // A puszta szöveg-jelenlét nem bizonyítja a POZÍCIÓT (2. döntés: a
-  // fizetési feltételek UTÁN, a nyilatkozat ELŐTT) -- egy az oldal
-  // végére fűzött Garancia is átmenne a fenti tesztéken. A mock minden
-  // <Page>-et data-mock-tag="page" <div>-re képez le (lásd a fájl tetején),
-  // ez adja a tényleges renderelési sorrendet.
-  it('a Garancia a harmadik oldal: a fizetési feltételek után, a nyilatkozat előtt', () => {
+  // A puszta szöveg-jelenlét nem bizonyítja a POZÍCIÓT (a fizetési
+  // feltételek UTÁN, a nyilatkozat ELŐTT) -- egy az oldal végére fűzött
+  // Garancia is átmenne a fenti tesztéken. A mock minden <Page>-et
+  // data-mock-tag="page" <div>-re képez le (lásd a fájl tetején); a
+  // fizetési feltételek és a garancia EGY blokkban (a B blokk, a mai
+  // 2. `<Page>`) van, a nyilatkozat egy külön, harmadik blokk.
+  it('a Garancia a B blokkban van: a fizetési feltételek után, a nyilatkozat blokk előtt', () => {
     const { container } = renderWithGarancia({
       offerOnly: false,
       nyilatkozatMd: 'Nyilatkozat szövege.',
     });
     const pages = container.querySelectorAll('[data-mock-tag="page"]');
-    expect(pages).toHaveLength(4);
-    expect(pages[2].textContent).toContain('Garancia');
-    expect(pages[2].textContent).not.toContain('Nyilatkozat szövege.');
-    expect(pages[3].textContent).toContain('Nyilatkozat');
+    expect(pages).toHaveLength(3);
+    expect(pages[1].textContent).toContain('Garancia');
+    expect(pages[1].textContent).not.toContain('Nyilatkozat szövege.');
+    expect(pages[1].textContent!.indexOf('Fizetési feltételek')).toBeLessThan(
+      pages[1].textContent!.indexOf('Garancia'),
+    );
+    expect(pages[2].textContent).toContain('Nyilatkozat');
   });
 
-  it('"csak ajánlat" módban 3 oldal marad, a Garancia akkor is a harmadik', () => {
+  it('"csak ajánlat" módban 2 blokk marad, a Garancia akkor is a másodikban', () => {
     const { container } = renderWithGarancia({ offerOnly: true });
     const pages = container.querySelectorAll('[data-mock-tag="page"]');
-    expect(pages).toHaveLength(3);
-    expect(pages[2].textContent).toContain('Garancia');
+    expect(pages).toHaveLength(2);
+    expect(pages[1].textContent).toContain('Garancia');
+  });
+});
+
+describe('TervDocument -- 76. tétel: kompakt fejléc és folytatólagos cím', () => {
+  function renderPlan(offerOnly = false) {
+    const plan = buildPlan(false, 'hu', AZONOS_AR);
+    plan.paciens.nev = 'Teszt Páciens';
+    return render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly={offerOnly}
+        nyilatkozatMd="Nyilatkozat szövege."
+        fizetesiFeltetelekMd=""
+        garanciaMd=""
+        toothChartPng={null}
+      />,
+    );
+  }
+
+  // A B és C blokk MiniHeaderje a mockban FÜGGETLENÜL a `pageState`-től
+  // mindig megjelenik (a valódi react-pdf-ben ezek külön `<Page>`
+  // elemek, saját pagination-nel) -- ezért az A blokk fejlécének
+  // ellenőrzését az első `page` div-re kell szűkíteni, különben a B/C
+  // blokk saját, feltétel nélküli minifejléce ál-pozitív/ál-negatív
+  // találatot adna.
+  it('az A blokk első fizikai oldalán a nagy fejléc látszik, a kompakt fejléc nem', () => {
+    pageState.pageNumber = 1;
+    const { container } = renderPlan();
+    const aBlokk = container.querySelectorAll<HTMLElement>('[data-mock-tag="page"]')[0];
+    expect(within(aBlokk).getByText(seedSettings.rendelo.cim)).toBeInTheDocument();
+    expect(within(aBlokk).queryByText('Kezelési terv · Teszt Páciens')).not.toBeInTheDocument();
+  });
+
+  it('az A blokk folytatólagos fizikai oldalán a kompakt fejléc jelenik meg', () => {
+    pageState.pageNumber = 2;
+    const { container } = renderPlan();
+    const aBlokk = container.querySelectorAll<HTMLElement>('[data-mock-tag="page"]')[0];
+    expect(within(aBlokk).getByText('Kezelési terv · Teszt Páciens')).toBeInTheDocument();
+  });
+
+  it('a Nyilatkozat első fizikai oldalán a sima cím áll', () => {
+    pageState.subPageNumber = 1;
+    renderPlan();
+    expect(screen.getByText('Nyilatkozat')).toBeInTheDocument();
+    expect(screen.queryByText('Nyilatkozat – folytatás')).not.toBeInTheDocument();
+  });
+
+  it('a Nyilatkozat folytatólagos fizikai oldalán a "– folytatás" cím áll', () => {
+    pageState.subPageNumber = 2;
+    renderPlan();
+    expect(screen.getByText('Nyilatkozat – folytatás')).toBeInTheDocument();
+    expect(screen.queryByText('Nyilatkozat')).not.toBeInTheDocument();
+  });
+
+  it('német terven a folytatólagos cím is németül jelenik meg', () => {
+    pageState.subPageNumber = 2;
+    const plan = buildPlan(false, 'de', AZONOS_AR);
+    render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly={false}
+        nyilatkozatMd="Erklärungstext."
+        fizetesiFeltetelekMd=""
+        garanciaMd=""
+        toothChartPng={null}
+      />,
+    );
+    expect(screen.getByText('Erklärung – Fortsetzung')).toBeInTheDocument();
   });
 });

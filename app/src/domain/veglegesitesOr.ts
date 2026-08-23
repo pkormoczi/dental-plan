@@ -10,9 +10,10 @@
 //
 // A `PreviewPage.tsx`-ben marad: a React state, a checklist RENDERelése,
 // a `doFinalize()`, és az `isPlaceholderTemplate()`-re épülő D23-zár (a
-// nyilatkozat+aláírás oldal letiltása) -- ez utóbbi nem ehhez a listához,
-// hanem a 4. oldal renderjéhez tartozik (a `nyilatkozat-placeholder` tétel
-// itt csak a TÉNYT jelzi, a kényszerített offer-only mód a hívó dolga).
+// nyilatkozat+aláírás blokk letiltása) -- ez utóbbi nem ehhez a listához,
+// hanem a nyilatkozat blokk renderjéhez tartozik (a `nyilatkozat-
+// placeholder` tétel itt csak a TÉNYT jelzi, a kényszerített offer-only
+// mód a hívó dolga).
 
 import { araztalanSorok, hianyzoCsomagLeirasok, kitoltetlenSorok, nullaOsszeguSorok, uresFazisok } from './kitoltetlen';
 import { arElteroSorok } from './arKoveti';

@@ -204,7 +204,7 @@ export default function PreviewPage() {
   }, [plan, priceList]);
 
   // Ha a MEGJELENÍTETT nyilatkozat placeholder (jogilag még nincs lezárva),
-  // a 4. oldal (nyilatkozat + aláírás) garantáltan kimarad -- a doki nem
+  // a nyilatkozat és aláírás blokk garantáltan kimarad -- a doki nem
   // kapcsolhatja vissza, amíg a szöveg placeholder marad (D23, lásd
   // docs/03-funkcionalis-spec.md § Sablon-placeholder őr). A nyers
   // `offerOnly` state-et mindenhol ez az effektív érték váltja fel.
@@ -295,8 +295,8 @@ export default function PreviewPage() {
         sablonVerzio: nyilatkozatVerzio,
         // Az EFFEKTÍV érték mentődik, nem a nyers `plan.csakAjanlat` --
         // placeholder-nyilatkozat miatt kényszerített esetben is a
-        // ténylegesen kiadott PDF-et kell tükröznie (a 4. oldal ekkor is
-        // kimarad), különben a verziósor D558 jelvénye hazudna.
+        // ténylegesen kiadott PDF-et kell tükröznie (a nyilatkozat blokk
+        // ekkor is kimarad), különben a verziósor D558 jelvénye hazudna.
         csakAjanlat: effectiveOfferOnly,
         osszesitok: computeOsszesitok(plan.fazisok, plan.kedvezmenyOsszeg),
       };

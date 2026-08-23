@@ -57,6 +57,8 @@ export interface PdfLabels {
   savosFootnote: string;
   fizetesiFeltetelekCim: string;
   nyilatkozatCim: string;
+  /** A Nyilatkozat blokk folytatólagos fizikai oldalainak címe -- az elsőn `nyilatkozatCim` áll. */
+  nyilatkozatCimFolytatas: string;
   garanciaCim: string;
   megbizott: string;
   megrendelo: string;
@@ -99,6 +101,7 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
       '* A csillaggal jelölt tételek ára — és a belőlük számított összegek (fizetendő, előleg, fennmaradó rész) — a kezelés során derül ki véglegesen, a megadott ár becslés.',
     fizetesiFeltetelekCim: 'Fizetési feltételek',
     nyilatkozatCim: 'Nyilatkozat',
+    nyilatkozatCimFolytatas: 'Nyilatkozat – folytatás',
     garanciaCim: 'Garancia',
     megbizott: 'Megbízott:',
     megrendelo: 'Megrendelő:',
@@ -142,6 +145,7 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
       '* Der Preis der mit einem Sternchen markierten Leistungen — und die daraus berechneten Beträge (zu zahlen, Anzahlung, Restbetrag) — wird während der Behandlung endgültig festgelegt; der angegebene Preis ist eine Schätzung.',
     fizetesiFeltetelekCim: 'Zahlungsbedingungen',
     nyilatkozatCim: 'Erklärung',
+    nyilatkozatCimFolytatas: 'Erklärung – Fortsetzung',
     garanciaCim: 'Garantie',
     megbizott: 'Auftragnehmer:',
     megrendelo: 'Auftraggeber:',
