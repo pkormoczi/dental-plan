@@ -1764,18 +1764,35 @@ jelenik meg) + akciósáv; verziónavigáció (‹ előző / „Összes verzió"
 következő ›); majd a tényleges tartalom, ABBAN a sorrendben, ami a
 véglegesített dokumentum logikus olvasási sorrendje: pénzügyi összesítés,
 fázisok és kezelési sorok, végül a terv metaadata (cím, verzió, dátumok,
-nyelv, pénznem, kezelőorvos, „Véglegesített"/„Csak ajánlat" jelvény) és a
-páciens-pillanatkép.
+nyelv, pénznem, kezelőorvos, „Véglegesített"/„Csak ajánlat" jelvény), a
+páciens-pillanatkép, és legvégül a beágyazott mentett PDF.
 
 **Akciósáv**: a lánc legfrissebb verzióján elsődleges „Új verzió", egy
 historical verzión helyette „Ugrás a legfrissebbre" (a legfrissebb verzió
-route-jára navigál); mindkettőn „Megnyitás külön" (a mentett PDF új
+route-jára navigál); mindegyiken „Megnyitás külön" (a mentett PDF új
 böngészőlapon, popup-blokkoló elleni szinkron `window.open`-nel, ugyanaz a
-mechanizmus, mint korábban a „Megnézés"-é) és „Másolás új tervbe". Ezek az
-akciók a `domain/planVersionActions.ts` + `components/
-PlanVersionActionDialog.tsx` megosztott réteget hívják — ugyanazt, amit a
-§ 5 terv-lánc fája is használ, hogy a piszkozat-felülírás-őr szövege/
-feltétele ne térjen el a két felület között.
+mechanizmus, mint korábban a „Megnézés"-é), „Letöltés" (a MEGLÉVŐ
+`buildDownloadFileName()` fájlnév-konvenciója, `isDraft: false`, mert a lap
+csak `VEGLEGES` verziót renderel — betöltés alatt/hiányzó PDF-nél letiltva,
+hogy az akciósáv szélessége ne ugráljon) és „Másolás új tervbe". A
+„Megnyitás külön"/„Másolás új tervbe" a `domain/planVersionActions.ts` +
+`components/PlanVersionActionDialog.tsx` megosztott réteget hívja —
+ugyanazt, amit a § 5 terv-lánc fája is használ, hogy a piszkozat-
+felülírás-őr szövege/feltétele ne térjen el a két felület között.
+
+**Mentett PDF**: a strukturált tartalom UTÁN, ~80vh natív böngésző-
+viewerben (`<iframe>`, a draft-előnézet `PreviewPage.tsx` iframe-stílusát
+követve) beágyazva jelenik meg a ténylegesen véglegesítéskor mentett
+bájtsorozat — sosem generálódik újra (nem `usePDF()`, mert ez már lezárt,
+mentett dokumentum). A bájtok → Blob → object URL átalakítást és annak
+életciklusát a megosztott `usePlanPdfObjectUrl` hook kezeli: az object URL
+verzióváltáskor és a lap elhagyásakor felszabadul, hogy egy beágyazott
+`<iframe>` (szemben a korábbi, böngészőre bízott „új lapon" úttal) ne
+hagyjon fel nem szabadított Blob URL-t a memóriában. Hiányzó vagy
+olvashatatlan mentett PDF esetén a viewer helyén egy üzenet jelenik meg,
+regenerálási kísérlet NÉLKÜL — a lap többi, JSON-ból származó tartalma
+(fejléc, pénzügyi összesítés, fázisok, metaadat, páciens-pillanatkép) a
+hiba ELLENÉRE is olvasható marad.
 
 **Verziónavigáció**: a lánc verziói dátum/verziószám szerint csökkenő
 sorrendben; a prev/next gombok a szomszédos verzió route-jára navigálnak,

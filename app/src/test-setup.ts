@@ -65,6 +65,18 @@ Object.defineProperty(globalThis, 'ResizeObserver', {
   configurable: true,
 });
 
+// jsdom nem implementálja a `URL.createObjectURL`/`revokeObjectURL`-t -- a
+// Terv részletei lap beágyazott PDF-viewere (75. tétel) minden renderen
+// hívja a `usePlanPdfObjectUrl`-on át, tehát mindig telepített csonk kell.
+// Az egyes tesztek `vi.fn()`-nel felül tudják írni, ha a hívásokat magukat
+// kell vizsgálniuk.
+if (!URL.createObjectURL) {
+  URL.createObjectURL = () => 'blob:jsdom-stub';
+}
+if (!URL.revokeObjectURL) {
+  URL.revokeObjectURL = () => {};
+}
+
 // A Radix Select/Popper a mutató-elfogás (pointer capture) API-t hívja
 // pozicionáláskor -- jsdom ezt sem implementálja.
 if (!Element.prototype.hasPointerCapture) {

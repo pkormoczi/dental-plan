@@ -18,6 +18,7 @@ import Section from '../components/Section';
 import { ReadOnlyField } from '../components/Field';
 import PlanVersionActionDialog, { usePlanVersionActions } from '../components/PlanVersionActionDialog';
 import FazisokBlokk from './tervReszletei/FazisokBlokk';
+import MentettPdfPanel from './tervReszletei/MentettPdfPanel';
 import PenzugyiOsszesites from './tervReszletei/PenzugyiOsszesites';
 import { t } from '../design/tokens';
 import { formatLongDate, formatShortDate } from '../domain/date';
@@ -37,7 +38,9 @@ import type {
   PlanVersion,
 } from '../domain/types';
 import { useAppState } from '../state/AppState';
+import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
+import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
 
 const NYELV_LABEL: Record<Nyelv, string> = { hu: 'Magyar', de: 'Deutsch' };
 const PENZNEM_LABEL: Record<Penznem, string> = { HUF: 'HUF — forint', EUR: 'EUR — euró' };
@@ -83,6 +86,15 @@ export default function TervReszleteiPage() {
   const [allapot, setAllapot] = useState<Allapot>({ fajta: 'toltes' });
   const rootRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+
+  // A beágyazott viewer csak a TÉNYLEGESEN betöltött, véglegesített
+  // verzióhoz kér PDF-et -- egy még betöltés alatti/hibás/nem létező
+  // útvonalra ne induljon el egy fölösleges `loadPlanPdf` hívás. A hook
+  // saját dep-listája (patientDir/planDir/versionDir) adja a verzióváltás-
+  // reset + revoke-ot, a `key`-alapú remounttól függetlenül.
+  const pdfState = usePlanPdfObjectUrl(
+    allapot.fajta === 'kesz' ? { patientDir, planDir, versionDir } : null,
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -393,6 +405,24 @@ export default function TervReszleteiPage() {
           <Button size="1" variant="soft" color="gray" onClick={() => void megnyitasKulon()}>
             Megnyitás külön
           </Button>
+          {pdfState.url ? (
+            <Button asChild size="1" variant="soft" color="gray">
+              <a
+                href={pdfState.url}
+                download={buildDownloadFileName(plan.paciens.nev, {
+                  tervId: planFolder.tervId,
+                  isDraft: false,
+                  suffix: versionDir,
+                })}
+              >
+                Letöltés
+              </a>
+            </Button>
+          ) : (
+            <Button size="1" variant="soft" color="gray" disabled>
+              Letöltés
+            </Button>
+          )}
           <Button
             size="1"
             variant="soft"
@@ -466,6 +496,12 @@ export default function TervReszleteiPage() {
           elteresek={elteresek}
           masterHiba={masterHiba}
           patientDir={patientDir}
+        />
+        <MentettPdfPanel
+          url={pdfState.url}
+          toltes={pdfState.toltes}
+          hianyzik={pdfState.hianyzik}
+          hiba={pdfState.hiba}
         />
       </Box>
 

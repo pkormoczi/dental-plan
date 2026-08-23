@@ -503,6 +503,19 @@ segédfüggvénye, szintén ne írd újra:
   külön névterű megfelelője, hogy a két lap id-i sose ütközzenek; más
   felület (pl. egy fogtérkép-kattintás) erre tud scroll-navigálni
 
+A Terv részletei beágyazott mentett PDF-viewere (`docs/03-funkcionalis-
+spec.md` § 11. Terv részletei (véglegesített verzió) "Mentett PDF")
+segédfüggvénye, szintén ne írd újra:
+- `usePlanPdfObjectUrl(ref)` (`app/src/storage/usePlanPdfObjectUrl.ts`) —
+  a "mentett bájtok → Blob → object URL, cleanupban revoke" effekt
+  megosztott otthona; a dep-lista a ref HÁROM mezőjére megy, nem az
+  objektum-identitására, hogy a hívónak ne kelljen `useMemo`-znia egy
+  inline `{...}`-ot. `null` ref esetén azonnal üres állapotot ad,
+  storage-hívás nélkül; a hiányzó mentett PDF (`loadPlanPdf()` `null`
+  visszatérése) KÜLÖN, nem hiba állapot. Két hívója van: a Terv részletei
+  lap beágyazott viewere és a Filerendszer nézet `FileContentPanel.tsx`-e
+  — ne hozz létre harmadik, egyedi blob-URL-effektet PDF-bájtokhoz.
+
 A D31 (`docs/01-attekintes-es-dontesek.md`) segédfüggvénye:
 - `savosHatarForditott(ar)` (`app/src/domain/money.ts`) — igaz, ha egy
   SAVOS ár `min`-je nagyobb, mint a `max`-a; puha figyelmeztetés az Árlista

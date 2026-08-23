@@ -15,15 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 75. tétel — Mentett PDF viewer / külön megnyitás
-  (a `backlog/redesign/` redesign-döntéssorozat DP-064 tétele) — a
-  mentett final PDF a 71. tétel oldalán beágyazva jelenik meg (a mai
-  "Megnézés"-ről ide áthuzalozott PDF-megnyitási logikával), object
-  URL életciklus-kezeléssel; a "Megnyitás külön" és "Letöltés" a
-  meglévő logika áthelyezésével/újrahasznosításával épül. A
-  döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-75-mentett-pdf-viewer-terv.md`
-
 ### 76. tétel — PDF oldalváz: fejléc/lábléc/oldalszám
   (a `backlog/redesign/` redesign-döntéssorozat DP-070 tétele) — a mai
   `TervDocument.tsx` négy fix `<Page>`-je három folyó blokkra vált

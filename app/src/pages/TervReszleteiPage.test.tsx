@@ -17,6 +17,7 @@ import { formatLongDate, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
 import type { Plan, PatientMasterData } from '../domain/types';
 import type { WorkflowRoute } from '../storage/DraftStorage';
+import { buildDownloadFileName } from '../storage/paths';
 
 function reszleteiUrl(patientDir: string, planDir: string, versionDir: string): string {
   return `/paciensek/${encodeURIComponent(patientDir)}/tervek/${encodeURIComponent(planDir)}/${encodeURIComponent(versionDir)}`;
@@ -456,7 +457,14 @@ describe('TervReszleteiPage', () => {
 
     const user = userEvent.setup();
     renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
-    await user.click(await screen.findByText('Megnyitás külön'));
+    // A beágyazott viewer (75. tétel) a lap betöltésekor MAGA is hív egy
+    // `createObjectURL`-t -- ezt be kell várni és törölni a callOrder-ből,
+    // különben versenyhelyzet dönti el, hogy a viewer saját hívása a
+    // kattintás előtt vagy után fut le.
+    await screen.findByTitle('A verzió mentett PDF-je');
+    callOrder.length = 0;
+
+    await user.click(screen.getByText('Megnyitás külön'));
 
     expect(openMock).toHaveBeenCalledWith('', '_blank');
     await waitFor(() => expect(mockWin.location.href).toBe('blob:teszt'));
@@ -468,11 +476,80 @@ describe('TervReszleteiPage', () => {
     window.open = vi.fn(() => mockWin as unknown as Window) as unknown as typeof window.open;
 
     const user = userEvent.setup();
-    // A seed-verziókhoz nincs mentett PDF.
+    // A seed-verziókhoz nincs mentett PDF -- a beágyazott viewer (75. tétel)
+    // ezt MÁR a lap betöltésekor jelzi, ugyanazzal a szöveggel, mint a
+    // "Megnyitás külön" saját hibaüzenete; kattintás után ezért két azonos
+    // szövegű előfordulás várható, nem egy.
     renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
-    await user.click(await screen.findByText('Megnyitás külön'));
+    await screen.findByText('Ehhez a verzióhoz nincs mentett PDF.');
+
+    await user.click(screen.getByText('Megnyitás külön'));
 
     await waitFor(() => expect(mockWin.close).toHaveBeenCalled());
-    expect(await screen.findByText('Ehhez a verzióhoz nincs mentett PDF.')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getAllByText('Ehhez a verzióhoz nincs mentett PDF.')).toHaveLength(2),
+    );
+  });
+
+  it('75. tétel: mentett PDF-fel rendelkező verzión a beágyazott viewer az object URL-re mutat', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const ref = await seeder.savePlan(makePlan(), new Uint8Array([1, 2, 3]));
+
+    renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
+    const iframe = await screen.findByTitle('A verzió mentett PDF-je');
+    expect(iframe).toHaveAttribute('src', expect.stringMatching(/^blob:/));
+  });
+
+  it('75. tétel: PDF nélküli verzión a viewer helyén üzenet, DE a fejléc/fázisok/összesítés továbbra is látszik', async () => {
+    renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
+    await screen.findByTestId('terv-reszletei-fejlec');
+
+    expect(screen.getByText('Ehhez a verzióhoz nincs mentett PDF.')).toBeInTheDocument();
+    expect(screen.queryByTitle('A verzió mentett PDF-je')).not.toBeInTheDocument();
+    expect(screen.getByText('Pénzügyi összesítés')).toBeInTheDocument();
+    expect(screen.getByText('1. kezelés — fogkő és tömés')).toBeInTheDocument();
+  });
+
+  it('75. tétel: a "Letöltés" link a meglévő fájlnév-konvenció szerinti download attribútumot kapja', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const ref = await seeder.savePlan(makePlan(), new Uint8Array([1, 2, 3]));
+    const [planFolder] = await seeder.listPlans(ref.patientDir);
+
+    renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
+    await screen.findByTitle('A verzió mentett PDF-je');
+
+    const link = await screen.findByRole('link', { name: 'Letöltés' });
+    expect(link).toHaveAttribute(
+      'download',
+      buildDownloadFileName('Egyedi Elek', { tervId: planFolder.tervId, isDraft: false, suffix: ref.versionDir }),
+    );
+  });
+
+  it('75. tétel: verzióváltáskor a korábbi verzió object URL-je felszabadul', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const refV1 = await seeder.savePlan(makePlan(), new Uint8Array([1]));
+    const v1 = await seeder.loadPlan(refV1);
+    const refV2 = await seeder.savePlan({ ...v1, keltezes: '2026-08-19' }, new Uint8Array([2]));
+
+    let counter = 0;
+    URL.createObjectURL = vi.fn(() => `blob:teszt-${++counter}`) as unknown as typeof URL.createObjectURL;
+    const revokeSpy = vi.fn();
+    URL.revokeObjectURL = revokeSpy;
+
+    const user = userEvent.setup();
+    renderReszletek(reszleteiUrl(refV2.patientDir, refV2.planDir, refV2.versionDir));
+    await waitFor(() =>
+      expect(screen.getByTitle('A verzió mentett PDF-je')).toHaveAttribute('src', 'blob:teszt-1'),
+    );
+
+    await user.click(screen.getByText(`v${v1.verzio} · ${formatShortDate(v1.keltezes, 'hu')}`));
+
+    await waitFor(() =>
+      expect(screen.getByTitle('A verzió mentett PDF-je')).toHaveAttribute('src', 'blob:teszt-2'),
+    );
+    expect(revokeSpy).toHaveBeenCalledWith('blob:teszt-1');
   });
 });

@@ -1,20 +1,15 @@
 // A Filerendszer fájában kiválasztott fájl tartalma (docs/03-funkcionalis-
 // spec.md § 8. Filerendszer). JSON/markdown esetén szinkron olvasás
-// (readRawFile), PDF esetén a ténylegesen elmentett bájtokból (loadPlanPdf)
-// blob-URL és "Megnyitás új lapon" link.
-//
-// A blob-URL-t NEM azonnal revoke-oljuk (szemben az OsszesTervSection
-// letöltés-gombjával, ahol a szinkron a.click() miatt biztonságos) --
-// egy target="_blank" fülnek ideje kell betöltenie a blobot, ezért a
-// revoke az effekt CLEANUP-jában történik, a következő kiválasztáskor
-// vagy unmountkor.
+// (readRawFile), PDF esetén a ténylegesen elmentett bájtokból
+// (`usePlanPdfObjectUrl`, a blob-URL életciklusát is ő kezeli) blob-URL és
+// "Megnyitás új lapon" link.
 
-import { useEffect, useState } from 'react';
 import { Box, Button, Callout, Skeleton, Text } from '@radix-ui/themes';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../../../design/tokens';
 import type { DemoFileNode } from '../../../storage/demoFileTree';
 import { useStorage } from '../../../storage/StorageContext';
+import { usePlanPdfObjectUrl } from '../../../storage/usePlanPdfObjectUrl';
 
 export interface FileContentPanelProps {
   node: DemoFileNode | null;
@@ -44,49 +39,8 @@ const CONTENT_TEXT_STYLE = {
 } as const;
 
 export default function FileContentPanel({ node }: FileContentPanelProps) {
-  const { readRawFile, loadPlanPdf } = useStorage();
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [pdfLoading, setPdfLoading] = useState(false);
-  const [pdfMissing, setPdfMissing] = useState(false);
-  const [pdfError, setPdfError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setPdfUrl(null);
-    setPdfMissing(false);
-    setPdfError(null);
-    if (!node || node.format !== 'pdf') {
-      setPdfLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    let objectUrl: string | null = null;
-    setPdfLoading(true);
-
-    (async () => {
-      try {
-        const bytes = await loadPlanPdf(node.ref);
-        if (cancelled) return;
-        if (!bytes) {
-          setPdfMissing(true);
-          return;
-        }
-        objectUrl = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/pdf' }));
-        setPdfUrl(objectUrl);
-      } catch (err) {
-        if (!cancelled) {
-          setPdfError(err instanceof Error ? err.message : 'A PDF betöltése váratlanul meghiúsult.');
-        }
-      } finally {
-        if (!cancelled) setPdfLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [node, loadPlanPdf]);
+  const { readRawFile } = useStorage();
+  const pdfState = usePlanPdfObjectUrl(node?.format === 'pdf' ? node.ref : null);
 
   if (!node) {
     return (
@@ -111,7 +65,7 @@ export default function FileContentPanel({ node }: FileContentPanelProps) {
       </Text>
 
       {node.format === 'pdf' ? (
-        <PdfBlock loading={pdfLoading} url={pdfUrl} missing={pdfMissing} error={pdfError} />
+        <PdfBlock loading={pdfState.toltes} url={pdfState.url} missing={pdfState.hianyzik} error={pdfState.hiba} />
       ) : (
         <TextBlock node={node} readRawFile={readRawFile} />
       )}

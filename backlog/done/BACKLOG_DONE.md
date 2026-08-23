@@ -2044,3 +2044,24 @@ karbantartási kör négy önálló javítása.
   `docs/03-funkcionalis-spec.md` § 11 "Terv részletei (véglegesített
   verzió)" → "Pénzügyi összesítés", `docs/02-domain-modell.md` § "Sor-
   szintű ár-eltérés osztályozása".
+
+---
+
+### 75. tétel: Mentett PDF viewer / külön megnyitás — KÉSZ
+
+- **Méret:** kicsi — 2 új fájl (`storage/usePlanPdfObjectUrl.ts`,
+  `pages/tervReszletei/MentettPdfPanel.tsx`), 3 módosított fájl
+  (`pages/TervReszleteiPage.tsx`, `pages/demo/fileTree/FileContentPanel.tsx`,
+  `test-setup.ts`), 1 tesztfájl bővítve.
+- **Megvalósítás:** a Terv részletei nézet a strukturált tartalom UTÁN
+  beágyazva jeleníti meg a ténylegesen véglegesítéskor mentett PDF-et
+  (~80vh natív `<iframe>`), a MEGLÉVŐ bájtokból (`loadPlanPdf()`), sosem
+  újragenerálva. A "bájtok → Blob → object URL, cleanupban revoke" effekt
+  egy új, megosztott `usePlanPdfObjectUrl` hookba került ki — a Filerendszer
+  nézet korábban egyedül élő PDF-betöltő logikája erre állt át, hogy ne
+  legyen két egyforma másolat. Az akciósáv egy "Letöltés" gombot kapott a
+  MEGLÉVŐ fájlnév-konvencióval; a "Megnyitás külön" változatlan maradt.
+  Hiányzó/olvashatatlan mentett PDF esetén a viewer helyén üzenet jelenik
+  meg, a lap többi, JSON-ból származó tartalma érintetlen. Részletek:
+  `docs/03-funkcionalis-spec.md` § 11 "Terv részletei (véglegesített
+  verzió)" → "Mentett PDF".
