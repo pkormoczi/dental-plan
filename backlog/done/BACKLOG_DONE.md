@@ -2115,3 +2115,22 @@ karbantartási kör négy önálló javítása.
   oszlopában marad üresen. Részletek: `docs/04-nyomtatvany-spec.md`
   § "1. blokk — kezelési terv és ár", "Terv címe", "Pácienstömb",
   "Fogtérkép", "Összegzés".
+
+### 78. tétel: PDF fázisok és kezeléstáblák — KÉSZ
+
+- **Méret:** kicsi — 1 érdemben átalakított fájl (`pdf/TervDocument.tsx`,
+  ezen belül a `PhaseTable`), egy szöveg-módosítás (`pdf/labels.ts`), a
+  kísérő teszt bővítve, a nyomtatvány-spec frissítve.
+- **Megvalósítás:** a tételtáblázat üres `Fog` cellája mostantól `—`-t
+  kap üres cella helyett; a becsült-ár csillag a tételnév utánról az
+  Egységár melletti, fix szélességű sávba költözik, hogy a csillagos és
+  nem csillagos sorok összege ugyanarra a függőleges vonalra igazodjon.
+  A sávos lábjegyzet szövege rövidebb, de a származtatott összegekre
+  (Fizetendő, Előleg, Fennmaradó rész) vonatkozó jogi védelmet
+  tartalmilag megtartja. Új oldaltörési szabályok: a fáziscím +
+  táblázatfejléc + legalább az első tételsor együtt marad (a cím nem
+  maradhat árván az oldal alján), a `Fázis összesen` + a fázis
+  megjegyzése szintén nem szakadhat szét. A tételsor+leírás
+  keep-together csoport szűkült a puszta alapsorra (név/fog/db/ár) — a
+  hozzá tartozó leírás, ha extrém hosszú, önállóan törhet oldalra.
+  Részletek: `docs/04-nyomtatvany-spec.md` § "Tételtáblázat".

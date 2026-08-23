@@ -15,19 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 78. tétel — PDF fázisok és kezeléstáblák
-  (a `backlog/redesign/` redesign-döntéssorozat DP-072 tétele) — üres
-  `Fog` mező `—`-t kap; a becsült-ár csillag a tételnév utánról az
-  Egységár mellé költözik (D376, explicit átállás a mai
-  `docs/04-nyomtatvany-spec.md` elhelyezéséről); a sávos lábjegyzet
-  szövege D378 magjára rövidül, a mai, a származtatott összegekre (D15
-  jogi védelme) kiterjesztett tartalommal megtartva. Új keep-together
-  szabályok: `Fázis összesen`+`Megjegyzés` egyben marad (D414), a
-  fáziscím+táblázatfejléc+első sor árva-védett (D361/D356); a tételsor
-  alapja egyben marad, de a hozzá tartozó leírás — ha nagyon hosszú —
-  törhet (D362 enyhítve). A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-78-pdf-fazisok-kezelestablak-terv.md`
-
 ### 79. tétel — PDF pénzügyi összesítés
   (a `backlog/redesign/` redesign-döntéssorozat DP-073 tétele) — az
   Összesítés blokk `Összesítés` címet kap (C6), a PDF-feliratok

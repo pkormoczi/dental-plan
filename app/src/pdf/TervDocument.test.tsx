@@ -109,25 +109,56 @@ function renderDoc(savos: boolean, nyelv: Nyelv = 'hu', arak: Arak = AZONOS_AR) 
 }
 
 describe('TervDocument -- backlog-4: kézzel bekapcsolt "becsült ár" csillag a nyomtatványon', () => {
-  it('bekapcsolt csillag: "*" a sor neve után és lábjegyzet a táblázat alatt', () => {
+  it('bekapcsolt csillag: "*" az Egységár mellett (nem a névnél), lábjegyzet a táblázat alatt', () => {
     renderDoc(true);
-    expect(screen.getByText('Csontpótló anyag *')).toBeInTheDocument();
+    expect(screen.getByText('Csontpótló anyag')).toBeInTheDocument();
+    expect(screen.queryByText('Csontpótló anyag *')).not.toBeInTheDocument();
+    // A csillag az egységár-cella testvéreként áll, ugyanabban a cellában.
+    const csillag = screen.getByText('*');
+    expect(within(csillag.parentElement!).getByText('45 000 Ft')).toBeInTheDocument();
     expect(
-      screen.getByText(/A csillaggal jelölt tételek ára .* a kezelés során derül ki véglegesen/),
+      screen.getByText(/A csillaggal jelölt tételek ára és a belőlük számított összegek becsültek/),
     ).toBeInTheDocument();
   });
 
-  it('kikapcsolt csillag: nincs "*" a névnél, nincs lábjegyzet', () => {
+  it('kikapcsolt csillag: nincs "*" sehol, nincs lábjegyzet', () => {
     renderDoc(false);
     expect(screen.getByText('Csontpótló anyag')).toBeInTheDocument();
-    expect(screen.queryByText('Csontpótló anyag *')).not.toBeInTheDocument();
+    expect(screen.queryByText('*')).not.toBeInTheDocument();
     expect(screen.queryByText(/A csillaggal jelölt tételek ára/)).not.toBeInTheDocument();
   });
 
   it('német nyelvű tervnél a lábjegyzet is németül jelenik meg', () => {
     renderDoc(true, 'de');
-    expect(screen.getByText('Csontpótló anyag *')).toBeInTheDocument();
-    expect(screen.getByText(/mit einem Sternchen markierten Leistungen/)).toBeInTheDocument();
+    expect(screen.getByText('Csontpótló anyag')).toBeInTheDocument();
+    expect(screen.getByText(/Der Preis der mit einem Sternchen markierten Leistungen/)).toBeInTheDocument();
+  });
+});
+
+describe('TervDocument -- 78. tétel: üres Fog cella', () => {
+  it('üres fogak mező esetén a Fog cella "—"-t mutat', () => {
+    renderDoc(false);
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('kitöltött fogak mező esetén a Fog cella a fogszámokat mutatja', () => {
+    const plan = buildPlan(false, 'hu', AZONOS_AR);
+    plan.fazisok[0].sorok[0].fogak = '16,17';
+    render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly
+        nyilatkozatMd=""
+        fizetesiFeltetelekMd=""
+        garanciaMd=""
+        tervCim=""
+        toothChartPng={null}
+      />,
+    );
+    expect(screen.getByText('16, 17')).toBeInTheDocument();
+    expect(screen.queryByText('—')).not.toBeInTheDocument();
   });
 });
 
@@ -232,7 +263,9 @@ describe('TervDocument -- backlog-9/D66: előleg-sor', () => {
     expect(screen.getByText('Előleg *')).toBeInTheDocument();
     expect(screen.getByText('Fennmaradó rész *')).toBeInTheDocument();
     // Egy lábjegyzet fedi le a tételeket és a belőlük számolt összegeket is.
-    expect(screen.getByText(/fizetendő, előleg, fennmaradó rész/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/A csillaggal jelölt tételek ára és a belőlük számított összegek becsültek/),
+    ).toBeInTheDocument();
   });
 
   it('savos tétel NÉLKÜL nincs csillag az új sorokon', () => {

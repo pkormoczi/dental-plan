@@ -171,11 +171,20 @@ Hosszú érték a saját oszlopában wrapol, nem lóg át a másik oszlopra.
 | Egységár | jobbra | 82 pt |
 | Összeg | jobbra | 90 pt |
 
-Sávos árú tétel neve után `*`, és a táblázat alatt egyszer:
+Üres `Fog` mező a cellában `—`-t kap, nem üres cellát — ez szándékos
+kivétel a pácienstömb „üres mező teljesen kimarad" szabálya alól (lásd
+fent): egy táblázatcella nem hagyható el, üresen viszont törött sornak
+látszana.
 
-> \* A csillaggal jelölt tételek ára — és a belőlük számított összegek
-> (fizetendő, előleg, fennmaradó rész) — a kezelés során derül ki
-> véglegesen, a megadott ár becslés.
+Sávos árú tétel **egységára mellett** `*` áll (nem a tétel neve után — a
+csillag célja a becsült ÁRRA mutatás, nem a kezelés tényére, az Egységár
+melletti elhelyezés pontosabban közli, melyik adat becsült), egy fix
+szélességű sávban, hogy a csillagos és nem csillagos sorok összege
+ugyanarra a függőleges vonalra igazodjon. A táblázat alatt, a fázisok
+után, egyszer:
+
+> \* A csillaggal jelölt tételek ára és a belőlük számított összegek
+> becsültek; a tényleges ár a kezelés körülményeitől függően változhat.
 
 Ez jogi védelem: sávos árat fix számként nyomtatni annyi, mint kötelező
 érvényű ajánlatot adni olyasmire, aminek a mennyisége még nem ismert.
@@ -184,10 +193,18 @@ Ez jogi védelem: sávos árat fix számként nyomtatni annyi, mint kötelező
 `Plan.leirasokMutatasa` igaz és a sornak van `leirasSnapshot`-ja, a leírás
 a tételsor alatt jelenik meg, soronként tördelve (a beírt `\n` sortörések
 megtartva) — behúzva, szürke színnel, kisebb betűmérettel, hogy
-alrészletnek olvasódjon, ne új tételsornak. A tételsor és a leírása egy
-`wrap={false}` csoportban renderelődik: a kettő soha nem szakadhat szét
-oldaltörésnél, az egész blokk együtt ugrik a következő oldalra, ha nem fér
-ki.
+alrészletnek olvasódjon, ne új tételsornak. A `wrap={false}` csoport a
+tételsorra (név/fog/db/ár) szűkül: a hozzá tartozó leírás önálló, törhető
+elem alatta — egy extrém hosszú leírás így oldalra törhet, ahelyett hogy
+kilógna az oldalról vagy egy teljesen üres oldalt hagyna maga előtt. Az
+alapsor maga (név/fog/db/ár) viszont mindig egyben marad.
+
+**Fázis oldaltörési szabályai.** A fáziscím + táblázatfejléc +
+legalább az első tételsor együtt marad: a cím nem maradhat árván az
+oldal alján, tartalom nélkül fölötte — ha nem fér ki legalább egy
+tételsor a cím és a fejléc alá, az egész blokk átkerül a következő
+oldalra. A fázis-zárás (`Fázis összesen` + a fázis megjegyzése) szintén
+nem szakadhat szét oldaltörésnél, a kettő mindig együtt ugrik.
 
 ### Fogtérkép
 

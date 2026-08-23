@@ -12,6 +12,7 @@
 // (`domain/money.ts`, 52. tétel) -- a kezelőfelület prózája (NavBar,
 // szerkesztő szövegei) ettől függetlenül végig magyar marad.
 
+import { Fragment } from 'react';
 import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
 import { t } from '../design/tokens';
 import { formatLongDate, formatShortDate } from '../domain/date';
@@ -30,6 +31,12 @@ import logoUrl from '../assets/logo.png';
 registerPdfFonts();
 
 const PAGE_MARGIN = 51; // ~18mm
+
+// A becsült-ár csillag fix sávja az Egységár cellában, hogy a csillagos és
+// nem csillagos sorok összege ugyanarra a függőleges vonalra igazodjon --
+// egy egyszerű utótoldás a csillagos soroknál balra tolná a számot a
+// többihez képest.
+const SAVOS_JEL_SZELESSEG = 8;
 
 const s = {
   page: {
@@ -114,8 +121,14 @@ const s = {
   colBeavatkozas: { flexGrow: 1, flexBasis: 0 },
   colFog: { width: 78 },
   colDb: { width: 30, textAlign: 'center' as const },
-  colEgysegar: { width: 72, textAlign: 'right' as const },
+  // paddingRight: a fejlécfelirat a testsor csillag-sávjához (savosJel)
+  // igazodik, hogy a "Egységár" felirat a szám fölött álljon, ne a
+  // csillag-sáv fölött.
+  colEgysegar: { width: 72, textAlign: 'right' as const, paddingRight: SAVOS_JEL_SZELESSEG },
   colOsszeg: { width: 80, textAlign: 'right' as const },
+  colEgysegarCella: { width: 72, flexDirection: 'row' as const },
+  egysegarErtek: { flexGrow: 1, flexBasis: 0, textAlign: 'right' as const },
+  savosJel: { width: SAVOS_JEL_SZELESSEG, textAlign: 'right' as const },
   phaseTotalRow: {
     flexDirection: 'row' as const,
     justifyContent: 'flex-end' as const,
@@ -266,30 +279,38 @@ function PhaseTable({
 }) {
   return (
     <View style={s.phaseBlock}>
-      <Text style={s.phaseTitle}>{fazis.megnevezes}</Text>
-      <View style={s.tableHeaderRow}>
-        <Text style={[s.th, s.colBeavatkozas]}>{L.thBeavatkozas}</Text>
-        <Text style={[s.th, s.colFog]}>{L.thFog}</Text>
-        <Text style={[s.th, s.colDb]}>{L.thDb}</Text>
-        <Text style={[s.th, s.colEgysegar]}>{L.thEgysegar}</Text>
-        <Text style={[s.th, s.colOsszeg]}>{L.thOsszeg}</Text>
+      {/* wrap={false} + minPresenceAhead: a cím + fejléc nem maradhat árván
+          az oldal alján tartalom nélkül -- legalább egy tételsor magassága
+          kell elférjen alatta, különben az egész blokk átkerül a következő
+          oldalra. */}
+      <View wrap={false} minPresenceAhead={20}>
+        <Text style={s.phaseTitle}>{fazis.megnevezes}</Text>
+        <View style={s.tableHeaderRow}>
+          <Text style={[s.th, s.colBeavatkozas]}>{L.thBeavatkozas}</Text>
+          <Text style={[s.th, s.colFog]}>{L.thFog}</Text>
+          <Text style={[s.th, s.colDb]}>{L.thDb}</Text>
+          <Text style={[s.th, s.colEgysegar]}>{L.thEgysegar}</Text>
+          <Text style={[s.th, s.colOsszeg]}>{L.thOsszeg}</Text>
+        </View>
       </View>
       {fazis.sorok.map((sor, i) => {
         const leiras = leirasokMutatasa ? (sor.leirasSnapshot ?? '').trim() : '';
         return (
-          // wrap={false}: a tételsor és a leírása soha nem szakadhat szét
-          // oldaltörésnél -- a leírás alrészlet, árva állapotban félreérthető.
-          <View key={i} wrap={false}>
-            <View style={s.tableRow}>
-              <Text style={[s.td, s.colBeavatkozas]}>
-                {sor.nevSnapshot}
-                {sor.savos ? ' *' : ''}
+          <Fragment key={i}>
+            {/* wrap={false} csak az alapsoron: név/fog/db/ár mindig egyben
+                marad, a HOZZÁ tartozó leírás (alább) önálló, törhető elem --
+                egy extrém hosszú leírás így oldalra törhet ahelyett, hogy
+                kilógna az oldalról vagy egy üres oldalt hagyna maga előtt. */}
+            <View style={s.tableRow} wrap={false}>
+              <Text style={[s.td, s.colBeavatkozas]}>{sor.nevSnapshot}</Text>
+              <Text style={[s.td, s.colFog]}>
+                {sor.fogak.trim() ? formatTeethForPrint(sor.fogak) : '—'}
               </Text>
-              <Text style={[s.td, s.colFog]}>{formatTeethForPrint(sor.fogak)}</Text>
               <Text style={[s.td, s.colDb]}>{sor.mennyiseg}</Text>
-              <Text style={[s.td, s.colEgysegar]}>
-                {formatMoney(sor.tenylegesEgysegar, currency, nyelv)}
-              </Text>
+              <View style={[s.td, s.colEgysegarCella]}>
+                <Text style={s.egysegarErtek}>{formatMoney(sor.tenylegesEgysegar, currency, nyelv)}</Text>
+                <Text style={s.savosJel}>{sor.savos ? '*' : ''}</Text>
+              </View>
               <Text style={[s.td, s.colOsszeg]}>
                 {formatMoney(sor.tenylegesEgysegar * sor.mennyiseg, currency, nyelv)}
               </Text>
@@ -303,19 +324,23 @@ function PhaseTable({
                 ))}
               </View>
             )}
-          </View>
+          </Fragment>
         );
       })}
-      <View style={s.phaseTotalRow}>
-        <Text style={s.phaseTotalLabel}>{L.fazisOsszesen}</Text>
-        <Text style={s.phaseTotalValue}>{formatMoney(fazisOsszeg(fazis), currency, nyelv)}</Text>
+      {/* wrap={false}: a fázis-zárás (összeg + megjegyzés) nem szakadhat
+          szét oldaltörésnél. */}
+      <View wrap={false}>
+        <View style={s.phaseTotalRow}>
+          <Text style={s.phaseTotalLabel}>{L.fazisOsszesen}</Text>
+          <Text style={s.phaseTotalValue}>{formatMoney(fazisOsszeg(fazis), currency, nyelv)}</Text>
+        </View>
+        {fazis.megjegyzes ? (
+          <Text style={s.phaseNote}>
+            {L.megjegyzesPrefix}
+            {fazis.megjegyzes}
+          </Text>
+        ) : null}
       </View>
-      {fazis.megjegyzes ? (
-        <Text style={s.phaseNote}>
-          {L.megjegyzesPrefix}
-          {fazis.megjegyzes}
-        </Text>
-      ) : null}
     </View>
   );
 }

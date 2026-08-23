@@ -98,7 +98,7 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     elolegKifejezes: (osszeg) => (osszeg == null ? 'a megállapított előleg' : `${osszeg} előleg`),
     anyagkoltseg: 'Az árak tartalmazzák az anyagköltséget.',
     savosFootnote:
-      '* A csillaggal jelölt tételek ára — és a belőlük számított összegek (fizetendő, előleg, fennmaradó rész) — a kezelés során derül ki véglegesen, a megadott ár becslés.',
+      '* A csillaggal jelölt tételek ára és a belőlük számított összegek becsültek; a tényleges ár a kezelés körülményeitől függően változhat.',
     fizetesiFeltetelekCim: 'Fizetési feltételek',
     nyilatkozatCim: 'Nyilatkozat',
     nyilatkozatCimFolytatas: 'Nyilatkozat – folytatás',
@@ -142,7 +142,7 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
       osszeg == null ? 'die vereinbarte Anzahlung' : `eine Anzahlung von ${osszeg}`,
     anyagkoltseg: 'Die Preise beinhalten die Materialkosten.',
     savosFootnote:
-      '* Der Preis der mit einem Sternchen markierten Leistungen — und die daraus berechneten Beträge (zu zahlen, Anzahlung, Restbetrag) — wird während der Behandlung endgültig festgelegt; der angegebene Preis ist eine Schätzung.',
+      '* Der Preis der mit einem Sternchen markierten Leistungen und die daraus berechneten Beträge sind Schätzungen; der tatsächliche Preis kann je nach den Umständen der Behandlung abweichen.',
     fizetesiFeltetelekCim: 'Zahlungsbedingungen',
     nyilatkozatCim: 'Erklärung',
     nyilatkozatCimFolytatas: 'Erklärung – Fortsetzung',
