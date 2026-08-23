@@ -8,6 +8,7 @@ import type { CSSProperties } from 'react';
 import { Badge, Box, Button, Flex, Table, Text } from '@radix-ui/themes';
 import { t } from '../../design/tokens';
 import { formatMoney } from '../../domain/money';
+import { sorElteres } from '../../domain/sorElteres';
 import { sorOsszeg } from '../../domain/totals';
 import type { Nyelv, Penznem, Sor } from '../../domain/types';
 
@@ -47,6 +48,10 @@ export default function SorReszlet({
 }) {
   const leirasTartalom = (sor.leirasSnapshot ?? '').trim();
   const arElter = sor.listaEgysegar !== sor.tenylegesEgysegar;
+  // Nincs második paraméter: egy mentett terven a mai árlista nem dönthet
+  // arról, mi látszik a soron -- a soron lévő listaár a pillanatkép, az az
+  // igazság (lásd `domain/sorElteres.ts`).
+  const elteres = sorElteres(sor);
   const leirasId = `sor-leiras-${fazisIndex}-${sorIndex}`;
 
   const leirasNyitottBorderNelkul = leirasNyitva && leirasTartalom.length > 0;
@@ -75,6 +80,11 @@ export default function SorReszlet({
             {sor.savos && (
               <Badge color="amber" variant="soft" size="1">
                 Becsült ár
+              </Badge>
+            )}
+            {elteres && (
+              <Badge color="gray" variant="soft" size="1">
+                {elteres.cimke}
               </Badge>
             )}
             {leirasTartalom && (

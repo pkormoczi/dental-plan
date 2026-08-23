@@ -37,13 +37,17 @@ vizuálisan különül el egy felső vonallal.
 
 ### 2. Feliratcsere a PDF-en: `Fizetendő` → `Végösszeg`, `Kezelések összesen` → `Kezelések összege` (D350/D351/C6)
 
-Csak a `pdf/labels.ts` `fizetendo`/`kezelesekOsszesen` kulcsok értéke
-(HU+DE) változik. **A KÉPERNYŐN** (final Terv részletei nézet)
-ugyanezt az átnevezést már a 74. tétel (`backlog-74-final-
-penzugyi-osszesites-terv.md`) hatásköre viszi — ez a tétel kizárólag a
-**PDF-oldali** feliratot cseréli, hogy a képernyő és a nyomtatvány ne
-csússzon szét (ugyanaz a felirat-pár, két külön fájlban: `pdf/labels.ts`
-vs. a képernyő-komponens).
+**FIGYELEM, ELLENŐRIZENDŐ IMPLEMENTÁCIÓ ELŐTT:** ez a döntés azon a
+feltevésen alapult, hogy a KÉPERNYŐN (final Terv részletei nézet) ez az
+átnevezés már megtörtént a 74. tétel során. A 74. tétel ténylegesen
+lezárva `docs/03-funkcionalis-spec.md` § 11 "Terv részletei
+(véglegesített verzió)" → "Pénzügyi összesítés" alatt — de a doki
+kifejezett döntése alapján a képernyő a nyomtatvány MEGLÉVŐ feliratait
+vette át változtatás nélkül (`Fizetendő`/`Kezelések összesen`), nem
+`Végösszeg`/`Kezelések összege`-re nevezte át. Az itt leírt PDF-oldali
+csere emiatt ELLENTÉTES hatást érne el a szándékolttal (a képernyő és a
+nyomtatvány szétcsúszna, nem összezárna) — ezt a döntést az
+implementáció megkezdése előtt újra kell gondolni.
 
 ### 3. Számítási forrás marad `tervVegosszeg()`
 

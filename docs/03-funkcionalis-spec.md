@@ -1796,6 +1796,26 @@ UI-állapot (nyitott blokkok, kijelölések) magától alapállapotba áll,
 anélkül hogy minden új interaktív elemet külön reset-listába kellene
 kötni. A lap emellett explicit a tetejére görget verzióváltáskor.
 
+**Pénzügyi összesítés**: minden kiírt szám a mentett `plan.osszesitok`-ból
+jön, sosem a sorokból újraszámolt értékből — egy lezárt dokumentumnak az
+aláírt papírral kell egyeznie. A feliratok a nyomtatvány szókincsét
+követik (Kezelések összesen / Fizetendő / Előleg / Fennmaradó rész), nem a
+szerkesztőét. A `Kezelések összesen` referenciasor csak akkor jelenik
+meg, ha a mentett összesítő szerint van eltérés a listaártól
+(`osszesitok.kedvezmeny !== 0`) — egymást nettóban kiegyenlítő sor-szintű
+kedvezmény és felár mellett is igaz, hogy ez más kérdésre válaszol, mint
+a domináns `Fizetendő` sor. Alatta, ha van legalább egy `savos` sor, egy
+halk, nem kattintható info-sor jelzi a becsült tételek számát. Az
+„Előleg"/„Fennmaradó rész" csak akkor jelenik meg (saját, csak ekkor
+kiírt „Fizetés" alcímmel), ha a tervnek van mentett `elolegOsszeg`-je, a
+STORED `Fizetendő`-ből számolva — a fennmaradó rész „—", ha az előleg
+meghaladja a fizetendőt. Az `osszesitokElter()` (eddig kizárólag
+piszkozat-betöltéskor futó) ellenőrzés itt is lefut: ha a mentett
+összesítő nem egyezik a mentett sorokból újraszámolt értékkel, egy
+info-szintű (nem blokkoló) figyelmeztetés jelzi — szándékosan semleges
+színnel, nem a szerkesztő amber jelzésével, mert egy lezárt dokumentumon
+a dokinak nincs mit tennie, csak tudnia kell róla.
+
 **Fázisok és kezelési sorok**: a fázis-szekciók alapból NYITVA vannak,
 összecsukhatók, a fázis-cím pedig NEM sticky, de minden fázisnak saját
 táblafejléce van, ami sticky marad görgetéskor (a globális lap-fejléc alatt
@@ -1812,8 +1832,12 @@ fázis összecsukása/kinyitása NEM veszíti el a már kibontott leírások
 állapotát (ez a nyitottság a szülő blokkban él, nem magában a soron belül,
 hogy a fázis-törzs feltételes renderje ne unmountolja el vele együtt). A
 `savos` sorokon egy statikus „Becsült ár" jelvény jelzi a bizonytalan
-árat — itt nincs átbillenthető kapcsoló, mert a nézet olvasásra való. A
-fázismegjegyzés nyitva mindig látszik, csukott fázis fejlécén egy halk
+árat — itt nincs átbillenthető kapcsoló, mert a nézet olvasásra való. Ha
+a sor ajánlati ára eltér a listaártól, egy semleges (szürke) jelvény
+jelzi a kedvezmény/felár mértékét — a szerkesztő zöld/amber jelvényétől
+szándékosan eltérő szín, mert itt ténymegállapítás, nem cselekvésre hívó
+jelzés (`domain/sorElteres.ts`, lásd `docs/02-domain-modell.md` § „Sor-
+szintű ár-eltérés osztályozása"). A fázismegjegyzés nyitva mindig látszik, csukott fázis fejlécén egy halk
 jelvény jelzi a meglétét. 4 vagy több fázisnál egy fázis-ugró legördülő
 (ordinal + a tényleges fázisnév) jelenik meg, ami görgetés közben
 scrollspy-vel követi az aktuálisan látható fázist, és kattintásra a

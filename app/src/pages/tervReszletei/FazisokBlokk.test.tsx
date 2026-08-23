@@ -265,6 +265,34 @@ describe('FazisokBlokk', () => {
   });
 });
 
+// 74. tétel: a `domain/sorElteres.ts` classifier semleges (gray) jelvénye a
+// lezárt terven -- NEM a szerkesztő zöld/amber jelvénye (PlanEditorPage.test.tsx
+// fedi azt).
+describe('FazisokBlokk -- sor-szintű ár-eltérés jelvény (74. tétel)', () => {
+  it('felárazott sor semleges "+N%" jelvényt kap', () => {
+    renderFazisok([
+      makeFazis({ sorok: [makeSor({ listaEgysegar: 10000, tenylegesEgysegar: 12000 })] }),
+    ]);
+    expect(screen.getByText('+20%')).toBeInTheDocument();
+  });
+
+  it('0 listaár mellett pozitív ajánlati ár "Felár" jelvényt kap, százalék nélkül', () => {
+    renderFazisok([makeFazis({ sorok: [makeSor({ listaEgysegar: 0, tenylegesEgysegar: 15000 })] })]);
+    expect(screen.getByText('Felár')).toBeInTheDocument();
+  });
+
+  it('0 ajánlati ár pozitív listaár mellett −100% jelvényt kap', () => {
+    renderFazisok([makeFazis({ sorok: [makeSor({ listaEgysegar: 10000, tenylegesEgysegar: 0 })] })]);
+    expect(screen.getByText('−100%')).toBeInTheDocument();
+  });
+
+  it('egyező árú soron nincs eltérés-jelvény', () => {
+    renderFazisok([makeFazis({ sorok: [makeSor({ listaEgysegar: 10000, tenylegesEgysegar: 10000 })] })]);
+    expect(screen.queryByText(/^[−+]\d/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Felár')).not.toBeInTheDocument();
+  });
+});
+
 // A doki explicit kikötése az implementáció indításakor: ez a panel
 // KIZÁRÓLAG a nagy, "Érintett fogak" gomb alatti fogtérkép -- a soronkénti,
 // célkeresztes ikonnal nyíló kis fogtérkép (ToothPickerPopover) ettől

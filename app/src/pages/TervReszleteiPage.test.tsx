@@ -14,6 +14,7 @@ import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage, PREFIX } from '../storage/DemoStorage';
 import { seedPatients, seedPlans } from '../storage/seed/plans';
 import { formatLongDate, formatShortDate } from '../domain/date';
+import { formatMoney } from '../domain/money';
 import type { Plan, PatientMasterData } from '../domain/types';
 import type { WorkflowRoute } from '../storage/DraftStorage';
 
@@ -172,6 +173,23 @@ describe('TervReszleteiPage', () => {
     expect(screen.getByText('1. kezelés — fogkő és tömés')).toBeInTheDocument();
     expect(screen.getByText('2. kezelés — korona')).toBeInTheDocument();
     expect(screen.getByText('Fognyaki tömés')).toBeInTheDocument();
+  });
+
+  it('74. tétel: a pénzügyi összesítés a MENTETT fizetendőt mutatja, a placeholder-szöveg eltűnt', async () => {
+    renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
+    await screen.findByTestId('terv-reszletei-fejlec');
+
+    expect(
+      screen.queryByText('A pénzügyi összesítés a következő lépésben kerül ide.'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Pénzügyi összesítés')).toBeInTheDocument();
+    expect(screen.getByText('Fizetendő')).toBeInTheDocument();
+    // Regex, nem a formatMoney() nyers stringje -- a hu-HU ICU ezres
+    // elválasztója nem feltétlenül ASCII szóköz, a jest-dom normalizer csak
+    // a DOM-oldalt normalizálja összehasonlításkor, a target stringet nem.
+    const fizetendoSzoveg = formatMoney(nagyV2.plan.osszesitok.fizetendo, nagyV2.plan.penznem, nagyV2.plan.nyelv);
+    const fizetendoMinta = fizetendoSzoveg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+    expect(screen.getByText(new RegExp(fizetendoMinta))).toBeInTheDocument();
   });
 
   it('"Csak ajánlat" jelvényt csak a ténylegesen csakAjanlat:true-val mentett verzión mutat', async () => {

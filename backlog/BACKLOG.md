@@ -15,18 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 74. tétel — Final pénzügyi összesítés
-  (a `backlog/redesign/` redesign-döntéssorozat DP-063 tétele) — a
-  forrásdokumentum D307–346 tartománya nagyrészt a 62–64. tételhez van
-  rendelve, de a SOR-szintű kedvezmény/felár-jelvény (D308–311,
-  D329–341) egyik meglévő tervben sem szerepel — ez a tétel új,
-  megosztott classifiert épít rá (mellékesen a szerkesztő mai,
-  csak-kedvezményre szűkített jelvényét is kiegészítve felárral), és a
-  plan-szintű végösszeget közvetlenül `plan.osszesitok`-ból olvassa
-  (D7), az eddig csak piszkozat-betöltéskor futó `osszesitokElter()`
-  újrahasznosításával. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-74-final-penzugyi-osszesites-terv.md`
-
 ### 75. tétel — Mentett PDF viewer / külön megnyitás
   (a `backlog/redesign/` redesign-döntéssorozat DP-064 tétele) — a
   mentett final PDF a 71. tétel oldalán beágyazva jelenik meg (a mai

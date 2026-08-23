@@ -18,6 +18,7 @@ import Section from '../components/Section';
 import { ReadOnlyField } from '../components/Field';
 import PlanVersionActionDialog, { usePlanVersionActions } from '../components/PlanVersionActionDialog';
 import FazisokBlokk from './tervReszletei/FazisokBlokk';
+import PenzugyiOsszesites from './tervReszletei/PenzugyiOsszesites';
 import { t } from '../design/tokens';
 import { formatLongDate, formatShortDate } from '../domain/date';
 import { MASTER_DIFF_MEZOK, masterSnapshotDiff, mezoErtekSzoveg } from '../domain/masterSnapshotDiff';
@@ -455,9 +456,7 @@ export default function TervReszleteiPage() {
           kijelölések, fogtérkép-navigáció) alapállapotba állítására, hogy a
           tartalom-blokknak ne kelljen külön reset-kódot írnia. */}
       <Box key={`${planDir}/${versionDir}`}>
-        {/* A pénzügyi összesítés itt, a fázisok fölött kap majd tartalmat --
-            a metaadat/páciens-pillanatkép LEGALUL marad. */}
-        <PlaceholderSlot szoveg="A pénzügyi összesítés a következő lépésben kerül ide." />
+        <PenzugyiOsszesites plan={plan} />
         <FazisokBlokk plan={plan} priceList={priceList} />
 
         <TervMetaadatok plan={plan} tervCim={tervCim} />
@@ -472,14 +471,6 @@ export default function TervReszleteiPage() {
 
       <PlanVersionActionDialog akciok={akciok} />
     </Box>
-  );
-}
-
-function PlaceholderSlot({ szoveg }: { szoveg: string }) {
-  return (
-    <Text as="p" size="1" color="gray" mb="4">
-      {szoveg}
-    </Text>
   );
 }
 

@@ -1055,6 +1055,18 @@ részletei (véglegesített verzió)) segédfüggvényei/komponensei, szintén n
   a hívó SAJÁT akcióit (pl. `downloadVersion`, „Megnyitás külön") is
   fogadja, a megjelenítés helyét (sorhoz kötött vagy lap-szintű) a hívó
   dönti el
+- `sorElteres(sor, nincsReferenciaAr?)` (`app/src/domain/sorElteres.ts`,
+  lásd `docs/02-domain-modell.md` § „Sor-szintű ár-eltérés osztályozása")
+  — a kezelési sor listaár/ajánlati ár eltérésének EGYETLEN osztályozója:
+  típus (kedvezmény/felár) + kész felirat. A szerkesztő `LineRow`-ja
+  (`pages/PlanEditorPage.tsx`) és a Terv részletei read-only sora
+  (`pages/tervReszletei/SorReszlet.tsx`) egyaránt ezt hívja — csak a
+  jelvény SZÍNE tér el a két hívó között, a típus/felirat-logika egy
+  helyen él. A `pages/tervReszletei/PenzugyiOsszesites.tsx` a plan-szintű
+  pénzügyi összesítést a MENTETT `plan.osszesitok`-ból olvassa, sosem a
+  `tervVegosszeg()` újraszámolásából — az `osszesitokElter()` itt fut le
+  először egy verzió puszta megtekintésekor is, nem csak
+  piszkozat-betöltéskor
 
 ## Domain szókincs
 

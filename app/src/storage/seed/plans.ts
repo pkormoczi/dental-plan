@@ -64,7 +64,9 @@ function buildPlan(base: Omit<Plan, 'schemaVersion' | 'osszesitok' | 'ervenyesIg
     ...base,
     schemaVersion: 1,
     ervenyesIg: addDaysIso(base.keltezes, ERVENYESSEG_NAP),
-    osszesitok: computeOsszesitok(base.fazisok),
+    // A `kedvezmenyOsszeg` átadása nélkül a mentett `osszesitok` nem
+    // tükrözné a terv-szintű kedvezményt.
+    osszesitok: computeOsszesitok(base.fazisok, base.kedvezmenyOsszeg),
   };
 }
 

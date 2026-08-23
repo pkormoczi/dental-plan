@@ -849,6 +849,34 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     expect(priceField.value).toBe('0,00');
   });
 
+  it('74. tétel: beárazatlan tételhez kézzel megadott ajánlati ár NEM kap "Felár" jelvényt -- ott nincs referenciaár', async () => {
+    const user = userEvent.setup();
+    seedWithNoEurPrices();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+    await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt EUR');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await screen.findByText('Pénznem');
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const priceField = screen.getByLabelText('Ajánlati egységár') as HTMLInputElement;
+    await user.clear(priceField);
+    await user.type(priceField, '35,50');
+    await user.tab();
+
+    expect(screen.queryByText('Felár')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^\+\d/)).not.toBeInTheDocument();
+  });
+
   it('backlog-5: az "Ajánlati ár" mező euróban jelenít meg és fogad be egy EUR pénznemű tervnél, a commit centben történik', async () => {
     const user = userEvent.setup();
     seedWithIntactPriceList();

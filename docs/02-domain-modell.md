@@ -391,6 +391,33 @@ A szerkesztő ezen a bázison mutat explicit refresh-vezérlőt a driftelt
 soron; az árlista mentése ettől függetlenül SOHA nem írja át automatikusan
 egy már megnyitott/mentett terv sorait.
 
+### Sor-szintű ár-eltérés osztályozása (`domain/sorElteres.ts`)
+
+A `listaEgysegar` és a `tenylegesEgysegar` eltérése a szerkesztőben és a
+Terv részletei nézeten egyaránt egy jelvényként látszik — ez a modul dönti
+el a típust (kedvezmény/felár) és a feliratot, mindkét hívó ugyanazt a
+logikát használja, csak a szín tér el (a szerkesztőben zöld/amber, egy
+lezárt terven semleges szürke).
+
+A `listaEgysegar === 0, tenylegesEgysegar > 0` eset (`Felár` felirat,
+százalék nélkül) nem hipotetikus: egy a terv pénznemében beárazatlan
+tétel `listaEgysegar: 0`-n indul, és egy kézzel beírt ajánlati ár csak a
+`tenylegesEgysegar`-t módosítja. Emiatt a hívó egy explicit
+`nincsReferenciaAr` jelzőt ad át, ha TUDJA, hogy a soron nincs
+értelmezhető árlistai referenciaár (egyedi sor, vagy a tétel nincs
+beárazva ebben a pénznemben) — enélkül a 0 listaár tévesen „ingyenes
+listaárnak” tűnne, és hamis `Felár` jelvényt kapna egy olyan sor, aminek
+egyáltalán nincs mihez viszonyulnia. A read-only nézeten ez a jelző
+SOSINCS átadva: egy mentett terven a mai árlista nem dönthet arról, mi
+látszik a soron — a soron lévő listaár a pillanatkép, az az igazság.
+
+A százalék-felirat alapból egész szám, de nem kerekíthet hazug értéket:
+egy nemnulla eltérés nem jelenhet meg `0%`-ként, egy nem teljesen
+elengedett sor (0 ajánlati ár) pedig nem jelenhet meg `−100%`-ként (az
+„ingyenes” jelentése). Ha az egész kerekítés hazug lenne, a felirat 1
+tizedesre vált; ha még az is hazug lenne, a szám elmarad, és a jelvény a
+`Kedvezmény`/`Felár` szó-alakra esik vissza.
+
 ### Tétel-leírás (`leiras`, `csomag`, `leirasSnapshot`, `leirasokMutatasa`)
 
 Egy összetett tétel (pl. „All-on-4 Anax csomag") egyetlen sorként megy be a

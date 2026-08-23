@@ -49,6 +49,7 @@ import { basePrice, formatMoney } from '../domain/money';
 import { arlistaiLeiras, leirasKoveti, nevAtirt, resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
 import { nyelviMismatch, reviewElfogadva, reviewIrasUtan, sorPatchNyelvvel } from '../domain/nyelviReview';
 import { nincsListaar } from '../domain/penznemValtas';
+import { sorElteres } from '../domain/sorElteres';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
 import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
 import { elolegOsszegek, elolegTullepi, fazisOsszeg, sorokListaOsszeg, sorokOsszeg, tervVegosszeg } from '../domain/totals';
@@ -1355,24 +1356,14 @@ function LineRow({
   // levált a fogak-követéstől, ÉS van mihez visszakapcsolni -- lásd
   // `sorPatchKovetessel` (domain/mennyiseg.ts) 1. szabálya.
   const visszakapcsolhato = line.mennyisegKezi !== false && teeth.valid;
-  // P2-4: `listaEgysegar === 0` (vagy egy jövőbeli NaN/Infinity) esetén ez a
-  // képlet korábban "−Infinity%"-ot adott -- most ha az osztó nem egy
-  // pozitív véges szám, nincs kedvezmény-/felár-jelvény.
-  const listaarErvenyes = Number.isFinite(line.listaEgysegar) && line.listaEgysegar > 0;
-  const discount =
-    listaarErvenyes && line.tenylegesEgysegar < line.listaEgysegar
-      ? Math.round((1 - line.tenylegesEgysegar / line.listaEgysegar) * 100)
-      : 0;
-  // A `Summary` terv-szintű felár-sorának soronkénti tükre (backlog-60,
-  // 2. döntés) -- semleges ténymegállapítás, nem hiba.
-  const surcharge =
-    listaarErvenyes && line.tenylegesEgysegar > line.listaEgysegar
-      ? Math.round((line.tenylegesEgysegar / line.listaEgysegar - 1) * 100)
-      : 0;
   const arEltero = !egyedi && line.tenylegesEgysegar !== line.listaEgysegar;
   // true, ha a sor tétele nincs beárazva a terv pénznemében -- lásd
   // `domain/penznemValtas.ts` `nincsListaar()` (62. tétel, D71).
   const araHianyzik = nincsListaar(line, tetel, currency);
+  // Egyedi sornál és beárazatlan tételnél a 0 listaár HIÁNY, nem "ingyenes
+  // lista" -- ha ezt nem jeleznénk a classifiernek, egy kézzel beírt
+  // ajánlati ár tévesen "Felár" jelvényt kapna. Lásd `domain/sorElteres.ts`.
+  const elteres = sorElteres(line, egyedi || araHianyzik);
 
   // backlog-60, 1. döntés: a `sorFallback`-tól FÜGGETLEN, nyelvfüggetlen
   // "kézzel átírt" komparátor -- lásd `domain/nev.ts` `nevAtirt()`.
@@ -1495,14 +1486,9 @@ function LineRow({
                 </IconButton>
               </>
             )}
-            {discount > 0 && (
-              <Badge color="green" variant="soft" size="1">
-                −{discount}%
-              </Badge>
-            )}
-            {surcharge > 0 && (
-              <Badge color="amber" variant="soft" size="1">
-                +{surcharge}%
+            {elteres && (
+              <Badge color={elteres.tipus === 'kedvezmeny' ? 'green' : 'amber'} variant="soft" size="1">
+                {elteres.cimke}
               </Badge>
             )}
             <Button
@@ -1652,7 +1638,7 @@ function LineRow({
                 // kedvezmény-/felár-kiemeléssel azonos slot, csak
                 // figyelmeztető színben, hogy ide dönteni kell.
                 style={
-                  discount || surcharge
+                  elteres
                     ? { borderColor: t.brand }
                     : araHianyzik && line.tenylegesEgysegar === 0
                       ? { borderColor: t.warn }

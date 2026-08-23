@@ -2019,3 +2019,28 @@ karbantartási kör négy önálló javítása.
   `docs/03-funkcionalis-spec.md` § 11 "Terv részletei (véglegesített
   verzió)" → "„Érintett fogak" panel", `docs/07-felulet-rendszer.md`
   „Komponensek".
+
+---
+
+### 74. tétel: Final pénzügyi összesítés — KÉSZ
+
+- **Méret:** közepes — 2 új fájl (`domain/sorElteres.ts` + teszt,
+  `pages/tervReszletei/PenzugyiOsszesites.tsx` + teszt), 4 módosított
+  fájl (`pages/PlanEditorPage.tsx`, `pages/tervReszletei/SorReszlet.tsx`,
+  `pages/TervReszleteiPage.tsx`, `storage/seed/plans.ts`), 3 tesztfájl
+  bővítve.
+- **Megvalósítás:** a Terv részletei nézet placeholder-slotja egy teljes
+  pénzügyi összesítő blokkra cserélődött, ami a MENTETT
+  `plan.osszesitok`-ból olvas (sosem a sorokból újraszámolt értékből) —
+  domináns Fizetendő, feltételes Kezelések összesen referenciasor,
+  becsült tételek info-sora, csak előleg megléte esetén megjelenő
+  Fizetés alcsoport, és egy eddig kizárólag piszkozat-betöltéskor futó
+  eltérés-ellenőrzés (`osszesitokElter()`) info-szintű figyelmeztetése.
+  Új, megosztott `sorElteres()` classifier váltotta a szerkesztő inline
+  kedvezmény/felár-számítását — ugyanaz a logika adja a szerkesztő
+  zöld/amber jelvényét és a lezárt terv semleges szürke jelvényét,
+  kiegészítve a hiányzó `Felár` (0 listaár) esettel és a nemnulla
+  eltérés hazug kerekítés elleni védelmével. Részletek:
+  `docs/03-funkcionalis-spec.md` § 11 "Terv részletei (véglegesített
+  verzió)" → "Pénzügyi összesítés", `docs/02-domain-modell.md` § "Sor-
+  szintű ár-eltérés osztályozása".
