@@ -24,7 +24,7 @@
 import type { ReactNode } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createBlankPlan } from '../domain/blankPlan';
+import { createBlankPlan, ELSO_FAZIS_NEV } from '../domain/blankPlan';
 import type { Nyelv, Plan, Sor } from '../domain/types';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
@@ -102,6 +102,7 @@ function renderDoc(savos: boolean, nyelv: Nyelv = 'hu', arak: Arak = AZONOS_AR) 
       nyilatkozatMd=""
       fizetesiFeltetelekMd=""
       garanciaMd=""
+      tervCim=""
       toothChartPng={null}
     />,
   );
@@ -196,6 +197,7 @@ describe('TervDocument -- backlog-9/D66: előleg-sor', () => {
         nyilatkozatMd=""
         fizetesiFeltetelekMd="- Fogtechnikai munkát tartalmazó kezelés esetén {{eloleg}} fizetendő a munka megkezdésekor."
         garanciaMd=""
+        tervCim=""
         toothChartPng={null}
       />,
     );
@@ -273,6 +275,7 @@ describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmé
         nyilatkozatMd=""
         fizetesiFeltetelekMd=""
         garanciaMd=""
+        tervCim=""
         toothChartPng={null}
       />,
     );
@@ -317,6 +320,7 @@ describe('TervDocument -- backlog-10: tétel-leírás a tételsor alatt', () => 
         nyilatkozatMd=""
         fizetesiFeltetelekMd=""
         garanciaMd=""
+        tervCim=""
         toothChartPng={null}
       />,
     );
@@ -351,6 +355,7 @@ describe('TervDocument -- backlog-10: tétel-leírás a tételsor alatt', () => 
           nyilatkozatMd=""
           fizetesiFeltetelekMd=""
           garanciaMd=""
+          tervCim=""
           toothChartPng={null}
         />,
       ),
@@ -383,6 +388,7 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
         nyilatkozatMd={nyilatkozatMd}
         fizetesiFeltetelekMd=""
         garanciaMd={garanciaMd}
+        tervCim=""
         toothChartPng={null}
       />,
     );
@@ -459,6 +465,7 @@ describe('TervDocument -- 76. tétel: kompakt fejléc és folytatólagos cím', 
         nyilatkozatMd="Nyilatkozat szövege."
         fizetesiFeltetelekMd=""
         garanciaMd=""
+        tervCim=""
         toothChartPng={null}
       />,
     );
@@ -511,9 +518,85 @@ describe('TervDocument -- 76. tétel: kompakt fejléc és folytatólagos cím', 
         nyilatkozatMd="Erklärungstext."
         fizetesiFeltetelekMd=""
         garanciaMd=""
+        tervCim=""
         toothChartPng={null}
       />,
     );
     expect(screen.getByText('Erklärung – Fortsetzung')).toBeInTheDocument();
+  });
+});
+
+describe('TervDocument -- 77. tétel: cím + páciensadatok + fogtérkép', () => {
+  function renderElsoBlokk(opts: {
+    tervCim?: string;
+    taj?: string;
+    fogak?: string;
+    toothChartPng?: string | null;
+  } = {}) {
+    const { tervCim = '', taj = '1234567890', fogak = '', toothChartPng = null } = opts;
+    const plan = buildPlan(false, 'hu', AZONOS_AR);
+    plan.paciens.nev = 'Teszt Páciens';
+    plan.paciens.szuletesiIdo = '1990-01-01';
+    plan.paciens.lakcim = '1114 Budapest, Móricz Zsigmond körtér 1.';
+    plan.paciens.telefon = '+36 30 123 4567';
+    plan.paciens.email = 'teszt@pelda.hu';
+    plan.paciens.taj = taj;
+    plan.fazisok[0].sorok[0].fogak = fogak;
+    const { container } = render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly
+        nyilatkozatMd=""
+        fizetesiFeltetelekMd=""
+        garanciaMd=""
+        tervCim={tervCim}
+        toothChartPng={toothChartPng}
+      />,
+    );
+    return container.querySelectorAll<HTMLElement>('[data-mock-tag="page"]')[0];
+  }
+
+  it('a terv címe megjelenik az 1. blokkban', () => {
+    const aBlokk = renderElsoBlokk({ tervCim: 'Fogpótlás terve' });
+    expect(within(aBlokk).getByText('Fogpótlás terve')).toBeInTheDocument();
+  });
+
+  it('üres TAJ esetén a TAJ sor teljesen kimarad, a bal oszlop többi mezője megjelenik', () => {
+    const aBlokk = renderElsoBlokk({ taj: '' });
+    expect(within(aBlokk).queryByText('TAJ')).not.toBeInTheDocument();
+    expect(within(aBlokk).getByText('Név')).toBeInTheDocument();
+    expect(within(aBlokk).getByText('Született')).toBeInTheDocument();
+    expect(within(aBlokk).getByText('Lakcím')).toBeInTheDocument();
+  });
+
+  it('a páciensmezők a bal, majd a jobb oszlop sorrendjében jelennek meg', () => {
+    const aBlokk = renderElsoBlokk();
+    const text = aBlokk.textContent!;
+    const idx = (label: string) => text.indexOf(label);
+    expect(idx('Név')).toBeLessThan(idx('Született'));
+    expect(idx('Született')).toBeLessThan(idx('TAJ'));
+    expect(idx('TAJ')).toBeLessThan(idx('Lakcím'));
+    expect(idx('Lakcím')).toBeLessThan(idx('Telefon'));
+    expect(idx('Telefon')).toBeLessThan(idx('E-mail'));
+  });
+
+  it('a fogtérkép a páciensadatok után, az első fázis címe előtt jelenik meg', () => {
+    const aBlokk = renderElsoBlokk({ fogak: '11', toothChartPng: 'data:image/png;base64,xx' });
+    const text = aBlokk.textContent!;
+    expect(text.indexOf('Lakcím')).toBeLessThan(text.indexOf('Érintett fogak'));
+    expect(text.indexOf('Érintett fogak')).toBeLessThan(text.indexOf(ELSO_FAZIS_NEV));
+  });
+
+  it('nincs fogszám a tervben: a fogtérkép-blokk kimarad', () => {
+    const aBlokk = renderElsoBlokk({ fogak: '', toothChartPng: 'data:image/png;base64,xx' });
+    expect(within(aBlokk).queryByText('Érintett fogak')).not.toBeInTheDocument();
+  });
+
+  it('az összesítés az utolsó fázis után áll, teljes szélességben', () => {
+    const aBlokk = renderElsoBlokk();
+    const text = aBlokk.textContent!;
+    expect(text.indexOf(ELSO_FAZIS_NEV)).toBeLessThan(text.indexOf('Fizetendő'));
   });
 });

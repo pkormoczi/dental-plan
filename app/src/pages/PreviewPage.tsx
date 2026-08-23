@@ -12,9 +12,10 @@ import { buildToothChartSvg } from '../design/toothChartSvg';
 import { aktivOrvosok } from '../domain/orvosok';
 import { paciensTorzsadatbol } from '../domain/paciensAdatok';
 import { isPlaceholderTemplate } from '../domain/templates';
+import { megjelenitettTervCim } from '../domain/tervCim';
 import { computeOsszesitok } from '../domain/totals';
 import { buildToothVisualStates } from '../domain/toothVisual';
-import { feloldPatientDir } from '../domain/torzsadatBetoltes';
+import { feloldPatientDir, feloldTervCimke } from '../domain/torzsadatBetoltes';
 import type { Paciens, PlanRef } from '../domain/types';
 import { nyelviMismatchek } from '../domain/nyelviReview';
 import { vanKemenyBlokk, veglegesitesDiagnozis } from '../domain/veglegesitesOr';
@@ -103,6 +104,27 @@ export default function PreviewPage() {
     // azonosító (patientDir/paciensId) változása indokol újratöltést.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storage, piszkozatPatientDir, plan.paciensId]);
+
+  // 77. tétel: a PDF-en megjelenő terv-cím -- a `TervCimField.tsx` (Terv
+  // adatai lap) olvasási láncának mintáján: már mentett lánchoz a tárolt
+  // `terv-cimke.json` értéke (`feloldTervCimke`, sosem dob), vadonatúj
+  // lánchoz `null` (storage-hívás nélkül, üres `tervId`-nél). A
+  // `megjelenitettTervCim()` dönti el a kézi címke vs. élő javaslat sorsát.
+  const [mentettTervCim, setMentettTervCim] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const cimke = await feloldTervCimke(storage, piszkozatPatientDir, plan.paciensId, plan.tervId);
+      if (!cancelled) setMentettTervCim(cimke?.tervCim ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [storage, piszkozatPatientDir, plan.paciensId, plan.tervId]);
+
+  const nyersTervCim = (piszkozatTervCim ?? mentettTervCim ?? '').trim();
+  const tervCim = megjelenitettTervCim(nyersTervCim || null, plan, priceList);
 
   useEffect(() => {
     let cancelled = false;
@@ -220,6 +242,7 @@ export default function PreviewPage() {
       nyilatkozatMd={nyilatkozatMd}
       fizetesiFeltetelekMd={fizetesiFeltetelekMd}
       garanciaMd={garanciaMd}
+      tervCim={tervCim}
       toothChartPng={toothChartPng}
     />
   );
@@ -242,6 +265,7 @@ export default function PreviewPage() {
     nyilatkozatMd,
     fizetesiFeltetelekMd,
     garanciaMd,
+    tervCim,
     toothChartPng,
     updatePdf,
   ]);

@@ -15,17 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 77. tétel — PDF első oldal: cím + páciensadatok + fogtérkép
-  (a `backlog/redesign/` redesign-döntéssorozat DP-071 tétele) — a
-  fogtérkép elhagyja a mai kéthasábos elrendezést (ahol az összegzés
-  mellett állt) és a páciensadatok alá kerül, a fázisok elé (D387); a
-  terv címe (az 51. tétel `terv-cimke.json`-jából, séma-változás nélkül,
-  új propon át) megjelenik a page1 tartalomban (D386). A páciensblokk
-  két fix szemantikus oszlopra vált (bal: Név/Született/TAJ/Lakcím, jobb:
-  Telefon/E-mail), üres mező teljesen kimarad `—` helyett, rebalance
-  nélkül (D431/D389/D432). A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-77-pdf-elso-oldal-terv.md`
-
 ### 78. tétel — PDF fázisok és kezeléstáblák
   (a `backlog/redesign/` redesign-döntéssorozat DP-072 tétele) — üres
   `Fog` mező `—`-t kap; a becsült-ár csillag a tételnév utánról az

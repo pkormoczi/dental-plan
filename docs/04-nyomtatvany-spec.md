@@ -126,12 +126,40 @@ igazolható.
 
 1. Fejléc (a nagy fejléc, kizárólag a blokk első fizikai oldalán — lásd
    „Fejléc" fent)
-2. Pácienstömb — két oszlop: név / telefon, született / e-mail, lakcím
-   teljes szélességben, TAJ
-3. Fázisonként: cím, tételtáblázat, fázisösszeg, majd a fázis megjegyzése
+2. **Terv címe** + pácienstömb — egy keep-together blokk, lásd „Terv
+   címe" és „Pácienstömb" lent
+3. **Fogtérkép** (ha van a tervben legalább egy fogszám)
+4. Fázisonként: cím, tételtáblázat, fázisösszeg, majd a fázis megjegyzése
    halványan
-4. Alul két hasábban: bal oldalon a **fogtérkép**, jobb oldalon az
-   összegzés
+5. **Összegzés**, teljes szélességben
+
+### Terv címe
+
+A terv címe (a Korábbi tervek fán is látszó terv-lánc címke, lásd
+`docs/02-domain-modell.md` § Páciens- és terv-mappa) a fejléc alatt, a
+pácienstömb fölött jelenik meg, félkövéren, kiemelt színnel — a fejléc
+jobb oldalán álló, minden tervre azonos „Kezelési terv és árajánlat"
+dokumentumcímtől eltérően ez az adott terv egyedi címe. Forrása a
+kézzel átírt címke, ennek hiányában az élő javaslat (a legnagyobb
+összegű kategória neve) — ugyanaz a forrás, mint a Korábbi tervek fán.
+Egy már véglegesített PDF a véglegesítés pillanatában érvényes címet
+fagyasztja be: egy utólagos átcímkézés a mentett fájlt nem érinti, csak
+egy új verzió PDF-jén látszik. Nagyon hosszú cím teljesen wrapol, nincs
+rövidítés vagy kisebb betűméretre váltás. A cím és a pácienstömb egy
+keep-together blokk: a kettő soha nem szakadhat szét oldaltörésnél.
+
+### Pácienstömb
+
+Két fix szemantikus oszlop, nem sorrendfüggetlen rács:
+
+- **bal:** Név, Született, TAJ, Lakcím
+- **jobb:** Telefon, E-mail
+
+Üres mező **teljesen kimarad** a sorból — nincs `—` jelzés. Nincs
+rebalance: egy hiányzó mező helye a saját oszlopában marad üresen, a
+másik oszlop tartalma nem tolódik a kiürült hely felé — a doki mindig
+ugyanott keresi az egyes mezőket, akkor is, ha valamelyik hiányzik.
+Hosszú érték a saját oszlopában wrapol, nem lóg át a másik oszlopra.
 
 ### Tételtáblázat
 
@@ -163,7 +191,9 @@ ki.
 
 ### Fogtérkép
 
-Anatómiai rajz mind a 32 maradó fogról (`app/src/assets/dental-chart-fdi-32.svg`,
+A pácienstömb alatt, a fázisok előtt áll, „Érintett fogak" cím alatt —
+cím + rajz + jelmagyarázat egy keep-together blokk, nem szakadhat szét
+oldaltörésnél. Anatómiai rajz mind a 32 maradó fogról (`app/src/assets/dental-chart-fdi-32.svg`,
 FDI-számozás, **számozás nélkül** nyomtatva — a fejlesztői/debug
 `showToothNumbers` mód kikapcsolva marad éles nyomtatványon). Ugyanez az
 SVG a forrása a szerkesztőbeli fogtérképnek is (`components/DentalChart.tsx`)
@@ -187,11 +217,13 @@ fogtérkép alatt egy külön sor sorolja fel szövegesen ("Tejfogak: 55, 65"),
 nem a rajzon.
 
 Ha egyetlen fogszám (maradó vagy tejfog) sincs a tervben, a fogtérkép
-**kimarad** és az összegzés teljes szélességet kap.
+**kimarad** — a fázisok közvetlenül a pácienstömb után folytatódnak.
 
 ### Összegzés
 
-Az összegzés **feltételesen egy vagy két soros**. Két sor csak akkor
+Az összegzés a fázisok UTÁN, mindig teljes szélességben áll (a korábbi,
+a fogtérkép mellett álló kéthasábos elrendezés megszűnt). **Feltételesen
+egy vagy két soros**. Két sor csak akkor
 jelenik meg, ha a listaárakból számolt összeg ténylegesen eltér a
 tényleges árakból számolttól (`fizetendo`):
 

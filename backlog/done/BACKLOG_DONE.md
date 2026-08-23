@@ -2092,3 +2092,26 @@ karbantartási kör négy önálló javítása.
   tudja natívan kifejezni. Részletek: `docs/04-nyomtatvany-spec.md` §
   "Fejléc", "Lábléc — minden oldalon", "2. blokk — fizetési feltételek
   és garancia", "3. blokk — nyilatkozat és aláírás".
+
+---
+
+### 77. tétel: PDF első oldal: cím + páciensadatok + fogtérkép — KÉSZ
+
+- **Méret:** kicsi-közepes — 2 érdemben átalakított fájl
+  (`pdf/TervDocument.tsx`, `pages/PreviewPage.tsx`), a kísérő teszt
+  bővítve, a nyomtatvány-spec frissítve.
+- **Megvalósítás:** az 1. blokk tartalmi sorrendje fejléc → terv címe +
+  páciensadatok → fogtérkép → fázisok → összegzésre vált, a korábbi,
+  a fogtérkép és az összegzés egymás mellett álló kéthasábos alsó sor
+  megszűnésével — az összegzés mostantól mindig a fázisok után, teljes
+  szélességben áll. A `TervDocument` egy új, kötelező `tervCim` propot
+  kapott (a `PreviewPage.tsx` adja fel oldva: már mentett lánchoz a
+  tárolt terv-cimke, vadonatúj lánchoz az élő javaslat), séma-változás
+  nélkül — a cím a `terv-cimke.json`-ban él, nem a `terv.json`-ban. A
+  páciensblokk egy sorrendfüggetlen kétoszlopos rácsból két fix
+  szemantikus oszlopra vált (bal: Név/Született/TAJ/Lakcím, jobb:
+  Telefon/E-mail), és az üres mező mostantól teljesen kimarad a sorból
+  `—` helyett, rebalance nélkül — a hiányzó mező helye a saját
+  oszlopában marad üresen. Részletek: `docs/04-nyomtatvany-spec.md`
+  § "1. blokk — kezelési terv és ár", "Terv címe", "Pácienstömb",
+  "Fogtérkép", "Összegzés".

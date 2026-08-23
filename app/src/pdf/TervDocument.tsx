@@ -82,13 +82,23 @@ const s = {
   logoMini: { width: 62, height: 15.5, objectFit: 'contain' as const },
   miniHeaderText: { fontSize: 9, color: t.textMuted },
 
-  patientGrid: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, marginBottom: 16 },
-  kvHalf: { width: '50%', marginBottom: 2 },
-  kvFull: { width: '100%', marginTop: 2 },
+  // A cím + páciensadatok egy keep-together blokk a MainHeader alatt.
+  titleAndPatientBlock: { marginBottom: 16 },
+  planTitle: { fontSize: 14, fontWeight: 600, color: t.brand, marginBottom: 10 },
+  // Két fix szemantikus oszlop (bal: Név/Született/TAJ/Lakcím, jobb:
+  // Telefon/E-mail) -- nem egy sorrendfüggetlen wrap-grid, hogy a doki mindig
+  // ugyanott keresse az egyes mezőket. Hiányzó mezőnél nincs rebalance: a
+  // másik oszlop tartalma nem tolódik a kiürült hely felé.
+  patientCols: { flexDirection: 'row' as const },
+  patientColLeft: { flexGrow: 1, flexBasis: 0, paddingRight: 16 },
+  patientColRight: { flexGrow: 1, flexBasis: 0 },
+  kvRow: { flexDirection: 'row' as const, fontSize: 9.5, marginBottom: 2 },
   // 72, nem 60: a német címkék ("Handelsregisternummer", "Geburtsdatum")
   // hosszabbak, mint a magyarok -- lásd a terv "Német layout-törés" kockázatát.
   kvKey: { color: t.textMuted, width: 72 },
-  kvRow: { flexDirection: 'row' as const, fontSize: 9.5 },
+  // flexGrow+flexBasis, hogy egy hosszú érték a SAJÁT oszlopában wrapoljon,
+  // ne lógjon ki és ne tolja el a másik oszlopot.
+  kvValue: { flexGrow: 1, flexBasis: 0 },
 
   phaseBlock: { marginBottom: 14 },
   phaseTitle: { fontSize: 11.5, fontWeight: 600, color: t.brand, marginBottom: 5 },
@@ -126,16 +136,18 @@ const s = {
 
   savosFootnote: { fontSize: 8, color: t.textMuted, marginBottom: 14, lineHeight: 1.5 },
 
-  bottomRow: {
-    flexDirection: 'row' as const,
+  // A fogtérkép a páciensadatok alatt, a fázisok előtt áll -- a korábbi
+  // kéthasábos (fogtérkép + összegzés egymás mellett) elrendezés megszűnt.
+  toothChartBlock: { marginBottom: 16 },
+  toothChartLabel: { fontSize: 8, color: t.textMuted, marginBottom: 5 },
+  // Az összesítés a fázisok UTÁN, mindig teljes szélességben áll (lásd 79.
+  // tétel a tartalmáért) -- a felső elválasztó a korábbi bottomRow-ról örökölt.
+  summaryBlock: {
+    width: '100%',
     borderTopWidth: 1,
     borderTopColor: t.line,
     paddingTop: 12,
   },
-  toothChartBlock: { flexGrow: 1 },
-  toothChartLabel: { fontSize: 8, color: t.textMuted, marginBottom: 5 },
-  summaryBlockNarrow: { width: 190 },
-  summaryBlockFull: { width: '100%' },
   summaryLine: { flexDirection: 'row' as const, justifyContent: 'space-between' as const },
   summaryLabelMuted: { fontSize: 9, color: t.textMuted },
   summaryDivider: { height: 1.5, backgroundColor: t.brand, marginVertical: 5 },
@@ -191,13 +203,14 @@ const s = {
   footerTextRightDynamic: { fontSize: 7.5, color: t.textFaint, textAlign: 'right' as const },
 };
 
-function Kv({ k, v, full }: { k: string; v: string; full?: boolean }) {
+// Üres érték esetén a mező sora TELJESEN kimarad (nem `—`) -- a doki nem
+// néz üres sorokat egy szerződéses dokumentumon.
+function Kv({ k, v }: { k: string; v: string }) {
+  if (!v) return null;
   return (
-    <View style={full ? s.kvFull : s.kvHalf}>
-      <View style={s.kvRow}>
-        <Text style={s.kvKey}>{k}</Text>
-        <Text>{v || '—'}</Text>
-      </View>
+    <View style={s.kvRow}>
+      <Text style={s.kvKey}>{k}</Text>
+      <Text style={s.kvValue}>{v}</Text>
     </View>
   );
 }
@@ -374,6 +387,15 @@ export interface TervDocumentProps {
   fizetesiFeltetelekMd: string;
   garanciaMd: string;
   /**
+   * A terv címe (`terv-cimke.json` -- `domain/tervCim.ts`
+   * `megjelenitettTervCim()`), NEM a `terv.json` mezője -- egy `Plan.cim`
+   * mező két forrást csinálna ugyanabból az adatból. A hívó (PreviewPage.tsx)
+   * adja fel oldva: mentett lánchoz a tárolt címkét, vadonatúj lánchoz az élő
+   * javaslatot. A már véglegesített PDF a véglegesítés pillanatában érvényes
+   * címet fagyasztja be -- egy utólagos átcímkézés a mentett fájlt nem érinti.
+   */
+  tervCim: string;
+  /**
    * A webbel megegyező markupból (design/toothChartSvg.ts) canvason
    * előállított raszterkép (pdf/toothChartImage.ts) -- lásd PreviewPage.tsx.
    * `null`, ha a renderelés meghiúsult vagy még nem készült el: ilyenkor a
@@ -390,6 +412,7 @@ export function TervDocument({
   nyilatkozatMd,
   fizetesiFeltetelekMd,
   garanciaMd,
+  tervCim,
   toothChartPng,
 }: TervDocumentProps) {
   const L = pdfLabels(plan.nyelv);
@@ -441,15 +464,31 @@ export function TervDocument({
         <View fixed render={({ pageNumber }) => (pageNumber === 1 ? null : <MiniHeader plan={plan} L={L} />)} />
         <MainHeader plan={plan} settings={settings} L={L} />
 
-        <View style={s.patientGrid}>
-          <Kv k={L.kvNev} v={plan.paciens.nev} />
-          <Kv k={L.kvTelefon} v={plan.paciens.telefon} />
-          <Kv k={L.kvSzuletett} v={plan.paciens.szuletesiIdo} />
-          <Kv k={L.kvEmail} v={plan.paciens.email} />
-          <Kv k={L.kvTaj} v={plan.paciens.taj} />
-          <View style={s.kvHalf} />
-          <Kv k={L.kvLakcim} v={plan.paciens.lakcim} full />
+        {/* Cím + páciensadatok egy keep-together blokk. */}
+        <View style={s.titleAndPatientBlock} wrap={false}>
+          {tervCim.trim() && <Text style={s.planTitle}>{tervCim}</Text>}
+          <View style={s.patientCols}>
+            <View style={s.patientColLeft}>
+              <Kv k={L.kvNev} v={plan.paciens.nev} />
+              <Kv k={L.kvSzuletett} v={plan.paciens.szuletesiIdo} />
+              <Kv k={L.kvTaj} v={plan.paciens.taj} />
+              <Kv k={L.kvLakcim} v={plan.paciens.lakcim} />
+            </View>
+            <View style={s.patientColRight}>
+              <Kv k={L.kvTelefon} v={plan.paciens.telefon} />
+              <Kv k={L.kvEmail} v={plan.paciens.email} />
+            </View>
+          </View>
         </View>
+
+        {/* A fogtérkép a páciensadatok alatt, a fázisok előtt áll,
+            cím+rajz+jelmagyarázat egy keep-together blokként. */}
+        {showToothChart && (
+          <View style={s.toothChartBlock} wrap={false}>
+            <Text style={s.toothChartLabel}>{L.erintettFogak}</Text>
+            <ToothChartPdf pngDataUrl={toothChartPng!} allapot={fogterkep} nyelv={plan.nyelv} L={L} />
+          </View>
+        )}
 
         {plan.fazisok.map((fazis, i) => (
           <PhaseTable
@@ -464,68 +503,60 @@ export function TervDocument({
 
         {hasRange && <Text style={s.savosFootnote}>{L.savosFootnote}</Text>}
 
-        <View style={s.bottomRow}>
-          {showToothChart && (
-            <View style={s.toothChartBlock}>
-              <Text style={s.toothChartLabel}>{L.erintettFogak}</Text>
-              <ToothChartPdf pngDataUrl={toothChartPng!} allapot={fogterkep} nyelv={plan.nyelv} L={L} />
-            </View>
+        <View style={s.summaryBlock}>
+          {/* A "Kezelések összesen" referenciasor csak akkor jelenik meg, ha
+              ténylegesen eltér a fizetendőtől -- eltérés nélkül a két szám
+              azonos lenne, és ugyanaz az összeg állna kétszer egymás alatt
+              (backlog-12). Az eltérés IRÁNYA nem számít: a felár ugyanúgy
+              megnyitja, mint a kedvezmény. Maga a kedvezmény összege
+              továbbra sem jelenik meg a nyomtatványon (D9). */}
+          {grand !== listTotal && (
+            <>
+              <View style={s.summaryLine}>
+                <Text style={s.summaryLabelMuted}>{L.kezelesekOsszesen}</Text>
+                <Text>{formatMoney(listTotal, plan.penznem, plan.nyelv)}</Text>
+              </View>
+              <View style={s.summaryDivider} />
+            </>
           )}
-          <View style={showToothChart ? s.summaryBlockNarrow : s.summaryBlockFull}>
-            {/* A "Kezelések összesen" referenciasor csak akkor jelenik meg, ha
-                ténylegesen eltér a fizetendőtől -- eltérés nélkül a két szám
-                azonos lenne, és ugyanaz az összeg állna kétszer egymás alatt
-                (backlog-12). Az eltérés IRÁNYA nem számít: a felár ugyanúgy
-                megnyitja, mint a kedvezmény. Maga a kedvezmény összege
-                továbbra sem jelenik meg a nyomtatványon (D9). */}
-            {grand !== listTotal && (
-              <>
-                <View style={s.summaryLine}>
-                  <Text style={s.summaryLabelMuted}>{L.kezelesekOsszesen}</Text>
-                  <Text>{formatMoney(listTotal, plan.penznem, plan.nyelv)}</Text>
-                </View>
-                <View style={s.summaryDivider} />
-              </>
-            )}
-            <View style={s.summaryLine}>
-              <Text style={s.summaryTotalLabel}>{L.fizetendo}</Text>
-              <Text style={s.summaryTotalValue}>{formatMoney(grand, plan.penznem, plan.nyelv)}</Text>
-            </View>
-            {eloleg && (
-              // Mindkét sor csillagot kap, ha a tervben van becsült árú
-              // tétel: mindkettő ugyanabból a becsült Fizetendőből számol,
-              // csak az egyiket jelölni félrevezető lenne (backlog-9).
-              // `fennmarado === null`: az előleg meghaladja a Fizetendőt
-              // (D66) -- a véglegesítés-őr ezt kemény blokkal megfogja, de a
-              // Csak-ajánlat előnézet a blokk előtt is renderel, ezért itt
-              // sem törhet el.
-              <>
-                <View style={s.summaryLine}>
-                  <Text style={s.summaryEloleg}>
-                    {L.elolegSor}
-                    {hasRange && ' *'}
-                  </Text>
-                  <Text style={s.summaryEloleg}>
-                    {formatMoney(eloleg.eloleg, plan.penznem, plan.nyelv)}
-                  </Text>
-                </View>
-                <View style={s.summaryLine}>
-                  <Text style={s.summaryEloleg}>
-                    {L.fennmaradoResz}
-                    {hasRange && ' *'}
-                  </Text>
-                  <Text style={s.summaryEloleg}>
-                    {eloleg.fennmarado == null ? '—' : formatMoney(eloleg.fennmarado, plan.penznem, plan.nyelv)}
-                  </Text>
-                </View>
-              </>
-            )}
-            <Text style={s.validityNote}>
-              {L.ervenyessegMondat(formatLongDate(plan.ervenyesIg, plan.nyelv))}
-              {'\n'}
-              {L.anyagkoltseg}
-            </Text>
+          <View style={s.summaryLine}>
+            <Text style={s.summaryTotalLabel}>{L.fizetendo}</Text>
+            <Text style={s.summaryTotalValue}>{formatMoney(grand, plan.penznem, plan.nyelv)}</Text>
           </View>
+          {eloleg && (
+            // Mindkét sor csillagot kap, ha a tervben van becsült árú
+            // tétel: mindkettő ugyanabból a becsült Fizetendőből számol,
+            // csak az egyiket jelölni félrevezető lenne (backlog-9).
+            // `fennmarado === null`: az előleg meghaladja a Fizetendőt
+            // (D66) -- a véglegesítés-őr ezt kemény blokkal megfogja, de a
+            // Csak-ajánlat előnézet a blokk előtt is renderel, ezért itt
+            // sem törhet el.
+            <>
+              <View style={s.summaryLine}>
+                <Text style={s.summaryEloleg}>
+                  {L.elolegSor}
+                  {hasRange && ' *'}
+                </Text>
+                <Text style={s.summaryEloleg}>
+                  {formatMoney(eloleg.eloleg, plan.penznem, plan.nyelv)}
+                </Text>
+              </View>
+              <View style={s.summaryLine}>
+                <Text style={s.summaryEloleg}>
+                  {L.fennmaradoResz}
+                  {hasRange && ' *'}
+                </Text>
+                <Text style={s.summaryEloleg}>
+                  {eloleg.fennmarado == null ? '—' : formatMoney(eloleg.fennmarado, plan.penznem, plan.nyelv)}
+                </Text>
+              </View>
+            </>
+          )}
+          <Text style={s.validityNote}>
+            {L.ervenyessegMondat(formatLongDate(plan.ervenyesIg, plan.nyelv))}
+            {'\n'}
+            {L.anyagkoltseg}
+          </Text>
         </View>
 
         <Footer plan={plan} settings={settings} L={L} />
