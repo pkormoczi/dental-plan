@@ -1,6 +1,6 @@
 // Egy kezelési sor listaár <-> ajánlati ár eltérésének osztályozása. Ez az
 // EGYETLEN hely, ahol eldől, hogy egy soron kedvezmény vagy felár van, és
-// hány százalék -- a szerkesztő (`PlanEditorPage.tsx` `LineRow`) és a
+// hány százalék -- a szerkesztő (`pages/planEditor/LineRow.tsx`) és a
 // lezárt terv read-only sora (`pages/tervReszletei/SorReszlet.tsx`) is ezt
 // hívja. A modul a TÍPUST, a nyers százalékot és a kész feliratot adja; a
 // SZÍN a hívóé -- a szerkesztőben zöld/amber (ott a doki még változtathat

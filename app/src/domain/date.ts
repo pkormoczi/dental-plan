@@ -48,7 +48,7 @@ export function formatShortDate(isoDate: string, nyelv: Nyelv): string {
 
 /**
  * A piszkozat-autosave "Piszkozat mentve"/"Utolsó módosítás" időbélyege
- * (Home.tsx, PlanEditorPage.tsx) -- NEM a nyomtatvány
+ * (Home.tsx, pages/planEditor/PlanEditorHeader.tsx) -- NEM a nyomtatvány
  * (docs/04-nyomtatvany-spec.md) formátuma, ezért nem `formatLongDate`/
  * `formatShortDate`: azok tisztán naptári dátumot (nap felbontás, UTC-re
  * rögzítve) formáznak, ide viszont egy tényleges időpillanat (dátum +

@@ -148,8 +148,8 @@ describe('NumberField', () => {
   });
 
   it('re-syncs the display after blur when the parent commits a different value (e.g. clamped)', async () => {
-    // Regresszió: a szülő (pl. az Előleg % mező, PlanEditorPage.tsx
-    // ElolegBlokk) a saját kerekített értéket tovább clampelheti egy
+    // Regresszió: a szülő (pl. az Előleg % mező,
+    // pages/planEditor/ElolegBlokk.tsx) a saját kerekített értéket tovább clampelheti egy
     // szűkebb tartományra, és egy ELTÉRŐ `value` prop-pal rendereli újra a
     // mezőt. Blur UTÁN a mezőnek ezt az új, tényleges értéket kell
     // mutatnia, nem a begépelt (clamp előtti) számot.

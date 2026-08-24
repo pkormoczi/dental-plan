@@ -2389,3 +2389,31 @@ karbantartási kör négy önálló javítása.
   árak "Tömeges árváltoztatás"; `docs/07-felulet-rendszer.md` §
   Komponensek (a checkbox-listás dialógus fordított alapállapota és
   annak indoka).
+
+### 93. tétel: A legnagyobb komponensfájlok felbontása — KÉSZ
+
+- **Méret:** nagy — három fájl felbontása, mindegyik kiemelés + tesztbontás
+  lépésben: `pages/PlanEditorPage.tsx` (2249 → ~640 sor, hét új
+  komponensfájl a `pages/planEditor/` alatt, plusz két új domain-modul),
+  `pages/PriceListAdminPage.tsx` (1476 → ~840 sor, három új fájl a
+  `pages/priceListAdmin/` alatt, plusz egy új domain-modul),
+  `pdf/TervDocument.tsx` (751 → ~280 sor, négy új fájl a
+  `pdf/tervDocument/` alatt).
+- **Megvalósítás:** viselkedésmegőrző kiemelés — a React-állapot
+  elrendezése, a hookok sorrendje és a renderelt kimenet (HTML/PDF)
+  változatlan maradt; a meglévő tesztfájlok a kiemelő lépésekben mindvégig
+  érintetlenek voltak (üres tesztfájl-diff), ez adta a gépi bizonyítékot.
+  A fájl-lokális tiszta logika (sor-mezők tétel-/egyedi-alapú felépítése,
+  fázis-mozgatás index-matematikája, árlista-szűrés predikátumai)
+  domain-modulokba költözött, saját unit tesztekkel; a terv szerkesztő
+  DOM-id-jei (korábban négy helyen egymástól függetlenül leírva) egy
+  közös helyre kerültek. A tesztfájlok egy része is szétvált: a
+  ténylegesen izolált, prop-tiszta komponensek (Egyedi végösszeg/Előleg
+  blokk, Mindösszesen sor, a szerkesztő fejléce) saját, önállóan
+  renderelt komponensteszteket kaptak, a lapot ténylegesen igénylő
+  integrációs leírások pedig egy témás testvér-tesztfájlba. Az Árlista
+  admin és a nyomtatvány kiemelt komponensei a meglévő helyi
+  tesztkonvenció szerint (ott minden komponens kizárólag a teljes lapon
+  keresztül tesztelt, dedikált komponensteszt-fájl nélkül) nem kaptak
+  hasonló bontást. Részletek: `docs/05-technologia.md`, `CLAUDE.md`
+  "Meglévő segédfüggvények".

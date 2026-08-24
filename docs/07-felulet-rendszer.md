@@ -101,11 +101,12 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   leírás mezőnkénti reset-vezérlők, D65) nem esnek e szabály alá —
   mindegyik a saját cellájának mezőjét szerkeszti, nem a sorra ható
   akció. NÉVESÍTETT KIVÉTEL: a tervszerkesztő fázisfejléce (`PhaseSection`,
-  `pages/PlanEditorPage.tsx`) ↑/↓ sorrendező nyilat ÉS kuka-ikont is mutat
-  egyszerre (három látható gomb) — ez NEM lista-jellegű adatsor, hanem
+  `pages/planEditor/PhaseSection.tsx`) ↑/↓ sorrendező nyilat ÉS kuka-ikont is
+  mutat egyszerre (három látható gomb) — ez NEM lista-jellegű adatsor, hanem
   szekciófejléc egy fix számú (jellemzően 1-3 elemű) listában, ugyanaz a
-  besorolás, mint az Árlista admin kategória-sora (`PriceListAdminPage.tsx`),
-  ami már ma is ugyanezt a hármat mutatja.
+  besorolás, mint az Árlista admin kategória-sora
+  (`pages/priceListAdmin/KategoriaPanel.tsx`), ami már ma is ugyanezt a
+  hármat mutatja.
   A menü első eleme a kockázatmentes/olvasó művelet, utána — elválasztóval
   — a többi, gyakoriság szerint. Hosszú, didaktikus feliratot csak menüben
   használj (ott egymás alatt állnak); egy sorban egymás mellett rövidnek
@@ -182,7 +183,7 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   `EgyebTab.tsx`, a lap egyetlen közös `dirty` state-jén át). Az Árlista
   admin Kategóriák paneljének attribútum-szerkesztése (HU/DE név, szín,
   sorrend) szintén ezen a primitíven megy át
-  (`pages/PriceListAdminPage.tsx` `KategoriaPanel`/`KategoriaPanelBody`) —
+  (`pages/priceListAdmin/KategoriaPanel.tsx` `KategoriaPanel`/`KategoriaPanelBody`) —
   a panel becsukása a tab-váltáshoz hasonlóan ténylegesen eldobja a
   draftot, ezért kér megerősítést. A tétel-szerkesztés és a kategória
   létrehozása/törlése ugyanazon a lapon VÁLTOZATLANUL autosave marad —

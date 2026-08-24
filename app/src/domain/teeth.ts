@@ -45,7 +45,7 @@ export function invalidFdiTokens(input: string | null | undefined): string[] {
  * dedupolja, de ez a függvény a nyers szöveget kapja), a megmaradó tokenek
  * sorrendjét megtartja. A kimeneti elválasztó mindig
  * ", " -- ez a `placeholder`/seed adatban is használt alak (lásd
- * PlanEditorPage.tsx "16, 17, 26" placeholder).
+ * pages/planEditor/LineRow.tsx "16, 17, 26" placeholder).
  */
 export function toggleFog(fogak: string, fdi: string): string {
   const tokens = (fogak || '').split(/[\s,;]+/).filter(Boolean);

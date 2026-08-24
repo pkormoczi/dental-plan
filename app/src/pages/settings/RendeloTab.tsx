@@ -7,7 +7,7 @@
 //
 // D63: az orvos-lista (korábban egyetlen "egy név soronként" TextArea)
 // soronkénti táblázatra váltott -- aktív/inaktív jelölés és alapértelmezett-
-// orvos fogalommal, a PriceListAdminPage.tsx KategoriaPanel sor-UI mintáján
+// orvos fogalommal, a pages/priceListAdmin/KategoriaPanel.tsx sor-UI mintáján
 // (Table.Root size="1" + soronkénti IconButton ↑/↓/🗑).
 
 import { useEffect, useState } from 'react';

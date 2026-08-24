@@ -8,7 +8,7 @@
 // `KezelesVizual` érték egyikébe (`KATEGORIA_VIZUAL`), és csak a vödör kapott
 // színt/feliratot/prioritást -- egy új kategória örökre szürke maradt volna.
 // Ez a réteg megszűnt: a `Kategoria` (domain/types.ts) most már saját `szin`
-// mezőt hordoz, a kategória-karbantartó panel (pages/PriceListAdminPage.tsx)
+// mezőt hordoz, a kategória-karbantartó panel (pages/priceListAdmin/KategoriaPanel.tsx)
 // pedig ezt szerkeszthetővé teszi. A domain objektumok (Sor, Tetel) továbbra
 // is SZÁNDÉKOSAN nem kapnak külön színmezőt -- CLAUDE.md "Domain szókincs":
 // a séma kulcsai a lemezre írt igazság, a bemutatási érték a kategórián él.

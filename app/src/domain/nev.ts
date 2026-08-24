@@ -57,8 +57,8 @@ export type SorFallbackOk =
 
 /**
  * Egy sor neve miért nem a terv nyelvén szerepel -- az EGYETLEN hely, ahol
- * ez a szabály eldől (a szerkesztő `HU`/„átírt" jelvénye, `PlanEditorPage.tsx`
- * `LineRow`, hívja).
+ * ez a szabály eldől (a szerkesztő `HU`/„átírt" jelvénye,
+ * `pages/planEditor/LineRow.tsx`, hívja).
  * `null`, ha a sor rendben van (követi az árlistát, vagy hu terven vagyunk).
  *
  * Egyedi (üres `tetelId`-jű) sornál nincs mit a `priceList`-ben megkeresni --
@@ -88,7 +88,7 @@ export function sorFallback(
 /**
  * A `Tetel.leiras` adott nyelvű szövege, hiányzó fordításnál üres string
  * -- D27 (nincs HU-visszaesés a leírásra), kiemelve, mert a `leirasKoveti`
- * és a `PlanEditorPage.tsx` `sorMezokTetelbol` mellett a backlog-60
+ * és a `domain/sorMezok.ts` `sorMezokTetelbol` mellett a backlog-60
  * leírás-reset a harmadik hívó.
  */
 export function arlistaiLeiras(tetel: Tetel, nyelv: Nyelv): string {

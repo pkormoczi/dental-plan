@@ -15,16 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 93. tétel: A legnagyobb komponensfájlok felbontása
-
-  A `PlanEditorPage.tsx` (2249 sor), a `PriceListAdminPage.tsx` (1476 sor)
-  és a `pdf/TervDocument.tsx` (751 sor) felelősségeit jól elkülönülő
-  komponensekre, hookokra és tiszta segédfüggvényekre kell bontani,
-  viselkedésmegőrző refaktorálással, világos modulhatárok kialakításával —
-  nem önmagában a fájlok sorszámának csökkentésével. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-93-nagy-komponensfajlok-terv.md`
-
 ---
 ## NEM FEJLESZTÉS
 

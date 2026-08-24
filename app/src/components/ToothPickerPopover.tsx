@@ -1,5 +1,5 @@
 // Soronkénti fogválasztó -- egy kis ikongomb a "Fog" mező mellett (lásd
-// pages/PlanEditorPage.tsx LineRow), ami egy felugró fogtérképet nyit: a
+// pages/planEditor/LineRow.tsx), ami egy felugró fogtérképet nyit: a
 // kattintott/Enterrel aktivált fog be-/kikapcsolódik a sor `fogak`
 // mezőjében (domain/teeth.ts `toggleFog`). Élő írás, nincs külön "Mentés" --
 // a popover bezárása nem "elvet", a mező már írva van a kattintás

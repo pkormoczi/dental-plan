@@ -19,7 +19,7 @@ import type { Penznem, Plan, PriceList, Sor, Tetel } from './types';
  *    szelleme: kézzel írt érték nem vész el egy oda-vissza váltásban).
  * 2. `tetel.ar[ujPenznem]` -- ha a tétel beárazott az új pénznemben,
  *    `basePrice()` adja mindkét mezőt, pontosan úgy, mint felvételkor
- *    (`PlanEditorPage.tsx` `sorMezokTetelbol`).
+ *    (`domain/sorMezok.ts` `sorMezokTetelbol`).
  * 3. `0/0` -- "hiányzó ár" állapot (egyedi sor, vagy a tétel nincs
  *    beárazva az új pénznemben); a doki kézzel tölti ki.
  *
@@ -133,8 +133,8 @@ export function tervOsszegekPenznemValtassal(
 /**
  * Igaz, ha a sor `tetelId`-hez kötött, a tétel megvan az árlistában, de
  * nincs beárazva az adott pénznemben (`ar[penznem] == null`) -- az
- * EGYETLEN hely, ahol ez eldől (`PlanEditorPage.tsx` Listaár cellája és a
- * `kitoltetlen.ts` `araztalanSorok()` is ezt hívja). Egy ismeretlen
+ * EGYETLEN hely, ahol ez eldől (`pages/planEditor/LineRow.tsx` Listaár
+ * cellája és a `kitoltetlen.ts` `araztalanSorok()` is ezt hívja). Egy ismeretlen
  * `tetelId` (a tétel már nincs az árlistában, D17) NEM számít hiányzónak
  * -- a pillanatkép-ár (D7) továbbra is érvényes, egy téves hard block
  * rosszabb lenne, mint a régi szám megjelenítése. Egyedi sor (üres

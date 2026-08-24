@@ -1,6 +1,6 @@
 // Egy kezelési fázis read-only szekciója a Terv részletei nézeten -- lásd
-// docs/03-funkcionalis-spec.md § 11. A `PlanEditorPage.tsx`
-// `PhaseSection`-jének vizuális mintáját követi (fejléc + saját táblafejléc
+// docs/03-funkcionalis-spec.md § 11. A `pages/planEditor/PhaseSection.tsx`
+// vizuális mintáját követi (fejléc + saját táblafejléc
 // + lábléc-összeg), de szerkeszthető mezők (fázisnév input, sorrendező
 // nyilak, törlés) nélkül.
 

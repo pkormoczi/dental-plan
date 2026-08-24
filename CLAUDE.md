@@ -276,7 +276,7 @@ verzióra nyitása, D22) segédfüggvényei, szintén ne írd újra őket:
 
 A sornév-szerkesztés + egyedi sor tétel (`docs/03-funkcionalis-spec.md`
 § Sor mezői, § Egyedi sor) segédfüggvényei, szintén ne írd újra őket:
-- `sorMezokEgyedibol(nev)` (`app/src/pages/PlanEditorPage.tsx`) — a
+- `sorMezokEgyedibol(nev)` (`app/src/domain/sorMezok.ts`) — a
   `sorMezokTetelbol` egyedi (árlistán kívüli) párja: `tetelId: ''`,
   `listaEgysegar === tenylegesEgysegar === 0` kezdőértékkel; ezt hívja
   mind a fázis alatti, mind a soron belüli `ItemPicker` `onPickEgyedi`-je
@@ -381,7 +381,7 @@ verziósoron…", D58) segédfüggvénye, szintén ne írd újra:
 - `csokkentettMozgas()` (`app/src/design/motion.ts`) — a
   `docs/07-felulet-rendszer.md` „prefers-reduced-motion tiszteletben
   tartva" NEM opcionális szabályának lekérdezése (`matchMedia`,
-  jsdom-biztos); a `PlanEditorPage.tsx` fogszám-fókuszálása és a
+  jsdom-biztos); a `pages/planEditor/useFokuszEffekt.ts` fogszám-fókuszálása és a
   `PatientPlanChains.tsx` „Ugrás a legfrissebb verzióra"
   scroll+fókusza is ezt hívja
 
@@ -396,7 +396,7 @@ segédfüggvényei, szintén ne írd újra őket:
   jelvénye/reset-vezérlője (D65) is ezt hívja, a JELENLEGI nyelvvel
 - `arlistaiLeiras(tetel, nyelv)` (`app/src/domain/nev.ts`) — a
   `Tetel.leiras` adott nyelvű szövege, hiányzó fordításnál üres string;
-  a `leirasKoveti()` és a `PlanEditorPage.tsx` `sorMezokTetelbol` ebből
+  a `leirasKoveti()` és a `domain/sorMezok.ts` `sorMezokTetelbol` ebből
   emelve, a D65 leírás-reset a harmadik hívó
 - `hianyzoCsomagLeirasok(plan, priceList)` (`app/src/domain/kitoltetlen.ts`)
   — PUHA diagnosztika, szándékosan külön a `kitoltetlenSorok` kemény
@@ -514,9 +514,10 @@ Terv részletei (véglegesített verzió) "Fázisok és kezelési sorok")
 segédfüggvénye, szintén ne írd újra:
 - `sorElemId(fazisIndex, sorIndex)` (`app/src/pages/tervReszletei/
   SorReszlet.tsx`) — egy kezelési sor read-only nézetének stabil, egyedi
-  DOM id-je, a szerkesztő `fog-<pi>-<li>` mintájának (`PlanEditorPage.tsx`)
-  külön névterű megfelelője, hogy a két lap id-i sose ütközzenek; más
-  felület (pl. egy fogtérkép-kattintás) erre tud scroll-navigálni
+  DOM id-je, a szerkesztő `fog-<pi>-<li>` mintájának (`fogId()`,
+  `app/src/pages/planEditor/elemIdk.ts`) külön névterű megfelelője, hogy a
+  két lap id-i sose ütközzenek; más felület (pl. egy fogtérkép-kattintás)
+  erre tud scroll-navigálni
 
 A Terv részletei beágyazott mentett PDF-viewere (`docs/03-funkcionalis-
 spec.md` § 11. Terv részletei (véglegesített verzió) "Mentett PDF")
@@ -554,7 +555,7 @@ szintén ne írd újra őket:
 - `parseInline(text)` / `MdSpan` (ugyanott) — egy bekezdés/listaelem
   szövegét `**félkövér**` szakaszokra bontja; egy párosítatlan `**`
   literálként marad, ugyanazzal az elvvel, mint a `fillPlaceholders`
-  ismeretlen `{{kulcs}}`-a. A `pdf/TervDocument.tsx` `MdInline`
+  ismeretlen `{{kulcs}}`-a. A `pdf/tervDocument/Markdown.tsx` `MdInline`
   komponense hívja mindhárom blokktípuson (`p`/`ul`/`ol`) belül — ez az
   EGYETLEN hely, ahol a `**` inline renderelése eldől
 
@@ -928,9 +929,9 @@ D60, `docs/03-funkcionalis-spec.md` § Fázisok) segédfüggvénye, szintén ne
 - `generaltFazisNev(pos)` / `fazisNevGeneralt(nev, pos)`
   (`app/src/domain/blankPlan.ts`) — az EGYETLEN hely, ahol a generált
   fázisnév-minta (`"N. kezelés"`) él; a „Fázis hozzáadása" gomb és a
-  fázis-sorrendezés (`PlanEditorPage.tsx` `movePhase()`, a mozgatott
-  fázis generált nevének pozíció szerinti frissítéséhez, kézzel átírt
-  nevet érintetlenül hagyva) egyaránt ezt hívja. `ELSO_FAZIS_NEV`
+  fázis-sorrendezés (`domain/fazisSorrend.ts` `fazisokFelcserelve()`, a
+  mozgatott fázis generált nevének pozíció szerinti frissítéséhez, kézzel
+  átírt nevet érintetlenül hagyva) egyaránt ezt hívja. `ELSO_FAZIS_NEV`
   (ugyanott) `generaltFazisNev(1)`-ként van definiálva, hogy a két
   string-literál ne driftelhessen szét
 
@@ -973,7 +974,7 @@ ne írd újra őket:
   fennmaradó rész összege, illetve a `előleg > fizetendő` túllépés-határ
   eldől. `elolegOsszegek` `fennmarado: null`-t ad, ha az előleg meghaladja
   a fizetendőt — a hívó (szerkesztő, PDF) ekkor „—”-t jelenít meg, nem
-  negatív számot. A szerkesztő (`PlanEditorPage.tsx` `ElolegBlokk`), a
+  negatív számot. A szerkesztő (`pages/planEditor/ElolegBlokk.tsx`), a
   véglegesítés-őr (`domain/veglegesitesOr.ts` `elolegTullep` mező) és a
   nyomtatvány (`pdf/TervDocument.tsx`) mind ezeket hívja
 - `elolegSzazalekbol(fizetendo, szazalek)` / `ELOLEG_SZAZALEK_KEREKITES`
@@ -1012,7 +1013,7 @@ A kezelőorvos-választás és öröklési szabályok tétel
   „Kezelőorvos" — az utóbbi a `Section` címével ütközne (két azonos
   szövegű találat egy accessible-name lekérdezésnél)
 - `pages/settings/RendeloTab.tsx` „Orvosok" szekció — soronkénti lista
-  (`Table.Root size="1"`, a `PriceListAdminPage.tsx` `KategoriaPanel`
+  (`Table.Root size="1"`, a `pages/priceListAdmin/KategoriaPanel.tsx`
   mintáján), a default orvos deaktiválása/törlése MÁSIK aktív orvos
   mellett `Dialog`-alapú azonnali újraválasztást kényszerít (nem
   `RadioGroup`-pal, hanem a már bevált `Select`-tel); nincs másik aktív
@@ -1090,8 +1091,8 @@ A pénznemváltás tétel (`docs/01-attekintes-es-dontesek.md` D71,
   illetve a `PatientPage.tsx` pénznemváltás-megerősítő dialógusának élő
   számlálása, a `nyelvvaltasHatasa()` (D24) mintáján. `nincsListaar()` az
   EGYETLEN hely, ahol eldől, hogy egy sornak nincs árlistai
-  referenciaára az adott pénznemben — a `PlanEditorPage.tsx` Listaár
-  cellája és a `domain/kitoltetlen.ts` `araztalanSorok()` is ezt hívja
+  referenciaára az adott pénznemben — a `pages/planEditor/LineRow.tsx`
+  Listaár cellája és a `domain/kitoltetlen.ts` `araztalanSorok()` is ezt hívja
 - `tervOsszegekPenznemValtassal(plan)` (ugyanott) — a fenti sor-szintű
   pár TERV-szintű megfelelője: a `Plan.kedvezmenyOsszeg`/`elolegOsszeg`
   pénznemváltása a `Plan.masikPenznemOsszegek` közös stash-slotján
@@ -1144,9 +1145,11 @@ D72, `docs/02-domain-modell.md` § Nyelvi review a kézzel írt szövegeken,
   a következő cél MINDIG a JELENLEGI piszkozatból élőben számol
   (`nyelviMismatchek(plan)`), nem egy a Contextben tárolt, befagyott lista.
   A navigáció a VALÓDI szerkesztőmezőkhöz a MEGLÉVŐ `fokuszCel`
-  mechanizmusra épül (`PlanEditorPage.tsx`), nem egy duplikált
-  modal-szerkesztőre — a `nev-${pi}-${li}`/`leiras-${pi}-${li}`/
-  `fazis-nev-${pi}`/`fazis-megjegyzes-${pi}` DOM `id`-k ehhez a horgonyok
+  mechanizmusra épül (a state `PlanEditorPage.tsx`-ben, a fókusz/scroll-
+  effekt `pages/planEditor/useFokuszEffekt.ts`-ben), nem egy duplikált
+  modal-szerkesztőre — a `nevId()`/`leirasId()`/`fazisNevId()`/
+  `fazisMegjegyzesId()` (`pages/planEditor/elemIdk.ts`) DOM `id`-k ehhez a
+  horgonyok
 
 A Terv részletei nézet (`docs/03-funkcionalis-spec.md` § 11. Terv
 részletei (véglegesített verzió)) segédfüggvényei/komponensei, szintén ne
@@ -1171,7 +1174,7 @@ részletei (véglegesített verzió)) segédfüggvényei/komponensei, szintén n
   lásd `docs/02-domain-modell.md` § „Sor-szintű ár-eltérés osztályozása")
   — a kezelési sor listaár/ajánlati ár eltérésének EGYETLEN osztályozója:
   típus (kedvezmény/felár) + kész felirat. A szerkesztő `LineRow`-ja
-  (`pages/PlanEditorPage.tsx`) és a Terv részletei read-only sora
+  (`pages/planEditor/LineRow.tsx`) és a Terv részletei read-only sora
   (`pages/tervReszletei/SorReszlet.tsx`) egyaránt ezt hívja — csak a
   jelvény SZÍNE tér el a két hívó között, a típus/felirat-logika egy
   helyen él. A `pages/tervReszletei/PenzugyiOsszesites.tsx` a plan-szintű
@@ -1221,6 +1224,44 @@ Kezelések és árak "Tömeges árváltoztatás") segédfüggvényei
   pillanatában kapott friss `tetelek`-en számol újra, nem az előnézet
   befagyasztott értékeit írja vissza, a `PriceListAdminPage.tsx`
   `addCategory`/`mentUjTetel`-jének elvén
+
+A kezelési fázisok kezelése tétel (`docs/03-funkcionalis-spec.md` §
+Fázisok) index-matematikája (`domain/fazisSorrend.ts`), szintén ne írd
+újra:
+- `fazisokFelcserelve(fazisok, pi, cel)` — egy fázis felcserélése a `cel`
+  pozícióval; csak a GENERÁLT (pl. "2. kezelés") nevet frissíti pozíció
+  szerint, a kézzel átírt fázisnevet a mozgatás nem bántja. A hívó
+  (`PlanEditorPage.tsx` `movePhase()`) felelőssége a `cel` tartomány-
+  ellenőrzése, a függvény ezt feltételezi. Új tömböt ad vissza, az eredeti
+  `fazisok`-at nem mutálja
+- `fazisCsukvaTorlesUtan(csukva, pi)` / `fazisCsukvaMozgatasUtan(csukva,
+  pi, cel)` — az összecsukott fázis-indexek halmazának karbantartása
+  törléskor (a törölt index alattiak változatlanok, fölöttiek eggyel
+  lejjebb tolódnak) illetve mozgatáskor (a két érintett index tagsága
+  felcserélődik), hogy az összecsukott/nyitott állapot a fázist kövesse,
+  ne a pozíciót
+
+Az árlista admin kereső/szűrő tétel (`docs/03-funkcionalis-spec.md` §
+6. Kezelések és árak) predikátumai (`domain/arlistaSzures.ts`), szintén
+ne írd újra őket:
+- `tetelIlleszkedik(x, q, filter)` — mindkét nyelven keres, ugyanaz a
+  szabály, mint a szerkesztő tétel-keresőjében (backlog-7); a Tömeges
+  árváltoztatás dialógus "jelenlegi szűrt lista" köre EZT hívja, a nyitott
+  sor kivétele NÉLKÜL (backlog-92)
+- `tetelMegtartando(x, q, filter, nyitottId)` — a fenti predikátum + a
+  nyitott sor kivétele: a nyitott sort MINDIG megtartja, akkor is, ha egy
+  időközbeni szerkesztés kiejtené a szűrőből
+
+A terv szerkesztő DOM-id-jei (`docs/03-funkcionalis-spec.md` § 3. Terv
+szerkesztő) egy közös helyen (`pages/planEditor/elemIdk.ts`), szintén ne
+írd újra őket:
+- `fogId`/`nevId`/`leirasId`/`keresoId`/`fazisKeresoId`/`fazisNevId`/
+  `fazisMegjegyzesId`/`fazisPanelId` — korábban négy helyen (JSX,
+  fókusz-effekt, teszt, dokumentáció) íródtak le egymástól függetlenül,
+  ugyanazzal a template-literál mintával; a `pages/planEditor/
+  useFokuszEffekt.ts` fókusz/scroll-effektje és a `PhaseSection`/
+  `FazisMegjegyzes`/`LineRow` mind ezekből építi a saját id-jeit. A
+  `FokuszCel` típus is itt él
 
 ## Domain szókincs
 
