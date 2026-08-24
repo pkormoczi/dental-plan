@@ -96,7 +96,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A sor `savos` mezője (nem az árlistai `SAVOS` ártípus!) dönt a nyomtatvány `*` + lábjegyzetéről, soha nem csupasz fix szám | D15 — jogi védelem: fix számként kötelező érvényű ajánlattá válna. A szerkesztőben soronként kézzel is átbillenthető — a sor lehet fix árú tételből, de a doki jelölheti becsültnek, ha a mennyiség csak a kezelés során derül ki |
 | `null` ár egy pénznemben ≠ `0` — a tétel abban a pénznemben nem ajánlható, a keresőben sem jelenik meg | `02-domain-modell.md` |
 | Minden JSON `schemaVersion`-nel indul; magasabb verzió észlelésekor **a betöltést meg kell tagadni**, érthető üzenettel | D18 — ezek a fájlok évekig élnek a Drive-on |
-| Placeholder-jelölésű nyilatkozat mellett a nyomtatvány nyilatkozat + aláírás oldala nem kerülhet PDF-be — a „csak ajánlat" mód kényszerített, felülírás nélkül | D23 — jogi védelem: a jogász által „még nincs lezárva" jelöléssel ellátott szöveg nem kerülhet aláírásra. Az `isPlaceholderTemplate()` (`app/src/domain/templates.ts`) az EGYETLEN hely, ahol ez eldől |
+| Placeholder-jelölésű vagy üres nyilatkozat mellett a nyomtatvány nyilatkozat + aláírás oldala nem kerülhet PDF-be — a „csak ajánlat" mód kényszerített, felülírás nélkül | D23 — jogi védelem: a jogász által „még nincs lezárva" jelöléssel ellátott, vagy a doki által kiürített szöveg nem kerülhet aláírásra. Az `isPlaceholderTemplate()` (`app/src/domain/templates.ts`) az EGYETLEN hely, ahol ez eldől |
 | Korábbi terv új verzióra nyitásakor a dátumbélyeg (`keltezes`/`ervenyesIg`) a betöltés pillanatában íródik (`frissDatummal`), soha nem véglegesítéskor | D22 — különben a mentett JSON és a már renderelt PDF-blob dátuma szétcsúszik, vagy egy lejárt keltezésű ajánlatot írnak alá |
 | Páciensmappa-névben az **ékezetek maradnak**, nincs transzliteráció; csak a tiltott karaktereket (`/ \ : * ? " < > \|`) kell cserélni; nevek rövidek (Windows 260 karakteres útvonalkorlát) | A doki a Fájlkezelőben keres rájuk névre |
 | A `DraftStorage` (piszkozat-autosave) nem válhat system of recorddá | Csak piszkozat-cache egy félbeszakadt tervhez; mockupban `localStorage`, véglegesben IndexedDB |
@@ -316,26 +316,27 @@ A sablonszerkesztő + placeholder-őr tétel (`docs/03-funkcionalis-spec.md`
 § Sablon-placeholder őr) segédfüggvénye, szintén ne írd újra:
 - `isPlaceholderTemplate(body)` (`app/src/domain/templates.ts`) — az
   EGYETLEN hely, ahol eldől, hogy egy sablon (nyilatkozat/fizetési
-  feltételek/garancia) törzse még jogi lektorálásra vár-e (`[PLACEHOLDER`/
-  `[PLATZHALTER` jelölő); a `DemoStorage.ts` (`ensureSeedTemplates`), a
-  `SettingsPage.tsx` (a német nyilatkozat készültség-jelzése) és a
-  `PreviewPage.tsx` (a nyilatkozat kemény zára + a fizetési feltételek/
-  garancia HU-visszaesése) mind ezt hívja — korábban két, egymástól eltérő
-  string-egyezésű privát duplikátum létezett, egy harmadik hívási hely
-  bevezetése volt az alkalom a konszolidálásra
+  feltételek/garancia) törzse még jogi lektorálásra vár-e: `[PLACEHOLDER`/
+  `[PLATZHALTER` jelölőt tartalmaz, VAGY a markdown-címsor levágása után
+  üres/csak-whitespace (a `pdf/markdownLite.ts` `stripMarkdownHeading()`-jét
+  hívja — a sablonszerkesztő mentéskor mindig kiírja a „# Cím” sort, tehát a
+  törzs önmagában sosem lenne csupasz üres string). A `DemoStorage.ts`
+  (`ensureSeedTemplates`), a `SettingsPage.tsx` (a német nyilatkozat
+  készültség-jelzése) és a `PreviewPage.tsx` (a nyilatkozat kemény zára + a
+  fizetési feltételek/garancia HU-visszaesése) mind ezt hívja — korábban két,
+  egymástól eltérő string-egyezésű privát duplikátum létezett, egy harmadik
+  hívási hely bevezetése volt az alkalom a konszolidálásra
 
 A fizetési feltételek/garancia szekció-kihagyás tétel
 (`docs/03-funkcionalis-spec.md` § Sablon-placeholder őr,
 `docs/04-nyomtatvany-spec.md` § „2. blokk — fizetési feltételek és
 garancia") segédfüggvénye, szintén ne írd újra:
 - `sablonNyomtathato(body)` (`app/src/domain/templates.ts`) — az
-  `isPlaceholderTemplate()` MELLETT (nem helyette) él: igaz, ha a szöveg
-  nem üres/csak-whitespace ÉS nem placeholder. A `pdf/TervDocument.tsx` a
-  MÁR feloldott (HU-visszaesés utáni) fizetési feltételek/garancia
-  szövegre hívja, hogy eldöntse, a szakasz a címével együtt a
-  nyomtatványra kerül-e; a `PreviewPage.tsx` ugyanezt hívja a
-  véglegesítés-őr puha „kimaradó szakasz" checklist-tételéhez, hogy a két
-  hely ne térjen el egymástól
+  `!isPlaceholderTemplate(body)`. A `pdf/TervDocument.tsx` a MÁR feloldott
+  (HU-visszaesés utáni) fizetési feltételek/garancia szövegre hívja, hogy
+  eldöntse, a szakasz a címével együtt a nyomtatványra kerül-e; a
+  `PreviewPage.tsx` ugyanezt hívja a véglegesítés-őr puha „kimaradó szakasz"
+  checklist-tételéhez, hogy a két hely ne térjen el egymástól
 
 A terv-szintű „kerek végösszeg" kedvezmény tétel
 (`docs/02-domain-modell.md` § Terv-szintű kedvezmény, D25)

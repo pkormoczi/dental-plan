@@ -160,7 +160,7 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
           <br />
           Nyilatkozat:{' '}
           <Text style={{ fontFamily: t.mono }}>{deNyilatkozatName ?? 'nyilatkozat-de-v1.md'}</Text>
-          {deNyilatkozatKesz === false && ' — placeholder, jogi lektorálás szükséges'}
+          {deNyilatkozatKesz === false && ' — hiányzik vagy placeholder, jogi lektorálás szükséges'}
           {deNyilatkozatKesz === true && ' — kész'}
           <br />
           <RadixLink asChild>

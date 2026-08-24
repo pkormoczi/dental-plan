@@ -15,16 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 87. tétel — Üres/whitespace sablon-validáció és hard-block navigáció
-  (a `backlog/redesign/` redesign-döntéssorozat DP-086 tétele) — az
-  `isPlaceholderTemplate()` ma csak a `[PLACEHOLDER`/`[PLATZHALTER`
-  jelölőt ismeri fel, üres/csak-whitespace szöveget nem (C8 hiányzó
-  fele) — egy törölt nyilatkozat-szöveg ma nem váltaná ki a D23 zárat.
-  Ez a tétel kiegészíti a predikátumot, és a nyilatkozat hard-block
-  Callout-ja valódi, kattintható linket kap a Beállítások →
-  Nyomtatványok tabra. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-87-sablon-ures-placeholder-terv.md`
-
 ### 88. tétel — Tárolás tájékoztató szöveg a DEMO oldalon
   (a `backlog/redesign/` redesign-döntéssorozat DP-087 tétele,
   leszűkített hatókörrel) — a forrás eredeti scope-ja (valódi

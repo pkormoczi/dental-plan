@@ -2290,3 +2290,20 @@ karbantartási kör négy önálló javítása.
   `docs/03-funkcionalis-spec.md` § "Nyomtatványok",
   `docs/04-nyomtatvany-spec.md` § "2. blokk — fizetési feltételek és
   garancia", `docs/05-technologia.md` § `PlanStorage`.
+
+### 87. tétel: Üres/whitespace sablon-validáció és hard-block navigáció — KÉSZ
+
+- **Méret:** kicsi — egy domain-modul (`domain/templates.ts`), egy
+  checklist-route bővítés (`domain/veglegesitesOr.ts`,
+  `pages/previewPage/VeglegesitesChecklist.tsx`), a Beállítások lap
+  induló fül-választása (`pages/SettingsPage.tsx`), kísérő tesztekkel.
+- **Megvalósítás:** `isPlaceholderTemplate()` mostantól a `[PLACEHOLDER`/
+  `[PLATZHALTER` jelölő MELLETT azt is felismeri, ha a sablon törzse a
+  markdown-címsor levágása után üres/csak-whitespace — a sablonszerkesztő
+  mentéskor mindig kiírja a „# Cím” sort, ezért az ürességet csak a címsor
+  UTÁN lehet érdemben mérni. A nyilatkozat véglegesítés-őr checklist-tétele
+  (`'nyilatkozat-placeholder'`) mostantól közvetlenül a Beállítások
+  Nyomtatványok fülére navigál (`/beallitasok?tab=nyomtatvanyok`), nem csak
+  a lap tetejére — a `SettingsPage` a query paramétert kizárólag a kezdeti
+  mounton olvassa, nincs param→state szinkron effekt. Részletek:
+  `docs/03-funkcionalis-spec.md` § "Sablon-placeholder őr".

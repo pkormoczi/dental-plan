@@ -906,21 +906,25 @@ PDF nem hagyhatja el a gépet.
 
 Egy sablon (nyilatkozat, fizetési feltételek vagy garancia) akkor számít
 jogilag lezáratlannak, ha a törzse `[PLACEHOLDER` vagy `[PLATZHALTER`
-jelölőt tartalmaz (zárójellel — a jelölő nélküli szóemlítés nem elég).
-Ez **egyetlen predikátum**, egyetlen helyen (`app/src/domain/templates.ts`
+jelölőt tartalmaz (zárójellel — a jelölő nélküli szóemlítés nem elég),
+VAGY ha a doki egyszerűen kiürítette a szöveget. Az üresség-vizsgálat a
+markdown-címsor (`# Cím`) levágása UTÁN néz — a sablonszerkesztő
+mentéskor mindig kiírja ezt a sort, tehát egy ténylegesen kiürített
+szöveg törzse önmagában sosem lenne csupasz üres string. Ez **egyetlen
+predikátum**, egyetlen helyen (`app/src/domain/templates.ts`
 `isPlaceholderTemplate`); a sablonszerkesztő készültség-jelzése, a
 seed-feltöltés és a véglegesítés-őr mind ezt hívja. A `sablonNyomtathato`
-(ugyanott) erre épül: igaz, ha a szöveg nem üres/csak-whitespace ÉS nem
-placeholder — a nyomtatvány ezt hívja annak eldöntésére, hogy egy
+(ugyanott) erre épül: a nyomtatvány ezt hívja annak eldöntésére, hogy egy
 fizetési feltételek/garancia szakasz ténylegesen a PDF-re kerülhet-e.
 
-- **Nyilatkozat placeholder → kemény zár.** Ha a ténylegesen betöltött
-  nyilatkozat placeholder, a „csak ajánlat" kapcsoló automatikusan
-  bepipálva és **letiltva** jelenik meg, tehát a nyilatkozat és aláírás
-  blokk garantáltan kimarad minden PDF-ből — letöltésből és
+- **Nyilatkozat placeholder vagy üres → kemény zár.** Ha a ténylegesen
+  betöltött nyilatkozat placeholder vagy üres, a „csak ajánlat" kapcsoló
+  automatikusan bepipálva és **letiltva** jelenik meg, tehát a nyilatkozat
+  és aláírás blokk garantáltan kimarad minden PDF-ből — letöltésből és
   véglegesítésből egyaránt, mert mindkettő ugyanabból a renderelt
-  példányból dolgozik. Piros figyelmeztetés jelzi az okot és hogy hol
-  kell javítani (Beállítások → Nyomtatvány szövegei). **Nincs „Folytatás
+  példányból dolgozik. A véglegesítés-őr checklist-tétele piros
+  figyelmeztetést ad, kattintható gombbal közvetlenül a Beállítások
+  **Nyomtatványok** fülére (nem csak a lap tetejére). **Nincs „Folytatás
   mindenképp"** — ez blokk, ugyanabban a súlyban, mint a kitöltetlen sor.
 - **Fizetési feltételek placeholder → HU-visszaesés, majd szekció-kihagyás,
   sosem zár.** A fizetési feltételek szakasz „csak ajánlat" módban is

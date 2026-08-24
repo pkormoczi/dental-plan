@@ -35,6 +35,21 @@ describe('isPlaceholderTemplate', () => {
     expect(isPlaceholderTemplate(NYILATKOZAT_DE_V1)).toBe(false);
     expect(isPlaceholderTemplate(FIZETESI_FELTETELEK_DE_V1)).toBe(false);
   });
+
+  it('true üres törzsre', () => {
+    expect(isPlaceholderTemplate('')).toBe(true);
+  });
+
+  it('true csak whitespace törzsre', () => {
+    expect(isPlaceholderTemplate('   \n  ')).toBe(true);
+  });
+
+  it('true, ha a törzs a mentett fájl mintájának megfelelően csak a markdown-címsort tartalmazza', () => {
+    // NyomtatvanyokTab.handleSaveTemplates() `# Cím\n\n<szöveg>\n` alakban ír --
+    // egy kiürített szöveg törzse így sosem lenne csupasz '', csak a
+    // címsor levágása UTÁN.
+    expect(isPlaceholderTemplate('# Nyilatkozat\n\n\n')).toBe(true);
+  });
 });
 
 describe('sablonNyomtathato', () => {
@@ -49,6 +64,10 @@ describe('sablonNyomtathato', () => {
   it('false placeholder-jelölésű szövegre', () => {
     expect(sablonNyomtathato('[PLACEHOLDER -- még nincs kész]')).toBe(false);
     expect(sablonNyomtathato('[PLATZHALTER / HELYKITÖLTŐ]')).toBe(false);
+  });
+
+  it('false csak markdown-címsort tartalmazó törzsre', () => {
+    expect(sablonNyomtathato('# Garancia\n\n\n')).toBe(false);
   });
 
   it('true valódi szövegre', () => {

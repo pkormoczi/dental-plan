@@ -894,13 +894,48 @@ describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
       expect(checkbox).toBeChecked();
       expect(checkbox).toBeDisabled();
       expect(
-        await screen.findByText(/A nyilatkozat szövege ezen a nyelven még jogi lektorálásra vár/),
+        await screen.findByText(/A nyilatkozat szövege ezen a nyelven/),
       ).toBeInTheDocument();
       // Mindkét seed DE sablon placeholder -- a fizetési feltételek a
       // meglévő sárga fallback-Callouton át is jelez (2. döntés).
       expect(
         screen.getByText(/A tervhez tartozó sablon nem érhető el a megfelelő nyelven/),
       ).toBeInTheDocument();
+    },
+    20000,
+  );
+
+  // 87. tétel -- a doki egyszerűen kiürítette a nyilatkozat szövegét
+  // (a szerkesztő mentéskor mindig kiírja a "# Cím" sort, tehát a törzs
+  // sosem csupasz üres string, csak a címsor levágása UTÁN az).
+  it(
+    'üresre törölt (csak címsort tartalmazó) nyilatkozattal is bepipálva és letiltva a "Csak ajánlat"',
+    async () => {
+      const user = userEvent.setup();
+      seedGermanPlanWithOneTranslatedItem();
+      localStorage.setItem('dp:sablonok/nyilatkozat-de-v2.md', '# Erklärung\n\n\n');
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Teszt Ures Nyilatkozat');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'zahnextraktion');
+      await user.click(await screen.findByText('Zahnextraktion'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+
+      const checkbox = screen.getByRole('checkbox');
+      expect(checkbox).toBeChecked();
+      expect(checkbox).toBeDisabled();
+      expect(await screen.findByText(/A nyilatkozat szövege ezen a nyelven/)).toBeInTheDocument();
     },
     20000,
   );
@@ -955,7 +990,7 @@ describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
         await screen.findByText(/A tervhez tartozó sablon nem érhető el a megfelelő nyelven/),
       ).toBeInTheDocument();
       expect(
-        screen.queryByText(/A nyilatkozat szövege ezen a nyelven még jogi lektorálásra vár/),
+        screen.queryByText(/A nyilatkozat szövege ezen a nyelven/),
       ).not.toBeInTheDocument();
       const checkbox = screen.getByRole('checkbox');
       expect(checkbox).not.toBeChecked();

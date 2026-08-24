@@ -33,7 +33,12 @@ import { elolegTullepi, tervVegosszeg } from './totals';
 import type { Paciens, Plan, PriceList } from './types';
 
 export type CsekklistaSulyossag = 'hard' | 'soft' | 'info';
-export type CsekklistaRoute = '/paciens' | '/terv' | '/arlista' | '/beallitasok';
+export type CsekklistaRoute =
+  | '/paciens'
+  | '/terv'
+  | '/arlista'
+  | '/beallitasok'
+  | '/beallitasok?tab=nyomtatvanyok';
 
 export interface CsekklistaReszlet {
   cim: string;
@@ -340,9 +345,10 @@ export function veglegesitesDiagnozis(
       id: 'nyilatkozat-placeholder',
       sulyossag: 'info',
       cim:
-        'A nyilatkozat szövege ezen a nyelven még jogi lektorálásra vár — a nyilatkozat és ' +
-        'aláírás oldal emiatt nem kerülhet a nyomtatványra, a „Csak ajánlat” mód kényszerítve van.',
-      route: '/beallitasok',
+        'A nyilatkozat szövege ezen a nyelven hiányzik, vagy még jogi lektorálásra vár — a ' +
+        'nyilatkozat és aláírás oldal emiatt nem kerülhet a nyomtatványra, a „Csak ajánlat” mód ' +
+        'kényszerítve van.',
+      route: '/beallitasok?tab=nyomtatvanyok',
     });
   }
 

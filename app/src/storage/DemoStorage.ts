@@ -325,7 +325,9 @@ export class DemoStorage implements PlanStorage {
    * visszaírná a seedet, elveszítve a doki munkáját. A garancia HU/DE
    * SZÁNDÉKOSAN placeholder marad a seedben (nincs forrása az Excelben) --
    * rá ez az ág továbbra is minden `init()`-en lefut, amíg a doki valódi
-   * szöveget nem ment.
+   * szöveget nem ment. Ugyanez vonatkozik egy tudatosan kiürített sablonra
+   * is (`isPlaceholderTemplate()` az üres törzset is placeholdernek
+   * tekinti): a következő `init()` ezt is visszaállítja a seedre.
    */
   private ensureSeedTemplates(): void {
     for (const [name, body] of DEFAULT_TEMPLATES) {

@@ -18,6 +18,17 @@ function renderSettings() {
   );
 }
 
+// 87. tétel: a véglegesítés-őr "nyilatkozat-placeholder" checklist-tétele
+// (`domain/veglegesitesOr.ts`) `/beallitasok?tab=nyomtatvanyok`-ra navigál --
+// a query paraméter kizárólag a KEZDETI mountot vezérli.
+function renderSettingsOnTemplatesTab() {
+  return render(
+    <TestProviders initialEntries={['/beallitasok?tab=nyomtatvanyok']}>
+      <SettingsPage />
+    </TestProviders>,
+  );
+}
+
 // D46: a NavBar-t IS rendereli, ugyanabban a router-fában -- a valós
 // bekötés (`useNavGuard(dirty)` a SettingsPage-ben, a NavBar
 // kattintás-elfogása) csak így igazolható, nem a `renderSettings()` szűkebb
@@ -58,6 +69,12 @@ describe('SettingsPage', () => {
     renderSettings();
     await screen.findByText('Beállítások');
     expect(screen.getByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('?tab=nyomtatvanyok belépési ponton a Nyomtatványok tab aktív', async () => {
+    renderSettingsOnTemplatesTab();
+    await screen.findByText('Beállítások');
+    expect(screen.getByRole('tab', { name: /Nyomtatványok/ })).toHaveAttribute('aria-selected', 'true');
   });
 
   describe('Rendelő adatai', () => {

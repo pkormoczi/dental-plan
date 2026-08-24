@@ -35,10 +35,17 @@ function TestLepesGuardProvider({ children }: { children: ReactNode }) {
   return <LepesGuardProvider value={value}>{children}</LepesGuardProvider>;
 }
 
-export function TestProviders({ children }: { children: ReactNode }) {
+export function TestProviders({
+  children,
+  initialEntries,
+}: {
+  children: ReactNode;
+  /** A `MemoryRouter` induló útvonala(i) -- alapból `['/']`, csak akkor kell megadni, ha egy teszt query paramétert vagy konkrét path-t igényel. */
+  initialEntries?: string[];
+}) {
   return (
     <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
-      <MemoryRouter>
+      <MemoryRouter initialEntries={initialEntries}>
         <StorageProvider>
           <AppStateProvider>
             {/* D46: a D38-védett lapok (pl. SettingsPage sablon-szekciója)

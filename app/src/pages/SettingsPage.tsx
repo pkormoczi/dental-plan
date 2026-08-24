@@ -13,6 +13,7 @@
 // `onDirtyChange` callbacken át.
 
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Box, Heading, Tabs } from '@radix-ui/themes';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import { useNavGuard } from '../components/NavGuardContext';
@@ -30,7 +31,13 @@ function toSettingsTab(value: string): SettingsTab {
 }
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<SettingsTab>('rendelo');
+  // A checklist "Nyomtatvány szövegei" gombja (domain/veglegesitesOr.ts
+  // '/beallitasok?tab=nyomtatvanyok') a query paraméterrel jelöli ki az
+  // induló fület -- kizárólag a KEZDETI mount pillanatában (lásd a lenti
+  // lazy state init), nincs param->state szinkron effekt: egy már mountolt lapon
+  // a fülváltás kizárólag a lenti dirty-guardon át történhet.
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<SettingsTab>(() => toSettingsTab(searchParams.get('tab') ?? ''));
   const [dirty, setDirty] = useState(false);
   const guard = useDiscardGuard(dirty);
   // D46: ugyanez a dirty jelző a NavBar-navigációt is védi.

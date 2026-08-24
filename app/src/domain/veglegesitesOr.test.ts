@@ -387,6 +387,15 @@ describe('veglegesitesDiagnozis', () => {
       expect(vanKemenyBlokk(diag)).toBe(false);
     });
 
+    it('a "nyilatkozat-placeholder" tétel a Beállítások Nyomtatványok fülére navigál', () => {
+      const plan = makePlan([[sor()]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, {
+        ...NO_SABLON,
+        nyilatkozatPlaceholder: true,
+      });
+      expect(tetel(diag, 'nyilatkozat-placeholder')?.route).toBe('/beallitasok?tab=nyomtatvanyok');
+    });
+
     // A fizetési feltételek/garancia placeholder- vagy üres szövege a hívó
     // (PreviewPage) MÁR feloldott TÉNYként adja át -- a nyomtatványon
     // (TervDocument.tsx) a szakasz a címével együtt kimarad, itt csak PUHA
