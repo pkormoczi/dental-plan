@@ -2,6 +2,46 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. augusztus 24.
+
+- Elkészült a véglegesített kezelési tervek megtekintésére szolgáló új "Terv részletei"
+  képernyő: verziók közötti lapozás, a kezelési fázisok és sorok áttekintő táblázata
+  (bővíthető leírásokkal), az érintett fogak fogtérképe, pénzügyi összesítő, valamint a
+  ténylegesen elmentett, aláírt PDF megtekintése és letöltése egy helyen.
+- A nyomtatott kezelési terv oldalai átalakultak: a korábbi négy fix oldal helyett a
+  tartalom folyamatosan tördelődik, minden oldalon (az első kivételével) megjelenik egy
+  kompakt fejléc, és ha a nyilatkozat több oldalra nyúlik, "Nyilatkozat – folytatás" cím
+  jelzi a folytatást. Az első oldalon a terv címe és a páciensadatok, majd a fogtérkép, a
+  fázisok és az összegzés következik egymás után, és egy üres páciensadat-mező most
+  egyszerűen kimarad, nem hagy üres helyet.
+- Javítottuk a nyomtatott kezelési táblázatok megjelenését: üres fogszám-mező helyén "—"
+  jelenik meg, a becsült árat jelző csillag az egységár mellé költözött, és egy fázis vagy
+  egy nagyon hosszú leírás mostantól nem szakad el csúnyán egy oldaltörésnél.
+- Az összesítő blokk saját címet kapott, a "Fizetendő" és "Kezelések összesen" feliratok
+  "Végösszeg"-re és "Kezelések összegé"-re változtak (mind a nyomtatványon, mind a Terv
+  részletei képernyőn), és az előleg/fennmaradó összeg sorai jobban elkülönülnek egymástól.
+- Ha a fizetési feltételek vagy a garancia szövege üres vagy még nincs véglegesítve, a
+  szakasz a címével együtt teljesen kimarad a nyomtatott dokumentumból — erre a
+  véglegesítés előtti ellenőrzőlista is figyelmeztet.
+- Ha az aláírás blokk nem fér ki az oldal aljára, a nyilatkozat utolsó bekezdése is
+  átkerül vele a következő oldalra, hogy ne szakadjon el az aláírástól.
+- Német nyelvű terveknél a terv címe és a fázisnevek (ha nem lettek kézzel átírva)
+  mostantól automatikusan németre fordulnak a nyomtatványon, és javítottuk a TAJ-szám
+  feliratát is.
+- Az Árlista adminban egy új tétel mostantól inaktívként jön létre; a forint ár első
+  megadása dönt az aktiválásról (pozitív ár automatikusan aktivál, 0 forint megerősítést
+  kér), a deaktiválás pedig mostantól megerősítést kér. Ha egy tervben szereplő sor
+  időközben inaktivált tételre hivatkozik, ezt a véglegesítés előtti ellenőrzőlista is
+  jelzi.
+- A Kategóriák szerkesztése (magyar/német név, szín, sorrend) mostantól nem menti el
+  azonnal minden billentyűleütést, hanem explicit "Mentés"/"Mégse" gombokkal működik, és a
+  becsukott kategória-sor jelzi, ha hiányzik a német név.
+- A terv szerkesztőjében az előleg mostantól forint/euró vagy százalék formában is
+  megadható — a százalék csak beviteli segédlet, a program azonnal átszámítja abszolút
+  összegre.
+- A Beállítások "Egyéb" fülén mostantól az alapértelmezett pénznem (forint vagy euró) is
+  beállítható egy új kezelési terv indításához, a nyelv beállítása mellett.
+
 ## 2026. augusztus 21.
 
 - Mostantól figyelmeztetést kapunk, ha egy kézzel begépelt szöveg (kezelés neve, leírása,

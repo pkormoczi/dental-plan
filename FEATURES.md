@@ -14,7 +14,8 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 
 ### Tervek és verziók
 
-- Egy visszatérő páciens korábbi ajánlatainak/terveinek listája: egy verzió közvetlenül megtekinthető böngészőben (letöltés nélkül) vagy letölthető PDF-ként, verziónkénti végösszeggel. Egy páciensnek akár több, egymástól független terve is lehet, ezek külön, saját — magától javasolt, de szabadon átírható — címmel jelennek meg, a legfrissebb elöl. Régi verzió sosem íródik felül, módosításkor mindig új verzió készül, és egy tervhez csak a legfrissebb verzióról indítható újabb verzió.
+- Egy visszatérő páciens korábbi ajánlatainak/terveinek listája, verziónkénti végösszeggel. Egy páciensnek akár több, egymástól független terve is lehet, ezek külön, saját — magától javasolt, de szabadon átírható — címmel jelennek meg, a legfrissebb elöl. Régi verzió sosem íródik felül, módosításkor mindig új verzió készül, és egy tervhez csak a legfrissebb verzióról indítható újabb verzió.
+- Egy korábbi, véglegesített verzió megnyitása egy áttekinthető oldalt mutat: pénzügyi összesítő, fázisonként a kezelési sorok, kattintható fogtérkép (amivel megnézhető, mely fogakhoz mely sorok tartoznak), a terv adatai (cím, dátumok, nyelv, pénznem, kezelőorvos) és a páciens akkori — a mai adataitól esetleg már eltérő — pillanatképe, legalul pedig maga a ténylegesen kiadott nyomtatvány, beágyazva. Innen indítható közvetlenül „Új verzió” vagy „Másolás új tervbe”, letölthető a PDF, megnyitható külön lapon, és előre-hátra lehet lépkedni a terv verziói között.
 - Egy korábbi terv alapján önálló új terv is indítható: vagy csak a páciens adataival (visszatérő páciensnél nem kell újragépelni — a nyelv és a pénznem is a páciens legutóbbi véglegesített ajánlatából öröklődik), vagy a teljes tartalom átvételével, például egy árváltozat elkészítéséhez.
 - Új terv indításakor kereshető, hogy a páciens szerepel-e már korábban, keresés nélkül is felajánlva a legutóbb aktív pácienseket. Ha nincs találat, egy „Új páciens” opció azonnal indítja a felvitelét a már begépelt névvel.
 
@@ -36,15 +37,16 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 
 ### Véglegesítés
 
-- A végleges nyomtatvány megtekintése véglegesítés előtt, akár „csak ajánlat” (nyilatkozat és aláírás nélküli) változatban is — ez a választás a tervvel együtt megmarad. Ha a nyomtatvány elkészítése közben hiba történik, az utolsó sikeresen elkészült nyomtatvány marad látható (beszürkítve), „Újrapróbálás” gombbal; amíg a hiba fennáll, sem letöltés, sem véglegesítés nem lehetséges. Ha a nyilatkozat szövege még jogi lektorálásra vár, a program automatikusan „csak ajánlat” módra kényszerít, mert enélkül nem generálható aláírásra alkalmas nyomtatvány.
-- Véglegesítés előtt egy mindig látható, egységes lista sorolja fel az összes talált problémát — például kitöltetlen vagy díjmentes sort, beárazatlan vagy elavult árú tételt, ellenőrzésre váró szöveget, üres fázist, orvos- vagy törzsadat-eltérést —; van közöttük olyan, ami megakadályozza a véglegesítést, és van, ami csak figyelmeztet. Egy kattintással a probléma pontos helyére lehet ugrani a listából.
+- A végleges nyomtatvány megtekintése véglegesítés előtt, akár „csak ajánlat” (nyilatkozat és aláírás nélküli) változatban is — ez a választás a tervvel együtt megmarad. Ha a nyomtatvány elkészítése közben hiba történik, az utolsó sikeresen elkészült nyomtatvány marad látható (beszürkítve), „Újrapróbálás” gombbal; amíg a hiba fennáll, sem letöltés, sem véglegesítés nem lehetséges. Ha a nyilatkozat szövege még jogi lektorálásra vár, a program automatikusan „csak ajánlat” módra kényszerít, mert enélkül nem generálható aláírásra alkalmas nyomtatvány; ha a fizetési feltételek vagy a garancia szövege üres vagy szintén lektorálásra vár, az adott szakasz a címével együtt egyszerűen kimarad a nyomtatványból.
+- Véglegesítés előtt egy mindig látható, egységes lista sorolja fel az összes talált problémát — például kitöltetlen vagy díjmentes sort, beárazatlan, elavult árú vagy időközben inaktivált tételre hivatkozó sort, ellenőrzésre váró szöveget, üres fázist, orvos- vagy törzsadat-eltérést —; van közöttük olyan, ami megakadályozza a véglegesítést, és van, ami csak figyelmeztet. Egy kattintással a probléma pontos helyére lehet ugrani a listából.
 - Innen indul a véglegesítés: ekkor készül el a letölthető PDF, és ekkor mentődik a terv új verzióként. A tervkészítés három lépése (Terv adatai → Kezelések → Előnézet és véglegesítés) fölött egy állandó, kattintható folyamatjelző mutatja, hol tart éppen a munka, és bármelyik korábbi lépésre bármikor vissza lehet lépni.
 
 ## Kezelések és árak
 
 - A kínált kezelések, áraik (forint és euró) és kategóriáik karbantartása, kereséssel és szűrőkkel (pl. hiányzó euró ár, sávos ár, inaktív vagy gyakori tétel).
-- Egy tétel törlés helyett inaktiválható, hogy a rá hivatkozó régi tervek később is értelmezhetők maradjanak — bármikor visszakapcsolható.
-- Kategóriák létrehozása, átnevezése, színezése és sorrendezése — a kategória színe egyben a fogtérképen is ezt jelöli.
+- Új tétel felvételekor a program kezdetben inaktívként hozza létre; amint megadják a forint árát, a tétel automatikusan aktiválódik — ha az ár 0 Ft-on marad, a program rákérdez, hogy ez szándékos-e.
+- Egy tétel törlés helyett inaktiválható, hogy a rá hivatkozó régi tervek később is értelmezhetők maradjanak — az inaktiválás megerősítést kér, a visszakapcsolás (reaktiválás) viszont azonnali.
+- Kategóriák létrehozása és törlése azonnali; a név, a szín és a sorrend módosítása viszont piszkozatban gyűlik, és külön Mentés gombbal kerül csak be a törzsadatba — Mégse-vel bármikor eldobható. A kategória színe egyben a fogtérképen is ezt jelöli, és jelzés mutatja, ha egy kategóriának hiányzik a német neve.
 - Tételenként megadható „gyakori” jelölés (gyorsgomb a szerkesztőben), leírás arról, mi tartozik hozzá, és megjelölhető „csomagtételnek” is, hogy a véglegesítés figyelmeztessen, ha egy rá hivatkozó soron nincs leírás.
 
 ## Beállítások
@@ -52,7 +54,7 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 - Három fülre osztva: Rendelő adatai, Nyomtatványok és Egyéb — mindegyiken önálló Mentés/Mégse gombpár védi a még nem mentett módosítást.
 - Rendelő adatai: a rendelő adatai a nyomtatvány fejlécéhez/lábléchez, és az orvosok listája — soronként aktiválható/inaktiválható, nyilakkal sorrendezhető, törölhető, és kijelölhető köztük egy alapértelmezett, aki minden új tervre automatikusan rákerül.
 - Nyomtatványok: a nyilatkozat, a fizetési feltételek és a garancia szövegének szerkesztése — mentéskor mindig új verzió jön létre, a korábban aláírt tervek a saját, aláírt szövegükkel maradnak.
-- Egyéb: az ajánlat érvényességi ideje, az alapértelmezett nyelv új tervekhez, és annak áttekintése, mennyi tartalom (tételnevek, euró árak, nyilatkozat) áll már készen németül.
+- Egyéb: az ajánlat érvényességi ideje, az alapértelmezett nyelv és pénznem új tervekhez, és annak áttekintése, mennyi tartalom (tételnevek, euró árak, nyilatkozat) áll már készen németül.
 
 ## DEMO
 
