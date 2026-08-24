@@ -254,7 +254,6 @@ kerekítési hiba az összegzésben.
   "keltezes": "2026-08-05",
   "ervenyesIg": "2026-11-05",      // számított: keltezes + beallitasok.ervenyessegNap
   "arlistaVerzio": "2026-07-01",   // melyik árlistából készült
-  "sablonVerzio": "nyilatkozat-hu-v1",
   "orvos": "Dr. Mándoki István",
 
   "paciens": {

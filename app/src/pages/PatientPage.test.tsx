@@ -421,7 +421,6 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
       keltezes: '2026-08-05',
       ervenyesIg: '2026-11-03',
       arlistaVerzio: '2026-07-01',
-      sablonVerzio: 'nyilatkozat-hu-v1',
       orvos: 'Dr. Mándoki István',
       paciens,
       fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
@@ -648,7 +647,6 @@ describe('PatientPage -- Kezelőorvos szekció (D67)', () => {
           keltezes: '2026-08-05',
           ervenyesIg: '2026-11-03',
           arlistaVerzio: '2026-07-01',
-          sablonVerzio: 'nyilatkozat-hu-v1',
           orvos,
           paciens: {
             nev: 'Teszt Elek',

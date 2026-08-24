@@ -21,7 +21,6 @@ function minimalPlan(statusz: TervStatusz): Plan {
     keltezes: '2026-08-01',
     ervenyesIg: '2026-11-01',
     arlistaVerzio: '2026-07-01',
-    sablonVerzio: 'nyilatkozat-hu-v1',
     orvos: 'Dr. Teszt Elek',
     paciens: {
       nev: 'Teszt',

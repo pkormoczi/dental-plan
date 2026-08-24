@@ -904,7 +904,10 @@ jogilag lezáratlannak, ha a törzse `[PLACEHOLDER` vagy `[PLATZHALTER`
 jelölőt tartalmaz (zárójellel — a jelölő nélküli szóemlítés nem elég).
 Ez **egyetlen predikátum**, egyetlen helyen (`app/src/domain/templates.ts`
 `isPlaceholderTemplate`); a sablonszerkesztő készültség-jelzése, a
-seed-feltöltés és a véglegesítés-őr mind ezt hívja.
+seed-feltöltés és a véglegesítés-őr mind ezt hívja. A `sablonNyomtathato`
+(ugyanott) erre épül: igaz, ha a szöveg nem üres/csak-whitespace ÉS nem
+placeholder — a nyomtatvány ezt hívja annak eldöntésére, hogy egy
+fizetési feltételek/garancia szakasz ténylegesen a PDF-re kerülhet-e.
 
 - **Nyilatkozat placeholder → kemény zár.** Ha a ténylegesen betöltött
   nyilatkozat placeholder, a „csak ajánlat" kapcsoló automatikusan
@@ -913,20 +916,27 @@ seed-feltöltés és a véglegesítés-őr mind ezt hívja.
   véglegesítésből egyaránt, mert mindkettő ugyanabból a renderelt
   példányból dolgozik. Piros figyelmeztetés jelzi az okot és hogy hol
   kell javítani (Beállítások → Nyomtatvány szövegei). **Nincs „Folytatás
-  mindenképp"** — ez blokk, ugyanabban a súlyban, mint a kitöltetlen sor
-  (D23).
-- **Fizetési feltételek placeholder → HU-visszaesés, nem zár.** A
-  fizetési feltételek szakasz „csak ajánlat" módban is mindig
-  nyomtatódik, ezért ott a kényszerített ajánlat-mód nulla védelmet
-  adna; helyette a hiányzó sablonnál is használt HU-visszaesés fut le (a
-  magyar szöveg jelenik meg), sárga figyelmeztetéssel.
-- **Garancia placeholder → HU-visszaesés, nem zár.** Ugyanaz a viselkedés,
-  mint a fizetési feltételeknél — a garancia szakasz „csak ajánlat"
-  módban is mindig nyomtatódik, tehát nála sincs mit védeni egy
-  kényszerített ajánlat-móddal. A magyar szöveg ma is placeholder (a doki
-  még nem adta meg), ezért a HU-visszaesés magyar nyelvű terven nem fut
-  le (a placeholder szöveg magyarul nyomtatódik, sárga figyelmeztetés
-  nélkül — nincs mire visszaesni), csak német nyelvű tervnél jelez.
+  mindenképp"** — ez blokk, ugyanabban a súlyban, mint a kitöltetlen sor.
+- **Fizetési feltételek placeholder → HU-visszaesés, majd szekció-kihagyás,
+  sosem zár.** A fizetési feltételek szakasz „csak ajánlat" módban is
+  mindig nyomtatódik, ezért ott a kényszerített ajánlat-mód nulla
+  védelmet adna; helyette a hiányzó sablonnál is használt HU-visszaesés
+  fut le (a magyar szöveg jelenik meg), sárga figyelmeztetéssel. Ha a
+  HU-visszaesés UTÁN is placeholder (vagy üres) marad a ténylegesen
+  felhasznált szöveg, a teljes szakasz — a címével együtt — kimarad a
+  nyomtatványból (`pdf/TervDocument.tsx`), a véglegesítés-őr pedig egy
+  ÚJ, PUHA checklist-tételen jelzi a dokinak, mely szakaszok maradnak ki.
+- **Garancia placeholder → ugyanaz, mint a fizetési feltételeknél.** A
+  garancia szakasz „csak ajánlat" módban is mindig nyomtatódik, tehát
+  nála sincs mit védeni egy kényszerített ajánlat-móddal. A magyar
+  szöveg ma is placeholder (a doki még nem adta meg), ezért a
+  HU-visszaesés magyar nyelvű terven nem fut le (nincs mire visszaesni)
+  — amíg ez így marad, a Garancia szakasz magyar nyelvű terven is
+  egyszerűen kimarad a nyomtatványból, a fenti puha checklist-tétellel
+  jelezve.
+- Ha MINDKÉT szakasz kimaradna, a nyomtatvány 2. blokkja (a teljes
+  `<Page>`) sem kerül a dokumentumba — nem marad üres oldal egy
+  szerződéses dokumentumban (lásd `04-nyomtatvany-spec.md` „2. blokk").
 
 ### Terv címének kiírása vadonatúj lánchoz (D61)
 

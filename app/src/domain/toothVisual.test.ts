@@ -80,7 +80,6 @@ function makeMultiPhasePlan(fazisok: Sor[][]): Plan {
     keltezes: '2026-01-01',
     ervenyesIg: '2026-02-01',
     arlistaVerzio: '2026-01-01',
-    sablonVerzio: 'nyilatkozat-hu-v1',
     orvos: 'Dr. Teszt',
     paciens: {
       nev: 'Teszt Elek',

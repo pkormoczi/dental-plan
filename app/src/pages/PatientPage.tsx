@@ -34,7 +34,6 @@ import ChipGroup from '../components/ChipGroup';
 import { Field, FieldGroup, ReadOnlyField } from '../components/Field';
 import { useLepesGuard } from '../components/LepesGuardContext';
 import Section from '../components/Section';
-import { sablonVerzioFor } from '../domain/blankPlan';
 import { lefedettseg } from '../domain/coverage';
 import { addDaysIso, formatLongDate } from '../domain/date';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
@@ -84,7 +83,6 @@ export default function PatientPage() {
       // (docs/01-attekintes-es-dontesek.md).
       const regiNyelv = prev.nyelv;
       next.nyelv = nyelv;
-      next.sablonVerzio = sablonVerzioFor(nyelv);
       for (const f of next.fazisok) {
         for (const s of f.sorok) {
           const tetel = priceList.tetelek.find((x) => x.id === s.tetelId);

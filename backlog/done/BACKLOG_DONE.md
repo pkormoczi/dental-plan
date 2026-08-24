@@ -2182,3 +2182,23 @@ karbantartási kör négy önálló javítása.
   tárolódik, a nyomtatvány, a sablon és a véglegesítés-őr érintetlen.
   Kezelési sor nélkül (0 Fizetendő) a módváltó nem jelenik meg. Részletek:
   `docs/03-funkcionalis-spec.md` § "Előleg".
+
+### 81. tétel: PDF fizetési feltételek és garancia — KÉSZ
+
+- **Méret:** kicsi-közepes — a `Plan.sablonVerzio` mező törlése ~50
+  fájlt érintett (túlnyomó többségük mechanikus teszt-fixture takarítás),
+  a tényleges viselkedésváltozás két fájlban (`pdf/TervDocument.tsx`,
+  `domain/veglegesitesOr.ts`) + egy új segédfüggvény
+  (`domain/templates.ts`), kísérő tesztek, a nyomtatvány- és
+  funkcionális spec frissítve.
+- **Megvalósítás:** a `terv.json` innentől nem tárol sablonazonosítót —
+  a történeti igazság kizárólag a véglegesítéskor mentett final PDF. Egy
+  a vizsgálat során talált, önálló rés is itt záródott: a fizetési
+  feltételek/garancia szakasz a HU-visszaesés UTÁN is placeholder- vagy
+  üres szövege esetén a címével együtt teljesen kimarad a nyomtatványból
+  (`sablonNyomtathato()`), nem csak a cross-language esetben — ha emiatt
+  mindkét szakasz kimaradna, a teljes blokk (`<Page>`) sem kerül a
+  dokumentumba. A véglegesítés-őr új, puha checklist-tétellel jelzi a
+  dokinak, mely szakaszok maradnak ki. Részletek:
+  `docs/04-nyomtatvany-spec.md` § "2. blokk — fizetési feltételek és
+  garancia" és `docs/03-funkcionalis-spec.md` § "Sablon-placeholder őr".

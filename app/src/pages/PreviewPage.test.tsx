@@ -147,7 +147,6 @@ describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', 
           keltezes: '2026-08-05',
           ervenyesIg: '2026-11-03',
           arlistaVerzio: '2026-07-01',
-          sablonVerzio: 'nyilatkozat-hu-v1',
           orvos,
           paciens: {
             nev: 'Teszt Orvosblokk',
@@ -712,7 +711,6 @@ function seedGermanNameDraft(sorok: Record<string, unknown>[]) {
         keltezes: '2026-08-05',
         ervenyesIg: '2026-11-03',
         arlistaVerzio: '2026-07-01',
-        sablonVerzio: 'nyilatkozat-de-v1',
         orvos: 'Dr. Mándoki István',
         paciens: {
           nev: 'Teszt Nemetnev',

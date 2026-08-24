@@ -17,7 +17,6 @@ function makeBlankPlan(overrides: Partial<Plan> = {}): Plan {
     keltezes: '2026-08-05',
     ervenyesIg: '2026-11-03',
     arlistaVerzio: '2026-07-01',
-    sablonVerzio: 'nyilatkozat-hu-v1',
     orvos: 'Dr. Mándoki István',
     paciens: {
       nev: 'Teszt Elek',

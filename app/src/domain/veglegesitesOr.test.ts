@@ -10,7 +10,7 @@ const NO_MASTER = null;
 const AKTIV_ORVOSOK = ['Dr. Teszt'];
 
 /** A legtöbb teszt a sablon-jelzéseket nem vizsgálja. */
-const NO_SABLON = { sablonFallback: false, nyilatkozatPlaceholder: false };
+const NO_SABLON = { sablonFallback: false, nyilatkozatPlaceholder: false, kihagyottSzekciok: [] };
 
 function paciens(partial: Partial<Paciens> = {}): Paciens {
   return {
@@ -50,7 +50,6 @@ function makePlan(fazisok: Sor[][], overrides: Partial<Plan> = {}): Plan {
     keltezes: '2026-01-01',
     ervenyesIg: '2026-02-01',
     arlistaVerzio: '2026-01-01',
-    sablonVerzio: 'nyilatkozat-hu-v1',
     orvos: 'Dr. Teszt',
     paciens: paciens(),
     fazisok: fazisok.map((sorok, i) => ({
@@ -346,8 +345,8 @@ describe('veglegesitesDiagnozis', () => {
     it('sablonFallback igaz esetén "sablon-fallback" soft tételt ad', () => {
       const plan = makePlan([[sor()]]);
       const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, {
+        ...NO_SABLON,
         sablonFallback: true,
-        nyilatkozatPlaceholder: false,
       });
       expect(tetel(diag, 'sablon-fallback')?.sulyossag).toBe('soft');
     });
@@ -355,11 +354,33 @@ describe('veglegesitesDiagnozis', () => {
     it('nyilatkozatPlaceholder igaz esetén "nyilatkozat-placeholder" info tételt ad, nem blokkol', () => {
       const plan = makePlan([[sor()]]);
       const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, {
-        sablonFallback: false,
+        ...NO_SABLON,
         nyilatkozatPlaceholder: true,
       });
       expect(tetel(diag, 'nyilatkozat-placeholder')?.sulyossag).toBe('info');
       expect(vanKemenyBlokk(diag)).toBe(false);
+    });
+
+    // A fizetési feltételek/garancia placeholder- vagy üres szövege a hívó
+    // (PreviewPage) MÁR feloldott TÉNYként adja át -- a nyomtatványon
+    // (TervDocument.tsx) a szakasz a címével együtt kimarad, itt csak PUHA
+    // jelzés a dokinak.
+    it('kihagyottSzekciok nem üres esetén "sablon-kihagyott-szekcio" soft tételt ad, nem blokkol', () => {
+      const plan = makePlan([[sor()]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, {
+        ...NO_SABLON,
+        kihagyottSzekciok: ['Garancia'],
+      });
+      const t = tetel(diag, 'sablon-kihagyott-szekcio');
+      expect(t?.sulyossag).toBe('soft');
+      expect(t?.szamlalo).toBe(1);
+      expect(t?.reszletek?.[0].nevek).toEqual(['Garancia']);
+      expect(vanKemenyBlokk(diag)).toBe(false);
+    });
+
+    it('kihagyottSzekciok üres esetén nem ad tételt', () => {
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON);
+      expect(tetel(diag, 'sablon-kihagyott-szekcio')).toBeUndefined();
     });
   });
 

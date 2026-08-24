@@ -26,6 +26,7 @@ import { FOOTER_JOBB_SZELESSEG, footerExtraMagassag } from './footerLayout';
 import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
 import { pdfFazisNev, pdfTervCim } from './pdfCimLokalizacio';
 import { fillPlaceholders, parseBlocks, type MdBlock } from './markdownLite';
+import { sablonNyomtathato } from '../domain/templates';
 import { ToothChartPdf } from './ToothChartPdf';
 import logoUrl from '../assets/logo.png';
 
@@ -38,6 +39,13 @@ const PAGE_MARGIN = 51; // ~18mm
 // egy egyszerű utótoldás a csillagos soroknál balra tolná a számot a
 // többihez képest.
 const SAVOS_JEL_SZELESSEG = 8;
+
+// A Fizetési feltételek/Garancia cím nem maradhat az oldal alján az első
+// bekezdés nélkül -- ~2-3 sornyi szöveg (9.5pt/1.5 sorköz) kell elférjen
+// alatta, különben a cím átkerül a következő oldalra. A cím ÉS a bekezdés
+// EGYÜTT wrap={false}-ba zárása szándékosan elvetve: egy hosszú első
+// bekezdés így is törhet oldalra, csak nem közvetlenül a cím alatt.
+const SZEKCIO_CIM_MIN_PRESENCE = 36;
 
 const s = {
   page: {
@@ -484,6 +492,14 @@ export function TervDocument({
   );
   const garanciaBlocks = parseBlocks(fillPlaceholders(garanciaMd, placeholderValues));
   const nyilatkozatBlocks = parseBlocks(fillPlaceholders(nyilatkozatMd, placeholderValues));
+  // A B blokk (fizetési feltételek + garancia) szekciói hiányzó vagy
+  // placeholder-jelölésű (jogilag még le nem zárt) szöveg esetén a
+  // címükkel együtt kimaradnak -- a HU-visszaesés UTÁNI, ténylegesen
+  // felhasznált szövegre vizsgálva, tehát a saját nyelvi placeholder-t is
+  // lefedi, nem csak a cross-language esetet.
+  const fizetesiLathato = sablonNyomtathato(fizetesiFeltetelekMd);
+  const garanciaLathato = sablonNyomtathato(garanciaMd);
+  const showFeltetelekPage = fizetesiLathato || garanciaLathato;
 
   // Dokumentum-szinten egyszer számolt, minden oldalon azonos lábléc-
   // magasság (lásd footerLayout.ts) -- nem oldalanként újraszámolt, mert a
@@ -605,14 +621,28 @@ export function TervDocument({
       </Page>
 
       {/* ---------- B blokk -- fizetési feltételek + garancia, egy folyamban ---------- */}
-      <Page size="A4" style={pageStyle}>
-        <MiniHeader plan={plan} L={L} fixed />
-        <Text style={s.h2}>{L.fizetesiFeltetelekCim}</Text>
-        <MdBlocks blocks={fizetesiFeltetelekBlocks} />
-        <Text style={[s.h2, s.h2Kovetkezo]}>{L.garanciaCim}</Text>
-        <MdBlocks blocks={garanciaBlocks} />
-        <Footer plan={plan} settings={settings} L={L} />
-      </Page>
+      {showFeltetelekPage && (
+        <Page size="A4" style={pageStyle}>
+          <MiniHeader plan={plan} L={L} fixed />
+          {fizetesiLathato && (
+            <>
+              <View wrap={false} minPresenceAhead={SZEKCIO_CIM_MIN_PRESENCE}>
+                <Text style={s.h2}>{L.fizetesiFeltetelekCim}</Text>
+              </View>
+              <MdBlocks blocks={fizetesiFeltetelekBlocks} />
+            </>
+          )}
+          {garanciaLathato && (
+            <>
+              <View wrap={false} minPresenceAhead={SZEKCIO_CIM_MIN_PRESENCE}>
+                <Text style={fizetesiLathato ? [s.h2, s.h2Kovetkezo] : s.h2}>{L.garanciaCim}</Text>
+              </View>
+              <MdBlocks blocks={garanciaBlocks} />
+            </>
+          )}
+          <Footer plan={plan} settings={settings} L={L} />
+        </Page>
+      )}
 
       {/* ---------- C blokk -- nyilatkozat és aláírás ---------- */}
       {!offerOnly && (

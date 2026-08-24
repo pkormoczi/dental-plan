@@ -11,7 +11,7 @@ import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
 import { aktivOrvosok } from '../domain/orvosok';
 import { paciensTorzsadatbol } from '../domain/paciensAdatok';
-import { isPlaceholderTemplate } from '../domain/templates';
+import { isPlaceholderTemplate, sablonNyomtathato } from '../domain/templates';
 import { megjelenitettTervCim } from '../domain/tervCim';
 import { computeOsszesitok } from '../domain/totals';
 import { buildToothVisualStates } from '../domain/toothVisual';
@@ -37,12 +37,6 @@ export default function PreviewPage() {
   // az autosave is megőrizze.
   const offerOnly = plan.csakAjanlat === true;
   const [nyilatkozatMd, setNyilatkozatMd] = useState('');
-  // A ténylegesen megjelenített nyilatkozat-verzió fájlneve (kiterjesztés
-  // nélkül) -- ez pinnelődik a `finalPlan.sablonVerzio`-jába véglegesítéskor
-  // (lásd doFinalize), hogy a doki mindig a most LÁTOTT szöveget írassa alá,
-  // ne egy korábban rögzített, esetleg már felülírt verziót. Alapértéknek a
-  // terv jelenlegi pinnelt verziója -- ha a betöltés hibázna, ez marad.
-  const [nyilatkozatVerzio, setNyilatkozatVerzio] = useState(plan.sablonVerzio);
   const [fizetesiFeltetelekMd, setFizetesiFeltetelekMd] = useState('');
   const [garanciaMd, setGaranciaMd] = useState('');
   const [sablonFallback, setSablonFallback] = useState(false);
@@ -129,12 +123,12 @@ export default function PreviewPage() {
   useEffect(() => {
     let cancelled = false;
 
-    // Mindhárom sablon a LEGFRISSEBB verzióban jelenik meg -- a nyilatkozat
-    // verzióját csak véglegesítéskor pinneljük (lásd doFinalize), hogy a
-    // doki a Beállításokban időközben mentett pontosítás után is a most
-    // látott szöveget írassa alá, ne egy korábbi állapotot. Ha a tervhez
-    // tartozó nyelven nincs sablon (pl. régi localStorage-ban a német
-    // bevezetése előtt keletkezett), a magyar szövegre esünk vissza --
+    // Mindhárom sablon a LEGFRISSEBB verzióban jelenik meg -- a doki a
+    // Beállításokban időközben mentett pontosítás után is a most látott
+    // szöveget írja alá, sosem egy korábbi állapotot (a mentett final PDF
+    // a történeti forrás, a `terv.json` nem hivatkozik sablonfájlra). Ha a
+    // tervhez tartozó nyelven nincs sablon (pl. régi localStorage-ban a
+    // német bevezetése előtt keletkezett), a magyar szövegre esünk vissza --
     // soha nem üres nyilatkozattal/hibával fut le a PDF. Ezt a
     // `sablonFallback`-en keresztül jelezzük is (lásd a sárga sávot lent).
     async function loadOrFallback(
@@ -190,7 +184,6 @@ export default function PreviewPage() {
         ]);
         if (!cancelled) {
           setNyilatkozatMd(nyil.body);
-          setNyilatkozatVerzio(nyil.name.replace(/\.md$/, ''));
           setFizetesiFeltetelekMd(fiz.body);
           setGaranciaMd(gar.body);
           setSablonFallback(nyil.fellback || fiz.fellback || gar.fellback);
@@ -232,6 +225,13 @@ export default function PreviewPage() {
   // `offerOnly` state-et mindenhol ez az effektív érték váltja fel.
   const nyilatkozatIsPlaceholder = isPlaceholderTemplate(nyilatkozatMd);
   const effectiveOfferOnly = offerOnly || nyilatkozatIsPlaceholder;
+
+  // A `TervDocument` ugyanezzel a predikátummal dönti el a szekció-kihagyást
+  // a nyomtatványon -- itt csak a checklist-jelzéshez ismételjük meg a nevekkel.
+  const kihagyottSablonSzekciok = [
+    !sablonNyomtathato(fizetesiFeltetelekMd) && 'Fizetési feltételek',
+    !sablonNyomtathato(garanciaMd) && 'Garancia',
+  ].filter((nev): nev is string => nev !== false);
 
   const tervDocument = (
     <TervDocument
@@ -281,7 +281,7 @@ export default function PreviewPage() {
     plan.leirasokMutatasa ?? true,
     masterPaciens,
     aktivOrvosok(settings),
-    { sablonFallback, nyilatkozatPlaceholder: nyilatkozatIsPlaceholder },
+    { sablonFallback, nyilatkozatPlaceholder: nyilatkozatIsPlaceholder, kihagyottSzekciok: kihagyottSablonSzekciok },
   );
 
   async function doFinalize() {
@@ -314,9 +314,6 @@ export default function PreviewPage() {
       const finalPlan = {
         ...plan,
         statusz: 'VEGLEGES' as const,
-        // A most az előnézetben LÁTOTT (legfrissebb) nyilatkozat-verzió
-        // pinnelődik -- lásd a fenti useEffect kommentjét.
-        sablonVerzio: nyilatkozatVerzio,
         // Az EFFEKTÍV érték mentődik, nem a nyers `plan.csakAjanlat` --
         // placeholder-nyilatkozat miatt kényszerített esetben is a
         // ténylegesen kiadott PDF-et kell tükröznie (a nyilatkozat blokk

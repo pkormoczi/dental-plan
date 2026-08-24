@@ -15,20 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 81. tétel — PDF fizetési feltételek és garancia
-  (a `backlog/redesign/` redesign-döntéssorozat DP-075 tétele) — a
-  `Plan.sablonVerzio` mező törlődik a sémából (C7/D595–D596): a mezőt
-  ma semmi nem olvassa vissza történeti célra, a mentett final PDF a
-  történeti forrás, nem egy JSON-ba pinnelt sablonazonosító. A
-  vizsgálat során talált, a redesign-től független rés is itt záródik:
-  a placeholder-ellenőrzés (`isPlaceholderTemplate`) ma csak a
-  cross-language HU-visszaesésnél fut — egy magyar terven a még
-  placeholder-jelölésű garancia-szöveg szó szerint rákerülne a PDF-re;
-  az ellenőrzés kiterjed a terv saját nyelvére is, placeholder esetén a
-  teljes szekció kimarad címmel együtt (D581). A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-81-pdf-fizetesi-garancia-terv.md`
-
 ### 82. tétel — PDF nyilatkozat és aláírásblokk
   (a `backlog/redesign/` redesign-döntéssorozat DP-076 tétele) — a
   `Plan.csakAjanlat` mezőre állás már megvan (`docs/02-domain-modell.md`

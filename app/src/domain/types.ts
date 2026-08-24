@@ -166,7 +166,6 @@ export interface Plan {
   keltezes: string;
   ervenyesIg: string;
   arlistaVerzio: string;
-  sablonVerzio: string;
   orvos: string;
   paciens: Paciens;
   fazisok: Fazis[];

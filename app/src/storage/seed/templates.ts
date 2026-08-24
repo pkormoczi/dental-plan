@@ -9,15 +9,17 @@
 //
 // A fizetési feltételek `{{eloleg}}` helyőrzője (D66, korábban
 // `{{elolegSzazalek}}` -- lásd `FIZETESI_FELTETELEK_HU_V1`/`_DE_V1`, a v1
-// sablon MÁR aláírt tervekre pinnelve marad, D4) a terv `elolegOsszeg`
-// mezőjéből képzett, formázott kifejezésre old fel (`pdf/labels.ts`
-// `elolegKifejezes`), kikapcsolt kapcsolónál a "megállapított"/"vereinbarte"
+// sablon már aláírt tervek mentett PDF-jében szó szerint benne marad) a
+// terv `elolegOsszeg` mezőjéből képzett, formázott kifejezésre old fel
+// (`pdf/labels.ts` `elolegKifejezes`), kikapcsolt kapcsolónál a
+// "megállapított"/"vereinbarte"
 // megfogalmazásra. Ezért NEM feltételes blokk, csak szöveghelyettesítés.
 //
 // A doki jogásza a Beállítások képernyőn szerkesztheti/pontosíthatja ezt a
 // szöveget -- mentéskor `storage.saveTemplate()` mindig ÚJ verziófájlt hoz
-// létre (pl. nyilatkozat-hu-v2.md), a jelenlegi megmarad, mert a már
-// véglegesített tervek erre hivatkoznak (D4, `plan.sablonVerzio`).
+// létre (pl. nyilatkozat-hu-v2.md), a jelenlegi megmarad -- a korábban
+// véglegesített tervek PDF-je a saját mentett byte-jaiban őrzi az akkor
+// érvényes szöveget, a `terv.json` nem hivatkozik a sablonfájlra.
 //
 // A hat sablon fix címét (a "# Cím" sor) a `TEMPLATE_HEADINGS` tartja --
 // ez teszi lehetővé, hogy a Beállítások szerkesztődobozában a cím nélküli
@@ -59,8 +61,8 @@ Megrendelő a kezelési tervben szereplő kezelés sorozat elvégzésével, az e
 
 // D66: az előleg százalékról abszolút összegre váltott -- ez a v2 az
 // egyetlen érintett felsorolás-pont mondatát igazítja hozzá, a v1 (fenti)
-// örökre változatlan marad (D4, már véglegesített tervek `sablonVerzio`-ja
-// rá mutathat).
+// örökre változatlan marad -- a korábban véglegesített tervek mentett
+// PDF-je a v1 szövegét tartalmazza, azt utólag nem írjuk át.
 export const FIZETESI_FELTETELEK_HU_V2 = `# Fizetési feltételek
 
 Megrendelő a kezelési tervben szereplő kezelés sorozat elvégzésével, az ehhez kapcsolódó fogtechnikai anyagok beépítésével egyetért, ehhez beleegyezését adja. Számlázási, fizetési feltételek tekintetében Megrendelő elfogadja az alábbiakat:

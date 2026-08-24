@@ -209,7 +209,6 @@ function makePlan(overrides: Partial<Plan> = {}): Plan {
     keltezes: '2026-08-05',
     ervenyesIg: '2026-11-03',
     arlistaVerzio: '2026-07-01',
-    sablonVerzio: 'nyilatkozat-de-v1',
     orvos: 'Dr. Teszt',
     paciens: {
       nev: 'Teszt Elek',

@@ -173,7 +173,6 @@ describe('Végpontok közötti folyamat', () => {
     const saved = JSON.parse(raw!);
     expect(saved.nyelv).toBe('de');
     expect(saved.penznem).toBe('HUF');
-    expect(saved.sablonVerzio).toBe('nyilatkozat-de-v1');
   }, 20000);
 
   // docs/03-funkcionalis-spec.md § Autosave -- ez a teszt annak valódi

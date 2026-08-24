@@ -117,6 +117,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | Egy tartósan mentett verzió (sikeres `savePlan`+`loadPlan`) UTÁNI piszkozat-takarítási hiba SOHA nem minősül „a mentés nem sikerült"-nek — a sikerképernyő ekkor is megjelenik, a takarítás hibája legfeljebb halk jelzés | D74 — a doki különben egy valójában sikeresen, tartósan mentett dokumentumot hinne elveszettnek, és egy fölösleges újrapróbálkozással egy `_v<n+1>` duplikátumot hozna létre (D4) |
 | Egy VÉGLEGESÍTETT terv `csakAjanlat` mezője azt rögzíti, hogy a ténylegesen kiadott PDF tartalmazta-e a nyilatkozat + aláírás oldalt — a placeholder-jelölésű nyilatkozat miatti kényszer (D23) a piszkozatban sosem íródik a mezőbe, csak véglegesítéskor | D75 — enélkül egy placeholder miatt kényszerítve, aláírás nélkül kiadott verzió a mentett fájlban tévesen „teljes dokumentum"-ként (`csakAjanlat: false`) szerepelne, és a verziósor jelvénye (D558) pontosan azon az eseten hallgatna, ahol a legkevésbé engedhető meg a tévedés |
 | Német nyelvű terven a véglegesítés blokkolva, ha egy látható sor neve nem igazoltan németül van (sem árlistai `nev.de`-t nem követ, sem D72 szerint igazoltan `de`-re írt kézi szöveg), vagy ha a fogtérkép-legendán ténylegesen megjelenő kategóriának nincs `nev.de`-je | D77 — aláírandó német dokumentumon lefordítatlan magyar tételnév/kategórianév jogilag/kommunikációsan nem elfogadható |
+| A fizetési feltételek/garancia szakasz placeholder-jelölésű vagy üres szövege a címével együtt kimarad a nyomtatványból, sosem kerül nyers `[PLACEHOLDER …]` szöveg éles PDF-re | Egy jogilag még le nem zárt, helykitöltő szöveg egy aláírandó/kiadott dokumentumon jogi kockázat — a `sablonNyomtathato()` (`app/src/domain/templates.ts`) dönti el, a véglegesítés-őr pedig puha checklist-tétellel jelzi a dokinak, mely szakaszok maradnak ki |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -312,7 +313,7 @@ ne írd újra:
   nyelváltás-szinkron
 
 A sablonszerkesztő + placeholder-őr tétel (`docs/03-funkcionalis-spec.md`
-§ Sablon-placeholder őr, D23) segédfüggvénye, szintén ne írd újra:
+§ Sablon-placeholder őr) segédfüggvénye, szintén ne írd újra:
 - `isPlaceholderTemplate(body)` (`app/src/domain/templates.ts`) — az
   EGYETLEN hely, ahol eldől, hogy egy sablon (nyilatkozat/fizetési
   feltételek/garancia) törzse még jogi lektorálásra vár-e (`[PLACEHOLDER`/
@@ -322,6 +323,19 @@ A sablonszerkesztő + placeholder-őr tétel (`docs/03-funkcionalis-spec.md`
   garancia HU-visszaesése) mind ezt hívja — korábban két, egymástól eltérő
   string-egyezésű privát duplikátum létezett, egy harmadik hívási hely
   bevezetése volt az alkalom a konszolidálásra
+
+A fizetési feltételek/garancia szekció-kihagyás tétel
+(`docs/03-funkcionalis-spec.md` § Sablon-placeholder őr,
+`docs/04-nyomtatvany-spec.md` § „2. blokk — fizetési feltételek és
+garancia") segédfüggvénye, szintén ne írd újra:
+- `sablonNyomtathato(body)` (`app/src/domain/templates.ts`) — az
+  `isPlaceholderTemplate()` MELLETT (nem helyette) él: igaz, ha a szöveg
+  nem üres/csak-whitespace ÉS nem placeholder. A `pdf/TervDocument.tsx` a
+  MÁR feloldott (HU-visszaesés utáni) fizetési feltételek/garancia
+  szövegre hívja, hogy eldöntse, a szakasz a címével együtt a
+  nyomtatványra kerül-e; a `PreviewPage.tsx` ugyanezt hívja a
+  véglegesítés-őr puha „kimaradó szakasz" checklist-tételéhez, hogy a két
+  hely ne térjen el egymástól
 
 A terv-szintű „kerek végösszeg" kedvezmény tétel
 (`docs/02-domain-modell.md` § Terv-szintű kedvezmény, D25)
@@ -576,11 +590,10 @@ ne írd újra őket:
 - `createBlankPlan(settings, priceList, oroklott?)`
   (`app/src/domain/blankPlan.ts`) opcionális harmadik paramétere
   (`OroklottNyelvPenznem`, csak `nyelv`/`penznem`, SOSEM `orvos`) — ha
-  megadva, felülírja a `nyelv`/`penznem` globális alapértékét, a
-  `sablonVerzio` ettől függetlenül a MEGLÉVŐ `sablonVerzioFor(nyelv)`-en
-  keresztül magától követi. Az `orvos` ezen a paraméteren nem juthat be —
-  saját, önálló globális default-forrása van (D67,
-  `domain/orvosok.ts` `alapertelmezettOrvosNeve()`, lásd lentebb)
+  megadva, felülírja a `nyelv`/`penznem` globális alapértékét. Az `orvos`
+  ezen a paraméteren nem juthat be — saját, önálló globális
+  default-forrása van (D67, `domain/orvosok.ts`
+  `alapertelmezettOrvosNeve()`, lásd lentebb)
 - `verziokFrissessegSzerint(plans, versionsFor)`
   (`app/src/domain/planFolders.ts`) — az összes terv-lánc összes verziója
   csökkenő frissesség szerint (a `rendezettLancok()` determinizmus-
@@ -1123,7 +1136,7 @@ A PDF-csak terv-cím/fázisnév lokalizáció (`docs/04-nyomtatvany-spec.md` §
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne
 fordítsd le őket kódban: `fazisok`, `sorok`, `tetelek`, `kategoriak`, `nevSnapshot`,
 `listaEgysegar`, `tenylegesEgysegar`, `mennyiseg`, `fogak`, `osszesitok`,
-`arlistaVerzio`, `sablonVerzio`, `aktiv`, `gyakori`, `paciensId`, `tervCim`, ártípus `FIX`/`SAVOS`, tervstátusz
+`arlistaVerzio`, `aktiv`, `gyakori`, `paciensId`, `tervCim`, ártípus `FIX`/`SAVOS`, tervstátusz
 `PISZKOZAT`/`VEGLEGES`.
 
 ## A UX kritikus pontja

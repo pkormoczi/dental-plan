@@ -413,6 +413,7 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
     opts: {
       nyelv?: Nyelv;
       offerOnly?: boolean;
+      fizetesiFeltetelekMd?: string;
       garanciaMd?: string;
       nyilatkozatMd?: string;
     } = {},
@@ -420,7 +421,8 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
     const {
       nyelv = 'hu',
       offerOnly = true,
-      garanciaMd = '[PLACEHOLDER — a garanciafeltételek még nincsenek megadva]',
+      fizetesiFeltetelekMd = '',
+      garanciaMd = 'Fogpótlásra 3 év garancia.',
       nyilatkozatMd = '',
     } = opts;
     const plan = buildPlan(false, nyelv, AZONOS_AR);
@@ -431,7 +433,7 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
         priceList={seedPriceList}
         offerOnly={offerOnly}
         nyilatkozatMd={nyilatkozatMd}
-        fizetesiFeltetelekMd=""
+        fizetesiFeltetelekMd={fizetesiFeltetelekMd}
         garanciaMd={garanciaMd}
         tervCim=""
         toothChartPng={null}
@@ -477,6 +479,7 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
   it('a Garancia a B blokkban van: a fizetési feltételek után, a nyilatkozat blokk előtt', () => {
     const { container } = renderWithGarancia({
       offerOnly: false,
+      fizetesiFeltetelekMd: 'Fizetési feltételek szövege.',
       nyilatkozatMd: 'Nyilatkozat szövege.',
     });
     const pages = container.querySelectorAll('[data-mock-tag="page"]');
@@ -494,6 +497,66 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
     const pages = container.querySelectorAll('[data-mock-tag="page"]');
     expect(pages).toHaveLength(2);
     expect(pages[1].textContent).toContain('Garancia');
+  });
+});
+
+// A hiányzó/placeholder-jelölésű fizetési feltételek/garancia szöveg a
+// címével együtt kimarad a nyomtatványból -- a
+// `TervDocument` a MÁR feloldott (HU-visszaesés utáni) szöveget kapja,
+// tehát ez a saját nyelvi ÉS a "mindkét nyelven placeholder" esetet is
+// lefedi, nem csak a cross-language HU-visszaesést (ami a PreviewPage.tsx
+// betöltési logikájának hatásköre, itt nem tesztelt).
+describe('TervDocument -- 81. tétel: hiányzó/placeholder szekció kihagyása', () => {
+  function renderPlaceholder(fizetesiFeltetelekMd: string, garanciaMd: string) {
+    const plan = buildPlan(false, 'hu', AZONOS_AR);
+    return render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly
+        nyilatkozatMd=""
+        fizetesiFeltetelekMd={fizetesiFeltetelekMd}
+        garanciaMd={garanciaMd}
+        tervCim=""
+        toothChartPng={null}
+      />
+    );
+  }
+
+  it('placeholder garancia mellett valódi fizetési feltételekkel: nincs Garancia cím, a fizetési feltételek megvan', () => {
+    renderPlaceholder(
+      'Fizetési feltételek szövege.',
+      '[PLACEHOLDER — a garanciafeltételek még nincsenek megadva]',
+    );
+    expect(screen.getByText('Fizetési feltételek')).toBeInTheDocument();
+    expect(screen.getByText('Fizetési feltételek szövege.')).toBeInTheDocument();
+    expect(screen.queryByText('Garancia')).not.toBeInTheDocument();
+    expect(screen.queryByText(/PLACEHOLDER/)).not.toBeInTheDocument();
+  });
+
+  it('üres garancia szöveg ugyanúgy kihagyja a szekciót, mint a placeholder', () => {
+    renderPlaceholder('Fizetési feltételek szövege.', '');
+    expect(screen.queryByText('Garancia')).not.toBeInTheDocument();
+  });
+
+  it('placeholder fizetési feltételek mellett: nincs Fizetési feltételek cím, a Garancia megvan', () => {
+    renderPlaceholder('[PLACEHOLDER -- még nincs kész]', 'Fogpótlásra 3 év garancia.');
+    expect(screen.queryByText('Fizetési feltételek')).not.toBeInTheDocument();
+    expect(screen.getByText('Garancia')).toBeInTheDocument();
+  });
+
+  it('mindkét szekció kimarad: a teljes B blokk (Page) nem kerül a dokumentumba', () => {
+    const { container } = renderPlaceholder(
+      '',
+      '[PLACEHOLDER — a garanciafeltételek még nincsenek megadva]',
+    );
+    const pages = container.querySelectorAll('[data-mock-tag="page"]');
+    // A blokk (terv és ár) + a C blokk (offerOnly esetén kimarad) -- csak az
+    // A blokk marad, a B blokk teljesen hiányzik.
+    expect(pages).toHaveLength(1);
+    expect(screen.queryByText('Fizetési feltételek')).not.toBeInTheDocument();
+    expect(screen.queryByText('Garancia')).not.toBeInTheDocument();
   });
 });
 

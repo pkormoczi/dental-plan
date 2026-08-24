@@ -46,8 +46,8 @@ describe('piszkozatTartalmas', () => {
   it('stays false for a blank plan built from DIFFERENT settings/priceList (dátum-/beállításfüggetlen)', () => {
     // Ha a piszkozatTartalmas() mély-egyenlőséget hasonlítana createBlankPlan()
     // egy friss hívásához, ez a teszt megbukna: egy másik `orvos`/`nyelv`/
-    // `sablonVerzio`/`arlistaVerzio` kombinációból épült blank plan nem
-    // egyezne mezőnként a másikkal, mégis mindkettő "üres".
+    // `arlistaVerzio` kombinációból épült blank plan nem egyezne mezőnként a
+    // másikkal, mégis mindkettő "üres".
     const masSettings: Settings = {
       ...settings,
       orvosok: ['Dr. Más Valaki'],

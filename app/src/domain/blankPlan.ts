@@ -7,17 +7,6 @@ import { alapertelmezettOrvosNeve } from './orvosok';
 import type { Nyelv, Penznem, Plan, PriceList, Settings } from './types';
 
 /**
- * A nyilatkozat-sablon ideiglenes kiinduló fájlneve (kiterjesztés nélkül) egy
- * adott nyelvhez, amíg a terv el nem indul. `PreviewPage` a tényleges
- * előnézetkor/véglegesítéskor mindig a legfrissebb elérhető verziót tölti be
- * és pinneli -- ez itt csak egy ártalmatlan alapérték a friss `Plan`-en,
- * amíg a doki el nem jut a nyomtatvány-előnézetig.
- */
-export function sablonVerzioFor(nyelv: Nyelv): string {
-  return `nyilatkozat-${nyelv}-v1`;
-}
-
-/**
  * Egy generált fázisnév adott pozícióra (1-alapú), pl. `generaltFazisNev(2)`
  * -> `"2. kezelés"`. Az EGYETLEN hely, ahol ez a minta él -- a „+ Fázis
  * hozzáadása" gomb ÉS a fázis-sorrendezés (backlog-58, `movePhase()`) is
@@ -81,7 +70,6 @@ export function createBlankPlan(
     keltezes: today,
     ervenyesIg: addDaysIso(today, settings.ervenyessegNap),
     arlistaVerzio: priceList.arlistaVerzio,
-    sablonVerzio: sablonVerzioFor(nyelv),
     orvos: alapertelmezettOrvosNeve(settings),
     paciens: {
       nev: '',

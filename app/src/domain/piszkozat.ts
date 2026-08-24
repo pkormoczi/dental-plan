@@ -13,8 +13,8 @@ import type { WorkflowRoute } from '../storage/DraftStorage';
  * Igaz, ha a terven van olyan tartalom, amit kár lenne elveszíteni.
  *
  * SZÁNDÉKOSAN NEM `createBlankPlan()`-nal mély-egyenlőséget hasonlít: a
- * `keltezes`/`ervenyesIg` a mai dátumból, az `orvos`/`nyelv`/`sablonVerzio`
- * a beállításokból, az `arlistaVerzio` az árlistából származik -- egy
+ * `keltezes`/`ervenyesIg` a mai dátumból, az `orvos`/`nyelv` a
+ * beállításokból, az `arlistaVerzio` az árlistából származik -- egy
  * éjfél vagy egy beállítás-módosítás hamis "módosítva" jelzést adna. Ehelyett
  * a ténylegesen doki által begépelt mezőket nézi.
  *

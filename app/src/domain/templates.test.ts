@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isPlaceholderTemplate } from './templates';
+import { isPlaceholderTemplate, sablonNyomtathato } from './templates';
 import {
   FIZETESI_FELTETELEK_DE_V1,
   FIZETESI_FELTETELEK_HU_V1,
@@ -34,5 +34,24 @@ describe('isPlaceholderTemplate', () => {
   it('a német seed sablonok AI-fordítás után már nem placeholderek (2026-08-10, jogi lektorálás nélkül)', () => {
     expect(isPlaceholderTemplate(NYILATKOZAT_DE_V1)).toBe(false);
     expect(isPlaceholderTemplate(FIZETESI_FELTETELEK_DE_V1)).toBe(false);
+  });
+});
+
+describe('sablonNyomtathato', () => {
+  it('false üres szövegre', () => {
+    expect(sablonNyomtathato('')).toBe(false);
+  });
+
+  it('false csak whitespace-re', () => {
+    expect(sablonNyomtathato('   \n  ')).toBe(false);
+  });
+
+  it('false placeholder-jelölésű szövegre', () => {
+    expect(sablonNyomtathato('[PLACEHOLDER -- még nincs kész]')).toBe(false);
+    expect(sablonNyomtathato('[PLATZHALTER / HELYKITÖLTŐ]')).toBe(false);
+  });
+
+  it('true valódi szövegre', () => {
+    expect(sablonNyomtathato(FIZETESI_FELTETELEK_HU_V1)).toBe(true);
   });
 });

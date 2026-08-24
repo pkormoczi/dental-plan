@@ -30,7 +30,6 @@ describe('createBlankPlan', () => {
     const plan = createBlankPlan({ ...settings, alapertelmezettNyelv: 'de' }, priceList);
     expect(plan.nyelv).toBe('de');
     expect(plan.penznem).toBe('HUF');
-    expect(plan.sablonVerzio).toBe('nyilatkozat-de-v1');
   });
 
   it('öröklés nélkül a beállítások alapértelmezett nyelvét adja', () => {
@@ -44,7 +43,6 @@ describe('createBlankPlan', () => {
     const plan = createBlankPlan(settings, priceList, { nyelv: 'de', penznem: 'EUR' });
     expect(plan.nyelv).toBe('de');
     expect(plan.penznem).toBe('EUR');
-    expect(plan.sablonVerzio).toBe('nyilatkozat-de-v1');
   });
 
   it('null oroklott ugyanaz, mint a paraméter elhagyása', () => {

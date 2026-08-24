@@ -64,8 +64,8 @@ import {
  * Alapértelmezett sablonfájlok -- lásd `ensureSeedTemplates`. A fizetési
  * feltételek v2-je (D66: {{elolegSzazalek}} -> {{eloleg}}) egy ÚJ kulcs --
  * egy meglévő demó-tárolóban is hiányzik, tehát az `ensureSeedTemplates`
- * `existing == null` ága automatikusan beírja, a v1 (aláírt tervek
- * `sablonVerzio`-ja rá is mutathat, D4) érintetlen marad.
+ * `existing == null` ága automatikusan beírja, a v1 (korábban véglegesített
+ * tervek mentett PDF-je ennek szövegét őrzi) érintetlen marad.
  */
 const DEFAULT_TEMPLATES: Array<[string, string]> = [
   ['nyilatkozat-hu-v1.md', NYILATKOZAT_HU_V1],
@@ -600,11 +600,10 @@ export class DemoStorage implements PlanStorage {
 
   /**
    * A legfrissebb elérhető verziót adja vissza egy alapnévhez (pl.
-   * "fizetesi-feltetelek-hu"), a fájlnevével együtt. A `terv.json`
-   * véglegesítéskor a MEGJELENÍTETT nyilatkozat verzióját pinneli
-   * (`sablonVerzio`) -- lásd docs/02-domain-modell.md és
-   * `PreviewPage.tsx` --, ezért a hívónak a fájlnévre is szüksége van, nem
-   * csak a szövegre.
+   * "fizetesi-feltetelek-hu"), a fájlnevével együtt -- a `PreviewPage.tsx`
+   * a fájlnevet a betöltés forrásának megjelenítéséhez (a szerkesztődoboz
+   * alatti "Jelenleg: ...md" feliratban) használja, nem csak a szövegre
+   * van szüksége.
    */
   async loadLatestTemplateByBase(base: string): Promise<{ name: string; body: string }> {
     const re = new RegExp(`^${escapeRegExp(base)}-v(\\d+)\\.md$`);

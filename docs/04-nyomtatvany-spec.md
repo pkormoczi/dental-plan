@@ -309,6 +309,17 @@ garancia egy folyamban tördelődik, a garancia közvetlenül a fizetési
 feltételek szövege után folytatódik ugyanazon az oldalon, ha van hely —
 soha nem külön blokk vagy fix oldaltörés a kettő között.
 
+Ha egy szakasz szövege (a HU-visszaesés UTÁN, azaz a ténylegesen
+felhasznált tartalom) üres vagy még placeholder-jelölésű (jogilag le nem
+zárt), a teljes szakasz — a címével együtt — kimarad a nyomtatványból,
+nem csak a szöveg üresedik ki a cím alatt. Ha emiatt MINDKÉT szakasz
+kimaradna, a teljes blokk (a `<Page>`) nem kerül a dokumentumba — nem
+marad üres oldal egy szerződéses dokumentumban. A cím emellett nem
+maradhat az oldal alján az első bekezdés nélkül, a „Fázis oldaltörési
+szabályai" (fent) mintájára — a cím és a bekezdés szándékosan NEM egy
+közös, törhetetlen blokk, hogy egy hosszú első bekezdés továbbra is
+törhessen oldalra.
+
 ### Fizetési feltételek
 
 A jelenlegi Excelben ez a jogi szövegfal közepén van elrejtve, pedig ez
@@ -329,7 +340,9 @@ egy bevezető bekezdés, utána a felsorolás. A szöveg forrása
 Ez a szakasz a „csak ajánlat" módban is **mindig** nyomtatódik (szemben a
 3. blokkal) — ezért kezeli a placeholder-őr a fizetési feltételek (és a
 garancia, lásd lent) lezáratlan állapotát eltérően, mint a nyilatkozatét:
-itt HU-visszaesés, nem zár (lásd `03-funkcionalis-spec.md` § Sablon-
+itt HU-visszaesés, nem zár. Ha a HU-visszaesés UTÁN is placeholder marad
+(vagy a szöveg üres), a szakasz — a címével együtt — kimarad a
+nyomtatványból (lásd fent és `03-funkcionalis-spec.md` § Sablon-
 placeholder őr).
 
 A sablon-markdown egyszerű: üres sorokkal elválasztott bekezdések, és
@@ -346,7 +359,8 @@ szöveg forrása `sablonok/garancia-hu-vN.md`, ugyanazzal a mechanizmussal
 képernyőn szerkeszthető. **A magyar szöveg ma is placeholder** (a doki
 adja meg: kezeléstípusonkénti garanciaidők, kivételek) — ez eltér a
 fizetési feltételek/nyilatkozat mai állapotától, azoknak már van valódi
-tartalma.
+tartalma. Amíg ez így marad, a Garancia cím és szakasz a placeholder-
+kihagyás (lásd fent) miatt egyszerűen nem kerül a nyomtatványra.
 
 Stílusa a fizetési feltételekével egyezik (normál, nem a nyilatkozat
 szorosabb, jogi kinézetű betűje) — a garancia tájékoztató jellegű, nem
@@ -355,17 +369,19 @@ maga az aláírás tárgya.
 Ez a szakasz a „csak ajánlat" módban is **mindig** nyomtatódik, ugyanúgy,
 mint a fizetési feltételek — a garancia a hazavitt példányon is
 hasznos, a páciens pont ott kérdezne rá legvalószínűbben. A
-placeholder-őr ugyanúgy HU-visszaesésként kezeli, nem zárként (lásd
-fent és `03-funkcionalis-spec.md` § Sablon-placeholder őr).
+placeholder-őr ugyanúgy HU-visszaesésként kezeli, nem zárként; ha a
+HU-visszaesés után is placeholder marad, a szakasz kimarad (lásd fent és
+`03-funkcionalis-spec.md` § Sablon-placeholder őr).
 
 ## 3. blokk — nyilatkozat és aláírás
 
 A jogi szövegfal (`sablonok/nyilatkozat-hu-vN.md`) kisebb betűvel,
 1.5-es sorközzel, bekezdésekre tördelve. A szöveg szó szerint az
 eredeti Excel `Kezelesi_Terv` lapjának "Nyilatkozat" blokkjából jön,
-záró mondata a `{{orvos}}` helyőrzővel. A tervben tárolt
-`sablonVerzio` (véglegesítéskor pinnelt, akkor épp legfrissebb verzió)
-mondja meg, melyik szövegváltozat volt érvényes.
+záró mondata a `{{orvos}}` helyőrzővel. A `terv.json` nem tárol
+sablonazonosítót vagy -szöveget: a történeti igazság a véglegesítéskor
+mentett final PDF, ami pontosan azt a szövegváltozatot tartalmazza, amit
+a doki a Véglegesítés pillanatában látott.
 
 Alatta:
 

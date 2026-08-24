@@ -22,7 +22,6 @@
 // A plans.test.ts mostantól kikényszeríti az egyezést.
 
 import { addDaysIso } from '../../domain/date';
-import { sablonVerzioFor } from '../../domain/blankPlan';
 import { basePrice } from '../../domain/money';
 import { javasoltTervCim } from '../../domain/tervCim';
 import { computeOsszesitok } from '../../domain/totals';
@@ -145,7 +144,6 @@ const kovacsJanos = buildPlan({
   penznem: 'HUF',
   keltezes: '2026-08-05',
   arlistaVerzio: ARLISTA_VERZIO,
-  sablonVerzio: 'nyilatkozat-hu-v1',
   orvos: 'Dr. Mándoki István',
   paciens: {
     nev: 'Kovács János',
@@ -212,7 +210,6 @@ const nagyEvaV1 = buildPlan({
   penznem: 'HUF',
   keltezes: '2026-06-10',
   arlistaVerzio: ARLISTA_VERZIO,
-  sablonVerzio: 'nyilatkozat-hu-v1',
   orvos: 'Dr. Mándoki István',
   paciens: nagyEvaPaciens,
   fazisok: nagyEvaV1Fazisok,
@@ -227,7 +224,6 @@ const nagyEvaV2 = buildPlan({
   penznem: 'HUF',
   keltezes: '2026-07-22',
   arlistaVerzio: ARLISTA_VERZIO,
-  sablonVerzio: 'nyilatkozat-hu-v1',
   orvos: 'Dr. Mándoki István',
   paciens: nagyEvaPaciens,
   // A visszatérő páciens korábbi fázisa megmarad, plusz egy új -- lásd
@@ -265,7 +261,6 @@ const nagyEvaSzures = buildPlan({
   penznem: 'HUF',
   keltezes: '2026-08-01',
   arlistaVerzio: ARLISTA_VERZIO,
-  sablonVerzio: 'nyilatkozat-hu-v1',
   orvos: 'Dr. Mándoki István',
   paciens: nagyEvaPaciens,
   fazisok: [
@@ -299,7 +294,6 @@ const tothZoltan = buildPlan({
   penznem: 'HUF',
   keltezes: '2026-07-15',
   arlistaVerzio: ARLISTA_VERZIO,
-  sablonVerzio: 'nyilatkozat-hu-v1',
   orvos: 'Dr. Mándoki István',
   paciens: {
     nev: 'Tóth Zoltán',
@@ -376,10 +370,10 @@ const tothDir = buildPatientDirName(tothZoltan.paciens.nev, tothZoltan.paciensId
 // A fenti három páciens kézzel írt, egyedi történet marad -- ez a szakasz
 // egy tömör leíróból (`UJ_PACIENSEK`) épít fel `Plan`/`PatientRecord`/
 // `PatientMasterData` objektumokat, hogy a bővítés ne váljon több száz
-// soros, ismétlődő kézi felsorolássá. A `basePrice()`/`sablonVerzioFor()`
-// meglévő segédfüggvényeket hívja -- az árakat és a sablon-fájlnevet nem
-// másoljuk be kézzel, a `seedPriceList`-ből olvassuk élőben, hogy a
-// plans.test.ts ár-egyezés-ellenőrzése automatikusan teljesüljön.
+// soros, ismétlődő kézi felsorolássá. A `basePrice()` meglévő
+// segédfüggvényt hívja -- az árakat nem másoljuk be kézzel, a
+// `seedPriceList`-ből olvassuk élőben, hogy a plans.test.ts
+// ár-egyezés-ellenőrzése automatikusan teljesüljön.
 
 const tetelById = new Map(seedPriceList.tetelek.map((t) => [t.id, t]));
 
@@ -522,7 +516,6 @@ function buildUjPaciens(spec: UjPaciensTerv): UjPaciensEredmeny {
         penznem,
         keltezes: v.keltezes,
         arlistaVerzio: ARLISTA_VERZIO,
-        sablonVerzio: sablonVerzioFor(nyelv),
         orvos: 'Dr. Mándoki István',
         paciens,
         fazisok: buildFazisok(v.fazisok, penznem, nyelv),
