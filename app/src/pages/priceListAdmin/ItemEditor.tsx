@@ -1,0 +1,339 @@
+// Kinyitott tétel-sor -- kiemelve a PriceListAdminPage.tsx-ből. Itt van
+// minden mező, köztük a kategória-mozgatás.
+
+import { useRef } from 'react';
+import { Box, Button, Checkbox, Flex, Grid, IconButton, Select, Text } from '@radix-ui/themes';
+import { Cross2Icon } from '@radix-ui/react-icons';
+import { Field, FieldGroup } from '../../components/Field';
+import NumberField from '../../components/NumberField';
+import { t } from '../../design/tokens';
+import { ALAP_KATEGORIA_SZIN } from '../../design/treatmentVisuals';
+import { leirasTulHosszu } from '../../domain/leirasHossz';
+import { savosHatarForditott } from '../../domain/money';
+import type { Ar, Kategoria, Tetel } from '../../domain/types';
+import { BufferedTextArea, BufferedTextField } from './BufferedFields';
+
+/** Kinyitott sor -- itt van minden mező, köztük a kategória-mozgatás. */
+export default function ItemEditor({
+  item,
+  categories,
+  onPatch,
+  autoFocusAr,
+  pendingActivation,
+  onFirstPriceCommit,
+}: {
+  item: Tetel;
+  categories: Kategoria[];
+  onPatch: (patch: Partial<Tetel> | ((prev: Tetel) => Partial<Tetel>)) => void;
+  /** Az Új tétel dialógusból frissen létrejött sorra igaz -- a HUF ár mező
+   * kapja a fókuszt, mivel a doki a popupban csak nevet és kategóriát adott
+   * meg (lásd a görgető effektet a szülő komponensben). */
+  autoFocusAr?: boolean;
+  /** Igaz, amíg a tétel a HUF ár mező első commitjára vár -- ekkor a fix ár
+   * mező commitja `onFirstPriceCommit`-ot hívja `onPatch` helyett, lásd
+   * `setFixPrice`. */
+  pendingActivation?: boolean;
+  onFirstPriceCommit?: (ertek: number) => void;
+}) {
+  const hufAr = item.ar.HUF ?? null;
+  const eurAr = item.ar.EUR ?? null;
+  const savos = hufAr?.tipus === 'SAVOS';
+
+  // A `NumberField` csak akkor hívja az `onCommit`-ot, ha az érték
+  // ténylegesen VÁLTOZOTT (lásd `components/NumberField.tsx` `commit()`) --
+  // egy friss (0 Ft-tal induló) tételen a mezőt érintetlenül hagyva és
+  // elhagyva emiatt SOHA nem fut le `setFixPrice`. Ez a ref jelzi, hogy az
+  // "első interakció" (akár értékváltozással, akár anélkül) már lezajlott
+  // -- `handleHufBlur` ezt a hiányzó esetet pótolja a mező saját `onBlur`-
+  // jával, ami MINDIG lefut, a commit lefutásától függetlenül.
+  const firstInteractionHandledRef = useRef(false);
+
+  /**
+   * P0-2 (D15): eddig csak a HUF-ot váltotta -- az EUR ár szerkezetileg
+   * mindig FIX maradt, tehát egy sávos tétel német (EUR) ajánlatán a doki
+   * tudta nélkül eltűnt a `*` jelölés és a sávos lábjegyzet. Mostantól a
+   * két pénznem együtt vált, hogy a szerkezetük soha ne csússzon szét. Ha a
+   * tételnek nincs EUR ára (`eurAr == null`), az marad -- a váltás nem hoz
+   * létre új EUR árat a semmiből.
+   *
+   * D31: az `ar` objektumot a friss `prev`-ből építi, nem a renderelt
+   * `item`-ből -- ez a valós versenyhelyzet: egy HUF-ár blur-commit után
+   * azonnal jövő EUR-stepper kattintás (vagy fordítva) enélkül eldobná az
+   * időben korábbi írást, mert mindkettő az `ar` objektumot cseréli
+   * egészben.
+   */
+  function toggleType() {
+    onPatch((prev) => {
+      const prevHuf = prev.ar.HUF ?? null;
+      const prevEur = prev.ar.EUR ?? null;
+      const toSavos = prevHuf?.tipus !== 'SAVOS';
+      const nextHuf: Ar = toSavos
+        ? {
+            tipus: 'SAVOS',
+            min: prevHuf?.tipus === 'FIX' ? prevHuf.ertek : 0,
+            max: prevHuf?.tipus === 'FIX' ? prevHuf.ertek : 0,
+          }
+        : { tipus: 'FIX', ertek: prevHuf?.tipus === 'SAVOS' ? prevHuf.min : 0 };
+
+      const nextEur: Ar | null =
+        prevEur == null
+          ? null
+          : toSavos
+            ? {
+                tipus: 'SAVOS',
+                min: prevEur.tipus === 'FIX' ? prevEur.ertek : prevEur.min,
+                max: prevEur.tipus === 'FIX' ? prevEur.ertek : prevEur.max,
+              }
+            : { tipus: 'FIX', ertek: prevEur.tipus === 'SAVOS' ? prevEur.min : prevEur.ertek };
+
+      return { ar: { ...prev.ar, HUF: nextHuf, EUR: nextEur } };
+    });
+  }
+
+  function setFixPrice(ertek: number) {
+    // A MÉG SOHA nem aktivált tétel HUF ár mezőjének első commitja a szülő
+    // aktiválási döntését váltja ki (némán aktivál, vagy megerősítést kér),
+    // nem egy sima árpatch-et -- lásd `handleFirstPriceCommit` a szülőben.
+    if (pendingActivation && !firstInteractionHandledRef.current) {
+      firstInteractionHandledRef.current = true;
+      onFirstPriceCommit?.(ertek);
+      return;
+    }
+    onPatch((prev) => ({ ar: { ...prev.ar, HUF: { tipus: 'FIX', ertek } } }));
+  }
+
+  /**
+   * A HUF ár mező `onBlur`-ja -- MINDIG lefut, akkor is, ha a mező a 0-n
+   * maradt és emiatt a fenti `setFixPrice` (`onCommit`) egyáltalán nem
+   * hívódott. Ha az "első interakció" még nincs elintézve, ez az egyetlen
+   * jel, hogy a doki elhagyta a mezőt -- a jelenlegi (érintetlen) árral
+   * hívja ugyanazt a döntést, amit egy tényleges commit hívna.
+   */
+  function handleFixPriceBlur() {
+    if (pendingActivation && !firstInteractionHandledRef.current) {
+      firstInteractionHandledRef.current = true;
+      onFirstPriceCommit?.(hufAr?.tipus === 'FIX' ? hufAr.ertek : 0);
+    }
+  }
+
+  function setSavosPrice(patch: Partial<{ min: number; max: number }>) {
+    onPatch((prev) => {
+      const prevHuf = prev.ar.HUF ?? null;
+      const base = prevHuf?.tipus === 'SAVOS' ? prevHuf : { tipus: 'SAVOS' as const, min: 0, max: 0 };
+      return { ar: { ...prev.ar, HUF: { ...base, ...patch } } };
+    });
+  }
+
+  function setEurFix(ertek: number) {
+    onPatch((prev) => ({ ar: { ...prev.ar, EUR: { tipus: 'FIX', ertek } } }));
+  }
+
+  function setEurSavos(patch: Partial<{ min: number; max: number }>) {
+    onPatch((prev) => {
+      const prevEur = prev.ar.EUR ?? null;
+      const base = prevEur?.tipus === 'SAVOS' ? prevEur : { tipus: 'SAVOS' as const, min: 0, max: 0 };
+      return { ar: { ...prev.ar, EUR: { ...base, ...patch } } };
+    });
+  }
+
+  function clearEur() {
+    onPatch((prev) => ({ ar: { ...prev.ar, EUR: null } }));
+  }
+
+  return (
+    <Box py="2">
+      <Grid columns="2" gap="3" mb="3">
+        <Field label="Megnevezés (magyar)">
+          <BufferedTextField
+            value={item.nev.hu}
+            onChange={(v) => onPatch((prev) => ({ nev: { ...prev.nev, hu: v } }))}
+          />
+        </Field>
+        <Field label="Bezeichnung (német)">
+          <BufferedTextField
+            value={item.nev.de || ''}
+            placeholder="még nincs megadva"
+            onChange={(v) => onPatch((prev) => ({ nev: { ...prev.nev, de: v || null } }))}
+          />
+        </Field>
+      </Grid>
+
+      <Grid columns="2" gap="3" mb="3">
+        <Field label="Leírás (mi van benne?)">
+          <BufferedTextArea
+            value={item.leiras?.hu ?? ''}
+            placeholder="pl. Implantátum, felépítmény, korona"
+            onChange={(v) => onPatch((prev) => ({ leiras: { hu: v, de: prev.leiras?.de ?? null } }))}
+          />
+          {leirasTulHosszu(item.leiras?.hu ?? '') && (
+            <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
+              Hosszú leírás — ellenőrizd a nyomtatási képet.
+            </Text>
+          )}
+        </Field>
+        <Field label="Beschreibung (mi van benne, németül)">
+          <BufferedTextArea
+            value={item.leiras?.de ?? ''}
+            placeholder="még nincs megadva"
+            onChange={(v) => onPatch((prev) => ({ leiras: { hu: prev.leiras?.hu ?? '', de: v || null } }))}
+          />
+          {leirasTulHosszu(item.leiras?.de ?? '') && (
+            <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
+              Hosszú leírás — ellenőrizd a nyomtatási képet.
+            </Text>
+          )}
+        </Field>
+      </Grid>
+
+      <Flex mb="3">
+        <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Checkbox
+            checked={item.csomag ?? false}
+            onCheckedChange={(checked) => onPatch({ csomag: checked === true })}
+          />
+          Csomagtétel — a véglegesítés figyelmeztet, ha az erre hivatkozó soron nincs leírás
+        </Text>
+      </Flex>
+
+      <Grid columns="2" gap="3">
+        <Field label="Kategória">
+          <Select.Root
+            value={item.kategoriaId}
+            onValueChange={(v) => onPatch({ kategoriaId: v })}
+          >
+            <Select.Trigger style={{ width: '100%' }} />
+            <Select.Content>
+              {categories.map((k) => (
+                <Select.Item key={k.id} value={k.id}>
+                  <Flex as="span" align="center" gap="2">
+                    <span
+                      aria-hidden
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: k.szin ?? ALAP_KATEGORIA_SZIN,
+                        display: 'inline-block',
+                        flexShrink: 0,
+                      }}
+                    />
+                    {k.nev.hu}
+                  </Flex>
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </Field>
+
+        {/* FieldGroup (plain div), NEM Field/<label> -- egy <label> ami egy
+            <button>-t fog körbe, a gomb SAJÁT szövege helyett a label
+            szövegét adná az accessible name-nek (ugyanaz a csapda, amit a
+            SettingsPage ChipGroup-kommentje is jelez a nyelvválasztónál). */}
+        <FieldGroup label="Ártípus (mindkét pénznemre hat)">
+          <Button type="button" variant="soft" color="gray" style={{ width: '100%' }} onClick={toggleType}>
+            {savos ? 'Sávos → fix' : 'Fix → sávos'}
+          </Button>
+        </FieldGroup>
+      </Grid>
+
+      <Grid columns="2" gap="3" mt="3">
+        {savos && hufAr?.tipus === 'SAVOS' ? (
+          <>
+            <Field label="HUF ár — tól">
+              <NumberField value={hufAr.min} min={0} onCommit={(v) => setSavosPrice({ min: v })} />
+            </Field>
+            <Field label="HUF ár — ig">
+              <NumberField value={hufAr.max} min={0} onCommit={(v) => setSavosPrice({ max: v })} />
+            </Field>
+            {savosHatarForditott(hufAr) && (
+              <Text as="div" size="1" mt="1" style={{ color: t.warn, gridColumn: '1 / -1' }}>
+                A „tól" nagyobb, mint az „ig" — fordított sáv, ellenőrizd.
+              </Text>
+            )}
+          </>
+        ) : (
+          <Field label="HUF ár">
+            <NumberField
+              value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
+              min={0}
+              onCommit={setFixPrice}
+              onBlur={pendingActivation ? handleFixPriceBlur : undefined}
+              autoFocus={autoFocusAr}
+            />
+          </Field>
+        )}
+      </Grid>
+
+      <Grid columns="2" gap="3" mt="3">
+        {eurAr == null ? (
+          <FieldGroup label="EUR ár">
+            <Button
+              type="button"
+              variant="soft"
+              color="gray"
+              style={{ width: '100%' }}
+              onClick={() => setEurFix(0)}
+            >
+              + EUR ár hozzáadása
+            </Button>
+          </FieldGroup>
+        ) : savos && eurAr.tipus === 'SAVOS' ? (
+          <>
+            <Field label="EUR ár — tól (€)">
+              <NumberField
+                value={eurAr.min}
+                unit="EUR"
+                min={0}
+                onCommit={(v) => setEurSavos({ min: v })}
+              />
+            </Field>
+            <Field label="EUR ár — ig (€)">
+              <NumberField
+                value={eurAr.max}
+                unit="EUR"
+                min={0}
+                onCommit={(v) => setEurSavos({ max: v })}
+              />
+            </Field>
+            {savosHatarForditott(eurAr) && (
+              <Text as="div" size="1" mt="1" style={{ color: t.warn, gridColumn: '1 / -1' }}>
+                A „tól" nagyobb, mint az „ig" — fordított sáv, ellenőrizd.
+              </Text>
+            )}
+          </>
+        ) : (
+          <Flex gap="2" align="end">
+            {/* A törlés gombot SZÁNDÉKOSAN a Field/<label>-en KÍVÜL tesszük --
+                egy <label> ami két "labelable" elemet (NumberField + button)
+                is befog, kétértelmű accessible name-et adna (ugyanaz a
+                probléma, mint amit a SettingsPage ChipGroup-kommentje már
+                jelez a nyelvválasztónál). */}
+            <Box style={{ flex: 1 }}>
+              <Field label="EUR ár (€)">
+                <NumberField
+                  value={eurAr.tipus === 'FIX' ? eurAr.ertek : 0}
+                  unit="EUR"
+                  min={0}
+                  onCommit={setEurFix}
+                />
+              </Field>
+            </Box>
+            <IconButton
+              type="button"
+              aria-label="EUR ár törlése"
+              variant="ghost"
+              color="gray"
+              onClick={clearEur}
+            >
+              <Cross2Icon />
+            </IconButton>
+          </Flex>
+        )}
+      </Grid>
+
+      <Text as="div" size="1" color="gray" mt="3" style={{ fontFamily: t.mono }}>
+        id: {item.id} — soha nem használjuk újra, a régi tervek erre hivatkoznak
+      </Text>
+    </Box>
+  );
+}
