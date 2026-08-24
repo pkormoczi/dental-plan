@@ -1784,7 +1784,7 @@ function Summary({
   // lehet nagyobb). A felár azonos vizuális súlyt kap, mint a kedvezmény:
   // semleges ténymegállapítás, nem hibajelzés -- a doki dolgozhat felárral
   // (backlog-12, 4. döntés). A nyomtatvány mindkét irányú eltérésre
-  // megmutatja a "Kezelések összesen" referenciasort, ezért indokolatlan
+  // megmutatja a "Kezelések összege" referenciasort, ezért indokolatlan
   // lenne, ha a szerkesztő csak az egyik irányról adna visszajelzést.
   const discount = listTotal - grand;
   const surcharge = grand - listTotal;

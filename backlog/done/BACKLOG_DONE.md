@@ -2134,3 +2134,18 @@ karbantartási kör négy önálló javítása.
   keep-together csoport szűkült a puszta alapsorra (név/fog/db/ár) — a
   hozzá tartozó leírás, ha extrém hosszú, önállóan törhet oldalra.
   Részletek: `docs/04-nyomtatvany-spec.md` § "Tételtáblázat".
+
+### 79. tétel: PDF pénzügyi összesítés — KÉSZ
+
+- **Méret:** kicsi — 3 érintett fájl (`pdf/labels.ts`, `pdf/TervDocument.tsx`,
+  `pages/tervReszletei/PenzugyiOsszesites.tsx`), a kísérő tesztek bővítve,
+  a nyomtatvány- és funkcionális spec frissítve.
+- **Megvalósítás:** az Összesítés blokk saját címet kapott (`Összesítés`/
+  `Zusammenfassung`), a `Fizetendő`/`Kezelések összesen` feliratok
+  `Végösszeg`/`Kezelések összege`-re változtak — a Terv részletei
+  (véglegesített verzió) képernyővel EGYÜTT, hogy a két felület szókincse
+  ne csússzon szét. Az Előleg/Fennmaradó rész sorok mostantól három
+  megkülönböztethető vizuális szintet kapnak (Végösszeg > Fennmaradó rész
+  > Előleg), finom elválasztóvonallal a Végösszeg alatt. A számítási
+  forrás változatlanul `tervVegosszeg()`. Részletek:
+  `docs/04-nyomtatvany-spec.md` § "Összegzés".

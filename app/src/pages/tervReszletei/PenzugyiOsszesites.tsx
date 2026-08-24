@@ -35,14 +35,14 @@ export default function PenzugyiOsszesites({ plan }: { plan: Plan }) {
       {/* A referenciasor akkor nyílik meg, ha a mentett összesítő szerint VAN
           eltérés a listaártól -- nem egy sorok fölötti egyenlőség-vizsgálatból:
           egymást nettóban kiegyenlítő sorszintű kedvezmény és felár mellett is
-          igaz, hogy a "Kezelések összesen" más kérdésre válaszol, mint a
-          Fizetendő. A nyomtatvány sorrendjét követi (referencia felül, alatta
+          igaz, hogy a "Kezelések összege" más kérdésre válaszol, mint a
+          Végösszeg. A nyomtatvány sorrendjét követi (referencia felül, alatta
           a domináns összeg), hogy a nézet úgy olvasódjon, mint a dokumentum. */}
       {osszesitok.kedvezmeny !== 0 && (
         <>
           <Flex justify="between" align="baseline" gap="4">
             <Text size="2" style={{ color: t.uiTextMuted }}>
-              Kezelések összesen
+              Kezelések összege
             </Text>
             <Text size="2" style={{ color: t.uiTextMuted, fontVariantNumeric: 'tabular-nums' }}>
               {penz(osszesitok.kezelesekOsszesen)}
@@ -54,14 +54,14 @@ export default function PenzugyiOsszesites({ plan }: { plan: Plan }) {
 
       <Flex justify="between" align="baseline" gap="4">
         <Text size="3" color="gray">
-          Fizetendő
+          Végösszeg
         </Text>
         <Text size="6" weight="bold" style={{ color: t.brand, fontVariantNumeric: 'tabular-nums' }}>
           {penz(osszesitok.fizetendo)}
         </Text>
       </Flex>
 
-      {/* Közvetlenül a Fizetendő alatt, a "Fizetés" alcsoport ELŐTT: az
+      {/* Közvetlenül a Végösszeg alatt, a "Fizetés" alcsoport ELŐTT: az
           előleg és a fennmaradó rész ebből a (becsült) összegből számol,
           tehát a bizonytalanságot előbb kell kimondani, mint a belőle
           származtatott számokat. Puszta ténymegállapítás, nem navigáció --

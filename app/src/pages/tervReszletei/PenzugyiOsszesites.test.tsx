@@ -71,7 +71,7 @@ function renderOsszesites(plan: Plan) {
 }
 
 describe('PenzugyiOsszesites', () => {
-  it('a Fizetendő a MENTETT osszesitok.fizetendo-t mutatja, nem az újraszámolt értéket', () => {
+  it('a Végösszeg a MENTETT osszesitok.fizetendo-t mutatja, nem az újraszámolt értéket', () => {
     // A `fazisok` szerint 100 000 lenne az összeg, de a mentett `osszesitok`
     // szerint 80 000 -- a mentett érték az igazság.
     const plan = makePlan({
@@ -104,22 +104,22 @@ describe('PenzugyiOsszesites', () => {
     expect(screen.queryByText(/nem egyezik/)).not.toBeInTheDocument();
   });
 
-  it('a "Kezelések összesen" sor csak akkor jelenik meg, ha osszesitok.kedvezmeny ≠ 0 (kedvezmény)', () => {
+  it('a "Kezelések összege" sor csak akkor jelenik meg, ha osszesitok.kedvezmeny ≠ 0 (kedvezmény)', () => {
     const plan = makePlan({ osszesitok: { kezelesekOsszesen: 100000, kedvezmeny: 20000, fizetendo: 80000 } });
     renderOsszesites(plan);
-    expect(screen.getByText('Kezelések összesen')).toBeInTheDocument();
+    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
   });
 
-  it('a "Kezelések összesen" sor negatív kedvezmény (felár) esetén is megjelenik', () => {
+  it('a "Kezelések összege" sor negatív kedvezmény (felár) esetén is megjelenik', () => {
     const plan = makePlan({ osszesitok: { kezelesekOsszesen: 100000, kedvezmeny: -20000, fizetendo: 120000 } });
     renderOsszesites(plan);
-    expect(screen.getByText('Kezelések összesen')).toBeInTheDocument();
+    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
   });
 
-  it('nulla kedvezmény esetén nincs "Kezelések összesen" referenciasor', () => {
+  it('nulla kedvezmény esetén nincs "Kezelések összege" referenciasor', () => {
     const plan = makePlan({ osszesitok: { kezelesekOsszesen: 100000, kedvezmeny: 0, fizetendo: 100000 } });
     renderOsszesites(plan);
-    expect(screen.queryByText('Kezelések összesen')).not.toBeInTheDocument();
+    expect(screen.queryByText('Kezelések összege')).not.toBeInTheDocument();
   });
 
   it('előleg nélkül nincs "Fizetés" alcsoport és nincs Előleg/Fennmaradó sor', () => {

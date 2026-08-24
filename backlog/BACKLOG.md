@@ -15,18 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 79. tétel — PDF pénzügyi összesítés
-  (a `backlog/redesign/` redesign-döntéssorozat DP-073 tétele) — az
-  Összesítés blokk `Összesítés` címet kap (C6), a PDF-feliratok
-  `Fizetendő`→`Végösszeg` és `Kezelések összesen`→`Kezelések összege`
-  (D350/D351) — a KÉPERNYŐS átnevezés már a 74. tétel hatásköre, ez
-  csak a `pdf/labels.ts`-t viszi, hogy a két felület ne csússzon szét.
-  A számítási forrás marad `tervVegosszeg()` (nincs átállás a mentett
-  `plan.osszesitok`-ra — a 74. tétel indoklása szerint ez a PDF-en
-  biztonságos). Új: három vizuális szint az Előleg/Fennmaradó rész
-  sorokhoz (D368–D369). A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-79-pdf-penzugyi-osszesites-terv.md`
-
 ### 80. tétel — PDF lokalizáció, dátum- és pénzformázás
   (a `backlog/redesign/` redesign-döntéssorozat DP-074 tétele) — a
   nyelvfüggő ezres tagolás (C4) már az 52. tétel hatásköre, ez csak a
@@ -158,6 +146,20 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   (Finalization validation engine) egységes modelljére vár, mert a
   checklist-infók helye oda tartozik. Terv még nincs hozzá, a `/planning`
   futtatása szükséges implementáció előtt.
+
+### 91. tétel — Előleg megadása százalékban is
+  A 64. tétel (D66) az előleget százalékos megadásról abszolút összegre
+  váltotta; a doki viszont gyakran arányban állapodik meg a pácienssel
+  (30%/50%), és ezt ma fejben kell összegre váltania. A tétel a szerkesztő
+  Előleg blokkjába egy összeg/százalék módváltót tesz: százalékos
+  megadásnál a beírt arány a Fizetendőből azonnal összeggé konvertálódik
+  (felfelé kerekítve a legközelebbi 1000 pénznem-alapegységre), és a
+  `Plan`-en változatlanul az abszolút `elolegOsszeg` tárolódik — nincs
+  sémaváltozás. Explicit kizárva: a százalék visszahozása tárolt
+  igazságként (élő, sorokat követő számítással), a nyomtatvány/sablon/
+  séma/véglegesítés-őr bármilyen módosítása, és az Egyedi végösszeg
+  százalékos bevitele. A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-91-eloleg-szazalek-bevitel-terv.md`
 
 ---
 ## NEM FEJLESZTÉS

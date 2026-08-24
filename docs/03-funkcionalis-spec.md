@@ -602,7 +602,7 @@ explicit megerősítést kér egy dialóguson keresztül, elgépelés ellen véd
 `0 → más érték → 0` váltás újra megerősítést kér.
 
 Mivel a kedvezmény/felár fix összeg, egy utólagos sortörlés a sorok
-összege fölé emelheti a kedvezmény-ágat — ilyenkor a „Fizetendő" 0-ra
+összege fölé emelheti a kedvezmény-ágat — ilyenkor a „Végösszeg" 0-ra
 padlózódik (soha nem negatív), és a blokk figyelmeztet, hogy a végösszeget
 újra be kell írni.
 
@@ -610,7 +610,7 @@ A „Mindösszesen" doboz „Kedvezmény: X"/„Felár: X" alszövege (fent) ett
 ponttól kezdve a sorszintű ÉS a terv-szintű eltérés ÖSSZEGÉT mutatja,
 összevonva — az egyedi végösszeg blokk saját sora adja meg külön a saját
 részét, ha a doki forrás szerint akarja látni. A kedvezmény/felár összege
-a nyomtatványon itt sem jelenik meg (D9), csak a „Fizetendő" változik; az
+a nyomtatványon itt sem jelenik meg (D9), csak a „Végösszeg" változik; az
 előleg (lásd lent) ebből a módosított összegből számol.
 
 ### Előleg (D66)
@@ -1817,16 +1817,16 @@ kötni. A lap emellett explicit a tetejére görget verzióváltáskor.
 **Pénzügyi összesítés**: minden kiírt szám a mentett `plan.osszesitok`-ból
 jön, sosem a sorokból újraszámolt értékből — egy lezárt dokumentumnak az
 aláírt papírral kell egyeznie. A feliratok a nyomtatvány szókincsét
-követik (Kezelések összesen / Fizetendő / Előleg / Fennmaradó rész), nem a
-szerkesztőét. A `Kezelések összesen` referenciasor csak akkor jelenik
+követik (Kezelések összege / Végösszeg / Előleg / Fennmaradó rész), nem a
+szerkesztőét. A `Kezelések összege` referenciasor csak akkor jelenik
 meg, ha a mentett összesítő szerint van eltérés a listaártól
 (`osszesitok.kedvezmeny !== 0`) — egymást nettóban kiegyenlítő sor-szintű
 kedvezmény és felár mellett is igaz, hogy ez más kérdésre válaszol, mint
-a domináns `Fizetendő` sor. Alatta, ha van legalább egy `savos` sor, egy
+a domináns `Végösszeg` sor. Alatta, ha van legalább egy `savos` sor, egy
 halk, nem kattintható info-sor jelzi a becsült tételek számát. Az
 „Előleg"/„Fennmaradó rész" csak akkor jelenik meg (saját, csak ekkor
 kiírt „Fizetés" alcímmel), ha a tervnek van mentett `elolegOsszeg`-je, a
-STORED `Fizetendő`-ből számolva — a fennmaradó rész „—", ha az előleg
+STORED `Végösszeg`-ből számolva — a fennmaradó rész „—", ha az előleg
 meghaladja a fizetendőt. Az `osszesitokElter()` (eddig kizárólag
 piszkozat-betöltéskor futó) ellenőrzés itt is lefut: ha a mentett
 összesítő nem egyezik a mentett sorokból újraszámolt értékkel, egy

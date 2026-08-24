@@ -163,12 +163,12 @@ describe('TervDocument -- 78. tétel: üres Fog cella', () => {
 });
 
 describe('TervDocument -- backlog-12: feltételes összegsor', () => {
-  it('nincs eltérés: csak a "Fizetendő" sor jelenik meg, referenciasor nélkül', () => {
+  it('nincs eltérés: csak a "Végösszeg" sor jelenik meg, referenciasor nélkül', () => {
     renderDoc(false, 'hu', { lista: 45000, tenyleges: 45000 });
-    expect(screen.getByText('Fizetendő')).toBeInTheDocument();
-    expect(screen.queryByText('Kezelések összesen')).not.toBeInTheDocument();
+    expect(screen.getByText('Végösszeg')).toBeInTheDocument();
+    expect(screen.queryByText('Kezelések összege')).not.toBeInTheDocument();
     // A 45 000 Ft pontosan egyszer szerepel az összegzésben (a fázistáblázat
-    // sorösszege és egységára külön elemek) -- a lényeg, hogy a "Fizetendő"
+    // sorösszege és egységára külön elemek) -- a lényeg, hogy a "Végösszeg"
     // fölött ne álljon ugyanaz a szám még egyszer.
   });
 
@@ -178,24 +178,36 @@ describe('TervDocument -- backlog-12: feltételes összegsor', () => {
   // önmagában bizonyítja, hogy a sor kirendereltetett.
   it('kedvezmény: mindkét sor megjelenik, a referenciaár a magasabb listaárral', () => {
     renderDoc(false, 'hu', { lista: 45000, tenyleges: 40000 });
-    expect(screen.getByText('Kezelések összesen')).toBeInTheDocument();
-    expect(screen.getByText('Fizetendő')).toBeInTheDocument();
+    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
+    expect(screen.getByText('Végösszeg')).toBeInTheDocument();
     expect(screen.getByText('45 000 Ft')).toBeInTheDocument();
     expect(screen.getAllByText('40 000 Ft').length).toBeGreaterThan(0);
   });
 
   it('felár: ugyanúgy mindkét sor megjelenik (az eltérés iránya nem számít)', () => {
     renderDoc(false, 'hu', { lista: 45000, tenyleges: 50000 });
-    expect(screen.getByText('Kezelések összesen')).toBeInTheDocument();
-    expect(screen.getByText('Fizetendő')).toBeInTheDocument();
+    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
+    expect(screen.getByText('Végösszeg')).toBeInTheDocument();
     expect(screen.getByText('45 000 Ft')).toBeInTheDocument();
     expect(screen.getAllByText('50 000 Ft').length).toBeGreaterThan(0);
   });
 
   it('német terv, eltérés nélkül: a "Behandlungen gesamt" sor is elmarad', () => {
     renderDoc(false, 'de', { lista: 45000, tenyleges: 45000 });
-    expect(screen.getByText('Zu zahlen')).toBeInTheDocument();
+    expect(screen.getByText('Gesamtbetrag')).toBeInTheDocument();
     expect(screen.queryByText('Behandlungen gesamt')).not.toBeInTheDocument();
+  });
+});
+
+describe('TervDocument -- 79. tétel: az Összesítés blokk saját címe', () => {
+  it('magyar terven az "Összesítés" cím jelenik meg', () => {
+    renderDoc(false, 'hu', { lista: 45000, tenyleges: 45000 });
+    expect(screen.getByText('Összesítés')).toBeInTheDocument();
+  });
+
+  it('német terven a "Zusammenfassung" cím jelenik meg', () => {
+    renderDoc(false, 'de', { lista: 45000, tenyleges: 45000 });
+    expect(screen.getByText('Zusammenfassung')).toBeInTheDocument();
   });
 });
 
@@ -208,7 +220,7 @@ describe('TervDocument -- 52. tétel: nyelvfüggő pénzformátum', () => {
     // A testing-library normalizálja a nem törhető szóközt (U+00A0) sima
     // szóközre -- a query-stringben ezért sima szóköz kell, ahogy a fájl
     // többi (HU) queryje is teszi. Az összeg a fázistáblázatban (egységár +
-    // sorösszeg) ÉS a "Zu zahlen" végösszegben is megjelenik -- getAllByText,
+    // sorösszeg) ÉS a "Gesamtbetrag" végösszegben is megjelenik -- getAllByText,
     // nem getByText (ami az egyértelműséget várná el).
     expect(screen.getAllByText('45.000 Ft').length).toBeGreaterThan(0);
     expect(screen.queryByText('45 000 Ft')).not.toBeInTheDocument();
@@ -241,7 +253,7 @@ describe('TervDocument -- backlog-9/D66: előleg-sor', () => {
     expect(screen.getByText(/a megállapított előleg fizetendő/)).toBeInTheDocument();
   });
 
-  it('bekapcsolva: két új sor a Fizetendőből számolva, a sablonszöveg ugyanazt az összeget mondja', () => {
+  it('bekapcsolva: két új sor a Végösszegből számolva, a sablonszöveg ugyanazt az összeget mondja', () => {
     renderEloleg(22500);
     expect(screen.getByText('Előleg')).toBeInTheDocument();
     expect(screen.getByText('Fennmaradó rész')).toBeInTheDocument();
@@ -294,7 +306,7 @@ describe('TervDocument -- backlog-9/D66: előleg-sor', () => {
 
 describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmény', () => {
   function renderKerekVegosszeg(kedvezmenyOsszeg: number | null, elolegOsszeg: number | null = null) {
-    // AZONOS_AR: nincs sorszintű eltérés -- a "Kezelések összesen" sor
+    // AZONOS_AR: nincs sorszintű eltérés -- a "Kezelések összege" sor
     // megjelenése kizárólag a terv-szintű kedvezménynek tulajdonítható.
     const plan = buildPlan(false, 'hu', AZONOS_AR);
     plan.kedvezmenyOsszeg = kedvezmenyOsszeg;
@@ -316,10 +328,10 @@ describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmé
 
   it('terv-szintű kedvezmény önmagában (sorszintű eltérés nélkül) is megnyitja a kétsoros összegzést', () => {
     renderKerekVegosszeg(5000);
-    expect(screen.getByText('Kezelések összesen')).toBeInTheDocument();
+    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
     // A listaár (45 000 Ft) a soron, a fázisösszegzőn ÉS a referenciasoron is
-    // megjelenik (a sorszintű ár változatlan, csak a terv-szintű Fizetendő
-    // csökken) -- ezért getAllByText, a "Fizetendő" 40 000 Ft-ja viszont
+    // megjelenik (a sorszintű ár változatlan, csak a terv-szintű Végösszeg
+    // csökken) -- ezért getAllByText, a "Végösszeg" 40 000 Ft-ja viszont
     // egyedi, csak azon az egy soron jelenik meg.
     expect(screen.getAllByText('45 000 Ft').length).toBeGreaterThan(0);
     expect(screen.getByText('40 000 Ft')).toBeInTheDocument();
@@ -327,7 +339,7 @@ describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmé
 
   it('kedvezmény nélkül (null) a viselkedés változatlan', () => {
     renderKerekVegosszeg(null);
-    expect(screen.queryByText('Kezelések összesen')).not.toBeInTheDocument();
+    expect(screen.queryByText('Kezelések összege')).not.toBeInTheDocument();
     expect(screen.getAllByText('45 000 Ft').length).toBeGreaterThan(0);
   });
 
@@ -630,6 +642,6 @@ describe('TervDocument -- 77. tétel: cím + páciensadatok + fogtérkép', () =
   it('az összesítés az utolsó fázis után áll, teljes szélességben', () => {
     const aBlokk = renderElsoBlokk();
     const text = aBlokk.textContent!;
-    expect(text.indexOf(ELSO_FAZIS_NEV)).toBeLessThan(text.indexOf('Fizetendő'));
+    expect(text.indexOf(ELSO_FAZIS_NEV)).toBeLessThan(text.indexOf('Végösszeg'));
   });
 });

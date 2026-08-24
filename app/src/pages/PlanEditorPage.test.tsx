@@ -176,7 +176,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     // A fenti kedvezmény-teszt tükre (backlog-12, 4. döntés): a "Tényleges ár"
     // mezőnek nincs felső korlátja, a felfelé eltérést a szerkesztő korábban
     // némán elnyelte -- a nyomtatvány viszont mostantól mindkét irányban
-    // megmutatja a "Kezelések összesen" referenciasort.
+    // megmutatja a "Kezelések összege" referenciasort.
     const user = userEvent.setup();
     renderEditor();
 

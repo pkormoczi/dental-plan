@@ -539,7 +539,7 @@ szerkesztőben a doki a kívánt **végösszeget** gépeli be, de a `Plan`-en ez
 FIX, ELŐJELES **eltérésként** (`kedvezmenyOsszeg`) rögzül, nem a begépelt
 végösszegként (D25) — pozitív érték kedvezményt, negatív felárat jelent,
 és a sorok tiszta összegéből vonódik le. `null` (vagy hiányzó mező) =
-nincs terv-szintű eltérés, a `Fizetendő` a sorok tiszta összege (a mai
+nincs terv-szintű eltérés, a `Végösszeg` a sorok tiszta összege (a mai
 viselkedés). Nem emelt `schemaVersion`-t, az `elolegOsszeg` precedense
 szerint; a séma-kulcs neve a D69 névváltás (a UI-n „Egyedi végösszeg") után
 is `kedvezmenyOsszeg` maradt.
@@ -549,13 +549,13 @@ végösszeget tárolnánk élőben, egy utólagos sormódosítás után az elté
 észrevétlenül változna — ez D8 szellemével (a kedvezmény mérhető, explicit
 tényállapot) ütközne, ugyanúgy, ahogy a soronkénti `listaEgysegar` vs
 `tenylegesEgysegar` sem "él" a listaár változásával. Ha a doki utólag
-módosítja a sorokat, a `Fizetendő` elcsúszhat a beírt végösszegtől — ez
+módosítja a sorokat, a `Végösszeg` elcsúszhat a beírt végösszegtől — ez
 szándékos viselkedés, a doki bármikor újra beírhatja a kívánt végösszeget,
 ami felülírja a `kedvezmenyOsszeg`-et.
 
 **`tervVegosszeg(fazisok, kedvezmenyOsszeg)` soha nem ad negatívat**
 (`domain/totals.ts`): mivel az eltérés fix összeg, egy utólagos sortörlés
-a kedvezmény-ágon a sorok összege fölé emelheti — ilyenkor a `Fizetendő`
+a kedvezmény-ágon a sorok összege fölé emelheti — ilyenkor a `Végösszeg`
 0-ra padlózódik, nem negatív szám kerül az aláírandó papírra (D25). A
 felár-ágnak (negatív `kedvezmenyOsszeg`) nincs felső korlátja.
 
@@ -569,7 +569,7 @@ Ne keverd a `plan.osszesitok.kedvezmeny` mezővel: az a KIMENET (a sor- és
 a terv-szintű eltérés összege a listaártól, véglegesítéskor számolva), a
 `kedvezmenyOsszeg` a BEMENET (a doki által beállított terv-szintű összeg).
 A kedvezmény összege — akárcsak az előlegnél — sehol nem jelenik meg a
-nyomtatványon (D9), csak a `Fizetendő` lesz kisebb.
+nyomtatványon (D9), csak a `Végösszeg` lesz kisebb.
 
 ### Csak ajánlat mód (`csakAjanlat`, D75)
 

@@ -238,29 +238,32 @@ Ha egyetlen fogszám (maradó vagy tejfog) sincs a tervben, a fogtérkép
 
 ### Összegzés
 
-Az összegzés a fázisok UTÁN, mindig teljes szélességben áll (a korábbi,
-a fogtérkép mellett álló kéthasábos elrendezés megszűnt). **Feltételesen
-egy vagy két soros**. Két sor csak akkor
-jelenik meg, ha a listaárakból számolt összeg ténylegesen eltér a
+A blokk saját címet kap (`Összesítés` / `Zusammenfassung`), ugyanolyan
+súllyal, mint a fáziscímek. Alatta az összegzés a fázisok UTÁN, mindig
+teljes szélességben áll (a korábbi, a fogtérkép mellett álló kéthasábos
+elrendezés megszűnt). **Feltételesen egy vagy két soros**. Két sor csak
+akkor jelenik meg, ha a listaárakból számolt összeg ténylegesen eltér a
 tényleges árakból számolttól (`fizetendo`):
 
 ```
-Kezelések összesen                820 000 Ft
+Összesítés
+Kezelések összege                 820 000 Ft
 ──────────────────────────────────────────── (1.5px, #976445)
-Fizetendő                         780 000 Ft
+Végösszeg                         780 000 Ft
 ```
 
 Ha a kettő megegyezik — tipikusan amikor a doki nem adott kedvezményt —,
-a `Kezelések összesen` sor és az elválasztó is **kimarad**, és csak a
-kiemelt `Fizetendő` sor marad, változatlan felirattal:
+a `Kezelések összege` sor és az elválasztó is **kimarad**, és csak a
+kiemelt `Végösszeg` sor marad, változatlan felirattal:
 
 ```
-Fizetendő                         820 000 Ft
+Összesítés
+Végösszeg                         820 000 Ft
 ```
 
 Az eltérés **iránya nem számít**: felár (a tényleges ár a listaár fölött)
 ugyanúgy megnyitja mindkét sort, mint a kedvezmény — a `Kezelések
-összesen` mindkét esetben ugyanazt az információt hordozza („ebből
+összege` mindkét esetben ugyanazt az információt hordozza („ebből
 indultunk"), külön felirat vagy eltérő megfogalmazás nélkül.
 
 **Kedvezmény sor nincs** (D9) — a kedvezmény *összege* sehol nem jelenik
@@ -271,18 +274,21 @@ sorszintű eltérés nélkül is megnyitja ezt a kétsoros összegzést, ugyanú
 mint egy sorszintű eltérés (`tervVegosszeg()`, `domain/totals.ts`).
 
 Ha a terven be van kapcsolva az előleg (`elolegOsszeg != null`, D66), a
-`Fizetendő` alatt még két sor áll, kisebb súllyal:
+`Végösszeg` alatt még két sor áll, egy finom elválasztóvonallal
+elkülönítve, három egymástól megkülönböztethető súllyal — a `Végösszeg` a
+legerősebb, a `Fennmaradó rész` közepes, az `Előleg` a leghalkabb:
 
 ```
-Fizetendő                         780 000 Ft
+Végösszeg                         780 000 Ft
+──────────────────────────────────────────── (1px, halvány)
 Előleg                            390 000 Ft
 Fennmaradó rész                   390 000 Ft
 ```
 
 Az „Előleg” felirat sima, zárójeles összeg-ismétlés nélkül — az érték az
-oszlopban amúgy is ott áll. A fennmaradó rész a `Fizetendő`-ből számol,
+oszlopban amúgy is ott áll. A fennmaradó rész a `Végösszeg`-ből számol,
 egész pénznemegységre kerekítve, és a kettő együtt pontosan a
-`Fizetendő`-t adja ki — KIVÉVE, ha az előleg meghaladja a `Fizetendő`-t
+`Végösszeg`-et adja ki — KIVÉVE, ha az előleg meghaladja a `Végösszeg`-et
 (sortörlés/módosítás utóhatása); ilyenkor a fennmaradó rész helyén „—” áll.
 A szerkesztő ezt az esetet kemény véglegesítési blokkal előzi meg
 (`domain/veglegesitesOr.ts`), de a „Csak ajánlat” előnézet a blokk előtt
@@ -402,7 +408,8 @@ németnyelvű PDF-re kerülne.
 | Név / Telefon / Született / E-mail / TAJ / Lakcím | Name / Telefon / Geburtsdatum / E-Mail / TAJ-Nr. / Adresse |
 | Adószám: / Cégjegyzékszám: | Steuernummer: / Handelsregisternummer: |
 | Érintett fogak | Betroffene Zähne |
-| Kezelések összesen / Fizetendő | Behandlungen gesamt / Zu zahlen |
+| Összesítés | Zusammenfassung |
+| Kezelések összege / Végösszeg | Behandlungen gesamt / Gesamtbetrag |
 | Fizetési feltételek / Nyilatkozat | Zahlungsbedingungen / Erklärung |
 | Nyilatkozat – folytatás | Erklärung – Fortsetzung |
 | Megbízott: / Megrendelő: | Auftragnehmer: / Auftraggeber: |

@@ -38,6 +38,11 @@ export interface PdfLabels {
   erintettFogak: string;
   /** A fogtérkép alatti tejfog-felsorolás előtagja -- a rajz csak a 32 maradó fogat ábrázolja. */
   tejfogakPrefix: string;
+  /** Az Összesítés blokk saját címe (nem a nyomtatvány dokumentumcíme). */
+  osszesitesCim: string;
+  // A két kulcs neve az `osszesitok` JSON-séma mezőneveit tükrözi
+  // (docs/02-domain-modell.md) -- ez NEM a PDF-en megjelenő szó, azt lásd az
+  // értékben.
   kezelesekOsszesen: string;
   fizetendo: string;
   /** Az előleg összegző sor felirata -- D66 óta sima "Előleg"/"Anzahlung", az összeg az érték-oszlopban áll, zárójeles ismétlés nélkül. */
@@ -91,8 +96,9 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     arlistaPrefix: 'árlista ',
     erintettFogak: 'Érintett fogak',
     tejfogakPrefix: 'Tejfogak: ',
-    kezelesekOsszesen: 'Kezelések összesen',
-    fizetendo: 'Fizetendő',
+    osszesitesCim: 'Összesítés',
+    kezelesekOsszesen: 'Kezelések összege',
+    fizetendo: 'Végösszeg',
     elolegSor: 'Előleg',
     fennmaradoResz: 'Fennmaradó rész',
     elolegKifejezes: (osszeg) => (osszeg == null ? 'a megállapított előleg' : `${osszeg} előleg`),
@@ -134,8 +140,9 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     arlistaPrefix: 'Preisliste ',
     erintettFogak: 'Betroffene Zähne',
     tejfogakPrefix: 'Milchzähne: ',
+    osszesitesCim: 'Zusammenfassung',
     kezelesekOsszesen: 'Behandlungen gesamt',
-    fizetendo: 'Zu zahlen',
+    fizetendo: 'Gesamtbetrag',
     elolegSor: 'Anzahlung',
     fennmaradoResz: 'Restbetrag',
     elolegKifejezes: (osszeg) =>

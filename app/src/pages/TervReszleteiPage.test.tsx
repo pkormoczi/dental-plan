@@ -184,7 +184,7 @@ describe('TervReszleteiPage', () => {
       screen.queryByText('A pénzügyi összesítés a következő lépésben kerül ide.'),
     ).not.toBeInTheDocument();
     expect(screen.getByText('Pénzügyi összesítés')).toBeInTheDocument();
-    expect(screen.getByText('Fizetendő')).toBeInTheDocument();
+    expect(screen.getByText('Végösszeg')).toBeInTheDocument();
     // Regex, nem a formatMoney() nyers stringje -- a hu-HU ICU ezres
     // elválasztója nem feltétlenül ASCII szóköz, a jest-dom normalizer csak
     // a DOM-oldalt normalizálja összehasonlításkor, a target stringet nem.

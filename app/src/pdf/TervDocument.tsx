@@ -153,21 +153,29 @@ const s = {
   // kéthasábos (fogtérkép + összegzés egymás mellett) elrendezés megszűnt.
   toothChartBlock: { marginBottom: 16 },
   toothChartLabel: { fontSize: 8, color: t.textMuted, marginBottom: 5 },
-  // Az összesítés a fázisok UTÁN, mindig teljes szélességben áll (lásd 79.
-  // tétel a tartalmáért) -- a felső elválasztó a korábbi bottomRow-ról örökölt.
+  // Az összesítés a fázisok UTÁN, mindig teljes szélességben áll (lásd
+  // docs/04-nyomtatvany-spec.md § "Összegzés") -- a felső elválasztó a
+  // korábbi bottomRow-ról örökölt.
   summaryBlock: {
     width: '100%',
     borderTopWidth: 1,
     borderTopColor: t.line,
     paddingTop: 12,
   },
+  summaryTitle: { fontSize: 11.5, fontWeight: 600, color: t.brand, marginBottom: 6 },
   summaryLine: { flexDirection: 'row' as const, justifyContent: 'space-between' as const },
   summaryLabelMuted: { fontSize: 9, color: t.textMuted },
   summaryDivider: { height: 1.5, backgroundColor: t.brand, marginVertical: 5 },
   summaryTotalLabel: { fontSize: 11, fontWeight: 600, color: t.brand },
   summaryTotalValue: { fontSize: 11, fontWeight: 600, color: t.brand },
-  // Az előleg/fennmaradó sorok a Fizetendő ALATT, kisebb súllyal: a
-  // szerződéses végösszeg marad a kiemelt szám, ezek abból bontanak.
+  // Finom elválasztó a Végösszeg és az Előleg/Fennmaradó rész között --
+  // gyengébb, mint a summaryDivider fölötte, hogy a hierarchia ne boruljon.
+  summaryElolegDivider: { height: 1, backgroundColor: t.line, marginTop: 6, marginBottom: 4 },
+  // Három vizuális szint: Végösszeg (summaryTotal*) > Fennmaradó rész
+  // (summaryFennmarado) > Előleg (summaryEloleg) -- a fennmaradó rész az,
+  // amit a páciensnek ténylegesen még fizetnie kell, ezért erősebb, mint a
+  // már letudott előleg, de gyengébb, mint a szerződéses végösszeg.
+  summaryFennmarado: { fontSize: 9.5, fontWeight: 600, color: t.text, marginTop: 3 },
   summaryEloleg: { fontSize: 9, color: t.textMuted, marginTop: 3 },
   validityNote: { fontSize: 8, color: t.textMuted, marginTop: 6, lineHeight: 1.5 },
 
@@ -529,7 +537,8 @@ export function TervDocument({
         {hasRange && <Text style={s.savosFootnote}>{L.savosFootnote}</Text>}
 
         <View style={s.summaryBlock}>
-          {/* A "Kezelések összesen" referenciasor csak akkor jelenik meg, ha
+          <Text style={s.summaryTitle}>{L.osszesitesCim}</Text>
+          {/* A "Kezelések összege" referenciasor csak akkor jelenik meg, ha
               ténylegesen eltér a fizetendőtől -- eltérés nélkül a két szám
               azonos lenne, és ugyanaz az összeg állna kétszer egymás alatt
               (backlog-12). Az eltérés IRÁNYA nem számít: a felár ugyanúgy
@@ -539,7 +548,7 @@ export function TervDocument({
             <>
               <View style={s.summaryLine}>
                 <Text style={s.summaryLabelMuted}>{L.kezelesekOsszesen}</Text>
-                <Text>{formatMoney(listTotal, plan.penznem, plan.nyelv)}</Text>
+                <Text style={s.summaryLabelMuted}>{formatMoney(listTotal, plan.penznem, plan.nyelv)}</Text>
               </View>
               <View style={s.summaryDivider} />
             </>
@@ -550,13 +559,14 @@ export function TervDocument({
           </View>
           {eloleg && (
             // Mindkét sor csillagot kap, ha a tervben van becsült árú
-            // tétel: mindkettő ugyanabból a becsült Fizetendőből számol,
+            // tétel: mindkettő ugyanabból a becsült Végösszegből számol,
             // csak az egyiket jelölni félrevezető lenne (backlog-9).
-            // `fennmarado === null`: az előleg meghaladja a Fizetendőt
+            // `fennmarado === null`: az előleg meghaladja a Végösszeget
             // (D66) -- a véglegesítés-őr ezt kemény blokkal megfogja, de a
             // Csak-ajánlat előnézet a blokk előtt is renderel, ezért itt
             // sem törhet el.
             <>
+              <View style={s.summaryElolegDivider} />
               <View style={s.summaryLine}>
                 <Text style={s.summaryEloleg}>
                   {L.elolegSor}
@@ -567,11 +577,11 @@ export function TervDocument({
                 </Text>
               </View>
               <View style={s.summaryLine}>
-                <Text style={s.summaryEloleg}>
+                <Text style={s.summaryFennmarado}>
                   {L.fennmaradoResz}
                   {hasRange && ' *'}
                 </Text>
-                <Text style={s.summaryEloleg}>
+                <Text style={s.summaryFennmarado}>
                   {eloleg.fennmarado == null ? '—' : formatMoney(eloleg.fennmarado, plan.penznem, plan.nyelv)}
                 </Text>
               </View>
