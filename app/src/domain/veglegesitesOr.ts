@@ -15,7 +15,14 @@
 // placeholder` tétel itt csak a TÉNYT jelzi, a kényszerített offer-only
 // mód a hívó dolga).
 
-import { araztalanSorok, hianyzoCsomagLeirasok, kitoltetlenSorok, nullaOsszeguSorok, uresFazisok } from './kitoltetlen';
+import {
+  araztalanSorok,
+  hianyzoCsomagLeirasok,
+  inaktivTetelreHivatkozoSorok,
+  kitoltetlenSorok,
+  nullaOsszeguSorok,
+  uresFazisok,
+} from './kitoltetlen';
 import { arElteroSorok } from './arKoveti';
 import { masterSnapshotDiff } from './masterSnapshotDiff';
 import { formatMoney } from './money';
@@ -264,9 +271,8 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // PUHA figyelmeztetés (backlog-61, D70) -- utolsó tartalmi tétel: az
-  // árlista-eltérés (kedvezmény/felár vagy elavult pillanatkép) legitim
-  // állapot is lehet.
+  // PUHA figyelmeztetés (backlog-61, D70) -- az árlista-eltérés
+  // (kedvezmény/felár vagy elavult pillanatkép) legitim állapot is lehet.
   const arElteresek = arElteroSorok(plan, priceList);
   if (arElteresek.elavult.length + arElteresek.keziAr.length > 0) {
     const reszletek: CsekklistaReszlet[] = [];
@@ -282,6 +288,21 @@ export function veglegesitesDiagnozis(
       cim: 'Néhány sor ára eltér a mai árlistától.',
       szamlalo: arElteresek.elavult.length + arElteresek.keziAr.length,
       reszletek,
+      route: '/terv',
+    });
+  }
+
+  // PUHA figyelmeztetés -- a sor `nevSnapshot`-ja/ára a pillanatkép-elv
+  // szerint változatlan marad, ez csak jelzi, hogy a hivatkozott tétel
+  // időközben inaktívvá vált.
+  const inaktivHivatkozasok = inaktivTetelreHivatkozoSorok(plan, priceList);
+  if (inaktivHivatkozasok.length > 0) {
+    tetelek.push({
+      id: 'inaktiv-tetel-hivatkozas',
+      sulyossag: 'soft',
+      cim: `A terv ${inaktivHivatkozasok.length} sora egy időközben inaktivált tételre hivatkozik.`,
+      szamlalo: inaktivHivatkozasok.length,
+      reszletek: [{ cim: 'Érintett sorok', nevek: inaktivHivatkozasok }],
       route: '/terv',
     });
   }

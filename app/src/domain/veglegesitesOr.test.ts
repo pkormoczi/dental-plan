@@ -88,6 +88,15 @@ const priceList: PriceList = {
       ar: { HUF: { tipus: 'FIX', ertek: 1950000 }, EUR: null },
       csomag: true,
     },
+    {
+      id: 't-inaktiv',
+      kategoriaId: 'k1',
+      sorrend: 3,
+      aktiv: false,
+      gyakori: false,
+      nev: { hu: 'Kivont tétel', de: null },
+      ar: { HUF: { tipus: 'FIX', ertek: 5000 }, EUR: null },
+    },
   ],
 };
 
@@ -270,6 +279,23 @@ describe('veglegesitesDiagnozis', () => {
 
     const t = tetel(diag, 'ar-elteres');
     expect(t?.reszletek).toEqual([{ cim: 'Kézzel felülírt ajánlati ár', nevek: ['Fogeltávolítás'] }]);
+  });
+
+  it('inaktivált tételre hivatkozó sor az "inaktiv-tetel-hivatkozas" soft tételt adja, nem blokkol', () => {
+    const plan = makePlan([[sor({ tetelId: 't-inaktiv', nevSnapshot: 'Kivont tétel' })]]);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON);
+
+    const t = tetel(diag, 'inaktiv-tetel-hivatkozas');
+    expect(t?.sulyossag).toBe('soft');
+    expect(t?.szamlalo).toBe(1);
+    expect(t?.reszletek).toEqual([{ cim: 'Érintett sorok', nevek: ['Kivont tétel'] }]);
+    expect(vanKemenyBlokk(diag)).toBe(false);
+  });
+
+  it('aktív tételre hivatkozó sor nem ad "inaktiv-tetel-hivatkozas" tételt', () => {
+    const plan = makePlan([[sor()]]); // t1 aktív
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON);
+    expect(tetel(diag, 'inaktiv-tetel-hivatkozas')).toBeUndefined();
   });
 
   // 65. tétel (D72): a doki kézzel írt szövegeinek nyelvi review-ja --

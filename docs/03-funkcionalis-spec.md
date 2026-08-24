@@ -865,6 +865,11 @@ kattintható/navigálható a releváns workflow-lépésre.
   feltételek/garancia sablon nem érhető el a megfelelő nyelven (lásd
   lent „Sablon-placeholder őr") — helyette a magyar szöveg jelenik meg a
   nyomtatványon.
+- **Inaktivált tételre hivatkozó sor:** a tervben van sor, aminek a
+  tétele az Árlista adminban időközben `aktiv: false`-ra váltott — a sor
+  `nevSnapshot`-ja/ára a pillanatkép-elv szerint változatlan marad
+  (lásd fent „Törlés helyett inaktiválás"), ez csak tájékoztatja a
+  dokit, hogy esetleg cserélni akarja a tételt.
 
 **Info (`info`) tételek — csak tájékoztatnak:**
 
@@ -1438,10 +1443,25 @@ megerősítés-kérés nélkül — a törzsadatba semmi nem kerül a Mentés
 megnyomásáig, és tétel-id sem foglalódik le.
 
 Mentés után a tétel a listában, az ártípus `FIX` és a HUF ára `0` kezdőértékkel
-jön létre (`aktiv: true`, `gyakori: false`, nincs EUR ára), a lista a friss
-sorhoz görget, a sor kinyílik, és a fókusz a HUF ár mezőre kerül — a többi
-mező (ártípus, HUF/EUR ár, gyakori, aktív) az alábbi „Sor kinyitása" szerinti
-szerkesztőben állítható be.
+jön létre — de **kezdetben inaktívan** (`aktiv: false`, `gyakori: false`, nincs
+EUR ára): egy félkész, kategorizálatlan/0 Ft-os gondolattal felvitt tétel ne
+legyen azonnal választható a tervezőben. A lista a friss sorhoz görget, a sor
+kinyílik, és a fókusz a HUF ár mezőre kerül.
+
+A HUF ár mező első elhagyása (blur vagy Enter) dönt az aktiválásról:
+
+- ha a doki pozitív árat ad meg, a tétel **némán, azonnal aktiválódik** —
+  nincs külön "Aktiválás" gomb, a sikeres ár-megadás maga az aktiválás,
+- ha a mező 0-n marad, egy megerősítő dialógus kérdez rá, hogy a doki
+  szándékosan 0 Ft-tal aktiválja-e (pl. az ár csak később derül ki) — csak
+  elfogadás után válik aktívvá, elutasításra a tétel inaktív marad.
+
+Ez az „első interakció" egyszeri: ha a doki a HUF ár mező érintése előtt
+bezárja a sort vagy elnavigál, a tétel egyszerűen egy rendes inaktív
+tétellé válik (nincs hozzá séma-mező, ez a döntés nem éli túl a
+munkamenetet) — a szem ikon utána a szokásos, azonnali reaktiválást
+engedi (lásd lent). A többi mező (ártípus, HUF/EUR ár, gyakori) az alábbi
+„Sor kinyitása" szerinti szerkesztőben állítható be.
 
 ### Sor kinyitása
 
@@ -1476,6 +1496,16 @@ mezője) emiatt nem üti ki egymást.
 A szem ikon inaktivál. Törölni nem lehet, és az `id`-t **soha nem
 használjuk újra** (D17) — ezen múlik, hogy a régi tervek évek múlva is
 értelmezhetők maradnak.
+
+A **deaktiválás** (aktív → inaktív) megerősítést kér — egy megerősítő
+dialógus jelzi, hogy a tétel innentől nem lesz választható a tervezőben,
+mielőtt a doki elfogadná. A **reaktiválás** (inaktív → aktív) marad
+azonnali, megerősítés nélkül — annak nincs hasonló kockázata.
+
+Ha egy draft sor egy időközben inaktivált tételre hivatkozik, a sor
+`nevSnapshot`-ja/ára a pillanatkép-elv szerint változatlan marad — a
+véglegesítés-őr erről egy puha, nem blokkoló checklist-tétellel
+tájékoztatja a dokit (lásd lent „Véglegesítési checklist").
 
 ### Kategóriák panel
 

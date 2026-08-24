@@ -2216,3 +2216,22 @@ karbantartási kör négy önálló javítása.
   az oldal aljára, ez a bekezdés is átkerül vele a következő oldalra,
   nem marad árván elszakítva az aláírástól. Részletek:
   `docs/04-nyomtatvany-spec.md` § "3. blokk — nyilatkozat és aláírás".
+
+### 83. tétel: Kezeléslista/editor: aktiválási modell és deaktiválás megerősítése — KÉSZ
+
+- **Méret:** közepes — két fő fájl (`pages/PriceListAdminPage.tsx`,
+  `domain/kitoltetlen.ts` + `domain/veglegesitesOr.ts`) és kísérő
+  tesztek.
+- **Megvalósítás:** a mai azonnali-aktiválásról a redesign óvatosabb
+  modelljére tért át. Egy új tétel mostantól inaktívként jön létre; a
+  HUF ár mező első elhagyása dönt az aktiválásról (pozitív ár némán
+  aktivál, 0 Ft megerősítést kér) — ez az "első interakció" állapot
+  tranziens, nincs hozzá séma-mező, elmúlik, ha a doki a sort érintés
+  előtt bezárja. A deaktiválás mostantól megerősítést kér, a
+  reaktiválás marad azonnali. Új, puha véglegesítés-checklist-tétel
+  jelzi, ha egy draft sor egy időközben inaktivált tételre hivatkozik
+  (`inaktivTetelreHivatkozoSorok()`, `domain/kitoltetlen.ts`), a sor
+  neve/ára a pillanatkép-elv szerint változatlan marad. Részletek:
+  `docs/03-funkcionalis-spec.md` § "6. Kezelések és árak" „Új tétel
+  felvitele" / „Törlés helyett inaktiválás" / „Véglegesítési
+  checklist".

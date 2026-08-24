@@ -1048,6 +1048,16 @@ A pénznemváltás tétel (`docs/01-attekintes-es-dontesek.md` D71,
   beárazatlan ÉS kézi árat sem kapott sorok. A `veglegesitesOr.ts`
   `'araztalan-sor'` hard checklist-tételeként (D76) jelenik meg
 
+Az árlistatétel-aktiválási modell tétel (`docs/03-funkcionalis-spec.md`
+§ 6. Kezelések és árak „Új tétel felvitele" és „Törlés helyett
+inaktiválás") segédfüggvénye, szintén ne írd újra:
+- `inaktivTetelreHivatkozoSorok(plan, priceList)`
+  (`app/src/domain/kitoltetlen.ts`) — a `nullaOsszeguSorok`/
+  `araztalanSorok` mintáján (named-sor `string[]`), de PUHA: névvel
+  ellátott sorok, amiknek a tétele időközben `aktiv: false`-ra váltott.
+  A `veglegesitesOr.ts` `'inaktiv-tetel-hivatkozas'` soft checklist-
+  tételeként jelenik meg
+
 A manuális szövegek nyelvi review-ja tétel (`docs/01-attekintes-es-dontesek.md`
 D72, `docs/02-domain-modell.md` § Nyelvi review a kézzel írt szövegeken,
 `docs/03-funkcionalis-spec.md` § 3. Sor mezői és § Fázisok, § 4. Előnézet

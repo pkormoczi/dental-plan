@@ -131,3 +131,26 @@ export function hianyzoCsomagLeirasok(plan: Plan, priceList: PriceList): Hianyzo
   });
   return eredmeny;
 }
+
+/**
+ * PUHA figyelmeztetés: névvel ellátott sorok, amiknek a tétele az Árlista
+ * adminban időközben `aktiv: false`-ra váltott. A sor `nevSnapshot`-ja és
+ * ára a pillanatkép-elv szerint továbbra is érvényes marad, ez csak
+ * tájékoztat, hogy a doki esetleg cserélni akarja a tételt. `string[]`-et
+ * ad vissza (a `nevSnapshot`-okat), a `nullaOsszeguSorok`/`araztalanSorok`
+ * mintáján -- egyedi (`tetelId` nélküli) sort nem érint, arra ez a fogalom
+ * nem értelmezhető.
+ */
+export function inaktivTetelreHivatkozoSorok(plan: Plan, priceList: PriceList): string[] {
+  const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));
+  const eredmeny: string[] = [];
+  plan.fazisok.forEach((fazis) => {
+    fazis.sorok.forEach((sor) => {
+      const tetel = tetelById.get(sor.tetelId);
+      if (sor.nevSnapshot.trim() && tetel && !tetel.aktiv) {
+        eredmeny.push(sor.nevSnapshot);
+      }
+    });
+  });
+  return eredmeny;
+}

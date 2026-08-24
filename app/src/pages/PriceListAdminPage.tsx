@@ -11,8 +11,9 @@
 // helyen a tétel-mozgatással, hogy a doki ne navigáljon oda-vissza a
 // takarításkor.
 
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertDialog,
   Box,
   Button,
   Callout,
@@ -157,6 +158,20 @@ export default function PriceListAdminPage() {
   // popupban csak nevet és kategóriát adott meg, a logikus következő lépés az
   // ár -- lásd a fájl tetején a panasz leírását.
   const [frissTetelId, setFrissTetelId] = useState<string | null>(null);
+  // Az imént mentett, MÉG SOHA nem aktivált tétel id-je -- a `frissTetelId`-
+  // vel egyszerre áll be, de attól függetlenül él tovább: a `frissTetelId` a
+  // görgető effektben AZONNAL nullázódik, ez viszont a HUF ár mező tényleges
+  // első commitjáig kell éljen (lásd `handleFirstPriceCommit`). Nincs hozzá
+  // `Tetel`-séma mező -- ha a doki a sort a HUF ár commitja előtt bezárja
+  // vagy elnavigál, ez a state is elvész (lásd a lentebbi effektet), és a
+  // tétel egyszerűen rendes inaktív tétellé válik.
+  const [pendingActivationId, setPendingActivationId] = useState<string | null>(null);
+  // A 0 Ft-on maradó első árcommit megerősítő dialógusa, illetve az aktív
+  // tétel deaktiválásának megerősítő dialógusa -- két külön jelző, mert a
+  // két dialógus szövege/hatása eltér, és egyszerre legfeljebb az egyik
+  // lehet nyitva.
+  const [zeroConfirmId, setZeroConfirmId] = useState<string | null>(null);
+  const [deactivateConfirmId, setDeactivateConfirmId] = useState<string | null>(null);
   // Kategóriaváltáskor a nyitott sor a táblázat egy másik (esetleg messze
   // görgetett) pontjára ugrik -- enélkül a doki keze alól "eltűnik" a
   // szerkesztett tétel. Külön state a `frissTetelId`-től: az az ÚJ tétel
@@ -297,7 +312,11 @@ export default function PriceListAdminPage() {
         id,
         kategoriaId,
         sorrend: maxSorrend + 1,
-        aktiv: true,
+        // Kezdetben inaktív -- egy félkész, kategorizálatlan/0 Ft-os
+        // gondolattal felvitt tétel ne legyen azonnal választható a
+        // tervezőben. A HUF ár mező első commitja aktiválja (lásd
+        // `handleFirstPriceCommit`), nem ez a mentés.
+        aktiv: false,
         gyakori: false,
         nev: { hu: nevHu, de: nevDe },
         ar: { HUF: { tipus: 'FIX', ertek: 0 }, EUR: null },
@@ -320,7 +339,27 @@ export default function PriceListAdminPage() {
     queueMicrotask(() => {
       setOpen(newId);
       setFrissTetelId(newId);
+      setPendingActivationId(newId);
     });
+  }
+
+  /**
+   * A HUF ár mező (fix ár) ELSŐ commitja egy még soha nem aktivált tételen:
+   * >0 érték némán, azonnal aktivál -- ez a doki természetes, egylépéses
+   * útja egy valódi ártétel felviteléhez. 0 esetén megerősítést kér, mert
+   * egy 0 Ft-os aktív tétel csendben megjelenne a tervező keresőjében. A
+   * `pendingActivationId` már ITT nullázódik, függetlenül a kimeneteltől --
+   * a mező egy KÖVETKEZŐ szerkesztése (akár 0-n maradva) onnantól rendes
+   * árcommitnak számít, nem old ki újra dialógust.
+   */
+  function handleFirstPriceCommit(id: string, ertek: number) {
+    setPendingActivationId((cur) => (cur === id ? null : cur));
+    patchItem(id, (prev) => ({ ar: { ...prev.ar, HUF: { tipus: 'FIX', ertek } } }));
+    if (ertek > 0) {
+      patchItem(id, { aktiv: true });
+    } else {
+      setZeroConfirmId(id);
+    }
   }
 
   // Mentés után a lista a friss sorhoz görget -- a doki a popupban csak
@@ -355,6 +394,16 @@ export default function PriceListAdminPage() {
     el.scrollIntoView({ block: 'center', behavior: csokkentettMozgas() ? 'auto' : 'smooth' });
     setAtmozgatottTetelId(null);
   }, [atmozgatottTetelId, priceList]);
+
+  // A "még soha nem aktivált" állapot elmúlik, amint a sor bezárul vagy egy
+  // másik sor nyílik ki -- a doki elhagyta a HUF ár mezőt a commit előtt,
+  // a tétel innentől rendes inaktív tétel (nincs séma-mező, lásd
+  // `pendingActivationId` deklarációját).
+  useEffect(() => {
+    if (pendingActivationId && open !== pendingActivationId) {
+      setPendingActivationId(null);
+    }
+  }, [open, pendingActivationId]);
 
   const keep = (x: Tetel): boolean => {
     // P0-7: a nyitott sort MINDIG megtartjuk, akkor is, ha egy időközbeni
@@ -577,7 +626,14 @@ export default function PriceListAdminPage() {
                           size="1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            patchItem(it.id, (prev) => ({ aktiv: !prev.aktiv }));
+                            // Deaktiválás megerősítést kér, mert visszamenőleg
+                            // érinti, hogy a tétel a jövőben választható-e a
+                            // tervezőben -- reaktiválás marad azonnali.
+                            if (it.aktiv) {
+                              setDeactivateConfirmId(it.id);
+                            } else {
+                              patchItem(it.id, { aktiv: true });
+                            }
                           }}
                         >
                           {it.aktiv ? <EyeOpenIcon /> : <EyeClosedIcon />}
@@ -593,6 +649,8 @@ export default function PriceListAdminPage() {
                             categories={sortedKategoriak}
                             onPatch={(p) => patchItem(it.id, p)}
                             autoFocusAr={it.id === frissTetelId}
+                            pendingActivation={it.id === pendingActivationId}
+                            onFirstPriceCommit={(ertek) => handleFirstPriceCommit(it.id, ertek)}
                           />
                         </Table.Cell>
                       </Table.Row>
@@ -613,6 +671,69 @@ export default function PriceListAdminPage() {
         </Text>
         <Button onClick={() => setUjTetelOpen(true)}>+ Új tétel</Button>
       </Flex>
+
+      {/* A HUF ár mező 0-n maradó első commitja explicit megerősítést kér,
+          mielőtt a tétel a tervezőben választhatóvá válna. */}
+      <AlertDialog.Root open={zeroConfirmId !== null} onOpenChange={(o) => !o && setZeroConfirmId(null)}>
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Tétel aktiválása 0 Ft-tal?</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            A HUF ár 0 maradt. Ha ez szándékos (pl. az ár később derül ki), a tétel 0 Ft-tal is
+            aktiválható -- innentől választható lesz a tervezőben.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse, marad inaktív
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                onClick={() => {
+                  if (zeroConfirmId) patchItem(zeroConfirmId, { aktiv: true });
+                  setZeroConfirmId(null);
+                }}
+              >
+                Aktiválás
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
+      {/* A deaktiválás megerősítést kér -- visszamenőleg érinti, hogy a
+          tétel a jövőben választható-e a tervezőben. A reaktiválás (a fenti
+          szem-ikon `else` ága) marad azonnali. */}
+      <AlertDialog.Root
+        open={deactivateConfirmId !== null}
+        onOpenChange={(o) => !o && setDeactivateConfirmId(null)}
+      >
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Tétel inaktiválása</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            „{priceList.tetelek.find((x) => x.id === deactivateConfirmId)?.nev.hu ?? ''}” inaktiválása
+            után a tétel nem lesz választható a tervezőben -- bármikor visszakapcsolható.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                color="red"
+                onClick={() => {
+                  if (deactivateConfirmId) patchItem(deactivateConfirmId, { aktiv: false });
+                  setDeactivateConfirmId(null);
+                }}
+              >
+                Inaktiválás
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
     </Box>
   );
 }
@@ -623,6 +744,8 @@ function ItemEditor({
   categories,
   onPatch,
   autoFocusAr,
+  pendingActivation,
+  onFirstPriceCommit,
 }: {
   item: Tetel;
   categories: Kategoria[];
@@ -631,10 +754,24 @@ function ItemEditor({
    * kapja a fókuszt, mivel a doki a popupban csak nevet és kategóriát adott
    * meg (lásd a görgető effektet a szülő komponensben). */
   autoFocusAr?: boolean;
+  /** Igaz, amíg a tétel a HUF ár mező első commitjára vár -- ekkor a fix ár
+   * mező commitja `onFirstPriceCommit`-ot hívja `onPatch` helyett, lásd
+   * `setFixPrice`. */
+  pendingActivation?: boolean;
+  onFirstPriceCommit?: (ertek: number) => void;
 }) {
   const hufAr = item.ar.HUF ?? null;
   const eurAr = item.ar.EUR ?? null;
   const savos = hufAr?.tipus === 'SAVOS';
+
+  // A `NumberField` csak akkor hívja az `onCommit`-ot, ha az érték
+  // ténylegesen VÁLTOZOTT (lásd `components/NumberField.tsx` `commit()`) --
+  // egy friss (0 Ft-tal induló) tételen a mezőt érintetlenül hagyva és
+  // elhagyva emiatt SOHA nem fut le `setFixPrice`. Ez a ref jelzi, hogy az
+  // "első interakció" (akár értékváltozással, akár anélkül) már lezajlott
+  // -- `handleHufBlur` ezt a hiányzó esetet pótolja a mező saját `onBlur`-
+  // jával, ami MINDIG lefut, a commit lefutásától függetlenül.
+  const firstInteractionHandledRef = useRef(false);
 
   /**
    * P0-2 (D15): eddig csak a HUF-ot váltotta -- az EUR ár szerkezetileg
@@ -679,7 +816,29 @@ function ItemEditor({
   }
 
   function setFixPrice(ertek: number) {
+    // A MÉG SOHA nem aktivált tétel HUF ár mezőjének első commitja a szülő
+    // aktiválási döntését váltja ki (némán aktivál, vagy megerősítést kér),
+    // nem egy sima árpatch-et -- lásd `handleFirstPriceCommit` a szülőben.
+    if (pendingActivation && !firstInteractionHandledRef.current) {
+      firstInteractionHandledRef.current = true;
+      onFirstPriceCommit?.(ertek);
+      return;
+    }
     onPatch((prev) => ({ ar: { ...prev.ar, HUF: { tipus: 'FIX', ertek } } }));
+  }
+
+  /**
+   * A HUF ár mező `onBlur`-ja -- MINDIG lefut, akkor is, ha a mező a 0-n
+   * maradt és emiatt a fenti `setFixPrice` (`onCommit`) egyáltalán nem
+   * hívódott. Ha az "első interakció" még nincs elintézve, ez az egyetlen
+   * jel, hogy a doki elhagyta a mezőt -- a jelenlegi (érintetlen) árral
+   * hívja ugyanazt a döntést, amit egy tényleges commit hívna.
+   */
+  function handleFixPriceBlur() {
+    if (pendingActivation && !firstInteractionHandledRef.current) {
+      firstInteractionHandledRef.current = true;
+      onFirstPriceCommit?.(hufAr?.tipus === 'FIX' ? hufAr.ertek : 0);
+    }
   }
 
   function setSavosPrice(patch: Partial<{ min: number; max: number }>) {
@@ -823,6 +982,7 @@ function ItemEditor({
               value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
               min={0}
               onCommit={setFixPrice}
+              onBlur={pendingActivation ? handleFixPriceBlur : undefined}
               autoFocus={autoFocusAr}
             />
           </Field>

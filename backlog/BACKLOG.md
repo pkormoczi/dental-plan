@@ -15,20 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 83. tétel — Kezeléslista/editor: aktiválási modell és deaktiválás megerősítése
-  (a `backlog/redesign/` redesign-döntéssorozat DP-080 tétele) — a
-  jelenlegi, `docs/03`-ban dokumentált azonnali-aktiválás (Új tétel
-  dialógus után a tétel rögtön `aktiv: true`, 0 Ft-tal) helyett a
-  redesign D127–D131 óvatosabb modelljére tér át: a tétel kezdetben
-  inaktívként jön létre, és csak a HUF ár mező első commitja aktiválja
-  (automatikusan, ha >0; explicit megerősítéssel, ha 0 marad) — az
-  „még soha nem aktivált” állapot tranziens, nincs séma-bővítés. A
-  deaktiválás (aktív→inaktív) mostantól megerősítést kér (D124), a
-  reaktiválás marad azonnali. Új, puha D113 véglegesítés-figyelmeztetés
-  a deaktivált tételre hivatkozó sorokhoz, a MÁR meglévő (67. tétel)
-  egységes checklistbe kötve. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-83-kezeleslista-aktivalas-terv.md`
-
 ### 84. tétel — Kategóriakezelés: mentési modell és hiányzó német név jelzése
   (a `backlog/redesign/` redesign-döntéssorozat DP-081 tétele) — a
   kategória-attribútumszerkesztés (név, szín, sorrend) a ma

@@ -109,7 +109,7 @@ describe('PriceListAdminPage', () => {
     expect(cbct.ar.EUR).toEqual({ tipus: 'FIX', ertek: 8200 });
   });
 
-  it('inactivating a row persists aktiv:false without touching its id (D17: never delete/reuse)', async () => {
+  it('inactivating a row asks for confirmation, then persists aktiv:false without touching its id (D17: never delete/reuse)', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -118,10 +118,42 @@ describe('PriceListAdminPage', () => {
     const originalId = findItem(readPriceList(), 'CBCT').id;
 
     await user.click(within(rowDiv).getByLabelText('Aktív'));
+    // A deaktiválás megerősítést kér -- a mai adat egy kattintás után még
+    // változatlan.
+    expect(findItem(readPriceList(), 'CBCT').aktiv).toBe(true);
+    await user.click(await screen.findByRole('button', { name: 'Inaktiválás' }));
 
     const cbct = findItem(readPriceList(), 'CBCT');
     expect(cbct.aktiv).toBe(false);
     expect(cbct.id).toBe(originalId);
+  });
+
+  it('cancelling the inactivation confirmation leaves the item active', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    const rowDiv = nameCell.parentElement!;
+
+    await user.click(within(rowDiv).getByLabelText('Aktív'));
+    await user.click(await screen.findByRole('button', { name: 'Mégse' }));
+
+    expect(findItem(readPriceList(), 'CBCT').aktiv).toBe(true);
+  });
+
+  it('reactivating an inactive row is immediate, no confirmation', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    const rowDiv = nameCell.parentElement!;
+    await user.click(within(rowDiv).getByLabelText('Aktív'));
+    await user.click(await screen.findByRole('button', { name: 'Inaktiválás' }));
+    expect(findItem(readPriceList(), 'CBCT').aktiv).toBe(false);
+
+    await user.click(within(rowDiv).getByLabelText('Aktív'));
+
+    expect(findItem(readPriceList(), 'CBCT').aktiv).toBe(true);
   });
 
   it('moving an item to a different category via the dropdown persists the new kategoriaId', async () => {
@@ -227,10 +259,18 @@ describe('PriceListAdminPage', () => {
   // `priceList` closure-ből épített `{ ...priceList, tetelek: ... }` miatt
   // kiütötte volna egymást.
   it('egy tickben két különböző sor csillaga/aktív jelölője is megmarad (D31 konkurencia)', async () => {
+    const user = userEvent.setup();
     renderAdmin();
 
     const aRow = (await screen.findByText('CBCT')).parentElement!;
     const bRow = (await screen.findByText('Fognyaki tömés')).parentElement!;
+
+    // A deaktiválás megerősítést kér (nem egy szinkron patch), tehát a
+    // reaktiválás ága adja a konkurencia-próbát -- ez maradt egylépéses,
+    // azonnali `patchItem` hívás.
+    await user.click(within(bRow).getByLabelText('Aktív'));
+    await user.click(await screen.findByRole('button', { name: 'Inaktiválás' }));
+    expect(findItem(readPriceList(), 'Fognyaki tömés').aktiv).toBe(false);
 
     fireEvent.click(within(aRow).getByLabelText('Gyakori tétel'));
     fireEvent.click(within(bRow).getByLabelText('Aktív'));
@@ -238,7 +278,7 @@ describe('PriceListAdminPage', () => {
     await waitFor(() => {
       const pl = readPriceList();
       expect(findItem(pl, 'CBCT').gyakori).toBe(true);
-      expect(findItem(pl, 'Fognyaki tömés').aktiv).toBe(false);
+      expect(findItem(pl, 'Fognyaki tömés').aktiv).toBe(true);
     });
   });
 
@@ -329,7 +369,7 @@ describe('PriceListAdminPage', () => {
       expect(readPriceList().tetelek).toHaveLength(118);
     });
 
-    it('kitöltve a Mentés a kiválasztott kategóriában hozza létre a tételt, és a sor a listában nyílik ki', async () => {
+    it('kitöltve a Mentés a kiválasztott kategóriában hozza létre a tételt, inaktívan, és a sor a listában nyílik ki', async () => {
       const user = userEvent.setup();
       renderAdmin();
       const dialog = await openUjTetelDialog(user);
@@ -347,7 +387,8 @@ describe('PriceListAdminPage', () => {
       const created = pl.tetelek[pl.tetelek.length - 1];
       expect(created.id).toBe('t119');
       expect(created.nev).toEqual({ hu: 'Teszt új tétel', de: 'Testneues Element' });
-      expect(created.aktiv).toBe(true);
+      // A tétel kezdetben inaktív -- a HUF ár mező első commitja aktivál.
+      expect(created.aktiv).toBe(false);
       expect(created.gyakori).toBe(false);
       expect(created.ar.HUF).toEqual({ tipus: 'FIX', ertek: 0 });
       expect(created.ar.EUR).toBeNull();
@@ -357,6 +398,92 @@ describe('PriceListAdminPage', () => {
       // A HUF ár mező kapja a fókuszt -- a doki a popupban csak nevet és
       // kategóriát adott meg, a logikus következő lépés az ár.
       expect(await screen.findByLabelText('HUF ár')).toHaveFocus();
+    });
+
+    it('a HUF ár mező pozitív első commitja némán aktiválja a friss tételt', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      const dialog = await openUjTetelDialog(user);
+
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'Friss aktivált tétel');
+      await pickFirstCategory(user, dialog);
+      await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+
+      const hufInput = await screen.findByLabelText('HUF ár');
+      await user.clear(hufInput);
+      await user.type(hufInput, '15000');
+      await user.tab();
+
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      const created = findItem(readPriceList(), 'Friss aktivált tétel');
+      expect(created.aktiv).toBe(true);
+      expect(created.ar.HUF).toEqual({ tipus: 'FIX', ertek: 15000 });
+    });
+
+    it('a HUF ár mező 0-n maradó első commitja megerősítést kér, csak elfogadás után aktivál', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      const dialog = await openUjTetelDialog(user);
+
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), '0 Ft-os friss tétel');
+      await pickFirstCategory(user, dialog);
+      await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+
+      const hufInput = await screen.findByLabelText('HUF ár');
+      // A mező már 0-n áll -- blur-re elhagyja, hogy egy 0-n maradó ÉRTÉK is
+      // "elsőnek számító" commitot adjon.
+      await user.click(hufInput);
+      await user.tab();
+
+      expect(findItem(readPriceList(), '0 Ft-os friss tétel').aktiv).toBe(false);
+      await user.click(await screen.findByRole('button', { name: 'Aktiválás' }));
+
+      expect(findItem(readPriceList(), '0 Ft-os friss tétel').aktiv).toBe(true);
+    });
+
+    it('a 0 Ft-os megerősítés elvetése után a tétel inaktív marad', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      const dialog = await openUjTetelDialog(user);
+
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'Elvetett aktiválás');
+      await pickFirstCategory(user, dialog);
+      await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+
+      const hufInput = await screen.findByLabelText('HUF ár');
+      await user.click(hufInput);
+      await user.tab();
+      await user.click(await screen.findByRole('button', { name: 'Mégse, marad inaktív' }));
+
+      expect(findItem(readPriceList(), 'Elvetett aktiválás').aktiv).toBe(false);
+    });
+
+    it('a sor bezárása az első árcommit előtt rendes inaktív tétellé teszi -- utána a szem-ikon azonnal reaktivál', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      const dialog = await openUjTetelDialog(user);
+
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'Félbehagyott tétel');
+      await pickFirstCategory(user, dialog);
+      await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+      await screen.findByLabelText('HUF ár');
+
+      const nameCell = await screen.findByText('Félbehagyott tétel');
+      // A sor fejlécére kattintva bezárul, a HUF ár mező érintése nélkül --
+      // fireEvent, mert a friss tétel dialógusa (Select-portál) után a
+      // Radix body-szintű pointer-events zárolása userEvent alatt még nem
+      // mindig oldódik fel jsdom-ban.
+      fireEvent.click(nameCell);
+      expect(screen.queryByLabelText('HUF ár')).not.toBeInTheDocument();
+
+      const rowDiv = nameCell.parentElement!;
+      fireEvent.click(within(rowDiv).getByLabelText('Aktív'));
+
+      // Rendes inaktív tétel -- a szem-ikon azonnal reaktivál, dialógus nélkül.
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(findItem(readPriceList(), 'Félbehagyott tétel').aktiv).toBe(true);
+      });
     });
 
     it('Mégse eldob mindent, és a következő mentés még mindig a soron következő id-t kapja (D17)', async () => {
@@ -559,6 +686,7 @@ describe('PriceListAdminPage', () => {
         const nameCell = await screen.findByText(item.nev.hu);
         const rowDiv = nameCell.parentElement!;
         await user.click(within(rowDiv).getByLabelText('Aktív'));
+        await user.click(await screen.findByRole('button', { name: 'Inaktiválás' }));
       }
 
       expect(

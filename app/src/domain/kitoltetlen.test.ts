@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   araztalanSorok,
   hianyzoCsomagLeirasok,
+  inaktivTetelreHivatkozoSorok,
   kitoltetlenSorok,
   nullaOsszeguSorok,
   uresFazisok,
@@ -192,6 +193,16 @@ const priceList: PriceList = {
       ar: { HUF: { tipus: 'FIX', ertek: 25000 }, EUR: null },
       csomag: false,
     },
+    {
+      id: 't-inaktiv',
+      kategoriaId: 'k1',
+      sorrend: 3,
+      aktiv: false,
+      gyakori: false,
+      nev: { hu: 'Kivont tétel', de: null },
+      ar: { HUF: { tipus: 'FIX', ertek: 10000 }, EUR: null },
+      csomag: false,
+    },
   ],
 };
 
@@ -251,5 +262,27 @@ describe('araztalanSorok', () => {
   it('meg nem nevezett sort nem jelez -- azt a kitoltetlenSorok kemény blokkja fedi', () => {
     const plan = { ...makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: '', listaEgysegar: 0, tenylegesEgysegar: 0 })]]), penznem: 'EUR' as const };
     expect(araztalanSorok(plan, priceList)).toEqual([]);
+  });
+});
+
+describe('inaktivTetelreHivatkozoSorok', () => {
+  it('inaktív tételre mutató, névvel ellátott sort jelez', () => {
+    const plan = makePlan([[sor({ tetelId: 't-inaktiv', nevSnapshot: 'Kivont tétel' })]]);
+    expect(inaktivTetelreHivatkozoSorok(plan, priceList)).toEqual(['Kivont tétel']);
+  });
+
+  it('aktív tételre mutató sort nem jelez', () => {
+    const plan = makePlan([[sor({ tetelId: 't-nem-csomag', nevSnapshot: 'Fognyaki tömés' })]]);
+    expect(inaktivTetelreHivatkozoSorok(plan, priceList)).toEqual([]);
+  });
+
+  it('egyedi (tetelId nélküli) sort nem jelez -- nincs mihez viszonyítani', () => {
+    const plan = makePlan([[sor({ tetelId: '', nevSnapshot: 'Egyedi sor' })]]);
+    expect(inaktivTetelreHivatkozoSorok(plan, priceList)).toEqual([]);
+  });
+
+  it('meg nem nevezett sort nem jelez, akkor sem, ha a tétele inaktív', () => {
+    const plan = makePlan([[sor({ tetelId: 't-inaktiv', nevSnapshot: '' })]]);
+    expect(inaktivTetelreHivatkozoSorok(plan, priceList)).toEqual([]);
   });
 });
