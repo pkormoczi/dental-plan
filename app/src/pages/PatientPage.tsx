@@ -38,7 +38,12 @@ import { lefedettseg } from '../domain/coverage';
 import { addDaysIso, formatLongDate } from '../domain/date';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import { aktivOrvosok } from '../domain/orvosok';
-import { penznemvaltasHatasa, sorPenznemValtassal } from '../domain/penznemValtas';
+import {
+  penznemvaltasHatasa,
+  sorPenznemValtassal,
+  tervOsszegekPenznemValtassal,
+  type PenznemvaltasHatas,
+} from '../domain/penznemValtas';
 import type { Nyelv, Penznem } from '../domain/types';
 import { t } from '../design/tokens';
 import TervCimField from './patientPage/TervCimField';
@@ -46,6 +51,63 @@ import TorzsadatSyncCard from './patientPage/TorzsadatSyncCard';
 import { useAppState } from '../state/AppState';
 
 type PendingChange = { kind: 'nyelv'; value: Nyelv } | { kind: 'penznem'; value: Penznem };
+
+const TERV_SZINTU_NEV: Record<'vegosszeg' | 'eloleg', string> = {
+  vegosszeg: 'az egyedi végösszeg',
+  eloleg: 'az előleg',
+};
+
+function felsorol(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? '';
+  return `${items.slice(0, -1).join(', ')} és ${items[items.length - 1]}`;
+}
+
+/**
+ * A pénznemváltás-dialógus terv-szintű mondata -- a `penznemvaltasHatas.
+ * tervSzintu` (`domain/penznemValtas.ts`) emberi megnevezése; a domain-modul
+ * maga nem tart UI-prózát, a nyelváltás-dialógus mintájára.
+ */
+function tervSzintuMondat(tervSzintu: PenznemvaltasHatas['tervSzintu']): string | null {
+  if (tervSzintu.length === 0) return null;
+  const visszaall = tervSzintu.filter((h) => h.hatas === 'visszaall').map((h) => TERV_SZINTU_NEV[h.mezo]);
+  const kikapcsol = tervSzintu.filter((h) => h.hatas === 'kikapcsol').map((h) => TERV_SZINTU_NEV[h.mezo]);
+  const reszek: string[] = [];
+  if (visszaall.length > 0) {
+    reszek.push(`${felsorol(visszaall)} a korábban ebben a pénznemben megadott értékét kapja vissza`);
+  }
+  if (kikapcsol.length > 0) {
+    reszek.push(
+      `${felsorol(kikapcsol)} kikapcsol -- ebben a pénznemben még nincs mentett érték, kézzel állítható be újra`,
+    );
+  }
+  const mondat = reszek.join('; ');
+  return `${mondat.charAt(0).toUpperCase()}${mondat.slice(1)}.`;
+}
+
+/**
+ * A pénznemváltás-dialógus teljes szövege -- a sorokról szóló mondat CSAK
+ * `sorokSzama > 0`-nál jelenik meg (a régi, sor nélküli terveken egy "0
+ * tétel szerepel" mondat értelmetlen lenne), a terv-szintű mondat pedig
+ * csak akkor, ha van érintett mező -- lásd `tervSzintuMondat()`.
+ */
+function penznemDialogSzoveg(hatas: PenznemvaltasHatas, sorokSzama: number): string {
+  const sorokMondat =
+    sorokSzama === 0
+      ? null
+      : hatas.visszaall > 0 || hatas.arlistabol > 0
+        ? `A tervben már ${sorokSzama} tétel szerepel. Pénznemváltáskor ` +
+          `${hatas.visszaall} sor a korábban ebben a pénznemben megadott ` +
+          `árát kapja vissza, ${hatas.arlistabol} sor ára az árlistából ` +
+          `frissül` +
+          (hatas.arNelkul > 0 ? `, ${hatas.arNelkul} sor ár nélkül marad (kézzel kell kitölteni)` : '') +
+          '. A sorok nem törlődnek.'
+        : `A tervben már ${sorokSzama} tétel szerepel, egyik sem beárazott az új ` +
+          'pénznemben -- ezek a sorok ár nélkül maradnak, kézzel kell kitölteni. A ' +
+          'sorok nem törlődnek.';
+
+  const tervMondat = tervSzintuMondat(hatas.tervSzintu);
+  return `${[sorokMondat, tervMondat].filter(Boolean).join(' ')} Folytatod?`;
+}
 
 export default function PatientPage() {
   const { plan, setPlan, settings, priceList } = useAppState();
@@ -104,13 +166,19 @@ export default function PatientPage() {
     setPlan((prev) => {
       const next = structuredClone(prev);
       next.penznem = penznem;
-      // 62. tétel (D71): a kilépő pénznem árpárja soronként a
-      // `masikPenznemAr` stash-be kerül, nem törlődik -- lásd
-      // domain/penznemValtas.ts `sorPenznemValtassal()`.
+      // A kilépő pénznem árpárja soronként a `masikPenznemAr` stash-be
+      // kerül, nem törlődik -- lásd domain/penznemValtas.ts
+      // `sorPenznemValtassal()`.
       const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));
       for (const f of next.fazisok) {
         f.sorok = f.sorok.map((s) => sorPenznemValtassal(s, penznem, tetelById.get(s.tetelId)));
       }
+      // A terv-szintű egyedi végösszeg/előleg is a `Sor.masikPenznemAr`
+      // mintáját követi -- lásd `tervOsszegekPenznemValtassal()`.
+      const tervOsszegek = tervOsszegekPenznemValtassal(prev);
+      next.kedvezmenyOsszeg = tervOsszegek.kedvezmenyOsszeg;
+      next.elolegOsszeg = tervOsszegek.elolegOsszeg;
+      next.masikPenznemOsszegek = tervOsszegek.masikPenznemOsszegek;
       return next;
     });
   }
@@ -126,7 +194,11 @@ export default function PatientPage() {
 
   function changePenznem(penznem: Penznem) {
     if (penznem === plan.penznem) return;
-    if (sorokSzama > 0) {
+    // A sorok mellett a terv-szintű egyedi végösszeg/előleg is érintett
+    // lehet -- egy sor nélküli, de beállított tervnél is meg kell
+    // erősítést kérni, ne csak `sorokSzama > 0`-nál.
+    const erintett = sorokSzama > 0 || penznemvaltasHatasa(plan, priceList, penznem).tervSzintu.length > 0;
+    if (erintett) {
       setPending({ kind: 'penznem', value: penznem });
       return;
     }
@@ -408,20 +480,7 @@ export default function PatientPage() {
                   '(ezeket a szerkesztőben egy „átírt” jelvény jelzi). Folytatod?'
                 : `A tervben már ${sorokSzama} tétel szerepel. A nyelv váltásakor a tételnevek ` +
                   'frissülnek az új nyelvre. Folytatod?'
-              : penznemvaltasHatas &&
-                (penznemvaltasHatas.visszaall > 0 || penznemvaltasHatas.arlistabol > 0
-                  ? `A tervben már ${sorokSzama} tétel szerepel. Pénznemváltáskor ` +
-                    `${penznemvaltasHatas.visszaall} sor a korábban ebben a pénznemben megadott ` +
-                    `árát kapja vissza, ${penznemvaltasHatas.arlistabol} sor ára az árlistából ` +
-                    `frissül` +
-                    (penznemvaltasHatas.arNelkul > 0
-                      ? `, ${penznemvaltasHatas.arNelkul} sor ár nélkül marad (kézzel kell ` +
-                        'kitölteni)'
-                      : '') +
-                    '. A sorok nem törlődnek. Folytatod?'
-                  : `A tervben már ${sorokSzama} tétel szerepel, egyik sem beárazott az új ` +
-                    'pénznemben -- ezek a sorok ár nélkül maradnak, kézzel kell kitölteni. A ' +
-                    'sorok nem törlődnek. Folytatod?')}
+              : penznemvaltasHatas && penznemDialogSzoveg(penznemvaltasHatas, sorokSzama)}
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { nincsListaar, penznemvaltasHatasa, sorPenznemValtassal } from './penznemValtas';
+import {
+  nincsListaar,
+  penznemvaltasHatasa,
+  sorPenznemValtassal,
+  tervOsszegekPenznemValtassal,
+} from './penznemValtas';
 import type { Plan, PriceList, Sor } from './types';
 
 function sor(partial: Partial<Sor> = {}): Sor {
@@ -173,6 +178,7 @@ describe('penznemvaltasHatasa', () => {
       visszaall: 1,
       arlistabol: 0,
       arNelkul: 0,
+      tervSzintu: [],
     });
   });
 
@@ -191,6 +197,7 @@ describe('penznemvaltasHatasa', () => {
       visszaall: 0,
       arlistabol: 1,
       arNelkul: 0,
+      tervSzintu: [],
     });
   });
 
@@ -209,6 +216,86 @@ describe('penznemvaltasHatasa', () => {
       visszaall: 0,
       arlistabol: 0,
       arNelkul: 2,
+      tervSzintu: [],
+    });
+  });
+
+  it('a terv-szintű kedvezmény/előleg "kikapcsol"-ba kerül, ha nincs stashelt pár', () => {
+    const plan = makePlan({ kedvezmenyOsszeg: 5000, elolegOsszeg: 20000 });
+    expect(penznemvaltasHatasa(plan, priceList, 'EUR').tervSzintu).toEqual([
+      { mezo: 'vegosszeg', hatas: 'kikapcsol' },
+      { mezo: 'eloleg', hatas: 'kikapcsol' },
+    ]);
+  });
+
+  it('a terv-szintű kedvezmény/előleg "visszaall"-ba kerül, ha van stashelt pár', () => {
+    const plan = makePlan({
+      kedvezmenyOsszeg: 5000,
+      elolegOsszeg: 20000,
+      masikPenznemOsszegek: { kedvezmenyOsszeg: 20, elolegOsszeg: null },
+    });
+    expect(penznemvaltasHatasa(plan, priceList, 'EUR').tervSzintu).toEqual([
+      { mezo: 'vegosszeg', hatas: 'visszaall' },
+      { mezo: 'eloleg', hatas: 'kikapcsol' },
+    ]);
+  });
+
+  it('üres terv-szintű `tervSzintu` tömböt ad, ha egyik mező sincs beállítva', () => {
+    expect(penznemvaltasHatasa(makePlan(), priceList, 'EUR').tervSzintu).toEqual([]);
+  });
+});
+
+describe('tervOsszegekPenznemValtassal', () => {
+  it('stash hiányában mindkét mező null-ra vált, a kilépő pár stashelődik', () => {
+    const plan = makePlan({ kedvezmenyOsszeg: 5000, elolegOsszeg: 20000 });
+    expect(tervOsszegekPenznemValtassal(plan)).toEqual({
+      kedvezmenyOsszeg: null,
+      elolegOsszeg: null,
+      masikPenznemOsszegek: { kedvezmenyOsszeg: 5000, elolegOsszeg: 20000 },
+    });
+  });
+
+  it('stashelt pár előlép, a kilépő (mostani) pár veszi át a helyét', () => {
+    const plan = makePlan({
+      kedvezmenyOsszeg: 5000,
+      elolegOsszeg: 20000,
+      masikPenznemOsszegek: { kedvezmenyOsszeg: 50, elolegOsszeg: 200 },
+    });
+    expect(tervOsszegekPenznemValtassal(plan)).toEqual({
+      kedvezmenyOsszeg: 50,
+      elolegOsszeg: 200,
+      masikPenznemOsszegek: { kedvezmenyOsszeg: 5000, elolegOsszeg: 20000 },
+    });
+  });
+
+  it('oda-vissza váltás visszaadja az eredeti értékeket, nincs FX', () => {
+    const huf = makePlan({ kedvezmenyOsszeg: 50000, elolegOsszeg: 100000 });
+    const eur = { ...huf, ...tervOsszegekPenznemValtassal(huf) };
+    expect(eur.kedvezmenyOsszeg).toBeNull();
+    expect(eur.elolegOsszeg).toBeNull();
+
+    const vissza = { ...eur, ...tervOsszegekPenznemValtassal(eur) };
+    expect(vissza.kedvezmenyOsszeg).toBe(50000);
+    expect(vissza.elolegOsszeg).toBe(100000);
+    // Nincs automatikus HUF<->EUR átváltás -- a szám sosem lesz `500`.
+    expect(vissza.kedvezmenyOsszeg).not.toBe(500);
+  });
+
+  it('csupa-null kilépő pár esetén a stash null, nem { null, null } objektum', () => {
+    const plan = makePlan();
+    expect(tervOsszegekPenznemValtassal(plan)).toEqual({
+      kedvezmenyOsszeg: null,
+      elolegOsszeg: null,
+      masikPenznemOsszegek: null,
+    });
+  });
+
+  it('csak az egyik mező beállítva -- a másik null-ként kerül a stashbe', () => {
+    const plan = makePlan({ kedvezmenyOsszeg: 5000 });
+    expect(tervOsszegekPenznemValtassal(plan)).toEqual({
+      kedvezmenyOsszeg: null,
+      elolegOsszeg: null,
+      masikPenznemOsszegek: { kedvezmenyOsszeg: 5000, elolegOsszeg: null },
     });
   });
 });

@@ -2320,3 +2320,22 @@ karbantartási kör négy önálló javítása.
   a doki egyszer kijelöl egy Google Drive-val szinkronizálható
   gyökérmappát. Részletek: `docs/03-funkcionalis-spec.md` § "Fő navigáció
   (D34)".
+
+### 89. tétel: Egyedi végösszeg és előleg pénznemenkénti állapota — KÉSZ
+
+- **Méret:** kicsi-közepes — egy domain-modul bővítése
+  (`domain/penznemValtas.ts`, `domain/types.ts`, `domain/piszkozat.ts`) és
+  a Terv adatai lap pénznemváltás-kezelése (`pages/PatientPage.tsx`),
+  kísérő tesztekkel.
+- **Megvalósítás:** a soronkénti pénznemváltás-stash (`Sor.masikPenznemAr`)
+  terv-szintű párja: a `Plan.kedvezmenyOsszeg`/`elolegOsszeg` mostantól a
+  NEM aktív pénznemben utoljára ismert értékét egy közös
+  `Plan.masikPenznemOsszegek` slotban tartja meg, hogy a két érték sose
+  csúszhasson szét egymástól. Stash hiányában mindkét mező kikapcsol
+  (nincs automatikus HUF↔EUR átváltás), stash meglétekor a korábban
+  beállított érték visszaáll. A pénznemváltás-megerősítő dialógus a
+  sorokról szóló mondat mellett ezt a hatást is kimondja, és sor nélküli,
+  de beállított tervnél is megjelenik. Részletek:
+  `docs/02-domain-modell.md` § "Pénznemváltás", § "Előleg", § "Terv-szintű
+  egyedi végösszeg"; `docs/03-funkcionalis-spec.md` § 2. "Dokumentum
+  nyelve / Pénznem", § "Egyedi végösszeg", § "Előleg (D66)".

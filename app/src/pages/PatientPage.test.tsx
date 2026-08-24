@@ -186,6 +186,108 @@ describe('PatientPage -- 62. tétel (D71): pénznemváltás nem törli a sorokat
   });
 });
 
+describe('PatientPage -- 89. tétel: egyedi végösszeg/előleg pénznemenkénti állapota', () => {
+  function makePlanNoSorok(overrides: Partial<Plan> = {}): Plan {
+    return {
+      schemaVersion: 1,
+      tervId: '',
+      verzio: 0,
+      statusz: 'PISZKOZAT',
+      nyelv: 'hu',
+      penznem: 'HUF',
+      keltezes: '2026-08-05',
+      ervenyesIg: '2026-11-03',
+      arlistaVerzio: '2026-07-01',
+      orvos: 'Dr. Mándoki István',
+      paciens: {
+        nev: 'Teszt Elek',
+        szuletesiIdo: '',
+        lakcim: '',
+        telefon: '',
+        email: '',
+        taj: '',
+        kiskoru: false,
+        torvenyesKepviselo: null,
+      },
+      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+      osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+      kedvezmenyOsszeg: 50000,
+      elolegOsszeg: 100000,
+      ...overrides,
+    };
+  }
+
+  function seedDraft(plan: Plan) {
+    // Az árlista/beállítások előzetes seedelése nélkül a `DemoStorage.init()`
+    // "első futás" ágán a `resetDemoData()` a piszkozatot is elsöpörné,
+    // mielőtt a betöltés elérné (lásd DemoStorage.ts `clearAll()` fejléce).
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({ schemaVersion: 1, mentve: '2026-08-09T10:15:00.000Z', plan, patientDir: null }),
+    );
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('sor nélküli, de beállított egyedi végösszegű/előlegű terven a pénznemváltás megjeleníti a dialógust, ami a terv-szintű hatást mondja ki', async () => {
+    const user = userEvent.setup();
+    seedDraft(makePlanNoSorok());
+    renderPatient();
+
+    await screen.findByText('Pénznem');
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(
+      within(dialog).getByText(/Az egyedi végösszeg és az előleg kikapcsol/),
+    ).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Folytatás' }));
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('radio', { name: 'EUR — euró' })).toHaveAttribute('data-state', 'on');
+  });
+
+  it('EUR-ban stashelt egyedi végösszeg/előleg mellett a HUF-ra váltás dialógusa "visszaáll"-t mond', async () => {
+    const user = userEvent.setup();
+    seedDraft(
+      makePlanNoSorok({
+        penznem: 'EUR',
+        kedvezmenyOsszeg: null,
+        elolegOsszeg: null,
+        masikPenznemOsszegek: { kedvezmenyOsszeg: 50000, elolegOsszeg: 100000 },
+      }),
+    );
+    renderPatient();
+
+    await screen.findByText('Pénznem');
+    await user.click(screen.getByRole('radio', { name: 'HUF — forint' }));
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(
+      within(dialog).getByText(
+        /Az egyedi végösszeg és az előleg a korábban ebben a pénznemben megadott értékét kapja vissza/,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('nincs dialógus, ha se sor, se terv-szintű összeg nincs beállítva', async () => {
+    const user = userEvent.setup();
+    seedDraft(makePlanNoSorok({ kedvezmenyOsszeg: null, elolegOsszeg: null }));
+    renderPatient();
+
+    await screen.findByText('Pénznem');
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
+
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(screen.getByRole('radio', { name: 'EUR — euró' })).toHaveAttribute('data-state', 'on');
+  });
+});
+
 describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztett neveket', () => {
   beforeEach(() => {
     localStorage.clear();

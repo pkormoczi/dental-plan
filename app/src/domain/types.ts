@@ -220,6 +220,17 @@ export interface Plan {
    * véglegesítéskor mentett érték a ténylegesen kiadott PDF pillanatképe.
    */
   csakAjanlat?: boolean;
+  /**
+   * A `Sor.masikPenznemAr` terv-szintű párja: a NEM aktív pénznemben
+   * utoljára ismert `kedvezmenyOsszeg`/`elolegOsszeg` pár --
+   * `domain/penznemValtas.ts` `tervOsszegekPenznemValtassal()`. A két
+   * érték EGY slotban mozog, mert mindig ugyanahhoz a pénznemhez
+   * tartoznak, sosem csúszhatnak szét egymástól. `null`/hiányzó mező = a
+   * másik pénznemben még sosem volt terv-szintű állapot. `schemaVersion`
+   * nem emelkedik, a `masikPenznemAr`/`kedvezmenyOsszeg`/`elolegOsszeg`
+   * additív mintáját követi.
+   */
+  masikPenznemOsszegek?: { kedvezmenyOsszeg: number | null; elolegOsszeg: number | null } | null;
 }
 
 /**

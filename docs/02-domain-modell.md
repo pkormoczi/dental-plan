@@ -375,6 +375,20 @@ pénznemben az érték vagy kézzel írt, vagy az árlistából jön. A
 `Sor.savos` mező érintetlen marad váltáskor: soronkénti, szabad,
 kétirányú doki-kapcsoló, nem pénznemből derivált érték.
 
+A terv-szintű `kedvezmenyOsszeg`/`elolegOsszeg` (lásd lentebb) ugyanezt a
+mintát követi, a `Plan.masikPenznemOsszegek` mezőn keresztül
+(`app/src/domain/penznemValtas.ts` `tervOsszegekPenznemValtassal()`). A
+két érték EGY közös slotban mozog, mert mindig ugyanahhoz a pénznemhez
+tartoznak — sosem csúszhatnak szét egymástól. A sor-szintű háromágú
+árlista-ág itt nem értelmezhető (a terv-szintű összegnek nincs árlistai
+referenciája), ezért a váltás kétágú: ha a belépő pénznemre van mentett
+stash, az emelkedik elő; egyébként MINDKÉT mező `null`-ra kapcsol — egy
+másik pénznem alapegységében átvitt szám mértékegység-hiba lenne, nem
+adat, a doki tudatosan gépeli be újra. A `PatientPage.tsx`
+pénznemváltás-megerősítő dialógusa a sorokról szóló mondat mellett ezt a
+hatást is kimondja, és akkor is megjelenik, ha a tervben nincs egyetlen
+sor sem, de van beállított terv-szintű összeg.
+
 ### Miért van `nevSnapshot` és `listaEgysegar` a soron
 
 Mert **az ajánlat pillanatkép**. Ha az árlistában fél év múlva átnevezik
@@ -536,6 +550,9 @@ Kikapcsolt kapcsolónál a helyőrző egy "a megállapított előleg"/"die
 vereinbarte Anzahlung" megfogalmazásra esik vissza — a mondat ilyenkor
 nem konkrét összeget mond, de nem is hamis nullát.
 
+Az érték a MINDENKORI dokumentum-pénznemhez tartozik — pénznemváltáskor a
+`Plan.masikPenznemOsszegek` stashbe kerül, lásd fent „Pénznemváltás".
+
 ### Terv-szintű egyedi végösszeg (`kedvezmenyOsszeg`)
 
 Az alku lezárásakor a doki gyakran egyedi végösszegben állapodik meg a
@@ -575,6 +592,9 @@ a terv-szintű eltérés összege a listaártól, véglegesítéskor számolva),
 `kedvezmenyOsszeg` a BEMENET (a doki által beállított terv-szintű összeg).
 A kedvezmény összege — akárcsak az előlegnél — sehol nem jelenik meg a
 nyomtatványon (D9), csak a `Végösszeg` lesz kisebb.
+
+Az érték a MINDENKORI dokumentum-pénznemhez tartozik — pénznemváltáskor a
+`Plan.masikPenznemOsszegek` stashbe kerül, lásd fent „Pénznemváltás".
 
 ### Csak ajánlat mód (`csakAjanlat`, D75)
 

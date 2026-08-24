@@ -222,6 +222,18 @@ kapja vissza a mentett árát, hány frissül az árlistából, hány marad ár
 nélkül) — a nyelváltás dialógusának mintájára. Nincs automatikus
 HUF↔EUR átváltás egyik irányban sem (D11).
 
+**A terv-szintű egyedi végösszeg/előleg ugyanezt a mintát követi.** A
+soronkénti stash mellett a `Plan.kedvezmenyOsszeg`/`elolegOsszeg` is a
+NEM aktív pénznemben utoljára ismert értékét tartja meg
+(`Plan.masikPenznemOsszegek`, lásd `docs/02-domain-modell.md` §
+Pénznemváltás) — visszaváltáskor a korábban beállított összeg
+változatlanul visszaáll. Ha a belépő pénznemre még nincs mentett
+állapot, mindkét kapcsoló KIKAPCSOLVA jelenik meg a szerkesztőben, nem
+egy átvitt, rossz mértékegységű szám. A megerősítő párbeszéd a sorokról
+szóló mondat mellett ezt a hatást is kimondja, és akkor is megjelenik,
+ha a tervben nincs egyetlen sor sem, de van beállított egyedi
+végösszeg/előleg.
+
 ### Páciens adatai
 
 A „Páciens adatai” szekció két részből áll: a személyes adatok mezői, majd
@@ -617,6 +629,11 @@ részét, ha a doki forrás szerint akarja látni. A kedvezmény/felár összege
 a nyomtatványon itt sem jelenik meg (D9), csak a „Végösszeg" változik; az
 előleg (lásd lent) ebből a módosított összegből számol.
 
+Pénznemváltáskor (Terv adatai lap) a kapcsoló a másik pénznemben utoljára
+beállított értékére áll vissza, vagy — ha ott még nincs mentett érték —
+kikapcsol; a részletekért lásd `docs/02-domain-modell.md` §
+Pénznemváltás.
+
 ### Előleg (D66)
 
 A „Mindösszesen" doboz alatt egy kapcsoló: *„Ez a terv fogtechnikai
@@ -666,6 +683,10 @@ ugyanúgy a kapcsoló automatikus kikapcsolását váltja ki, mint a `0`
 összeg. Amíg a tervnek nincs egyetlen kezelési sora sem (a Fizetendő
 `0`), a módváltó nem jelenik meg — csak az összeg-mező, egy rövid
 magyarázó szöveggel.
+
+Pénznemváltáskor (Terv adatai lap) a kapcsoló a másik pénznemben utoljára
+beállított értékére áll vissza, vagy — ha ott még nincs mentett érték —
+kikapcsol, az Egyedi végösszeg blokk mintájára (lásd fent).
 
 ### Tétel-leírások nyomtatása
 

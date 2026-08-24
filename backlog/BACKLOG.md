@@ -15,15 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 89. tétel — Egyedi végösszeg pénznemenkénti állapota
-  A 63. tételből (D69, Egyedi végösszeg) levált maradék: a redesign
-  D487/D524 döntés szerint az egyedi végösszeg (és a 0-végösszeg
-  megerősítése) pénznemenkénti ÖNÁLLÓ állapotot kell tartson, a 62.
-  tétel `masikPenznemAr`-stash mintájának analógiájára — ez a 63.
-  tételben VÁRAKOZÓ maradt, mert a 62. tétel akkor még nem készült el.
-  Nincs önálló tervdokumentum, a 62. tétel elkészülte után `/planning`
-  futtatandó hozzá.
-
 ### 90. tétel — Másolt terv örökölt szakmai-tartalom jelzései
   A 61. tétel (D70) lezárásakor levált maradék: a 49. tétel (D57) 6.
   döntése az árlista-snapshot alapkőre (a 61. tételre) épült, de csak a
@@ -33,8 +24,24 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   markere szerkesztésig/resetig, a fázismegjegyzés örökölt-jelzése, és
   ezek összesítése a véglegesítés-őr checklistjében — utóbbi a 67. tétel
   (Finalization validation engine) egységes modelljére vár, mert a
-  checklist-infók helye oda tartozik. Terv még nincs hozzá, a `/planning`
-  futtatása szükséges implementáció előtt.
+  checklist-infók helye oda tartozik.
+  **Terv:** `backlog/plans/backlog-90-masolt-terv-orokolt-jelzesek-terv.md`
+
+### 92. tétel — Tömeges árváltoztatás az árlista adminban
+  Egy árkorrekció ma 118 tételen egyenként, soronként kinyitott
+  szerkesztővel végezhető el — egy általános áremelés vagy egy euró-árak
+  szintjének igazítása ezért gyakorlatilag megvalósíthatatlan az adminban.
+  A tétel egy „Tömeges árváltoztatás" dialógust vezet be: kör-választó
+  (teljes árlista / egy kategória / a lapon éppen szűrt lista), egy
+  pénznem, irány + pozitív százalék, választható kerekítési lépés, élő
+  soronkénti előnézet régi → új értékkel és kipipálható kivételekkel,
+  végül összesített megerősítés. Automatikus árfolyam-szolgáltatás és
+  HUF↔EUR átváltás nincs, a két pénznem árai továbbra is egymástól
+  függetlenek. Kizárt hatókör: visszavonás/árlista-verziótörténet, abszolút
+  értékre állítás, tömeges kategória-áthelyezés vagy `gyakori`/`aktiv`
+  billentés, 0%-os „csak kerekítés" művelet. A döntéseket lásd a
+  tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-92-tomeges-arvaltoztatas-terv.md`
 
 ---
 ## NEM FEJLESZTÉS
@@ -119,15 +126,7 @@ Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
    listázást és folytatást, a törlést/takarítást, a hiányos sorok
    menthetőségét, valamint azt, hogy a félretett verzióhoz készüljön-e PDF.
 
-7. **Tömeges árváltoztatás az adminban.** Százalékos emeléssel vagy
-   csökkentéssel egyszerre lehessen korrigálni több ártételt — például az
-   összes EUR-árat 5%-kal —, automatikus árfolyam-szolgáltatás nélkül. A
-   kidolgozásnak rendeznie kell a módosítandó kör kiválasztását (teljes
-   árlista, kategória, pénznem vagy kijelölt tételek), a kerekítési
-   szabályokat, valamint a mentés előtti összesített előnézetet és
-   megerősítést.
-
-8. **Sémamigrációs stratégia és keretrendszer kidolgozása.** Meg kell
+7. **Sémamigrációs stratégia és keretrendszer kidolgozása.** Meg kell
    határozni, hogyan alakulnak át a rendelő meglévő JSON-fájljai, amikor az
    alkalmazás valamelyik adatsémája megváltozik. A kidolgozás térjen ki a
    fájltípusonkénti, egymásra épülő verziólépésekre, a mentés előtti

@@ -50,6 +50,13 @@ export interface PenznemvaltasHatas {
   arlistabol: number;
   /** Hány sor kerül "hiányzó ár" állapotba (egyedi sor, vagy nincs beárazva az új pénznemben). */
   arNelkul: number;
+  /**
+   * A terv-szintű `kedvezmenyOsszeg`/`elolegOsszeg` közül melyik
+   * KAPCSOL KI (stash hiányában) vagy ÁLL VISSZA (stashelt érték
+   * emelkedik elő) a váltáskor -- a `PatientPage.tsx`
+   * pénznemváltás-dialógusának élő kiegészítéséhez.
+   */
+  tervSzintu: { mezo: 'vegosszeg' | 'eloleg'; hatas: 'kikapcsol' | 'visszaall' }[];
 }
 
 /**
@@ -78,7 +85,49 @@ export function penznemvaltasHatasa(
       else arNelkul++;
     }
   }
-  return { visszaall, arlistabol, arNelkul };
+
+  // A tényleges eredményből (nem csak a kilépő oldalból) vezetjük le a
+  // hatást -- egy kikapcsolt aktuális mező mellett is lehet jelentős
+  // változás, ha a stash egy korábbi értéket állít vissza (pl. HUF->EUR->HUF
+  // váltásnál a HUF oldal a másodikig kikapcsolt marad, majd visszaáll).
+  const eredmeny = tervOsszegekPenznemValtassal(plan);
+  const tervSzintu: PenznemvaltasHatas['tervSzintu'] = [];
+  if (plan.kedvezmenyOsszeg != null || eredmeny.kedvezmenyOsszeg != null) {
+    tervSzintu.push({ mezo: 'vegosszeg', hatas: eredmeny.kedvezmenyOsszeg != null ? 'visszaall' : 'kikapcsol' });
+  }
+  if (plan.elolegOsszeg != null || eredmeny.elolegOsszeg != null) {
+    tervSzintu.push({ mezo: 'eloleg', hatas: eredmeny.elolegOsszeg != null ? 'visszaall' : 'kikapcsol' });
+  }
+  return { visszaall, arlistabol, arNelkul, tervSzintu };
+}
+
+/**
+ * A terv-szintű `kedvezmenyOsszeg`/`elolegOsszeg` pénznemváltása --
+ * `sorPenznemValtassal()` terv-szintű párja. A sor-szintű háromágú
+ * árlista-ág itt nem értelmezhető (a terv-szintű összegnek nincs
+ * árlistai referenciája), ezért kétágú: stashelt pár előlép,
+ * egyébként mindkét mező `null`-ra kapcsol -- nincs automatikus HUF<->EUR
+ * átváltás, egy másik pénznem alapegységében átvitt szám mértékegység-hiba
+ * lenne, nem adat. A visszaadott `masikPenznemOsszegek` `null`, ha a kilépő pár
+ * mindkét tagja `null` -- nincs értelme fölösleges kulcsot tartani a
+ * `terv.json`-ben.
+ */
+export function tervOsszegekPenznemValtassal(
+  plan: Plan,
+): Pick<Plan, 'kedvezmenyOsszeg' | 'elolegOsszeg' | 'masikPenznemOsszegek'> {
+  const kilepoPar = { kedvezmenyOsszeg: plan.kedvezmenyOsszeg ?? null, elolegOsszeg: plan.elolegOsszeg ?? null };
+  const ujStash = kilepoPar.kedvezmenyOsszeg == null && kilepoPar.elolegOsszeg == null ? null : kilepoPar;
+
+  const stash = plan.masikPenznemOsszegek;
+  if (stash) {
+    return {
+      kedvezmenyOsszeg: stash.kedvezmenyOsszeg,
+      elolegOsszeg: stash.elolegOsszeg,
+      masikPenznemOsszegek: ujStash,
+    };
+  }
+
+  return { kedvezmenyOsszeg: null, elolegOsszeg: null, masikPenznemOsszegek: ujStash };
 }
 
 /**

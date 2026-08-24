@@ -144,6 +144,26 @@ describe('piszkozatTartalmas', () => {
     const plan = createBlankPlan(settings, priceList);
     expect(piszkozatTartalmas({ ...plan, nyelv: 'de', penznem: 'EUR' })).toBe(false);
   });
+
+  it('is true when the ONLY content is a masikPenznemOsszegek stash', () => {
+    const plan = createBlankPlan(settings, priceList);
+    expect(
+      piszkozatTartalmas({
+        ...plan,
+        masikPenznemOsszegek: { kedvezmenyOsszeg: 50000, elolegOsszeg: null },
+      }),
+    ).toBe(true);
+  });
+
+  it('stays false for a stash where both stashed values are null', () => {
+    const plan = createBlankPlan(settings, priceList);
+    expect(
+      piszkozatTartalmas({
+        ...plan,
+        masikPenznemOsszegek: { kedvezmenyOsszeg: null, elolegOsszeg: null },
+      }),
+    ).toBe(false);
+  });
 });
 
 describe('piszkozatCelRoute', () => {

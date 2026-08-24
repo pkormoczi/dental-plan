@@ -111,7 +111,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | A terv `ervenyesIg` mezője soha nem maradhat üresen | D62 — üres érték a `formatLongDate`-en át „Invalid Date”-ként kerülne egy szerződéses dokumentumra; a „Terv adatai” lap Dátumok szekciója a mező elhagyásakor automatikusan visszaállítja az alapértékre |
 | A terv `elolegOsszeg` mezője soha nem haladhatja meg a fizetendőt egy véglegesített terven, és soha nem vágódik le némán | D66 — a százalék-alapú, strukturálisan garantált `előleg ≤ fizetendő` védelem megszűnt az abszolút összegre váltáskor; a véglegesítés-őr kemény blokkja váltja ki, a doki tudatos rendezését várva, nem automatikus levágást |
 | A véglegesítés blokkolva, ha a terv `orvos`-a üres vagy nem szerepel a jelenleg AKTÍV orvosok között | D68 — az aláírás-blokkban szereplő név jogilag releváns; egy már véglegesített terv `plan.orvos` név-pillanatképét ez visszamenőleg nem érinti (D7) |
-| Sem a sor-, sem a tétel-szintű ár SOHA nem számolódik át automatikusan a két pénznem között; a `Sor.masikPenznemAr` kizárólag a pénznemváltás munkaállapota, sosem system of record egyetlen renderelt/nyomtatott értékhez sem | D11/D71 — minden HUF/EUR érték egymástól függetlenül, kézzel megadott; egy automatikus árfolyam-átszámítás vagy a stash-mező nyomtatványon való feltűnése a pillanatkép-elvet (D7) sértené |
+| Sem a sor-, sem a tétel-szintű, sem a terv-szintű (`kedvezmenyOsszeg`/`elolegOsszeg`) ár/összeg SOHA nem számolódik át automatikusan a két pénznem között; a `Sor.masikPenznemAr` és a `Plan.masikPenznemOsszegek` kizárólag a pénznemváltás munkaállapota, sosem system of record egyetlen renderelt/nyomtatott értékhez sem | D11/D71 — minden HUF/EUR érték egymástól függetlenül, kézzel megadott; egy automatikus árfolyam-átszámítás vagy a stash-mező nyomtatványon való feltűnése a pillanatkép-elvet (D7) sértené |
 | Egy kézzel gépelt szöveg nyelvi mismatch-ét (`nevNyelv`/`leirasNyelv`/`megnevezesNyelv`/`megjegyzesNyelv`) KIZÁRÓLAG az explicit „Nyelv ellenőrizve” akció oldja fel — a szöveg szerkesztése, egy teljes (akár helyes) fordítás a másik nyelvre, és a dokumentumnyelv puszta váltása sosem | D72 — a páciens által aláírt dokumentumon egy egyszerű szerkesztés nem bizonyítja, hogy a doki ténylegesen ellenőrizte a szöveg nyelvi helyességét; nincs „jelentős változás” heurisztika |
 | A PDF-előnézet render-hibája esetén sem letölteni, sem véglegesíteni nem lehet, amíg a hiba fennáll — az utolsó sikeres PDF csak beszürkítve látható, „Újrapróbálás” akcióval | D73 — a `usePDF()` hibán át megőrzi a korábbi `url`-t/`blob`-ot; letöltésre engedve egy a képernyőn látott tervvel már nem egyező PDF hagyhatná el a gépet |
 | Egy tartósan mentett verzió (sikeres `savePlan`+`loadPlan`) UTÁNI piszkozat-takarítási hiba SOHA nem minősül „a mentés nem sikerült"-nek — a sikerképernyő ekkor is megjelenik, a takarítás hibája legfeljebb halk jelzés | D74 — a doki különben egy valójában sikeresen, tartósan mentett dokumentumot hinne elveszettnek, és egy fölösleges újrapróbálkozással egy `_v<n+1>` duplikátumot hozna létre (D4) |
@@ -1069,6 +1069,13 @@ A pénznemváltás tétel (`docs/01-attekintes-es-dontesek.md` D71,
   EGYETLEN hely, ahol eldől, hogy egy sornak nincs árlistai
   referenciaára az adott pénznemben — a `PlanEditorPage.tsx` Listaár
   cellája és a `domain/kitoltetlen.ts` `araztalanSorok()` is ezt hívja
+- `tervOsszegekPenznemValtassal(plan)` (ugyanott) — a fenti sor-szintű
+  pár TERV-szintű megfelelője: a `Plan.kedvezmenyOsszeg`/`elolegOsszeg`
+  pénznemváltása a `Plan.masikPenznemOsszegek` közös stash-slotján
+  keresztül (`docs/02-domain-modell.md` § Pénznemváltás). A
+  `penznemvaltasHatasa()` visszatérési értékének `tervSzintu` mezője
+  ebből vezeti le, melyik terv-szintű összeg kapcsol ki vagy áll vissza —
+  a `PatientPage.tsx` `applyPenznem()` hívja a sor-ciklus mellett
 - `araztalanSorok(plan, priceList)` (`app/src/domain/kitoltetlen.ts`) — a
   `nullaOsszeguSorok()` mintájára, de KEMÉNY blokk: névvel ellátott,
   beárazatlan ÉS kézi árat sem kapott sorok. A `veglegesitesOr.ts`

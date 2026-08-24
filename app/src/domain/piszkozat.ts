@@ -54,6 +54,13 @@ export function piszkozatTartalmas(plan: Plan): boolean {
   // Ugyanez a terv-szintű kedvezmény kapcsolójára (backlog-16).
   if (plan.kedvezmenyOsszeg != null) return true;
 
+  // A másik pénznemben stashelt egyedi végösszeg/előleg (domain/penznemValtas.ts
+  // `tervOsszegekPenznemValtassal()`) is védendő tartalom -- enélkül egy
+  // pénznemet visszaváltó doki alatt némán veszne el, mert a fenti két
+  // feltétel a JELENLEGI pénznem mezőit nézi, a stash a NEM aktívét.
+  const stash = plan.masikPenznemOsszegek;
+  if (stash && (stash.kedvezmenyOsszeg != null || stash.elolegOsszeg != null)) return true;
+
   const csakEgyAlapFazis =
     plan.fazisok.length === 1 &&
     plan.fazisok[0].megnevezes === ELSO_FAZIS_NEV &&
