@@ -25,7 +25,12 @@ Find what actually changed since the last changelog entry:
 1. Read the most recent dated entry in `CHANGELOG.md` to find the reference point.
 2. Run `git log` and `git diff` from that point (or from the start of the current feature branch/
    session if the repo is not the reference point — ask if ambiguous) to the current state.
-3. Treat the diff as ground truth, not the plan. If a `CONTEXT.md` or ADR exists for this feature
+3. Pull the actual commit dates alongside the log, e.g.
+   `git log --pretty=format:'%ad|%h|%s' --date=format:'%Y-%m-%d' <range>` — the changelog date for
+   each entry comes from this, never from today's date (see Step 4). A commit's author date can
+   differ from the day `/update-changelog` happens to run — batching several days of work into one
+   session is normal and must NOT collapse everything under the run date.
+4. Treat the diff as ground truth, not the plan. If a `CONTEXT.md` or ADR exists for this feature
    (from a grilling session), use it to understand *intent*, but describe what actually shipped —
    plans can be aspirational or stale.
 
@@ -63,7 +68,17 @@ Banned terms (translate around them, don't use them even in explanation):
 pricing logic to a new module"), find the *user-visible* consequence and describe only that — or
 conclude it's not changelog-worthy (see Step 2).
 
-One entry = one short bullet. Multiple commits for the same feature = one bullet, not several.
+One entry = one short bullet, dated to a single day. Multiple commits for the same feature *on the
+same calendar day* = one bullet, not several. If a single feature's commits span more than one
+calendar day, split it: write one bullet per day describing only the portion of the behavior that
+actually shipped that day, and put each under its own date section (see Step 4) — don't pull the
+whole feature forward to whichever day it happened to be finished, and don't push it back to the
+day it started. If a later commit changes or reverts something an earlier commit in the same range
+did (e.g. a layout tried one way, then changed back a day later because it didn't work out),
+describe only the net, final behavior, dated to the commit that actually produced that final
+state — don't write a bullet for an intermediate state that never survived to be seen by the
+doctor.
+
 Describe what changed from the user's point of view, e.g.:
 
 > Rossz: "Refaktoráltuk a fogszám-validációs logikát a backend oldalon."
@@ -74,6 +89,12 @@ Describe what changed from the user's point of view, e.g.:
 Reverse-chronological, dated sections in Hungarian date format. No semver, no "Added/Changed/
 Fixed" English headers, no commit hashes — the reader doesn't think in those categories.
 
+**The date header is the commit date of the work being described, never the date
+`/update-changelog` is being run.** These are routinely different: a session may draft an entry
+for work committed several days earlier, or a single run may cover commits spread across many
+days (see Step 3's splitting rule). Determine the section a bullet belongs in from the commit
+date(s) found in Step 1, not from "today".
+
 ```
 ## 2026. augusztus 9.
 - Mostantól a nyomtatott kezelési terven feltüntetjük az érintett fogszámokat is.
@@ -83,8 +104,12 @@ Fixed" English headers, no commit hashes — the reader doesn't think in those c
 - Bevezettük a kétnyelvű (magyar/német) árazást — az admin felületen külön szerkeszthető.
 ```
 
-If today's date already has a section (multiple `/update-changelog` runs same day), append to it
-rather than creating a duplicate date header.
+If the date a bullet belongs to already has a section anywhere in the file, append the bullet to
+that existing section instead of creating a duplicate header — this applies regardless of whether
+that section is at the top (multiple runs the same day) or further down (a run adds a bullet for a
+day that's already documented). Keep the file's overall header order reverse-chronological: insert
+a new date section in its correct chronological position among the existing headers, not always at
+the very top.
 
 ## Step 5 — Confirm before writing
 
