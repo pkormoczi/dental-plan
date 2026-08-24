@@ -22,13 +22,14 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 ### Terv összeállítása
 
 - A páciens adatlapján dől el az ajánlat nyelve (magyar/német) és pénzneme (forint/euró), a kezelőorvos (csak az aktív orvosok közül választható) és az ajánlat dátumai — ezek a teljes szerkesztés alatt szabadon módosíthatók, egy már mentett terven is.
-- Ha a tervben már vannak felvett tételek, nyelv- vagy pénznemváltás előtt a program megkérdezi, mi történjen velük: a tételnevek frissülnek az új nyelvre, pénznemváltásnál pedig a régi pénznem árai megmaradnak a háttérben, így egy visszaváltás nem veszíti el a korábban megadott árakat.
+- Ha a tervben már vannak felvett tételek, nyelv- vagy pénznemváltás előtt a program megkérdezi, mi történjen velük: a tételnevek frissülnek az új nyelvre, pénznemváltásnál pedig a régi pénznem árai (a tételeké és az egyedi végösszegé/előlegé is) megmaradnak a háttérben, így egy visszaváltás nem veszíti el a korábban megadott értékeket.
 - Ha a kiválasztott orvos időközben inaktívvá válik, a program jelzi, és a véglegesítés blokkolva marad, amíg nem választanak aktív orvost.
 - A kezelési terv összeállítása fázisokra bontva, gyors kereséssel az árlistából — gépeléssel, nyilakkal és Enterrel is, egérhasználat nélkül.
 - Ha egy tétel nem szerepel az árlistában, a begépelt szöveg egyedi tételként is felvehető.
 - Kattintható fogtérkép: egy fogra kattintva közvetlenül onnan is felvehető egy kezelés, és látszik, mely fogakon milyen kezelés szerepel.
 - Tételenként megadható a fog, a mennyiség (a felsorolt fogak számából automatikusan kitöltve, de bármikor kézzel felülírható), az ajánlati ár (kedvezménnyel vagy felárral), és jelölhető, hogy az ár csak becsült-e; hozzáadható egy leírás is arról, mi tartozik a tételhez.
 - Ha egy tétel nevét, árát vagy leírását kézzel írták át, ezt egy jól látható jelzés mutatja a soron, és egy kattintással visszaállítható az árlistai eredetire.
+- Egy korábbi tervből teljes tartalommal másolt új tervben az átvett, kézzel írt ár és fázismegjegyzés is ugyanilyen jelzést kap, és a program külön figyelmeztet, ha egy átvett sor már a másolás pillanatában is egy időközben inaktivált kezelésre hivatkozott.
 - Ha az árlistai ár időközben megváltozott, a program felajánlja a frissítést, előre megmutatva a hatását a terv végösszegére.
 - A szerkesztés folyamatosan, automatikusan mentődik piszkozatként, és egy gombbal bármikor eldobható.
 - Fázisok tetszőlegesen hozzáadhatók, nyilakkal sorrendezhetők és összecsukhatók; egy törölt kezelési sor rövid ideig egy kattintással visszavonható.
@@ -44,6 +45,7 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 ## Kezelések és árak
 
 - A kínált kezelések, áraik (forint és euró) és kategóriáik karbantartása, kereséssel és szűrőkkel (pl. hiányzó euró ár, sávos ár, inaktív vagy gyakori tétel).
+- Az árak tömegesen is módosíthatók, nem csak tételenként: kiválasztható a teljes árlista, egy kategória vagy a lapon épp szűrt tételkör, egy pénznemben, egy megadott emelési vagy csökkentési százalékkal. A program előre, tételenként megmutatja a régi és az új árat — kerek összegekre kerekítve —, automatikusan kihagyja a hiányzó árú vagy nullára csökkenő tételeket, és bármelyik sor egyenként is kivehető a módosításból, mielőtt az egyetlen lépésben mentődne.
 - Új tétel felvételekor a program kezdetben inaktívként hozza létre; amint megadják a forint árát, a tétel automatikusan aktiválódik — ha az ár 0 Ft-on marad, a program rákérdez, hogy ez szándékos-e.
 - Egy tétel törlés helyett inaktiválható, hogy a rá hivatkozó régi tervek később is értelmezhetők maradjanak — az inaktiválás megerősítést kér, a visszakapcsolás (reaktiválás) viszont azonnali.
 - Kategóriák létrehozása és törlése azonnali; a név, a szín és a sorrend módosítása viszont piszkozatban gyűlik, és külön Mentés gombbal kerül csak be a törzsadatba — Mégse-vel bármikor eldobható. A kategória színe egyben a fogtérképen is ezt jelöli, és jelzés mutatja, ha egy kategóriának hiányzik a német neve.
@@ -53,7 +55,7 @@ Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyő
 
 - Három fülre osztva: Rendelő adatai, Nyomtatványok és Egyéb — mindegyiken önálló Mentés/Mégse gombpár védi a még nem mentett módosítást.
 - Rendelő adatai: a rendelő adatai a nyomtatvány fejlécéhez/lábléchez, és az orvosok listája — soronként aktiválható/inaktiválható, nyilakkal sorrendezhető, törölhető, és kijelölhető köztük egy alapértelmezett, aki minden új tervre automatikusan rákerül.
-- Nyomtatványok: a nyilatkozat, a fizetési feltételek és a garancia szövegének szerkesztése — mentéskor mindig új verzió jön létre, a korábban aláírt tervek a saját, aláírt szövegükkel maradnak.
+- Nyomtatványok: a nyilatkozat, a fizetési feltételek és a garancia szövegének szerkesztése — a szöveg félkövérrel is kiemelhető, és pontokba szedett vagy számozott lista is írható benne. Mentéskor a program felülírja a jelenlegi szöveget; egy már véglegesített terv a saját, akkor mentett szövegével marad, függetlenül attól, mi változik utólag itt.
 - Egyéb: az ajánlat érvényességi ideje, az alapértelmezett nyelv és pénznem új tervekhez, és annak áttekintése, mennyi tartalom (tételnevek, euró árak, nyilatkozat) áll már készen németül.
 
 ## DEMO
