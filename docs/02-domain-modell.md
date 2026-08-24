@@ -622,7 +622,8 @@ a fájlban lévő érték az igazság — és érdemes figyelmeztetni.
   "inaktivOrvosok": [],             // hiánya/üres = minden orvos aktív (D63)
   "alapertelmezettOrvos": "Dr. Mándoki István",  // hiányzó/inaktív érték: az első AKTÍV név (D63)
   "ervenyessegNap": 90,
-  "alapertelmezettNyelv": "hu"     // öröklés híján ez lesz az új tervek nyelve (D52)
+  "alapertelmezettNyelv": "hu",    // öröklés híján ez lesz az új tervek nyelve (D52)
+  "alapertelmezettPenznem": "HUF"  // öröklés híján ez lesz az új tervek pénzneme
 }
 ```
 
@@ -634,6 +635,14 @@ default az első aktív név. A feloldás egyetlen helye
 (egyelőre csak a NÉV, nincs komplex `doctorSnapshot` titulussal/aláírás-
 képpel, D63) — egy orvos törlése/deaktiválása a korábbi terveket nem
 érinti (D7).
+
+Az `alapertelmezettPenznem` szintén additív mező (`schemaVersion` nem
+emelkedett) — egy régi fájl hiányával olvasódik be, ilyenkor a
+tényleges default `HUF` (a rendelő elsődleges pénzneme, az EUR árak ma
+még lektorálatlan, árfolyamból becsült kiindulóértékek). A feloldás
+egyetlen helye `app/src/domain/beallitasok.ts`
+`alapertelmezettPenznem()` — ez a nyelv- és pénznem-default egymástól
+független, mindkettő a doki által konfigurálható mezője.
 
 ## Fogszám kezelés
 

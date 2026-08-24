@@ -2252,3 +2252,17 @@ karbantartási kör négy önálló javítása.
   ugyanaz a vizuális minta, mint a tétel-táblázat során. Részletek:
   `docs/03-funkcionalis-spec.md` § "6. Kezelések és árak" „Kategóriák
   panel", `docs/07-felulet-rendszer.md` § "Komponensek".
+
+### 85. tétel: Alapértelmezett dokumentum-pénznem — KÉSZ
+
+- **Méret:** kicsi — három forrásfájl (`domain/types.ts`, új
+  `domain/beallitasok.ts`, `domain/blankPlan.ts`) és a Beállítások Egyéb
+  tabja, kísérő tesztekkel.
+- **Megvalósítás:** a nyelv-defaulthoz hasonlóan a pénznemnek is lett
+  Settings-mezője (`alapertelmezettPenznem`, opcionális, HUF
+  visszaeséssel) és egy ChipGroup-ja az Egyéb tabon, a nyelv-kapcsoló
+  alatt, ugyanazzal az explicit Mentés/Mégse modellel. A `blankPlan.ts` a
+  korábbi hardkódolt HUF helyett ezt a mezőt olvassa, öröklés híján —
+  meglévő pácienshez induló új lánc továbbra is a legutóbb véglegesített
+  terv pénznemét örökli. Részletek: `docs/02-domain-modell.md` §
+  `beallitasok.json`, `docs/03-funkcionalis-spec.md` § "Egyéb".

@@ -2,6 +2,7 @@
 // szerkesztő. `tervId`/`verzio` üresen marad, a storage.savePlan() tölti ki
 // első mentéskor (lásd storage/DemoStorage.ts).
 
+import { alapertelmezettPenznem } from './beallitasok';
 import { addDaysIso, todayIso } from './date';
 import { alapertelmezettOrvosNeve } from './orvosok';
 import type { Nyelv, Penznem, Plan, PriceList, Settings } from './types';
@@ -53,11 +54,11 @@ export function createBlankPlan(
   // dönt (a német nyelv mindig választható, nincs hozzá engedélyező
   // kapcsoló).
   //
-  // A pénznem alapértéke öröklés híján MINDIG HUF, nem a nyelvtől függ: a
-  // rendelő elsődleges pénzneme forint, az EUR árak pedig ma még
-  // lektorálatlan, árfolyamból becsült kiindulóértékek -- a HUF
-  // alapértelmezés a biztonságosabb kiindulás. A doki egy kattintással
-  // vált a Terv adatai lapon, ha mégis EUR kell.
+  // A pénznem alapértéke öröklés híján a `Settings.alapertelmezettPenznem`
+  // (gyári kiindulás HUF, a rendelő elsődleges pénzneme, az EUR árak pedig
+  // ma még lektorálatlan, árfolyamból becsült kiindulóértékek) -- a doki a
+  // Beállításokban állítja át, vagy egy kattintással vált a Terv adatai
+  // lapon egy adott terven.
   const nyelv: Nyelv = oroklott?.nyelv ?? settings.alapertelmezettNyelv;
 
   return {
@@ -66,7 +67,7 @@ export function createBlankPlan(
     verzio: 0,
     statusz: 'PISZKOZAT',
     nyelv,
-    penznem: oroklott?.penznem ?? 'HUF',
+    penznem: oroklott?.penznem ?? alapertelmezettPenznem(settings),
     keltezes: today,
     ervenyesIg: addDaysIso(today, settings.ervenyessegNap),
     arlistaVerzio: priceList.arlistaVerzio,

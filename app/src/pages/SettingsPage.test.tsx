@@ -382,6 +382,27 @@ describe('SettingsPage', () => {
         screen.queryByRole('checkbox', { name: 'Német nyelvű ajánlat engedélyezése' }),
       ).not.toBeInTheDocument();
     });
+
+    it('az alapértelmezett pénznem EUR-ra váltása és mentése perzisztálja az értéket, a Mégse visszaállítja HUF-ra', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await goToTab(user, /Egyéb/);
+
+      const panel = screen.getByRole('tabpanel');
+      await user.click(within(panel).getByRole('radio', { name: 'EUR — euró' }));
+      expect(screen.getByText('Nem mentett módosítás')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
+
+      const stored = JSON.parse(localStorage.getItem('dp:beallitasok.json') ?? '{}');
+      expect(stored.alapertelmezettPenznem).toBe('EUR');
+
+      await user.click(within(panel).getByRole('radio', { name: 'HUF — forint' }));
+      expect(within(panel).getByRole('radio', { name: 'HUF — forint' })).toHaveAttribute('aria-checked', 'true');
+      await user.click(screen.getByRole('button', { name: 'Mégse' }));
+      expect(within(panel).getByRole('radio', { name: 'EUR — euró' })).toHaveAttribute('aria-checked', 'true');
+    });
   });
 
   describe('Nyomtatványok', () => {

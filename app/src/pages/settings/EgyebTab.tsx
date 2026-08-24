@@ -1,7 +1,7 @@
 // Egyéb tab -- a Beállítások tab-szerkezetének (D49) harmadik tabja: ajánlat
-// érvényessége + alapértelmezett nyelv + "A német tartalom készültsége"
-// áttekintő (tételnév-/EUR ár-lefedettség és a nyilatkozat placeholder-
-// státusza). Korábban a `SettingsPage.tsx` "Ajánlat és nyelv" Card-ja volt,
+// érvényessége + alapértelmezett nyelv/pénznem + "A német tartalom
+// készültsége" áttekintő (tételnév-/EUR ár-lefedettség és a nyilatkozat
+// placeholder-státusza). Korábban a `SettingsPage.tsx` "Ajánlat és nyelv" Card-ja volt,
 // leütésenkénti autosave-vel (D31); a tabosítás óta pufferelt draft +
 // explicit Mentés/Mégse.
 //
@@ -26,9 +26,10 @@ import ChipGroup from '../../components/ChipGroup';
 import { useDirtyDraft } from '../../components/useDirtyDraft';
 import { Field } from '../../components/Field';
 import Section from '../../components/Section';
+import { alapertelmezettPenznem } from '../../domain/beallitasok';
 import { lefedettseg } from '../../domain/coverage';
 import { isPlaceholderTemplate } from '../../domain/templates';
-import type { Nyelv } from '../../domain/types';
+import type { Nyelv, Penznem } from '../../domain/types';
 import { t } from '../../design/tokens';
 import { stripMarkdownHeading } from '../../pdf/markdownLite';
 import { useStorage } from '../../storage/StorageContext';
@@ -37,17 +38,22 @@ import { useAppState } from '../../state/AppState';
 interface EgyebDraft {
   ervenyessegNap: number;
   alapertelmezettNyelv: Nyelv;
+  alapertelmezettPenznem: Penznem;
 }
 
-function toDraft(ervenyessegNap: number, alapertelmezettNyelv: Nyelv): EgyebDraft {
-  return { ervenyessegNap, alapertelmezettNyelv };
+function toDraft(
+  ervenyessegNap: number,
+  alapertelmezettNyelv: Nyelv,
+  alapertelmezettPenznem: Penznem,
+): EgyebDraft {
+  return { ervenyessegNap, alapertelmezettNyelv, alapertelmezettPenznem };
 }
 
 export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const { settings, saveSettings, priceList } = useAppState();
   const { loadLatestTemplateByBase } = useStorage();
   const { draft, setDraft, dirty, reset } = useDirtyDraft<EgyebDraft>(
-    toDraft(settings.ervenyessegNap, settings.alapertelmezettNyelv),
+    toDraft(settings.ervenyessegNap, settings.alapertelmezettNyelv, alapertelmezettPenznem(settings)),
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -99,7 +105,7 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
 
   return (
     <>
-      <Section title="Ajánlat és nyelv">
+      <Section title="Ajánlat, nyelv és pénznem">
         <Field label="Ajánlat érvényessége (nap)">
           <TextField.Root
             type="number"
@@ -126,6 +132,22 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
               ['de', 'Deutsch'],
             ]}
             onChange={(nyelv) => setDraft((prev) => ({ ...prev, alapertelmezettNyelv: nyelv }))}
+            ariaLabel="Alapértelmezett nyelv új tervnél"
+          />
+        </Box>
+
+        <Box mt="3">
+          <Text as="div" size="1" color="gray" mb="1">
+            Alapértelmezett pénznem új tervnél
+          </Text>
+          <ChipGroup
+            value={draft.alapertelmezettPenznem}
+            options={[
+              ['HUF', 'HUF — forint'],
+              ['EUR', 'EUR — euró'],
+            ]}
+            onChange={(penznem) => setDraft((prev) => ({ ...prev, alapertelmezettPenznem: penznem }))}
+            ariaLabel="Alapértelmezett pénznem új tervnél"
           />
         </Box>
 

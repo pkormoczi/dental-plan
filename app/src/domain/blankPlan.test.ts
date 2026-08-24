@@ -15,6 +15,7 @@ const settings: Settings = {
   orvosok: ['Dr. Teszt Elek'],
   ervenyessegNap: 90,
   alapertelmezettNyelv: 'hu',
+  alapertelmezettPenznem: 'HUF',
 };
 
 const priceList: PriceList = {
@@ -26,15 +27,24 @@ const priceList: PriceList = {
 };
 
 describe('createBlankPlan', () => {
-  it('öröklés nélkül a mai alapértékeket adja: nyelv a beállításokból, pénznem mindig HUF', () => {
-    const plan = createBlankPlan({ ...settings, alapertelmezettNyelv: 'de' }, priceList);
+  it('öröklés nélkül a mai alapértékeket adja: nyelv és pénznem a beállításokból', () => {
+    const plan = createBlankPlan(
+      { ...settings, alapertelmezettNyelv: 'de', alapertelmezettPenznem: 'EUR' },
+      priceList,
+    );
     expect(plan.nyelv).toBe('de');
-    expect(plan.penznem).toBe('HUF');
+    expect(plan.penznem).toBe('EUR');
   });
 
   it('öröklés nélkül a beállítások alapértelmezett nyelvét adja', () => {
     const plan = createBlankPlan(settings, priceList);
     expect(plan.nyelv).toBe('hu');
+  });
+
+  it('hiányzó alapertelmezettPenznem esetén HUF-ra esik vissza', () => {
+    const { alapertelmezettPenznem: _omit, ...settingsRegiFormatum } = settings;
+    const plan = createBlankPlan(settingsRegiFormatum, priceList);
+    expect(plan.penznem).toBe('HUF');
   });
 
   // D534 (47. tétel): egy meglévő páciens legutóbb véglegesített tervéből

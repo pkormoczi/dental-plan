@@ -1617,13 +1617,21 @@ elvetést választja.
 - Ajánlat érvényessége napokban (alapérték 90)
 - **Alapértelmezett nyelv** (`alapertelmezettNyelv`) kapcsolója — ez lesz
   az új tervek nyelve, öröklés híján (D52). Feltétel nélkül látszik (D63),
-  nincs hozzá engedélyező kapcsoló. Alatta a **német tartalom
-  készültsége**, szintén feltétel nélkül: hány aktív tételnek van már
-  német neve, hány tételnek van EUR ára, és a `nyilatkozat-de-v1.md`
-  státusza (placeholder, amíg a jogi fordítás el nem készül) — link a
-  Kezelések és árak oldalra, ahol a „Nincs EUR ár" szűrő a munkalista. A
-  nyilatkozat státuszát a tab saját maga tölti be, függetlenül a
-  Nyomtatványok tabtól.
+  nincs hozzá engedélyező kapcsoló.
+- **Alapértelmezett pénznem** (`alapertelmezettPenznem`) kapcsolója,
+  ugyanabban az elrendezésben, a nyelv-kapcsoló alatt — ez lesz egy új
+  terv-lánc kiinduló pénzneme, öröklés híján (meglévő pácienshez induló
+  új lánc továbbra is a legutóbb véglegesített terv pénznemét örökli,
+  D52). A nyelvtől független mező, gyári alapértéke HUF — a rendelő
+  elsődleges pénzneme, az EUR árak pedig ma még lektorálatlan,
+  árfolyamból becsült kiindulóértékek.
+
+Alattuk a **német tartalom készültsége**, feltétel nélkül: hány aktív
+tételnek van már német neve, hány tételnek van EUR ára, és a
+`nyilatkozat-de-v1.md` státusza (placeholder, amíg a jogi fordítás el nem
+készül) — link a Kezelések és árak oldalra, ahol a „Nincs EUR ár" szűrő a
+munkalista. A nyilatkozat státuszát a tab saját maga tölti be, függetlenül
+a Nyomtatványok tabtól.
 
 ---
 

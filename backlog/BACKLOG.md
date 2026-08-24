@@ -15,17 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 85. tétel — Alapértelmezett dokumentum-pénznem
-  (a `backlog/redesign/` redesign-döntéssorozat DP-084 tétele) — a
-  nyelv-defaultnak már ma is van Settings-mezője és UI-ja (feltétel
-  nélkül, engedélyező gate nélkül), de a pénznemnek nincs: a
-  `blankPlan.ts` ma hardkódoltan mindig HUF-fal indít egy
-  vadonatúj láncot. Ez a tétel egy új, konfigurálható
-  `Settings.alapertelmezettPenznem` mezőt vezet be (alapérték HUF), az
-  Egyéb tabon egy ChipGroup-pal a nyelv-default mellett. A döntéseket
-  lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-85-penznem-default-terv.md`
-
 ### 86. tétel — Nyomtatványszöveg-sablonok felülírása + markdown-bővítés
   (a `backlog/redesign/` redesign-döntéssorozat DP-085 tétele) — a
   C7/D573 szerint a sablon-mentés a ma dokumentált, verziózó

@@ -314,6 +314,13 @@ export interface Settings {
   alapertelmezettOrvos?: string;
   ervenyessegNap: number;
   alapertelmezettNyelv: Nyelv;
+  /**
+   * A globális alapértelmezett pénznem új terv-láncnál, öröklés híján.
+   * Hiányzó érték `HUF`-ot jelent (`domain/beallitasok.ts`
+   * `alapertelmezettPenznem()` az EGYETLEN feloldó). `schemaVersion` nem
+   * emelkedett, a mező opcionális.
+   */
+  alapertelmezettPenznem?: Penznem;
 }
 
 /**

@@ -1003,6 +1003,16 @@ A kezelőorvos-választás és öröklési szabályok tétel
   orvos esetén a művelet a dialógus megnyitása nélkül, azonnal engedett,
   amber figyelmeztetéssel
 
+Az alapértelmezett dokumentum-pénznem tétel (`docs/02-domain-modell.md`
+§ `beallitasok.json`, `docs/03-funkcionalis-spec.md` § Egyéb)
+segédfüggvénye, szintén ne írd újra:
+- `alapertelmezettPenznem(settings)` (`app/src/domain/beallitasok.ts`) —
+  a `Settings.alapertelmezettPenznem` opcionális mező feloldásának
+  EGYETLEN helye, `HUF` visszaeséssel; a `createBlankPlan()` ezt hívja
+  öröklés híján, az `alapertelmezettOrvosNeve()` mintáján. A nyelv- és a
+  pénznem-default egymástól független, mindkettő a doki által
+  konfigurálható mezője az Egyéb tabon
+
 Az árlista-snapshot és explicit refresh tétel (`docs/01-attekintes-es-
 dontesek.md` D70, `docs/02-domain-modell.md` § "Miért van `nevSnapshot`
 és `listaEgysegar` a soron", `docs/03-funkcionalis-spec.md` § 3. "Sor
