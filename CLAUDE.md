@@ -1197,6 +1197,31 @@ A PDF-csak terv-cím/fázisnév lokalizáció (`docs/04-nyomtatvany-spec.md` §
   kapnak `nyelv` paramétert — a szerkesztő UI-ja (Korábbi tervek fa,
   terv-mappa névjavaslat, „+ Fázis hozzáadása" gomb) végig magyar marad
 
+A tömeges árváltoztatás tétel (`docs/03-funkcionalis-spec.md` § 6.
+Kezelések és árak "Tömeges árváltoztatás") segédfüggvényei
+(`app/src/domain/tomegesAr.ts`), szintén ne írd újra őket:
+- `KEREKITES_LETRA` / `VALASZTHATO_KEREKITES` / `ALAP_KEREKITES` — az
+  EGYETLEN kerekítési létra, a pénznem alapegységében kifejezve (HUF:
+  forint, EUR: cent), és a doki választható felső korlátjai
+- `tenylegesLepes(korlat, nyersValtozas)` — a ténylegesen használt
+  kerekítési lépés egy nyers változáshoz: a létra legnagyobb olyan foka,
+  ami nem nagyobb sem a választott korlátnál, sem a nyers változás
+  abszolút értékénél; ebből következik az invariáns, hogy a kerekítés a
+  nyers eredményt legfeljebb a kért változás felével térítheti el
+- `ujAr(ar, irany, szazalek, korlat)` — egy `Ar` (FIX vagy SAVOS) új
+  értéke; SAVOS-nál a `min` és a `max` is ugyanazzal a százalékkal, de
+  külön lépés-számítással mozdul
+- `tomegesArSor(tetel, params)` / `tomegesArSorok(tetelek, params)` — a
+  soronkénti állapot-osztályozás (`valtozik`/`nincs-ar`/`nem-valtozik`/
+  `nulla-ra-csokkenne`) az EGYETLEN hely, ahol ez eldől; a `null` ár innen
+  sosem kap értéket
+- `tomegesArOsszegzes(sorok, kivett)` — a dialógus lábléc-darabszámai,
+  csak a ténylegesen kijelölt (nem kivett) `valtozik` sorokra
+- `alkalmazTomegesArat(tetelek, idk, params)` — az írás: a MENTÉS
+  pillanatában kapott friss `tetelek`-en számol újra, nem az előnézet
+  befagyasztott értékeit írja vissza, a `PriceListAdminPage.tsx`
+  `addCategory`/`mentUjTetel`-jének elvén
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

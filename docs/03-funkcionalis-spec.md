@@ -1602,6 +1602,90 @@ kategória `nev.de`-je hiányzik — ugyanaz a vizuális minta, mint a
 tétel-táblázat során; a jelvény a MÉG NEM MENTETT draftból olvas, tehát
 azonnal eltűnik, amint a doki beírja a német nevet.
 
+### Tömeges árváltoztatás
+
+A „Tömeges árváltoztatás” gomb a fejlécsorban, a felső „+ Új tétel” mellett
+egy Radix `Dialog`-ot nyit (a lista alján megismételt „+ Új tétel”-nek NINCS
+tömeges párja — az ritkán használt, tudatos művelet).
+
+**Kör.** Egy `RadioGroup`: *Teljes árlista* (alap) · *Kategória* (mellette
+egy `Select` EGY kategóriára — két kategória két külön, külön ellenőrzött
+művelet) · *A jelenlegi szűrt lista (N tétel)*, ez utóbbi csak akkor
+jelenik meg, ha a lap keresője vagy szűrője aktív (egyébként szó szerint
+azonos lenne a „Teljes árlista” körrel). A „jelenlegi szűrt lista” a lap
+kereső/szűrő predikátumát használja, de a nyitott sor kivétele NÉLKÜL — az a
+kivétel a szerkesztés közbeni eltűnés ellen véd, egy tömeges művelet körét
+hamisan tágítaná. A kör mellett egy „Inaktív tételek is” checkbox, alapból
+kikapcsolva — egy inaktív tétel bármikor visszakapcsolható, ezért a bevonás
+egy kattintás.
+
+**Egy művelet = egy pénznem.** Kötelező `RadioGroup`: HUF vagy EUR, sosem
+egyszerre — a két ár egymástól teljesen független (nincs automatikus
+átváltás), összekapcsolásuk egy közös százalékkal hamis kapcsolatot
+sugallna.
+
+**Irány + százalék.** „Emelés”/„Csökkentés” és egy pozitív százalék-mező,
+0-nál nagyobb. Emelésnél 0–100%, csökkentésnél 0–90% a megengedett
+tartomány — a plafonok a nagyságrend-elgépelés (50 helyett 500) olcsó
+fogása. 0%-nál az „Alkalmazás” gomb kattintásra hibaszöveget mutat a mező
+alatt, nincs letiltva.
+
+**Kerekítés.** Egy közös létra, a pénznem alapegységében kifejezve
+(HUF: `1000 · 500 · 100 · 10 · 1` Ft, EUR: `10 · 5 · 1 · 0,10 · 0,01` €,
+ugyanaz a számsor). A dialógusban a doki a létra felső három fokát
+választja (HUF: 100/500/1000 Ft, EUR: 1/5/10 €, alapértelmezés a
+legfinomabb), ez FELSŐ KORLÁT, nem fix lépés: soronként (SAVOS-nál
+határonként külön) a ténylegesen használt lépés a létra legnagyobb olyan
+foka, ami nem nagyobb sem a választott korlátnál, sem a nyers változás
+abszolút értékénél, a legközelebbi többszörösre kerekítve. Ebből a
+szabályból egyetlen invariáns következik: a kerekítés a nyers eredményt
+legfeljebb a kért változás felével térítheti el. Az előnézetben minden
+sor, amelyik a választottnál finomabb lépést kapott, halkan kiírja a
+ténylegesen használt lépést, a lábléc pedig számolja őket — ez nem
+figyelmeztetés, a viselkedés helyes, csak magyarázatot igényel.
+
+`SAVOS` tételnél a `min` és a `max` is ugyanazzal a százalékkal változik,
+de mindkettő külön kapja meg a soronkénti lépés-számítást (a nyers
+változásuk eltérő nagyságú lehet); az előnézet a teljes sávot mutatja. Egy
+már fordított sáv (`min` > `max`) a művelettől nem javul meg és nem is
+romlik el — mindkét határ arányosan mozdul, ez a művelet nem vállalja fel
+az adathiba javítását.
+
+**Kihagyott és nem változó sorok.** Az előnézet a kör minden tételét
+felsorolja, négy állapot egyikében: *változik* (kipipálva, kipipálható),
+*nincs ár ebben a pénznemben* (letiltva — a `null` ár SOSEM kap értéket
+ettől a művelettől, a `null` azt jelenti, a tétel abban a pénznemben nem
+ajánlható, nem azt, hogy „0”), *nem változik* (0 ár, vagy a kerekítés
+visszaadja az eredetit, letiltva), *0-ra csökkenne* (erős csökkentésnél
+kis árnál, letiltva — a 0 ár érvényes, de tudatos érték, nem születhet
+kerekítés mellékhatásaként).
+
+**Kijelölés.** Az előnézet alapból MINDEN módosítható sort kipipálva mutat
+— a soronkénti pipa kivétel-jelölő (opt-out), nem beleegyezés (opt-in),
+mert a szándékot a doki már kimondta a kör-választóval, a dialógus csak
+végrehajtja (lásd `docs/07-felulet-rendszer.md` § Komponensek a
+checkbox-listás dialógus szokásos, ellentétes alapállapotáról és ennek
+indokáról). A lábléc a kihagyások okával bontott darabszámokat írja ki,
+összegzés nélkül — 118 különböző kezelés árának összege nem hordoz
+jelentést, hamis pontosságot sugallna.
+
+**Megerősítés és írás.** Az előnézet élőben követi a paramétereket, nincs
+külön „Előnézet” lépés. Az „Alkalmazás” egy `AlertDialog`-ot nyit az
+összegzéssel és azzal, hogy a művelet nem vonható vissza (egy ellentétes
+százalék sem állítja vissza pontosan az eredeti árakat a kerekítés miatt).
+Elfogadás után a teljes módosítás EGY `savePriceList` híváson megy át, a
+friss árlista-állapotra futtatva újra (nem az előnézet befagyasztott
+értékeire) — ebből egyetlen `arlistaVerzio`-bélyeg keletkezik, nem
+tételenként egy. Sikertelen mentésnél a dialógus bezárul, a lap saját
+piros `saveError` `Callout`-ja jelez — nincs dialóguson belüli
+újrapróbálás, mert a memóriabeli állapot a mentés előtt már frissült, egy
+újrapróbálás a már megemelt árakra futna újra.
+
+A művelet a mentett terveket sosem érinti (pillanatkép-elv): egy már
+véglegesített verzió `terv.json`-je változatlan marad, egy éppen nyitott
+piszkozat sorain a meglévő „elavult ár” jelzés jelenik meg, amit
+soronként lehet frissíteni.
+
 ---
 
 ## 7. Beállítások

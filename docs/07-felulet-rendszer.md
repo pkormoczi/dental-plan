@@ -199,6 +199,19 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   fogalma itt nem értelmezhető. Csak a Terv adatai lap "Tovább" gombja és a
   workflow-stepper Kezelések/Előnézet linkjei hívják — a NavBar-navigációt a
   D46 guard fedi, a kettő nem keveredik egy felületen.
+- Checkbox-listás dialógus, FORDÍTOTT alapállapottal (Tömeges árváltoztatás,
+  `pages/priceListAdmin/TomegesArDialog.tsx`, `docs/03-funkcionalis-spec.md`
+  § 6. Kezelések és árak): a fenti „Alapból SEMMI nincs kijelölve” szabály
+  alól tudatos kivétel — itt alapból MINDEN módosítható sor ki van pipálva,
+  a soronkénti pipa kivétel-jelölő (opt-out), nem beleegyezés (opt-in). A
+  különbség oka: a mezőnkénti összevető/szinkron-dialógusnál a dialógus MAGA
+  az ajánlat — a program veti fel, hogy két adatforrás eltér, és az üres
+  kiindulás védi a dokit egy nem kért felülírástól. A Tömeges
+  árváltoztatásnál fordított a helyzet: a szándékot a doki már kimondta a
+  kör-választóval (pl. „az egész Implantológia +5%”), a dialógus csak
+  végrehajtja — egy 118 tételes körnél az üres kiindulás azt jelentené,
+  hogy az első kattintás mindig az „Összes kijelölése”, ami rítus, nem
+  védelem.
 - Read-only label+érték adatnézet (D45): `components/Field.tsx`
   `ReadOnlyField` — a `FieldGroup`-ra épül (NEM a `Field`-re, lásd a
   `Field.tsx` fejléckommentjét: egy `<label>` statikus szöveg köré téve

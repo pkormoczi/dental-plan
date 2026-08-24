@@ -57,7 +57,9 @@ import { leirasTulHosszu } from '../domain/leirasHossz';
 import { formatPrice, savosHatarForditott } from '../domain/money';
 import { nextKategoriaId, nextTetelId } from '../domain/priceListIds';
 import { nevEgyezik, norm } from '../domain/search';
+import { alkalmazTomegesArat, type TomegesArParams } from '../domain/tomegesAr';
 import type { Ar, Kategoria, PriceList, Tetel } from '../domain/types';
+import TomegesArDialog from './priceListAdmin/TomegesArDialog';
 import UjTetelDialog from './priceListAdmin/UjTetelDialog';
 import { useAppState } from '../state/AppState';
 
@@ -154,6 +156,7 @@ export default function PriceListAdminPage() {
   const [open, setOpen] = useState<string | null>(null);
   const [catPanelOpen, setCatPanelOpen] = useState(false);
   const [ujTetelOpen, setUjTetelOpen] = useState(false);
+  const [tomegesArOpen, setTomegesArOpen] = useState(false);
   // Az imént mentett tétel id-je -- egyszer használatos jelző, ami a lentebbi
   // effektnek szól (odagörget, majd nullázza magát). Az ItemEditor ebből dönti
   // el, hogy a HUF ár mezőt `autoFocus`-szal kell-e felvennie: a doki a
@@ -408,6 +411,22 @@ export default function PriceListAdminPage() {
     }
   }, [open, pendingActivationId]);
 
+  // Mindkét nyelven keres, ugyanaz a szabály, mint a szerkesztő
+  // tétel-keresőjében (backlog-7): egy csak németül elgépelt/elnevezett
+  // tétel eddig itt egyáltalán nem volt megtalálható. Külön a `keep()`-től
+  // (lásd lent) -- a Tömeges árváltoztatás dialógus "jelenlegi szűrt lista"
+  // köre EZT a predikátumot használja, a nyitott sor kivétele NÉLKÜL: az a
+  // kivétel a szerkesztés közbeni eltűnés ellen véd, egy tömeges művelet
+  // körét viszont hamisan tágítaná (backlog-92).
+  const illeszkedik = (x: Tetel): boolean => {
+    if (q && !nevEgyezik(x.nev, norm(q))) return false;
+    if (filter === 'noeur') return !x.ar.EUR;
+    if (filter === 'range') return x.ar.HUF?.tipus === 'SAVOS' || x.ar.EUR?.tipus === 'SAVOS';
+    if (filter === 'off') return !x.aktiv;
+    if (filter === 'fav') return x.gyakori;
+    return true;
+  };
+
   const keep = (x: Tetel): boolean => {
     // P0-7: a nyitott sort MINDIG megtartjuk, akkor is, ha egy időközbeni
     // szerkesztés (pl. az első EUR-számjegy begépelése a "Nincs EUR ár"
@@ -416,15 +435,7 @@ export default function PriceListAdminPage() {
     // számot. A blur-re commitáló NumberField (lásd lent) már önmagában is
     // sokat segít, de ez a védelem a commit UTÁNI állapotra is vonatkozik.
     if (x.id === open) return true;
-    // Mindkét nyelven keres, ugyanaz a szabály, mint a szerkesztő
-    // tétel-keresőjében (backlog-7): egy csak németül elgépelt/elnevezett
-    // tétel eddig itt egyáltalán nem volt megtalálható.
-    if (q && !nevEgyezik(x.nev, norm(q))) return false;
-    if (filter === 'noeur') return !x.ar.EUR;
-    if (filter === 'range') return x.ar.HUF?.tipus === 'SAVOS' || x.ar.EUR?.tipus === 'SAVOS';
-    if (filter === 'off') return !x.aktiv;
-    if (filter === 'fav') return x.gyakori;
-    return true;
+    return illeszkedik(x);
   };
 
   const grouped = useMemo(() => {
@@ -441,6 +452,21 @@ export default function PriceListAdminPage() {
 
   const missingEur = priceList.tetelek.filter((x) => !x.ar.EUR).length;
   const shown = grouped.reduce((s, g) => s + g.items.length, 0);
+
+  // `null`, ha nincs aktív keresés/szűrő -- ilyenkor a Tömeges árváltoztatás
+  // dialógus "jelenlegi szűrt lista" köre szó szerint azonos lenne a "Teljes
+  // árlista" körrel, ezért az az opció ott nem is jelenik meg (backlog-92,
+  // 2. döntés).
+  const szurtAktiv = q.trim() !== '' || filter !== 'all';
+  const szurtTetelek = useMemo(
+    () => (szurtAktiv ? priceList.tetelek.filter(illeszkedik) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [priceList, q, filter, szurtAktiv],
+  );
+
+  function applyTomegesAr(idk: Set<string>, params: TomegesArParams): Promise<boolean> {
+    return commit((prev) => ({ ...prev, tetelek: alkalmazTomegesArat(prev.tetelek, idk, params) }));
+  }
 
   return (
     <Box style={{ maxWidth: 940, margin: '0 auto' }}>
@@ -466,7 +492,12 @@ export default function PriceListAdminPage() {
           onDelete={deleteCategory}
           onSave={saveCategoriesDraft}
         />
-        <Button onClick={() => setUjTetelOpen(true)}>+ Új tétel</Button>
+        <Flex gap="2">
+          <Button variant="soft" color="gray" onClick={() => setTomegesArOpen(true)}>
+            Tömeges árváltoztatás
+          </Button>
+          <Button onClick={() => setUjTetelOpen(true)}>+ Új tétel</Button>
+        </Flex>
       </Flex>
 
       <UjTetelDialog
@@ -475,6 +506,15 @@ export default function PriceListAdminPage() {
         kategoriak={sortedKategoriak}
         tetelek={priceList.tetelek}
         onSave={mentUjTetel}
+      />
+
+      <TomegesArDialog
+        open={tomegesArOpen}
+        onOpenChange={setTomegesArOpen}
+        kategoriak={sortedKategoriak}
+        tetelek={priceList.tetelek}
+        szurtTetelek={szurtTetelek}
+        onApply={applyTomegesAr}
       />
 
       <TextField.Root

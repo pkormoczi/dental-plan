@@ -15,22 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 92. tétel — Tömeges árváltoztatás az árlista adminban
-  Egy árkorrekció ma 118 tételen egyenként, soronként kinyitott
-  szerkesztővel végezhető el — egy általános áremelés vagy egy euró-árak
-  szintjének igazítása ezért gyakorlatilag megvalósíthatatlan az adminban.
-  A tétel egy „Tömeges árváltoztatás" dialógust vezet be: kör-választó
-  (teljes árlista / egy kategória / a lapon éppen szűrt lista), egy
-  pénznem, irány + pozitív százalék, választható kerekítési lépés, élő
-  soronkénti előnézet régi → új értékkel és kipipálható kivételekkel,
-  végül összesített megerősítés. Automatikus árfolyam-szolgáltatás és
-  HUF↔EUR átváltás nincs, a két pénznem árai továbbra is egymástól
-  függetlenek. Kizárt hatókör: visszavonás/árlista-verziótörténet, abszolút
-  értékre állítás, tömeges kategória-áthelyezés vagy `gyakori`/`aktiv`
-  billentés, 0%-os „csak kerekítés" művelet. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-92-tomeges-arvaltoztatas-terv.md`
-
 ---
 ## NEM FEJLESZTÉS
 

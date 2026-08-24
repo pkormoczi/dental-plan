@@ -2364,3 +2364,28 @@ karbantartási kör négy önálló javítása.
   jelzései"; `docs/03-funkcionalis-spec.md` § "Terv másolása új
   tervként", § 3. "Sor mezői", § "Fázisok", § 4. "Előnézet és
   véglegesítés".
+
+### 92. tétel: Tömeges árváltoztatás az árlista adminban — KÉSZ
+
+- **Méret:** közepes — egy új domain-modul (`domain/tomegesAr.ts`, kísérő
+  teszttel), egy új dialógus-komponens
+  (`pages/priceListAdmin/TomegesArDialog.tsx`), az Árlista admin fejlécsora
+  és `keep()`-szűrője (`pages/PriceListAdminPage.tsx`), külön
+  teszt-fájlban a lap-szintű végigjátszás.
+- **Megvalósítás:** a fejlécsorban egy „Tömeges árváltoztatás" gomb
+  dialógust nyit: kör-választó (teljes árlista / egy kategória / a lapon
+  éppen szűrt lista), egy kötelező pénznem, irány + pozitív százalék
+  (emelésnél 0–100%, csökkentésnél 0–90%), és egy közös kerekítési létra
+  (a pénznem alapegységében kifejezve), amin a doki csak felső korlátot
+  választ — a ténylegesen használt lépés soronként a nyers változáshoz
+  igazodik, hogy a kerekítés sose lője túl nagyságrendekkel a kért
+  százalékot. Az élő előnézet-táblázat minden módosítható sort alapból
+  kipipálva mutat (opt-out kivétel-jelölés), a `null` ár és a 0-ra
+  csökkenő sor sosem kap értéket, a lábléc kihagyás-okonként bontott
+  darabszámokat ír ki összegzés nélkül. Egy összesített megerősítés után a
+  teljes módosítás EGYETLEN mentésben landol, egyetlen
+  `arlistaVerzio`-bélyeggel — a mentett tervek árait a művelet nem
+  érinti. Részletek: `docs/03-funkcionalis-spec.md` § 6. Kezelések és
+  árak "Tömeges árváltoztatás"; `docs/07-felulet-rendszer.md` §
+  Komponensek (a checkbox-listás dialógus fordított alapállapota és
+  annak indoka).
