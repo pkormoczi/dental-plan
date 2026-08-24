@@ -405,7 +405,7 @@ németnyelvű PDF-re kerülne.
 | Kezelési terv · | Behandlungsplan · |
 | Beavatkozás / Fog / Db / Egységár / Összeg | Leistung / Zahn / Menge / Einzelpreis / Betrag |
 | Fázis összesen | Phase gesamt |
-| Név / Telefon / Született / E-mail / TAJ / Lakcím | Name / Telefon / Geburtsdatum / E-Mail / TAJ-Nr. / Adresse |
+| Név / Telefon / Született / E-mail / TAJ / Lakcím | Name / Telefon / Geburtsdatum / E-Mail / TAJ / Adresse |
 | Adószám: / Cégjegyzékszám: | Steuernummer: / Handelsregisternummer: |
 | Érintett fogak | Betroffene Zähne |
 | Összesítés | Zusammenfassung |
@@ -438,6 +438,17 @@ lábléc jogi metaadata.
 kiskorú-figyelmeztetés és az érvényességi mondat **jogi lektorálást
 igényel**, mielőtt valódi német páciensnek szóló PDF-re kerülnek — lásd
 `README.md` „Nyitott kérdések".
+
+A soha át nem írt (auto-javasolt) terv-cím és a generált fázisnév-minta
+(`"N. kezelés"`) egy német terven lokalizálódik — a domináns kategória
+neve `nev.de`-re (ha van rá fordítás, egyébként a meglévő HU-visszaesési
+mechanizmus szerint), a fázisnév `"N. Behandlung"`-ra. A doki kézzel
+átírt terv-címe, illetve átnevezett fázisa VÁLTOZATLAN marad — a
+felismerés a tárolt szöveg pontos egyezésén alapul az auto-javasolt/
+generált mintával, nem heurisztikán. Ez KIZÁRÓLAG a PDF-en él
+(`app/src/pdf/pdfCimLokalizacio.ts`) — a szerkesztő UI-ja (Korábbi tervek
+fa, terv-mappa névjavaslat, „+ Fázis hozzáadása" gomb) szándékosan
+magyar marad.
 
 A tételnevek (`nev.de`) és a nyilatkozat/fizetési feltételek sablonjai
 (`nyilatkozat-de-v1.md`, `fizetesi-feltetelek-de-v1.md`) **külön

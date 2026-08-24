@@ -24,6 +24,7 @@ import type { Fazis, Plan, PriceList, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
 import { FOOTER_JOBB_SZELESSEG, footerExtraMagassag } from './footerLayout';
 import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
+import { pdfFazisNev, pdfTervCim } from './pdfCimLokalizacio';
 import { fillPlaceholders, parseBlocks, type MdBlock } from './markdownLite';
 import { ToothChartPdf } from './ToothChartPdf';
 import logoUrl from '../assets/logo.png';
@@ -273,12 +274,15 @@ function MiniHeader({ plan, L, fixed }: { plan: Plan; L: PdfLabels; fixed?: bool
 
 function PhaseTable({
   fazis,
+  pos,
   currency,
   nyelv,
   leirasokMutatasa,
   L,
 }: {
   fazis: Fazis;
+  /** 1-alapú pozíció a tervben -- a generált fázisnév-minta (pdfCimLokalizacio.ts) ehhez kötött. */
+  pos: number;
   currency: Plan['penznem'];
   nyelv: Plan['nyelv'];
   /** docs/02-domain-modell.md § Tétel-leírás -- `plan.leirasokMutatasa`. */
@@ -292,7 +296,7 @@ function PhaseTable({
           kell elférjen alatta, különben az egész blokk átkerül a következő
           oldalra. */}
       <View wrap={false} minPresenceAhead={20}>
-        <Text style={s.phaseTitle}>{fazis.megnevezes}</Text>
+        <Text style={s.phaseTitle}>{pdfFazisNev(fazis.megnevezes, pos, nyelv)}</Text>
         <View style={s.tableHeaderRow}>
           <Text style={[s.th, s.colBeavatkozas]}>{L.thBeavatkozas}</Text>
           <Text style={[s.th, s.colFog]}>{L.thFog}</Text>
@@ -499,7 +503,9 @@ export function TervDocument({
 
         {/* Cím + páciensadatok egy keep-together blokk. */}
         <View style={s.titleAndPatientBlock} wrap={false}>
-          {tervCim.trim() && <Text style={s.planTitle}>{tervCim}</Text>}
+          {tervCim.trim() && (
+            <Text style={s.planTitle}>{pdfTervCim(tervCim, plan, priceList)}</Text>
+          )}
           <View style={s.patientCols}>
             <View style={s.patientColLeft}>
               <Kv k={L.kvNev} v={plan.paciens.nev} />
@@ -527,6 +533,7 @@ export function TervDocument({
           <PhaseTable
             key={i}
             fazis={fazis}
+            pos={i + 1}
             currency={plan.penznem}
             nyelv={plan.nyelv}
             leirasokMutatasa={leirasokMutatasa}

@@ -2149,3 +2149,21 @@ karbantartási kör négy önálló javítása.
   > Előleg), finom elválasztóvonallal a Végösszeg alatt. A számítási
   forrás változatlanul `tervVegosszeg()`. Részletek:
   `docs/04-nyomtatvany-spec.md` § "Összegzés".
+
+### 80. tétel: PDF lokalizáció, dátum- és pénzformázás — KÉSZ
+
+- **Méret:** kicsi — a `pdf/labels.ts` TAJ-felirata, egy új
+  `pdf/pdfCimLokalizacio.ts` modul + kísérő teszt, egy kis refaktor a
+  `domain/tervCim.ts`-ben, bekötés a `pdf/TervDocument.tsx`-ben, a
+  nyomtatvány-spec és a `CLAUDE.md` frissítve.
+- **Megvalósítás:** a német TAJ-felirat szó szerint `TAJ` lett
+  (`TAJ-Nr.` helyett). Új, kizárólag a `pdf/` alól importálható
+  lokalizáló réteg: a soha át nem írt (auto-javasolt) terv-cím és a
+  generált fázisnév-minta egy német terven lokalizálódik (a domináns
+  kategória `nev.de`-je, illetve `"N. Behandlung"`), kézzel átírt/
+  átnevezett szöveget változatlanul hagyva — a szerkesztő UI-ja
+  (`javasoltTervCim`/`generaltFazisNev`) szándékosan magyar marad. A
+  doki a tervdokumentum EUR pénznemjel-cseréjét (szöveges `EUR` a `€`
+  szimbólum helyett) explicit felülbírálta: a `€` marad, a Ft-tal
+  konzisztensen, ehhez a ponthoz nem tartozott kódváltozás. Részletek:
+  `docs/04-nyomtatvany-spec.md` § "Nyelv".

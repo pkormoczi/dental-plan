@@ -133,7 +133,7 @@ export const PDF_LABELS: Record<Nyelv, PdfLabels> = {
     kvTelefon: 'Telefon',
     kvSzuletett: 'Geburtsdatum',
     kvEmail: 'E-Mail',
-    kvTaj: 'TAJ-Nr.',
+    kvTaj: 'TAJ',
     kvLakcim: 'Adresse',
     adoszam: 'Steuernummer:',
     cegjegyzekszam: 'Handelsregisternummer:',

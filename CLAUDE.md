@@ -1093,6 +1093,21 @@ részletei (véglegesített verzió)) segédfüggvényei/komponensei, szintén n
   először egy verzió puszta megtekintésekor is, nem csak
   piszkozat-betöltéskor
 
+A PDF-csak terv-cím/fázisnév lokalizáció (`docs/04-nyomtatvany-spec.md` §
+„Nyelv") segédfüggvényei, szintén ne írd újra őket:
+- `dominansKategoria(plan, priceList)` (`app/src/domain/tervCim.ts`) — a
+  legnagyobb ÖSSZEGŰ kategória a tervben (a tie-break szabály D28-mintájú
+  precedenciával), a teljes `Kategoria` objektummal; a `javasoltTervCim()`
+  ebből emeli ki a `.nev.hu`-t, ne duplikáld a tie-break ciklust máshol
+- `pdfTervCim(tervCim, plan, priceList)` / `pdfFazisNev(nev, pos, nyelv)`
+  (`app/src/pdf/pdfCimLokalizacio.ts`, csak a `pdf/` alól importálható, a
+  `pdf/labels.ts` mintájára) — a soha át nem írt (auto-javasolt) terv-cím,
+  illetve a generált fázisnév-minta német PDF-en való feloldása; kézzel
+  átírt/átnevezett szöveget változtatás nélkül hagynak. A `javasoltTervCim()`
+  és a `generaltFazisNev()`/`fazisNevGeneralt()` MAGUK szándékosan nem
+  kapnak `nyelv` paramétert — a szerkesztő UI-ja (Korábbi tervek fa,
+  terv-mappa névjavaslat, „+ Fázis hozzáadása" gomb) végig magyar marad
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

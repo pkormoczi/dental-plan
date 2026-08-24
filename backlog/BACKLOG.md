@@ -15,19 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 80. tétel — PDF lokalizáció, dátum- és pénzformázás
-  (a `backlog/redesign/` redesign-döntéssorozat DP-074 tétele) — a
-  nyelvfüggő ezres tagolás (C4) már az 52. tétel hatásköre, ez csak a
-  fennmaradó réseket zárja: `EUR` szöveges pénznemjel a `€` szimbólum
-  helyett (D438, `domain/money.ts`-t is érinti, koordinálandó az 52.
-  tétel implementációjával), a német TAJ-címke szó szerint `TAJ` marad
-  `TAJ-Nr.` helyett (D451), és egy új, kizárólag PDF-oldali lokalizáló
-  réteg az alapértelmezett (sosem kézzel átírt) terv-cím és fázisnév
-  német megjelenítéséhez (D454/D455) — a szerkesztő UI-ja (`javasoltTervCim`/
-  `generaltFazisNev`) MAGA változatlanul magyar marad. A döntéseket lásd
-  a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-80-pdf-lokalizacio-terv.md`
-
 ### 81. tétel — PDF fizetési feltételek és garancia
   (a `backlog/redesign/` redesign-döntéssorozat DP-075 tétele) — a
   `Plan.sablonVerzio` mező törlődik a sémából (C7/D595–D596): a mezőt

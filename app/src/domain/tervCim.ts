@@ -12,8 +12,15 @@ import type { Kategoria, Plan, PriceList } from './types';
 
 export const ALAPERTELMEZETT_TERV_CIM = 'Terv';
 
-/** Mindig magyar -- a kezelőfelület (a fájlnév-javaslat is) végig magyar marad. */
-export function javasoltTervCim(plan: Plan, priceList: PriceList): string {
+/**
+ * A legnagyobb ÖSSZEGŰ kategória a tervben (a tie-break szabályt lásd a
+ * fájl fejlécében), vagy `null`, ha nincs kategóriába sorolható sor. Ezt a
+ * `javasoltTervCim()` ÉS a `pdf/pdfCimLokalizacio.ts` PDF-cím-feloldója is
+ * hívja -- utóbbinak a teljes `Kategoria` objektumra van szüksége
+ * (`nev.de`-re is), nem csak a `javasoltTervCim()` HU-visszaesésű
+ * sztringjére.
+ */
+export function dominansKategoria(plan: Plan, priceList: PriceList): Kategoria | null {
   const tetelById = new Map(priceList.tetelek.map((t) => [t.id, t]));
   const kategoriaById = new Map(priceList.kategoriak.map((k) => [k.id, k]));
   const osszegByKategoria = new Map<string, number>();
@@ -47,7 +54,12 @@ export function javasoltTervCim(plan: Plan, priceList: PriceList): string {
     }
   }
 
-  return best ? best.nev.hu : ALAPERTELMEZETT_TERV_CIM;
+  return best;
+}
+
+/** Mindig magyar -- a kezelőfelület (a fájlnév-javaslat is) végig magyar marad. */
+export function javasoltTervCim(plan: Plan, priceList: PriceList): string {
+  return dominansKategoria(plan, priceList)?.nev.hu ?? ALAPERTELMEZETT_TERV_CIM;
 }
 
 /**
