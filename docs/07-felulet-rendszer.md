@@ -180,8 +180,13 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   `pages/PatientDetailPage.tsx`-en át), `pages/SettingsPage.tsx` mindhárom
   tabja (D49 — `pages/settings/RendeloTab.tsx`/`NyomtatvanyokTab.tsx`/
   `EgyebTab.tsx`, a lap egyetlen közös `dirty` state-jén át). Az Árlista
-  admin marad autosave (D31) — ott a primitívek nem hívási hely, csak
-  jövőbeli lehetőség.
+  admin Kategóriák paneljének attribútum-szerkesztése (HU/DE név, szín,
+  sorrend) szintén ezen a primitíven megy át
+  (`pages/PriceListAdminPage.tsx` `KategoriaPanel`/`KategoriaPanelBody`) —
+  a panel becsukása a tab-váltáshoz hasonlóan ténylegesen eldobja a
+  draftot, ezért kér megerősítést. A tétel-szerkesztés és a kategória
+  létrehozása/törlése ugyanazon a lapon VÁLTOZATLANUL autosave marad —
+  ezek nem illenek egy Mégse-vel visszavonható draft-modellbe.
 - Mezőnkénti összevető/szinkron-dialógus (D48, `components/TorzsadatDiffDialog.tsx`)
   — a fenti „Mezős felugró ablak” mintájának checkbox-listás változata:
   Radix Themes `Dialog`, mert tényleges mezőválasztás történik benne, nem

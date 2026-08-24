@@ -1524,6 +1524,24 @@ Az új kategória `id`-je a `nextKategoriaId()` max-alapú számításával
 készül — a `nextTetelId` párja, ugyanaz a D17-szerű elv (soha nem
 hossz-alapú, soha nem újrahasznosított).
 
+**Mentési modell.** A kategória-ATTRIBÚTUM-szerkesztés (HU/DE név, szín,
+fel/le sorrendezés) pufferelt draftban él, saját explicit Mentés/Mégse
+gombpárral — a doki végiggondolhatja a takarítást, mielőtt bármi a
+törzsadatba kerülne. A Mégse azonnali, megerősítés nélkül (csak a
+látható mezőket veszíti el). A panel becsukása és a NavBar-navigáció nem
+mentett módosítással viszont megerősítést kér, mert a panel becsukása
+ténylegesen eldobja a draftot. Ezzel szemben **a kategória létrehozása és
+törlése marad azonnali** — identitás-változtató műveletek (új
+`id`-foglalás, végleges törlés), amiket egy Mégse nem tud értelmesen
+visszavonni; egy folyamatban lévő, még nem mentett átnevezés/színezés/
+sorrendezés emiatt érintetlen marad egy közbeni létrehozás/törlés
+mellett is.
+
+A lecsukott kategória-sor egy szürke „nincs DE név” jelvényt mutat, ha a
+kategória `nev.de`-je hiányzik — ugyanaz a vizuális minta, mint a
+tétel-táblázat során; a jelvény a MÉG NEM MENTETT draftból olvas, tehát
+azonnal eltűnik, amint a doki beírja a német nevet.
+
 ---
 
 ## 7. Beállítások

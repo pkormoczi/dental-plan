@@ -15,17 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 84. tétel — Kategóriakezelés: mentési modell és hiányzó német név jelzése
-  (a `backlog/redesign/` redesign-döntéssorozat DP-081 tétele) — a
-  kategória-attribútumszerkesztés (név, szín, sorrend) a ma
-  dokumentált „az Árlista admin marad autosave” elvtől eltérve (D49)
-  explicit Mentés/Mégse + dirty guardra vált (D52) — a kategória
-  létrehozása/törlése marad azonnali. A panel bekapcsolódik a D46
-  `NavGuardContext`-be. A lecsukott kategória-sor is kap egy „nincs DE
-  név” jelvényt (D405), ugyanúgy mint a tétel-táblázat. A döntéseket
-  lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-84-kategoriakezeles-terv.md`
-
 ### 85. tétel — Alapértelmezett dokumentum-pénznem
   (a `backlog/redesign/` redesign-döntéssorozat DP-084 tétele) — a
   nyelv-defaultnak már ma is van Settings-mezője és UI-ja (feltétel

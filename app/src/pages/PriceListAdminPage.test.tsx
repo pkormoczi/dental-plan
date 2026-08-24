@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { Theme } from '@radix-ui/themes';
 import { beforeEach, describe, expect, it } from 'vitest';
 import PriceListAdminPage from './PriceListAdminPage';
+import NavBar from '../components/NavBar';
+import { NavGuardProvider } from '../components/NavGuardContext';
+import { AppStateProvider } from '../state/AppState';
+import { StorageProvider } from '../storage/StorageContext';
 import { TestProviders } from '../testUtils';
 import { todayIso } from '../domain/date';
 import { seedPriceList } from '../storage/seed/priceList';
@@ -13,6 +19,29 @@ function renderAdmin() {
     <TestProviders>
       <PriceListAdminPage />
     </TestProviders>,
+  );
+}
+
+// A Kategóriák panel NavBar-navigáció elleni védelme (`useNavGuard`) csak a
+// valódi NavBar-ral, közös router-fában igazolható -- a `SettingsPage.test.tsx`
+// `renderSettingsWithNavBar()`-jának mintája.
+function renderAdminWithNavBar() {
+  return render(
+    <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
+      <MemoryRouter initialEntries={['/arlista']}>
+        <StorageProvider>
+          <AppStateProvider>
+            <NavGuardProvider>
+              <NavBar />
+              <Routes>
+                <Route path="/arlista" element={<PriceListAdminPage />} />
+                <Route path="/" element={<div>Kezdőlap-próba</div>} />
+              </Routes>
+            </NavGuardProvider>
+          </AppStateProvider>
+        </StorageProvider>
+      </MemoryRouter>
+    </Theme>,
   );
 }
 
@@ -572,6 +601,11 @@ describe('PriceListAdminPage', () => {
       expect(toggle).toHaveAttribute('aria-expanded', 'true');
     }
 
+    async function saveCatPanel(user: ReturnType<typeof userEvent.setup>) {
+      await user.click(within(catPanel()).getByRole('button', { name: 'Mentés' }));
+      await within(catPanel()).findByRole('button', { name: 'Mentve ✓' });
+    }
+
     it('alapból csukva van, nyitva az összes kategóriát felsorolja', async () => {
       const user = userEvent.setup();
       renderAdmin();
@@ -626,7 +660,7 @@ describe('PriceListAdminPage', () => {
       });
     });
 
-    it('kategória átnevezése (HU/DE) perzisztálódik', async () => {
+    it('kategória átnevezése (HU/DE) Mentés előtt nem ír, Mentés után perzisztálódik', async () => {
       const user = userEvent.setup();
       renderAdmin();
       await openCatPanel(user);
@@ -641,12 +675,18 @@ describe('PriceListAdminPage', () => {
       const deInput = within(catPanel()).getByPlaceholderText('még nincs megadva');
       await user.type(deInput, 'Kieferorthopädie');
 
+      const beforeSave = readPriceList().kategoriak.find((k) => k.id === created.id)!;
+      expect(beforeSave.nev.hu).toBe('Új kategória');
+      expect(beforeSave.nev.de).toBeNull();
+
+      await saveCatPanel(user);
+
       const updated = readPriceList().kategoriak.find((k) => k.id === created.id)!;
       expect(updated.nev.hu).toBe('Fogszabályozás');
       expect(updated.nev.de).toBe('Kieferorthopädie');
     });
 
-    it('fel/le mozgatás megcseréli két szomszédos kategória sorrendjét, a szélső nyíl tiltva', async () => {
+    it('fel/le mozgatás Mentés előtt nem ír, Mentés után megcseréli két szomszédos kategória sorrendjét (a szélső nyíl tiltva)', async () => {
       const user = userEvent.setup();
       renderAdmin();
       await openCatPanel(user);
@@ -660,9 +700,147 @@ describe('PriceListAdminPage', () => {
 
       await user.click(within(firstRow).getByRole('button', { name: 'Kategória lejjebb' }));
 
+      const beforeSave = readPriceList().kategoriak;
+      expect(beforeSave.find((k) => k.id === first.id)!.sorrend).toBe(first.sorrend);
+      expect(beforeSave.find((k) => k.id === second.id)!.sorrend).toBe(second.sorrend);
+
+      await saveCatPanel(user);
+
       const updated = readPriceList().kategoriak;
       expect(updated.find((k) => k.id === first.id)!.sorrend).toBe(second.sorrend);
       expect(updated.find((k) => k.id === second.id)!.sorrend).toBe(first.sorrend);
+    });
+
+    it('Mégse visszaállítja az utolsó mentett állapotot, és tiltott amíg nincs módosítás', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      expect(within(catPanel()).getByRole('button', { name: 'Mégse' })).toBeDisabled();
+
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+      const huInput = within(catPanel()).getByDisplayValue('Új kategória');
+      await user.clear(huInput);
+      await user.type(huInput, 'Fogszabályozás');
+
+      const cancelButton = within(catPanel()).getByRole('button', { name: 'Mégse' });
+      expect(cancelButton).not.toBeDisabled();
+      await user.click(cancelButton);
+
+      // A visszaállított draft a legutóbb MENTETT állapotot mutatja -- a
+      // kategória LÉTREHOZÁSA azonnali volt, azt a Mégse nem érinti, csak
+      // az utána megkezdett átnevezést dobja el.
+      expect(within(catPanel()).getByDisplayValue('Új kategória')).toBeInTheDocument();
+      expect(within(catPanel()).getByRole('button', { name: 'Mégse' })).toBeDisabled();
+    });
+
+    it('a panel becsukása piszkozattal megerősítést kér -- Mégse a panelen tart, megerősítés eldobja és becsukja', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+      const huInput = within(catPanel()).getByDisplayValue('Új kategória');
+      await user.clear(huInput);
+      await user.type(huInput, 'Fogszabályozás');
+
+      const toggle = screen.getByRole('button', { name: /Kategóriák/ });
+      await user.click(toggle);
+
+      const dialog = await screen.findByRole('alertdialog');
+      expect(within(dialog).getByText('Nem mentett módosítás')).toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(document.getElementById('kategoriak-panel')).toBeInTheDocument();
+      expect(within(catPanel()).getByDisplayValue('Fogszabályozás')).toBeInTheDocument();
+
+      await user.click(toggle);
+      await user.click(await screen.findByRole('button', { name: 'Becsukás, módosítás elvetésével' }));
+      expect(document.getElementById('kategoriak-panel')).not.toBeInTheDocument();
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('mentetlen kategória-piszkozattal a NavBar-kattintás is megerősítést kér -- Mégse a lapon tart', async () => {
+      const user = userEvent.setup();
+      renderAdminWithNavBar();
+      await openCatPanel(user);
+
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+      const huInput = within(catPanel()).getByDisplayValue('Új kategória');
+      await user.clear(huInput);
+      await user.type(huInput, 'Fogszabályozás');
+
+      await user.click(screen.getByRole('link', { name: 'Kezdőlap' }));
+      const dialog = await screen.findByRole('alertdialog');
+      expect(within(dialog).getByText('Nem mentett módosítás')).toBeInTheDocument();
+      expect(screen.queryByText('Kezdőlap-próba')).not.toBeInTheDocument();
+
+      await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      expect(within(catPanel()).getByDisplayValue('Fogszabályozás')).toBeInTheDocument();
+    });
+
+    it('mentetlen kategória-piszkozattal a NavBar-kattintás megerősítés után ténylegesen navigál', async () => {
+      const user = userEvent.setup();
+      renderAdminWithNavBar();
+      await openCatPanel(user);
+
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+      const huInput = within(catPanel()).getByDisplayValue('Új kategória');
+      await user.clear(huInput);
+      await user.type(huInput, 'Fogszabályozás');
+
+      await user.click(screen.getByRole('link', { name: 'Kezdőlap' }));
+      await user.click(await screen.findByRole('button', { name: 'Váltás, módosítás elvetésével' }));
+
+      expect(await screen.findByText('Kezdőlap-próba')).toBeInTheDocument();
+    });
+
+    it('"+ Új kategória" és az üres kategória törlése piszkozat mellett is azonnali, és nem viszi el a folyamatban lévő szerkesztést', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      const first = readPriceList().kategoriak.slice().sort((a, b) => a.sorrend - b.sorrend)[0];
+      await user.click(within(catPanel()).getByText(first.nev.hu));
+      const huInput = within(catPanel()).getByDisplayValue(first.nev.hu);
+      await user.clear(huInput);
+      await user.type(huInput, 'Ideiglenes átnevezés');
+
+      const beforeCount = readPriceList().kategoriak.length;
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+
+      const afterAdd = readPriceList();
+      expect(afterAdd.kategoriak).toHaveLength(beforeCount + 1);
+      expect(afterAdd.kategoriak.find((k) => k.id === first.id)!.nev.hu).toBe(first.nev.hu);
+      // A "+ Új kategória" -- az eredeti `addCategory()`-hoz hasonlóan -- a
+      // friss kategóriára nyit szerkesztésre, tehát `first` sora ide-
+      // becsukódik; a piszkozat-név a lecsukott soron olvasható tovább.
+      expect(within(catPanel()).getByText('Ideiglenes átnevezés')).toBeInTheDocument();
+
+      const created = afterAdd.kategoriak.at(-1)!;
+      const createdRow = within(catPanel()).getByText(created.nev.hu).closest('tr')!;
+      await user.click(within(createdRow).getByRole('button', { name: 'Kategória törlése' }));
+
+      const afterDelete = readPriceList();
+      expect(afterDelete.kategoriak.some((k) => k.id === created.id)).toBe(false);
+      expect(within(catPanel()).getByText('Ideiglenes átnevezés')).toBeInTheDocument();
+    });
+
+    it('nev.de nélküli kategória lecsukott sora "nincs DE név" jelvényt mutat, még Mentés előtt is', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
+      const created = readPriceList().kategoriak.at(-1)!;
+      // Létrehozáskor a sor rögtön nyitva van -- becsukjuk, hogy a
+      // LECSUKOTT sor jelvényét vizsgáljuk.
+      await user.click(within(catPanel()).getByText(created.nev.hu));
+
+      const createdRow = within(catPanel()).getByText(created.nev.hu).closest('tr')!;
+      expect(within(createdRow).getByText('nincs DE név')).toBeInTheDocument();
     });
 
     it('a törlés gomb tiltva marad akkor is, ha egy kategória MINDEN tétele inaktív (8. döntés)', async () => {
@@ -713,7 +891,7 @@ describe('PriceListAdminPage', () => {
       expect(readPriceList().kategoriak.some((k) => k.id === created.id)).toBe(false);
     });
 
-    it('a színválasztó palettából kiválasztott szín perzisztálódik', async () => {
+    it('a színválasztó palettából kiválasztott szín Mentés előtt nem ír, Mentés után perzisztálódik', async () => {
       const user = userEvent.setup();
       renderAdmin();
       await openCatPanel(user);
@@ -722,6 +900,11 @@ describe('PriceListAdminPage', () => {
       const created = readPriceList().kategoriak.at(-1)!;
 
       await user.click(within(catPanel()).getByRole('radio', { name: 'Türkiz' }));
+
+      const beforeSave = readPriceList().kategoriak.find((k) => k.id === created.id)!;
+      expect(beforeSave.szin).toBe('#adb5bd');
+
+      await saveCatPanel(user);
 
       const updated = readPriceList().kategoriak.find((k) => k.id === created.id)!;
       expect(updated.szin).toBe('#20c997');

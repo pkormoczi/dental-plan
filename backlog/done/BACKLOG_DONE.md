@@ -2235,3 +2235,20 @@ karbantartási kör négy önálló javítása.
   `docs/03-funkcionalis-spec.md` § "6. Kezelések és árak" „Új tétel
   felvitele" / „Törlés helyett inaktiválás" / „Véglegesítési
   checklist".
+
+### 84. tétel: Kategóriakezelés: mentési modell és hiányzó német név jelzése — KÉSZ
+
+- **Méret:** kicsi-közepes — egyetlen fájl (`pages/PriceListAdminPage.tsx`)
+  és kísérő tesztek.
+- **Megvalósítás:** a Kategóriák panel attribútum-szerkesztése (HU/DE név,
+  szín, fel/le sorrendezés) a korábbi leütésenkénti autosave-ról pufferelt
+  draftra tért át, saját explicit Mentés/Mégse gombpárral — a panel
+  becsukása és a NavBar-navigáció nem mentett módosítással megerősítést
+  kér, a Mégse azonnali. A kategória létrehozása és törlése marad
+  azonnali, mert ezek identitás-változtató műveletek, amiket egy Mégse
+  nem tud értelmesen visszavonni; egy folyamatban lévő draft-szerkesztés
+  ettől érintetlen marad. A lecsukott kategória-sor mostantól egy szürke
+  „nincs DE név” jelvényt mutat, ha a kategóriának nincs német neve,
+  ugyanaz a vizuális minta, mint a tétel-táblázat során. Részletek:
+  `docs/03-funkcionalis-spec.md` § "6. Kezelések és árak" „Kategóriák
+  panel", `docs/07-felulet-rendszer.md` § "Komponensek".

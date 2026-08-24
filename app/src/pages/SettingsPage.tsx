@@ -1,7 +1,10 @@
 // Beállítások -- docs/03-funkcionalis-spec.md "7. Beállítások" (D49). Három
 // tab (Rendelő adatai / Nyomtatványok / Egyéb), mindegyik saját explicit
 // Mentés/Mégse + dirty guarddal -- a korábbi leütésenkénti autosave (D31)
-// ezen a lapon megszűnt, az Árlista admin azonban autosave marad.
+// ezen a lapon megszűnt (az Árlista admin Kategóriák paneljének
+// attribútum-szerkesztése azóta ugyanezt a mintát követi, a tétel-
+// szerkesztés és a kategória létrehozás/törlés viszont autosave marad,
+// lásd docs/03-funkcionalis-spec.md § Kategóriák panel).
 //
 // A Radix `Tabs.Content` unmountolja az inaktív tabot, ezért egyszerre csak
 // egy tab draftja él -- a `dirty` egyetlen state a lap szintjén (a
