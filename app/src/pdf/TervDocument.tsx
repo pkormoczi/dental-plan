@@ -47,6 +47,14 @@ const SAVOS_JEL_SZELESSEG = 8;
 // bekezdés így is törhet oldalra, csak nem közvetlenül a cím alatt.
 const SZEKCIO_CIM_MIN_PRESENCE = 36;
 
+// Az aláírásblokk (wrap={false}) nem maradhat egyedül a következő oldalra
+// ugorva, a nyilatkozat utolsó bekezdését árván hagyva az előző oldal
+// alján. A react-pdf pagination-je (@react-pdf/layout `shouldBreak`) az itt
+// megadott értéket az aláírásblokk tényleges aljával `Math.min`-eli -- elég,
+// ha ez nagyobb az aláírásblokk valós magasságánál (kiskorú megjegyzéssel
+// együtt is), nincs szükség pontos becslésre.
+const ALAIRAS_MIN_PRESENCE = 240;
+
 const s = {
   page: {
     padding: PAGE_MARGIN,
@@ -659,7 +667,13 @@ export function TervDocument({
             fixed
             render={({ subPageNumber }) => (subPageNumber > 1 ? L.nyilatkozatCimFolytatas : L.nyilatkozatCim)}
           />
-          <MdBlocks blocks={nyilatkozatBlocks} legal />
+          <MdBlocks blocks={nyilatkozatBlocks.slice(0, -1)} legal />
+          {/* Az utolsó bekezdés az aláírásblokk minPresenceAhead-jével együtt
+              -- ha az aláírásblokk nem fér ki, ez a bekezdés is átkerül vele
+              a következő oldalra, nem marad árván itt. */}
+          <View minPresenceAhead={ALAIRAS_MIN_PRESENCE}>
+            <MdBlocks blocks={nyilatkozatBlocks.slice(-1)} legal />
+          </View>
 
           <View style={s.signatureBlock} wrap={false}>
             <Text style={s.signatureDate}>

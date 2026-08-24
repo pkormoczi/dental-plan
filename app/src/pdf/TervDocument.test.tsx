@@ -46,7 +46,14 @@ vi.mock('@react-pdf/renderer', () => {
   return {
     Document: dom('document'),
     Page: dom('page'),
-    View: dom('view'),
+    // A `minPresenceAhead` propot -- ellentétben a többi react-pdf-specifikus
+    // proppal -- egy data-attribútumra képezzük le, hogy az árva-védelem
+    // wrapperei (TervDocument.tsx) szerkezetileg tesztelhetők legyenek.
+    View: ({ children, render, minPresenceAhead }: { children?: ReactNode; render?: RenderProp; minPresenceAhead?: number }) => (
+      <div data-mock-tag="view" data-min-presence-ahead={minPresenceAhead}>
+        {render ? render(pageState) : children}
+      </div>
+    ),
     Text: (props: { children?: ReactNode; render?: RenderProp }) => (
       <span>{props.render ? props.render(pageState) : props.children}</span>
     ),
@@ -631,6 +638,30 @@ describe('TervDocument -- 76. tétel: kompakt fejléc és folytatólagos cím', 
       />,
     );
     expect(screen.getByText('Erklärung – Fortsetzung')).toBeInTheDocument();
+  });
+});
+
+describe('TervDocument -- 82. tétel: nyilatkozat árva-védelem', () => {
+  it('a nyilatkozat utolsó bekezdése az aláírásblokkal együtt árva-védett wrapperben van, a korábbiak nem', () => {
+    const plan = buildPlan(false, 'hu', AZONOS_AR);
+    const { container } = render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly={false}
+        nyilatkozatMd={'Első bekezdés.\n\nMásodik, utolsó bekezdés.'}
+        fizetesiFeltetelekMd=""
+        garanciaMd=""
+        tervCim=""
+        toothChartPng={null}
+      />,
+    );
+    const cBlokk = container.querySelectorAll<HTMLElement>('[data-mock-tag="page"]')[1];
+    const elso = within(cBlokk).getByText('Első bekezdés.');
+    const utolso = within(cBlokk).getByText('Második, utolsó bekezdés.');
+    expect(elso.closest('[data-min-presence-ahead]')).toBeNull();
+    expect(utolso.closest('[data-min-presence-ahead]')).not.toBeNull();
   });
 });
 

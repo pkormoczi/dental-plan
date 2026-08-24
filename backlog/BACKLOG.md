@@ -15,20 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 82. tétel — PDF nyilatkozat és aláírásblokk
-  (a `backlog/redesign/` redesign-döntéssorozat DP-076 tétele) — a
-  `Plan.csakAjanlat` mezőre állás már megvan (`docs/02-domain-modell.md`
-  § Csak ajánlat mód, D75), ez a MEGLÉVŐ `offerOnly` prop forrását
-  cseréli React state-ről a mentett mezőre, a PDF-oldali logikát
-  (`{!offerOnly && ...}`) változatlanul hagyva. Az aláírásblokk AS-IS
-  elrendezése, a nyilatkozat folytatólagos
-  „– folytatás" címe (D587, a react-pdf `subPageNumber`-ével — az
-  EGYETLEN hely, ahol a 76. tétel elvetett folytatólagos-cím mechanizmusa
-  mégis natívan megvalósul), és egy új árva-védelem az utolsó bekezdés és
-  az aláírásblokk között (D584) kerül be. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-82-pdf-nyilatkozat-alairas-terv.md`
-
 ### 83. tétel — Kezeléslista/editor: aktiválási modell és deaktiválás megerősítése
   (a `backlog/redesign/` redesign-döntéssorozat DP-080 tétele) — a
   jelenlegi, `docs/03`-ban dokumentált azonnali-aktiválás (Új tétel

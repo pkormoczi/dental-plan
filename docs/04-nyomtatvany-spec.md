@@ -407,6 +407,12 @@ A blokk mindig új fizikai oldalon indul. Ha a jogi szöveg több oldalra
 fut, a minifejléc alatt a szakaszcím a második és minden további fizikai
 oldalon „Nyilatkozat – folytatás" alakban ismétlődik (lásd „Fejléc" fent).
 
+Az aláírásblokk (dátumsor + a két aláírás-oszlop) mindig egyben marad,
+sosem szakad szét oldaltörésnél. Ha nem fér ki az oldal aljára, a
+nyilatkozat utolsó teljes bekezdése is vele együtt átkerül a következő
+oldalra — nem maradhat egyedül árván az előző oldal alján, az
+aláírástól elszakítva.
+
 ## Nyelv (D21)
 
 A nyomtatvány fix feliratai, a dátumformátum és a sablon a **terv

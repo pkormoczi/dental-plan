@@ -2202,3 +2202,17 @@ karbantartási kör négy önálló javítása.
   dokinak, mely szakaszok maradnak ki. Részletek:
   `docs/04-nyomtatvany-spec.md` § "2. blokk — fizetési feltételek és
   garancia" és `docs/03-funkcionalis-spec.md` § "Sablon-placeholder őr".
+
+### 82. tétel: PDF nyilatkozat és aláírásblokk — KÉSZ
+
+- **Méret:** kicsi — a tétel eredeti hatóköréből az `offerOnly` prop
+  `plan.csakAjanlat`-ra állítása és a nyilatkozat folytatólagos
+  „– folytatás" címe időközben más tételekben már megvalósult; egyedül
+  az aláírásblokk és a nyilatkozat utolsó bekezdése közti árva-védelem
+  maradt nyitott.
+- **Megvalósítás:** a nyilatkozat utolsó bekezdése egy `minPresenceAhead`-
+  del ellátott `View`-ba került, a fáziscím/szakaszcím-védelem meglévő
+  mintáján — ha az egyben maradó (`wrap={false}`) aláírásblokk nem fér ki
+  az oldal aljára, ez a bekezdés is átkerül vele a következő oldalra,
+  nem marad árván elszakítva az aláírástól. Részletek:
+  `docs/04-nyomtatvany-spec.md` § "3. blokk — nyilatkozat és aláírás".
