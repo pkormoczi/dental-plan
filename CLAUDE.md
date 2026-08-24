@@ -947,6 +947,14 @@ ne írd újra őket:
   negatív számot. A szerkesztő (`PlanEditorPage.tsx` `ElolegBlokk`), a
   véglegesítés-őr (`domain/veglegesitesOr.ts` `elolegTullep` mező) és a
   nyomtatvány (`pdf/TervDocument.tsx`) mind ezeket hívja
+- `elolegSzazalekbol(fizetendo, szazalek)` / `ELOLEG_SZAZALEK_KEREKITES`
+  (`app/src/domain/totals.ts`, `docs/03-funkcionalis-spec.md` § Előleg) —
+  a szerkesztő Ft/% módváltójának egyetlen átváltó függvénye: a 0–100
+  közé szorított százalékot a Fizetendőből abszolút összeggé számolja,
+  felfelé kerekítve a legközelebbi 1000 pénznem-alapegységre. A `Plan`-en
+  ettől függetlenül továbbra is kizárólag `elolegOsszeg` tárolódik — a
+  százalék sosem éri el a fájlt, csak a fenti `elolegOsszegek()`/
+  `elolegTullepi()` bemenetét adja
 - `NumberField` (`app/src/components/NumberField.tsx`) opcionális
   `onBlur?: () => void` propja — KIZÁRÓLAG „a mező most vesztette el a
   fókuszt” jelzéshez (pl. egy kötelező-mező hiba, ami csak blur/Enter után
@@ -1096,9 +1104,11 @@ részletei (véglegesített verzió)) segédfüggvényei/komponensei, szintén n
 A PDF-csak terv-cím/fázisnév lokalizáció (`docs/04-nyomtatvany-spec.md` §
 „Nyelv") segédfüggvényei, szintén ne írd újra őket:
 - `dominansKategoria(plan, priceList)` (`app/src/domain/tervCim.ts`) — a
-  legnagyobb ÖSSZEGŰ kategória a tervben (a tie-break szabály D28-mintájú
-  precedenciával), a teljes `Kategoria` objektummal; a `javasoltTervCim()`
-  ebből emeli ki a `.nev.hu`-t, ne duplikáld a tie-break ciklust máshol
+  legnagyobb ÖSSZEGŰ kategória a tervben (a fogtérkép ütközésfeloldásával
+  azonos precedenciaelv: holtversenynél a kisebb `sorrend`-ű kategória
+  nyer, `docs/07-felulet-rendszer.md` § Szín, forma, sűrűség), a teljes
+  `Kategoria` objektummal; a `javasoltTervCim()` ebből emeli ki a
+  `.nev.hu`-t, ne duplikáld a tie-break ciklust máshol
 - `pdfTervCim(tervCim, plan, priceList)` / `pdfFazisNev(nev, pos, nyelv)`
   (`app/src/pdf/pdfCimLokalizacio.ts`, csak a `pdf/` alól importálható, a
   `pdf/labels.ts` mintájára) — a soha át nem írt (auto-javasolt) terv-cím,

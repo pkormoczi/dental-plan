@@ -2167,3 +2167,18 @@ karbantartási kör négy önálló javítása.
   szimbólum helyett) explicit felülbírálta: a `€` marad, a Ft-tal
   konzisztensen, ehhez a ponthoz nem tartozott kódváltozás. Részletek:
   `docs/04-nyomtatvany-spec.md` § "Nyelv".
+
+### 91. tétel: Előleg megadása százalékban is — KÉSZ
+
+- **Méret:** kicsi — egy új tiszta függvény (`domain/totals.ts`), egy
+  additív `ChipGroup` prop, a szerkesztő Előleg blokkjának bővítése
+  (`pages/PlanEditorPage.tsx`), kísérő tesztek, a funkcionális spec és a
+  `CLAUDE.md` frissítve.
+- **Megvalósítás:** a szerkesztő Előleg blokkja Ft/% módváltót kapott — a
+  százalék kizárólag beviteli segéd, a bevitel pillanatában a
+  Fizetendőből abszolút összeggé számol (felfelé kerekítve a legközelebbi
+  1000 pénznem-alapegységre), és sem a mód, sem a beírt százalék nem
+  kerül a `Plan`-re: a fájlban továbbra is kizárólag az abszolút összeg
+  tárolódik, a nyomtatvány, a sablon és a véglegesítés-őr érintetlen.
+  Kezelési sor nélkül (0 Fizetendő) a módváltó nem jelenik meg. Részletek:
+  `docs/03-funkcionalis-spec.md` § "Előleg".

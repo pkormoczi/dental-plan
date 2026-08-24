@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { computeOsszesitok, elolegOsszegek, elolegTullepi, osszesitokElter, tervVegosszeg } from './totals';
+import {
+  computeOsszesitok,
+  elolegOsszegek,
+  elolegSzazalekbol,
+  elolegTullepi,
+  osszesitokElter,
+  tervVegosszeg,
+} from './totals';
 import type { Fazis } from './types';
 
 const fazisok: Fazis[] = [
@@ -128,5 +135,35 @@ describe('elolegTullepi (D66)', () => {
   it('hamis egyenlőségnél és az alatt', () => {
     expect(elolegTullepi(45000, 45000)).toBe(false);
     expect(elolegTullepi(45000, 40000)).toBe(false);
+  });
+});
+
+describe('elolegSzazalekbol (91. tétel: százalékos előleg-bevitel)', () => {
+  it('pontosan osztható összegnél nem kerekít fölöslegesen', () => {
+    expect(elolegSzazalekbol(780000, 30)).toBe(234000);
+  });
+
+  it('maradékos összegnél felfelé kerekít a legközelebbi 1000 Ft-ra', () => {
+    expect(elolegSzazalekbol(781234, 30)).toBe(235000);
+  });
+
+  it('EUR (cent) összegnél a legközelebbi 1000 centre (10 €) kerekít', () => {
+    expect(elolegSzazalekbol(214560, 30)).toBe(65000);
+  });
+
+  it('0% mindig 0 összeget ad', () => {
+    expect(elolegSzazalekbol(780000, 0)).toBe(0);
+  });
+
+  it('100% fölötti bemenet 100%-ként számol (szorítás)', () => {
+    expect(elolegSzazalekbol(780000, 101)).toBe(elolegSzazalekbol(780000, 100));
+  });
+
+  it('0 fizetendőnél bármely százalék 0 összeget ad', () => {
+    expect(elolegSzazalekbol(0, 30)).toBe(0);
+  });
+
+  it('100% egy nem 1000-többszörös fizetendőn a fizetendő FÖLÉ kerekít', () => {
+    expect(elolegSzazalekbol(780400, 100)).toBe(781000);
   });
 });

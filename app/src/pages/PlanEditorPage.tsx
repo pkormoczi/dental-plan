@@ -33,6 +33,7 @@ import {
   TrashIcon,
   UpdateIcon,
 } from '@radix-ui/react-icons';
+import ChipGroup from '../components/ChipGroup';
 import HuChip from '../components/HuChip';
 import NumberField from '../components/NumberField';
 import { useNyelviReview } from '../components/NyelviReviewContext';
@@ -52,7 +53,15 @@ import { nincsListaar } from '../domain/penznemValtas';
 import { sorElteres } from '../domain/sorElteres';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
 import { buildToothVisualStates, type FogterkepAllapot } from '../domain/toothVisual';
-import { elolegOsszegek, elolegTullepi, fazisOsszeg, sorokListaOsszeg, sorokOsszeg, tervVegosszeg } from '../domain/totals';
+import {
+  elolegOsszegek,
+  elolegSzazalekbol,
+  elolegTullepi,
+  fazisOsszeg,
+  sorokListaOsszeg,
+  sorokOsszeg,
+  tervVegosszeg,
+} from '../domain/totals';
 import type { Fazis, Nyelv, Penznem, Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import ItemPicker from './planEditor/ItemPicker';
@@ -1991,10 +2000,12 @@ function EgyediVegosszegBlokk({
   );
 }
 
+type ElolegMod = 'osszeg' | 'szazalek';
+
 /**
- * Előleg-kapcsoló (backlog-9, D66: abszolút összeg). A `Summary` ALATT áll,
- * mert az előleg a végösszegből számol -- ez az a pillanat, amikor a doki
- * amúgy is azt nézi.
+ * Előleg-kapcsoló (backlog-9, D66: abszolút összeg; a 91. tétel a
+ * százalékos bevitellel bővítette). A `Summary` ALATT áll, mert az előleg a
+ * végösszegből számol -- ez az a pillanat, amikor a doki amúgy is azt nézi.
  *
  * A `Plan` továbbra is egyetlen nullázható mezőt hordoz (`elolegOsszeg`,
  * `null` = nincs előleg-sor a nyomtatványon). A "bekapcsolva, de a doki még
@@ -2003,6 +2014,11 @@ function EgyediVegosszegBlokk({
  * nélkül (D517), és amíg a doki nem commitál egy összeget, a `Plan`-en
  * marad `null`. Ez zárja ki, hogy egy "bekapcsolt, de értelmetlen" állapot
  * perzisztálódjon.
+ *
+ * A Ft/% módváltó (`mod`) és a %-mező piszkozata (`szazalek`) SZINTÉN
+ * komponens-lokális -- a százalék csak beviteli segéd `elolegSzazalekbol()`-
+ * hoz (docs/03-funkcionalis-spec.md § Előleg), a `Plan`-en mindig a belőle
+ * számolt abszolút összeg landol.
  */
 function ElolegBlokk({
   grand,
@@ -2018,7 +2034,9 @@ function ElolegBlokk({
   onChange: (next: number | null) => void;
 }) {
   const [on, setOn] = useState(() => elolegOsszeg != null);
-  // Van-e ÉRVÉNYES, commitált összeg a mezőben -- ezt nézi a kötelező-mező
+  const [mod, setMod] = useState<ElolegMod>('osszeg');
+  const [szazalek, setSzazalek] = useState<number | null>(null);
+  // Van-e ÉRVÉNYES, commitált érték a mezőben -- ezt nézi a kötelező-mező
   // hiba (D518: csak blur/véglegesítési kísérlet után), NEM a prop-ot: az
   // `onChange` a szülő state-jét frissíti, ami csak a KÖVETKEZŐ renderben ér
   // vissza propként. Ugyanígy nem lehet React state sem: az `onCommit`-tal
@@ -2027,14 +2045,27 @@ function ElolegBlokk({
   // -- ezért ref, nem state.
   const helyesErtekRef = useRef(elolegOsszeg != null);
   const [hibaLatszik, setHibaLatszik] = useState(false);
+  // A LEGUTÓBB, ebből a komponensből kiküldött összeg -- megkülönbözteti a
+  // saját `onChange` visszapattanását (a mód NEM vált vissza, lásd lent) egy
+  // valódi külső prop-változástól (terv betöltése/másolása).
+  const utoljaraKuldottRef = useRef(elolegOsszeg);
 
-  // Külső prop-változást követ (pl. terv betöltése/másolása) -- a doki
-  // épp folyamatban lévő, még nem commitált gépelését a NumberField saját
-  // `focused`-őre már megvédi, ez csak a kapcsoló ki/be állapotát.
+  // Külső prop-változást követ (pl. terv betöltése/másolása) -- a doki épp
+  // folyamatban lévő, még nem commitált gépelését a NumberField saját
+  // `focused`-őre már megvédi, ez csak a kapcsoló ki/be és a mód állapotát.
   useEffect(() => {
     setOn(elolegOsszeg != null);
     helyesErtekRef.current = elolegOsszeg != null;
+    if (elolegOsszeg !== utoljaraKuldottRef.current) {
+      setMod('osszeg');
+      setSzazalek(null);
+    }
   }, [elolegOsszeg]);
+
+  function kuld(next: number | null) {
+    utoljaraKuldottRef.current = next;
+    onChange(next);
+  }
 
   const tullepi = on && elolegOsszeg != null && elolegTullepi(grand, elolegOsszeg);
   const osszegek = on && elolegOsszeg != null ? elolegOsszegek(grand, elolegOsszeg) : null;
@@ -2052,9 +2083,11 @@ function ElolegBlokk({
               return;
             }
             setOn(false);
+            setMod('osszeg');
+            setSzazalek(null);
             helyesErtekRef.current = false;
             setHibaLatszik(false);
-            onChange(null);
+            kuld(null);
           }}
         />
         Ez a terv fogtechnikai munkát tartalmaz — előleg feltüntetése
@@ -2066,36 +2099,110 @@ function ElolegBlokk({
             <Text size="2" color="gray">
               Előleg
             </Text>
-            <Box style={{ width: 120 }}>
-              <NumberField
-                value={elolegOsszeg}
-                unit={currency}
-                min={0}
-                autoFocus
-                aria-label="Előleg összege"
-                textAlign="right"
-                onCommit={(v) => {
-                  // Explicit 0 -- canonical disable: a kapcsoló automatikusan
-                  // kikapcsol, a mező eltűnik (D519, "0 összegű előleg" nem
-                  // értelmes állapot).
-                  if (v === 0) {
-                    setOn(false);
-                    helyesErtekRef.current = false;
-                    setHibaLatszik(false);
-                    onChange(null);
-                    return;
-                  }
-                  helyesErtekRef.current = true;
-                  setHibaLatszik(false);
-                  onChange(Math.max(0, Math.round(v)));
-                }}
-                onBlur={() => setHibaLatszik(!helyesErtekRef.current)}
-              />
-            </Box>
+            <Flex align="center" gap="2">
+              {grand > 0 && (
+                <ChipGroup
+                  value={mod}
+                  onChange={(v) => {
+                    setMod(v);
+                    if (v === 'szazalek') setSzazalek(null);
+                  }}
+                  options={[
+                    ['osszeg', currency === 'EUR' ? '€' : 'Ft'],
+                    ['szazalek', '%'],
+                  ]}
+                  ariaLabel="Előleg megadása"
+                />
+              )}
+              <Box style={{ width: 120 }}>
+                {mod === 'szazalek' && grand > 0 ? (
+                  <NumberField
+                    // Külön `key` a két ágon -- enélkül React ugyanazt a
+                    // `NumberField`-példányt (és mögötte az `<input>` DOM-
+                    // node-ot) frissítené módváltáskor, az `autoFocus` pedig
+                    // csak ÚJ node létrejöttekor tüzel.
+                    key="szazalek"
+                    value={szazalek}
+                    min={0}
+                    autoFocus
+                    aria-label="Előleg százaléka"
+                    textAlign="right"
+                    onCommit={(v) => {
+                      // A NumberField `min={0}`-ja már kizárja a negatívot,
+                      // a felső 100-as korlát itt szorít -- a felkerekítés
+                      // (elolegSzazalekbol) ettől MÉG a fizetendő fölé is
+                      // vihet, azt a MEGLÉVŐ `tullepi` ág fogja meg.
+                      const clamped = Math.min(100, v);
+                      const ujOsszeg = elolegSzazalekbol(grand, clamped);
+                      // 0% -- ugyanaz a canonical disable, mint a 0 Ft (lásd az
+                      // összeg-módú ág lent): egy "0 összegű előleg" nem
+                      // értelmes állapot.
+                      if (ujOsszeg === 0) {
+                        setOn(false);
+                        setMod('osszeg');
+                        setSzazalek(null);
+                        helyesErtekRef.current = false;
+                        setHibaLatszik(false);
+                        kuld(null);
+                        return;
+                      }
+                      setSzazalek(clamped);
+                      helyesErtekRef.current = true;
+                      setHibaLatszik(false);
+                      kuld(ujOsszeg);
+                    }}
+                    onBlur={() => setHibaLatszik(!helyesErtekRef.current)}
+                  />
+                ) : (
+                  <NumberField
+                    key="osszeg"
+                    value={elolegOsszeg}
+                    unit={currency}
+                    min={0}
+                    autoFocus
+                    aria-label="Előleg összege"
+                    textAlign="right"
+                    onCommit={(v) => {
+                      // Explicit 0 -- canonical disable: a kapcsoló
+                      // automatikusan kikapcsol, a mező eltűnik (D519, "0
+                      // összegű előleg" nem értelmes állapot).
+                      if (v === 0) {
+                        setOn(false);
+                        helyesErtekRef.current = false;
+                        setHibaLatszik(false);
+                        kuld(null);
+                        return;
+                      }
+                      helyesErtekRef.current = true;
+                      setHibaLatszik(false);
+                      kuld(Math.max(0, Math.round(v)));
+                    }}
+                    onBlur={() => setHibaLatszik(!helyesErtekRef.current)}
+                  />
+                )}
+              </Box>
+            </Flex>
           </Flex>
+          {grand === 0 && (
+            <Text as="div" size="1" color="gray" mt="1">
+              Százalékos megadás kezelési sorok felvétele után.
+            </Text>
+          )}
+          {mod === 'szazalek' && grand > 0 && elolegOsszeg != null && (
+            <Flex justify="between" align="baseline" mt="1">
+              <Text size="2" color="gray">
+                Előleg összege
+              </Text>
+              <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                {formatMoney(elolegOsszeg, currency, nyelv)}
+              </Text>
+            </Flex>
+          )}
           {hibaLatszik && (
             <Text as="div" size="1" mt="1" style={{ color: t.danger }}>
-              Add meg az előleg összegét.
+              {mod === 'szazalek' && grand > 0
+                ? 'Add meg az előleg százalékát.'
+                : 'Add meg az előleg összegét.'}
             </Text>
           )}
           {tullepi && (

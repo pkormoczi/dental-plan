@@ -134,20 +134,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   checklist-infók helye oda tartozik. Terv még nincs hozzá, a `/planning`
   futtatása szükséges implementáció előtt.
 
-### 91. tétel — Előleg megadása százalékban is
-  A 64. tétel (D66) az előleget százalékos megadásról abszolút összegre
-  váltotta; a doki viszont gyakran arányban állapodik meg a pácienssel
-  (30%/50%), és ezt ma fejben kell összegre váltania. A tétel a szerkesztő
-  Előleg blokkjába egy összeg/százalék módváltót tesz: százalékos
-  megadásnál a beírt arány a Fizetendőből azonnal összeggé konvertálódik
-  (felfelé kerekítve a legközelebbi 1000 pénznem-alapegységre), és a
-  `Plan`-en változatlanul az abszolút `elolegOsszeg` tárolódik — nincs
-  sémaváltozás. Explicit kizárva: a százalék visszahozása tárolt
-  igazságként (élő, sorokat követő számítással), a nyomtatvány/sablon/
-  séma/véglegesítés-őr bármilyen módosítása, és az Egyedi végösszeg
-  százalékos bevitele. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-91-eloleg-szazalek-bevitel-terv.md`
-
 ---
 ## NEM FEJLESZTÉS
 

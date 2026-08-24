@@ -643,6 +643,26 @@ Bekapcsolva a nyomtatvány terv-és-ár blokkja két új sort kap, és a
 fizetési feltételek szövege is ugyanezt az összeget mondja (lásd
 `docs/04-nyomtatvany-spec.md`).
 
+Az összeg mellett a doki százalékban is megadhatja az előleget — egy
+Ft/% módváltó dönti el, melyik mező látszik. A százalék KIZÁRÓLAG
+beviteli segéd: a bevitel pillanatában a Fizetendőből (a terv-szintű
+egyedi végösszeggel már korrigált értékből) abszolút összeggé
+konvertálódik, felfelé kerekítve a legközelebbi 1000 pénznem-
+alapegységre (HUF: 1000 Ft, EUR: 1000 cent = 10 €) — a `Plan`-en
+továbbra is kizárólag ez a számolt összeg tárolódik, sem a mód, sem a
+beírt százalék nem perzisztálódik. A módváltó a szerkesztő komponensének
+lokális állapota: újratöltés, verziónyitás vagy másolás után a blokk
+mindig összeg-módból indul, a mentett összeggel. Módváltáskor a %-mező
+üresen, azonnali fókusszal jelenik meg, a már beírt összeg és a
+fennmaradó rész addig változatlan marad. A %-bevitel 0–100 közé
+szorítva; a felkerekítés emiatt még mindig a Fizetendő fölé viheti az
+összeget — ilyenkor ugyanaz az inline hard error és véglegesítési blokk
+lép be, mint egy kézzel beírt, túl magas összegnél. A `0` százalék
+ugyanúgy a kapcsoló automatikus kikapcsolását váltja ki, mint a `0`
+összeg. Amíg a tervnek nincs egyetlen kezelési sora sem (a Fizetendő
+`0`), a módváltó nem jelenik meg — csak az összeg-mező, egy rövid
+magyarázó szöveggel.
+
 ### Tétel-leírások nyomtatása
 
 Az Előleg blokk alatt egy kapcsoló: *„Tétel-leírások nyomtatása"* —

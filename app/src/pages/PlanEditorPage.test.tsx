@@ -283,6 +283,118 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     });
   });
 
+  // A doki gyakran arányban állapodik meg a pácienssel, nem összegben --
+  // ez a módváltó egy beviteli segéd, a `Plan`-en változatlanul az
+  // abszolút összeg marad az egyetlen tárolt érték.
+  describe('az előleg-kapcsoló Ft/% módváltója', () => {
+    async function felvesz(user: ReturnType<typeof userEvent.setup>) {
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+    }
+
+    it('módváltáskor a %-mező üresen, fókuszáltan jelenik meg, a meglévő összeg változatlan marad', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+      const osszeg = await screen.findByLabelText('Előleg összege');
+      await user.type(osszeg, '10000');
+      await user.tab();
+      expect(await screen.findByText('15 000 Ft')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('radio', { name: '%' }));
+
+      const szazalek = await screen.findByLabelText('Előleg százaléka');
+      expect(szazalek).toHaveValue('');
+      await waitFor(() => expect(szazalek).toHaveFocus());
+      // Az elolegOsszeg és a fennmaradó rész nem mozdul, amíg nincs commit.
+      expect(screen.getByText('10 000 Ft')).toBeInTheDocument();
+      expect(screen.getByText('15 000 Ft')).toBeInTheDocument();
+
+      await user.tab();
+      // Puszta módváltás + kilépés nem írja át az összeget.
+      expect(screen.getByText('10 000 Ft')).toBeInTheDocument();
+      expect(screen.getByText('15 000 Ft')).toBeInTheDocument();
+    });
+
+    it('a százalékból számolt összeg felfelé kerekedik a legközelebbi ezerre', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+      await user.click(screen.getByRole('radio', { name: '%' }));
+
+      const szazalek = await screen.findByLabelText('Előleg százaléka');
+      // 25 000 Ft fizetendő 30%-a 7500 -> felkerekítve 8000 Ft.
+      await user.type(szazalek, '30');
+      await user.tab();
+
+      // hu-HU Intl-formázás: 4-jegyű összegnél (8000) nincs ezres elválasztó.
+      expect(await screen.findByText('8000 Ft')).toBeInTheDocument();
+      expect(screen.getByText('17 000 Ft')).toBeInTheDocument();
+    });
+
+    it('0% beírása után blur/Enterre a kapcsoló automatikusan kikapcsol', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+      await user.click(screen.getByRole('radio', { name: '%' }));
+
+      const szazalek = await screen.findByLabelText('Előleg százaléka');
+      await user.type(szazalek, '0');
+      await user.tab();
+
+      await waitFor(() =>
+        expect(screen.queryByLabelText('Előleg százaléka')).not.toBeInTheDocument(),
+      );
+      expect(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ })).not.toBeChecked();
+    });
+
+    it('a felkerekítés miatt a fizetendő fölé kerülő összeg a meglévő hard errort váltja ki', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await felvesz(user);
+
+      // A listaár 25 000 Ft -- egy nem 1000-többszörösre írjuk át, hogy
+      // 100%-nál a felkerekítés ténylegesen a fizetendő FÖLÉ vigyen.
+      const actualPriceInput = screen.getByDisplayValue('25000');
+      await user.clear(actualPriceInput);
+      await user.type(actualPriceInput, '20001');
+      await user.tab();
+
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+      await user.click(screen.getByRole('radio', { name: '%' }));
+
+      const szazalek = await screen.findByLabelText('Előleg százaléka');
+      await user.type(szazalek, '100');
+      await user.tab();
+
+      expect(await screen.findByText(/Az előleg nagyobb, mint a fizetendő/)).toBeInTheDocument();
+      expect(screen.getByText('—')).toBeInTheDocument();
+    });
+
+    it('kezelési sor nélkül nincs módváltó, csak a magyarázó szöveg', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      // Nincs tétel felvéve -- csak megvárjuk, hogy az app betöltsön.
+      await screen.findByPlaceholderText(/Tétel keresése/);
+
+      await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+
+      expect(screen.queryByRole('radio', { name: '%' })).not.toBeInTheDocument();
+      expect(
+        await screen.findByText(/Százalékos megadás kezelési sorok felvétele után/),
+      ).toBeInTheDocument();
+      expect(await screen.findByLabelText('Előleg összege')).toBeInTheDocument();
+    });
+  });
+
   // D69 (redesign DP-046): az alku lezárásakor a doki eddig fejben osztotta
   // vissza a sorokat, hogy a papíron kerek végösszeg jöjjön ki -- a mező
   // mostantól felár-irányban is állítható, üresen/autofókuszálva indul, és a

@@ -82,6 +82,27 @@ export function elolegOsszegek(fizetendo: number, eloleg: number): ElolegOsszege
   return { eloleg, fennmarado: elolegTullepi(fizetendo, eloleg) ? null : fizetendo - eloleg };
 }
 
+/**
+ * A százalékos előleg-bevitel kerekítési lépése, a pénznem alapegységében
+ * (HUF: 1000 Ft, EUR: 1000 cent = 10 €) -- mindkét pénznemben ugyanaz a szám,
+ * hogy egy aláírandó papíron ne álljon pl. "234 370 Ft" alakú összeg.
+ */
+export const ELOLEG_SZAZALEK_KEREKITES = 1000;
+
+/**
+ * Egy 0-100 közé szorított előleg-százalékot vált a Fizetendőből ABSZOLÚT
+ * összeggé, felfelé kerekítve a legközelebbi `ELOLEG_SZAZALEK_KEREKITES`
+ * többszörösére. A százalék ez után NEM tárolódik és nem számol újra -- csak
+ * beviteli segéd az `elolegOsszeg` mezőhöz (docs/03-funkcionalis-spec.md §
+ * Előleg), a felkerekítés miatt a Fizetendő fölé is vihet, ezt a hívó a mai
+ * `elolegTullepi()` úton kezeli.
+ */
+export function elolegSzazalekbol(fizetendo: number, szazalek: number): number {
+  const clamped = Math.min(100, Math.max(0, szazalek));
+  const nyers = (fizetendo * clamped) / 100;
+  return Math.ceil(nyers / ELOLEG_SZAZALEK_KEREKITES) * ELOLEG_SZAZALEK_KEREKITES;
+}
+
 export function computeOsszesitok(
   fazisok: Fazis[],
   kedvezmenyOsszeg?: number | null,
