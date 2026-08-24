@@ -2,6 +2,14 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. augusztus 25.
+
+- Az Árlista adminban új „Tömeges árváltoztatás" funkció érhető el: kiválasztható, hogy a
+  teljes árlistára, egy kategóriára vagy csak a lapon éppen szűrt tételekre vonatkozzon,
+  megadható az irány (emelés/csökkentés) és a százalék, valamint egy kerekítési szabály —
+  a program élő előnézetet mutat az új árakról, amiből egyes tételek kihagyhatók, majd
+  egyetlen mentéssel lép életbe.
+
 ## 2026. augusztus 24.
 
 - Az első oldalon a terv címe és a páciensadatok, majd a fogtérkép, a fázisok és az
@@ -34,6 +42,25 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   becsukott kategória-sor jelzi, ha hiányzik a német név.
 - A Beállítások "Egyéb" fülén mostantól az alapértelmezett pénznem (forint vagy euró) is
   beállítható egy új kezelési terv indításához, a nyelv beállítása mellett.
+- Javítottuk, hogy forint és euró között váltva a kedvezmény és az előleg összege ne
+  csússzon szét: eddig egy 50 000 forintos kedvezményből váltás után némán 500 eurós
+  kedvezmény lett. Mostantól mindkét pénznemben külön-külön emlékszik a beállított
+  értékre, és a pénznemváltáskor felugró figyelmeztetés ezt is jelzi.
+- A "Másolás új tervbe" funkció mostantól finoman jelzi a szerkesztőben, ha egy sor kézzel
+  átírt ajánlati ára vagy egy fázis megjegyzése szó szerint egy korábbi tervből származik,
+  illetve ha egy másolt sor időközben inaktivált kezelésre hivatkozik.
+- Javítottuk, hogy ha a nyilatkozat szövege véletlenül teljesen kiürül vagy csak
+  szóközöket tartalmaz, a program ugyanúgy letiltsa az aláírásos véglegesítést, mint egy
+  még lezáratlan (placeholder) szöveg esetén. A véglegesítés előtti ellenőrzőlistán a
+  nyilatkozatra figyelmeztető sor mostantól egyetlen kattintással a Beállítások
+  Nyomtatványok füléhez visz.
+- A nyomtatványszövegek (nyilatkozat, fizetési feltételek, garancia) szerkesztésekor
+  mostantól félkövér kiemelés és számozott lista is használható — a nyomtatott
+  dokumentumon ez helyesen jelenik meg, a listák sorszámozása pedig megmarad akkor is, ha
+  egy üres sor kettévágja a listát.
+- A DEMO oldal Adatkezelés fülén kiegészítettük a tájékoztató szöveget: elmagyarázza, hogy
+  ez a próbaváltozat a böngésző tárolóját használja, a végleges programban pedig a doki
+  egy Google Drive-val szinkronizálható mappát fog kijelölni.
 
 ## 2026. augusztus 23.
 
