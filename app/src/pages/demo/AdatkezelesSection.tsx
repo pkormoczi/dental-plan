@@ -100,9 +100,11 @@ export default function AdatkezelesSection() {
 
       <Card size="2" mb="4">
         <Text as="p" size="2" mt="0">
-          Ez a mockup a végleges alkalmazás vázán fut, demó adatokkal. A
-          véglegesben ugyanez az alkalmazás egy, a doki gépén kijelölt
-          mappába ír majd — itt egyelőre a böngésző tárolja az adatot.
+          Ez a mockup a végleges alkalmazás vázán fut, demó adatokkal, és a
+          rendszerállapotot a böngésző helyi tárolójában (localStorage)
+          tartja — nincs valódi fájlrendszer-hozzáférés. A véglegesben
+          ugyanez az alkalmazás egyszer, a doki gépén kijelölt gyökérmappába
+          ír majd, ami Google Drive-val is szinkronizálható.
         </Text>
         <Flex gap="3" mt="4" wrap="wrap">
           <Button variant="soft" color="gray" onClick={() => setPendingAction('reset')}>

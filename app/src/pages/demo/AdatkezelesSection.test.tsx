@@ -56,6 +56,17 @@ describe('AdatkezelesSection', () => {
     expect(arlistaVerzio()).toBe('2026-07-01');
   });
 
+  // 88. tétel: statikus tárolás-tájékoztató szöveg, interakció nélkül -- a
+  // regex a bevezető mondatra szűkít, mert a lenti Adatvédelem kártya is
+  // említi külön a "localStorage" szót.
+  it('megjeleníti a localStorage/Google Drive tárolás-tájékoztató szöveget', async () => {
+    renderSection();
+    expect(
+      await screen.findByText(/böngésző helyi tárolójában \(localStorage\) tartja/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Google Drive-val is szinkronizálható/)).toBeInTheDocument();
+  });
+
   it('Mégse esetén a localStorage érintetlen marad', async () => {
     const user = userEvent.setup();
     renderSection();

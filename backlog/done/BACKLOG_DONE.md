@@ -2307,3 +2307,16 @@ karbantartási kör négy önálló javítása.
   a lap tetejére — a `SettingsPage` a query paramétert kizárólag a kezdeti
   mounton olvassa, nincs param→state szinkron effekt. Részletek:
   `docs/03-funkcionalis-spec.md` § "Sablon-placeholder őr".
+
+### 88. tétel: Tárolás tájékoztató szöveg a DEMO oldalon — KÉSZ
+
+- **Méret:** apró — egy mondat bővítés a DEMO → Adatkezelés fül első
+  kártyájában (`pages/demo/AdatkezelesSection.tsx`), kísérő teszttel.
+- **Megvalósítás:** a redesign DP-087 tételének leszűkített szelete — a
+  `CLAUDE.md` „Két fázisú build” elve miatt a valódi mappa-választás/hard
+  gate a 2. fázis (`FileSystemStorage`) hatásköre marad, ide csak egy
+  statikus, nem interaktív tájékoztató mondat került: a mockup a böngésző
+  `localStorage`-át használja rendszerállapotként, a végleges alkalmazásban
+  a doki egyszer kijelöl egy Google Drive-val szinkronizálható
+  gyökérmappát. Részletek: `docs/03-funkcionalis-spec.md` § "Fő navigáció
+  (D34)".

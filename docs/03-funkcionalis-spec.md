@@ -31,8 +31,12 @@ terv-lánc/verzió fa, lásd § 5, D54 — ez az EGYETLEN kivétel: valódi
 terv-adatot mutat, és a rajta lévő akciók — Új terv, Új verzió, Másolás,
 Letöltés — élesek), **Filerendszer** (a fenti 8. képernyő),
 **Változásnapló** (`CHANGELOG.md`) és **Adatkezelés** (a Kezdőlapról
-D39-cel átköltöztetett „Demó adat visszaállítása"/„Minden adat törlése")
-— a `/tervek` URL erre a fülre (`/demo/tervek`) redirectel.
+D39-cel átköltöztetett „Demó adat visszaállítása"/„Minden adat törlése",
+kiegészülve egy statikus tárolás-tájékoztató szöveggel: a mockup
+`localStorage`-t használ, a végleges alkalmazásban a doki egy Google
+Drive-val szinkronizálható gyökérmappát jelöl ki, lásd
+`docs/05-technologia.md` „Google Drive") — a `/tervek` URL erre a fülre
+(`/demo/tervek`) redirectel.
 
 A `Páciens`/`Terv szerkesztő`/`Előnézet`/`Korábbi tervek` képernyők (2–5.)
 korábban átmenetileg saját nav-linkkel is elérhetők voltak — ezt a

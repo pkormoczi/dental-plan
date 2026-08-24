@@ -15,17 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 88. tétel — Tárolás tájékoztató szöveg a DEMO oldalon
-  (a `backlog/redesign/` redesign-döntéssorozat DP-087 tétele,
-  leszűkített hatókörrel) — a forrás eredeti scope-ja (valódi
-  mappa-választás, hard startup gate) a `CLAUDE.md` „Két fázisú build”
-  elve szerint a 2. fázis (`FileSystemStorage`) hatásköre; ez a tétel
-  EHELYETT egy rövid, statikus tájékoztató szöveget vezet be a DEMO →
-  Adatkezelés fülre, ami elmagyarázza a mockup `localStorage`-alapú
-  tárolását és a végleges alkalmazás mappa-modelljét — nincs
-  interaktív elem. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-88-tarolas-tajekoztato-terv.md`
-
 ### 89. tétel — Egyedi végösszeg pénznemenkénti állapota
   A 63. tételből (D69, Egyedi végösszeg) levált maradék: a redesign
   D487/D524 döntés szerint az egyedi végösszeg (és a 0-végösszeg
