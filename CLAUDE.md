@@ -542,6 +542,21 @@ spec.md` § "Lábléc — minden oldalon") segédfüggvényei, szintén ne írd
   szövegmérést, ezért ez heurisztika, böngészős vizuális ellenőrzést
   igényel szélsőségesen hosszú névvel
 
+A sablon-markdown alkészletének teljessé tétele (`docs/04-nyomtatvany-
+spec.md` § "2. blokk — fizetési feltételek és garancia") segédfüggvényei,
+szintén ne írd újra őket:
+- `parseBlocks(md)` `'ol'` ága (`app/src/pdf/markdownLite.ts`) — a
+  meglévő `'ul'` mintájára: egy szakasz `ol`, ha MINDEN sora egy
+  sorszámmal és ponttal kezdődik; a beírt sorszámot (`marker`) őrzi meg,
+  nem 1-től újraszámolja, hogy egy üres sorral kettévágott lista
+  második fele ne ugorjon vissza 1-re a nyomtatványon
+- `parseInline(text)` / `MdSpan` (ugyanott) — egy bekezdés/listaelem
+  szövegét `**félkövér**` szakaszokra bontja; egy párosítatlan `**`
+  literálként marad, ugyanazzal az elvvel, mint a `fillPlaceholders`
+  ismeretlen `{{kulcs}}`-a. A `pdf/TervDocument.tsx` `MdInline`
+  komponense hívja mindhárom blokktípuson (`p`/`ul`/`ol`) belül — ez az
+  EGYETLEN hely, ahol a `**` inline renderelése eldől
+
 A D31 (`docs/01-attekintes-es-dontesek.md`) segédfüggvénye:
 - `savosHatarForditott(ar)` (`app/src/domain/money.ts`) — igaz, ha egy
   SAVOS ár `min`-je nagyobb, mint a `max`-a; puha figyelmeztetés az Árlista

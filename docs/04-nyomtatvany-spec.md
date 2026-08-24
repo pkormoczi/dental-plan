@@ -345,9 +345,16 @@ itt HU-visszaesés, nem zár. Ha a HU-visszaesés UTÁN is placeholder marad
 nyomtatványból (lásd fent és `03-funkcionalis-spec.md` § Sablon-
 placeholder őr).
 
-A sablon-markdown egyszerű: üres sorokkal elválasztott bekezdések, és
-"- " kezdetű listaelemek (lásd `app/src/pdf/markdownLite.ts`
-`parseBlocks`). Bekezdésben és listaelemben is használható a
+A sablon-markdown egyszerű: üres sorokkal elválasztott bekezdések, "- "
+kezdetű felsorolás, "1. " kezdetű számozott lista (a nyomtatványon a
+beírt sorszám jelenik meg, nem 1-től újraszámolt — egy üres sorral
+kettévágott lista második fele így nem ugrik vissza 1-re), és
+`**...**` közé zárt szöveg félkövérként (lásd `app/src/pdf/
+markdownLite.ts` `parseBlocks`/`parseInline`). A `#`/`##` fejlécjelölés
+a szöveg TÖRZSÉBEN nem támogatott, literál szövegként marad — csak a
+sablon legelső sora (a "# Cím") speciális. Egy bekezdésen belüli kézi
+sortörés szóközzé olvad, nem hard break — csak üres sor választ szét
+bekezdést/listát. Bekezdésben és listaelemben is használható a
 `{{orvos}}` helyőrző, amit a PDF generáláskor a terv kezelőorvosának
 neve vált fel.
 

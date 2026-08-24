@@ -316,20 +316,22 @@ export class DemoStorage implements PlanStorage {
    * azoknak, akik egy régebbi demó-állapotot hoznak magukkal. A nyilatkozat/
    * fizetési feltételek HU szövege ma már valódi (az eredeti Excelből átvett,
    * nem placeholder), ezért ott ez a felülírás egyszeri migráció, utána nem
-   * fut le újra. A garancia HU/DE viszont SZÁNDÉKOSAN placeholder marad
-   * (nincs a garanciának forrás az Excelben) -- rá ez az ág minden `init()`-en
-   * lefut, ártalmatlanul (ugyanazt a placeholdert írja vissza). A doki
-   * garanciaszövege sosem a `garancia-hu-v1.md`-be kerül -- a Beállítások
-   * mentése mindig ÚJ verziófájlt hoz létre (`garancia-hu-v2.md`), a v1
-   * pedig, mint minden más sablon esetén is, örökre változatlan placeholder
-   * marad (D4). A doki által ténylegesen szerkesztett -- tehát már nem
-   * placeholder -- törzshöz ez a függvény sosem nyúl.
+   * fut le újra.
+   *
+   * A `body` is placeholder-e -- nem csak az `existing` -- azért kell, mert
+   * `saveTemplate()` a doki szövegét ugyanabba a fájlba (`garancia-hu-v1.md`)
+   * írja felül: ha a doki a `[PLACEHOLDER` jelölőt bent hagyta a saját
+   * szövegében, egy erre rákövetkező `init()` a régi feltétellel némán
+   * visszaírná a seedet, elveszítve a doki munkáját. A garancia HU/DE
+   * SZÁNDÉKOSAN placeholder marad a seedben (nincs forrása az Excelben) --
+   * rá ez az ág továbbra is minden `init()`-en lefut, amíg a doki valódi
+   * szöveget nem ment.
    */
   private ensureSeedTemplates(): void {
     for (const [name, body] of DEFAULT_TEMPLATES) {
       const key = templateKey(name);
       const existing = localStorage.getItem(key);
-      if (existing == null || isPlaceholderTemplate(existing)) {
+      if (existing == null || (isPlaceholderTemplate(existing) && !isPlaceholderTemplate(body))) {
         localStorage.setItem(key, body);
       }
     }
@@ -589,11 +591,17 @@ export class DemoStorage implements PlanStorage {
     return raw;
   }
 
-  /** `name`: alap név kiterjesztés nélkül, pl. "nyilatkozat-hu". Mindig új -vN.md fájlt ír. */
+  /**
+   * `name`: alap név kiterjesztés nélkül, pl. "nyilatkozat-hu". Felülírja a
+   * base jelenleg legfrissebb -vN.md fájlját (ha még nincs egy sem, -v1.md-t
+   * hoz létre) -- a fájlnév ezután állandó, csak a tartalma cserélődik. A
+   * korábbi szövegváltozatok egyetlen igazsága a véglegesítéskor mentett PDF,
+   * a `terv.json` nem hivatkozik sablonfájlra.
+   */
   async saveTemplate(name: string, body: string): Promise<string> {
     const base = name.replace(/\.md$/, '').replace(/-v\d+$/, '');
-    const nextV = this.nextTemplateVersion(base);
-    const fileName = `${base}-v${nextV}.md`;
+    const latest = this.latestTemplateFile(base);
+    const fileName = latest?.name ?? `${base}-v1.md`;
     localStorage.setItem(templateKey(fileName), body);
     return fileName;
   }
@@ -606,6 +614,12 @@ export class DemoStorage implements PlanStorage {
    * van szüksége.
    */
   async loadLatestTemplateByBase(base: string): Promise<{ name: string; body: string }> {
+    const latest = this.latestTemplateFile(base);
+    if (!latest) throw new Error(`Nincs "${base}" kezdetű sablon.`);
+    return { name: latest.name, body: localStorage.getItem(latest.key)! };
+  }
+
+  private latestTemplateFile(base: string): { key: string; name: string } | null {
     const re = new RegExp(`^${escapeRegExp(base)}-v(\\d+)\\.md$`);
     let maxV = 0;
     let latestKey: string | null = null;
@@ -620,19 +634,7 @@ export class DemoStorage implements PlanStorage {
         latestName = fileName;
       }
     });
-    if (!latestKey || !latestName) throw new Error(`Nincs "${base}" kezdetű sablon.`);
-    return { name: latestName, body: localStorage.getItem(latestKey)! };
-  }
-
-  private nextTemplateVersion(base: string): number {
-    const re = new RegExp(`^${escapeRegExp(base)}-v(\\d+)\\.md$`);
-    let maxV = 0;
-    this.eachKey((key) => {
-      if (!key.startsWith(TEMPLATES_PREFIX)) return;
-      const m = re.exec(key.slice(TEMPLATES_PREFIX.length));
-      if (m) maxV = Math.max(maxV, Number(m[1]));
-    });
-    return maxV + 1;
+    return latestKey && latestName ? { key: latestKey, name: latestName } : null;
   }
 
   /**

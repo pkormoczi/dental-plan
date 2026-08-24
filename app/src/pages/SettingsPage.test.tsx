@@ -444,7 +444,7 @@ describe('SettingsPage', () => {
       expect(huAgain.value).toContain('HU piszkozat.');
     });
 
-    it('saving an edited template creates a new -v2 file and updates the shown filename', async () => {
+    it('saving an edited template overwrites the current file, the shown filename stays the same', async () => {
       const user = userEvent.setup();
       renderSettings();
       await goToTab(user, /Nyomtatványok/);
@@ -456,13 +456,11 @@ describe('SettingsPage', () => {
       await user.click(screen.getByRole('button', { name: 'Szöveg mentése' }));
 
       expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
-      expect(screen.getByText('nyilatkozat-hu-v2.md')).toBeInTheDocument();
+      expect(screen.getByText('nyilatkozat-hu-v1.md')).toBeInTheDocument();
 
-      const stored = localStorage.getItem('dp:sablonok/nyilatkozat-hu-v2.md');
+      const stored = localStorage.getItem('dp:sablonok/nyilatkozat-hu-v1.md');
       expect(stored).toContain('Kiegészítés.');
-      // A v1 változatlan marad (D4 -- korábbi tervek erre hivatkozhatnak).
-      const v1 = localStorage.getItem('dp:sablonok/nyilatkozat-hu-v1.md');
-      expect(v1).not.toContain('Kiegészítés.');
+      expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v2.md')).toBeNull();
     });
 
     // Garancia szakasz a nyomtatványon (docs/04-nyomtatvany-spec.md § „2.
@@ -470,7 +468,7 @@ describe('SettingsPage', () => {
     // sablon-szlot, ugyanazon a mechanizmuson --
     // a mező alapból a placeholder szöveget mutatja (a nyilatkozattal/
     // fizetési feltételekkel ellentétben, azoknak már van valódi tartalma).
-    it('backlog-13: a Garancia mező alapból a placeholder szöveget mutatja, szerkesztése új -v2 fájlt hoz létre', async () => {
+    it('a Garancia mező alapból a placeholder szöveget mutatja, szerkesztése felülírja ugyanazt a fájlt', async () => {
       const user = userEvent.setup();
       renderSettings();
       await goToTab(user, /Nyomtatványok/);
@@ -482,14 +480,12 @@ describe('SettingsPage', () => {
       await user.click(screen.getByRole('button', { name: 'Szöveg mentése' }));
 
       expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
-      expect(screen.getByText('garancia-hu-v2.md')).toBeInTheDocument();
+      expect(screen.getByText('garancia-hu-v1.md')).toBeInTheDocument();
 
-      const stored = localStorage.getItem('dp:sablonok/garancia-hu-v2.md');
+      const stored = localStorage.getItem('dp:sablonok/garancia-hu-v1.md');
+      expect(stored).toContain('[PLACEHOLDER');
       expect(stored).toContain('Kiegészítés.');
-      // A v1 (a placeholder) változatlan marad (D4).
-      const v1 = localStorage.getItem('dp:sablonok/garancia-hu-v1.md');
-      expect(v1).toContain('[PLACEHOLDER');
-      expect(v1).not.toContain('Kiegészítés.');
+      expect(localStorage.getItem('dp:sablonok/garancia-hu-v2.md')).toBeNull();
     });
 
     it('does NOT show "Mentve ✓" when saving a template fails, and shows the error instead', async () => {
@@ -502,7 +498,7 @@ describe('SettingsPage', () => {
 
       const originalSetItem = localStorage.setItem.bind(localStorage);
       vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
-        if (key === 'dp:sablonok/nyilatkozat-hu-v2.md') throw new DOMException('QuotaExceededError');
+        if (key === 'dp:sablonok/nyilatkozat-hu-v1.md') throw new DOMException('QuotaExceededError');
         originalSetItem(key, value);
       });
 
@@ -542,7 +538,7 @@ describe('SettingsPage', () => {
     // `useRef`-alapú in-flight zár, mint a `PreviewPage.tsx` `savingRef`-je --
     // a `disabled` prop önmagában megkerülhető egy render előtti második
     // kattintással (`fireEvent.click` szinkron, `await` nélkül a kettő közt).
-    it('dupla kattintás a "Szöveg mentése" gombon csak egy új verziófájlt hoz létre', async () => {
+    it('dupla kattintás a "Szöveg mentése" gombon nem hoz létre új verziófájlt', async () => {
       const user = userEvent.setup();
       renderSettings();
       await goToTab(user, /Nyomtatványok/);
@@ -558,8 +554,8 @@ describe('SettingsPage', () => {
         expect(screen.getByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument(),
       );
 
-      expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v2.md')).not.toBeNull();
-      expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v3.md')).toBeNull();
+      expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v1.md')).toContain('Kiegészítés.');
+      expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v2.md')).toBeNull();
     });
 
     // D38: a szekció eddig egyedüliként nem kapott Mégse gombot,

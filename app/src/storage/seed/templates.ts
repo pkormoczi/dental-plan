@@ -16,10 +16,10 @@
 // megfogalmazásra. Ezért NEM feltételes blokk, csak szöveghelyettesítés.
 //
 // A doki jogásza a Beállítások képernyőn szerkesztheti/pontosíthatja ezt a
-// szöveget -- mentéskor `storage.saveTemplate()` mindig ÚJ verziófájlt hoz
-// létre (pl. nyilatkozat-hu-v2.md), a jelenlegi megmarad -- a korábban
-// véglegesített tervek PDF-je a saját mentett byte-jaiban őrzi az akkor
-// érvényes szöveget, a `terv.json` nem hivatkozik a sablonfájlra.
+// szöveget -- mentéskor `storage.saveTemplate()` felülírja a jelenlegi
+// sablonfájlt, a fájlnév nem változik -- a korábban véglegesített tervek
+// PDF-je a saját mentett byte-jaiban őrzi az akkor érvényes szöveget, a
+// `terv.json` nem hivatkozik a sablonfájlra.
 //
 // A hat sablon fix címét (a "# Cím" sor) a `TEMPLATE_HEADINGS` tartja --
 // ez teszi lehetővé, hogy a Beállítások szerkesztődobozában a cím nélküli

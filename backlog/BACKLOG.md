@@ -15,19 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 86. tétel — Nyomtatványszöveg-sablonok felülírása + markdown-bővítés
-  (a `backlog/redesign/` redesign-döntéssorozat DP-085 tétele) — a
-  C7/D573 szerint a sablon-mentés a ma dokumentált, verziózó
-  (`DemoStorage.saveTemplate()` minden mentésnél új `-vN.md` fájlt hoz
-  létre) viselkedésről felülírásra vált: a mentés a jelenlegi
-  legfrissebb fájlt írja felül, a történeti igazság innentől
-  kizárólag a mentett PDF (C9). A markdown-alrendszer
-  (`pdf/markdownLite.ts`) kiegészül félkövér (`**szöveg**`) inline
-  rendereléssel és számozott listával (D588) — a kézi
-  sortörés-megőrzés (D590/D591) explicit ELVETVE, marad a mai
-  szoft-tördelés. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-86-sablon-felulirasa-markdown-terv.md`
-
 ### 87. tétel — Üres/whitespace sablon-validáció és hard-block navigáció
   (a `backlog/redesign/` redesign-döntéssorozat DP-086 tétele) — az
   `isPlaceholderTemplate()` ma csak a `[PLACEHOLDER`/`[PLATZHALTER`

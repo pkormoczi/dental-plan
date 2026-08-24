@@ -35,6 +35,12 @@ nincs szerver.
           terv.json
 ```
 
+A `sablonok/` fájlneve a fenti `-v1.md` a szöveg LÉTREHOZÁSAKORI (a doki
+általi legelső szerkesztésekori) verziószáma — ezután **fix**, a
+Beállítások képernyőn szövegmentés a fájl TARTALMÁT cseréli, nem hoz
+létre új verziófájlt. Egy korábbi szövegváltozatnak nincs másik forrása,
+mint egy már véglegesített terv mentett PDF-je.
+
 ### Mappanév szabályok
 
 - Páciensmappa: `Vezeteknev-Keresztnev_<6 karakteres id>`

@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { fillPlaceholders, parseBlocks, stripMarkdownHeading } from './markdownLite';
-import { FIZETESI_FELTETELEK_HU_V1, NYILATKOZAT_HU_V1 } from '../storage/seed/templates';
+import { fillPlaceholders, parseBlocks, parseInline, stripMarkdownHeading } from './markdownLite';
+import {
+  FIZETESI_FELTETELEK_DE_V1,
+  FIZETESI_FELTETELEK_DE_V2,
+  FIZETESI_FELTETELEK_HU_V1,
+  FIZETESI_FELTETELEK_HU_V2,
+  GARANCIA_DE_V1,
+  GARANCIA_HU_V1,
+  NYILATKOZAT_DE_V1,
+  NYILATKOZAT_HU_V1,
+} from '../storage/seed/templates';
 
 describe('stripMarkdownHeading', () => {
   it('removes the leading "# ..." line and surrounding blank lines', () => {
@@ -51,6 +60,79 @@ describe('parseBlocks', () => {
     const blocks = parseBlocks(NYILATKOZAT_HU_V1);
     expect(blocks.every((b) => b.kind === 'p')).toBe(true);
     expect(blocks.length).toBeGreaterThan(3);
+  });
+
+  it('treats a block as an ordered list only when every line starts with "N. "', () => {
+    const md = '# Cím\n\n1. Első\n2. Második\n\nNem lista sor\n3. Harmadik';
+    expect(parseBlocks(md)).toEqual([
+      {
+        kind: 'ol',
+        items: [
+          { marker: '1', text: 'Első' },
+          { marker: '2', text: 'Második' },
+        ],
+      },
+      { kind: 'p', text: 'Nem lista sor 3. Harmadik' },
+    ]);
+  });
+
+  it('keeps the source marker across a blank-line split, instead of renumbering from 1', () => {
+    const md = '# Cím\n\n1. Első\n2. Második\n\n3. Harmadik (üres sor után)';
+    expect(parseBlocks(md)).toEqual([
+      {
+        kind: 'ol',
+        items: [
+          { marker: '1', text: 'Első' },
+          { marker: '2', text: 'Második' },
+        ],
+      },
+      { kind: 'ol', items: [{ marker: '3', text: 'Harmadik (üres sor után)' }] },
+    ]);
+  });
+
+  it('the six seed templates parse with no "ol" block and no bold span (today\'s rendering is unchanged)', () => {
+    const seeds = [
+      NYILATKOZAT_HU_V1,
+      NYILATKOZAT_DE_V1,
+      FIZETESI_FELTETELEK_HU_V1,
+      FIZETESI_FELTETELEK_HU_V2,
+      FIZETESI_FELTETELEK_DE_V1,
+      FIZETESI_FELTETELEK_DE_V2,
+      GARANCIA_HU_V1,
+      GARANCIA_DE_V1,
+    ];
+    for (const seed of seeds) {
+      const blocks = parseBlocks(seed);
+      expect(blocks.some((b) => b.kind === 'ol')).toBe(false);
+      expect(seed).not.toContain('**');
+    }
+  });
+});
+
+describe('parseInline', () => {
+  it('leaves plain text as a single non-bold span', () => {
+    expect(parseInline('Sima szöveg.')).toEqual([{ text: 'Sima szöveg.', bold: false }]);
+  });
+
+  it('splits a **bold** section into plain and bold spans', () => {
+    expect(parseInline('Ez **fontos** rész.')).toEqual([
+      { text: 'Ez ', bold: false },
+      { text: 'fontos', bold: true },
+      { text: ' rész.', bold: false },
+    ]);
+  });
+
+  it('handles multiple bold sections in one text', () => {
+    expect(parseInline('**Egy** és **kettő**.')).toEqual([
+      { text: 'Egy', bold: true },
+      { text: ' és ', bold: false },
+      { text: 'kettő', bold: true },
+      { text: '.', bold: false },
+    ]);
+  });
+
+  it('leaves an unpaired "**" literal instead of silently dropping it', () => {
+    expect(parseInline('Fél pár: ** nem zár.')).toEqual([{ text: 'Fél pár: ** nem zár.', bold: false }]);
   });
 });
 

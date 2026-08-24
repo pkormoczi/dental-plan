@@ -158,25 +158,43 @@ describe('DemoStorage', () => {
     expect(loadedBytes).toEqual(bytes);
   });
 
-  it('saveTemplate always creates a new versioned file, never overwrites', async () => {
+  it('saveTemplate overwrites the current latest file, never creates a new version', async () => {
     const v1Name = await storage.saveTemplate('nyilatkozat-hu', 'v1 szöveg');
-    expect(v1Name).toBe('nyilatkozat-hu-v2.md'); // a seed már ír egy v1-et resetDemoData-ban
+    expect(v1Name).toBe('nyilatkozat-hu-v1.md'); // a seed már ír egy v1-et resetDemoData-ban
 
     const v1Content = await storage.loadTemplate('nyilatkozat-hu-v1.md');
-    expect(v1Content).toContain('Megrendelő megrendeli a KEZELÉSI TERV szerinti');
-
-    const v2Content = await storage.loadTemplate(v1Name);
-    expect(v2Content).toBe('v1 szöveg');
+    expect(v1Content).toBe('v1 szöveg');
+    expect(await storage.loadTemplate('nyilatkozat-hu-v1.md')).not.toContain(
+      'Megrendelő megrendeli a KEZELÉSI TERV szerinti',
+    );
   });
 
-  it('loadLatestTemplateByBase returns the highest version and its filename', async () => {
-    const first = await storage.loadLatestTemplateByBase('nyilatkozat-hu');
-    expect(first.name).toBe('nyilatkozat-hu-v1.md');
+  it('saveTemplate overwrites the highest existing version, leaving lower ones untouched', async () => {
+    // A fizetesi-feltetelek-hu base legfrissebbje a seedben eleve -v2 (D66).
+    const first = await storage.loadLatestTemplateByBase('fizetesi-feltetelek-hu');
+    expect(first.name).toBe('fizetesi-feltetelek-hu-v2.md');
 
-    await storage.saveTemplate('nyilatkozat-hu', 'v2 szöveg');
-    const second = await storage.loadLatestTemplateByBase('nyilatkozat-hu');
-    expect(second.name).toBe('nyilatkozat-hu-v2.md');
-    expect(second.body).toBe('v2 szöveg');
+    const savedName = await storage.saveTemplate('fizetesi-feltetelek-hu', 'új v2 szöveg');
+    expect(savedName).toBe('fizetesi-feltetelek-hu-v2.md');
+
+    const second = await storage.loadLatestTemplateByBase('fizetesi-feltetelek-hu');
+    expect(second.name).toBe('fizetesi-feltetelek-hu-v2.md');
+    expect(second.body).toBe('új v2 szöveg');
+
+    const v1 = await storage.loadTemplate('fizetesi-feltetelek-hu-v1.md');
+    expect(v1).not.toBe('új v2 szöveg');
+  });
+
+  it('ensureSeedTemplates does not overwrite a doctor-edited body that still contains a leftover placeholder marker', async () => {
+    localStorage.setItem(
+      'dp:sablonok/garancia-hu-v1.md',
+      '# Garancia\n\nA doki valódi szövege, de bent hagyta: [PLACEHOLDER -- ellenőrizendő].\n',
+    );
+
+    await storage.init(); // idempotens -- a seed maga is placeholder, ezért nem írja felül
+
+    const untouched = await storage.loadTemplate('garancia-hu-v1.md');
+    expect(untouched).toContain('A doki valódi szövege');
   });
 
   it('ensureSeedTemplates (a second init) upgrades a still-placeholder -v1 to the real seed text', async () => {
@@ -619,7 +637,7 @@ describe('DemoStorage', () => {
       expect(patient.children.map((n) => n.name).sort()).toEqual(['paciens-adatok.json', 'paciens.json']);
     });
 
-    it('saveTemplate után a régi ÉS az új verziójú sablonfájl is látszik a fában (D4)', async () => {
+    it('saveTemplate után is pontosan egy fájl látszik a base-hez a fában, nem keletkezik új verzió', async () => {
       await storage.saveTemplate('garancia-hu', 'új szöveg');
 
       const tree = storage.listFileTree();
@@ -627,7 +645,7 @@ describe('DemoStorage', () => {
       if (sablonok?.type !== 'dir') throw new Error('unreachable');
       const names = sablonok.children.map((n) => n.name);
       expect(names).toContain('garancia-hu-v1.md');
-      expect(names).toContain('garancia-hu-v2.md');
+      expect(names).not.toContain('garancia-hu-v2.md');
     });
 
     it('readRawFile a pontos tárolt stringet adja vissza, ismeretlen/prefix nélküli kulcsra null-t', async () => {

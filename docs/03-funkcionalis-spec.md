@@ -1588,9 +1588,11 @@ elvész**, a Radix a tab tartalmát unmountolja.
 
 Sablonszövegek szerkesztése — a nyilatkozat, a fizetési feltételek és a
 garancia, saját nyelvváltóval (Magyar/Deutsch, ha a német engedélyezve
-van). **Mentéskor új verziófájl keletkezik** (`nyilatkozat-hu-v2.md`), a
-régi marad, mert a korábbi tervek arra hivatkoznak — a mentés a
-véglegesítéskor épp aktuális (legfrissebb) verziót pinneli a tervre. A
+van). **Mentéskor a program felülírja a jelenlegi sablonfájlt** — a
+fájlnév nem változik, nem keletkezik új verziófájl. A korábbi
+szövegváltozatnak nincs másik forrása, mint egy már véglegesített terv
+mentett PDF-je: a `terv.json` nem hivatkozik sablonfájlra, a
+véglegesítéskor mentett PDF bájtjai őrzik, milyen szöveg volt aláírva. A
 nyilatkozat szövegében a `{{orvos}}` helyőrző a kezelőorvos nevére
 cserélődik a nyomtatványon. A szerkesztőmezők tartalma elnavigálásig sem
 vész el: egy `dp:sablon-piszkozat` localStorage-kulcs base-enként

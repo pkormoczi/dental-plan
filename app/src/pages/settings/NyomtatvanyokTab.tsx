@@ -288,8 +288,14 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
       <Text as="div" size="1" color="gray" mb="3" style={{ lineHeight: 1.7 }}>
         Használható helyőrző a nyilatkozat szövegében:{' '}
         <Text style={{ fontFamily: t.mono }}>{'{{orvos}}'}</Text> — a kezelőorvos neve, a nyomtatvány
-        generálásakor cserélődik be. Mentéskor új verziófájl keletkezik (pl. „nyilatkozat-hu-v2.md”) --
-        a már véglegesített tervek a saját, aláírt szövegükkel maradnak.
+        generálásakor cserélődik be.
+        <br />
+        Formázás: üres sor választ el bekezdéseket, „- ” kezdetű sor felsorolást, „1. ” kezdetű sor
+        számozott listát ad, két csillag között (<Text style={{ fontFamily: t.mono }}>**szöveg**</Text>
+        ) a szöveg félkövéren jelenik meg.
+        <br />
+        Mentéskor a program felülírja a jelenlegi sablonfájlt — a már véglegesített tervek a saját,
+        aláírt szövegükkel maradnak.
       </Text>
 
       {templateLoadError && (

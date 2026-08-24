@@ -2266,3 +2266,27 @@ karbantartási kör négy önálló javítása.
   meglévő pácienshez induló új lánc továbbra is a legutóbb véglegesített
   terv pénznemét örökli. Részletek: `docs/02-domain-modell.md` §
   `beallitasok.json`, `docs/03-funkcionalis-spec.md` § "Egyéb".
+
+### 86. tétel: Nyomtatványszöveg-sablonok felülírása + markdown-bővítés — KÉSZ
+
+- **Méret:** kicsi-közepes — négy forrásfájl
+  (`storage/DemoStorage.ts`, `storage/PlanStorage.ts`,
+  `pdf/markdownLite.ts`, `pdf/TervDocument.tsx`) és a Nyomtatványok tab
+  súgószövege, kísérő tesztekkel.
+- **Megvalósítás:** a Beállítások → Nyomtatványok sablon-mentése a
+  korábbi, minden mentésnél új `-vN.md` fájlt létrehozó viselkedésről a
+  jelenlegi legfrissebb fájl felülírására tért át — a fájlnév a szöveg
+  létrehozásakor rögzül, egy korábbi szövegváltozatnak nincs másik
+  forrása, mint egy már véglegesített terv mentett PDF-je. A
+  placeholder-jelölésű seed-sablon (garancia) őrfeltétele emiatt
+  szűkült: egy doki által bővített, de a `[PLACEHOLDER` jelölőt
+  szándékosan bent hagyó szöveget egy újbóli `init()` többé nem ír felül
+  némán. A sablon-markdown emellett két, korábban dokumentált, de nem
+  implementált elemmel bővült: `**félkövér**` inline renderelés és
+  számozott lista (a nyomtatványon a beírt sorszám látszik, nem 1-től
+  újraszámolt). A kézi sortörés-megőrzés bevezetése explicit elmaradt —
+  a mai szoft-tördelés (egy bekezdésen belüli Enter szóközzé olvad)
+  változatlan. Részletek: `docs/02-domain-modell.md` § "Mappastruktúra",
+  `docs/03-funkcionalis-spec.md` § "Nyomtatványok",
+  `docs/04-nyomtatvany-spec.md` § "2. blokk — fizetési feltételek és
+  garancia", `docs/05-technologia.md` § `PlanStorage`.

@@ -25,7 +25,7 @@ import { registerPdfFonts } from './fonts';
 import { FOOTER_JOBB_SZELESSEG, footerExtraMagassag } from './footerLayout';
 import { ALAIRAS_VAROS, pdfLabels, type PdfLabels } from './labels';
 import { pdfFazisNev, pdfTervCim } from './pdfCimLokalizacio';
-import { fillPlaceholders, parseBlocks, type MdBlock } from './markdownLite';
+import { fillPlaceholders, parseBlocks, parseInline, type MdBlock } from './markdownLite';
 import { sablonNyomtathato } from '../domain/templates';
 import { ToothChartPdf } from './ToothChartPdf';
 import logoUrl from '../assets/logo.png';
@@ -207,6 +207,11 @@ const s = {
   bulletDot: { width: 12, fontSize: 9.5 },
   bulletText: { flex: 1, fontSize: 9.5, lineHeight: 1.5 },
   legalBulletText: { flex: 1, fontSize: 8.5, lineHeight: 1.6 },
+  // Szélesebb, mint a bulletDot -- a kétjegyű sorszám ("10.") is elférjen.
+  numberMarker: { width: 18, fontSize: 9.5 },
+  // 600, nem 700/'bold' -- a pdf/fonts.ts a NotoSans 400 és 600 vágatát
+  // regisztrálja, 700-ra nincs betöltött font (a h2 is 600-at használ).
+  bold: { fontWeight: 600 },
 
   signatureBlock: { marginTop: 40 },
   signatureDate: { fontSize: 9.5, marginBottom: 30 },
@@ -406,27 +411,63 @@ function Footer({ plan, settings, L }: { plan: Plan; settings: Settings; L: PdfL
   );
 }
 
+// Bold nélküli szöveg a nyers stringet adja vissza -- ez garantálja, hogy a
+// mai (`**`-t nem tartalmazó) sablonszövegek renderelése bájtra változatlan
+// marad.
+function MdInline({ text }: { text: string }) {
+  const spans = parseInline(text);
+  if (spans.length === 1 && !spans[0].bold) return <>{text}</>;
+  return (
+    <>
+      {spans.map((span, i) => (
+        <Text key={i} style={span.bold ? s.bold : undefined}>
+          {span.text}
+        </Text>
+      ))}
+    </>
+  );
+}
+
 function MdBlocks({ blocks, legal }: { blocks: MdBlock[]; legal?: boolean }) {
   const paragraphStyle = legal ? s.legalParagraph : s.paragraph;
   const bulletTextStyle = legal ? s.legalBulletText : s.bulletText;
   return (
     <>
-      {blocks.map((block, i) =>
-        block.kind === 'ul' ? (
-          <View key={i}>
-            {block.items.map((item, j) => (
-              <View key={j} style={s.bulletRow}>
-                <Text style={s.bulletDot}>•</Text>
-                <Text style={bulletTextStyle}>{item}</Text>
-              </View>
-            ))}
-          </View>
-        ) : (
+      {blocks.map((block, i) => {
+        if (block.kind === 'ul') {
+          return (
+            <View key={i}>
+              {block.items.map((item, j) => (
+                <View key={j} style={s.bulletRow}>
+                  <Text style={s.bulletDot}>•</Text>
+                  <Text style={bulletTextStyle}>
+                    <MdInline text={item} />
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+        if (block.kind === 'ol') {
+          return (
+            <View key={i}>
+              {block.items.map((item, j) => (
+                <View key={j} style={s.bulletRow}>
+                  <Text style={s.numberMarker}>{item.marker}.</Text>
+                  <Text style={bulletTextStyle}>
+                    <MdInline text={item.text} />
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+        return (
           <Text key={i} style={paragraphStyle}>
-            {block.text}
+            <MdInline text={block.text} />
           </Text>
-        ),
-      )}
+        );
+      })}
     </>
   );
 }

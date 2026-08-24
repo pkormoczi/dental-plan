@@ -46,7 +46,12 @@ export interface PlanStorage {
   /** Lásd a `savePriceList` doc-kommentjét -- ugyanaz a sorosítási szerződés. */
   saveSettings(s: Settings): Promise<void>;
   loadTemplate(name: string): Promise<string>;
-  /** Mindig új verziófájlt hoz létre, ennek a nevét adja vissza. */
+  /**
+   * Felülírja a base jelenleg legfrissebb -vN.md fájlját (ha még nincs egy
+   * sem, -v1.md-t hoz létre), és ennek a fájlnevét adja vissza -- a fájlnév
+   * innentől állandó, a korábbi szövegváltozatnak nincs másik forrása, mint
+   * egy már véglegesített terv mentett PDF-je.
+   */
   saveTemplate(name: string, body: string): Promise<string>;
   /**
    * D33: a paciens-adatok.json -- `null`, ha még nem létezik (a hívó ekkor
