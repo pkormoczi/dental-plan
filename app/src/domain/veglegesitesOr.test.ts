@@ -298,6 +298,59 @@ describe('veglegesitesDiagnozis', () => {
     expect(tetel(diag, 'inaktiv-tetel-hivatkozas')).toBeUndefined();
   });
 
+  // domain/orokoltJelzesek.ts -- "Másolás új tervbe" örökölt jelzései.
+  it('másoláskor is inaktivált tételre hivatkozó sor mindkét tételt adja: a "inaktiv-tetel-hivatkozas" és az "inaktiv-tetel-orokolt" is megjelenik', () => {
+    const plan = makePlan([
+      [sor({ tetelId: 't-inaktiv', nevSnapshot: 'Kivont tétel', orokoltInaktivTetel: true })],
+    ]);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON);
+
+    expect(tetel(diag, 'inaktiv-tetel-hivatkozas')?.sulyossag).toBe('soft');
+    const t = tetel(diag, 'inaktiv-tetel-orokolt');
+    expect(t?.sulyossag).toBe('soft');
+    expect(t?.szamlalo).toBe(1);
+    expect(t?.reszletek).toEqual([{ cim: 'Érintett sorok', nevek: ['Kivont tétel'] }]);
+    expect(vanKemenyBlokk(diag)).toBe(false);
+  });
+
+  it('nem másoláskor inaktivált (marker nélküli) tételre hivatkozó sor NEM ad "inaktiv-tetel-orokolt" tételt', () => {
+    const plan = makePlan([[sor({ tetelId: 't-inaktiv', nevSnapshot: 'Kivont tétel' })]]);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON);
+    expect(tetel(diag, 'inaktiv-tetel-orokolt')).toBeUndefined();
+  });
+
+  it('örökölt, kézzel felülírt ajánlati árú sor az "orokolt-kezi-ar" info tételt adja, nem blokkol', () => {
+    const plan = makePlan([
+      [sor({ nevSnapshot: 'Kedvezményes', listaEgysegar: 10000, tenylegesEgysegar: 8000, orokoltKeziAr: true })],
+    ]);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON);
+
+    const t = tetel(diag, 'orokolt-kezi-ar');
+    expect(t?.sulyossag).toBe('info');
+    expect(t?.szamlalo).toBe(1);
+    expect(t?.reszletek).toEqual([{ cim: 'Örökölt ajánlati ár', nevek: ['Kedvezményes'] }]);
+    expect(vanKemenyBlokk(diag)).toBe(false);
+  });
+
+  it('nem örökölt kézi árú sor NEM ad "orokolt-kezi-ar" tételt', () => {
+    const plan = makePlan([[sor({ listaEgysegar: 10000, tenylegesEgysegar: 8000 })]]);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON);
+    expect(tetel(diag, 'orokolt-kezi-ar')).toBeUndefined();
+  });
+
+  it('örökölt fázismegjegyzés az "orokolt-fazismegjegyzes" info tételt adja, nem blokkol', () => {
+    const plan = makePlan([[sor()]]);
+    plan.fazisok[0].megjegyzes = 'Régi ütemezés';
+    plan.fazisok[0].orokoltMegjegyzes = true;
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON);
+
+    const t = tetel(diag, 'orokolt-fazismegjegyzes');
+    expect(t?.sulyossag).toBe('info');
+    expect(t?.szamlalo).toBe(1);
+    expect(t?.reszletek).toEqual([{ cim: 'Érintett fázisok', nevek: ['1. kezelés'] }]);
+    expect(vanKemenyBlokk(diag)).toBe(false);
+  });
+
   // 65. tétel (D72): a doki kézzel írt szövegeinek nyelvi review-ja --
   // SZÁNDÉKOSAN külön a "nemet-nev" tételtől (az az ÁRLISTAI fordítás/
   // igazolás hiányát jelzi), lásd `domain/nyelviReview.ts`.

@@ -137,6 +137,22 @@ export interface Sor {
   nevNyelv?: NyelviReview | null;
   /** A `leirasSnapshot` nyelvi review-metaadata -- a `nevNyelv` párja, lásd ott. */
   leirasNyelv?: NyelviReview | null;
+  /**
+   * Igaz, ha a sor ajánlati ára egy KORÁBBI tervből másolt, kézzel
+   * felülírt érték ("Másolás új tervbe", priceList átadásával) -- a doki
+   * a copy-eredetű árat még nem nézte át ezen a másolaton. Bármilyen
+   * ártétel-szerkesztés vagy az ár-⟳ elfogadása törli. Additív mező,
+   * hiányzó/`false` = nem másolatból örökölt vagy már felülvizsgált érték.
+   */
+  orokoltKeziAr?: boolean;
+  /**
+   * Igaz, ha a sor `tetelId`-je már a másolás PILLANATÁBAN egy inaktivált
+   * tételre mutatott -- történeti tény a másolásról, FÜGGETLEN attól, hogy
+   * a tétel azóta esetleg reaktiválódott. Csak akkor törlődik, ha a doki
+   * másik tételre cseréli a sort. Additív mező, hiányzó/`false` = nem
+   * másolatból örökölt hivatkozás.
+   */
+  orokoltInaktivTetel?: boolean;
 }
 
 export interface Fazis {
@@ -148,6 +164,14 @@ export interface Fazis {
   megnevezesNyelv?: NyelviReview | null;
   /** A `megjegyzes` nyelvi review-metaadata (D72) -- lásd `Sor.nevNyelv`. */
   megjegyzesNyelv?: NyelviReview | null;
+  /**
+   * Igaz, ha a fázis megjegyzése egy KORÁBBI tervből másolt szöveg
+   * ("Másolás új tervbe"), amit a doki még nem szerkesztett ezen a
+   * másolaton. Bármilyen szerkesztés törli, nincs külön reset-vezérlő -- egy
+   * szabad szöveges mezőnek nincs kanonikus visszaállítási célértéke.
+   * Additív mező, hiányzó/`false` = nem örökölt vagy már szerkesztett szöveg.
+   */
+  orokoltMegjegyzes?: boolean;
 }
 
 export interface Osszesitok {

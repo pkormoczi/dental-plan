@@ -99,6 +99,9 @@ export function arElteroSorok(plan: Plan, priceList: PriceList): ArElteroSorok {
  * sorokat kellene frissíteni. A kézi árfelülírás egyetlen megbízható jele
  * `tenylegesEgysegar !== listaEgysegar` (az `arElteroSorok` "keziAr"
  * ágának mintája) -- ez FÜGGETLEN attól, hogy a listaár azóta driftelt-e.
+ *
+ * Azt, mely sorokat hagyta ez a függvény érintetlenül, nem tárolja -- a
+ * másolat-eredet jelzését lásd `domain/orokoltJelzesek.ts`.
  */
 export function frissArlistaval(plan: Plan, priceList: PriceList): Plan {
   const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));

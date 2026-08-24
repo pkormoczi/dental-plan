@@ -15,18 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 90. tétel — Másolt terv örökölt szakmai-tartalom jelzései
-  A 61. tétel (D70) lezárásakor levált maradék: a 49. tétel (D57) 6.
-  döntése az árlista-snapshot alapkőre (a 61. tételre) épült, de csak a
-  default-following ár/név/leírás tényleges frissítése (49/2) készült el
-  vele együtt. Hátravan még: inaktív (`aktiv: false`) tételre hivatkozó
-  másolt sorok erősebb figyelmeztetése, az örökölt kézi ajánlati ár finom
-  markere szerkesztésig/resetig, a fázismegjegyzés örökölt-jelzése, és
-  ezek összesítése a véglegesítés-őr checklistjében — utóbbi a 67. tétel
-  (Finalization validation engine) egységes modelljére vár, mert a
-  checklist-infók helye oda tartozik.
-  **Terv:** `backlog/plans/backlog-90-masolt-terv-orokolt-jelzesek-terv.md`
-
 ### 92. tétel — Tömeges árváltoztatás az árlista adminban
   Egy árkorrekció ma 118 tételen egyenként, soronként kinyitott
   szerkesztővel végezhető el — egy általános áremelés vagy egy euró-árak

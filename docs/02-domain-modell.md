@@ -410,6 +410,42 @@ A szerkesztő ezen a bázison mutat explicit refresh-vezérlőt a driftelt
 soron; az árlista mentése ettől függetlenül SOHA nem írja át automatikusan
 egy már megnyitott/mentett terv sorait.
 
+### Másolat-eredet jelzései (`domain/orokoltJelzesek.ts`)
+
+„Másolás új tervbe” a mai árlistára frissíti azokat a sorokat, amik a
+forrásban pontosan követték az akkori árlistát — de a többi sor/fázis
+tartalma szó szerint egy KORÁBBI tervből marad a másolaton. Három
+additív, opcionális mező (`Sor.orokoltKeziAr`, `Sor.orokoltInaktivTetel`,
+`Fazis.orokoltMegjegyzes`) jelzi ezt a másolat-eredetet, `schemaVersion`
+emelése nélkül. A markerek KIZÁRÓLAG a másolás pillanatában, és
+KIZÁRÓLAG akkor íródnak, ha a hívó árlistát is átad (ugyanaz a feltétel,
+mint a fenti ár-frissítésé) — árlista nélküli másoláskor egyik sem
+keletkezik.
+
+- **`orokoltKeziAr`**: igaz azon a `tetelId`-hez kötött soron, aminek
+  ajánlati ára kézzel eltér a listaárától (`tenylegesEgysegar !==
+  listaEgysegar`) — pontosan azokon a sorokon, amiket az ár-frissítés a
+  fenti szabály szerint érintetlenül hagyott. Egyedi (üres `tetelId`-jű)
+  sor sosem kaphatja meg, hiszen ott a két ármező mindig egyezik (lásd
+  fent). Bármilyen ártétel-szerkesztés vagy a ⟳ ár-frissítés elfogadása
+  törli.
+- **`orokoltInaktivTetel`**: igaz azon a soron, aminek `tetelId`-je már a
+  másolás PILLANATÁBAN egy `aktiv: false` tételre mutatott — ez egy
+  történeti tény a másolásról, FÜGGETLEN attól, hogy a sor egyébként
+  frissült-e, és attól is, hogy a tétel azóta esetleg újra aktívvá vált.
+  Csak akkor törlődik, ha a doki másik tételre cseréli a sort.
+- **`orokoltMegjegyzes`**: igaz azon a fázison, aminek a megjegyzése a
+  forrásban nem volt üres. Bármilyen szerkesztés törli, nincs külön
+  reset-vezérlő — egy szabad szöveges mezőnek nincs kanonikus
+  visszaállítási célértéke, szemben az árral, ahol a listaár ez a cél.
+
+A szerkesztőben mindhárom egy finom, semleges szürke jelvényként látszik
+(„örökölt ár” a soron, „örökölt” a fázismegjegyzés mellett), és a
+véglegesítés-őr checklistjén is megjelenik (lásd lent, „Véglegesítési
+checklist”) — egyik marker sem kerül a nyomtatványra, sem a mentett terv
+read-only nézetére: ezek a doki felé szóló, „nézd át véglegesítés előtt”
+jelzések, nem a dokumentum tartalmának részei.
+
 ### Sor-szintű ár-eltérés osztályozása (`domain/sorElteres.ts`)
 
 A `listaEgysegar` és a `tenylegesEgysegar` eltérése a szerkesztőben és a

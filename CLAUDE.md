@@ -1056,6 +1056,29 @@ mezői" és § 4. "Előnézet és véglegesítés") segédfüggvényei
   `domain/planCopy.ts` `planMasolatKent()` opcionális ötödik `priceList`
   paramétere hívja, ha a hívó átadja
 
+A másolat-eredet jelzései tétel (`docs/02-domain-modell.md` §
+„Másolat-eredet jelzései", `docs/03-funkcionalis-spec.md` § „Terv
+másolása új tervként", § 3. „Sor mezői", § Fázisok, § 4. „Előnézet és
+véglegesítés") segédfüggvényei (`app/src/domain/orokoltJelzesek.ts`),
+szintén ne írd újra őket:
+- `orokoltJelzesekkel(plan, priceList)` — a `frissArlistaval()` MELLETT,
+  önálló lépésként hívandó AUTORITATÍV stamper: minden sor/fázis
+  markerét a MÁSOLATI állapotból újraszámolja, sosem a forrásból veszi
+  át, nehogy egy korábbi másolat-láncból ittmaradt, tárgytalanná vált
+  jelzés tovább öröklődjön
+- `sorPatchOroklessel(sor, patch)` — a `sorPatchKovetessel()`/
+  `sorPatchNyelvvel()` mintája, a törlési szabályokhoz; a
+  `PlanEditorPage.tsx` `patchLine`-ja hívja
+- `orokoltKeziAru(sor)` / `orokoltMegjegyzesu(fazis)` — megosztott
+  predikátumok, amiket a szerkesztő badge-e ÉS a checklist-collectorok is
+  hívnak; a tárolt marker ÉS az aktuális adat konzisztenciáját nézik
+  (self-healing egy a `patchLine`-t megkerülő íráshoz, pl. pénznemváltás
+  után is)
+- `orokoltKeziAruSorok(plan)` / `orokoltInaktivSorok(plan)` /
+  `orokoltMegjegyzesuFazisok(plan)` — a `domain/kitoltetlen.ts`
+  `nullaOsszeguSorok()`/`inaktivTetelreHivatkozoSorok()` mintáján, a
+  véglegesítés-őr megfelelő checklist-tételeihez
+
 A pénznemváltás tétel (`docs/01-attekintes-es-dontesek.md` D71,
 `docs/02-domain-modell.md` § Pénznemváltás, `docs/03-funkcionalis-spec.md`
 § 2. Dokumentum nyelve / Pénznem) segédfüggvényei, szintén ne írd újra

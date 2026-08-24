@@ -27,6 +27,11 @@ import { arElteroSorok } from './arKoveti';
 import { masterSnapshotDiff } from './masterSnapshotDiff';
 import { formatMoney } from './money';
 import { igazolatlanNemetKategoriak, igazolatlanNemetNevek } from './nemetNev';
+import {
+  orokoltInaktivSorok,
+  orokoltKeziAruSorok,
+  orokoltMegjegyzesuFazisok,
+} from './orokoltJelzesek';
 import { nyelviMismatchek, type NyelviMismatchTetel, type ReviewMezo } from './nyelviReview';
 import { orvosProblema as szamitOrvosProblema } from './orvosok';
 import { elolegTullepi, tervVegosszeg } from './totals';
@@ -312,6 +317,24 @@ export function veglegesitesDiagnozis(
     });
   }
 
+  // PUHA figyelmeztetés -- a fentitől KÜLÖN tétel, csak a másoláskor is már
+  // inaktivált tételre hivatkozó sorokra (`Sor.orokoltInaktivTetel`,
+  // domain/orokoltJelzesek.ts): ez a szöveg hangsúlyosabban fogalmaz, mert a
+  // doki a másolás pillanatában is láthatta volna a problémát. A fenti,
+  // általános tétel erre a sorra TOVÁBBRA IS megjelenik -- a kettő
+  // egymás mellett él, egyik sem blokkol.
+  const orokoltInaktivHivatkozasok = orokoltInaktivSorok(plan);
+  if (orokoltInaktivHivatkozasok.length > 0) {
+    tetelek.push({
+      id: 'inaktiv-tetel-orokolt',
+      sulyossag: 'soft',
+      cim: `A terv ${orokoltInaktivHivatkozasok.length} sora már a másoláskor is egy inaktivált tételre hivatkozott.`,
+      szamlalo: orokoltInaktivHivatkozasok.length,
+      reszletek: [{ cim: 'Érintett sorok', nevek: orokoltInaktivHivatkozasok }],
+      route: '/terv',
+    });
+  }
+
   if (sablon.sablonFallback) {
     tetelek.push({
       id: 'sablon-fallback',
@@ -362,6 +385,34 @@ export function veglegesitesDiagnozis(
       cim: `A páciens törzsadata ${masterElteresek.length} mezőben eltér a terv adataitól (${masterElteresek.map((m) => m.cimke).join(', ')}).`,
       szamlalo: masterElteresek.length,
       route: '/paciens',
+    });
+  }
+
+  // INFO tétel -- tisztán tájékoztató, KÜLÖN a fenti (bármely tervre igaz)
+  // `ar-elteres` puha tételtől: az ott csak "eltér a mai árlistától"
+  // fogalmat fedi, itt kifejezetten a MÁSOLATBÓL örökölt eredet a téma,
+  // amit csak a `Sor.orokoltKeziAr` marker tud eldönteni.
+  const orokoltKeziArak = orokoltKeziAruSorok(plan);
+  if (orokoltKeziArak.length > 0) {
+    tetelek.push({
+      id: 'orokolt-kezi-ar',
+      sulyossag: 'info',
+      cim: `${orokoltKeziArak.length} soron a másolt tervből örökölt, kézzel felülírt ajánlati ár van.`,
+      szamlalo: orokoltKeziArak.length,
+      reszletek: [{ cim: 'Örökölt ajánlati ár', nevek: orokoltKeziArak }],
+      route: '/terv',
+    });
+  }
+
+  const orokoltMegjegyzesek = orokoltMegjegyzesuFazisok(plan);
+  if (orokoltMegjegyzesek.length > 0) {
+    tetelek.push({
+      id: 'orokolt-fazismegjegyzes',
+      sulyossag: 'info',
+      cim: `${orokoltMegjegyzesek.length} fázis megjegyzése a másolt tervből öröklődött.`,
+      szamlalo: orokoltMegjegyzesek.length,
+      reszletek: [{ cim: 'Érintett fázisok', nevek: orokoltMegjegyzesek }],
+      route: '/terv',
     });
   }
 

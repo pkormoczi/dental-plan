@@ -442,7 +442,7 @@ becsült-ár-≈, törlés).
 | Fog | Szabad szöveg, felsorolás. Nem kötelező. A beírt *számokat* validáljuk (lásd lent), a folyószöveges jegyzet (pl. „jobb felső") változatlanul megengedett |
 | Db | Automatikusan követi a Fog mezőben felsorolt (dedupolt) fogszámot, amíg a doki kézzel be nem írja — attól kezdve a sor levált, egy ⟳ ikongomb jelenik meg a mező mellett, amire kattintva egy lépésben visszaáll a fogak számára és újra követővé válik (`Sor.mennyisegKezi`, docs/02-domain-modell.md § Fogszám kezelés, D32). Alapérték 1, minimum 1 |
 | Listaár | Csak megjelenítés, halványan. Sávos tételnél `35 000–55 000` formában, kiemelve. Egyedi sornál, illetve a terv pénznemében beárazatlan tételnél `—` (nincs árlistai referenciaár, D71). Ha a sor `listaEgysegar`-ja eltér a MAI árlistától, egy ⟳ ikongomb jelenik meg mellette (D70) |
-| Ajánlati ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`). EUR pénznemű tervnél a mező **euróban** fogad be és jelenít meg szöveget (pl. `35,50`), a tárolás változatlanul centben történik — ugyanaz a `NumberField` `unit` mechanizmus, ami az árlista adminban már véd az euró/cent tévesztéstől. Ez tisztán UI-réteg felirat, nem pénzösszeg-formázás, ezért nem indokol közös `domain/money.ts` segédfüggvényt. Ha eltér a listaártól, egy kompakt reset-vezérlő állítja vissza a listaárra (D65) |
+| Ajánlati ár | Szerkeszthető. Alapértéke a listaár (sávosnál a `min`, egyedi sornál `0`). EUR pénznemű tervnél a mező **euróban** fogad be és jelenít meg szöveget (pl. `35,50`), a tárolás változatlanul centben történik — ugyanaz a `NumberField` `unit` mechanizmus, ami az árlista adminban már véd az euró/cent tévesztéstől. Ez tisztán UI-réteg felirat, nem pénzösszeg-formázás, ezért nem indokol közös `domain/money.ts` segédfüggvényt. Ha eltér a listaártól, egy kompakt reset-vezérlő állítja vissza a listaárra (D65). Egy „Másolás új tervbe”-ből örökölt, kézzel felülírt ár mellett semleges szürke „örökölt ár” jelvény jelenik meg — bármilyen ár-szerkesztés vagy a ⟳ ár-frissítés elfogadása törli, lásd `docs/02-domain-modell.md` § „Másolat-eredet jelzései” |
 | Becsült ár (≈) | Soronkénti, szabad és kétirányú kapcsoló az Ajánlati ár mező ALATT (ghost ikongomb, `≈` szövegglyph, D65 — korábban a mező mellett volt) — bármelyik soron be- és kikapcsolható, függetlenül attól, hogy a sor árlistai FIX, SAVOS, fogtérkép-kattintásos vagy egyedi eredetű. Bekapcsolva a nyomtatványon `*` + lábjegyzetet kap (D15). Csak megjelenítést vezérel, az összegzésbe nem szól bele; nincs eredet-nyilvántartás, a sor nem jegyzi meg, honnan jött, és az aktuális árlistából sem kérdezzük vissza (D7) |
 | Összeg | `tenylegesEgysegar * mennyiseg` |
 | Leírás | Összecsukható, a Beavatkozás mező melletti „+ leírás"/„Leírás" jelvényre kattintva nyílik ki, teljes szélességben, a sor alatt (docs/02-domain-modell.md § Tétel-leírás). Bármelyik sor kaphat leírást, árlistai vagy egyedi is. Ha a sor egy `csomag: true` tételre hivatkozik és üres a leírás, a trigger amber jelzést kap — korai figyelmeztetés, mielőtt a véglegesítés-őr megerősítést kérne. Ha egy `tetelId`-hez kötött, VAN árlistai leírással rendelkező sor leírása kézzel eltér attól, „átírt leírás" jelvény + reset jelenik meg a leírás-sáv alján (`domain/nev.ts` `leirasKoveti()`/`arlistaiLeiras()`, D65) — hiányzó árlistai leírásnál (D27: nincs HU-visszaesés) nincs mire visszaállítani, ilyenkor sem jelvény, sem reset. A leírás nyelvi review-jelvénye ugyanúgy megjelenhet a sáv alján (D72) |
@@ -572,6 +572,12 @@ blokkol, egyik sem jelenik meg a nyomtatványon:
   után, kb. 3 hónappal"*. A mező progresszíven rejtett — alapból csukva,
   ha üres, nyitva, ha már van tartalma —, a sor „+ leírás" jelvényének
   mintáját követve.
+- Egy „Másolás új tervbe"-ből örökölt, nem üres fázismegjegyzés mellett
+  semleges szürke „örökölt" jelvény jelenik meg — a mező bármilyen
+  szerkesztése törli, nincs külön reset-vezérlő, mert egy szabad szöveges
+  mezőnek nincs kanonikus visszaállítási célértéke (szemben az ajánlati
+  árral, ahol a listaár ez a cél), lásd `docs/02-domain-modell.md` §
+  „Másolat-eredet jelzései".
 - Mind a fázisnév, mind a fázis-megjegyzés kap nyelvi review-jelzést, a sor
   Beavatkozás/Leírás mezőjével azonos szabály szerint (D72, lásd fent
   „Sor mezői" és docs/02-domain-modell.md § Nyelvi review a kézzel írt
@@ -895,6 +901,13 @@ kattintható/navigálható a releváns workflow-lépésre.
   `nevSnapshot`-ja/ára a pillanatkép-elv szerint változatlan marad
   (lásd fent „Törlés helyett inaktiválás"), ez csak tájékoztatja a
   dokit, hogy esetleg cserélni akarja a tételt.
+- **Örökölt, inaktivált tételre hivatkozó sor:** a fentitől KÜLÖN tétel,
+  csak azokra a sorokra, amik már a „Másolás új tervbe" pillanatában is
+  egy inaktivált tételre hivatkoztak — hangsúlyosabb szöveggel, mert a
+  doki a másolás pillanatában is láthatta volna a problémát. A fenti,
+  általános tétel erre a sorra TOVÁBBRA IS megjelenik, a kettő egymás
+  mellett él, egyik sem blokkol (lásd `docs/02-domain-modell.md` §
+  „Másolat-eredet jelzései").
 
 **Info (`info`) tételek — csak tájékoztatnak:**
 
@@ -912,6 +925,16 @@ kattintható/navigálható a releváns workflow-lépésre.
   véglegesítéskor újraolvassa, hogy a tétel a legfrissebb állapotot
   mutassa — a mentett `terv.json` `paciens` blokkja ettől függetlenül a
   piszkozat pillanatképe marad (D7).
+- **Örökölt, kézzel felülírt ajánlati ár:** a tervben olyan sor van, ami
+  „Másolás új tervbe" révén egy KORÁBBI tervből hozott, kézzel felülírt
+  ajánlati árat tartalmaz, és a doki még nem nézte át ezen a másolaton
+  (lásd `docs/02-domain-modell.md` § „Másolat-eredet jelzései"). KÜLÖN a
+  fenti (bármely tervre igaz) „Árlista-eltérés" tételtől: az csak
+  „eltér a mai árlistától" fogalmat fedi, ez kifejezetten a másolatból
+  örökölt eredetet jelzi.
+- **Örökölt fázismegjegyzés:** a tervben olyan fázis van, aminek
+  megjegyzése „Másolás új tervbe" révén egy KORÁBBI tervből öröklődött,
+  és a doki még nem szerkesztette ezen a másolaton.
 
 A technikai/infrastrukturális hibák — sablon betöltési hiba, PDF-render
 hiba, mentési hiba — NEM checklist-tételek, hanem önálló, tranziens
@@ -1315,6 +1338,14 @@ az adatkör-különbséget követi, nem kényszeríti egy szintre:
   született (D58, lásd fent § 5 „A verziósoron…"). Az **`orvos`** (D67)
   — MINDIG a mai globális alapértelmezett orvos, a forrás verzió orvosa
   SOSEM másolódik át.
+
+  Ugyanezzel az árlista-argumentummal a másolat finoman jelzi is, mely
+  tartalma maradt szó szerint a forrásból: egy kézzel felülírt ajánlati
+  árú sor „örökölt ár” jelvényt kap, egy már a másoláskor is inaktivált
+  tételre hivatkozó sor a véglegesítés-őr checklistjén kap hangsúlyosabb
+  jelzést, egy nem üres fázismegjegyzés pedig „örökölt” jelvényt (lásd
+  `docs/02-domain-modell.md` § „Másolat-eredet jelzései”). Árlista nélküli
+  másoláskor egyik jelzés sem keletkezik.
 
 Mindhárom út a meglévő `frissDatummal` (D22) hívásával bélyegzi a
 `keltezes`/`ervenyesIg`-et a mai napra, és a másolat `osszesitok`-ja a

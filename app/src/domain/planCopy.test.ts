@@ -364,14 +364,24 @@ describe('planMasolatKent — priceList paraméterrel (D70)', () => {
         nev: { hu: 'Fogeltávolítás', de: 'Zahnextraktion' },
         ar: { HUF: null, EUR: { tipus: 'FIX', ertek: 120 } },
       },
+      {
+        id: 't-inaktiv',
+        kategoriaId: 'k1',
+        sorrend: 2,
+        aktiv: false,
+        gyakori: false,
+        nev: { hu: 'Kivont tétel', de: null },
+        ar: { HUF: null, EUR: { tipus: 'FIX', ertek: 50 } },
+      },
     ],
   };
 
-  it('priceList nélkül a sorok és az arlistaVerzio változatlanul másolódnak (a korábbi viselkedés)', () => {
+  it('priceList nélkül a sorok és az arlistaVerzio változatlanul másolódnak (a korábbi viselkedés) -- örökölt jelzés sem íródik', () => {
     const plan = makePlan();
     const masolat = planMasolatKent(plan, settings, '2026-08-10');
     expect(masolat.fazisok).toEqual(plan.fazisok);
     expect(masolat.arlistaVerzio).toBe(plan.arlistaVerzio);
+    expect(masolat.fazisok[0].sorok[0].orokoltKeziAr).toBeUndefined();
   });
 
   it('egy default-following sort az AKTUÁLIS árlistára frissít, az arlistaVerzio is átáll', () => {
@@ -403,12 +413,71 @@ describe('planMasolatKent — priceList paraméterrel (D70)', () => {
     expect(masolat.osszesitok.kezelesekOsszesen).toBe(120);
   });
 
-  it('egy kézzel felülírt (kedvezményes) sort NEM frissít, az arlistaVerzio attól még átáll', () => {
+  it('egy kézzel felülírt (kedvezményes) sort NEM frissít, az arlistaVerzio attól még átáll -- örökölt-ár jelzést kap', () => {
     const plan = makePlan(); // tenylegesEgysegar 90 !== listaEgysegar 100 -- kézi ár
     const masolat = planMasolatKent(plan, settings, '2026-08-10', null, ujPriceList);
 
     expect(masolat.fazisok[0].sorok[0].listaEgysegar).toBe(100);
     expect(masolat.fazisok[0].sorok[0].tenylegesEgysegar).toBe(90);
     expect(masolat.arlistaVerzio).toBe('2026-08-01');
+    expect(masolat.fazisok[0].sorok[0].orokoltKeziAr).toBe(true);
+  });
+
+  it('egy default-following sor NEM kap örökölt-ár jelzést a frissítés után', () => {
+    const plan = makePlan({
+      fazisok: [
+        {
+          sorszam: 1,
+          megnevezes: '1. kezelés',
+          megjegyzes: '',
+          sorok: [
+            {
+              tetelId: 't001',
+              nevSnapshot: 'Zahnextraktion',
+              savos: false,
+              fogak: '16',
+              mennyiseg: 1,
+              listaEgysegar: 100,
+              tenylegesEgysegar: 100,
+            },
+          ],
+        },
+      ],
+    });
+    const masolat = planMasolatKent(plan, settings, '2026-08-10', null, ujPriceList);
+    expect(masolat.fazisok[0].sorok[0].orokoltKeziAr).toBeUndefined();
+  });
+
+  it('másoláskor is inaktivált tételre hivatkozó sor örökölt-inaktív jelzést kap', () => {
+    const plan = makePlan({
+      fazisok: [
+        {
+          sorszam: 1,
+          megnevezes: '1. kezelés',
+          megjegyzes: '',
+          sorok: [
+            {
+              tetelId: 't-inaktiv',
+              nevSnapshot: 'Kivont tétel',
+              savos: false,
+              fogak: '',
+              mennyiseg: 1,
+              listaEgysegar: 50,
+              tenylegesEgysegar: 50,
+            },
+          ],
+        },
+      ],
+    });
+    const masolat = planMasolatKent(plan, settings, '2026-08-10', null, ujPriceList);
+    expect(masolat.fazisok[0].sorok[0].orokoltInaktivTetel).toBe(true);
+  });
+
+  it('nem üres fázismegjegyzés örökölt jelzést kap, priceList paraméterrel', () => {
+    const plan = makePlan({
+      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: 'Régi ütemezés', sorok: [] }],
+    });
+    const masolat = planMasolatKent(plan, settings, '2026-08-10', null, ujPriceList);
+    expect(masolat.fazisok[0].orokoltMegjegyzes).toBe(true);
   });
 });

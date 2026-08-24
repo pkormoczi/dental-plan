@@ -7,6 +7,7 @@
 import { frissArlistaval } from './arKoveti';
 import { createBlankPlan } from './blankPlan';
 import type { OroklottNyelvPenznem } from './blankPlan';
+import { orokoltJelzesekkel } from './orokoltJelzesek';
 import { alapertelmezettOrvosNeve } from './orvosok';
 import { paciensTorzsadatbol } from './paciensAdatok';
 import { computeOsszesitok } from './totals';
@@ -79,6 +80,13 @@ export function planUjTorzsadattal(
  * aktuális árlistáé lesz. `priceList` híján (a hívó nem adja át) a forrás
  * sorai és `arlistaVerzio`-ja változatlanul másolódnak -- a korábbi,
  * VÁRAKOZÓ viselkedés.
+ *
+ * Ugyanezzel a `priceList`-gate-tel az `orokoltJelzesekkel()`
+ * (domain/orokoltJelzesek.ts) a `frissArlistaval()` MELLETT, önálló
+ * lépésként jelöli meg, mely sorok/fázisok tartalma másolatból örökölt: a
+ * kézzel felülírt ajánlati ár, a másoláskor már inaktivált tételre
+ * hivatkozás, és a nem üres fázismegjegyzés. `priceList` híján egyik
+ * jelzés sem íródik.
  */
 export function planMasolatKent(
   plan: Plan,
@@ -89,8 +97,9 @@ export function planMasolatKent(
 ): Plan {
   const friss = frissDatummal(plan, settings, ma);
   const arlistavalFriss = priceList ? frissArlistaval(friss, priceList) : friss;
+  const jelzesekkel = priceList ? orokoltJelzesekkel(arlistavalFriss, priceList) : arlistavalFriss;
   return {
-    ...arlistavalFriss,
+    ...jelzesekkel,
     orvos: alapertelmezettOrvosNeve(settings),
     paciens: master ? paciensTorzsadatbol(master) : friss.paciens,
     tervId: '',
@@ -100,6 +109,6 @@ export function planMasolatKent(
     // verzió" nyitással) -- enélkül a fenti spread csendben átvinné a forrás
     // állapotát, amit ez a mező kifejezetten kizár.
     csakAjanlat: false,
-    osszesitok: computeOsszesitok(arlistavalFriss.fazisok, arlistavalFriss.kedvezmenyOsszeg),
+    osszesitok: computeOsszesitok(jelzesekkel.fazisok, jelzesekkel.kedvezmenyOsszeg),
   };
 }

@@ -49,6 +49,11 @@ import { sorPatchKovetessel } from '../domain/mennyiseg';
 import { basePrice, formatMoney } from '../domain/money';
 import { arlistaiLeiras, leirasKoveti, nevAtirt, resolveNev, sorFallback, type SorFallbackOk } from '../domain/nev';
 import { nyelviMismatch, reviewElfogadva, reviewIrasUtan, sorPatchNyelvvel } from '../domain/nyelviReview';
+import {
+  orokoltKeziAru,
+  orokoltMegjegyzesu,
+  sorPatchOroklessel,
+} from '../domain/orokoltJelzesek';
 import { nincsListaar } from '../domain/penznemValtas';
 import { sorElteres } from '../domain/sorElteres';
 import { invalidFdiTokens, parseTeeth } from '../domain/teeth';
@@ -418,7 +423,10 @@ export default function PlanEditorPage() {
   function patchLine(pi: number, li: number, patch: Partial<Sor>) {
     updatePlan((draft) => {
       const sor = draft.fazisok[pi].sorok[li];
-      Object.assign(sor, sorPatchNyelvvel(sor, sorPatchKovetessel(sor, patch), nyelv));
+      Object.assign(
+        sor,
+        sorPatchOroklessel(sor, sorPatchNyelvvel(sor, sorPatchKovetessel(sor, patch), nyelv)),
+      );
     });
   }
 
@@ -649,6 +657,7 @@ export default function PlanEditorPage() {
                 const f = draft.fazisok[pi];
                 f.megjegyzesNyelv = reviewIrasUtan(f.megjegyzesNyelv, f.megjegyzes, v, nyelv);
                 f.megjegyzes = v;
+                if (f.orokoltMegjegyzes) f.orokoltMegjegyzes = false;
               })
             }
             onReviewMegnevezes={() =>
@@ -1178,6 +1187,7 @@ function PhaseSection({
             authoredNyelv={phase.megjegyzesNyelv?.authoredInLanguage}
             onReview={onReviewMegjegyzes}
             forceOpen={fokuszCel?.mit === 'fazisMegjegyzes' && fokuszCel.pi === pi}
+            orokolt={orokoltMegjegyzesu(phase)}
           />
 
           <Flex
@@ -1236,6 +1246,7 @@ function FazisMegjegyzes({
   authoredNyelv,
   onReview,
   forceOpen,
+  orokolt,
 }: {
   pi: number;
   value: string;
@@ -1246,6 +1257,8 @@ function FazisMegjegyzes({
   onReview: () => void;
   /** 65. tétel (D72): a guided review kényszerítve nyitja a sávot -- lásd `LineRow` `forceLeirasOpen`-jét. */
   forceOpen: boolean;
+  /** Igaz, ha a megjegyzés egy másolt tervből öröklődött és még nincs szerkesztve -- `domain/orokoltJelzesek.ts` `orokoltMegjegyzesu()`. */
+  orokolt: boolean;
 }) {
   const [nyitva, setNyitva] = useState(Boolean(value.trim()));
   useEffect(() => {
@@ -1274,6 +1287,11 @@ function FazisMegjegyzes({
               placeholder="Megjegyzés a fázishoz (megjelenik a nyomtatványon)"
             />
           </Box>
+          {orokolt && (
+            <Badge color="gray" variant="soft" size="1">
+              örökölt
+            </Badge>
+          )}
           {nyelvMismatch && (
             <>
               <Badge color="amber" variant="soft" size="1">
@@ -1498,6 +1516,11 @@ function LineRow({
             {elteres && (
               <Badge color={elteres.tipus === 'kedvezmeny' ? 'green' : 'amber'} variant="soft" size="1">
                 {elteres.cimke}
+              </Badge>
+            )}
+            {orokoltKeziAru(line) && (
+              <Badge color="gray" variant="soft" size="1">
+                örökölt ár
               </Badge>
             )}
             <Button

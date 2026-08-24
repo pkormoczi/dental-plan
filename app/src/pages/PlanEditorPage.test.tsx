@@ -1774,3 +1774,66 @@ describe('PlanEditorPage -- backlog-61: árlista-snapshot és explicit refresh',
     ).toBeInTheDocument();
   });
 });
+
+/**
+ * Egy piszkozat, aminek van egy örökölt (másolatból hozott) kézi ajánlati
+ * árú sora ÉS egy örökölt fázismegjegyzése -- a 90. tétel
+ * (`domain/orokoltJelzesek.ts`) badge- és törlés-teszteihez.
+ */
+function seedWithOrokoltJelzesek() {
+  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+  localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+  const plan = createBlankPlan(seedSettings, seedPriceList);
+  plan.paciens.nev = 'Teszt Elek';
+  plan.fazisok[0].megjegyzes = 'Régi ütemezés';
+  plan.fazisok[0].orokoltMegjegyzes = true;
+  plan.fazisok[0].sorok.push({
+    tetelId: 't041',
+    nevSnapshot: 'Fogeltávolítás',
+    savos: false,
+    fogak: '',
+    mennyiseg: 1,
+    listaEgysegar: 25000,
+    tenylegesEgysegar: 20000,
+    orokoltKeziAr: true,
+  });
+  localStorage.setItem(
+    'dp:piszkozat',
+    JSON.stringify({ schemaVersion: 1, mentve: new Date().toISOString(), plan }),
+  );
+}
+
+describe('PlanEditorPage -- 90. tétel: másolt terv örökölt szakmai-tartalom jelzései', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('örökölt kézi ajánlati árú soron megjelenik az "örökölt ár" jelvény, ár-szerkesztés után eltűnik', async () => {
+    const user = userEvent.setup();
+    seedWithOrokoltJelzesek();
+    renderEditor();
+
+    await screen.findByText('örökölt ár');
+
+    const priceField = screen.getByLabelText('Ajánlati egységár') as HTMLInputElement;
+    await user.clear(priceField);
+    await user.type(priceField, '21000');
+    await user.tab();
+
+    await waitFor(() => expect(screen.queryByText('örökölt ár')).not.toBeInTheDocument());
+  });
+
+  it('örökölt fázismegjegyzés mellett megjelenik az "örökölt" jelvény, szerkesztés után eltűnik', async () => {
+    const user = userEvent.setup();
+    seedWithOrokoltJelzesek();
+    renderEditor();
+
+    await screen.findByDisplayValue('Régi ütemezés');
+    expect(screen.getByText('örökölt')).toBeInTheDocument();
+
+    const noteField = screen.getByDisplayValue('Régi ütemezés');
+    await user.type(noteField, ' + kiegészítve');
+
+    await waitFor(() => expect(screen.queryByText('örökölt')).not.toBeInTheDocument());
+  });
+});

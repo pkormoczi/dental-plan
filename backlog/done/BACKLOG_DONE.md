@@ -2339,3 +2339,28 @@ karbantartási kör négy önálló javítása.
   `docs/02-domain-modell.md` § "Pénznemváltás", § "Előleg", § "Terv-szintű
   egyedi végösszeg"; `docs/03-funkcionalis-spec.md` § 2. "Dokumentum
   nyelve / Pénznem", § "Egyedi végösszeg", § "Előleg (D66)".
+
+### 90. tétel: Másolt terv örökölt szakmai-tartalom jelzései — KÉSZ
+
+- **Méret:** kicsi-közepes — egy új domain-modul
+  (`domain/orokoltJelzesek.ts`), a `Sor`/`Fazis` séma két-egy additív
+  mezője (`domain/types.ts`), a "Másolás új tervbe" bekötése
+  (`domain/planCopy.ts`), a szerkesztő két jelvénye
+  (`pages/PlanEditorPage.tsx`), három új véglegesítés-őr checklist-tétel
+  (`domain/veglegesitesOr.ts`), kísérő tesztekkel.
+- **Megvalósítás:** "Másolás új tervbe" (árlista átadásával) mostantól
+  finoman jelzi, mely tartalom maradt szó szerint egy korábbi tervből: egy
+  kézzel felülírt ajánlati árú sor "örökölt ár" jelvényt kap
+  (`Sor.orokoltKeziAr`), egy már a másoláskor is inaktivált tételre
+  hivatkozó sor a meglévő, bármely tervre érvényes soft checklist-tétel
+  MELLETT egy hangsúlyosabb, saját tételt is kap (`Sor.orokoltInaktivTetel`),
+  egy nem üres fázismegjegyzés pedig "örökölt" jelvényt
+  (`Fazis.orokoltMegjegyzes`). A markerek a másolat pillanatában, a
+  másolati állapotból újraszámolva íródnak (nem a forrásból átvéve), hogy
+  egy korábbi másolat-láncból ittmaradt jelzés sose öröklődjön tovább
+  hamisan; a szerkesztő badge-e és a checklist ugyanazt a megosztott
+  predikátumot olvassa. Árlista nélküli másoláskor egyik jelzés sem
+  keletkezik. Részletek: `docs/02-domain-modell.md` § "Másolat-eredet
+  jelzései"; `docs/03-funkcionalis-spec.md` § "Terv másolása új
+  tervként", § 3. "Sor mezői", § "Fázisok", § 4. "Előnézet és
+  véglegesítés".
