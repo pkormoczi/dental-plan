@@ -47,7 +47,7 @@ A CLAUDE.md "Böngésző-automatizálás — nem tárgyalható" szakasza szó sz
 
 Ez a skill soha nem módosítja a `.mcp.json`-t, és soha nem javasol
 kapcsolódást egy futó, valós Chrome-hoz. `.mcp.json` (követett, verzió-pinnelt:
-`chrome-devtools-mcp@1.6.0 --isolated --headless=false`) az egyetlen
+`chrome-devtools-mcp@1.6.0 --isolated --headless=true`) az egyetlen
 kikényszerítési pont.
 
 **Soha ne gépelj valódi páciensadatot a böngészőbe** — csak seed/demó adat
