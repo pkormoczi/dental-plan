@@ -31,7 +31,7 @@ kiolvasásával firsthand megerősítette (lásd 1. megállapítás).
 ### 1. „Másolás új tervbe" + egy másik, létező páciens nevének begépelése → páciens-identitás keveredés egy véglegesíthető dokumentumon
 
 - **Súlyosság:** Kritikus (adatvédelmi/jogi kockázat — GDPR 9. cikk szerinti
-  különleges adat, D2; téves páciens-azonosítású, aláírásra kész dokumentum)
+  különleges adat; téves páciens-azonosítású, aláírásra kész dokumentum)
 - **Gyakoriság:** Ritka, de reális — bármikor előfordulhat, amikor a doki egy
   meglévő tervet sablonként szeretne felhasználni egy másik, akár már
   ismert páciensnél, vagy elgépeli/összekeveri két hasonló ügyfél nevét
@@ -158,7 +158,7 @@ kiolvasásával firsthand megerősítette (lásd 1. megállapítás).
 
 ## 3. Nehezen felfedezhető vagy kihasználatlan funkciók
 
-- A „Páciens törzsadata" eltérés-jelző (`TorzsadatSyncCard`, D48) valós,
+- A „Páciens törzsadata" eltérés-jelző (`TorzsadatSyncCard`) valós,
   hasznos funkció, de a jelen menetben félrevezető információt adott,
   mert a mögötte álló összevetés mindig a `paciensId`-hoz (nem a
   megjelenített névhez) kötött törzsadatot nézi — ez a funkció léte és

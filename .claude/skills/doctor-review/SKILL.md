@@ -29,7 +29,7 @@ javasol/kísérel meg kapcsolódást egy futó, valós Chrome-hoz.
 
 **Soha nem kerülhet valódi páciensadat a böngészőbe** — kizárólag a demó
 seed-adat (`app/src/storage/seed/`) és szükség esetén kitalált, nyilvánvalóan
-fiktív nevek/adatok (D2, GDPR 9. cikk).
+fiktív nevek/adatok (GDPR 9. cikk).
 
 ---
 
@@ -90,8 +90,8 @@ Fusson le `list_console_messages` a forgatókönyv végén is (ezt az
 3. **Kemény szabály — mit NEM szabad tenned:** egy megállapítást sem
    törölhetsz vagy tompíthatsz azon az alapon, hogy a súrlódás mögött
    szándékos tervezői döntés vagy jogi kényszer áll (pl. a
-   véglegesítés-őr kemény blokkjai, D4 verzió-immutabilitás, a nyelvi
-   review kényszere). Az orvos nyers hangja megmarad. **Kizárólag tárgyi
+   véglegesítés-őr kemény blokkjai, a verzió-immutabilitás szabálya, a
+   nyelvi review kényszere). Az orvos nyers hangja megmarad. **Kizárólag tárgyi
    tévedést javíthatsz** (pl. a persona azt írja, nincs ilyen gomb, pedig
    van) — ilyenkor is tartsd meg az eredeti megfogalmazást, és fűzz hozzá
    egy „Pontosítás:" sort, ne írd felül.

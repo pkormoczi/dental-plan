@@ -158,8 +158,10 @@
     "docs/04-nyomtatvany-spec.md": 10,
     "docs/05-technologia.md": 16,
     "docs/07-felulet-rendszer.md": 24,
+    "docs/D-SZAM-FORRASKOD-LELTAR.md": 17,
     "docs/PROBLEMS.md": 3,
     "docs/reviews/2026-08-10-arch-react-review-2.md": 11,
-    "docs/reviews/2026-08-10-browser-validation.md": 2
+    "docs/reviews/2026-08-10-browser-validation.md": 2,
+    "docs/reviews/2026-08-25-arch-react-review.md": 15
   }
 }
