@@ -32,13 +32,12 @@ import { useNavGuard } from '../components/NavGuardContext';
 import PatientDetailHeader from '../components/PatientDetailHeader';
 import PatientEditorPanel from '../components/PatientEditorPanel';
 import PatientPlanChains from '../components/PatientPlanChains';
+import PlanVersionActionDialog, { usePlanVersionActions } from '../components/PlanVersionActionDialog';
 import { loadPlanChainData, versionDataKey, type PlanChainData } from '../domain/planChainData';
 import { latestVersionAcrossPlans } from '../domain/planFolders';
 import { megjelenitettTorzsadat } from '../domain/paciensAdatok';
 import { paciensTorlesAkadaly, type TorlesAkadaly } from '../domain/paciensTorles';
 import type { PatientFolder, PatientMasterData } from '../domain/types';
-import { useAppState } from '../state/AppState';
-import { ujTervForrasPaciensbol } from '../state/planIndulas';
 import { useStorage } from '../storage/StorageContext';
 
 type DetailTab = 'adatai' | 'tervek';
@@ -56,9 +55,12 @@ export default function PatientDetailPage() {
   const { patientDir: rawPatientDir } = useParams<{ patientDir: string }>();
   const patientDir = rawPatientDir ?? '';
   const { storage } = useStorage();
-  const { settings, priceList, copyPlanIntoDraft } = useAppState();
   const navigate = useNavigate();
   const location = useLocation();
+  // Az üres állapot "+ Új terv" gombjához -- ha helyette a `PatientPlanChains`
+  // renderel, az a SAJÁT példányát tartja, a kettő egymást kizáróan van a
+  // DOM-ban, tehát nincs dupla dialógus.
+  const ujTervAkciok = usePlanVersionActions({ patientDir });
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -100,9 +102,6 @@ export default function PatientDetailPage() {
       setTab(next);
     });
   }
-
-  const [startingPlan, setStartingPlan] = useState(false);
-  const [startError, setStartError] = useState<string | null>(null);
 
   // A Terv részletei lap "Összes verzió" gombja ide, POP-navigációval tér
   // vissza -- a lánc-nyitottság enélkül a `PatientPlanChains` helyi
@@ -176,21 +175,6 @@ export default function PatientDetailPage() {
       ? (chainData.plansByVersion[versionDataKey(latestOverall.planDir, latestOverall.version.dirName)] ??
         null)
       : null;
-
-  async function startFirstPlan() {
-    if (!patient) return;
-    setStartingPlan(true);
-    setStartError(null);
-    try {
-      const next = await ujTervForrasPaciensbol(storage, settings, priceList, patient.dirName);
-      copyPlanIntoDraft(next, patient.dirName);
-      navigate('/paciens');
-    } catch (err) {
-      setStartError(err instanceof Error ? err.message : 'Az új terv indítása váratlanul meghiúsult.');
-    } finally {
-      setStartingPlan(false);
-    }
-  }
 
   // App-chrome, nem tartalom -- ezért mind a 4 return-ágban megjelenik
   // (betöltés/hiba/nem található/normál), és a MEGLÉVŐ dirty-guardon (D46
@@ -352,17 +336,21 @@ export default function PatientDetailPage() {
               <Text as="p" size="2" color="gray" mb="3">
                 Ennek a páciensnek még nincs kezelési terve.
               </Text>
-              {startError && (
+              {ujTervAkciok.hiba && ujTervAkciok.hiba.planDir === null && ujTervAkciok.hiba.versionDir === null && (
                 <Callout.Root color="red" size="1" mb="3">
                   <Callout.Icon>
                     <CrossCircledIcon />
                   </Callout.Icon>
-                  <Callout.Text>{startError}</Callout.Text>
+                  <Callout.Text>{ujTervAkciok.hiba.message}</Callout.Text>
                 </Callout.Root>
               )}
-              <Button onClick={() => void startFirstPlan()} disabled={startingPlan}>
+              <Button
+                onClick={() => ujTervAkciok.inditas({ kind: 'ujTerv' })}
+                disabled={ujTervAkciok.fut !== null}
+              >
                 + Új terv
               </Button>
+              <PlanVersionActionDialog akciok={ujTervAkciok} />
             </Box>
           ) : (
             <PatientPlanChains

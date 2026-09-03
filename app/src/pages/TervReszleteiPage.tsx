@@ -81,7 +81,7 @@ export default function TervReszleteiPage() {
   const { priceList } = useAppState();
   const navigate = useNavigate();
   const location = useLocation();
-  const akciok = usePlanVersionActions(patientDir);
+  const akciok = usePlanVersionActions({ patientDir });
 
   const [allapot, setAllapot] = useState<Allapot>({ fajta: 'toltes' });
   const rootRef = useRef<HTMLDivElement>(null);

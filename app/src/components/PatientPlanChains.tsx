@@ -127,7 +127,7 @@ export default function PatientPlanChains({
   const { storage, loadPlanPdf } = useStorage();
   const { priceList } = useAppState();
   const navigate = useNavigate();
-  const akciok = usePlanVersionActions(patient.dirName);
+  const akciok = usePlanVersionActions({ patientDir: patient.dirName });
 
   const standalone = header === 'standalone';
 

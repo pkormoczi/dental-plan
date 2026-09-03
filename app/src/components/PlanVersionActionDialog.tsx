@@ -1,11 +1,13 @@
-// A verzió-linkelt akciók (Új verzió / Másolás új tervbe / Új terv) React-
-// rétege -- a tiszta döntési logikát (`domain/planVersionActions.ts`)
-// storage/AppState/navigáció-kontextusra kötve, ÉS a hozzá tartozó
-// piszkozat-felülírás-őr `AlertDialog`-ot EGY fájlban adja, a
-// `DiscardChangesDialog.tsx` hook+komponens mintáján. Két hívója van: a
-// `PatientPlanChains.tsx` verziósora és a `pages/TervReszleteiPage.tsx` —
-// mindkettő ugyanazt a szöveget/feltételt kapja, nincs második,
-// függetlenül karbantartott másolat.
+// A verzió-linkelt akciók (Új verzió / Másolás új tervbe / Új terv / Új
+// páciens) React-rétege -- a tiszta döntési logikát
+// (`domain/planVersionActions.ts`) storage/AppState/navigáció-kontextusra
+// kötve, ÉS a hozzá tartozó piszkozat-felülírás-őr `AlertDialog`-ot EGY
+// fájlban adja, a `DiscardChangesDialog.tsx` hook+komponens mintáján. Négy
+// hívója van: a `PatientPlanChains.tsx` verziósora, a
+// `pages/TervReszleteiPage.tsx`, a `pages/NewPlanPage.tsx` köztes választója
+// és a `pages/PatientDetailPage.tsx` üres állapota -- mind ugyanazt a
+// szöveget/feltételt kapja, nincs második, függetlenül karbantartott
+// másolat.
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -29,28 +31,58 @@ export interface VerzioAkcioHiba {
   message: string;
 }
 
+export interface UsePlanVersionActionsOptions {
+  /** Hook-szintű alapértelmezett célpáciens -- egy konkrét páciens oldalán élő
+   * hívóknak (PatientPlanChains, TervReszleteiPage, PatientDetailPage) ez elég,
+   * nem kell minden `inditas()`-hívásban megismételni. */
+  patientDir?: string;
+  /** A `'ujPaciens'` kind egyetlen hatása: a hívóhoz tartozó quick-create
+   * dialógus megnyitása -- az a felület (`NewPlanPage.tsx`) SAJÁT, nem
+   * megosztható állapota, ezért ide callbackként jön be, nem a hook kezeli. */
+  onUjPaciens?: (nev?: string) => void;
+}
+
 export interface PlanVersionActions {
   hiba: VerzioAkcioHiba | null;
   /** A hívó SAJÁT (nem megosztott) akciói -- pl. `downloadVersion` -- ugyanide írnak. */
   jelezHiba: (hiba: VerzioAkcioHiba | null) => void;
   /** Megerősítést kér, ha kell -- egyébként azonnal fut. */
   inditas: (action: PendingAction) => void;
+  /**
+   * Azonnal dispatch-el, a `kellMegerosites()` megkerülésével -- KIZÁRÓLAG
+   * olyan útra, ahol a megerősítés MÁR lefutott (a quick-create dialógus
+   * sikeres mentése, vagy annak "Ezt a pácienst választom" ága). Nem a
+   * védelem megkerülésének általános eszköze.
+   */
+  futtat: (action: PendingAction) => void;
+  /** Az ÉPP FUTÓ akció, vagy `null` -- a `NewPlanPage` ebből tudja, MELYIK
+   * sor van letiltva (`fut?.patientDir === p.dirName`), a többi hívónak elég
+   * a `fut !== null`. */
+  fut: PendingAction | null;
   pending: PendingAction | null;
   zar: () => void;
   megerosit: () => void;
 }
 
-export function usePlanVersionActions(patientDir: string): PlanVersionActions {
+export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): PlanVersionActions {
   const { storage } = useStorage();
   const { settings, priceList, loadPlanIntoDraft, copyPlanIntoDraft, vanMentetlenPiszkozat } =
     useAppState();
   const navigate = useNavigate();
 
   const [pending, setPending] = useState<PendingAction | null>(null);
+  const [fut, setFut] = useState<PendingAction | null>(null);
   const [hiba, setHiba] = useState<VerzioAkcioHiba | null>(null);
 
-  async function openVersion(ref: VersionRef) {
+  function resolvePatientDir(action: PendingAction): string | null {
+    return action.patientDir ?? opts?.patientDir ?? null;
+  }
+
+  async function openVersion(action: PendingAction) {
+    const patientDir = resolvePatientDir(action);
+    const ref = action as VersionRef;
     setHiba(null);
+    if (!patientDir) return;
     try {
       const plan = await storage.loadPlan({ patientDir, planDir: ref.planDir, versionDir: ref.versionDir });
       loadPlanIntoDraft(plan, patientDir);
@@ -66,8 +98,11 @@ export function usePlanVersionActions(patientDir: string): PlanVersionActions {
     }
   }
 
-  async function copyVersion(ref: VersionRef) {
+  async function copyVersion(action: PendingAction) {
+    const patientDir = resolvePatientDir(action);
+    const ref = action as VersionRef;
     setHiba(null);
+    if (!patientDir) return;
     try {
       // A paciens blokkot az ÉLŐ törzsadatból frissítjük, nem a forrás
       // verzió pillanatképéből -- olvashatatlan (sérült/magasabb-verziójú)
@@ -88,8 +123,10 @@ export function usePlanVersionActions(patientDir: string): PlanVersionActions {
     }
   }
 
-  async function ujTervPaciensAdataival() {
+  async function ujTervPaciensAdataival(action: PendingAction) {
+    const patientDir = resolvePatientDir(action);
     setHiba(null);
+    if (!patientDir) return;
     try {
       const next = await ujTervForrasPaciensbol(storage, settings, priceList, patientDir);
       copyPlanIntoDraft(next, patientDir);
@@ -106,14 +143,32 @@ export function usePlanVersionActions(patientDir: string): PlanVersionActions {
     }
   }
 
-  function dispatchPending(action: PendingAction): Promise<void> {
+  async function dispatchPending(action: PendingAction): Promise<void> {
     switch (action.kind) {
       case 'open':
-        return openVersion(action as VersionRef);
+        return openVersion(action);
       case 'copy':
-        return copyVersion(action as VersionRef);
+        return copyVersion(action);
       case 'ujTerv':
-        return ujTervPaciensAdataival();
+        return ujTervPaciensAdataival(action);
+      case 'ujPaciens':
+        opts?.onUjPaciens?.(action.nev);
+        return;
+    }
+  }
+
+  async function runTracked(action: PendingAction) {
+    // A 'ujPaciens' ág szinkron (csak egy dialógust nyit) -- nem állítjuk a
+    // `fut`-ot, különben egy render-tick erejéig hamis "busy" villanna.
+    if (action.kind === 'ujPaciens') {
+      await dispatchPending(action);
+      return;
+    }
+    setFut(action);
+    try {
+      await dispatchPending(action);
+    } finally {
+      setFut(null);
     }
   }
 
@@ -122,17 +177,19 @@ export function usePlanVersionActions(patientDir: string): PlanVersionActions {
       setPending(action);
       return;
     }
-    void dispatchPending(action);
+    void runTracked(action);
   }
 
   return {
     hiba,
     jelezHiba: setHiba,
     inditas,
+    futtat: (action: PendingAction) => void runTracked(action),
+    fut,
     pending,
     zar: () => setPending(null),
     megerosit: () => {
-      if (pending) void dispatchPending(pending);
+      if (pending) void runTracked(pending);
       setPending(null);
     },
   };

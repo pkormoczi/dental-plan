@@ -4,9 +4,7 @@
 // a célpáciens már adott a forrás tervből, nincs kétértelműség.
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  AlertDialog,
   Box,
   Button,
   Callout,
@@ -19,33 +17,29 @@ import {
 } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
+import PlanVersionActionDialog, { usePlanVersionActions } from '../components/PlanVersionActionDialog';
 import { aktivitasSzoveg, legutobbAktivPaciensek, UJ_TERV_RECENT_LIMIT } from '../domain/paciensAktivitas';
 import { KERESES_MIN_KARAKTER, paciensTalalatok } from '../domain/paciensKereses';
 import type { PatientFolder } from '../domain/types';
-import { useAppState } from '../state/AppState';
-import { ujTervForrasPaciensbol } from '../state/planIndulas';
 import { useStorage } from '../storage/StorageContext';
 import UjPaciensDialog from './paciensek/UjPaciensDialog';
 
-type PendingAction =
-  | { kind: 'existing'; patient: PatientFolder }
-  | { kind: 'new'; nev?: string };
-
 export default function NewPlanPage() {
   const { storage } = useStorage();
-  const { settings, priceList, copyPlanIntoDraft, vanMentetlenPiszkozat } = useAppState();
-  const navigate = useNavigate();
 
   const [patients, setPatients] = useState<PatientFolder[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const [hi, setHi] = useState(0);
-  const [selectingDir, setSelectingDir] = useState<string | null>(null);
-  const [selectError, setSelectError] = useState<string | null>(null);
-  const [pending, setPending] = useState<PendingAction | null>(null);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  // A "+ Új páciens" ág megerősítése a quick-create dialógus MEGNYITÁSA
+  // előtt fut le -- a `'ujPaciens'` kind egyetlen hatása maga a dialógus
+  // megnyitása, ami itt, a laphoz kötött állapotban él (nem a megosztott
+  // hookban, lásd `onUjPaciens`).
+  const akciok = usePlanVersionActions({ onUjPaciens: openQuickCreate });
 
   // A "Vadonatúj páciens"/no-match ág mostantól a quick-create dialóguson át
   // hoz létre valódi Patient-rekordot MÉG A TERV ELŐTT (D14, backlog-36) --
@@ -106,29 +100,6 @@ export default function NewPlanPage() {
     itemRefs.current[hi]?.scrollIntoView({ block: 'nearest' });
   }, [hi]);
 
-  // A páciens ELÉRHETŐ legjobb adataiból tölti elő a Terv adatai lapot: a
-  // lezárt törzsadatból (paciens-adatok.json, D33), ha van, egyébként a
-  // LEGUTÓBB MÓDOSÍTOTT terv-lánc legfrissebb verziójából -- ugyanaz a
-  // közös kiválasztás, mint az OsszesTervSection páciensszintű "Új terv"
-  // gombjáé (state/planIndulas.ts).
-  async function selectExistingPatient(patient: PatientFolder) {
-    setSelectError(null);
-    setSelectingDir(patient.dirName);
-    try {
-      const next = await ujTervForrasPaciensbol(storage, settings, priceList, patient.dirName);
-      copyPlanIntoDraft(next, patient.dirName);
-      navigate('/paciens');
-    } catch (err) {
-      setSelectError(
-        err instanceof Error
-          ? `A páciens adatainak átvétele nem sikerült: ${err.message}`
-          : 'A páciens adatainak átvétele váratlanul meghiúsult.',
-      );
-    } finally {
-      setSelectingDir(null);
-    }
-  }
-
   // A `nev` a no-match ág begépelt szövege (docs/03-funkcionalis-spec.md
   // „Új terv indítása") -- a mindig látható "+ Új páciens" gomb `nev`
   // nélkül hívja. Csak MEGNYITJA a quick-create dialógust -- a tényleges
@@ -139,35 +110,19 @@ export default function NewPlanPage() {
     setUjOpen(true);
   }
 
-  function runOrConfirm(action: PendingAction) {
-    if (vanMentetlenPiszkozat) {
-      setPending(action);
-      return;
-    }
-    dispatchPending(action);
-  }
-
-  function dispatchPending(action: PendingAction) {
-    if (action.kind === 'existing') {
-      void selectExistingPatient(action.patient);
-    } else {
-      openQuickCreate(action.nev);
-    }
-  }
-
-  // Sikeres `storage.createPatient` után UGYANAZT a `selectExistingPatient`-et
-  // futtatjuk a frissen létrehozott mappára: a `paciens-adatok.json` (amit a
-  // `createPatient` már megírt) miatt `ujTervForrasPaciensbol` a törzsadat-ágon
-  // tölt elő, a `copyPlanIntoDraft(next, folder.dirName)` pedig kitölti a
-  // draft `patientDir`-jét (D37) -- külön kód nélkül teljesíti a terv-doc 5.
-  // döntését, és a későbbi `savePlan` a MÁR LÉTEZŐ páciensmappába ment.
+  // Sikeres `storage.createPatient` után UGYANAZT az 'ujTerv' akciót
+  // futtatjuk a frissen létrehozott mappára, a `futtat()`-tal -- a
+  // megerősítés MÁR lefutott a dialógus megnyitása előtt, itt nem kérdez
+  // másodszor. A `paciens-adatok.json` (amit a `createPatient` már megírt)
+  // miatt a hook a törzsadat-ágon tölt elő, a `copyPlanIntoDraft` pedig
+  // kitölti a draft `patientDir`-jét.
   async function createAndStart(nev: string, kezdoAdatok: { szuletesiIdo: string; telefon: string }) {
     setCreateError(null);
     try {
       const folder = await storage.createPatient(nev, kezdoAdatok);
       setPatients((prev) => [...prev, folder]);
       setUjOpen(false);
-      await selectExistingPatient(folder);
+      akciok.futtat({ kind: 'ujTerv', patientDir: folder.dirName });
     } catch (err) {
       setCreateError(
         err instanceof Error ? err.message : 'Az új páciens felvitele váratlanul meghiúsult.',
@@ -208,26 +163,10 @@ export default function NewPlanPage() {
       setHi((h) => (h - 1 + opcioSzam) % opcioSzam);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (hi < listaTetelek.length) runOrConfirm({ kind: 'existing', patient: listaTetelek[hi] });
-      else if (ujPaciensOpcio) runOrConfirm({ kind: 'new', nev: trimmed });
+      if (hi < listaTetelek.length) akciok.inditas({ kind: 'ujTerv', patientDir: listaTetelek[hi].dirName });
+      else if (ujPaciensOpcio) akciok.inditas({ kind: 'ujPaciens', nev: trimmed });
     }
   }
-
-  const pendingSpecs: Record<PendingAction['kind'], { description: string; actionLabel: string }> = {
-    existing: {
-      description:
-        'Van mentetlen piszkozatod. Ha ennek a páciensnek az adataival új tervet indítasz, a ' +
-        'jelenlegi piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. ' +
-        'Biztosan folytatod?',
-      actionLabel: 'Folytatás, piszkozat elvetésével',
-    },
-    new: {
-      description:
-        'Van mentetlen piszkozatod. Ha új tervet indítasz, ez elvész -- nem került fájlba, ' +
-        'csak ebben a böngészőben volt meg. Biztosan új tervvel kezded?',
-      actionLabel: 'Elvetés és új terv',
-    },
-  };
 
   return (
     <Box style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -239,16 +178,16 @@ export default function NewPlanPage() {
         adatait a terv átveszi, nem kell újragépelni.
       </Text>
 
-      {selectError && (
+      {akciok.hiba && (
         <Callout.Root color="red" mb="4">
           <Callout.Icon>
             <CrossCircledIcon />
           </Callout.Icon>
-          <Callout.Text>{selectError}</Callout.Text>
+          <Callout.Text>{akciok.hiba.message}</Callout.Text>
         </Callout.Root>
       )}
 
-      <Button type="button" onClick={() => runOrConfirm({ kind: 'new' })}>
+      <Button type="button" onClick={() => akciok.inditas({ kind: 'ujPaciens' })}>
         + Új páciens
       </Button>
 
@@ -325,8 +264,8 @@ export default function NewPlanPage() {
                 type="button"
                 variant="soft"
                 color="gray"
-                disabled={selectingDir === p.dirName}
-                onClick={() => runOrConfirm({ kind: 'existing', patient: p })}
+                disabled={akciok.fut?.patientDir === p.dirName}
+                onClick={() => akciok.inditas({ kind: 'ujTerv', patientDir: p.dirName })}
                 onMouseEnter={() => setHi(i)}
                 style={{
                   justifyContent: 'space-between',
@@ -355,7 +294,7 @@ export default function NewPlanPage() {
             type="button"
             variant="soft"
             color="gray"
-            onClick={() => runOrConfirm({ kind: 'new', nev: trimmed })}
+            onClick={() => akciok.inditas({ kind: 'ujPaciens', nev: trimmed })}
             onMouseEnter={() => setHi(listaTetelek.length)}
             style={{
               justifyContent: 'flex-start',
@@ -377,37 +316,12 @@ export default function NewPlanPage() {
         onSave={(nev, kezdoAdatok) => void createAndStart(nev, kezdoAdatok)}
         onUseExisting={(p) => {
           setUjOpen(false);
-          void selectExistingPatient(p);
+          akciok.futtat({ kind: 'ujTerv', patientDir: p.dirName });
         }}
         submitError={createError}
       />
 
-      <AlertDialog.Root open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
-        <AlertDialog.Content maxWidth="440px">
-          <AlertDialog.Title>Piszkozat felülírása</AlertDialog.Title>
-          <AlertDialog.Description size="2">
-            {pending && pendingSpecs[pending.kind].description}
-          </AlertDialog.Description>
-          <Flex gap="3" mt="4" justify="end">
-            <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">
-                Mégse
-              </Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button
-                color="red"
-                onClick={() => {
-                  if (pending) dispatchPending(pending);
-                  setPending(null);
-                }}
-              >
-                {pending && pendingSpecs[pending.kind].actionLabel}
-              </Button>
-            </AlertDialog.Action>
-          </Flex>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
+      <PlanVersionActionDialog akciok={akciok} />
     </Box>
   );
 }

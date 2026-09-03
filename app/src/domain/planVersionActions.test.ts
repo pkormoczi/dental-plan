@@ -10,6 +10,7 @@ describe('kellMegerosites', () => {
     expect(kellMegerosites({ kind: 'open' }, true)).toBe(true);
     expect(kellMegerosites({ kind: 'copy', historical: false }, true)).toBe(true);
     expect(kellMegerosites({ kind: 'ujTerv' }, true)).toBe(true);
+    expect(kellMegerosites({ kind: 'ujPaciens' }, true)).toBe(true);
   });
 
   it('historical másolás piszkozat nélkül is megerősítést kér', () => {
@@ -50,6 +51,11 @@ describe('megerositesTartalom', () => {
   it('"ujTerv" akciónál a megfelelő szöveget adja', () => {
     const tartalom = megerositesTartalom({ kind: 'ujTerv' }, true);
     expect(tartalom.actionLabel).toBe('Új terv, piszkozat elvetésével');
+  });
+
+  it('"ujPaciens" akciónál a megfelelő szöveget adja', () => {
+    const tartalom = megerositesTartalom({ kind: 'ujPaciens' }, true);
+    expect(tartalom.actionLabel).toBe('Új páciens, piszkozat elvetésével');
   });
 });
 

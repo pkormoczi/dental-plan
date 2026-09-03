@@ -1,8 +1,10 @@
-// Egy verzió-linkelt akció (Új verzió / Másolás új tervbe / Új terv) tiszta
-// döntési logikája -- a `components/PlanVersionActionDialog.tsx` (React/
-// storage-kontextus) és a `components/PatientPlanChains.tsx` verziósora
-// egyaránt ezt hívja, hogy a megerősítő dialógus szövege és a
-// piszkozat-felülírás-őr feltétele ne driftelhessen szét két hívóhely
+// Egy verzió-linkelt akció (Új verzió / Másolás új tervbe / Új terv / Új
+// páciens) tiszta döntési logikája -- a `components/PlanVersionActionDialog.tsx`
+// (React/storage-kontextus) és ennek MIND A NÉGY hívója (a
+// `PatientPlanChains.tsx` verziósora, a `TervReszleteiPage.tsx`, a
+// `NewPlanPage.tsx` köztes választója és a `PatientDetailPage.tsx` üres
+// állapota) egyaránt ezt hívja, hogy a megerősítő dialógus szövege és a
+// piszkozat-felülírás-őr feltétele ne driftelhessen szét a hívóhelyek
 // között. Lásd `docs/03-funkcionalis-spec.md` § 5. "Terv-láncok és
 // verziók" — "A négy terv-létrehozási út" és az utána következő
 // bekezdések.
@@ -12,15 +14,27 @@ export interface VersionRef {
   versionDir: string;
 }
 
-export type PendingKind = 'open' | 'copy' | 'ujTerv';
+export type PendingKind = 'open' | 'copy' | 'ujTerv' | 'ujPaciens';
 
 /**
  * `historical` kizárólag `kind: 'copy'`-nál értelmes: igaz, ha a másolt
  * verzió NEM a lánc legfrissebbje. Ez önmagában is megerősítést kér (lásd
  * `kellMegerosites`), és ez dönti el a dialógus tartalmát (lásd
  * `megerositesTartalom`).
+ *
+ * `patientDir` opcionális: a hívó (`components/PlanVersionActionDialog.tsx`)
+ * hook-szintű alapértékkel is rendelkezhet, ilyenkor csak azok az akciók
+ * adják meg itt, amiknek a célpáciense a hívó saját kötésétől eltér (pl.
+ * `pages/NewPlanPage.tsx` soronként más pácienst indít). `nev` kizárólag
+ * `kind: 'ujPaciens'`-nél értelmes: a quick-create dialógust ezzel a
+ * begépelt névvel előtöltve nyitja meg a hívó `onUjPaciens` callbackje.
  */
-export type PendingAction = Partial<VersionRef> & { kind: PendingKind; historical?: boolean };
+export type PendingAction = Partial<VersionRef> & {
+  kind: PendingKind;
+  historical?: boolean;
+  patientDir?: string;
+  nev?: string;
+};
 
 export interface MegerositesTartalom {
   title: string;
@@ -60,6 +74,12 @@ const PENDING_SPECS: Record<PendingKind, { description: string; actionLabel: str
       'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
       'folytatod?',
     actionLabel: 'Új terv, piszkozat elvetésével',
+  },
+  ujPaciens: {
+    description:
+      'Van mentetlen piszkozatod. Ha új tervet indítasz, ez elvész -- nem került fájlba, ' +
+      'csak ebben a böngészőben volt meg. Biztosan új tervvel kezded?',
+    actionLabel: 'Új páciens, piszkozat elvetésével',
   },
 };
 

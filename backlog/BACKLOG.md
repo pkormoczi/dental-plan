@@ -32,18 +32,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   (c) a kötés (páciensmappa) látszódjon a mentés előtt.
   **Terv:** `backlog/plans/backlog-94-paciens-identitas-vedohalo-terv.md`
 
-### 95. tétel: Egységes piszkozat-felülírás védelem minden „új terv" belépési ponton
-
-  A `pages/PatientDetailPage.tsx` `startFirstPlan()` (terv nélküli páciens
-  üres-állapotának „+ Új terv" gombja) megerősítés nélkül hívja a
-  `copyPlanIntoDraft`-ot, eldobva bármely aktív piszkozatot. A
-  `PatientPlanChains.tsx` és a `TervReszleteiPage.tsx` szabályosan az
-  `usePlanVersionActions().inditas()`-t hívja; a `NewPlanPage.tsx` egy
-  párhuzamos, saját `AlertDialog`-os védelmet valósít meg
-  (`kellMegerosites()` nélkül). Kért: egyetlen közös védelmi út mind a négy
-  belépési ponton.
-  **Terv:** `backlog/plans/backlog-95-egyseges-piszkozat-felulirasvedelem-terv.md`
-
 ### 96. tétel: Elgépelés-védelem az árlista árainál
 
   A `pages/priceListAdmin/ItemEditor.tsx` `setFixPrice()`/`setSavosPrice()`

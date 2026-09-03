@@ -118,6 +118,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | Egy VÉGLEGESÍTETT terv `csakAjanlat` mezője azt rögzíti, hogy a ténylegesen kiadott PDF tartalmazta-e a nyilatkozat + aláírás oldalt — a placeholder-jelölésű nyilatkozat miatti kényszer (D23) a piszkozatban sosem íródik a mezőbe, csak véglegesítéskor | D75 — enélkül egy placeholder miatt kényszerítve, aláírás nélkül kiadott verzió a mentett fájlban tévesen „teljes dokumentum"-ként (`csakAjanlat: false`) szerepelne, és a verziósor jelvénye (D558) pontosan azon az eseten hallgatna, ahol a legkevésbé engedhető meg a tévedés |
 | Német nyelvű terven a véglegesítés blokkolva, ha egy látható sor neve nem igazoltan németül van (sem árlistai `nev.de`-t nem követ, sem D72 szerint igazoltan `de`-re írt kézi szöveg), vagy ha a fogtérkép-legendán ténylegesen megjelenő kategóriának nincs `nev.de`-je | D77 — aláírandó német dokumentumon lefordítatlan magyar tételnév/kategórianév jogilag/kommunikációsan nem elfogadható |
 | A fizetési feltételek/garancia szakasz placeholder-jelölésű vagy üres szövege a címével együtt kimarad a nyomtatványból, sosem kerül nyers `[PLACEHOLDER …]` szöveg éles PDF-re | Egy jogilag még le nem zárt, helykitöltő szöveg egy aláírandó/kiadott dokumentumon jogi kockázat — a `sablonNyomtathato()` (`app/src/domain/templates.ts`) dönti el, a véglegesítés-őr pedig puha checklist-tétellel jelzi a dokinak, mely szakaszok maradnak ki |
+| Minden új tervet indító akció a megosztott piszkozat-felülírás-őrön megy át; mentetlen piszkozat mellett megerősítés nélkül egyik sem fut | A piszkozat sosem került fájlba — egy megkerült őr csendes, visszafordíthatatlan adatvesztés |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -1157,19 +1158,35 @@ részletei (véglegesített verzió)) segédfüggvényei/komponensei, szintén n
 - `domain/planVersionActions.ts` `kellMegerosites(action,
   vanMentetlenPiszkozat)` / `megerositesTartalom(action,
   vanMentetlenPiszkozat)` / `tervReszleteiUtvonal(patientDir, ref)` — a
-  verzió-linkelt akciók (Új verzió/Másolás új tervbe/Új terv) tiszta
-  döntési logikája: a piszkozat-felülírás-őr feltétele, a megerősítő
-  dialógus szövege és a Terv részletei útvonal encodeURIComponent-es
-  felépítése egy helyen. A `components/PatientPlanChains.tsx` verziósora
-  ÉS a `pages/TervReszleteiPage.tsx` egyaránt ezt hívja, hogy a szöveg/
-  feltétel a két felület között ne térjen el
-- `components/PlanVersionActionDialog.tsx` `usePlanVersionActions(patientDir)`
-  / `PlanVersionActionDialog` — a fenti tiszta logika React-kontextusra
-  (storage/AppState/navigáció) kötött hook+dialógus párosa, a
-  `DiscardChangesDialog.tsx` mintáján; a hiba-állapot (`hiba`/`jelezHiba`)
-  a hívó SAJÁT akcióit (pl. `downloadVersion`, „Megnyitás külön") is
-  fogadja, a megjelenítés helyét (sorhoz kötött vagy lap-szintű) a hívó
-  dönti el
+  verzió-linkelt akciók (Új verzió/Másolás új tervbe/Új terv/Új páciens)
+  tiszta döntési logikája: a piszkozat-felülírás-őr feltétele, a
+  megerősítő dialógus szövege és a Terv részletei útvonal
+  encodeURIComponent-es felépítése egy helyen, a négy `PendingKind`
+  (`'open'`/`'copy'`/`'ujTerv'`/`'ujPaciens'`) mindegyikéhez. A
+  `components/PatientPlanChains.tsx` verziósora, a `pages/TervReszleteiPage.tsx`,
+  a `pages/NewPlanPage.tsx` köztes választója ÉS a `pages/PatientDetailPage.tsx`
+  terv nélküli páciens üres állapota egyaránt ezt hívja, hogy a
+  szöveg/feltétel egyik felület se térjen el a többitől
+- `components/PlanVersionActionDialog.tsx`
+  `usePlanVersionActions({ patientDir?, onUjPaciens? })` / `PlanVersionActionDialog`
+  — a fenti tiszta logika React-kontextusra (storage/AppState/navigáció)
+  kötött hook+dialógus párosa, a `DiscardChangesDialog.tsx` mintáján; a
+  hiba-állapot (`hiba`/`jelezHiba`) a hívó SAJÁT akcióit (pl.
+  `downloadVersion`, „Megnyitás külön") is fogadja, a megjelenítés helyét
+  (sorhoz kötött vagy lap-szintű) a hívó dönti el. A `patientDir` a hook
+  opciói KÖZÜL is jöhet (egy konkrét páciens oldalán élő hívóknak, pl.
+  `PatientPlanChains`), VAGY az egyes `inditas()`/`futtat()`-hívás
+  `action.patientDir`-jéből (a `NewPlanPage` soronként más célpáciense) —
+  a kettő `??`-vel keveredik. Az `onUjPaciens` a `'ujPaciens'` kind
+  egyetlen hatását (egy quick-create dialógus megnyitása) adja vissza a
+  hívónak, mert az a felület saját, nem megosztható állapota — a hook
+  maga sosem ismeri a dialógust. A `futtat(action)` a `kellMegerosites()`
+  megkerülésével azonnal dispatch-el, KIZÁRÓLAG olyan útra, ahol a
+  megerősítés MÁR lefutott (a quick-create sikeres mentése, illetve annak
+  „Ezt a pácienst választom” ága) — nem a védelem megkerülésének
+  általános eszköze. A `fut` mező az ÉPP FUTÓ akciót adja (nem boolean):
+  a `NewPlanPage` ebből dönti el, melyik SOR van letiltva
+  (`fut?.patientDir === p.dirName`), a többi hívónak elég a `fut !== null`
 - `sorElteres(sor, nincsReferenciaAr?)` (`app/src/domain/sorElteres.ts`,
   lásd `docs/02-domain-modell.md` § „Sor-szintű ár-eltérés osztályozása")
   — a kezelési sor listaár/ajánlati ár eltérésének EGYETLEN osztályozója:

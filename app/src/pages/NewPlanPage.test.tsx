@@ -306,7 +306,7 @@ describe('NewPlanPage', () => {
     );
 
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Elvetés és új terv' }));
+    await user.click(screen.getByRole('button', { name: 'Új páciens, piszkozat elvetésével' }));
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
 
     const nameInput = await screen.findByRole('textbox', { name: 'Név *' });
@@ -314,6 +314,26 @@ describe('NewPlanPage', () => {
     await user.click(screen.getByRole('button', { name: 'Mentés' }));
 
     expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Teljesen Ismeretlen Név');
+  });
+
+  // A `NewPlanPage` a megosztott `usePlanVersionActions().futtat()`-ot hívja
+  // a quick-create SIKERES mentése után -- a megerősítés a dialógus
+  // megnyitása előtt már lefutott, ezért itt NEM jöhet második kérdés.
+  it('végigvitt quick-create mentetlen piszkozattal: nincs második megerősítő dialógus', async () => {
+    seedPersistedDraft();
+    const user = userEvent.setup();
+    renderNewPlan();
+
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+    await user.click(await screen.findByRole('button', { name: 'Új páciens, piszkozat elvetésével' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Teszt Egy Kérdés');
+    await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
+
+    expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
+    expect(screen.getByTestId('draft-nev')).toHaveTextContent('Teszt Egy Kérdés');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
   it('nulla meglévő páciensnél csak a "+ Új páciens" ág látszik', async () => {
@@ -419,7 +439,7 @@ describe('NewPlanPage', () => {
     expect(screen.queryByTestId('draft-oldal')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '+ Új páciens' }));
-    await user.click(await screen.findByRole('button', { name: 'Elvetés és új terv' }));
+    await user.click(await screen.findByRole('button', { name: 'Új páciens, piszkozat elvetésével' }));
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
 
     const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
@@ -441,7 +461,7 @@ describe('NewPlanPage', () => {
 
     await user.click(screen.getByRole('button', { name: /Kovács János/ }));
     await user.click(
-      await screen.findByRole('button', { name: 'Folytatás, piszkozat elvetésével' }),
+      await screen.findByRole('button', { name: 'Új terv, piszkozat elvetésével' }),
     );
     expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Kovács János');
   });

@@ -2417,3 +2417,23 @@ karbantartási kör négy önálló javítása.
   keresztül tesztelt, dedikált komponensteszt-fájl nélkül) nem kaptak
   hasonló bontást. Részletek: `docs/05-technologia.md`, `CLAUDE.md`
   "Meglévő segédfüggvények".
+
+### 95. tétel: Egységes piszkozat-felülírás védelem minden „új terv" belépési ponton — KÉSZ
+
+- **Méret:** közepes — egy meglévő megosztott réteg bővítése három hívóhelyen.
+- **Megvalósítás:** a `domain/planVersionActions.ts` `PendingKind`-ja egy
+  negyedik, `'ujPaciens'` taggel bővült, a `components/PlanVersionActionDialog.tsx`
+  `usePlanVersionActions` hookja pedig opciós argumentumra állt
+  (`patientDir?`/`onUjPaciens?`), egy `futtat()` (a megerősítés
+  megkerülésével, kizárólag már megerősített útra) és egy `fut`
+  (az épp futó akció, soronkénti letiltáshoz) mezővel. A
+  `pages/NewPlanPage.tsx` párhuzamos, saját `AlertDialog`-os védelme
+  teljesen elbontva a hook javára; a `pages/PatientDetailPage.tsx` terv
+  nélküli páciens üres-állapotának „+ Új terv" gombja (korábban
+  megerősítés NÉLKÜL hívta a `copyPlanIntoDraft`-ot) most a hookon
+  keresztül fut. Mind a négy belépési pont (verziósor, Terv részletei,
+  köztes választó, üres állapot) egyetlen szövegtáblát és feltételt
+  oszt meg. Részletek: `docs/03-funkcionalis-spec.md` § 5. „A négy
+  terv-létrehozási út" és „Új terv indítása", § 10. „Kezelési tervek
+  tab"; `CLAUDE.md` "Sérthetetlen szabályok" és "Meglévő
+  segédfüggvények".

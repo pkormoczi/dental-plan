@@ -23,10 +23,48 @@ import { AppStateProvider, useAppState } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
 import { seedPatients, seedPlans } from '../storage/seed/plans';
+import type { Plan } from '../domain/types';
 
 function DraftProbe() {
   const { plan } = useAppState();
   return <div data-testid="draft-nev">{plan.paciens.nev}</div>;
+}
+
+// A 0 láncú páciens "+ Új terv" gombja a megosztott piszkozat-felülírás-őrön
+// megy át -- ehhez kell egy MÁSIK pácienshez tartozó, ténylegesen a
+// `DraftStorage`-ban ülő mentetlen piszkozat. A `OsszesTervSection.test.tsx`
+// `seedPersistedDraft()`-jának egyszerűsített másolata (itt nincs szükség
+// `meta`-ra).
+function seedPersistedDraft(overrides: Partial<Plan> = {}) {
+  const plan: Plan = {
+    schemaVersion: 1,
+    tervId: '',
+    verzio: 0,
+    statusz: 'PISZKOZAT',
+    nyelv: 'hu',
+    penznem: 'HUF',
+    keltezes: '2026-08-05',
+    ervenyesIg: '2026-11-03',
+    arlistaVerzio: '2026-07-01',
+    orvos: 'Dr. Mándoki István',
+    paciens: {
+      nev: 'Piszkozat Panni',
+      szuletesiIdo: '',
+      lakcim: '',
+      telefon: '',
+      email: '',
+      taj: '',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+    },
+    fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+    osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+    ...overrides,
+  };
+  localStorage.setItem(
+    'dp:piszkozat',
+    JSON.stringify({ schemaVersion: 1, mentve: '2026-08-09T10:00:00.000Z', plan }),
+  );
 }
 
 // A verziósor "Megnézés" gombja ide navigál (71. tétel) -- a "Vissza" gomb
@@ -180,6 +218,35 @@ describe('PatientDetailPage', () => {
     await user.click(screen.getByRole('button', { name: '+ Új terv' }));
 
     expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Teszt Üres');
+  });
+
+  // Korábban ez az ág megerősítés nélkül hívta a `copyPlanIntoDraft`-ot --
+  // egy MÁSIK páciens mentetlen piszkozata szó nélkül eltűnt volna. A
+  // `latestOverall === null && sajatAktivDraft === null` ág itt renderel,
+  // tehát a piszkozat szükségszerűen egy másik pácienshez tartozik (lásd
+  // `PatientDetailPage.tsx` idevágó kommentje).
+  it('0 láncú páciens "+ Új terv" gombja megerősítést kér, ha MÁS páciensnek van mentetlen piszkozata', async () => {
+    seedPersistedDraft();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const folder = await seeder.createPatient('Teszt Üres Piszkozattal');
+
+    const user = userEvent.setup();
+    renderDetail(folder.dirName);
+
+    await user.click(await screen.findByRole('button', { name: '+ Új terv' }));
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Mégse' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('draft-nev')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '+ Új terv' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Új terv, piszkozat elvetésével' }),
+    );
+
+    expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Teszt Üres Piszkozattal');
   });
 
   it('meglévő terv-láncú páciensnél (Kovács János) a Kezelési tervek tab a fát mutatja, nem CTA-t', async () => {

@@ -1175,6 +1175,21 @@ előtt látnia kell — lásd `docs/07-felulet-rendszer.md` („a gombfelirat az
 mondja, mi történik"). Ugyanezt mondja ki egy rövid, szürke magyarázó sor a
 lista tetején, a kereső alatt.
 
+Mind a négy út — a verziósor „Új verzió"/„Másolás új tervbe" gombja, a
+páciensszintű „Új terv", a köztes választó mindkét ága ÉS a terv nélküli
+páciens üres állapotának „+ Új terv" CTA-ja — ugyanazon a megosztott
+piszkozat-felülírás-őrön megy át (`domain/planVersionActions.ts`
+`kellMegerosites`/`megerositesTartalom` + `components/PlanVersionActionDialog.tsx`
+`usePlanVersionActions`/`PlanVersionActionDialog`), egyetlen szövegtáblával
+a négy `PendingKind`-hoz (`'open'`/`'copy'`/`'ujTerv'`/`'ujPaciens'`). Ez
+azért fontos, mert a mentetlen piszkozat sosem került fájlba — egy erről
+megfeledkező belépési pont a doki félbehagyott munkáját szó nélkül
+eltüntetné, visszafordíthatatlanul. A hook egy `futtat()` belépési pontot
+is ad a `kellMegerosites()` megkerülésével — ez KIZÁRÓLAG olyan útra való,
+ahol a megerősítés MÁR lefutott (a köztes választó quick-create ágán a
+dialógus megnyitása előtt, lásd lentebb), nem a védelem általános
+megkerülésének eszköze.
+
 **Kimondott kivétel (D55):** az `/uj-terv` köztes választó „+ Új páciens"
 gombja NEM hordozza a „új terv" fogalmat a feliratában, szemben a fenti
 szabállyal. Ezen a képernyőn a fogalmat a képernyő fejléce („Új terv
@@ -1434,9 +1449,14 @@ hogy új vagy visszatérő páciensről van szó, csak utána a konkrét személ
 
 A piszkozat-felülírás-őr a köztes lépésen fut le (mindkét ágon), NEM a
 Kezdőlap gombján — a Kezdőlap gombja feltétel nélkül navigál ide, mert a
-piszkozat itt még nem veszik el. A „+ Új páciens" ágon ez a megerősítés a
-quick-create dialógus MEGNYITÁSA előtt fut le; a dialógus saját
-Mégse/Escape-je (fent) ettől független, külön lépés.
+piszkozat itt még nem veszik el. Ez a fent leírt megosztott őr, ugyanazokkal
+a feliratokkal, mint a terv-lánc fa akciói. A „+ Új páciens" ágon ez a
+megerősítés a quick-create dialógus MEGNYITÁSA előtt fut le; a dialógus
+saját Mégse/Escape-je (fent) ettől független, külön lépés. A korábbi
+kérdés tudatos választás: ha a megerősítés a `storage.createPatient()`
+UTÁNRA tolódna, egy ott adott Mégse egy árva páciensrekordot hagyna a
+lemezen — a korai kérdés ezt előzi meg, annak árán, hogy elméletileg
+korábban kérdez, mint ahol ténylegesen elveszne a piszkozat.
 
 A terv-lánc fa saját „Új terv"/„Másolás új tervbe" gombjai (lásd fent)
 **nem** ide navigálnak — azoknál a célpáciens már adott a forrás tervből,
@@ -1953,7 +1973,12 @@ kereszt-linkek mutatnak ide.
   állapoté. Ha a páciensnek még nincs egyetlen olvasható terv-verziója
   sem, a fa helyett egy „Új terv” CTA jelenik meg — ez az EGYETLEN eset,
   ahol ez a képernyő ilyen üres állapotot mutat, mert a DEMO „Összes terv”
-  füle (§ 5) egy ilyen pácienst eleve ki sem listáz.
+  füle (§ 5) egy ilyen pácienst eleve ki sem listáz. Ez a CTA is a fent
+  leírt megosztott piszkozat-felülírás-őrön megy át — enélkül, mivel ez
+  az ág pontosan akkor renderel, ha a dokinak NINCS ehhez a pácienshez
+  tartozó lánca és NINCS ehhez tartozó aktív piszkozata, egy mentetlen
+  piszkozat szükségszerűen egy MÁSIK pácienshez tartozna, és a gomb szó
+  nélkül eltüntetné.
 - A `Páciens adatai` tab „Korábbi tervek” gombja — ami korábban a
   `PatientEditorPanel` alján állt — megszűnt (D44): a tabok közti váltás
   egyetlen helye a tabsor. A `Kezelési tervek` tab tartalma emiatt sem
