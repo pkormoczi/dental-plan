@@ -119,6 +119,7 @@ Ezek jogi vagy adatintegritási következménnyel járnak — nem stíluskérdé
 | Német nyelvű terven a véglegesítés blokkolva, ha egy látható sor neve nem igazoltan németül van (sem árlistai `nev.de`-t nem követ, sem D72 szerint igazoltan `de`-re írt kézi szöveg), vagy ha a fogtérkép-legendán ténylegesen megjelenő kategóriának nincs `nev.de`-je | D77 — aláírandó német dokumentumon lefordítatlan magyar tételnév/kategórianév jogilag/kommunikációsan nem elfogadható |
 | A fizetési feltételek/garancia szakasz placeholder-jelölésű vagy üres szövege a címével együtt kimarad a nyomtatványból, sosem kerül nyers `[PLACEHOLDER …]` szöveg éles PDF-re | Egy jogilag még le nem zárt, helykitöltő szöveg egy aláírandó/kiadott dokumentumon jogi kockázat — a `sablonNyomtathato()` (`app/src/domain/templates.ts`) dönti el, a véglegesítés-őr pedig puha checklist-tétellel jelzi a dokinak, mely szakaszok maradnak ki |
 | Minden új tervet indító akció a megosztott piszkozat-felülírás-őrön megy át; mentetlen piszkozat mellett megerősítés nélkül egyik sem fut | A piszkozat sosem került fájlba — egy megkerült őr csendes, visszafordíthatatlan adatvesztés |
+| Egy meglévő páciensmappához kötött piszkozat Terv adatai lapján a Név mező PONTOS egyezése egy MÁSIK, létező páciens nevével kemény véglegesítés-blokk, és letiltja a piszkozat → törzsadat írási utakat (mindkét kézi gomb, a lépés-elhagyási prompt ajánlata) — a törzsadat → piszkozat irány érintetlen | A terv a kötött mappa, azaz egy MÁSIK páciens azonosító adatai (telefon/e-mail/lakcím/TAJ) mellé, de a beírt, idegen névvel mentődne — GDPR 9. cikk szerinti különleges adatot érintő azonosítási kollízió egy aláírásra kész dokumentumon |
 
 A fenti táblázat data-/jogi-integritási szabályokat sorol. A felület
 kinézetére és viselkedésére (színek, komponensek, billentyűzet,
@@ -1279,6 +1280,22 @@ szerkesztő) egy közös helyen (`pages/planEditor/elemIdk.ts`), szintén ne
   useFokuszEffekt.ts` fókusz/scroll-effektje és a `PhaseSection`/
   `FazisMegjegyzes`/`LineRow` mind ezekből építi a saját id-jeit. A
   `FokuszCel` típus is itt él
+
+A páciens-identitás védőháló tétel (`docs/03-funkcionalis-spec.md` § 2.
+"Páciens adatai" "Páciens-identitás védőháló" bekezdés, § 4. "Véglegesítési
+checklist") segédfüggvénye/rétege, szintén ne írd újra őket:
+- `paciensKotes(patients, patientDir, nev, paciensId?)`
+  (`app/src/domain/paciensKotes.ts`) — a MEGLÉVŐ `nevJeloltek()`
+  (`domain/paciensDuplikacio.ts`) újrahasznosításával, kizárólag a PONTOS
+  névegyezésre szűkítve: melyik páciensmappához kötött a piszkozat, és mely
+  MÁSIK páciensek neve egyezik pontosan a Terv adatai lap Név mezőjével. A
+  kötött páciens sosem üt vissza magára (`paciensId` ÉS `dirName` szerint is
+  kizárva)
+- `components/PaciensKotesContext.tsx` `PaciensKotesProvider`/
+  `usePaciensKotes()` — a `TervWorkflowShell.tsx` legkülső eleme mountolja,
+  hogy a `PatientPage`/`TorzsadatSyncCard`/`PreviewPage`/
+  `components/PaciensBreadcrumb.tsx` mind elérje; a `feloldPatientDir()`
+  (`domain/torzsadatBetoltes.ts`) mintáján, sosem dob
 
 ## Domain szókincs
 

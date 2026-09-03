@@ -267,6 +267,118 @@ describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', 
   );
 });
 
+// 94. tétel: Másolás új tervbe -- páciens-identitás védőháló. A beírt Név
+// egy MÁSIK, létező páciensre pontosan illő egyezése KEMÉNY blokk -- külön
+// az ÁLTALÁNOS, info-szintű `torzsadat-elteres` tételtől.
+describe('PreviewPage -- 94. tétel: névütközés kemény blokkja', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  async function seedDraftKotve(patientDir: string, paciensId: string, nev: string) {
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({
+        schemaVersion: 1,
+        mentve: '2026-08-09T10:15:00.000Z',
+        patientDir,
+        plan: {
+          schemaVersion: 1,
+          tervId: '',
+          verzio: 0,
+          statusz: 'PISZKOZAT',
+          nyelv: 'hu',
+          penznem: 'HUF',
+          keltezes: '2026-08-05',
+          ervenyesIg: '2026-11-03',
+          arlistaVerzio: '2026-07-01',
+          orvos: 'Dr. Mándoki István',
+          paciens: {
+            nev,
+            szuletesiIdo: '',
+            lakcim: '',
+            telefon: '',
+            email: '',
+            taj: '',
+            kiskoru: false,
+            torvenyesKepviselo: null,
+          },
+          fazisok: [
+            {
+              sorszam: 1,
+              megnevezes: '1. kezelés',
+              megjegyzes: '',
+              sorok: [
+                {
+                  tetelId: '',
+                  nevSnapshot: 'Kontroll',
+                  savos: false,
+                  fogak: '',
+                  mennyiseg: 1,
+                  listaEgysegar: 0,
+                  tenylegesEgysegar: 0,
+                },
+              ],
+            },
+          ],
+          osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+          paciensId,
+        },
+      }),
+    );
+  }
+
+  it(
+    'a kötött piszkozat névütközése esetén a véglegesítés blokkolva -- a nevet javítva folytatható',
+    async () => {
+      const user = userEvent.setup();
+      // A demó teljes alap-seedjét (árlista + a "Kovács János" demó-páciens)
+      // SZÁNDÉKOSAN a `seeder.init()` hozza létre, nem kézzel az
+      // `dp:arlista.json`/`dp:beallitasok.json` kulcsokba írva -- a
+      // `DemoStorage.init()` a már meglévő kulcsok láttán a teljes
+      // páciens-seedet kihagyja (lásd a fenti `seedDraftWithOrvos`-t hívó
+      // tesztek kézi kulcs-írását, ami emiatt SZÁNDÉKOSAN nem hoz létre
+      // pácienst).
+      const seeder = new DemoStorage();
+      await seeder.init();
+      const kotott = await seeder.createPatient('Teszt Ütköző', { szuletesiIdo: '1980-05-05', telefon: '' });
+      // Kovács János a demó-seedben eleve létező páciens.
+      await seedDraftKotve(kotott.dirName, kotott.paciensId, 'Kovács János');
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+
+      expect(
+        await screen.findByText(/egy másik, létező páciensre illik pontosan/),
+      ).toBeInTheDocument();
+      expect(finalizeBtn).toBeDisabled();
+      expect(screen.queryByText('A terv elmentve ✓')).not.toBeInTheDocument();
+
+      const [terveAdataiGomb] = screen.getAllByRole('button', { name: 'Terv adatai' });
+      await user.click(terveAdataiGomb);
+      const nameInput = await screen.findByDisplayValue('Kovács János');
+      await user.clear(nameInput);
+      await user.type(nameInput, 'Teszt Ütköző');
+
+      window.location.hash = '#/elonezet';
+      const finalizeBtn2 = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      expect(screen.queryByText(/egy másik, létező páciensre illik pontosan/)).toBeNull();
+      expect(finalizeBtn2).not.toBeDisabled();
+    },
+    20000,
+  );
+});
+
 // 62. tétel (D71): egy a terv pénznemében beárazatlan, kézi árat sem kapott
 // sor KEMÉNY blokk -- lásd domain/kitoltetlen.ts `araztalanSorok()`.
 describe('PreviewPage -- 62. tétel (D71): beárazatlan sor kemény véglegesítés-blokkja', () => {

@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
 import { Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
 import { useNyelviReview } from '../components/NyelviReviewContext';
+import { usePaciensKotes } from '../components/PaciensKotesContext';
 import { t } from '../design/tokens';
 import { buildToothChartSvg } from '../design/toothChartSvg';
 import { aktivOrvosok } from '../domain/orvosok';
@@ -271,6 +272,7 @@ export default function PreviewPage() {
   ]);
 
   const nyelviReview = useNyelviReview();
+  const paciensKotes = usePaciensKotes();
 
   // A csekklista a `nyilatkozatIsPlaceholder`-t (fent) csak TÉNYKÉNT kapja
   // meg (D73) -- a kényszerített offer-only mód (`effectiveOfferOnly`,
@@ -282,6 +284,7 @@ export default function PreviewPage() {
     masterPaciens,
     aktivOrvosok(settings),
     { sablonFallback, nyilatkozatPlaceholder: nyilatkozatIsPlaceholder, kihagyottSzekciok: kihagyottSablonSzekciok },
+    paciensKotes,
   );
 
   async function doFinalize() {

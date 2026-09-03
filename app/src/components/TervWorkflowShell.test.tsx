@@ -162,6 +162,39 @@ describe('TervWorkflowShell', () => {
     expect(link).toHaveAttribute('href', '/paciensek/Teszt-Piroska_abc123');
   });
 
+  // 94. tétel: a Név mező szerkesztése ELŐTT rögzített kötés a breadcrumb
+  // felirata -- a link célja és felirata így garantáltan ugyanaz a rekord,
+  // akkor is, ha a doki a Név mezőt egy másik páciens nevére írja át.
+  it('a Név mező átírása után is a kötött páciens tárolt nevét mutatja', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Piroska', { szuletesiIdo: '1980-05-05', telefon: '' });
+    await seedDraftWithPaciens(
+      patient.dirName,
+      {
+        nev: 'Teszt Piroska',
+        szuletesiIdo: '',
+        lakcim: '',
+        telefon: '',
+        email: '',
+        taj: '',
+        kiskoru: false,
+        torvenyesKepviselo: null,
+      },
+      patient.paciensId,
+    );
+    renderShell('/paciens');
+    const nameInput = await screen.findByDisplayValue('Teszt Piroska');
+
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Nagy Éva');
+
+    const breadcrumb = await screen.findByRole('navigation', { name: 'Hol vagyok' });
+    expect(within(breadcrumb).getByText('Teszt Piroska')).toBeInTheDocument();
+    expect(within(breadcrumb).queryByText('Nagy Éva')).toBeNull();
+  });
+
   it('route-váltásra a lastRoute perzisztálódik a dp:piszkozat rekordba, ha van aktív draft', async () => {
     await seedActiveDraft();
     const user = userEvent.setup();

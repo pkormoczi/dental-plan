@@ -10,6 +10,7 @@ import { Theme } from '@radix-ui/themes';
 import { LepesGuardProvider } from './components/LepesGuardContext';
 import { NavGuardProvider } from './components/NavGuardContext';
 import { NyelviReviewProvider } from './components/NyelviReviewContext';
+import { PaciensKotesProvider } from './components/PaciensKotesContext';
 import { AppStateProvider } from './state/AppState';
 import { StorageProvider } from './storage/StorageContext';
 
@@ -55,7 +56,15 @@ export function TestProviders({
                 {/* 65. tétel (D72): a `PlanEditorPage`/`PreviewPage`
                     `useNyelviReview()`-t hív -- Provider nélkül dob, a
                     `TervWorkflowShell` mintáján. */}
-                <NyelviReviewProvider>{children}</NyelviReviewProvider>
+                <NyelviReviewProvider>
+                  {/* 94. tétel: a `PatientPage`/`TorzsadatSyncCard`/
+                      `PreviewPage` `usePaciensKotes()`-t hív -- Provider
+                      nélkül dob. Ez a valódi, önmagát betöltő provider (nem
+                      egy néma teszt-stub, mint a `TestLepesGuardProvider`),
+                      mert a védőháló tesztelt viselkedése épp a betöltésétől
+                      függ. */}
+                  <PaciensKotesProvider>{children}</PaciensKotesProvider>
+                </NyelviReviewProvider>
               </TestLepesGuardProvider>
             </NavGuardProvider>
           </AppStateProvider>

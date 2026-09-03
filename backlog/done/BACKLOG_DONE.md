@@ -2437,3 +2437,25 @@ karbantartási kör négy önálló javítása.
   terv-létrehozási út" és „Új terv indítása", § 10. „Kezelési tervek
   tab"; `CLAUDE.md` "Sérthetetlen szabályok" és "Meglévő
   segédfüggvények".
+
+### 94. tétel: Másolás új tervbe — páciens-identitás védőháló — KÉSZ
+
+- **Méret:** közepes — egy új domain-modul + egy önmagát betöltő React
+  Context, három meglévő felület bekötve.
+- **Megvalósítás:** a `domain/paciensKotes.ts` egy tiszta függvénnyel
+  (a meglévő névegyezés-detektálást újrahasznosítva) dönti el, melyik
+  páciensmappához köti a piszkozatot, és pontosan mely MÁSIK páciens neve
+  ütközik a Terv adatai lap Név mezőjével. A `components/
+  PaciensKotesContext.tsx` a `TervWorkflowShell.tsx` alatt mindenhol
+  elérhetővé teszi ezt: a Terv adatai lapon mindig látszik a kötött
+  páciensmappa (Név mezőtől függetlenül), ütközésnél piros figyelmeztetés
+  jelenik meg (váltás-akció nélkül), a „Páciens törzsadata" mindhárom
+  piszkozat → törzsadat írási útja letiltott, a breadcrumb felirata a
+  kötött mappa tárolt nevét mutatja (nem a szerkeszthető Név mezőt), és a
+  véglegesítés-őr egy önálló, kemény checklist-tétellel blokkol, amíg az
+  ütközés fennáll — a meglévő, ÁLTALÁNOS „Páciens törzsadata eltér"
+  info-tétel változatlan maradt mellette. Részletek:
+  `docs/03-funkcionalis-spec.md` § 2. „Páciens adatai" „Páciens-identitás
+  védőháló" bekezdés, § 4. „Véglegesítési checklist", § „Terv-workflow
+  héj"; `CLAUDE.md` "Sérthetetlen szabályok" és "Meglévő
+  segédfüggvények".

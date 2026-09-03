@@ -33,6 +33,7 @@ import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import ChipGroup from '../components/ChipGroup';
 import { Field, FieldGroup, ReadOnlyField } from '../components/Field';
 import { useLepesGuard } from '../components/LepesGuardContext';
+import { usePaciensKotes } from '../components/PaciensKotesContext';
 import Section from '../components/Section';
 import { lefedettseg } from '../domain/coverage';
 import { addDaysIso, formatLongDate } from '../domain/date';
@@ -113,6 +114,7 @@ export default function PatientPage() {
   const { plan, setPlan, settings, priceList } = useAppState();
   const navigate = useNavigate();
   const { kerLepesValtas } = useLepesGuard();
+  const { patientDir: kotottPatientDir, kotott, utkozok } = usePaciensKotes();
   const paciens = plan.paciens;
   const [pending, setPending] = useState<PendingChange | null>(null);
   const aktivOrvosNevek = aktivOrvosok(settings);
@@ -250,6 +252,33 @@ export default function PatientPage() {
           <Text as="div" size="1" mt="-2" mb="3" style={{ color: t.warn }}>
             A név nélkül a mappanév sem képezhető, de tovább léphetsz.
           </Text>
+        )}
+
+        {/* 94. tétel: a piszkozathoz kötött páciensmappa semleges jelzése --
+            FÜGGETLENÜL attól, ütközik-e a Név mező tartalma valakivel. A
+            terv mindig ebbe a mappába, ennek a páciensnek az azonosító
+            adatai (telefon/e-mail/lakcím/TAJ) mellé mentődik, a Név mező
+            tartalmától függetlenül. */}
+        {kotott && (
+          <Box mb="3">
+            <ReadOnlyField
+              label="A terv ehhez a páciensmappához kötve mentődik"
+              value={`${kotott.nev} (${kotottPatientDir})`}
+            />
+          </Box>
+        )}
+
+        {kotott && utkozok.length > 0 && (
+          <Callout.Root color="red" size="1" mb="3">
+            <Callout.Icon>
+              <ExclamationTriangleIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              A beírt név egy MÁSIK, létező páciensre ({utkozok.map((p) => p.nev).join(', ')}) illik
+              pontosan — a terv ettől függetlenül a fenti kötött páciensmappába mentődik. A
+              véglegesítés blokkolva van, amíg a név nem egyezik a kötött páciens nevével.
+            </Callout.Text>
+          </Callout.Root>
         )}
 
         <Grid columns="2" gap="3">

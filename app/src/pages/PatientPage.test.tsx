@@ -690,6 +690,159 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
   });
 });
 
+// 94. tétel: Másolás új tervbe -- páciens-identitás védőháló.
+describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
+  function makePaciens(overrides: Partial<Paciens> = {}): Paciens {
+    return {
+      nev: 'Teszt Elek',
+      szuletesiIdo: '1980-05-05',
+      lakcim: 'Régi utca 1.',
+      telefon: '+36 30 000 0000',
+      email: 'regi@example.hu',
+      taj: '111 222 333',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+      ...overrides,
+    };
+  }
+
+  function makePlanWithPaciens(paciens: Paciens, paciensId: string): Plan {
+    return {
+      schemaVersion: 1,
+      tervId: '',
+      verzio: 0,
+      statusz: 'PISZKOZAT',
+      nyelv: 'hu',
+      penznem: 'HUF',
+      keltezes: '2026-08-05',
+      ervenyesIg: '2026-11-03',
+      arlistaVerzio: '2026-07-01',
+      orvos: 'Dr. Mándoki István',
+      paciens,
+      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+      osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+      paciensId,
+    };
+  }
+
+  async function seedDraft(patientDir: string, paciens: Paciens, paciensId: string) {
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({
+        schemaVersion: 1,
+        mentve: '2026-08-09T10:15:00.000Z',
+        plan: makePlanWithPaciens(paciens, paciensId),
+        patientDir,
+      }),
+    );
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('kötött piszkozatnál mutatja, melyik páciensmappához mentődik a terv', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
+
+    renderPatient();
+
+    expect(await screen.findByText('A terv ehhez a páciensmappához kötve mentődik')).toBeInTheDocument();
+    expect(screen.getByText(`Teszt Elek (${patient.dirName})`)).toBeInTheDocument();
+  });
+
+  it('vadonatúj (kötés nélküli) piszkozatnál nem mutatja a kötés-jelzést', async () => {
+    renderPatient();
+    await screen.findByRole('heading', { name: 'Terv adatai' });
+
+    expect(screen.queryByText('A terv ehhez a páciensmappához kötve mentődik')).toBeNull();
+  });
+
+  it('a beírt név egy MÁSIK, létező páciens NEVÉRE pontosan illesztve figyelmeztet', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const kotott = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    // Kovács János a demó-seedben eleve létező páciens.
+    await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
+
+    renderPatient();
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Kovács János');
+
+    expect(
+      await screen.findByText(/egy MÁSIK, létező páciensre \(Kovács János\) illik pontosan/),
+    ).toBeInTheDocument();
+  });
+
+  it('csak HASONLÓ (nem pontos) névre nem figyelmeztet', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const kotott = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
+
+    renderPatient();
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Kovács');
+
+    expect(screen.queryByText(/illik pontosan/)).toBeNull();
+  });
+
+  it('a kötött páciens saját nevére nem figyelmeztet', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const kotott = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
+
+    renderPatient();
+    await screen.findByDisplayValue('Teszt Elek');
+
+    expect(screen.queryByText(/illik pontosan/)).toBeNull();
+  });
+
+  it('ütközés esetén a "Törzsadat frissítése a tervből" gomb letiltott', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const kotott = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
+
+    renderPatient();
+    await screen.findByText(/mező eltér a páciens törzsadatától/);
+    const nameInput = screen.getByPlaceholderText('Kovács János');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Kovács János');
+
+    const gomb = await screen.findByRole('button', { name: 'Törzsadat frissítése a tervből' });
+    expect(gomb).toBeDisabled();
+  });
+
+  it('törzsadat nélküli páciensnél ütközés esetén a "Törzsadat létrehozása a terv adataiból" gomb letiltott', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    // Kovács János a demó-seedben törzsadat NÉLKÜL szerepel (fallback).
+    const kovacs = (await seeder.listPatients()).find((p) => p.nev === 'Kovács János')!;
+    const utkozo = await seeder.createPatient('Ütköző Napsugár', { szuletesiIdo: '1990-01-01', telefon: '' });
+    await seedDraft(kovacs.dirName, makePaciens({ nev: 'Kovács János' }), kovacs.paciensId);
+
+    renderPatient();
+    await screen.findByText(/még nincs önálló törzsadata/);
+    const nameInput = screen.getByPlaceholderText('Kovács János');
+    await user.clear(nameInput);
+    await user.type(nameInput, utkozo.nev);
+
+    const gomb = await screen.findByRole('button', { name: 'Törzsadat létrehozása a terv adataiból' });
+    expect(gomb).toBeDisabled();
+  });
+});
+
 // backlog-51 (D68): a lap hat, vizuálisan elkülönített szekcióra tagolódik.
 describe('PatientPage -- backlog-51: hat szekció', () => {
   beforeEach(() => {

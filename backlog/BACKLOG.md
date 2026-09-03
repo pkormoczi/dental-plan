@@ -15,23 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 94. tétel: Másolás új tervbe — páciens-identitás védőháló
-
-  A `domain/planCopy.ts` `planMasolatKent()` a forrás `paciensId`-t viszi
-  tovább (szándékosan: A/B alku-változat), a Terv adatai Név mezője
-  (`pages/PatientPage.tsx`) viszont szabad szöveg. Egy másik létező páciens
-  nevét beírva a terv a FORRÁS páciens mappájába, a forrás
-  telefon/e-mail/lakcím/TAJ mellé mentődik, idegen névvel — ez egy
-  aláírásra kész dokumentumon adatvédelmi kockázat. Ma az egyetlen jelzés
-  egy INFO-szintű `'torzsadat-elteres'` checklist-tétel, ami nem blokkol —
-  sőt elnémul, ha a forrás páciensnek nincs `paciens-adatok.json`-ja, és a
-  „Törzsadat frissítése a tervből" gomb a hibás nevet a törzsadatba írja.
-  Kért: (a) a funkció szándékának kimondása a felületen, (b) hangsúlyos
-  figyelmeztetés, ha a beírt név egy MÁSIK létező páciensre illeszkedik
-  (a `domain/paciensDuplikacio.ts`/`usePaciensDuplikacio` újrahasználható),
-  (c) a kötés (páciensmappa) látszódjon a mentés előtt.
-  **Terv:** `backlog/plans/backlog-94-paciens-identitas-vedohalo-terv.md`
-
 ### 96. tétel: Elgépelés-védelem az árlista árainál
 
   A `pages/priceListAdmin/ItemEditor.tsx` `setFixPrice()`/`setSavosPrice()`

@@ -33,6 +33,7 @@ import {
   orokoltMegjegyzesuFazisok,
 } from './orokoltJelzesek';
 import { nyelviMismatchek, type NyelviMismatchTetel, type ReviewMezo } from './nyelviReview';
+import type { PaciensKotes } from './paciensKotes';
 import { orvosProblema as szamitOrvosProblema } from './orvosok';
 import { elolegTullepi, tervVegosszeg } from './totals';
 import type { Paciens, Plan, PriceList } from './types';
@@ -94,6 +95,9 @@ function nyelviReviewReszletek(tetelek: NyelviMismatchTetel[]): CsekklistaReszle
  * MÁR feloldott aktív-orvos listája (`domain/orvosok.ts` `aktivOrvosok()`).
  * `sablon` a hívó sablonbetöltésének eredménye -- ez a modul sosem tölt be
  * sablont, csak a TÉNYt kapja meg, a fenti három paraméter mintáján.
+ * `nevUtkozes` (94. tétel, `domain/paciensKotes.ts`) a hívó MÁR feloldott
+ * páciens-kötése/ütközése, ugyanezen a mintán -- `null`, ha nincs
+ * feloldható kötés.
  * Szándékosan kötelező, nem defaultos paraméterek -- egy csendben
  * kikapcsolt hard block jogi kockázat lenne (a `ujVerzioDatum.ts` `ma`
  * paraméterének mintája).
@@ -105,6 +109,7 @@ export function veglegesitesDiagnozis(
   master: Paciens | null,
   aktivOrvosNevek: string[],
   sablon: { sablonFallback: boolean; nyilatkozatPlaceholder: boolean; kihagyottSzekciok: string[] },
+  nevUtkozes: PaciensKotes | null,
 ): VeglegesitesCsekklista {
   const tetelek: CsekklistaTetel[] = [];
 
@@ -114,6 +119,22 @@ export function veglegesitesDiagnozis(
       id: 'nev-hianyzik',
       sulyossag: 'hard',
       cim: 'A páciens neve kötelező a véglegesítéshez.',
+      route: '/paciens',
+    });
+  }
+
+  // 94. tétel: a piszkozathoz kötött páciensmappa MÁS páciens azonosító
+  // adatai mellé, egy MÁSIK létező páciens nevével mentődne -- GDPR 9.
+  // cikk szerinti különleges adatot érintő azonosítási kollízió egy
+  // aláírásra kész dokumentumon, ezért KEMÉNY blokk, nem a lenti, ÁLTALÁNOS
+  // (info-szintű) `torzsadat-elteres` tétel.
+  if (nevUtkozes && nevUtkozes.utkozok.length > 0) {
+    tetelek.push({
+      id: 'nev-utkozes',
+      sulyossag: 'hard',
+      cim: 'A páciens neve egy másik, létező páciensre illik pontosan -- a terv mégis a kötött páciensmappába mentődne.',
+      szamlalo: nevUtkozes.utkozok.length,
+      reszletek: [{ cim: 'Ütköző páciensek', nevek: nevUtkozes.utkozok.map((p) => p.nev) }],
       route: '/paciens',
     });
   }

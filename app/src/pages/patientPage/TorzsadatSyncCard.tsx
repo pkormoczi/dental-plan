@@ -17,6 +17,7 @@ import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Separator, Text } fr
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import TorzsadatDiffDialog from '../../components/TorzsadatDiffDialog';
 import { useLepesElhagyas, useLepesGuard } from '../../components/LepesGuardContext';
+import { usePaciensKotes } from '../../components/PaciensKotesContext';
 import { t } from '../../design/tokens';
 import { diffAzonosito, masterSnapshotDiff, valodiUtkozesek } from '../../domain/masterSnapshotDiff';
 import { paciensTorzsadatbol, torzsadatTervbol } from '../../domain/paciensAdatok';
@@ -31,6 +32,13 @@ export default function TorzsadatSyncCard() {
   const { plan, setPlan, piszkozatPatientDir } = useAppState();
   const { storage } = useStorage();
   const { elutasitottDiffId, setElutasitottDiffId } = useLepesGuard();
+  // 94. tétel: amíg a Név mező egy MÁSIK, létező páciensre illik pontosan,
+  // egyik draft->master írási út sem tilthat el a doki elől -- a "Törzsadat
+  // frissítése a tervből" gomb, a "Törzsadat létrehozása a terv adataiból"
+  // gomb ÉS a lépés-elhagyási prompt draft->master ajánlata is. A master->
+  // draft irány ("Frissítés a törzsadatból") érintetlen.
+  const { utkozok } = usePaciensKotes();
+  const nevUtkozes = utkozok.length > 0;
 
   const [patientDir, setPatientDir] = useState<string | null>(null);
   const [paciensId, setPaciensId] = useState<string | null>(null);
@@ -168,6 +176,10 @@ export default function TorzsadatSyncCard() {
   // sosem mindkettőt egyszerre, a törzsadat léte dönti el, melyiket.
   const handleLepesElhagyas = useCallback(
     (proceed: () => void): boolean => {
+      // 94. tétel: névütközés esetén egyik draft->master ajánlat sem
+      // kínálható fel -- a lépésváltás akadálytalanul megy tovább, a
+      // blokk a véglegesítésnél áll (domain/veglegesitesOr.ts).
+      if (nevUtkozes) return false;
       if (torzsadat === null && !loadError) {
         proceedRef.current = proceed;
         setLetrehozzaMost(false);
@@ -181,7 +193,7 @@ export default function TorzsadatSyncCard() {
       setLepesPromptOpen(true);
       return true;
     },
-    [torzsadat, loadError, utkozesek.length, diffId, elutasitottDiffId],
+    [nevUtkozes, torzsadat, loadError, utkozesek.length, diffId, elutasitottDiffId],
   );
 
   useLepesElhagyas(patientDir ? handleLepesElhagyas : null);
@@ -229,11 +241,17 @@ export default function TorzsadatSyncCard() {
           <Button
             size="1"
             variant="soft"
-            disabled={creating}
+            disabled={creating || nevUtkozes}
             onClick={() => void handleManualCreate()}
           >
             {creating ? 'Létrehozás…' : 'Törzsadat létrehozása a terv adataiból'}
           </Button>
+          {nevUtkozes && (
+            <Text as="div" size="1" mt="2" style={{ color: t.danger }}>
+              A Név mező egy másik, létező páciensre illik pontosan -- javítsd a nevet, mielőtt a
+              törzsadatot a terv adataiból hoznád létre.
+            </Text>
+          )}
         </Box>
       )}
 
@@ -252,10 +270,21 @@ export default function TorzsadatSyncCard() {
                 <Button size="1" variant="soft" onClick={() => setManualDialog('master-to-draft')}>
                   Frissítés a törzsadatból
                 </Button>
-                <Button size="1" variant="soft" onClick={() => setManualDialog('draft-to-master')}>
+                <Button
+                  size="1"
+                  variant="soft"
+                  disabled={nevUtkozes}
+                  onClick={() => setManualDialog('draft-to-master')}
+                >
                   Törzsadat frissítése a tervből
                 </Button>
               </Flex>
+              {nevUtkozes && (
+                <Text as="div" size="1" mt="2" style={{ color: t.danger }}>
+                  A Név mező egy másik, létező páciensre illik pontosan -- javítsd a nevet, mielőtt
+                  a törzsadatot a terv adataiból frissítenéd.
+                </Text>
+              )}
             </>
           )}
 

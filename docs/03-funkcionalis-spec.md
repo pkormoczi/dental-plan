@@ -54,7 +54,14 @@ ami mindhárom oldal fölött állandó:
   képernyő) linkel, egyébként csak szöveg — a `patientDir` nem minden
   belépési ponton ismert (pl. egy funkció előtti perzisztált piszkozat; a
   "+ Új páciens" ág a quick-create dialógus (D41) sikeres mentése óta
-  már ismeri). Üres névnél a "Új páciens" tartalék-címke látszik.
+  már ismeri). Üres névnél a "Új páciens" tartalék-címke látszik. Ismert
+  `patientDir` esetén a felirat a KÖTÖTT páciensmappa `paciens.json`
+  indexében tárolt neve, NEM a Terv adatai lap szabadon szerkeszthető Név
+  mezője — a link célja és felirata így garantáltan ugyanazt a rekordot
+  jelöli akkor is, ha a doki a Név mezőt időközben átírja (lásd lent,
+  "Páciens adatai" alszakasz, "Páciens-identitás védőháló" bekezdés).
+  Kötés hiányában (pl. vadonatúj, még nem mentett lánc) a felirat a Név
+  mező tartalma, a mai viselkedés szerint.
 - **Stepper** — szabadon kattintható, 3 lépés: `Terv adatai → Kezelések →
   Előnézet és véglegesítés`. Az aktuális lépés a route-ból dől el
   (`/paciens`/`/terv`/`/elonezet`), nincs hozzá külön `Plan`/state-mező.
@@ -248,6 +255,26 @@ TAJ, „kiskorú" jelölő. Ha kiskorú, megjelenik a törvényes képviselő ne
 Csak a **név** kötelező (ebből képződik a mappanév). A többi hiánya
 véglegesítéskor figyelmeztetést ad, de nem blokkol — a doki néha
 gyorsan akar árajánlatot adni.
+
+**Páciens-identitás védőháló.** A másolás/új verzió/gyorsfelvétel utáni
+folytatás mind egy MÁR LÉTEZŐ páciensmappához köti a piszkozatot, mielőtt
+a Terv adatai lap megjelenik — a Név mező viszont ettől függetlenül
+szabadon szerkeszthető szöveg marad. Amíg ez a kötés ismert
+(`feloldPatientDir()`), a Név mező alatt mindig megjelenik egy semleges,
+nem szerkeszthető jelzés arról, melyik páciensmappához mentődik a terv —
+ez a jelzés a Név mező tartalmától FÜGGETLEN, mindig a tényleges kötést
+mutatja. Ha a Név mezőbe beírt szöveg PONTOSAN egy MÁSIK, létező páciens
+nevére illik (a részleges/hasonló egyezés nem számít), egy piros
+figyelmeztetés jelenik meg — váltás-akció NÉLKÜL, csak tudatosítva a
+kollíziót, mert a terv a beírt névtől függetlenül a kötött mappába, a
+kötött páciens azonosító adatai (telefon/e-mail/lakcím/TAJ) mellé
+mentődne. Amíg ez az ütközés fennáll: a véglegesítés egy önálló, kemény
+tétellel blokkolva (lásd lent, „Véglegesítési checklist"), és a lenti
+„Páciens törzsadata" mindhárom piszkozat → törzsadat írási útja (mindkét
+kézi gomb és a lépés-elhagyási prompt ajánlata) letiltott — a
+törzsadat → piszkozat irány (a törzsadat behúzása) ettől függetlenül
+szabadon használható. A kötés-jelzés a Terv-workflow héj breadcrumb-jában
+is megjelenik (lásd fent).
 
 **Páciens törzsadata (D48).** A `paciens-adatok.json` (D33) és az
 AKTUÁLIS terv-piszkozat `paciens` blokkja közötti mezőszintű
@@ -820,6 +847,15 @@ kattintható/navigálható a releváns workflow-lépésre.
 **Kemény (`hard`) tételek — blokkolják a véglegesítést:**
 
 - **Hiányzó páciensnév.**
+- **Páciens-identitás ütközés:** a piszkozathoz kötött páciensmappa
+  ismert, és a Terv adatai lap Név mezőjébe beírt szöveg PONTOSAN egy
+  MÁSIK, létező páciens nevére illik (lásd fent, § 2. „Páciens adatai",
+  „Páciens-identitás védőháló" bekezdés) — a terv a kötött mappa
+  azonosító adatai mellé, de idegen névvel mentődne, ami egy aláírásra
+  kész dokumentumon azonosítási kollízió. Az ütköző páciens(ek) nevét
+  felsorolja; a Terv adatai lapra navigál. Ez a tétel önálló, KÜLÖN a
+  lenti, ÁLTALÁNOS „Páciens törzsadata eltér" info-tételtől, ami
+  szándékosan nem blokkol.
 - **Hiányzó vagy nem aktív kezelőorvos (D68):** a terv `orvos` mezője
   üres, vagy nem szerepel a jelenleg aktív orvosok között (a
   Beállításokban időközben deaktiválták vagy törölték) — az
