@@ -186,4 +186,25 @@ describe('PriceListAdminPage -- backlog-92: Tömeges árváltoztatás', () => {
     const dialog = screen.getByRole('dialog', { name: 'Tömeges árváltoztatás' });
     expect(within(dialog).getByText('A jelenlegi szűrt lista (2 tétel)')).toBeInTheDocument();
   });
+
+  // 106. tétel: a sor-szintű "Mentve ✓" kizárólag a közvetlen sor-szerkesztést
+  // (patchItem) váltja ki, a Tömeges árváltoztatást nem -- száz egyszerre
+  // felvillanó felirat nem visszajelzés, hanem zaj.
+  it('a Tömeges árváltoztatás alkalmazása után egyetlen sor sem mutat "Mentve ✓"-t', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+    const dialog = await openDialog(user);
+
+    await valasztKategoriat(user, dialog);
+    await irjSzazalekot(user, dialog, '5');
+    await screen.findByText('3 tétel HUF ára változik');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Alkalmazás' }));
+    const confirm = await screen.findByRole('alertdialog', { name: 'Tömeges árváltoztatás megerősítése' });
+    await user.click(within(confirm).getByRole('button', { name: 'Alkalmazás' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(findItem(readPriceList(), 'CBCT').ar.HUF).toEqual({ tipus: 'FIX', ertek: 25200 });
+    expect(screen.queryByText('Mentve ✓')).not.toBeInTheDocument();
+  });
 });

@@ -1737,6 +1737,31 @@ szinkron frissíti (D31, `docs/05-technologia.md`) — két, gyorsan egymást
 követő szerkesztés (akár két különböző sor, akár ugyanannak a sornak két
 mezője) emiatt nem üti ki egymást.
 
+**Mentés-visszajelzés a soron.** Mivel itt nincs Mentés gomb (minden
+mezőszerkesztés autosave), a sikeres mentés jelzése a tétel táblasorának
+jobb szélén, egy fix szélességű oszlopban él — akkor is, ha a szerkesztő
+panel épp nyitva van alatta, mert a lap fejléce nem sticky, egy fejléc-
+jelzés ilyenkor kicsúszna a képből. A felirat halk szürke „Mentve ✓”,
+megjelenik a sikeres mentés után, és kb. 2 másodperccel az utolsó mentés
+után eltűnik — minden újabb mentés újraindítja az órát, tehát gépelés
+közben a szöveges mezőknél (amik minden leütésre mentenek) stabilan
+látszik, nem villog. Egyszerre legfeljebb egy sor jelez: ha a doki A
+tételről B tételre vált, A jelzése azonnal átadja a helyét B-nek. A
+jelzés kizárólag a tényleges mentés sikeres lefutása után gyullad ki,
+soha az optimista, memóriabeli állapotfrissítés pillanatában (D31) — a
+kinyitott szerkesztő minden mezője, a csukott sor két ikongombja
+(gyakori csillag, aktív szem), és a két megerősítő dialógusból induló
+írás (0 Ft-os aktiválás, deaktiválás) váltja ki, de a Tömeges
+árváltoztatás, az Új tétel dialógus és a kategória-műveletek nem — ezek
+saját, erősebb visszajelzéssel zárnak (előnézet, illetve a friss sor
+kinyílása és odagördülése). Hiba esetén a jelzés azonnal eltűnik, és a
+lap-szintű piros hiba-`Callout` marad az egyetlen jelzés — nincs
+sor-szintű hibajelzés. A jelzés meg-/eltűnése nem mozdítja el a sor
+többi tartalmát (az oszlop mindig foglalt), és egy lap-szintű,
+`aria-live="polite"` élő régió is bemondja, hogy a képernyőolvasó-
+felhasználó se maradjon a közvetett jelekre (a fejléc verzió-dátuma)
+utalva.
+
 ### Törlés helyett inaktiválás
 
 A szem ikon inaktivál. Törölni nem lehet, és az `id`-t **soha nem

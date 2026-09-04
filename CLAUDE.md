@@ -1357,6 +1357,24 @@ jelzése") segédfüggvénye, szintén ne írd újra:
   proppként kapja, a betöltési stratégia (a `plans`/`versionsByPlan`
   mintáján) hívónként eltér
 
+A mentés-visszajelzés tétel (`docs/03-funkcionalis-spec.md` § 6.
+Kezelések és árak „Sor kinyitása" „Mentés-visszajelzés a soron",
+`docs/07-felulet-rendszer.md` § Komponensek) segédfüggvénye, szintén ne
+írd újra:
+- `useMentesJelzo(idozites?)` (`app/src/components/useMentesJelzo.ts`) —
+  a `saving`/`saved`/2 másodperces időzítő hármas, unmount-takarítással;
+  korábban négyszer másolat-beillesztve
+  (`pages/settings/RendeloTab.tsx`/`EgyebTab.tsx`/`NyomtatvanyokTab.tsx`,
+  `pages/priceListAdmin/KategoriaPanel.tsx`), mindegyik hiányzó
+  takarítással. Két fogyasztási mód: `felirat(alap)` a gombfeliratos
+  hívóknak (a fenti négy hely, változatlan `Mentés` → `Mentés…` →
+  `Mentve ✓` viselkedéssel), illetve a csupasz `saved`/`jelez()`/`olts()`
+  az Árlista admin tétel-táblázatának sor-szintű jelzéséhez
+  (`pages/PriceListAdminPage.tsx` `patchItem()`), `saving` nélkül. A
+  `futtat(muvelet)` egy mentési műveletet fut le — sikeres (nem dob, nem
+  `false`) lefutásra kigyújtja a jelzést, `false`-ra vagy dobott hibára
+  (amit TOVÁBB is enged) azonnal eloltja
+
 ## Domain szókincs
 
 A JSON sémák mezőnevei magyarul vannak, és ezek **a lemezre írt séma kulcsai** — ne

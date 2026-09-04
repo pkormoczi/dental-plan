@@ -15,15 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 106. tétel: Mentés-visszajelzés az árlista tétel-soroknál
-
-  A Beállítások és a Kategóriák panel időközben megkapta a "Mentve"
-  visszajelzést, de a `pages/PriceListAdminPage.tsx` mezőnkénti azonnali
-  mentése csak hibát jelez, sikert nem, és az `ItemEditor` egyetlen
-  mentés-jelzést sem rendereli — minden név-, leírás-, kategória- és
-  árírás némán történik.
-  **Terv:** `backlog/plans/backlog-106-mentes-visszajelzes-arlista-sorokon-terv.md`
-
 ### 107. tétel: Duplikáció-jelölt chip megkülönböztető adattal
 
   A `pages/paciensek/DuplikacioJavaslatok.tsx` chipje kizárólag minőségi

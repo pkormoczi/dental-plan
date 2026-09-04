@@ -12,6 +12,7 @@ import { Field } from '../../components/Field';
 import ChipGroup from '../../components/ChipGroup';
 import DiscardChangesDialog, { useDiscardGuard } from '../../components/DiscardChangesDialog';
 import { useDirtyDraft } from '../../components/useDirtyDraft';
+import { useMentesJelzo } from '../../components/useMentesJelzo';
 import type { Nyelv } from '../../domain/types';
 import { t } from '../../design/tokens';
 import { stripMarkdownHeading } from '../../pdf/markdownLite';
@@ -105,9 +106,8 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
   const cancelTemplatesGuard = useDiscardGuard(templatesDirty);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [templateLoadError, setTemplateLoadError] = useState<string | null>(null);
-  const [templateSaving, setTemplateSaving] = useState(false);
+  const templateJelzo = useMentesJelzo();
   const [templateSaveError, setTemplateSaveError] = useState<string | null>(null);
-  const [templateSaved, setTemplateSaved] = useState(false);
   // Melyik alapneveket töltöttük már be -- egy újramountolásnál a már
   // betöltött (és esetleg szerkesztett) base-eket nem kérjük le újra, a
   // magyar oldalon esetleg már megkezdett, nem mentett szerkesztés nem
@@ -196,36 +196,34 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
     // kommentjét -- a `disabled` prop önmagában nem elég.
     if (templateSavingRef.current) return;
     templateSavingRef.current = true;
-    setTemplateSaving(true);
     setTemplateSaveError(null);
     try {
-      const dirtyBases = Object.keys(templateDrafts).filter(
-        (base) => templateDrafts[base] !== savedTemplateTexts[base],
-      );
-      if (dirtyBases.length > 0) {
-        const nameUpdates: Record<string, string> = {};
-        const textUpdates: Record<string, string> = {};
-        for (const base of dirtyBases) {
-          const heading = TEMPLATE_HEADINGS[base as keyof typeof TEMPLATE_HEADINGS] ?? base;
-          const text = templateDrafts[base];
-          const fullBody = `# ${heading}\n\n${text.trim()}\n`;
-          nameUpdates[base] = await storage.saveTemplate(base, fullBody);
-          textUpdates[base] = text;
-          // Törlés kizárólag sikeres mentéskor, base-enként (4. döntés).
-          clearTemplateDraftCacheEntry(base);
+      await templateJelzo.futtat(async () => {
+        const dirtyBases = Object.keys(templateDrafts).filter(
+          (base) => templateDrafts[base] !== savedTemplateTexts[base],
+        );
+        if (dirtyBases.length > 0) {
+          const nameUpdates: Record<string, string> = {};
+          const textUpdates: Record<string, string> = {};
+          for (const base of dirtyBases) {
+            const heading = TEMPLATE_HEADINGS[base as keyof typeof TEMPLATE_HEADINGS] ?? base;
+            const text = templateDrafts[base];
+            const fullBody = `# ${heading}\n\n${text.trim()}\n`;
+            nameUpdates[base] = await storage.saveTemplate(base, fullBody);
+            textUpdates[base] = text;
+            // Törlés kizárólag sikeres mentéskor, base-enként (4. döntés).
+            clearTemplateDraftCacheEntry(base);
+          }
+          setTemplateNames((prev) => ({ ...prev, ...nameUpdates }));
+          setSavedTemplateTexts((prev) => ({ ...prev, ...textUpdates }));
         }
-        setTemplateNames((prev) => ({ ...prev, ...nameUpdates }));
-        setSavedTemplateTexts((prev) => ({ ...prev, ...textUpdates }));
-      }
-      setTemplateSaved(true);
-      setTimeout(() => setTemplateSaved(false), 2000);
+      });
     } catch (err) {
       setTemplateSaveError(
         err instanceof Error ? err.message : 'A sablonszövegek mentése váratlanul meghiúsult.',
       );
     } finally {
       templateSavingRef.current = false;
-      setTemplateSaving(false);
     }
   }
 
@@ -310,7 +308,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
       )}
 
       <Flex justify="end" align="center" gap="3">
-        {templatesDirty && !templateSaved && (
+        {templatesDirty && !templateJelzo.saved && (
           <Text size="1" color="gray">
             Nem mentett módosítás
           </Text>
@@ -320,12 +318,15 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
           variant="soft"
           color="gray"
           onClick={() => cancelTemplatesGuard.request(handleCancelTemplates)}
-          disabled={templatesLoading || templateSaving || !templatesDirty}
+          disabled={templatesLoading || templateJelzo.saving || !templatesDirty}
         >
           Mégse
         </Button>
-        <Button onClick={() => void handleSaveTemplates()} disabled={templatesLoading || templateSaving || !templatesDirty}>
-          {templateSaving ? 'Mentés…' : templateSaved ? 'Mentve ✓' : 'Szöveg mentése'}
+        <Button
+          onClick={() => void handleSaveTemplates()}
+          disabled={templatesLoading || templateJelzo.saving || !templatesDirty}
+        >
+          {templateJelzo.felirat('Szöveg mentése')}
         </Button>
       </Flex>
 

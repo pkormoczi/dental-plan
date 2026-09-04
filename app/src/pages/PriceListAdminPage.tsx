@@ -25,6 +25,7 @@ import {
   Table,
   Text,
   TextField,
+  VisuallyHidden,
 } from '@radix-ui/themes';
 import { EyeClosedIcon, EyeOpenIcon, InfoCircledIcon, StarFilledIcon, StarIcon } from '@radix-ui/react-icons';
 import { t } from '../design/tokens';
@@ -37,6 +38,7 @@ import { nextKategoriaId, nextTetelId } from '../domain/priceListIds';
 import { egyezoKategoriaIdk, norm } from '../domain/search';
 import { alkalmazTomegesArat, type TomegesArParams } from '../domain/tomegesAr';
 import type { Kategoria, PriceList, Tetel } from '../domain/types';
+import { useMentesJelzo } from '../components/useMentesJelzo';
 import ItemEditor from './priceListAdmin/ItemEditor';
 import KategoriaPanel from './priceListAdmin/KategoriaPanel';
 import TomegesArDialog from './priceListAdmin/TomegesArDialog';
@@ -89,6 +91,12 @@ export default function PriceListAdminPage() {
   // P0-8-hoz hasonlóan (SettingsPage) -- a `savePriceList` korábban `void`-olva
   // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
   const [saveError, setSaveError] = useState<string | null>(null);
+  // A "Mentve ✓" sor-szintű jelzése (docs/03-funkcionalis-spec.md § 6.
+  // "Sor kinyitása" "Mentés-visszajelzés a soron") -- csak a `patchItem()`
+  // váltja ki, a `mentettTetelId` biztosítja, hogy egyszerre legfeljebb egy
+  // sor jelezzen.
+  const mentesJelzo = useMentesJelzo();
+  const [mentettTetelId, setMentettTetelId] = useState<string | null>(null);
   // A Tömeges árváltoztatás után nő -- jelez a nyitott `ItemEditor`-nak, hogy
   // az elgépelés-védelem baseline-ja a friss értékre újrarögzüljön, jelzés
   // nélkül (docs/03-funkcionalis-spec.md § 6. "Sor kinyitása"): a tömeges
@@ -125,12 +133,19 @@ export default function PriceListAdminPage() {
 
   function patchItem(id: string, patch: Partial<Tetel> | ((prev: Tetel) => Partial<Tetel>)) {
     const prevItem = priceList.tetelek.find((x) => x.id === id);
-    commit((prev) => ({
+    void commit((prev) => ({
       ...prev,
       tetelek: prev.tetelek.map((x) =>
         x.id === id ? { ...x, ...(typeof patch === 'function' ? patch(x) : patch) } : x,
       ),
-    }));
+    })).then((ok) => {
+      if (!ok) {
+        mentesJelzo.olts();
+        return;
+      }
+      setMentettTetelId(id);
+      mentesJelzo.jelez();
+    });
     if (prevItem) {
       const resolved = typeof patch === 'function' ? patch(prevItem) : patch;
       if (resolved.kategoriaId !== undefined && resolved.kategoriaId !== prevItem.kategoriaId) {
@@ -444,6 +459,13 @@ export default function PriceListAdminPage() {
         </Callout.Root>
       )}
 
+      {/* Egy, mountkor már meglévő élő régió a sor-szintű "Mentve ✓"-hoz --
+          `PaciensekPage.tsx` mintája. Soronkénti `aria-live` helyett (118
+          tétel, dinamikusan beszúrt régiót több képernyőolvasó egyáltalán
+          nem mond be), és a tétel neve nélkül, hogy egy gépelés közben
+          változó szöveg ne okozzon karakterenkénti bemondást. */}
+      <VisuallyHidden aria-live="polite">{mentesJelzo.saved ? 'Mentve' : ''}</VisuallyHidden>
+
       {grouped.length === 0 ? (
         <Callout.Root color="gray" mb="4">
           <Callout.Icon>
@@ -464,13 +486,14 @@ export default function PriceListAdminPage() {
               <Table.ColumnHeaderCell justify="end">Ár (HUF)</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell justify="end">Ár (EUR)</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell width="34px" />
+              <Table.ColumnHeaderCell width="76px" />
             </Table.Row>
           </Table.Header>
           <Table.Body>
             {grouped.map(({ cat, items }) => (
               <Fragment key={cat.id}>
                 <Table.Row>
-                  <Table.Cell colSpan={5} pt="4">
+                  <Table.Cell colSpan={6} pt="4">
                     <Flex justify="between" align="baseline">
                       <Text size="2" weight="bold" style={{ color: t.brand }}>
                         {cat.nev.hu}
@@ -585,11 +608,22 @@ export default function PriceListAdminPage() {
                           {it.aktiv ? <EyeOpenIcon /> : <EyeClosedIcon />}
                         </IconButton>
                       </Table.Cell>
+
+                      {/* Fix szélesség (a fejlécen, width="76px") -- a jelzés
+                          meg-/eltűnése nem tolhatja el az ár-oszlopokat, a
+                          hely mindig foglalt. */}
+                      <Table.Cell>
+                        {mentesJelzo.saved && mentettTetelId === it.id && (
+                          <Text aria-hidden size="1" color="gray">
+                            Mentve ✓
+                          </Text>
+                        )}
+                      </Table.Cell>
                     </Table.Row>
 
                     {open === it.id && (
                       <Table.Row id={`tetel-szerkeszto-${it.id}`}>
-                        <Table.Cell colSpan={5} style={{ background: t.surfaceAlt }}>
+                        <Table.Cell colSpan={6} style={{ background: t.surfaceAlt }}>
                           <ItemEditor
                             item={it}
                             categories={sortedKategoriak}

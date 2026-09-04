@@ -24,6 +24,7 @@ import {
 } from '@radix-ui/themes';
 import ChipGroup from '../../components/ChipGroup';
 import { useDirtyDraft } from '../../components/useDirtyDraft';
+import { useMentesJelzo } from '../../components/useMentesJelzo';
 import { Field } from '../../components/Field';
 import Section from '../../components/Section';
 import { alapertelmezettPenznem } from '../../domain/beallitasok';
@@ -55,8 +56,7 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
   const { draft, setDraft, dirty, reset } = useDirtyDraft<EgyebDraft>(
     toDraft(settings.ervenyessegNap, settings.alapertelmezettNyelv, alapertelmezettPenznem(settings)),
   );
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const jelzo = useMentesJelzo();
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -90,16 +90,11 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
   }, [loadLatestTemplateByBase]);
 
   async function handleSave() {
-    setSaving(true);
     setSaveError(null);
     try {
-      await saveSettings((prev) => ({ ...prev, ...draft }));
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      await jelzo.futtat(() => saveSettings((prev) => ({ ...prev, ...draft })));
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -177,16 +172,16 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
       )}
 
       <Flex justify="end" align="center" gap="3">
-        {dirty && !saved && (
+        {dirty && !jelzo.saved && (
           <Text size="1" color="gray">
             Nem mentett módosítás
           </Text>
         )}
-        <Button type="button" variant="soft" color="gray" onClick={reset} disabled={saving || !dirty}>
+        <Button type="button" variant="soft" color="gray" onClick={reset} disabled={jelzo.saving || !dirty}>
           Mégse
         </Button>
-        <Button onClick={() => void handleSave()} disabled={saving || !dirty}>
-          {saving ? 'Mentés…' : saved ? 'Mentve ✓' : 'Mentés'}
+        <Button onClick={() => void handleSave()} disabled={jelzo.saving || !dirty}>
+          {jelzo.felirat('Mentés')}
         </Button>
       </Flex>
     </>

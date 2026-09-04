@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PriceListAdminPage from './PriceListAdminPage';
 import NavBar from '../components/NavBar';
 import { NavGuardProvider } from '../components/NavGuardContext';
@@ -670,6 +670,81 @@ describe('PriceListAdminPage', () => {
     const ma = todayIso();
     expect(readPriceList().arlistaVerzio).toBe(ma);
     expect(await screen.findByText(`verzió ${ma}`)).toBeInTheDocument();
+  });
+
+  describe('Mentés-visszajelzés a soron (106. tétel)', () => {
+    it('a nyitott sor egy mezőjének írása után a SOR (nem az ItemEditor) mutatja a "Mentve ✓"-t', async () => {
+      renderAdmin();
+
+      const nameCell = await screen.findByText('CBCT');
+      const rowDiv = nameCell.parentElement!;
+      fireEvent.click(nameCell);
+
+      const hufInput = await screen.findByLabelText('HUF ár');
+      fireEvent.change(hufInput, { target: { value: '55000' } });
+      fireEvent.blur(hufInput);
+
+      expect(await within(rowDiv).findByText('Mentve ✓')).toBeInTheDocument();
+    });
+
+    it('A tétel szerkesztése után B tételre váltva csak B sora jelez', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+
+      const aRow = (await screen.findByText('CBCT')).parentElement!;
+      const bRow = (await screen.findByText('Fognyaki tömés')).parentElement!;
+
+      await user.click(gyakoriGomb(aRow));
+      expect(await within(aRow).findByText('Mentve ✓')).toBeInTheDocument();
+
+      await user.click(gyakoriGomb(bRow));
+      expect(await within(bRow).findByText('Mentve ✓')).toBeInTheDocument();
+      expect(within(aRow).queryByText('Mentve ✓')).not.toBeInTheDocument();
+    });
+
+    it('csukott sor csillag-gombja is jelez, a sor kinyitása nélkül', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+
+      const nameCell = await screen.findByText('CBCT');
+      const rowDiv = nameCell.parentElement!;
+      await user.click(gyakoriGomb(rowDiv));
+
+      expect(await within(rowDiv).findByText('Mentve ✓')).toBeInTheDocument();
+    });
+
+    it('a szem-ikonos deaktiválás megerősítése után is a sor jelez', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+
+      const nameCell = await screen.findByText('CBCT');
+      const rowDiv = nameCell.parentElement!;
+      await user.click(aktivGomb(rowDiv));
+      await user.click(await screen.findByRole('button', { name: 'Inaktiválás' }));
+
+      expect(await within(rowDiv).findByText('Mentve ✓')).toBeInTheDocument();
+    });
+
+    it('sikertelen mentésnél a sor NEM mutat "Mentve ✓"-t, és a lap-szintű hiba jelenik meg', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+
+      const nameCell = await screen.findByText('CBCT');
+      const rowDiv = nameCell.parentElement!;
+
+      const originalSetItem = localStorage.setItem.bind(localStorage);
+      vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+        if (key === 'dp:arlista.json') throw new DOMException('QuotaExceededError');
+        originalSetItem(key, value);
+      });
+
+      await user.click(gyakoriGomb(rowDiv));
+
+      expect(await screen.findByText(/A mentés nem sikerült/)).toBeInTheDocument();
+      expect(within(rowDiv).queryByText('Mentve ✓')).not.toBeInTheDocument();
+
+      vi.restoreAllMocks();
+    });
   });
 
   describe('Kategóriák panel', () => {

@@ -13,6 +13,7 @@ import { Field, FieldGroup } from '../../components/Field';
 import DiscardChangesDialog, { useDiscardGuard } from '../../components/DiscardChangesDialog';
 import { useNavGuard } from '../../components/NavGuardContext';
 import { useDirtyDraft } from '../../components/useDirtyDraft';
+import { useMentesJelzo } from '../../components/useMentesJelzo';
 import { t } from '../../design/tokens';
 import { ALAP_KATEGORIA_SZIN, KATEGORIA_PALETTA } from '../../design/treatmentVisuals';
 import type { Kategoria, Tetel } from '../../domain/types';
@@ -125,8 +126,7 @@ function KategoriaPanelBody({
 }) {
   const { draft, setDraft, dirty, reset } = useDirtyDraft<Kategoria[]>(kategoriak);
   const [openCat, setOpenCat] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const jelzo = useMentesJelzo();
 
   useEffect(() => {
     onDirtyChange(dirty);
@@ -165,19 +165,16 @@ function KategoriaPanelBody({
   }
 
   async function handleSave() {
-    setSaving(true);
     // A tömbsorrend a megjelenítési/fogszín-ütközési sorrend (lásd
     // docs/07-felulet-rendszer.md § Szín, forma, sűrűség és
     // domain/toothVisual.ts `resolveToothVisual`) -- a `sorrend` mező csak
     // ennek a lemezre írt tükre, ezért itt, mentéskor számozódik újra.
     const next = draft.map((k, i) => ({ ...k, sorrend: i + 1 }));
-    const ok = await onSave(next);
-    setSaving(false);
-    if (ok) {
-      setDraft(next);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    }
+    await jelzo.futtat(async () => {
+      const ok = await onSave(next);
+      if (ok) setDraft(next);
+      return ok;
+    });
   }
 
   return (
@@ -320,16 +317,23 @@ function KategoriaPanelBody({
           + Új kategória
         </Button>
         <Flex align="center" gap="3">
-          {dirty && !saved && (
+          {dirty && !jelzo.saved && (
             <Text size="1" color="gray">
               Nem mentett módosítás
             </Text>
           )}
-          <Button type="button" size="1" variant="soft" color="gray" onClick={reset} disabled={saving || !dirty}>
+          <Button
+            type="button"
+            size="1"
+            variant="soft"
+            color="gray"
+            onClick={reset}
+            disabled={jelzo.saving || !dirty}
+          >
             Mégse
           </Button>
-          <Button size="1" onClick={() => void handleSave()} disabled={saving || !dirty}>
-            {saving ? 'Mentés…' : saved ? 'Mentve ✓' : 'Mentés'}
+          <Button size="1" onClick={() => void handleSave()} disabled={jelzo.saving || !dirty}>
+            {jelzo.felirat('Mentés')}
           </Button>
         </Flex>
       </Flex>

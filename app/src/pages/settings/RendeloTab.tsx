@@ -29,6 +29,7 @@ import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Field } from '../../components/Field';
 import Section from '../../components/Section';
 import { useDirtyDraft } from '../../components/useDirtyDraft';
+import { useMentesJelzo } from '../../components/useMentesJelzo';
 import { alapertelmezettOrvosNeve } from '../../domain/orvosok';
 import type { Rendelo, Settings } from '../../domain/types';
 import { useAppState } from '../../state/AppState';
@@ -70,8 +71,7 @@ interface ReassignState {
 export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const { settings, saveSettings } = useAppState();
   const { draft, setDraft, dirty, reset } = useDirtyDraft<RendeloDraft>(toDraft(settings));
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const jelzo = useMentesJelzo();
   const [saveError, setSaveError] = useState<string | null>(null);
   const [megprobaltMenteni, setMegprobaltMenteni] = useState(false);
   const [reassign, setReassign] = useState<ReassignState | null>(null);
@@ -176,26 +176,23 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
     const nevek = sorok.map((o) => o.nev);
     if (new Set(nevek).size !== nevek.length) return;
 
-    setSaving(true);
     setSaveError(null);
     try {
       const inaktivOrvosok = sorok.filter((o) => !o.aktiv).map((o) => o.nev);
       const alapertelmezettOrvos =
         draft.alapertelmezett && nevek.includes(draft.alapertelmezett) ? draft.alapertelmezett : undefined;
-      await saveSettings((prev) => ({
-        ...prev,
-        rendelo: draft.rendelo,
-        orvosok: nevek,
-        inaktivOrvosok: inaktivOrvosok.length > 0 ? inaktivOrvosok : undefined,
-        alapertelmezettOrvos,
-      }));
+      await jelzo.futtat(() =>
+        saveSettings((prev) => ({
+          ...prev,
+          rendelo: draft.rendelo,
+          orvosok: nevek,
+          inaktivOrvosok: inaktivOrvosok.length > 0 ? inaktivOrvosok : undefined,
+          alapertelmezettOrvos,
+        })),
+      );
       setMegprobaltMenteni(false);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -359,16 +356,16 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
       )}
 
       <Flex justify="end" align="center" gap="3">
-        {dirty && !saved && (
+        {dirty && !jelzo.saved && (
           <Text size="1" color="gray">
             Nem mentett módosítás
           </Text>
         )}
-        <Button type="button" variant="soft" color="gray" onClick={reset} disabled={saving || !dirty}>
+        <Button type="button" variant="soft" color="gray" onClick={reset} disabled={jelzo.saving || !dirty}>
           Mégse
         </Button>
-        <Button onClick={() => void handleSave()} disabled={saving || !dirty}>
-          {saving ? 'Mentés…' : saved ? 'Mentve ✓' : 'Mentés'}
+        <Button onClick={() => void handleSave()} disabled={jelzo.saving || !dirty}>
+          {jelzo.felirat('Mentés')}
         </Button>
       </Flex>
 

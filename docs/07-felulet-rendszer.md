@@ -65,6 +65,26 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   keret).
 - Theme beállítás (`app/src/App.tsx`): `accentColor="brown" grayColor="slate"
   radius="small" scaling="95%"`.
+- A sikeres mentés „Mentve ✓” jelzése egy megosztott `saving`/`saved`
+  primitívre épül (`components/useMentesJelzo.ts`) — korábban négyszer
+  másolat-beillesztve, egy időzítő-takarítási hibával mindegyikben (egy
+  Radix tab-váltás unmountolhatta a komponenst a 2 másodperces `setTimeout`
+  belül). Két, egymástól független fogyasztási mód: **gombfeliratos**
+  (`Beállítások` mindhárom tabja, Árlista admin Kategóriák panelje —
+  alap → „Mentés…” → „Mentve ✓”, a felirat szó szerint ismétlődik minden
+  hívási helyen, `docs/07-felulet-rendszer.md` § Nyelv és szövegek elve
+  szerint) és **csupasz jelző** (Árlista admin tétel-táblázata — a sor
+  jobb szélén, halk szürke szöveg, `saving` köztes állapot nélkül, mert az
+  írás gyakorlatilag azonnali). Minden sikeres jelzés újraindítja a 2
+  másodperces órát; a jelzés a memóriabeli állapotfrissítés helyett
+  KIZÁRÓLAG a tényleges mentés sikeres lefutása után gyullad ki (D31).
+  Szándékosan nem zöld — az app a zöldet a véglegesítés lezárásának
+  tartja fenn (`PreviewPage` sikerképernyője). Egy lap-szintű,
+  `aria-live="polite"` élő régió (Radix `VisuallyHidden`) kíséri, a
+  `pages/PaciensekPage.tsx` egyetlen meglévő `aria-live`-mintáján — nem
+  soronkénti/mezőnkénti régió, hogy egy dinamikusan beszúrt élő régiót ne
+  hagyjon ki a képernyőolvasó, és hogy gépelés közben ne karakterenként
+  szólaljon meg.
 - Kivételek, amik kézzel írtak maradnak: a fogtérkép (funkcionális,
   kattintható/billentyűzetes SVG adatvizualizáció ÉS beviteli eszköz —
   lásd `components/DentalChart.tsx`, `design/toothChartSvg.ts`) és a

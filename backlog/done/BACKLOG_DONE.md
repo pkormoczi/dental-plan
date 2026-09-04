@@ -2637,3 +2637,24 @@ karbantartási kör négy önálló javítása.
   figyelmeztetésnél a képernyő változatlan marad. Semmi nem kerül a
   `terv.json`-ba, a séma nem változott. Részletek:
   `docs/03-funkcionalis-spec.md` § 4 "Sikeres véglegesítés".
+
+### 106. tétel: Mentés-visszajelzés az árlista tétel-soroknál — KÉSZ
+
+- **Méret:** kicsi-közepes — egy új megosztott primitív, négy meglévő
+  hívási hely átállítása rá (változatlan viselkedéssel), és egy új,
+  sor-szintű jelzőhely az Árlista adminban.
+- **Megvalósítás:** a `pages/PriceListAdminPage.tsx` tétel-táblázatának
+  minden sora egy hatodik, fix szélességű oszlopot kapott — a sor
+  sikeres, mezőnkénti mentése után halk szürke „Mentve ✓” jelenik meg
+  rajta kb. 2 másodpercre, egyszerre legfeljebb egy soron. A jelzés
+  kizárólag a tényleges mentés sikeres lefutása után gyullad ki, sosem az
+  optimista állapotfrissítéskor; hibánál azonnal eltűnik, a lap-szintű
+  piros hiba-`Callout` marad az egyetlen jelzés. A `saving`/`saved`/
+  2 másodperces időzítő logika, ami korábban négyszer másolat-beillesztve
+  élt (Beállítások mindhárom tabja, Árlista admin Kategóriák panelje),
+  egy új, unmount-takarítással kiegészített megosztott primitívbe került
+  — mind a négy meglévő hívó erre állt át, változatlan felirattal. Egy
+  lap-szintű `aria-live="polite"` élő régió gondoskodik a
+  képernyőolvasó-visszajelzésről. Részletek: `docs/03-funkcionalis-
+  spec.md` § 6 "Kezelések és árak" "Sor kinyitása"; `docs/07-felulet-
+  rendszer.md` § Komponensek.
