@@ -157,3 +157,69 @@ Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
    visszaállásra, valamint a régi adatokon futó migrációs tesztekre; az
    első `schemaVersion: 2` bevezetése már ezt a módszert kövesse.
 
+### 113. tétel: Véglegesítési checklist "sablon nem érhető el a megfelelő nyelven" üzenete hamis, ha a magyar tartalék is placeholder
+
+  A `pages/PreviewPage.tsx` `loadOrFallback()` a HU-tartalékra eséskor
+  `fellback: true`-t állít be attól függetlenül, hogy a HU-tartalom maga
+  használható-e — emiatt egy mindkét nyelven placeholder szakasznál (ma:
+  Garancia) a checklist EGYSZERRE adja a helyes "kimarad a nyomtatványból"
+  ÉS a hamis "helyette a magyar szöveg jelenik meg" üzenetet, holott a
+  ténylegesen generált PDF-en semmilyen magyar szöveg nem jelenik meg ebből
+  a szakaszból. Forrás: `docs/reviews/2026-09-05-doctor-review-nemet-euro.md`
+  2. megállapítás.
+  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
+
+### 114. tétel: "Törzsadat létrehozása" lépés-elhagyási dialógus minden navigációnál újra felugrik
+
+  A `pages/patientPage/TorzsadatSyncCard.tsx` `handleLepesElhagyas()` a
+  törzsadat nélküli páciens ágán (`torzsadat === null`) minden
+  meghívásnál felugrasztja a létrehozási ajánlatot — a testvér diff-ág
+  `elutasitottDiffId` memóriájával ellentétben nincs "már eldöntöttem ezen
+  a piszkozaton" jelzője, ezért egy már kihagyott ajánlat minden "Terv
+  adatai" lap-elhagyásnál újra megjelenik. Forrás:
+  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 1. megállapítás.
+  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
+
+### 115. tétel: Nyelv-/pénznemváltás megerősítő dialógusának gombszín-inkonzisztenciája
+
+  A `pages/PatientPage.tsx` megerősítő `AlertDialog`-jának "Folytatás"
+  gombja kizárólag nyelvváltásnál kap piros színt
+  (`color={pending?.kind === 'nyelv' ? 'red' : undefined}`), a
+  funkcionálisan azonos jellegű (nem-destruktív, csak neveket/árakat
+  frissítő) pénznemváltásnál nem — a piros szín itt nem tükröz valódi
+  extra kockázatot. Forrás:
+  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 3. megállapítás.
+  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
+
+### 116. tétel: "Nyomtatvány szövegei" fül mindig magyarra nyit, függetlenül a hívó terv nyelvétől
+
+  A `pages/settings/NyomtatvanyokTab.tsx` belső nyelv-váltója
+  (`templateLang`) mindig `'hu'`-val inicializálódik — egy nem-magyar terv
+  Előnézetéről a checklist "Nyomtatvány szövegei" gombjával navigálva a
+  doki mindig egy plusz kattintással vált a terv tényleges nyelvére.
+  Forrás: `docs/reviews/2026-09-05-doctor-review-nemet-euro.md`
+  5. megállapítás.
+  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
+
+### 117. tétel: Új terv-lánc nyelv-/pénznem-öröklésének jelzése
+
+  Egy vadonatúj terv-lánc a páciens legutóbbi véglegesített tervének
+  nyelvét/pénznemét örökli (D52, szándékos), de erről a Terv adatai lap
+  semmilyen jelzést nem ad — a doki csak akkor veszi észre, ha kifejezetten
+  másik nyelvet/pénznemet szeretne. Tisztázandó, hogy egy semleges
+  "öröklődött a legutóbbi tervedből" jelzés elegendő megoldás-e. Forrás:
+  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 4. megállapítás.
+  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
+
+### 118. tétel: Az előleg-mező (EUR, cent-alapú NumberField) programozott kitöltésnél tapasztalt eltérésének kivizsgálása
+
+  Egy böngésző-automatizálási menetben az Előleg mező (EUR) egy
+  programozott mezőkitöltés után az elvárt érték helyett egy, a
+  `NumberField` `step()` cent-lépésével egyező eltérést mutatott (300,00 €
+  → 300,01 € a várt 900,00 € helyett) — kézi begépeléssel a persona nem
+  tudta reprodukálni, ezért valószínűleg automatizálási műtermék, de mivel
+  pénzügyi mezőt érint, egy fejlesztői, kézi böngészős újrateszt indokolt a
+  `NumberField` `step()`/billentyűkezelésén. Forrás:
+  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 6. megállapítás.
+  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
+

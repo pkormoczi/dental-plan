@@ -18,7 +18,7 @@ URL-lel volt elérhető.
 Ez nem szándékos végállapot volt, hanem befejezetlen migráció:
 
 - A redesign IA már **beolvadást** döntött
-  (`backlog/redesign/02_...-kategorizalt.md` § 20 „C1 — FELOLDVA
+  (`redesign` § 20 „C1 — FELOLDVA
   2026-08-18": „`Korábbi tervek` a páciens `Kezelési tervek`
   kontextusába olvad", származtatott IA-következmény).
 - A megvalósítás viszont **csak a belépési pontokat** vette el (D39:
@@ -101,7 +101,7 @@ magyarázó szöveggel.
 ## Megjelölve, külön döntést kér (NEM része a hatókörnek)
 
 1. **Kettős D-számozás.** A `docs/01` D1–D53, a
-   `backlog/redesign/01_...md` viszont D1–D606, és a `docs/03`
+   `redesign` viszont D1–D606, és a `docs/03`
    megkülönböztetés nélkül idéz mindkettőből (`D192`, `D203`–`D205`,
    `D534` mind redesign-log számok). Önálló backlog-tételt érdemel.
 2. **`useListStateMemory.ts` fejléce** a lánc-nyitottság bővítésénél

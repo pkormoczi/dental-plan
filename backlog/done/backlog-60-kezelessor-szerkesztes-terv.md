@@ -5,7 +5,7 @@ rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek kidolgozása
 a megvalósító feladata.
 
-**Eredet:** ez a tétel a `backlog/redesign/` redesign-döntéssorozat DP-043
+**Eredet:** ez a tétel a `redesign` redesign-döntéssorozat DP-043
 szelete. Szintézis a redesign-interjú D-döntéseiből. Az itt hivatkozott
 `D80`–`D83`, `D87`–`D91`, `D105`–`D106` a redesign saját D1–D606
 számozásából valók — NEM azonosak a `docs/01-attekintes-es-dontesek.md`

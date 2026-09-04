@@ -5,7 +5,7 @@ döntéseit rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek
 kidolgozása a megvalósító feladata.
 
-**Eredet:** ez a tétel a `backlog/redesign/` redesign-döntéssorozat
+**Eredet:** ez a tétel a `redesign` redesign-döntéssorozat
 DP-087 szelete, LESZŰKÍTETT hatókörrel — az eredeti scope-ja (valódi
 mappa-választás, hard startup gate, D64–D66) a `CLAUDE.md` „Két fázisú
 build” elve szerint a 2. fázis (`FileSystemStorage`) hatásköre.

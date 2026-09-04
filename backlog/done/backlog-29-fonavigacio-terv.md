@@ -5,17 +5,17 @@ rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek kidolgozása
 a megvalósító feladata.
 
-**Eredet:** ez a tétel a `backlog/redesign/` alatti nagy redesign-döntéssorozat
-(D1–D606, `backlog/redesign/01_dental-plan-redesign-dontesek.md`) DP-001
-szelete (`backlog/redesign/03_dental-plan-implementacios-backlog-javaslat.md`
+**Eredet:** ez a tétel a `redesign` alatti nagy redesign-döntéssorozat
+(D1–D606, `redesign`) DP-001
+szelete (`redesign`
 3. fejezet). A redesign-interjú már lezajlott, ezért ez a dokumentum nem egy
-új grill-me session eredménye, hanem a DP-001 hatókörére eső D-döntések
-szintézise a szokásos terv-file formára. **Fontos:** az itt hivatkozott
+   új grill-me session eredménye, hanem a DP-001 hatókörére eső D-döntések
+   szintézise a szokásos terv-file formára. **Fontos:** az itt hivatkozott
 `D1`/`D35`/`D46` stb. számok a redesign saját, önálló D1–D606 számozásából
-valók (`backlog/redesign/`) — NEM azonosak a `docs/01-attekintes-es-dontesek.md`
+   valók (`redesign`) — NEM azonosak a `docs/01-attekintes-es-dontesek.md`
 D-táblájának számozásával. Lezáráskor a ténylegesen tartós döntések a
-szokásos módon, ÚJ, a `docs/01` táblájából szabad D-számot kapnak
-(`CLAUDE.md` § Backlog-tétel lezárása).
+   szokásos módon, ÚJ, a `docs/01` táblájából szabad D-számot kapnak
+   (`CLAUDE.md` § Backlog-tétel lezárása).
 
 ## Probléma
 

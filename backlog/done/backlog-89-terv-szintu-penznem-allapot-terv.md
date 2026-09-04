@@ -5,7 +5,7 @@ döntéseit rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek kidolgozása
 a megvalósító feladata.
 
-**Eredet:** a `backlog/redesign/` redesign-döntéssorozat § 8.6 „Egyedi
+**Eredet:** a `redesign` redesign-döntéssorozat § 8.6 „Egyedi
 végösszeg és előleg” szakaszának `D487`/`D488`/`D489`/`D524`–`D527`
 szelete. Ez a 63. tétel (Egyedi végösszeg, D69) 6. döntésének és a 64.
 tétel (Előleg, D66) 8. döntésének VÁRAKOZÓ maradéka — mindkettő a 62.

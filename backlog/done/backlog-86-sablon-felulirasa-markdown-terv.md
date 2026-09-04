@@ -5,7 +5,7 @@ döntéseit rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek
 kidolgozása a megvalósító feladata.
 
-**Eredet:** ez a tétel a `backlog/redesign/` redesign-döntéssorozat
+**Eredet:** ez a tétel a `redesign` redesign-döntéssorozat
 DP-085 szelete. Az itt hivatkozott `D571`–`D574`, `D588`–`D591`, `C7`,
 `C9` a redesign saját D1–D606 számozásából/konfliktus-jegyzékéből
 valók — NEM azonosak a `docs/01-attekintes-es-dontesek.md`

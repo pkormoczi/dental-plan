@@ -5,7 +5,7 @@ döntéseit rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek kidolgozása
 a megvalósító feladata.
 
-**Eredet:** a `backlog/redesign/` redesign-döntéssorozat § 6.3 „Másolás
+**Eredet:** a `redesign` redesign-döntéssorozat § 6.3 „Másolás
 új tervként” `D141`–`D147` szelete. Ez a 49. tétel (D57, „Másolás új
 tervbe”) 6. döntésének VÁRAKOZÓ maradéka — mindkét előfeltétele
 (a 61. tétel, D70, override-modell; a 67. tétel, Finalization validation

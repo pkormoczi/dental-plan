@@ -5,19 +5,19 @@ rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek kidolgozása
 a megvalósító feladata.
 
-**Eredet:** ez a tétel a `backlog/redesign/` redesign-döntéssorozat DP-002
-szelete (`backlog/redesign/03_dental-plan-implementacios-backlog-javaslat.md`
+**Eredet:** ez a tétel a `redesign` redesign-döntéssorozat DP-002
+szelete (`redesign`
 4. fejezet). A szokásos módon szintézis a már lezajlott redesign-interjú
-D-döntéseiből, nem új grill-me session. Az itt hivatkozott `D3`/`D5`/`D45`
+   D-döntéseiből, nem új grill-me session. Az itt hivatkozott `D3`/`D5`/`D45`
 stb. számok a redesign saját D1–D606 számozásából valók
-(`backlog/redesign/01_dental-plan-redesign-dontesek.md`) — NEM azonosak a
+   (`redesign`) — NEM azonosak a
 `docs/01-attekintes-es-dontesek.md` D-táblájával. A 29. tétel (DP-001)
 már lezárult (`docs/01-attekintes-es-dontesek.md` D34,
 `docs/03-funkcionalis-spec.md` § Fő navigáció) — a `Páciens`/`Terv
 szerkesztő`/`Előnézet`/`Korábbi tervek` nav-linkek D34 szerint átmenetileg
-a navon maradnak, amíg ez a tétel ÉS a DP-003 (Terv workflow shell) át
-nem veszi a szerepüket; a végleges megszüntetés emiatt nem csak ennek a
-tételnek, hanem a DP-003-nak is előfeltétele.
+   a navon maradnak, amíg ez a tétel ÉS a DP-003 (Terv workflow shell) át
+   nem veszi a szerepüket; a végleges megszüntetés emiatt nem csak ennek a
+   tételnek, hanem a DP-003-nak is előfeltétele.
 
 ## Probléma
 

@@ -5,11 +5,11 @@ rögzíti, implementáció-indításhoz. Nem tartalmaz kódot vagy
 függvényszignatúrákat — az implementáció módja és a részletek kidolgozása
 a megvalósító feladata.
 
-**Eredet:** ez a tétel a `backlog/redesign/` redesign-döntéssorozat DP-003
-szelete (`backlog/redesign/03_dental-plan-implementacios-backlog-javaslat.md`
+**Eredet:** ez a tétel a `redesign` redesign-döntéssorozat DP-003
+szelete (`redesign`
 3. fejezet). Szintézis a redesign-interjú D-döntéseiből, nem új grill-me
-session. Az itt hivatkozott `D11`/`D36`/`D38`/`D40` a redesign saját
-D1–D606 számozásából valók (`backlog/redesign/01_dental-plan-redesign-dontesek.md`)
+   session. Az itt hivatkozott `D11`/`D36`/`D38`/`D40` a redesign saját
+   D1–D606 számozásából valók (`redesign`)
 — NEM azonosak a `docs/01-attekintes-es-dontesek.md` D-táblájával.
 
 ## Probléma

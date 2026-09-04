@@ -1460,17 +1460,17 @@ karbantartási kör négy önálló javítása.
   (default-following árfrissítés + hozzá tartozó markerek, "csak
   ajánlat" öröklése, nyelvi review-metaadat öröklése) egy még nem
   létező modellre vár, és külön útra terelődött: az orvos-öröklés az
-  53. tételhez, a többi a `backlog/redesign/` DP-044/DP-048/DP-051/
-  DP-054 tételeihez, amikor azok kidolgozásra kerülnek. A
+  53. tételhez, a többi a `redesign` DP-044/DP-048/DP-051/
+      DP-054 tételeihez, amikor azok kidolgozásra kerülnek. A
   `planMasolatKent()` (`app/src/domain/planCopy.ts`) opcionális
-  negyedik `master` paraméterrel bővült — ha van, a `paciens` blokkot
-  ebből építi (a meglévő `paciensTorzsadatbol()`-lal), a `paciensId`
+      negyedik `master` paraméterrel bővült — ha van, a `paciens` blokkot
+      ebből építi (a meglévő `paciensTorzsadatbol()`-lal), a `paciensId`
   változatlanul a forrás tervből jön. A `PatientPlanChains.tsx`
   `copyVersion()` egyetlen hívási helye a `loadPatientData()`-t is
-  betölti a másolt verzió mellé; olvashatatlan törzsadatnál a másolás
-  hibaüzenettel áll meg, nem esik vissza némán a régi adatra
-  (docs/01-attekintes-es-dontesek.md D57, docs/03-funkcionalis-spec.md
-  § "Terv másolása új tervként").
+      betölti a másolt verzió mellé; olvashatatlan törzsadatnál a másolás
+      hibaüzenettel áll meg, nem esik vissza némán a régi adatra
+      (docs/01-attekintes-es-dontesek.md D57, docs/03-funkcionalis-spec.md
+      § "Terv másolása új tervként").
 
 ### 50. tétel: Verzió-szintű akciók és historical figyelmeztetések — KÉSZ (2026-08-20)
 

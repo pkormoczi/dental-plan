@@ -9,7 +9,7 @@ egy körben kész lett, nem maradt nyitva).
 két elemet jelölt meg screenshoten redundánsként: a `PatientPlanChains`
 terv-lánc blokk fejlécében ismételt páciensnevet és a „Páciens adatai"
 kereszt-linket. Ellenőriztük, hogy sem a `docs/`-ban, sem a
-`backlog/`-ban, sem a `backlog/redesign/` döntéssorozatban nincs erre
+`backlog/`-ban, sem a `redesign` döntéssorozatban nincs erre
 vonatkozó döntés — sőt, `docs/03-funkcionalis-spec.md` § 10 kifejezetten
 megerősítette a kereszt-linket, mert a § 5 (Korábbi tervek) szabályait
 vette át változtatás nélkül.

@@ -6,10 +6,10 @@ függvényszignatúrákat — az implementáció módja és a részletek kidolgo
 a megvalósító feladata.
 
 **Eredet:** a `backlog/BACKLOG.md` korábbi „KIDOLGOZÁSRA VÁR" listájának
-7. pontja, háttérfájl nélküli felvetés. A `backlog/redesign/`
+7. pontja, háttérfájl nélküli felvetés. A `redesign`
 döntéssorozat nem ismeri ezt a funkciót — a DP-080 (kezeléslista/editor)
 és a DP-081 (kategóriakezelés) egyaránt csak soronkénti szerkesztést
-tárgyal.
+   tárgyal.
 
 ## Probléma
 

@@ -7,7 +7,7 @@ a megvalósító feladata.
 
 **Eredet:** a `docs/reviews/2026-08-25-doctor-review-uj-terv.md`
 doktor-szimulációs jelentés 1. megfigyelése (magas súlyosság). A
-`backlog/redesign/` döntéssorozat nem ismeri ezt a felvetést.
+`redesign` döntéssorozat nem ismeri ezt a felvetést.
 
 ## Probléma
 

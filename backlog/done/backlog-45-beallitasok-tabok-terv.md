@@ -28,10 +28,10 @@ volt.
 
 ## Döntések
 
-### 1. Három tab, eltérve a `backlog/redesign/` javaslattól
+### 1. Három tab, eltérve a `redesign` javaslattól
 
 `Rendelő adatai | Nyomtatványok | Egyéb`, nem a
-`backlog/redesign/01_dental-plan-redesign-dontesek.md` D53-ban javasolt
+`redesign` D53-ban javasolt
 `Rendelő | Orvosok | Dokumentum | Tárolás`. Az Orvosok ma egy 3 soros
 textarea — saját tabot csak egy jövőbeli, accordionos szerkesztő (a
 redesign-javaslat D57/D58) után érdemel. A `Tárolás` a 2. fázis

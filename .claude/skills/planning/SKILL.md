@@ -1,6 +1,6 @@
 ---
 name: planning
-description: Interview the user about a not-yet-decided backlog item, or a new idea sourced from backlog/redesign, backlog/ideas, or a freeform prompt — branch by branch until every decision is resolved, then write a backlog/plans/backlog-N-<slug>-terv.md decision summary. For ideas not yet in BACKLOG.md, also assigns the next tétel-szám and writes the ### N. tétel entry itself, appended to the KIDOLGOZOTT block. Never writes or edits application code, and never modifies the source notes it reads from. Invoke explicitly with /planning.
+description: Interview the user about a not-yet-decided backlog item, or a new idea sourced from backlog/ideas or a freeform prompt — branch by branch until every decision is resolved, then write a backlog/plans/backlog-N-<slug>-terv.md decision summary. For ideas not yet in BACKLOG.md, also assigns the next tétel-szám and writes the ### N. tétel entry itself, appended to the KIDOLGOZOTT block. Never writes or edits application code, and never modifies the source notes it reads from. Invoke explicitly with /planning.
 disable-model-invocation: true
 ---
 
@@ -12,7 +12,6 @@ Egy döntést végigvinni implementáció-indításig — függetlenül attól, 
 kiinduló ötlet honnan jön:
 
 - egy már számozott, de terv nélküli `backlog/BACKLOG.md` tétel,
-- egy konkrét DP-XXX tétel a `backlog/redesign/` redesign-döntéssorozatból,
 - egy konkrét, kiválasztott ötlet a `backlog/ideas/` alatti nyers
   jegyzetekből,
 - vagy egy szabadon, a `/planning` hívásban vagy a beszélgetésben leírt,
@@ -26,8 +25,8 @@ rátérne (lásd "Mikor fut").
 
 **Ez a skill soha nem ír és nem módosít alkalmazáskódot** (`app/`, `data/`,
 `assets/` alatt semmit), és soha nem módosítja a forrás-jegyzeteket
-(`backlog/redesign/`, `backlog/ideas/` — ezek mindig csak olvasásra
-szolgálnak, lásd "Korlátok"). Amit ír:
+(`backlog/ideas/` — ezek mindig csak olvasásra szolgálnak, lásd
+"Korlátok"). Amit ír:
 
 - egy új `backlog/plans/backlog-N-<cím>-terv.md` fájlt,
 - ha a tétel már szerepelt a backlogban, de terv nélkül: a meglévő tétel
@@ -53,20 +52,16 @@ szerepel egy "N. tétel", de nincs hozzá `**Terv:**` sor. A "Mikor fut"
 innentől nem tér el a korábbi viselkedéstől, egyenesen a döntési interjúra
 megy (lásd "Hogyan dolgozz").
 
-**B) Új tétel felvétele — a forrás még nincs a backlogban.** Három
+**B) Új tétel felvétele — a forrás még nincs a backlogban.** Két
 konkrét alakja lehet:
 
-1. Egy konkrét DP-XXX tétel a `backlog/redesign/03_dental-plan-
-   implementacios-backlog-javaslat.md`-ból (vagy a mögötte álló
-   döntéssorozat egyéb fájljaiból) — a hívó megnevezi a DP-számot vagy
-   idézi a szakaszt.
-2. Egy konkrét, MÁR KIVÁLASZTOTT ötlet a `backlog/ideas/` alatt (pl.
+1. Egy konkrét, MÁR KIVÁLASZTOTT ötlet a `backlog/ideas/` alatt (pl.
    `USER_FEEDBACK.md` egy bulletje) — a hívó pontosan megmondja, melyik
    bekezdésről/gondolatról van szó.
-3. Egy szabadon, a hívásban vagy a beszélgetésben leírt ötlet, amihez
+2. Egy szabadon, a hívásban vagy a beszélgetésben leírt ötlet, amihez
    nincs háttérfájl.
 
-Mindhárom esetben a skill a döntési interjú ELŐTT elvégzi:
+Mindkét esetben a skill a döntési interjú ELŐTT elvégzi:
 
 - **Ütközés-ellenőrzés** — lásd "Előkészítés" 2–3. pontja: ha az ötlet
   ütközik egy `docs/01` D-döntéssel vagy egy már elvetett, az "EGYÉB
@@ -99,7 +94,7 @@ interjún és a felvételen, sosem többet egyszerre.
 ## Előkészítés — mielőtt egy kérdést is felteszel
 
 1. Olvasd el a célzott `backlog/BACKLOG.md` tételt (ha van sorszáma), vagy
-   — B) módban — a forrás-szakaszt (DP-XXX / az idézett ötlet).
+   — B) módban — a forrás-szakaszt (az idézett ötlet).
 2. Olvasd el a `docs/01-attekintes-es-dontesek.md` D-táblázatát és a
    `CLAUDE.md` "Sérthetetlen szabályok" táblázatát. Ezek nem tárgyalási
    alap — ha egy döntési ág ütközik egy meglévő D-ponttal, ezt EXPLICIT
@@ -171,11 +166,11 @@ már lezajlott az Előkészítés/Mikor fut lépéseiben, mielőtt ez elkezdődi
   D-pontra hivatkozhat (ütközés-ellenőrzésként, lásd "Előkészítés"), de
   soha nem ígéri, hogy egy döntés "D-számot fog kapni", és nem ír elő a
   megvalósítónak D-hivatkozást — a lezárás a döntést prózaként vezeti át.
-- **Nem módosítja a forrás-jegyzeteket.** A `backlog/redesign/` és a
-  `backlog/ideas/` alatti fájlok mindig csak olvasásra szolgálnak — a
-  skill sosem jelöli vissza bennük, hogy egy ötletből már lett tétel.
-  Ismétlődő futásnál a dedup-ellenőrzés (Előkészítés 3. pont, kiterjesztve
-  a `backlog/done/BACKLOG_DONE.md`-re is) a védelem, nem egy fájlba írt
+- **Nem módosítja a forrás-jegyzeteket.** A `backlog/ideas/` alatti
+  fájlok mindig csak olvasásra szolgálnak — a skill sosem jelöli vissza
+  bennük, hogy egy ötletből már lett tétel. Ismétlődő futásnál a
+  dedup-ellenőrzés (Előkészítés 3. pont, kiterjesztve a
+  `backlog/done/BACKLOG_DONE.md`-re is) a védelem, nem egy fájlba írt
   jelölés.
 - **A tétel-felvétel (B mód) sosem priorizálás.** A hozzárendelt szám
   stabil azonosító, nem rangsor (`backlog/BACKLOG.md` fejléce szerint) —
@@ -233,8 +228,6 @@ Ugyanaz a forma, mint a meglévő `KIDOLGOZOTT` tételeké:
 
 A forrás-hivatkozás alakja a bemenet szerint változik:
 
-- DP-XXX eredetű: `a backlog/redesign/ redesign-döntéssorozat DP-0XX
-  tétele` — ugyanaz a forma, mint a meglévő 51–70. tételeknél.
 - `backlog/ideas/` eredetű: `a backlog/ideas/<fájlnév> alapján`.
 - szabad, háttérfájl nélküli felvetés: nincs zárójeles hivatkozás — a
   bekezdés egyenesen a probléma leírásával kezdődik.
