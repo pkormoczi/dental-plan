@@ -16,7 +16,7 @@
 // domain/planChainData.ts) hívónként eltérhessen, a renderelés viszont
 // egy helyen éljen.
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Badge,
@@ -50,8 +50,10 @@ import { tervReszleteiUtvonal, type VersionRef } from '../domain/planVersionActi
 import { rendezettLancok, versionDataKey, type VersionTotal } from '../domain/planChainData';
 import { tervVegosszeg } from '../domain/totals';
 import { ALAPERTELMEZETT_TERV_CIM, megjelenitettTervCim } from '../domain/tervCim';
+import { paciensElteres, verzioElteresek } from '../domain/torzsadatElteres';
+import type { MezoElteres } from '../domain/masterSnapshotDiff';
 import { workflowLepesFelirat } from '../domain/workflowLepesek';
-import type { PatientFolder, Plan, PlanFolder, PlanVersion } from '../domain/types';
+import type { PatientFolder, PatientMasterData, Plan, PlanFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import type { AktivDraft } from './useAktivDraft';
 import PlanVersionActionDialog, {
@@ -112,6 +114,14 @@ export interface PatientPlanChainsProps {
   nyitottLancok?: Record<string, boolean>;
   /** `nyitottLancok`-hoz tartozó író -- csak akkor hívódik, ha `nyitottLancok` is át van adva. */
   onLancValtas?: (planDir: string, nyitva: boolean) => void;
+  /**
+   * A páciens LEZÁRT törzsadata (`paciens-adatok.json`), vagy `null`, ha
+   * nincs ilyen / nem olvasható -- ilyenkor a lánc-fán sehol nem jelenik meg
+   * eltérés-jelzés. A hívó tölti be (a betöltési STRATÉGIA hívónként eltér,
+   * a `plans`/`versionsByPlan` mintáján), a komponens csak a
+   * `domain/torzsadatElteres.ts` összevetését futtatja rajta.
+   */
+  torzsadat?: PatientMasterData | null;
 }
 
 export default function PatientPlanChains({
@@ -127,6 +137,7 @@ export default function PatientPlanChains({
   aktivDraft,
   nyitottLancok,
   onLancValtas,
+  torzsadat,
 }: PatientPlanChainsProps) {
   const { storage, loadPlanPdf, isSeedVersion } = useStorage();
   const { priceList } = useAppState();
@@ -134,6 +145,13 @@ export default function PatientPlanChains({
   const akciok = usePlanVersionActions({ patientDir: patient.dirName });
 
   const standalone = header === 'standalone';
+
+  // A törzsadat-eltérés jelzésének magja -- lásd domain/torzsadatElteres.ts;
+  // `torzsadat` hiányában/`null`-nál üres map, sehol nincs jelzés.
+  const elteresekVerzionkent = useMemo(
+    () => verzioElteresek(torzsadat ?? null, plansByVersion),
+    [torzsadat, plansByVersion],
+  );
 
   // Lánc-szintű összecsukás (46. tétel, D237/D249/D250) -- FELVÁLTJA a
   // korábbi, kizárólag `standalone`-ban élő páciens-szintű "N terv"
@@ -274,6 +292,10 @@ export default function PatientPlanChains({
     const lanc = aktivDraft.plan.tervId ? plans.find((p) => p.tervId === aktivDraft.plan.tervId) : undefined;
     draftKontextus = lanc ? `Új verzió — ${displayedLabel(lanc)}` : 'Új terv';
   }
+  // A piszkozat JELEN idejű eltérés-jelzése (4. döntés) -- ellentétben a
+  // mentett verziókon használt múlt idejű alakkal, itt nincs "akkor",
+  // amihez képest az adat "azóta módosult" volna.
+  const draftElteres = aktivDraft ? paciensElteres(torzsadat ?? null, aktivDraft.plan.paciens) : [];
 
   return (
     <Box>
@@ -354,6 +376,7 @@ export default function PatientPlanChains({
                 }
           }
           onFolytatas={() => navigate(piszkozatCelRoute(aktivDraft.lastRoute, aktivDraft.plan))}
+          elteroMezok={draftElteres}
         />
       )}
 
@@ -366,6 +389,11 @@ export default function PatientPlanChains({
           ? totalsByVersion[versionDataKey(plan.dirName, legfrissebb.dirName)]
           : undefined;
         const lancNyitva = nyitva(plan.dirName);
+        // A lánc-fejléc verziószámlálója (3. döntés) -- a piszkozat NEM
+        // számít bele, az nem verzió (4. döntés).
+        const lancElteresSzam = versions.filter(
+          (v) => (elteresekVerzionkent[versionDataKey(plan.dirName, v.dirName)]?.length ?? 0) > 0,
+        ).length;
         const lancDraftJelzett =
           aktivDraft != null && aktivDraft.plan.tervId !== '' && aktivDraft.plan.tervId === plan.tervId;
         const controlsId = `lanc-${patient.dirName}-${plan.dirName}`;
@@ -446,6 +474,11 @@ export default function PatientPlanChains({
                           Piszkozat
                         </Badge>
                       )}
+                      {lancElteresSzam > 0 && (
+                        <Badge color="amber" variant="soft" size="1" ml="1">
+                          {lancElteresSzam} verzió eltér
+                        </Badge>
+                      )}
                     </Button>
                     <IconButton
                       size="1"
@@ -513,6 +546,8 @@ export default function PatientPlanChains({
                     // verziós láncon -- egyverziós láncon funkciótlan dísz
                     // lenne (docs/07 tiltja).
                     const legutobbi = versions.length > 1 && isLegfrissebb;
+                    const versionElteres: MezoElteres[] =
+                      elteresekVerzionkent[versionDataKey(plan.dirName, v.dirName)] ?? [];
                     return (
                       <Box key={v.dirName}>
                         {vi > 0 && <Separator size="4" />}
@@ -529,6 +564,16 @@ export default function PatientPlanChains({
                             {versionPlan?.csakAjanlat === true && (
                               <Badge color="gray" variant="soft" size="1">
                                 Csak ajánlat
+                              </Badge>
+                            )}
+                            {versionElteres.length > 0 && (
+                              <Badge
+                                color="amber"
+                                variant="soft"
+                                size="1"
+                                title={versionElteres.map((e) => e.cimke).join(', ')}
+                              >
+                                {versionElteres.length} mező azóta módosult
                               </Badge>
                             )}
                           </Flex>
@@ -665,6 +710,7 @@ function AktivDraftBlokk({
   mentve,
   osszeg,
   onFolytatas,
+  elteroMezok,
 }: {
   kontextus: string;
   paciensNev: string;
@@ -672,6 +718,7 @@ function AktivDraftBlokk({
   mentve: string | null;
   osszeg: { ertek: number; penznem: Plan['penznem']; nyelv: Plan['nyelv'] } | null;
   onFolytatas: () => void;
+  elteroMezok: MezoElteres[];
 }) {
   return (
     <Card
@@ -683,9 +730,21 @@ function AktivDraftBlokk({
         onFolytatas();
       }}
     >
-      <Text as="p" size="2" weight="bold" mb="1" style={{ color: t.brand }}>
-        {kontextus}
-      </Text>
+      <Flex align="center" gap="1" wrap="wrap" mb="1">
+        <Text as="p" size="2" weight="bold" style={{ color: t.brand }}>
+          {kontextus}
+        </Text>
+        {elteroMezok.length > 0 && (
+          <Badge
+            color="amber"
+            variant="soft"
+            size="1"
+            title={elteroMezok.map((e) => e.cimke).join(', ')}
+          >
+            {elteroMezok.length} mező eltér a törzsadattól
+          </Badge>
+        )}
+      </Flex>
       {paciensNev && (
         <Text as="p" size="2" mt="0" mb="1">
           {paciensNev}

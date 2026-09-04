@@ -15,16 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 104. tétel: Terv-lánc listán jelzés a törzsadat ↔ pillanatkép eltérésről
-
-  A `components/PatientPlanChains.tsx` sehol nem hívja a
-  `domain/masterSnapshotDiff.ts`-t, így egy elavult kontaktadatú verzió
-  csak a saját részletoldalán derül ki. Kért: apró, nem tolakodó jelzés a
-  lánc/verzió soron is — a törzsadat betöltésére a
-  `domain/torzsadatBetoltes.ts` `loadMegjelenitettTorzsadat()` már megvan.
-  A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-104-torzsadat-elteres-lanc-listan-terv.md`
-
 ### 105. tétel: Sikerképernyő — mit fogadott el a doki véglegesítéskor
 
   A `pages/PreviewPage.tsx` mentés utáni ága csak a sikerüzenetet, a

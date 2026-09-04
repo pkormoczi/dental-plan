@@ -2603,3 +2603,19 @@ karbantartási kör négy önálló javítása.
   letiltott, betöltési HIBÁNÁL viszont változatlanul kattintható marad.
   Részletek: `docs/03-funkcionalis-spec.md` § 11 "Mentett PDF"; `CLAUDE.md`
   "Meglévő segédfüggvények".
+
+### 104. tétel: Terv-lánc listán jelzés a törzsadat ↔ pillanatkép eltérésről — KÉSZ
+
+- **Méret:** kicsi — egy új, tiszta domain modul a meglévő
+  `masterSnapshotDiff()` újrahasználatával, egy opcionális prop a
+  terv-lánc/verzió fán, és a törzsadat leadása a két hívó oldalon.
+- **Megvalósítás:** a `components/PatientPlanChains.tsx` mostantól amber
+  jelvénnyel jelzi, ha egy mentett verzió (vagy az aktív piszkozat)
+  `paciens` pillanatképe eltér a páciens élő, lezárt törzsadatától — a
+  lánc-fejlécen az ÉRINTETT VERZIÓK számával, a verziósoron az ELTÉRŐ
+  MEZŐK számával, a piszkozat-blokkon jelen idejű szöveggel. Az összevetés
+  kizárólag a valódi `paciens-adatok.json` ellen fut, sosem az élő
+  fallbackre; hiányzó vagy olvashatatlan törzsadatnál a fán sehol nem
+  jelenik meg jelzés. A jelzés tisztán informatív, nem kattintható, nem
+  módosít mentett adatot. Részletek: `docs/03-funkcionalis-spec.md` § 5
+  "Terv-láncok és verziók"; `CLAUDE.md` "Meglévő segédfüggvények".

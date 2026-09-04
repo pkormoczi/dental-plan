@@ -1192,6 +1192,26 @@ egy élő auto-javaslatot mutat (a terv domináns kategóriájának neve,
 `javasoltTervCim()`). A ceruza-ikon itt a MÁSODIK belépési pont ehhez az
 íráshoz — az első a „Terv adatai” lap Terv címe mezője (§ 2, D61).
 
+**Törzsadat ↔ pillanatkép eltérés jelzése.** Egy mentett verzió `paciens`
+blokkja pillanatkép (§ 10 alatt is részletezve) — ha a páciens élő,
+lezárt törzsadata (`paciens-adatok.json`) azóta módosult, ez a fán is
+látszik, nem csak a verzió saját részletoldalán. A lánc-fejléc
+(nyitottságtól függetlenül) egy amber jelvényt kap, ha a láncban van
+legalább egy eltérő verzió — a jelvény az ÉRINTETT VERZIÓK számát mondja
+(„2 verzió eltér”), a fejléc-toggle akadálymentes nevébe folyva, a
+„Piszkozat” jelvény mintáján. A kinyitott lánc minden érintett
+verziósora saját jelvényt kap, az ELTÉRŐ MEZŐK számával („3 mező azóta
+módosult”) — a konkrét mezőnevek a jelvény `title`-jén érhetők el. Az
+összevetés KIZÁRÓLAG a ténylegesen létező `paciens-adatok.json` ellen fut
+— egy páciens élő fallback-adatához (a legfrissebb terv pillanatképéhez)
+sosem, mert attól minden régebbi verzió eltérőnek látszana a puszta
+korkülönbség miatt. Ha a páciensnek nincs lezárt törzsadata, vagy az nem
+olvasható, a fán sehol nem jelenik meg jelzés — néma kihagyás, nem
+hibaállapot. A jelzés tisztán informatív: nem kattintható, nem nyit
+dialógust, nem kínál szinkronizálást — a részletekhez a verziósor MÁR
+meglévő „Megnézés” gombja, a törzsadat szerkesztéséhez a „Páciens adatai”
+tab / kereszt-link visz.
+
 ### Aktív draft a listán
 
 Ha az EGYETLEN globális, mentetlen piszkozat (D21) a megjelenített
@@ -1206,7 +1226,13 @@ előleg nélkül — tétel-/fázisszám nélkül, és HA a piszkozatban egyetle
 sor sincs, összeg nélkül. A teljes blokk kattintható, a piszkozat utolsó
 workflow-lépésére navigál, plusz egy külön „Folytatás” gomb — EGYIK sem
 megy át a piszkozat-felülírás-őrön, mert a saját draft folytatása nem
-felülírás.
+felülírás. A blokk a fenti törzsadat-eltérés jelzését is megkapja, ha a
+piszkozat `paciens` blokkja eltér a törzsadattól — de JELEN idejű
+szöveggel („N mező eltér a törzsadattól”), nem a mentett verziókon
+használt múlt idejű alakkal, mert a piszkozat élő, szerkesztés alatt
+álló adat, nincs olyan „akkor”, amihez képest „azóta módosult” volna. A
+lánc-fejléc verziószámlálójába a piszkozat NEM számít bele — az nem
+verzió.
 
 A verziósoron megjelenő összeg a verzió saját `terv.json`-jából jött
 `osszesitok.fizetendo` (a ténylegesen fizetendő, nem a listaáras
@@ -2098,7 +2124,10 @@ kereszt-linkek mutatnak ide.
   az ág pontosan akkor renderel, ha a dokinak NINCS ehhez a pácienshez
   tartozó lánca és NINCS ehhez tartozó aktív piszkozata, egy mentetlen
   piszkozat szükségszerűen egy MÁSIK pácienshez tartozna, és a gomb szó
-  nélkül eltüntetné.
+  nélkül eltüntetné. A § 5 törzsadat-eltérés jelzéséhez a tab a MÁR
+  betöltött törzsadatot adja le a `PatientPlanChains`-nek — nulla új
+  storage-hívás; a törzsadat-mentés meglévő visszacsatolása miatt a
+  fülváltás után azonnal a friss állapot látszik.
 - A `Páciens adatai` tab „Korábbi tervek” gombja — ami korábban a
   `PatientEditorPanel` alján állt — megszűnt (D44): a tabok közti váltás
   egyetlen helye a tabsor. A `Kezelési tervek` tab tartalma emiatt sem

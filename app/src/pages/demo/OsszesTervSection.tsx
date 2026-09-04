@@ -20,7 +20,7 @@ import { useListStateMemory } from '../../components/useListStateMemory';
 import { t } from '../../design/tokens';
 import { type PlanChainData, loadPlanChainData } from '../../domain/planChainData';
 import { norm } from '../../domain/search';
-import type { PatientFolder } from '../../domain/types';
+import type { PatientFolder, PatientMasterData } from '../../domain/types';
 import { useStorage } from '../../storage/StorageContext';
 
 // A lánc-nyitottság memória-kulcsa (46. tétel) -- a `versionDataKey()`
@@ -58,6 +58,9 @@ export default function OsszesTervSection() {
 
   const [patients, setPatients] = useState<PatientFolder[]>([]);
   const [chainDataByPatient, setChainDataByPatient] = useState<Record<string, PlanChainData>>({});
+  const [torzsadatByPatient, setTorzsadatByPatient] = useState<Record<string, PatientMasterData | null>>(
+    {},
+  );
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
 
@@ -79,16 +82,27 @@ export default function OsszesTervSection() {
         const list = await storage.listPatients();
         // P1-2: egyetlen sérült/inkompatibilis páciens ne bénítsa meg az
         // egész listát -- egy hibázó betöltés ⚠-jelöléssel, üres lánccal
-        // jelenik meg, a többi rendben betölt.
-        const results = await Promise.allSettled(list.map((p) => loadPlanChainData(storage, p.dirName)));
+        // jelenik meg, a többi rendben betölt. A törzsadat NYERSEN (nem
+        // `loadMegjelenitettTorzsadat()`-tal) töltődik -- a törzsadat-eltérés
+        // jelzése kizárólag a valódi paciens-adatok.json ellen fut
+        // (domain/torzsadatElteres.ts), a fallback-ág itt fölösleges lenne.
+        const [chainResults, masterResults] = await Promise.all([
+          Promise.allSettled(list.map((p) => loadPlanChainData(storage, p.dirName))),
+          Promise.allSettled(list.map((p) => storage.loadPatientData(p.dirName))),
+        ]);
         if (cancelled) return;
         const dataByPatient: Record<string, PlanChainData> = {};
-        results.forEach((res, i) => {
+        chainResults.forEach((res, i) => {
           dataByPatient[list[i].dirName] =
             res.status === 'fulfilled' ? res.value : { ...EMPTY_CHAIN_DATA, unreadable: true };
         });
+        const masterByPatient: Record<string, PatientMasterData | null> = {};
+        masterResults.forEach((res, i) => {
+          masterByPatient[list[i].dirName] = res.status === 'fulfilled' ? res.value : null;
+        });
         setPatients(list);
         setChainDataByPatient(dataByPatient);
+        setTorzsadatByPatient(masterByPatient);
       } catch (err) {
         if (!cancelled) {
           setListError(
@@ -182,6 +196,7 @@ export default function OsszesTervSection() {
               unreadable={data.unreadable}
               header="standalone"
               aktivDraft={sajatDraft(aktivDraft, p.dirName)}
+              torzsadat={torzsadatByPatient[p.dirName] ?? null}
               nyitottLancok={lancokEhhezAPacienshez(nyitottak, p.dirName)}
               onLancValtas={(planDir, nyitva) => setNyitott(lancMemoriaKulcs(p.dirName, planDir), nyitva)}
               onNavigateToPatientData={() =>
