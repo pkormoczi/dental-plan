@@ -255,7 +255,7 @@ export function veglegesitesDiagnozis(
       cim: 'A szakasz szövege hiányzik, vagy még jogi lektorálásra vár — a címével együtt kimarad a nyomtatványból.',
       szamlalo: sablon.kihagyottSzekciok.length,
       reszletek: [{ cim: 'Kimaradó szakaszok', nevek: sablon.kihagyottSzekciok }],
-      route: '/beallitasok',
+      route: '/beallitasok?tab=nyomtatvanyok',
     });
   }
 
@@ -266,7 +266,7 @@ export function veglegesitesDiagnozis(
       cim:
         'A tervhez tartozó sablon nem érhető el a megfelelő nyelven (hiányzik, vagy még jogi ' +
         'lektorálásra vár) — helyette a magyar szöveg jelenik meg a nyomtatványon.',
-      route: '/beallitasok',
+      route: '/beallitasok?tab=nyomtatvanyok',
     });
   }
 
