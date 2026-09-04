@@ -365,7 +365,7 @@ describe('TervReszleteiPage', () => {
     renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
     expect(
       await screen.findByText(
-        'Ez a verzió nem véglegesített -- a Terv részletei nézet csak véglegesített verziót mutat.',
+        'Ez a verzió nem véglegesített — a Terv részletei nézet csak véglegesített verziót mutat.',
       ),
     ).toBeInTheDocument();
   });

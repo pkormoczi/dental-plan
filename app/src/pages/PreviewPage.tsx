@@ -426,7 +426,7 @@ export default function PreviewPage() {
         {cimkeHiba && (
           <Callout.Root color="amber" mb="5" style={{ textAlign: 'left' }}>
             <Callout.Text>
-              {cimkeHiba} A terv mentése ettől függetlenül sikeres volt -- a cím a Korábbi
+              {cimkeHiba} A terv mentése ettől függetlenül sikeres volt — a cím a Korábbi
               tervek listáján, a ceruza-ikonnal pótolható.
             </Callout.Text>
           </Callout.Root>
@@ -435,7 +435,7 @@ export default function PreviewPage() {
           <Callout.Root color="amber" mb="5" style={{ textAlign: 'left' }}>
             <Callout.Text>
               A piszkozat automatikus törlése nem sikerült: {piszkozatTorlesHiba} A terv
-              mentése ettől függetlenül sikeres volt -- a Kezdőlapon még megjelenhet egy
+              mentése ettől függetlenül sikeres volt — a Kezdőlapon még megjelenhet egy
               elavult piszkozat-kártya, ott elvethető.
             </Callout.Text>
           </Callout.Root>

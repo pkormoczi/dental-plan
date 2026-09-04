@@ -662,7 +662,7 @@ export default function PriceListAdminPage() {
           <AlertDialog.Title>Tétel aktiválása 0 Ft-tal?</AlertDialog.Title>
           <AlertDialog.Description size="2">
             A HUF ár 0 maradt. Ha ez szándékos (pl. az ár később derül ki), a tétel 0 Ft-tal is
-            aktiválható -- innentől választható lesz a tervezőben.
+            aktiválható — innentől választható lesz a tervezőben.
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>
@@ -695,7 +695,7 @@ export default function PriceListAdminPage() {
           <AlertDialog.Title>Tétel inaktiválása</AlertDialog.Title>
           <AlertDialog.Description size="2">
             „{priceList.tetelek.find((x) => x.id === deactivateConfirmId)?.nev.hu ?? ''}” inaktiválása
-            után a tétel nem lesz választható a tervezőben -- bármikor visszakapcsolható.
+            után a tétel nem lesz választható a tervezőben — bármikor visszakapcsolható.
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">
             <AlertDialog.Cancel>

@@ -554,7 +554,7 @@ export class DemoStorage implements PlanStorage {
       localStorage.removeItem(planKeyStr);
       localStorage.removeItem(pdfKeyStr);
       throw new Error(
-        'A tervet nem sikerült elmenteni -- valószínűleg megtelt a böngésző tárhelye. ' +
+        'A tervet nem sikerült elmenteni — valószínűleg megtelt a böngésző tárhelye. ' +
           'Semmi nem íródott félkészen, próbáld törölni pár korábbi tervet.',
       );
     }

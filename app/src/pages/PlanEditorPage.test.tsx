@@ -130,7 +130,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     const result = await screen.findByText('Fogeltávolítás');
     await user.click(result);
 
-    const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    const teethInput = screen.getByPlaceholderText('pl. 16, 17, 26');
     const quantityInput = screen.getByRole('textbox', { name: 'Darabszám' });
     await user.type(teethInput, '16, 17');
 
@@ -175,7 +175,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await user.click(result);
     await waitFor(() => expect(search).toHaveValue(''));
 
-    const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    const teethInput = screen.getByPlaceholderText('pl. 16, 17, 26');
     const quantityInput = screen.getByRole('textbox', { name: 'Darabszám' });
     await user.type(teethInput, '16, 17, 26');
     // A fogak-követés miatt a darabszám már gépelés közben 3-ra áll -- nincs
@@ -202,7 +202,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await user.click(await screen.findByText('Fogeltávolítás'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    const teethInput = screen.getByPlaceholderText('pl. 16, 17, 26');
     await user.type(teethInput, 'jobb felső');
 
     expect(screen.queryByText(/Nem érvényes FDI fogszám/)).not.toBeInTheDocument();
@@ -218,7 +218,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await user.click(await screen.findByText('Fogeltávolítás'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    const teethInput = screen.getByPlaceholderText('pl. 16, 17, 26');
     await user.type(teethInput, '99');
 
     expect(await screen.findByText(/Nem érvényes FDI fogszám: 99/)).toBeInTheDocument();
@@ -241,7 +241,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await user.click(await screen.findByText('Fogeltávolítás'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    const teethInput = screen.getByPlaceholderText('16, 17, 26');
+    const teethInput = screen.getByPlaceholderText('pl. 16, 17, 26');
     await user.type(teethInput, '16, jobb felső');
     expect(screen.queryByText(/Nem érvényes FDI fogszám/)).not.toBeInTheDocument();
 

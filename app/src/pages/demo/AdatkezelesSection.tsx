@@ -82,7 +82,7 @@ export default function AdatkezelesSection() {
       title: 'Minden adat törlése',
       description:
         'Biztosan törlöd ÖSSZES adatot (árlista, beállítások, minden mentett terv)? Ez ' +
-        'nem demó-visszaállítás, hanem teljes törlés -- utána a Demó adat visszaállítása ' +
+        'nem demó-visszaállítás, hanem teljes törlés — utána a Demó adat visszaállítása ' +
         'gombbal tudsz újra a seedből kiindulni.',
       actionLabel: 'Törlés',
       onConfirm: () => void performClearAll(),
@@ -119,7 +119,7 @@ export default function AdatkezelesSection() {
         </Text>
         <Text as="p" size="2" color="gray" mt="0">
           Ez a demó a böngésző <Text style={{ fontFamily: t.mono }}>localStorage</Text>-ában,
-          titkosítatlanul tárol mindent, amit beírsz -- ide valódi páciensadat nem való (lásd a
+          titkosítatlanul tárol mindent, amit beírsz — ide valódi páciensadat nem való (lásd a
           fenti DEMÓ sávot). Ha véletlenül mégis valódit vittél be, ez a gomb ténylegesen kiüríti a
           tárolót (nem csak visszaseedeli a demó adatot).
         </Text>

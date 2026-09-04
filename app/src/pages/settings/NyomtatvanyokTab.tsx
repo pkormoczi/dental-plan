@@ -338,7 +338,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
         onOpenChange={(open) => !open && cancelTemplatesGuard.cancel()}
         onConfirm={cancelTemplatesGuard.confirm}
         title="Nem mentett módosítás"
-        description="Minden nyelven/szövegen elveted a nem mentett módosításokat -- ez nem vonható vissza."
+        description="Minden nyelven/szövegen elveted a nem mentett módosításokat — ez nem vonható vissza."
         confirmLabel="Elvetés"
       />
     </>

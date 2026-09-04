@@ -116,7 +116,7 @@ export default function UjTetelDialog({
               <Text as="div" size="1" mt="1" style={{ color: t.warn }}>
                 {duplikatum.aktiv
                   ? 'Már van ilyen nevű tétel a listában.'
-                  : 'Már van ilyen nevű, inaktív tétel a listában -- lehet, hogy inkább azt kellene visszakapcsolni.'}
+                  : 'Már van ilyen nevű, inaktív tétel a listában — lehet, hogy inkább azt kellene visszakapcsolni.'}
               </Text>
             )}
           </Box>

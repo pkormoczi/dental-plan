@@ -132,7 +132,7 @@ export class VersionConflictError extends Error {
   constructor(dirName: string) {
     super(
       `A(z) "${dirName}" verziómappa már létezik. Verziómappát soha nem ` +
-        `írunk felül (D4) -- ez hiba a hívó kódban, nem a felhasználó adatában.`,
+        `írunk felül (D4) — ez hiba a hívó kódban, nem a felhasználó adatában.`,
     );
     this.name = 'VersionConflictError';
   }

@@ -78,7 +78,7 @@ function tervSzintuMondat(tervSzintu: PenznemvaltasHatas['tervSzintu']): string 
   }
   if (kikapcsol.length > 0) {
     reszek.push(
-      `${felsorol(kikapcsol)} kikapcsol -- ebben a pénznemben még nincs mentett érték, kézzel állítható be újra`,
+      `${felsorol(kikapcsol)} kikapcsol — ebben a pénznemben még nincs mentett érték, kézzel állítható be újra`,
     );
   }
   const mondat = reszek.join('; ');
@@ -103,7 +103,7 @@ function penznemDialogSzoveg(hatas: PenznemvaltasHatas, sorokSzama: number): str
           (hatas.arNelkul > 0 ? `, ${hatas.arNelkul} sor ár nélkül marad (kézzel kell kitölteni)` : '') +
           '. A sorok nem törlődnek.'
         : `A tervben már ${sorokSzama} tétel szerepel, egyik sem beárazott az új ` +
-          'pénznemben -- ezek a sorok ár nélkül maradnak, kézzel kell kitölteni. A ' +
+          'pénznemben — ezek a sorok ár nélkül maradnak, kézzel kell kitölteni. A ' +
           'sorok nem törlődnek.';
 
   const tervMondat = tervSzintuMondat(hatas.tervSzintu);
@@ -444,7 +444,7 @@ export default function PatientPage() {
               <ExclamationTriangleIcon />
             </Callout.Icon>
             <Callout.Text>
-              Nincs aktív kezelőorvos a Beállításokban -- a véglegesítés blokkolva lesz, amíg
+              Nincs aktív kezelőorvos a Beállításokban — a véglegesítés blokkolva lesz, amíg
               nem aktiválsz egyet.
             </Callout.Text>
           </Callout.Root>

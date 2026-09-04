@@ -2681,3 +2681,21 @@ karbantartási kör négy önálló javítása.
   megszűnt. A négy megmaradó, akcióképes helyen (Terv részletei lap,
   Terv adatai lap "Páciens törzsadata" szekció, véglegesítés-őr, Másolás
   új tervbe) a törzsadat-eltérés jelzése változatlan.
+
+### 110. tétel: Apró szövegezési csiszolások (gyűjtőtétel) — KÉSZ
+
+- **Méret:** kicsi — három, egymástól független szövegjavítás, nulla
+  domain-/viselkedésváltozás.
+- **Megvalósítás:** (a) a `pages/planEditor/LineRow.tsx` ár-frissítő
+  `⟳` gombjának tooltipje a következmény-mondat helyett a művelet
+  nevére rövidült, szó szerint egyezve az `aria-label`-lel és a
+  megnyíló megerősítő dialógus címével — a tényleges hatást (régi → új
+  ár, tervre gyakorolt összeghatás) továbbra is kizárólag a dialógus
+  mondja ki, feltételesen. (b) A Fog mező placeholdere `pl. 16, 17, 26`-ra
+  bővült, hogy egy sorra pillantva megkülönböztethető legyen az üres és a
+  kitöltött mező. (c) A kódkommentek `--` írásmódja, ami ~36 helyen
+  átszivárgott a felhasználónak látszó szövegekbe (dialógus-leírás,
+  hibaüzenet, `Callout`), mindenütt valódi em dash-re (`—`) cserélődött;
+  a kommentek, a CSS custom property-k és a teszt-leírások házi `--`
+  konvenciója érintetlen maradt. Részletek: `docs/07-felulet-rendszer.md`
+  § "Nyelv és szövegek".

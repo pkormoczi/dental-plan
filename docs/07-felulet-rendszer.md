@@ -398,10 +398,24 @@ Minden nézetnek van loading, empty és error állapota.
 ### Nyelv és szövegek
 
 - Magyar UI szöveg.
-- A gondolatjel (–) helyes magyar tipográfia, használható.
+- A gondolatjel (–) helyes magyar tipográfia, használható. A felületre
+  kerülő szövegben mindig a valódi gondolatjel-karakter áll, soha az
+  ASCII `--` helyettesítő — a kettő egy képernyőn egymás mellett
+  látszana, és a `--` gépelt-jegyzet benyomását kelti egy
+  szerződés-előkészítő felületen. A `--` írásmód a kódkommentek, a CSS
+  custom property-k és a teszt-leírások (`describe`/`it` szövege) házi
+  konvenciója marad, azok nem renderelt szöveg.
 - A gombfelirat azt mondja, mi történik: "Terv mentése", nem "Küldés".
-  Ugyanaz a művelet mindenhol ugyanazt a szót kapja.
-- Nincs kitalált adat a felületen. Ha példa kell, jelöld példaként.
+  Ugyanaz a művelet mindenhol ugyanazt a szót kapja. Ugyanez vonatkozik
+  egy akció tooltipjére is: a tooltip a művelet nevét mondja, nem a
+  következményét — a következményt (és hogy a művelet megerősítést kér)
+  a megnyíló dialógus közli, mert csak az ismeri a sor/adat aktuális
+  állapotát; egy feltételes következmény a tooltipben könnyen hamis
+  állítássá válik.
+- Nincs kitalált adat a felületen. Ha példa kell, jelöld példaként — egy
+  mezőt kitöltő `placeholder` `pl.` előtagot kap, különben egy
+  adatoszlopban nem különböztethető meg a példaérték a tényleges
+  tartalomtól.
 
 ### Amihez ne nyúlj kérdés nélkül
 

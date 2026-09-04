@@ -262,7 +262,7 @@ export default function LineRow({
             <TextField.Root
               id={fogId(pi, li)}
               value={line.fogak}
-              placeholder="16, 17, 26"
+              placeholder="pl. 16, 17, 26"
               onChange={(e) => onPatch({ fogak: e.target.value })}
               aria-invalid={invalidFormat || undefined}
               // lásd a soron fentebb: box-shadow, nem borderColor -- az
@@ -281,7 +281,7 @@ export default function LineRow({
         </Flex>
         {invalidFormat && (
           <Text as="div" size="1" mt="1" style={{ color: t.danger }}>
-            Nem érvényes FDI fogszám: {rosszTokenek.join(', ')} -- a kvadráns 1-4 (tejfog 5-8), a fog a
+            Nem érvényes FDI fogszám: {rosszTokenek.join(', ')} — a kvadráns 1-4 (tejfog 5-8), a fog a
             kvadránson belül 1-8 (tejfog 1-5) lehet.
           </Text>
         )}
@@ -345,7 +345,7 @@ export default function LineRow({
             color="gray"
             size="1"
             aria-label="Ár frissítése az árlistából"
-            title="Ár frissítése az árlistából – a kézzel megadott ajánlati ár törlődik"
+            title="Ár frissítése az árlistából"
             onClick={onRequestArFrissites}
             // A ⟳ mennyiség-visszakapcsoló (fent, Db cella) mintája: mindig a
             // DOM-ban marad, csak `visibility: hidden`-nel tűnik el, hogy a

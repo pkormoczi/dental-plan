@@ -64,7 +64,7 @@ export class DemoDraftStorage implements DraftStorage {
       // lenne. A doki a szerkesztőben marad, csak a mentés hiúsul meg (lásd
       // PlanEditorPage.tsx hiba-Callout-ja).
       throw new Error(
-        'A piszkozatot nem sikerült automatikusan elmenteni -- valószínűleg megtelt a ' +
+        'A piszkozatot nem sikerült automatikusan elmenteni — valószínűleg megtelt a ' +
           'böngésző tárhelye. A terv a szerkesztőben megmarad, de frissítés vagy ' +
           'összeomlás esetén elveszhet, amíg ez fennáll.',
       );

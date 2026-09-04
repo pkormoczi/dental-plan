@@ -234,7 +234,7 @@ export default function PatientDetailPage() {
           <Callout.Icon>
             <CrossCircledIcon />
           </Callout.Icon>
-          <Callout.Text>Nincs ilyen páciens -- lehet, hogy elgépelt vagy elavult a link.</Callout.Text>
+          <Callout.Text>Nincs ilyen páciens — lehet, hogy elgépelt vagy elavult a link.</Callout.Text>
         </Callout.Root>
         {/* A "Vissza a páciensekhez" a "← Vissza" mellett is marad: a két cél
             eltér -- elavult/elgépelt URL esetén a navigate(-1) visszavihet

@@ -66,9 +66,9 @@ type Allapot =
   | { fajta: 'kesz'; adat: Reszletek };
 
 const NINCS_UZENET: Record<'paciens' | 'terv' | 'verzio', string> = {
-  paciens: 'Nincs ilyen páciens -- lehet, hogy elgépelt vagy elavult a link.',
-  terv: 'Nincs ilyen terv-lánc -- lehet, hogy elgépelt vagy elavult a link.',
-  verzio: 'Nincs ilyen verzió -- lehet, hogy elgépelt vagy elavult a link.',
+  paciens: 'Nincs ilyen páciens — lehet, hogy elgépelt vagy elavult a link.',
+  terv: 'Nincs ilyen terv-lánc — lehet, hogy elgépelt vagy elavult a link.',
+  verzio: 'Nincs ilyen verzió — lehet, hogy elgépelt vagy elavult a link.',
 };
 
 export default function TervReszleteiPage() {
@@ -228,7 +228,7 @@ export default function TervReszleteiPage() {
         planDir,
         versionDir,
         message:
-          'A böngésző letiltotta az új lap megnyitását -- engedélyezd a felugró ablakokat ehhez ' +
+          'A böngésző letiltotta az új lap megnyitását — engedélyezd a felugró ablakokat ehhez ' +
           'az oldalhoz, vagy használd a Letöltést.',
       });
       return;
@@ -309,7 +309,7 @@ export default function TervReszleteiPage() {
         {osszesVerzioGomb}
         <Callout.Root color="gray">
           <Callout.Text>
-            Ez a verzió nem véglegesített -- a Terv részletei nézet csak véglegesített verziót mutat.
+            Ez a verzió nem véglegesített — a Terv részletei nézet csak véglegesített verziót mutat.
           </Callout.Text>
         </Callout.Root>
       </Box>
@@ -594,7 +594,7 @@ function PaciensPillanatkep({
           {elteresek.length > 0 && !masterHiba && (
             <>
               <Text as="p" size="2" color="gray" mt="3" mb="2">
-                A páciens törzsadata azóta módosult -- ez a blokk a véglegesítéskori pillanatképet
+                A páciens törzsadata azóta módosult — ez a blokk a véglegesítéskori pillanatképet
                 mutatja, a véglegesített terv nem módosul.
               </Text>
               <Box style={{ border: `1px solid ${t.uiLine}`, borderRadius: t.radius, overflow: 'hidden' }}>

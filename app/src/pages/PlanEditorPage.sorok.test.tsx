@@ -83,7 +83,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    const fogInputs = screen.getAllByPlaceholderText('16, 17, 26');
+    const fogInputs = screen.getAllByPlaceholderText('pl. 16, 17, 26');
     await user.type(fogInputs[0], '16');
     await user.type(fogInputs[1], '16');
 

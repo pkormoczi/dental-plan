@@ -132,7 +132,7 @@ export function veglegesitesDiagnozis(
     tetelek.push({
       id: 'nev-utkozes',
       sulyossag: 'hard',
-      cim: 'A páciens neve egy másik, létező páciensre illik pontosan -- a terv mégis a kötött páciensmappába mentődne.',
+      cim: 'A páciens neve egy másik, létező páciensre illik pontosan — a terv mégis a kötött páciensmappába mentődne.',
       szamlalo: nevUtkozes.utkozok.length,
       reszletek: [{ cim: 'Ütköző páciensek', nevek: nevUtkozes.utkozok.map((p) => p.nev) }],
       route: '/paciens',

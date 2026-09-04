@@ -57,27 +57,27 @@ const PENDING_SPECS: Record<PendingKind, { description: string; actionLabel: str
   open: {
     description:
       'Van mentetlen piszkozatod. Ha ebből a verzióból újat készítesz, a jelenlegi ' +
-      'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
+      'piszkozat elvész — nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
       'folytatod?',
     actionLabel: 'Új verzió, piszkozat elvetésével',
   },
   copy: {
     description:
       'Van mentetlen piszkozatod. Ha ennek a verziónak a tartalmával új tervet indítasz, a ' +
-      'jelenlegi piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. ' +
+      'jelenlegi piszkozat elvész — nem került fájlba, csak ebben a böngészőben volt meg. ' +
       'Biztosan folytatod?',
     actionLabel: 'Másolás, piszkozat elvetésével',
   },
   ujTerv: {
     description:
       'Van mentetlen piszkozatod. Ha a páciens adataival új tervet indítasz, a jelenlegi ' +
-      'piszkozat elvész -- nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
+      'piszkozat elvész — nem került fájlba, csak ebben a böngészőben volt meg. Biztosan ' +
       'folytatod?',
     actionLabel: 'Új terv, piszkozat elvetésével',
   },
   ujPaciens: {
     description:
-      'Van mentetlen piszkozatod. Ha új tervet indítasz, ez elvész -- nem került fájlba, ' +
+      'Van mentetlen piszkozatod. Ha új tervet indítasz, ez elvész — nem került fájlba, ' +
       'csak ebben a böngészőben volt meg. Biztosan új tervvel kezded?',
     actionLabel: 'Új páciens, piszkozat elvetésével',
   },
@@ -86,7 +86,7 @@ const PENDING_SPECS: Record<PendingKind, { description: string; actionLabel: str
 // A lánchoz azóta újabb verzió készült -- a pontos (exact) másolás
 // továbbra is engedett, csak tudatosítva.
 const HISTORICAL_MASOLAS_FIGYELMEZTETES =
-  'Ez egy korábbi, nem a legfrissebb verzió -- a lánchoz azóta újabb verzió készült. A pontos ' +
+  'Ez egy korábbi, nem a legfrissebb verzió — a lánchoz azóta újabb verzió készült. A pontos ' +
   'másolás (ezzel a régebbi tartalommal) folytatható, ha ez volt a szándékod.';
 
 /**

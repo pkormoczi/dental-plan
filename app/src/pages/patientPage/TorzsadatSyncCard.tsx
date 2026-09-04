@@ -229,7 +229,7 @@ export default function TorzsadatSyncCard() {
               <InfoCircledIcon />
             </Callout.Icon>
             <Callout.Text>
-              Ennek a páciensnek még nincs önálló törzsadata -- a mentés a legutóbb mentett terv
+              Ennek a páciensnek még nincs önálló törzsadata — a mentés a legutóbb mentett terv
               adataiból hoz létre egyet, a most a lapon látott mezőkkel.
             </Callout.Text>
           </Callout.Root>
@@ -248,7 +248,7 @@ export default function TorzsadatSyncCard() {
           </Button>
           {nevUtkozes && (
             <Text as="div" size="1" mt="2" style={{ color: t.danger }}>
-              A Név mező egy másik, létező páciensre illik pontosan -- javítsd a nevet, mielőtt a
+              A Név mező egy másik, létező páciensre illik pontosan — javítsd a nevet, mielőtt a
               törzsadatot a terv adataiból hoznád létre.
             </Text>
           )}
@@ -281,7 +281,7 @@ export default function TorzsadatSyncCard() {
               </Flex>
               {nevUtkozes && (
                 <Text as="div" size="1" mt="2" style={{ color: t.danger }}>
-                  A Név mező egy másik, létező páciensre illik pontosan -- javítsd a nevet, mielőtt
+                  A Név mező egy másik, létező páciensre illik pontosan — javítsd a nevet, mielőtt
                   a törzsadatot a terv adataiból frissítenéd.
                 </Text>
               )}
@@ -319,7 +319,7 @@ export default function TorzsadatSyncCard() {
         <AlertDialog.Content maxWidth="440px">
           <AlertDialog.Title>Törzsadat létrehozása</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            Ennek a páciensnek még nincs önálló törzsadata -- a mezők egyelőre a terv adataiból
+            Ennek a páciensnek még nincs önálló törzsadata — a mezők egyelőre a terv adataiból
             látszanak. Létrehozod most, a lapon jelenleg látott adatokból?
           </AlertDialog.Description>
           <Text as="label" size="2" mt="3" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

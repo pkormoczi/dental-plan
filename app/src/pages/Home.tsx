@@ -110,7 +110,7 @@ export default function Home() {
             </Callout.Text>
           </Callout.Root>
           <Text as="p" size="2" color="gray" mt="0" mb="3">
-            A piszkozat nem tűnt el, csak nem olvasható -- ha nem tudod/akarod
+            A piszkozat nem tűnt el, csak nem olvasható — ha nem tudod/akarod
             helyreállítani, itt elvetheted. Ha inkább új munkát kezdesz, az automatikusan
             felülírja.
           </Text>

@@ -177,7 +177,7 @@ export default function UjPaciensDialog({
       <Dialog.Content maxWidth="440px" onCloseAutoFocus={(e) => e.preventDefault()}>
         <Dialog.Title>Új páciens</Dialog.Title>
         <Dialog.Description size="2" color="gray">
-          A születési dátum és a telefon opcionális -- ezek és a többi adat (lakcím, TAJ, kiskorú
+          A születési dátum és a telefon opcionális — ezek és a többi adat (lakcím, TAJ, kiskorú
           stb.) a mentés után is szerkeszthetők maradnak.
         </Dialog.Description>
 

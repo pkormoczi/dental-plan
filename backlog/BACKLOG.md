@@ -44,17 +44,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   `pages/priceListAdmin/UjTetelDialog.tsx` szándékosan nem tartozik bele.
   **Terv:** `backlog/plans/backlog-109-uj-paciens-elvetes-megerosites-terv.md`
 
-### 110. tétel: Apró szövegezési csiszolások (gyűjtőtétel)
-
-  Három egymondatos javítás: (a) a `pages/planEditor/LineRow.tsx` ár-
-  frissítő gombjának tooltipje visszavonhatatlannak hangzik, pedig a
-  művelet valójában egy előnézetes megerősítő dialógust nyit; (b) ugyanott
-  a Fog mező placeholdere valós FDI-számokat mutat „pl." előtag nélkül;
-  (c) a tétel-inaktiválás megerősítő dialógusának szövegében szimpla
-  dupla kötőjel szerepel gondolatjel helyett.
-  A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-110-szovegezesi-csiszolasok-terv.md`
-
 ---
 ## NEM FEJLESZTÉS
 

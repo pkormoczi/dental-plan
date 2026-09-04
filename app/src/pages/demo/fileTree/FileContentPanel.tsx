@@ -95,7 +95,7 @@ function TextBlock({
     <>
       {invalid && (
         <Callout.Root color="amber" size="1" mb="2">
-          <Callout.Text>A fájl nem érvényes JSON -- a nyers tartalom látszik.</Callout.Text>
+          <Callout.Text>A fájl nem érvényes JSON — a nyers tartalom látszik.</Callout.Text>
         </Callout.Root>
       )}
       <Box p="3" style={CONTENT_BOX_STYLE}>
