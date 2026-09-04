@@ -873,7 +873,11 @@ súlyosságú tétel-lista (`veglegesitesDiagnozis()`,
 „Folytatás" modal-lánc: a `soft`/`info` tételek nem blokkolnak és nem
 kérnek külön megerősítést, a doki már a gombnyomás ELŐTT látja őket. A
 gomb kizárólag `hard` tétel jelenlétekor letiltott. Minden tétel
-kattintható/navigálható a releváns workflow-lépésre.
+kattintható/navigálható a releváns workflow-lépésre. A tétel címe mellett,
+ha van érintett darabszám, egy jelvény jelzi azt — ha a tétel egynél több,
+eltérő jelentésű alcsoportot fog össze (pl. az Árlista-eltérés „Elavult
+árlistai pillanatkép" / „Kézzel felülírt ajánlati ár" bontása), alcsoportonként
+külön jelvény, nem egy összegzett szám.
 
 **Kemény (`hard`) tételek — blokkolják a véglegesítést:**
 
@@ -925,8 +929,20 @@ kattintható/navigálható a releváns workflow-lépésre.
   kategória hiányzó neve nem blokkol. Az Árlista adminba (Kategóriák
   panel) navigál.
 
-**Puha (`soft`) tételek — látszanak, de nem blokkolnak:**
+**Puha (`soft`) tételek — látszanak, de nem blokkolnak.** A csoport elején
+a két tétel áll, ami a nyomtatvány TARTALMÁT érinti (a doki aláírt PDF-je
+más szöveget kap emiatt) — a maradék a mai relatív sorrendjében:
 
+- **Szakasz kimarad a nyomtatványból (lásd lent „Sablon-placeholder
+  őr"):** a fizetési feltételek vagy a garancia szakasz szövege a
+  HU-visszaesés után is placeholder-jelölésű vagy üres — a teljes szakasz
+  a címével együtt kimarad az aláírandó dokumentumból. Ez a legsúlyosabb
+  puha tétel, ezért a puha csoport ELSŐ eleme.
+- **Sablon HU-visszaesés:** a tervhez tartozó nyilatkozat/fizetési
+  feltételek/garancia sablon nem érhető el a megfelelő nyelven (lásd
+  lent „Sablon-placeholder őr") — helyette a magyar szöveg jelenik meg a
+  nyomtatványon. A fenti tételnél kevésbé súlyos (a tartalom megvan,
+  csak rossz nyelven), ezért a puha csoportban közvetlenül utána áll.
 - **Hiányzó egyéb páciensadat** (nem kötelező, de a nyomtatványon
   üresen marad).
 - **Nyelvi ellenőrzésre váró szövegek (D72):** a tervben van kézzel írt
@@ -959,10 +975,6 @@ kattintható/navigálható a releváns workflow-lépésre.
   ajánlati ár"). Nem kemény blokk: az árlista-eltérés (szándékos
   kedvezmény, felár, vagy egyszerűen elavult, de még nem frissített
   pillanatkép) legitim állapot lehet.
-- **Sablon HU-visszaesés:** a tervhez tartozó nyilatkozat/fizetési
-  feltételek/garancia sablon nem érhető el a megfelelő nyelven (lásd
-  lent „Sablon-placeholder őr") — helyette a magyar szöveg jelenik meg a
-  nyomtatványon.
 - **Inaktivált tételre hivatkozó sor:** a tervben van sor, aminek a
   tétele az Árlista adminban időközben `aktiv: false`-ra váltott — a sor
   `nevSnapshot`-ja/ára a pillanatkép-elv szerint változatlan marad

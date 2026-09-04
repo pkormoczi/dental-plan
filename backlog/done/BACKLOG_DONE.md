@@ -2544,3 +2544,23 @@ karbantartási kör négy önálló javítása.
   fut, a crash-recovery nem gyengült. Részletek:
   `docs/03-funkcionalis-spec.md` § Autosave; `CLAUDE.md` "Meglévő
   segédfüggvények".
+
+### 101. tétel: Véglegesítés-őr — puha figyelmeztetések rangsora és számlálója — KÉSZ
+
+- **Méret:** kicsi — egy tétel-átrendezés a `veglegesitesOr.ts`-ben, egy
+  jelvény-renderelő segéd a `VeglegesitesChecklist.tsx`-ben, plusz új és
+  módosított tesztek.
+- **Megvalósítás:** a `domain/veglegesitesOr.ts` puha (`soft`) csoportja
+  a nyomtatvány TARTALMÁT érintő két tétellel (`sablon-kihagyott-szekcio`,
+  utána `sablon-fallback`) kezdődik, a maradék hét tétel a mai relatív
+  sorrendjében marad mögöttük — a `hard`/`info` csoport belső sorrendje
+  változatlan, nincs új severity-szint, nincs új szín. A
+  `VeglegesitesChecklist.tsx` mostantól kiolvassa a `tetel.szamlalo`
+  mezőt, és a tétel címe mellé egy súlyosság-színű `Badge`-et rendereld
+  — ha a tételnek egynél több `reszletek`-alcsoportja van (pl. az
+  `ar-elteres` „Elavult árlistai pillanatkép”/„Kézzel felülírt ajánlati
+  ár” bontása), alcsoportonként külön jelvény jár, nem egy összegzett,
+  duplikációra hajlamos szám; a `reszletek` szöveges soraiból az addigi
+  inline `(N):` előtag elmaradt. Részletek:
+  `docs/03-funkcionalis-spec.md` § „Véglegesítési checklist”; `CLAUDE.md`
+  "Meglévő segédfüggvények".

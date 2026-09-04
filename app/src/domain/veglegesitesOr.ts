@@ -243,6 +243,33 @@ export function veglegesitesDiagnozis(
     });
   }
 
+  // A puha csoport ELEJÉN a két tétel, ami a NYOMTATVÁNY TARTALMÁT érinti --
+  // a doki aláírt PDF-je más szöveget kap emiatt, szemben a lenti hét
+  // tisztán adatminőségi/adminisztratív tétellel. `sablon-kihagyott-szekcio`
+  // előzi meg `sablon-fallback`-ot: a teljesen hiányzó tartalom súlyosabb,
+  // mint a rossz nyelvű, de meglévő tartalom.
+  if (sablon.kihagyottSzekciok.length > 0) {
+    tetelek.push({
+      id: 'sablon-kihagyott-szekcio',
+      sulyossag: 'soft',
+      cim: 'A szakasz szövege hiányzik, vagy még jogi lektorálásra vár — a címével együtt kimarad a nyomtatványból.',
+      szamlalo: sablon.kihagyottSzekciok.length,
+      reszletek: [{ cim: 'Kimaradó szakaszok', nevek: sablon.kihagyottSzekciok }],
+      route: '/beallitasok',
+    });
+  }
+
+  if (sablon.sablonFallback) {
+    tetelek.push({
+      id: 'sablon-fallback',
+      sulyossag: 'soft',
+      cim:
+        'A tervhez tartozó sablon nem érhető el a megfelelő nyelven (hiányzik, vagy még jogi ' +
+        'lektorálásra vár) — helyette a magyar szöveg jelenik meg a nyomtatványon.',
+      route: '/beallitasok',
+    });
+  }
+
   const otherFieldsMissing =
     !plan.paciens.szuletesiIdo ||
     !plan.paciens.lakcim ||
@@ -353,34 +380,6 @@ export function veglegesitesDiagnozis(
       szamlalo: orokoltInaktivHivatkozasok.length,
       reszletek: [{ cim: 'Érintett sorok', nevek: orokoltInaktivHivatkozasok }],
       route: '/terv',
-    });
-  }
-
-  if (sablon.sablonFallback) {
-    tetelek.push({
-      id: 'sablon-fallback',
-      sulyossag: 'soft',
-      cim:
-        'A tervhez tartozó sablon nem érhető el a megfelelő nyelven (hiányzik, vagy még jogi ' +
-        'lektorálásra vár) — helyette a magyar szöveg jelenik meg a nyomtatványon.',
-      route: '/beallitasok',
-    });
-  }
-
-  // A cross-language HU-visszaesés (fenti `sablon-fallback`) UTÁN is
-  // placeholder-jelölésű vagy üres szöveg a nyomtatványon a címével együtt
-  // kimarad -- ez itt csak PUHA jelzés, mert a fizetési feltételek/garancia
-  // szakasz "csak ajánlat" módban is mindig nyomtatódna, tehát nincs mit
-  // védeni egy kényszerített móddal (lásd docs/03-funkcionalis-spec.md §
-  // Sablon-placeholder őr).
-  if (sablon.kihagyottSzekciok.length > 0) {
-    tetelek.push({
-      id: 'sablon-kihagyott-szekcio',
-      sulyossag: 'soft',
-      cim: 'A szakasz szövege hiányzik, vagy még jogi lektorálásra vár — a címével együtt kimarad a nyomtatványból.',
-      szamlalo: sablon.kihagyottSzekciok.length,
-      reszletek: [{ cim: 'Kimaradó szakaszok', nevek: sablon.kihagyottSzekciok }],
-      route: '/beallitasok',
     });
   }
 

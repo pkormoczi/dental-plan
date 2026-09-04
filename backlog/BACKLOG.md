@@ -15,18 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 101. tétel: Véglegesítés-őr — puha figyelmeztetések rangsora és számlálója
-
-  A `domain/veglegesitesOr.ts` checklist-tételei közül a `soft` szintűek
-  mind azonos amber dobozt kapnak, másodlagos megkülönböztetés nélkül — a
-  jogilag releváns, kimaradó szakaszt jelző tétel vizuálisan és
-  sorrendben is egy pusztán informatív tétel alatt áll. Ugyanide tartozik,
-  hogy az ártól-eltérés-doboz fejléce számozatlan, a kiszámolt darabszámot
-  a `pages/previewPage/VeglegesitesChecklist.tsx` sosem rendereli, miközben
-  a doboz két, eltérő jelentésű alcsoportot (elavult ár / kézi ár) fog
-  össze egy szám mögé. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-101-checklist-rangsor-szamlalo-terv.md`
-
 ### 102. tétel: Fogtérkép billentyűzetes fókuszjelzőjének kontrasztja
 
   A `design/toothChartSvg.ts` fókusz-stílusa vékony, szaggatott, sötét

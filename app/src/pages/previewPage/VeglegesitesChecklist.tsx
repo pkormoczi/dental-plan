@@ -5,8 +5,9 @@
 // prezentációs: a súlyosság->szín és a route->gombfelirat leképezés is itt él,
 // mert csak ez a komponens rendereli a csekklistát.
 
-import { Button, Callout, Flex, Text } from '@radix-ui/themes';
+import { Badge, Button, Callout, Flex, Text } from '@radix-ui/themes';
 import type {
+  CsekklistaTetel,
   CsekklistaRoute,
   CsekklistaSulyossag,
   VeglegesitesCsekklista,
@@ -17,6 +18,23 @@ const SULYOSSAG_SZIN: Record<CsekklistaSulyossag, 'red' | 'amber' | 'gray'> = {
   soft: 'amber',
   info: 'gray',
 };
+
+/**
+ * Egynél több `reszletek`-alcsoportnál alcsoportonként külön jelvény-felirat
+ * (pl. "Elavult árlistai pillanatkép: 2"), hogy egy összegzett szám ne
+ * fedje el, hogy a sorok két eltérő okból érintettek -- lásd
+ * `domain/arKoveti.ts` `arElteroSorok()`. Egyébként a `szamlalo` puszta
+ * értéke egyetlen jelvényként.
+ */
+function jelvenyFeliratok(tetel: CsekklistaTetel): string[] {
+  if (tetel.reszletek && tetel.reszletek.length > 1) {
+    return tetel.reszletek.map((r) => `${r.cim}: ${r.nevek.length}`);
+  }
+  if (tetel.szamlalo != null) {
+    return [String(tetel.szamlalo)];
+  }
+  return [];
+}
 
 const ROUTE_GOMB_FELIRAT: Record<CsekklistaRoute, string> = {
   '/paciens': 'Terv adatai',
@@ -59,9 +77,21 @@ export function VeglegesitesChecklist({
         <Callout.Root key={tetel.id} color={SULYOSSAG_SZIN[tetel.sulyossag]}>
           <Callout.Text>
             {tetel.cim}
+            {jelvenyFeliratok(tetel).map((felirat) => (
+              <Badge
+                key={felirat}
+                color={SULYOSSAG_SZIN[tetel.sulyossag]}
+                variant="soft"
+                size="1"
+                ml="2"
+                aria-hidden="true"
+              >
+                {felirat}
+              </Badge>
+            ))}
             {tetel.reszletek?.map((reszlet) => (
               <Text as="p" key={reszlet.cim} size="1" mt="1">
-                {reszlet.cim} ({reszlet.nevek.length}): {reszlet.nevek.slice(0, 8).join('; ')}
+                {reszlet.cim}: {reszlet.nevek.slice(0, 8).join('; ')}
                 {reszlet.nevek.length > 8 ? ` … és további ${reszlet.nevek.length - 8}` : ''}
               </Text>
             ))}

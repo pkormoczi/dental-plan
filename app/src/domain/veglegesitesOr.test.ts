@@ -274,6 +274,7 @@ describe('veglegesitesDiagnozis', () => {
     const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
 
     const t = tetel(diag, 'ar-elteres');
+    expect(t?.szamlalo).toBe(1);
     expect(t?.reszletek).toEqual([{ cim: 'Elavult árlistai pillanatkép', nevek: ['Fogeltávolítás'] }]);
   });
 
@@ -282,6 +283,7 @@ describe('veglegesitesDiagnozis', () => {
     const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
 
     const t = tetel(diag, 'ar-elteres');
+    expect(t?.szamlalo).toBe(1);
     expect(t?.reszletek).toEqual([{ cim: 'Kézzel felülírt ajánlati ár', nevek: ['Fogeltávolítás'] }]);
   });
 
@@ -494,6 +496,25 @@ describe('veglegesitesDiagnozis', () => {
       const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
       expect(tetel(diag, 'sablon-kihagyott-szekcio')).toBeUndefined();
     });
+
+    // 101. tétel: a nyomtatvány TARTALMÁT érintő két puha tétel a puha
+    // csoport ELEJÉN áll, a tisztán adminisztratív tételek (pl.
+    // "hianyzo-paciensadat") mögöttük -- a "sablon-kihagyott-szekcio" a
+    // "sablon-fallback" elé, mert a teljesen hiányzó tartalom súlyosabb.
+    it('a "sablon-kihagyott-szekcio" és a "sablon-fallback" a puha csoport élén áll, ebben a sorrendben', () => {
+      const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '' }) });
+      const diag = veglegesitesDiagnozis(
+        plan,
+        priceList,
+        true,
+        NO_MASTER,
+        AKTIV_ORVOSOK,
+        { sablonFallback: true, nyilatkozatPlaceholder: false, kihagyottSzekciok: ['Garancia'] },
+        NO_NEV_UTKOZES,
+      );
+      const puhaIdk = diag.tetelek.filter((t) => t.sulyossag === 'soft').map((t) => t.id);
+      expect(puhaIdk).toEqual(['sablon-kihagyott-szekcio', 'sablon-fallback', 'hianyzo-paciensadat']);
+    });
   });
 
   // backlog-40: a master↔snapshot eltérés INFO-szintű tétel -- lásd a
@@ -570,6 +591,18 @@ describe('veglegesitesDiagnozis', () => {
       const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
       expect(tetel(diag, 'orvos')).toBeUndefined();
     });
+  });
+
+  // 101. tétel: a `hard` csoport belső sorrendje az átrendezés mellett is
+  // bájtra a mai render marad -- csak a puha csoport élét érinti a rangsor.
+  it('a "hard" csoport belső sorrendje több egyidejű hard-hibánál változatlan', () => {
+    const plan = makePlan([[sor({ tetelId: '', nevSnapshot: '', fogak: '16' })], []], {
+      paciens: paciens({ nev: '' }),
+      orvos: '',
+    });
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const hardIdk = diag.tetelek.filter((t) => t.sulyossag === 'hard').map((t) => t.id);
+    expect(hardIdk).toEqual(['nev-hianyzik', 'orvos', 'kitoltetlen-sor', 'ures-fazis']);
   });
 });
 

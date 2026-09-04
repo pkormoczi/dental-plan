@@ -517,7 +517,15 @@ véglegesítés) segédfüggvényei, szintén ne írd újra őket:
   funkcionalis-spec.md` § 4. „Elrendezés") felső blokkjaként. A
   `nyelvi-review` tétel guided-review gombja (`NyelviReviewContext`) egy
   opcionális `nyelviReviewAction` propon jön be — a komponens maga nem
-  ismeri a Contextet
+  ismeri a Contextet. A `veglegesitesOr.ts` puha (`soft`) tétel-listája a
+  nyomtatvány TARTALMÁT érintő két tétellel (szakasz-kihagyás, sablon
+  HU-visszaesés) kezdődik, a többi tétel a push-sorrendjében marad
+  mögöttük — lásd `docs/03-funkcionalis-spec.md` § „Véglegesítési
+  checklist". A `VeglegesitesChecklist.tsx` a `tetel.szamlalo`
+  mezőből jelvényt (Radix `Badge`) renderel a tétel címe mellé; ha a
+  tételnek egynél több `reszletek`-alcsoportja van (pl. az `ar-elteres`
+  „Elavult árlistai pillanatkép”/„Kézzel felülírt ajánlati ár” bontása),
+  alcsoportonként külön jelvény jár, nem egy összegzett szám
 
 A Terv részletei fázis-megjelenítés (`docs/03-funkcionalis-spec.md` § 11.
 Terv részletei (véglegesített verzió) "Fázisok és kezelési sorok")

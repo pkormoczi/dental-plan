@@ -889,10 +889,10 @@ describe('PreviewPage -- D74/D133: német tételnév kemény blokk', () => {
         ),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Nincs német nevük az árlistában \(1\): Fogeltávolítás/),
+        screen.getByText(/Nincs német nevük az árlistában: Fogeltávolítás/),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Kézzel írt\/átírt, nyelvileg nem ellenőrzött \(1\): Kézzel átírt szöveg/),
+        screen.getByText(/Kézzel írt\/átírt, nyelvileg nem ellenőrzött: Kézzel átírt szöveg/),
       ).toBeInTheDocument();
       expect(finalizeBtn).toBeDisabled();
     },
@@ -1268,7 +1268,7 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
       );
 
       expect(await screen.findByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
-      expect(screen.getByText(/Érintett sorok \(1\): Érzéstelenítés/)).toBeInTheDocument();
+      expect(screen.getByText(/Érintett sorok: Érzéstelenítés/)).toBeInTheDocument();
       expect(finalizeBtn).not.toBeDisabled();
 
       await user.click(finalizeBtn);
@@ -1634,7 +1634,7 @@ describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés
         { timeout: 10000 },
       );
       expect(await screen.findByText(/Néhány sor ára eltér a mai árlistától/)).toBeInTheDocument();
-      expect(screen.getByText(/Kézzel felülírt ajánlati ár \(1\): Fogeltávolítás/)).toBeInTheDocument();
+      expect(screen.getByText(/Kézzel felülírt ajánlati ár: Fogeltávolítás/)).toBeInTheDocument();
       expect(finalizeBtn).not.toBeDisabled();
 
       await user.click(finalizeBtn);
@@ -1709,7 +1709,7 @@ describe('PreviewPage -- 65. tétel (D72) + D74/D133: nyelvi review és a német
         ),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/Kézzel írt\/átírt, nyelvileg nem ellenőrzött \(1\): Kihúzás megbeszélt módon/),
+        screen.getByText(/Kézzel írt\/átírt, nyelvileg nem ellenőrzött: Kihúzás megbeszélt módon/),
       ).toBeInTheDocument();
       expect(finalizeBtn).toBeDisabled();
 
