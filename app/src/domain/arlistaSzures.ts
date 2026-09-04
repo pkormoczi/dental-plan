@@ -10,8 +10,13 @@ export type FilterKey = 'all' | 'noeur' | 'range' | 'off' | 'fav';
 // "jelenlegi szűrt lista" köre EZT a predikátumot használja, a nyitott sor
 // kivétele NÉLKÜL: az a kivétel a szerkesztés közbeni eltűnés ellen véd,
 // egy tömeges művelet körét viszont hamisan tágítaná (backlog-92).
-export function tetelIlleszkedik(x: Tetel, q: string, filter: FilterKey): boolean {
-  if (q && !nevEgyezik(x.nev, norm(q))) return false;
+export function tetelIlleszkedik(
+  x: Tetel,
+  q: string,
+  filter: FilterKey,
+  egyezoKatIdk: Set<string>,
+): boolean {
+  if (q && !nevEgyezik(x.nev, norm(q)) && !egyezoKatIdk.has(x.kategoriaId)) return false;
   if (filter === 'noeur') return !x.ar.EUR;
   if (filter === 'range') return x.ar.HUF?.tipus === 'SAVOS' || x.ar.EUR?.tipus === 'SAVOS';
   if (filter === 'off') return !x.aktiv;
@@ -32,7 +37,8 @@ export function tetelMegtartando(
   q: string,
   filter: FilterKey,
   nyitottId: string | null,
+  egyezoKatIdk: Set<string>,
 ): boolean {
   if (x.id === nyitottId) return true;
-  return tetelIlleszkedik(x, q, filter);
+  return tetelIlleszkedik(x, q, filter, egyezoKatIdk);
 }

@@ -34,6 +34,7 @@ import { tetelIlleszkedik, tetelMegtartando, type FilterKey } from '../domain/ar
 import { todayIso } from '../domain/date';
 import { formatPrice } from '../domain/money';
 import { nextKategoriaId, nextTetelId } from '../domain/priceListIds';
+import { egyezoKategoriaIdk, norm } from '../domain/search';
 import { alkalmazTomegesArat, type TomegesArParams } from '../domain/tomegesAr';
 import type { Kategoria, PriceList, Tetel } from '../domain/types';
 import ItemEditor from './priceListAdmin/ItemEditor';
@@ -317,6 +318,16 @@ export default function PriceListAdminPage() {
     }
   }, [open, pendingActivationId]);
 
+  // A kategórianévre illeszkedő kategória-id-k -- egyszer, itt kiszámolva,
+  // hogy a `grouped` ÉS a `szurtTetelek` (lent) ugyanazt a kört lássa: egy
+  // kategórianévre keresve az egész csoport visszajön, a Tömeges
+  // árváltoztatás köre pedig szándékosan együtt tágul (docs/03-funkcionalis-
+  // spec.md § Keresés és szűrők).
+  const egyezoKatIdk = useMemo(
+    () => egyezoKategoriaIdk(priceList.kategoriak, norm(q)),
+    [priceList.kategoriak, q],
+  );
+
   const grouped = useMemo(() => {
     return priceList.kategoriak
       .slice()
@@ -324,12 +335,12 @@ export default function PriceListAdminPage() {
       .map((k) => ({
         cat: k,
         items: priceList.tetelek.filter(
-          (x) => x.kategoriaId === k.id && tetelMegtartando(x, q, filter, open),
+          (x) => x.kategoriaId === k.id && tetelMegtartando(x, q, filter, open, egyezoKatIdk),
         ),
       }))
       .filter((g) => g.items.length > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [priceList, q, filter, open]);
+  }, [priceList, q, filter, open, egyezoKatIdk]);
 
   const missingEur = priceList.tetelek.filter((x) => !x.ar.EUR).length;
   const shown = grouped.reduce((s, g) => s + g.items.length, 0);
@@ -340,9 +351,12 @@ export default function PriceListAdminPage() {
   // 2. döntés).
   const szurtAktiv = q.trim() !== '' || filter !== 'all';
   const szurtTetelek = useMemo(
-    () => (szurtAktiv ? priceList.tetelek.filter((x) => tetelIlleszkedik(x, q, filter)) : null),
+    () =>
+      szurtAktiv
+        ? priceList.tetelek.filter((x) => tetelIlleszkedik(x, q, filter, egyezoKatIdk))
+        : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [priceList, q, filter, szurtAktiv],
+    [priceList, q, filter, szurtAktiv, egyezoKatIdk],
   );
 
   function applyTomegesAr(idk: Set<string>, params: TomegesArParams): Promise<boolean> {
@@ -437,7 +451,7 @@ export default function PriceListAdminPage() {
           </Callout.Icon>
           <Callout.Text>
             {q.trim()
-              ? `Nincs találat erre: „${q}”. Próbálj más névre keresni, vagy válts szűrőt.`
+              ? `Nincs találat erre: „${q}”. Próbálj más névre vagy kategórianévre keresni, vagy válts szűrőt.`
               : 'Ebben a szűrőben nincs tétel. Válts szűrőt, vagy add hozzá az elsőt a „+ Új tétel” gombbal.'}
           </Callout.Text>
         </Callout.Root>

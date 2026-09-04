@@ -173,4 +173,17 @@ describe('PriceListAdminPage -- backlog-92: Tömeges árváltoztatás', () => {
     const dialog = screen.getByRole('dialog', { name: 'Tömeges árváltoztatás' });
     expect(within(dialog).getByText('A jelenlegi szűrt lista (1 tétel)')).toBeInTheDocument();
   });
+
+  it('kategórianévre keresve a "jelenlegi szűrt lista" kör pontosan a kategória-egyezéssel bekerült tételeket fogja', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+    await screen.findByText(/118 \/ 118 tétel látszik/);
+    // A "Fogkőeltávolítás" két tétele csak a kategórianéven át találat.
+    await user.type(screen.getByPlaceholderText('Keresés a tételek között…'), 'fogko');
+    await screen.findByText(/2 \/ 118 tétel látszik/);
+
+    await user.click(screen.getByRole('button', { name: 'Tömeges árváltoztatás' }));
+    const dialog = screen.getByRole('dialog', { name: 'Tömeges árváltoztatás' });
+    expect(within(dialog).getByText('A jelenlegi szűrt lista (2 tétel)')).toBeInTheDocument();
+  });
 });

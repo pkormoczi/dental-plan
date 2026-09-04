@@ -29,14 +29,14 @@ import HuChip from '../../components/HuChip';
 import { t } from '../../design/tokens';
 import { formatPrice } from '../../domain/money';
 import { resolveNev } from '../../domain/nev';
-import { nevEgyezik, norm } from '../../domain/search';
-import type { Nyelv, Penznem, Tetel } from '../../domain/types';
+import { egyezoKategoriaIdk, nevEgyezik, norm } from '../../domain/search';
+import type { Kategoria, Nyelv, Penznem, Tetel } from '../../domain/types';
 
 const LATHATO_TALALAT = 12;
 
 export interface ItemPickerProps {
   available: Tetel[];
-  catName: (id: string) => string;
+  kategoriak: Kategoria[];
   currency: Penznem;
   nyelv: Nyelv;
   onPick: (item: Tetel) => void;
@@ -69,7 +69,7 @@ export interface ItemPickerProps {
 
 export default function ItemPicker({
   available,
-  catName,
+  kategoriak,
   currency,
   nyelv,
   onPick,
@@ -83,29 +83,64 @@ export default function ItemPicker({
   const [hi, setHi] = useState(0);
   const ref = useRef<HTMLInputElement>(null);
 
+  const catById = useMemo(() => new Map(kategoriak.map((k) => [k.id, k])), [kategoriak]);
+  function catName(kategoriaId: string): string {
+    const kat = catById.get(kategoriaId);
+    return kat ? resolveNev(kat.nev, nyelv).szoveg : 'Egyéb';
+  }
+
   // A kereső mindkét nyelven keres, mindig -- a doki magyar, magyarul gépel
   // akkor is, ha német ajánlatot állít össze. Csak a megjelenített és
   // snapshotolt név nyelvfüggő (lásd domain/nev.ts).
-  // A lista legfeljebb LATHATO_TALALAT tételt mutat. A levágott találatok
-  // száma is kell: eddig a csonkítás NÉMA volt, a doki nem tudta, hogy
-  // pontosítania kellene (backlog-7). A limit maga változatlan.
-  const { results, tobbiTalalat } = useMemo(() => {
-    if (!q.trim()) return { results: [] as Tetel[], tobbiTalalat: 0 };
+  //
+  // Két szint: a névtalálatok (a mai szabály), utána a CSAK a kategórianéven
+  // át egyező tételek (`Kategória: …` fejléc alatt, kategória `sorrend`
+  // szerint) -- egy tétel sosem szerepel mindkét szinten. A közös
+  // LATHATO_TALALAT limit az 1. szintet tölti először, hogy egy
+  // kategória-egyezés sosem szorítson ki egy névtalálatot. A levágott
+  // találatok száma is kell: eddig a csonkítás NÉMA volt, a doki nem
+  // tudta, hogy pontosítania kellene (backlog-7). A limit maga változatlan.
+  const { results, katResults, tobbiTalalat } = useMemo(() => {
+    if (!q.trim()) return { results: [] as Tetel[], katResults: [] as Tetel[], tobbiTalalat: 0 };
     const nq = norm(q);
-    const osszes = available.filter((x) => nevEgyezik(x.nev, nq));
+    const nevTalalat = available.filter((x) => nevEgyezik(x.nev, nq));
+    const nevTalaltIdk = new Set(nevTalalat.map((x) => x.id));
+
+    const katIdk = egyezoKategoriaIdk(kategoriak, nq);
+    const katonkent = new Map<string, Tetel[]>();
+    for (const x of available) {
+      if (nevTalaltIdk.has(x.id) || !katIdk.has(x.kategoriaId)) continue;
+      const arr = katonkent.get(x.kategoriaId);
+      if (arr) arr.push(x);
+      else katonkent.set(x.kategoriaId, [x]);
+    }
+    const katTalalat = kategoriak
+      .slice()
+      .sort((a, b) => a.sorrend - b.sorrend)
+      .flatMap((k) => katonkent.get(k.id) ?? []);
+
+    const results = nevTalalat.slice(0, LATHATO_TALALAT);
+    const katResults = katTalalat.slice(0, Math.max(0, LATHATO_TALALAT - results.length));
+    const osszesTalalat = nevTalalat.length + katTalalat.length;
     return {
-      results: osszes.slice(0, LATHATO_TALALAT),
-      tobbiTalalat: Math.max(0, osszes.length - LATHATO_TALALAT),
+      results,
+      katResults,
+      tobbiTalalat: Math.max(0, osszesTalalat - results.length - katResults.length),
     };
-  }, [q, available]);
+  }, [q, available, kategoriak]);
 
   useEffect(() => setHi(0), [q]);
 
+  // Egy közös, a két szintet összefűző tömb adja az index-teret a
+  // billentyűzet-ciklushoz -- az Enter célpontja így a `hi` index alapján
+  // egyértelmű, a szintek határa nem számít neki.
+  const valaszthato = useMemo(() => [...results, ...katResults], [results, katResults]);
+
   // Az egyedi opció csak akkor létezik, ha a hívó kéri ÉS van gépelt szöveg
-  // -- mindig a lista VÉGÉN, ezért az index-tartomány [0, results.length]
-  // (a results.length-edik = az egyedi opció).
+  // -- mindig a lista VÉGÉN, ezért az index-tartomány [0, valaszthato.length]
+  // (a valaszthato.length-edik = az egyedi opció).
   const egyediElerheto = Boolean(onPickEgyedi) && q.trim() !== '';
-  const opcioSzam = results.length + (egyediElerheto ? 1 : 0);
+  const opcioSzam = valaszthato.length + (egyediElerheto ? 1 : 0);
 
   // 62. tétel (D71): `available` már nem szűr `currency`-re (egy
   // beárazatlan tétel is kereshető/felvehető) -- az üres-találat jegyzet
@@ -149,12 +184,54 @@ export default function ItemPicker({
       setHi((h) => (h - 1 + opcioSzam) % opcioSzam);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (hi < results.length) pickTetel(results[hi]);
+      if (hi < valaszthato.length) pickTetel(valaszthato[hi]);
       else if (egyediElerheto) pickEgyedi();
     }
   }
 
   let lastCat: string | null = null;
+  let lastKatCat: string | null = null;
+
+  // A két szint sora vizuálisan azonos -- csak a fejléc tér el (csupasz
+  // kategórianév / `Kategória: …`) --, ezért közös renderelő, a globális
+  // (a `valaszthato` tömbre vonatkozó) indexet kapja a `hi`-höz.
+  function renderRow(r: Tetel, idx: number) {
+    const rn = resolveNev(r.nev, nyelv);
+    return (
+      <div
+        onMouseEnter={() => setHi(idx)}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          pickTetel(r);
+        }}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '7px 10px',
+          fontSize: 13,
+          cursor: 'pointer',
+          borderRadius: t.radius,
+          background: idx === hi ? t.accentWash : 'transparent',
+          boxShadow: idx === hi ? `inset 3px 0 0 ${t.accent}` : 'none',
+        }}
+      >
+        <span>
+          {rn.szoveg}
+          {rn.fallback && <HuChip />}
+        </span>
+        <span
+          style={{
+            color: t.uiTextFaint,
+            whiteSpace: 'nowrap',
+            fontVariantNumeric: 'tabular-nums',
+          }}
+        >
+          {formatPrice(r.ar[currency], currency, nyelv) ?? '—'}
+        </span>
+      </div>
+    );
+  }
 
   const input = (
     <TextField.Root
@@ -189,7 +266,6 @@ export default function ItemPicker({
         results.map((r, i) => {
           const category = catName(r.kategoriaId);
           const header = category !== lastCat ? ((lastCat = category), category) : null;
-          const rn = resolveNev(r.nev, nyelv);
           return (
             <div key={r.id}>
               {header && (
@@ -197,42 +273,27 @@ export default function ItemPicker({
                   {header}
                 </div>
               )}
-              <div
-                onMouseEnter={() => setHi(i)}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  pickTetel(r);
-                }}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  padding: '7px 10px',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  borderRadius: t.radius,
-                  background: i === hi ? t.accentWash : 'transparent',
-                  boxShadow: i === hi ? `inset 3px 0 0 ${t.accent}` : 'none',
-                }}
-              >
-                <span>
-                  {rn.szoveg}
-                  {rn.fallback && <HuChip />}
-                </span>
-                <span
-                  style={{
-                    color: t.uiTextFaint,
-                    whiteSpace: 'nowrap',
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {formatPrice(r.ar[currency], currency, nyelv) ?? '—'}
-                </span>
-              </div>
+              {renderRow(r, i)}
             </div>
           );
         })}
-      {results.length === 0 && (
+      {katResults.length > 0 &&
+        katResults.map((r, i2) => {
+          const idx = results.length + i2;
+          const category = catName(r.kategoriaId);
+          const header = category !== lastKatCat ? ((lastKatCat = category), category) : null;
+          return (
+            <div key={r.id}>
+              {header && (
+                <div style={{ fontSize: 11, color: t.uiTextFaint, padding: '6px 10px 2px' }}>
+                  Kategória: {header}
+                </div>
+              )}
+              {renderRow(r, idx)}
+            </div>
+          );
+        })}
+      {valaszthato.length === 0 && (
         <div
           style={{
             padding: '10px 12px',
@@ -262,7 +323,7 @@ export default function ItemPicker({
       )}
       {egyediElerheto && (
         <div
-          onMouseEnter={() => setHi(results.length)}
+          onMouseEnter={() => setHi(valaszthato.length)}
           onMouseDown={(e) => {
             e.preventDefault();
             pickEgyedi();
@@ -276,8 +337,8 @@ export default function ItemPicker({
             cursor: 'pointer',
             borderRadius: t.radius,
             color: t.uiTextMuted,
-            background: hi === results.length ? t.accentWash : 'transparent',
-            boxShadow: hi === results.length ? `inset 3px 0 0 ${t.accent}` : 'none',
+            background: hi === valaszthato.length ? t.accentWash : 'transparent',
+            boxShadow: hi === valaszthato.length ? `inset 3px 0 0 ${t.accent}` : 'none',
           }}
         >
           Egyedi tétel felvétele: „{q.trim()}”

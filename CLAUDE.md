@@ -166,7 +166,9 @@ Ezek (eredetileg a törölt `ui/tokens.js` prototípusból portolva) már megvan
   illeszkedik-e a MÁR normalizált keresőszövegre, MINDKÉT nyelven; ez az
   EGYETLEN hely, ahol a kétnyelvű keresés szabálya él (a szerkesztő
   `ItemPicker`-e és az Árlista admin szűrője is ezt hívja) — a hívó a ciklus
-  előtt egyszer normalizál, ne tételenként
+  előtt egyszer normalizál, ne tételenként. `egyezoKategoriaIdk(kategoriak,
+  nq)` (ugyanitt) ugyanezt a szabályt futtatja kategórianevekre, egyszer a
+  tétel-ciklus előtt — lásd `docs/03-funkcionalis-spec.md` § Tételkereső
 - `parseTeeth(input)` — FDI fogszám-validáció (`11–18`/`21–28`/`31–38`/`41–48`
   maradó, `51–55` stb. tejfog)
 - `parseSections(markdown)` (`app/src/domain/markdownSections.ts`) — a
@@ -1326,7 +1328,9 @@ generálás előtt. A kereső search-only, nincs kategória böngésző (D19); �
 (`norm()`); csak `aktiv: true` tételeket listáz — a pénznem NEM szűr a találatokra
 (D71), egy a terv pénznemében beárazatlan tétel is `—` listaárral, kézi ajánlati árral
 felvehető. Mindkét nyelven keres (`nev.hu` és `nev.de`) függetlenül a terv nyelvétől —
-a doki magyar, magyarul gépel akkor is, ha német ajánlatot állít össze (D21).
+a doki magyar, magyarul gépel akkor is, ha német ajánlatot állít össze (D21). A tétel
+akkor is találat, ha nem a saját neve, hanem a kategóriájának neve illeszkedik —
+lásd `docs/03-funkcionalis-spec.md` § Tételkereső.
 
 ## Adat és ismert hiányok
 

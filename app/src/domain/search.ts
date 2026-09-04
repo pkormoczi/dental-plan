@@ -4,7 +4,7 @@
 // NFD-normalizalas szetszedi az ekezetes betuket alapbetu + kombinalo
 // ekezetjel (U+0300-U+036F) parra, amit utana levagunk.
 
-import type { LokalizaltSzoveg } from './types';
+import type { Kategoria, LokalizaltSzoveg } from './types';
 
 const COMBINING_MARKS = /[̀-ͯ]/g;
 
@@ -29,4 +29,18 @@ export function norm(s: string | null | undefined): string {
  */
 export function nevEgyezik(nev: LokalizaltSzoveg, nq: string): boolean {
   return norm(nev.hu).includes(nq) || norm(nev.de).includes(nq);
+}
+
+/**
+ * Azon kategória-`id`-k halmaza, amiknek a neve illeszkedik a keresőszövegre
+ * -- ugyanazzal a `nevEgyezik()` szabállyal, tehát mindkét nyelven, a terv
+ * nyelvétől függetlenül. Egyszer, a tétel-ciklus ELŐTT hívandó (a MÁR
+ * normalizált `nq`-val), nem tételenként újra.
+ */
+export function egyezoKategoriaIdk(kategoriak: Kategoria[], nq: string): Set<string> {
+  const idk = new Set<string>();
+  for (const k of kategoriak) {
+    if (nevEgyezik(k.nev, nq)) idk.add(k.id);
+  }
+  return idk;
 }

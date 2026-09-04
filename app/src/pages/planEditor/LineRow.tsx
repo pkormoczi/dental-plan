@@ -19,7 +19,7 @@ import { sorElteres } from '../../domain/sorElteres';
 import { sorMezokEgyedibol, sorMezokTetelbol } from '../../domain/sorMezok';
 import { invalidFdiTokens, parseTeeth } from '../../domain/teeth';
 import type { FogterkepAllapot } from '../../domain/toothVisual';
-import type { Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
+import type { Kategoria, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
 import { fogId, keresoId, leirasId, nevId } from './elemIdk';
 import ItemPicker from './ItemPicker';
 
@@ -30,7 +30,7 @@ export interface LineRowProps {
   currency: Penznem;
   nyelv: Nyelv;
   available: Tetel[];
-  catName: (id: string) => string;
+  kategoriak: Kategoria[];
   fogterkep: FogterkepAllapot;
   fallback: SorFallbackOk | null;
   /** A sor mögötti árlistai tétel, ha `tetelId`-hez kötött (a `csomag`/leírás/
@@ -52,7 +52,7 @@ export default function LineRow({
   currency,
   nyelv,
   available,
-  catName,
+  kategoriak,
   fogterkep,
   fallback,
   tetel,
@@ -141,7 +141,7 @@ export default function LineRow({
         {keresoMod ? (
           <ItemPicker
             available={available}
-            catName={catName}
+            kategoriak={kategoriak}
             currency={currency}
             nyelv={nyelv}
             floating="portal"

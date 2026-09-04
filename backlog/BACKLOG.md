@@ -15,19 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 97. tétel: Kategórianévre is találjon a kezelés-kereső
-
-  A `domain/search.ts` `nevEgyezik()` csak a tétel saját `nev.hu`/`nev.de`-
-  jét nézi, ezért egy kategórianévre (pl. „fogkő" a „Fogkőeltávolítás"
-  kategórián) rákeresve nulla találat jön — mindkét felületen
-  (`pages/planEditor/ItemPicker.tsx` és `domain/arlistaSzures.ts`), pedig
-  az `ItemPicker` a kategórianevet propként már megkapja. Napi hatás:
-  felesleges kézi árazású egyedi sor egy karbantartott árlistai tétel
-  helyett. Kért: vagy a keresés terjedjen ki a kategórianévre, vagy a
-  nulla-találatos üzenet ajánljon kilépési utat. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-97-kategorianev-kereses-terv.md`
-
 ### 98. tétel: Számmezők tartalmának kijelölése fókuszáláskor
 
   Sehol a kódbázisban nincs `select()` az `onFocus`-ban, és a `NumberField`

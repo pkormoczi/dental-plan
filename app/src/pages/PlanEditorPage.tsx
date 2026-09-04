@@ -16,7 +16,6 @@ import { formatLongDate } from '../domain/date';
 import { fazisCsukvaMozgatasUtan, fazisCsukvaTorlesUtan, fazisokFelcserelve } from '../domain/fazisSorrend';
 import { sorPatchKovetessel } from '../domain/mennyiseg';
 import { formatMoney } from '../domain/money';
-import { resolveNev } from '../domain/nev';
 import { reviewElfogadva, reviewIrasUtan, sorPatchNyelvvel } from '../domain/nyelviReview';
 import { sorPatchOroklessel } from '../domain/orokoltJelzesek';
 import { sorMezokEgyedibol, sorMezokTetelbol } from '../domain/sorMezok';
@@ -117,11 +116,6 @@ export default function PlanEditorPage() {
     else if (cel.mezo === 'sorNev') setFokuszCel({ mit: 'nev', pi: cel.fazisIndex, li: cel.sorIndex ?? 0 });
     else setFokuszCel({ mit: 'leiras', pi: cel.fazisIndex, li: cel.sorIndex ?? 0 });
   }, [nyelviReview.cel]);
-
-  const catName = (id: string): string => {
-    const kat = priceList.kategoriak.find((k) => k.id === id);
-    return kat ? resolveNev(kat.nev, nyelv).szoveg : 'Egyéb';
-  };
 
   // 62. tétel (D71) C5: egy `currency`-ben nem beárazott tétel is
   // kereshető/felvehető marad -- a kereső ma nem szűr pénznemre, csak
@@ -412,7 +406,7 @@ export default function PlanEditorPage() {
             currency={currency}
             nyelv={nyelv}
             available={available}
-            catName={catName}
+            kategoriak={priceList.kategoriak}
             frequent={frequent}
             tetelekById={tetelekById}
             fogterkep={fogterkep}

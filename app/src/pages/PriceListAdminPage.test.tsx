@@ -575,6 +575,37 @@ describe('PriceListAdminPage', () => {
     expect(screen.queryByText('Zahnhalsfüllung')).not.toBeInTheDocument();
   });
 
+  it('a kategórianévre keresve az egész csoport visszajön, akkor is, ha a tételek neve nem egyezik', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await screen.findByText(/118 \/ 118 tétel látszik/);
+    const search = screen.getByPlaceholderText('Keresés a tételek között…');
+    // A "Fogkőeltávolítás" kategória két tétele egyetlen szakmai szóra sem
+    // jön elő a saját nevéből -- csak a kategórianéven át találhatók.
+    await user.type(search, 'fogko');
+
+    expect(
+      await screen.findByText('Komplett kezelés: ultrahang, sófúvás, kézi műszeres kez., polírozás'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Ismételt kezelés 3-6 havonta')).toBeInTheDocument();
+    expect(screen.getByText(/2 \/ 118 tétel látszik/)).toBeInTheDocument();
+  });
+
+  it('valódi nulla találatnál az üres-állapot szövege kimondja, hogy kategórianévre is lehet keresni', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await screen.findByText(/118 \/ 118 tétel látszik/);
+    await user.type(screen.getByPlaceholderText('Keresés a tételek között…'), 'zzznincsilyen');
+
+    expect(
+      await screen.findByText(
+        'Nincs találat erre: „zzznincsilyen”. Próbálj más névre vagy kategórianévre keresni, vagy válts szűrőt.',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('backlog-21: bármelyik szerkesztés a mai napra állítja az arlistaVerziót (a lábléc audit-adatának forrása)', async () => {
     const user = userEvent.setup();
     renderAdmin();

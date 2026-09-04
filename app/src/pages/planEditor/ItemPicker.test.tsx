@@ -3,12 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Theme } from '@radix-ui/themes';
 import ItemPicker from './ItemPicker';
-import type { Tetel } from '../../domain/types';
+import type { Kategoria, Tetel } from '../../domain/types';
 
-function tetel(id: string, nevHu: string): Tetel {
+function tetel(id: string, nevHu: string, kategoriaId = 'k02'): Tetel {
   return {
     id,
-    kategoriaId: 'k02',
+    kategoriaId,
     sorrend: 1,
     aktiv: true,
     gyakori: false,
@@ -16,6 +16,8 @@ function tetel(id: string, nevHu: string): Tetel {
     ar: { HUF: { tipus: 'FIX', ertek: 1000 }, EUR: null },
   };
 }
+
+const kategoriak: Kategoria[] = [{ id: 'k02', nev: { hu: 'Tömések', de: null }, sorrend: 1 }];
 
 const available: Tetel[] = [tetel('t1', 'Gyökértömés'), tetel('t2', 'Esztétikus tömés')];
 
@@ -25,7 +27,7 @@ function renderPicker(props: Partial<React.ComponentProps<typeof ItemPicker>> = 
     <Theme>
       <ItemPicker
         available={available}
-        catName={() => 'Tömések'}
+        kategoriak={kategoriak}
         currency="HUF"
         nyelv="hu"
         onPick={onPick}
@@ -191,6 +193,110 @@ describe('ItemPicker', () => {
       await user.keyboard('{ArrowDown>12/}{Enter}');
 
       expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 's0' }));
+    });
+  });
+
+  // A névtalálatok mellett a kategórianévre illeszkedő tételek is
+  // találatok, külön "Kategória: …" fejléc alatt.
+  describe('kategórianév-egyezés', () => {
+    const katKategoriak: Kategoria[] = [
+      { id: 'k01', nev: { hu: 'Fogkőeltávolítás', de: 'Zahnsteinentfernung' }, sorrend: 1 },
+      { id: 'k02', nev: { hu: 'Tömések', de: null }, sorrend: 2 },
+    ];
+    const katAvailable: Tetel[] = [
+      tetel('t1', 'Gyökértömés', 'k02'),
+      tetel('t2', 'Komplett kezelés: ultrahang, sófúvás', 'k01'),
+      tetel('t3', 'Ismételt kezelés 3-6 havonta', 'k01'),
+    ];
+
+    it('csak kategórianévre találó tétel megjelenik "Kategória: …" fejléc alatt (ma nulla találat lenne)', async () => {
+      const user = userEvent.setup();
+      renderPicker({ available: katAvailable, kategoriak: katKategoriak });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'fogko');
+
+      expect(await screen.findByText('Kategória: Fogkőeltávolítás')).toBeInTheDocument();
+      expect(screen.getByText('Komplett kezelés: ultrahang, sófúvás')).toBeInTheDocument();
+      expect(screen.getByText('Ismételt kezelés 3-6 havonta')).toBeInTheDocument();
+    });
+
+    it('a kategória NÉMET nevére is illeszkedik, a terv nyelvétől függetlenül', async () => {
+      const user = userEvent.setup();
+      renderPicker({ available: katAvailable, kategoriak: katKategoriak, nyelv: 'hu' });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'zahnstein');
+
+      expect(await screen.findByText('Kategória: Fogkőeltávolítás')).toBeInTheDocument();
+    });
+
+    it('egyetlen tétel sem szerepel mindkét szinten: névtalálat nem ismétlődik a kategória-blokkban', async () => {
+      const user = userEvent.setup();
+      // "gyoker" névtalálat t1-re -- a t1 kategóriája (k02, "Tömések") NEM
+      // illeszkedik a keresőszóra, tehát nincs kategória-blokk.
+      renderPicker({ available: katAvailable, kategoriak: katKategoriak });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'gyoker');
+
+      await screen.findByText('Gyökértömés');
+      expect(screen.queryByText(/^Kategória:/)).not.toBeInTheDocument();
+    });
+
+    it('beírás után azonnali Enter a névtalálatot veszi fel, a névtalálatok sorrendjében', async () => {
+      const user = userEvent.setup();
+      // "kezeles" mindkét k01-es tétel NEVÉRE illeszkedik (névtalálat) --
+      // tisztán névtalálat eset, nincs kategória-egyezés.
+      const { onPick } = renderPicker({ available: katAvailable, kategoriak: katKategoriak });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'kezeles');
+      await screen.findByText('Komplett kezelés: ultrahang, sófúvás');
+      await user.keyboard('{Enter}');
+
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }));
+    });
+
+    it('12 névtalálat mellett a kategória-blokk egyáltalán nem jelenik meg', async () => {
+      const user = userEvent.setup();
+      const sokNevTalalat: Tetel[] = Array.from({ length: 12 }, (_, i) =>
+        tetel(`n${i}`, `Tömés ${i + 1} felszín`, 'k02'),
+      );
+      // A saját neve NEM tartalmazza a keresőszót, csak a kategóriája
+      // ("Tömések") -- ez adná a kategória-egyezést, ha lenne rá hely.
+      const katEgyezo = tetel('kt1', 'Kategória általi találat', 'k02');
+      renderPicker({
+        available: [...sokNevTalalat, katEgyezo],
+        kategoriak: katKategoriak,
+      });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'tomes');
+
+      await screen.findByText('Tömés 1 felszín');
+      expect(screen.queryByText(/^Kategória:/)).not.toBeInTheDocument();
+    });
+
+    it('a `↑ ↓` ciklus bejárja a kategória-blokk sorait is, a fejléc nem választható', async () => {
+      const user = userEvent.setup();
+      const { onPick } = renderPicker({ available: katAvailable, kategoriak: katKategoriak });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'fogko');
+      await screen.findByText('Kategória: Fogkőeltávolítás');
+
+      // Két kategória-egyezés van (t2, t3), nincs névtalálat -- beírás után a
+      // 0. opció (t2) az alap kijelölés, Enter azonnal azt veszi fel.
+      await user.keyboard('{Enter}');
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }));
+
+      // Egy ArrowDown a következő (t3) sorra visz -- a fejléc nem számít bele.
+      onPick.mockClear();
+      await user.type(input, 'fogko');
+      await screen.findByText('Kategória: Fogkőeltávolítás');
+      await user.keyboard('{ArrowDown}{Enter}');
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't3' }));
     });
   });
 });

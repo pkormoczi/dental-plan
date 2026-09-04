@@ -413,14 +413,27 @@ kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`
   és a felvételkor *rögzített* név nyelvfüggő (lásd alább, „Hiányzó
   fordítás"); ha a tétel német neve hiányzik, a magyar névre esik vissza,
   jól látható `HU` jelöléssel a találati soron és a felvett soron is.
-- A lista **legfeljebb 12 találatot** mutat. Ha ennél több egyezik, a
-  lista alján egy nem választható, tájékoztató sor jelzi: „+N további
-  találat — pontosíts a kereséssel". Pontosan 12 (vagy kevesebb) találatnál
-  nincs jelzés — a lista ilyenkor teljes. A 12-es megjelenítési limit
-  szándékosan **nem** emelkedik: a nagyobb limit csak elodázná, hogy a
-  doki pontosítson.
-- Billentyűzet: `↑ ↓` navigál, `Enter` hozzáad, `Esc` bezár. A csonkítás-
-  jelző sor **nem** része a ciklusnak.
+- A találatok akkor is megjelennek, ha nem a tétel saját neve, hanem a
+  **kategóriájának neve** illeszkedik a keresőszóra (ugyanazzal a
+  kétnyelvű szabállyal) — sok tétel neve önmagában nem azonosítja a
+  kezelést (pl. a „Fogkőeltávolítás" kategória egyik tétele sem tartalmazza
+  a „fogkő" szót a saját nevében). Két, vizuálisan elkülönített szint
+  jelenik meg: elöl a névtalálatok a mai, csupasz kategória-fejlécekkel,
+  utánuk a CSAK a kategórianéven át egyező tételek, `Kategória: <név>`
+  fejléc alatt (a kategóriák `sorrend`-je szerint) — egy tétel sosem
+  szerepel mindkét szinten. A beírás utáni azonnali `Enter` célpontja
+  változatlanul az első NÉVtalálat marad.
+- A lista **legfeljebb 12 találatot** mutat, a két szintre összevontan —
+  a névtalálatok töltenek először, egy kategória-egyezés sosem szorít ki
+  egy névtalálatot, és 12-nél több névtalálat esetén a kategória-szint
+  egyáltalán nem jelenik meg. Ha ennél több egyezik, a lista alján egy nem
+  választható, tájékoztató sor jelzi: „+N további találat — pontosíts a
+  kereséssel". Pontosan 12 (vagy kevesebb) találatnál nincs jelzés — a
+  lista ilyenkor teljes. A 12-es megjelenítési limit szándékosan **nem**
+  emelkedik: a nagyobb limit csak elodázná, hogy a doki pontosítson.
+- Billentyűzet: `↑ ↓` navigál, `Enter` hozzáad, `Esc` bezár — a ciklus a
+  két szint sorait egyben járja be. A kategória-fejlécek és a csonkítás-
+  jelző sor **nem** részei a ciklusnak.
 - **Hozzáadás után a kereső kiürül és visszakapja a fókuszt.** Ez a
   ciklus a lényeg: gépel → nyíl → Enter → gépel tovább, egérhasználat
   nélkül.
@@ -1528,6 +1541,14 @@ a szabállyal, mint a tervszerkesztő tétel-keresője — egy csak németül
 elnevezett vagy csak a német nevében elgépelt tétel is megtalálható. A
 találati sor változatlanul a magyar nevet mutatja; nincs külön jelzés
 arra, hogy a találat a német névből jött.
+
+A tétel akkor is a szűrt listában marad, ha nem a saját neve, hanem a
+**kategóriájának neve** illeszkedik a keresőszóra (ugyanazzal a kétnyelvű
+szabállyal) — a lap ma is kategóriánként csoportosít és elrejti az üres
+csoportokat, ezért egy kategórianév-egyezés magától „az egész csoport
+visszajön" alakban jelenik meg, külön jelölés nélkül. A Tömeges
+árváltoztatás dialógus „jelenlegi szűrt lista" köre ugyanezt a szűrt
+kört használja, tehát a kör a kategórianév-egyezéssel együtt tágul.
 
 `Mind` · `Nincs EUR ár` · `Sávos ár` · `Inaktív` · `Gyakori`
 

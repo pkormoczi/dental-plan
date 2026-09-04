@@ -20,7 +20,7 @@ import { formatMoney } from '../../domain/money';
 import { resolveNev, sorFallback } from '../../domain/nev';
 import { nyelviMismatch } from '../../domain/nyelviReview';
 import { orokoltMegjegyzesu } from '../../domain/orokoltJelzesek';
-import type { Fazis, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
+import type { Fazis, Kategoria, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
 import type { FogterkepAllapot } from '../../domain/toothVisual';
 import { fazisKeresoId, fazisNevId, fazisPanelId, type FokuszCel } from './elemIdk';
 import FazisMegjegyzes from './FazisMegjegyzes';
@@ -33,7 +33,7 @@ export interface PhaseSectionProps {
   currency: Penznem;
   nyelv: Nyelv;
   available: Tetel[];
-  catName: (id: string) => string;
+  kategoriak: Kategoria[];
   frequent: Tetel[];
   tetelekById: Map<string, Tetel>;
   fogterkep: FogterkepAllapot;
@@ -67,7 +67,7 @@ export default function PhaseSection({
   currency,
   nyelv,
   available,
-  catName,
+  kategoriak,
   frequent,
   tetelekById,
   fogterkep,
@@ -271,7 +271,7 @@ export default function PhaseSection({
                       currency={currency}
                       nyelv={nyelv}
                       available={available}
-                      catName={catName}
+                      kategoriak={kategoriak}
                       fogterkep={fogterkep}
                       fallback={sorFallback(l, nyelv, tetelekById)}
                       tetel={tetelekById.get(l.tetelId)}
@@ -297,7 +297,7 @@ export default function PhaseSection({
           <ItemPicker
             id={fazisKeresoId(pi)}
             available={available}
-            catName={catName}
+            kategoriak={kategoriak}
             currency={currency}
             nyelv={nyelv}
             onPick={onAdd}

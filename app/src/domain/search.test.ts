@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { nevEgyezik, norm } from './search';
+import { egyezoKategoriaIdk, nevEgyezik, norm } from './search';
+import type { Kategoria } from './types';
 
 describe('norm', () => {
   it('strips accents so "gyoker" matches "Gyökérkezelés"', () => {
@@ -41,5 +42,24 @@ describe('nevEgyezik', () => {
     const csakHu = { hu: 'Fogeltávolítás', de: null };
     expect(nevEgyezik(csakHu, norm('fogeltavolitas'))).toBe(true);
     expect(nevEgyezik(csakHu, norm('krone'))).toBe(false);
+  });
+});
+
+describe('egyezoKategoriaIdk', () => {
+  const kategoriak: Kategoria[] = [
+    { id: 'k01', nev: { hu: 'Fogkőeltávolítás', de: 'Zahnsteinentfernung' }, sorrend: 1 },
+    { id: 'k02', nev: { hu: 'Korona és hídpótlások', de: null }, sorrend: 2 },
+  ];
+
+  it('a magyar kategórianévre illeszkedő id bekerül a halmazba', () => {
+    expect(egyezoKategoriaIdk(kategoriak, norm('fogko'))).toEqual(new Set(['k01']));
+  });
+
+  it('a német kategórianévre is illeszkedik, a terv nyelvétől függetlenül', () => {
+    expect(egyezoKategoriaIdk(kategoriak, norm('zahnstein'))).toEqual(new Set(['k01']));
+  });
+
+  it('nem illeszkedő szóra üres halmazt ad', () => {
+    expect(egyezoKategoriaIdk(kategoriak, norm('implantatum'))).toEqual(new Set());
   });
 });

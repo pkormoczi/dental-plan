@@ -2476,3 +2476,22 @@ karbantartási kör négy önálló javítása.
   bezárásával nyomtalanul elvész. Részletek:
   `docs/03-funkcionalis-spec.md` § 6. „Sor kinyitása" „Elgépelés-védelem
   az ár-mezőkön"; `CLAUDE.md` "Meglévő segédfüggvények".
+
+### 97. tétel: Kategórianévre is találjon a kezelés-kereső — KÉSZ
+
+- **Méret:** kicsi-közepes — egy közös domain-függvény + két meglévő
+  keresési predikátum bővítése, plusz plumbing az `ItemPicker` három
+  hívási szintjén.
+- **Megvalósítás:** a `domain/search.ts` `egyezoKategoriaIdk()` a meglévő
+  `nevEgyezik()`-re épülve adja az egyező kategória-id-k halmazát, egyszer
+  a tétel-ciklus előtt. Az `arlistaSzures.ts` `tetelIlleszkedik()`/
+  `tetelMegtartando()` ezt kapja negyedik paraméterként, így az Árlista
+  admin szűrője (és vele a Tömeges árváltoztatás köre) is a kategórianévre
+  is talál, külön UI nélkül. A szerkesztő `ItemPicker`-je egy `catName`
+  callback helyett a teljes `kategoriak` tömböt kapja, és a találatokat két
+  szintre bontja: a mai névtalálatok, utána a csak kategórianéven át
+  egyező tételek `Kategória: …` fejléc alatt — közös 12-es limittel, a
+  névtalálatok elsőbbségével, az Enter célpontja pedig változatlanul az
+  első névtalálat marad. Részletek: `docs/03-funkcionalis-spec.md` §
+  Tételkereső és § Keresés és szűrők; `CLAUDE.md` "A UX kritikus pontja"
+  és "Meglévő segédfüggvények".
