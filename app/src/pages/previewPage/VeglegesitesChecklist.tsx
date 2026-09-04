@@ -46,7 +46,13 @@ const ROUTE_GOMB_FELIRAT: Record<CsekklistaRoute, string> = {
 
 export interface VeglegesitesChecklistProps {
   csekklista: VeglegesitesCsekklista;
-  onNavigate: (route: CsekklistaRoute) => void;
+  /**
+   * Elhagyva egyetlen tétel route-gombja sem jelenik meg -- a sikerképernyő
+   * (105. tétel) ezt a csak-olvasó módot használja: a piszkozat ekkor már
+   * törölve van, egy "Vissza a szerkesztőbe" gomb nem a most mentett
+   * verzióba, hanem egy üres piszkozatba vinne.
+   */
+  onNavigate?: (route: CsekklistaRoute) => void;
   /**
    * A 'nyelvi-review' tétel guided-review indító gombja -- a hívó adja meg
    * (kell hozzá a `NyelviReviewContext` és az első cél), `undefined` esetén a
@@ -96,9 +102,9 @@ export function VeglegesitesChecklist({
               </Text>
             ))}
           </Callout.Text>
-          {(tetel.route || (tetel.id === 'nyelvi-review' && nyelviReviewAction)) && (
+          {((tetel.route && onNavigate) || (tetel.id === 'nyelvi-review' && nyelviReviewAction)) && (
             <Flex mt="2" gap="2">
-              {tetel.route && (
+              {tetel.route && onNavigate && (
                 <Button variant="soft" color="gray" onClick={() => onNavigate(tetel.route!)}>
                   {ROUTE_GOMB_FELIRAT[tetel.route]}
                 </Button>

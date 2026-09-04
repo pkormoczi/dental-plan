@@ -2619,3 +2619,21 @@ karbantartási kör négy önálló javítása.
   jelenik meg jelzés. A jelzés tisztán informatív, nem kattintható, nem
   módosít mentett adatot. Részletek: `docs/03-funkcionalis-spec.md` § 5
   "Terv-láncok és verziók"; `CLAUDE.md` "Meglévő segédfüggvények".
+
+### 105. tétel: Sikerképernyő — mit fogadott el a doki véglegesítéskor — KÉSZ
+
+- **Méret:** kicsi — egy meglévő komponens csak-olvasó módja (opcionális
+  `onNavigate`), egy befagyasztott állapot a `PreviewPage.tsx`-ben, és a
+  sikerképernyő rendjének egy új blokkja.
+- **Megvalósítás:** a mentés utáni "A terv elmentve ✓" panel mostantól
+  felsorolja a véglegesítés PILLANATÁBAN fennállt `soft`/`info`
+  figyelmeztetéseket (kézi ár, kimaradó nyomtatvány-szakasz, 0 Ft-os sor,
+  törzsadat-eltérés stb.) — a `hard` tételek definíció szerint nem
+  kerülhetnek ide. A lista a gombnyomáskori csekklistát mutatja, nem egy
+  élő újraszámolást, mert a mentés közben újraolvasott törzsadat egy élő
+  értéket a doki által ténylegesen látottól eltérővé tehetne. Ugyanaz a
+  checklist-render jelenik meg, mint mentés előtt, de route- és
+  guided-review gombok nélkül — a piszkozat ekkor már törölve van. Nulla
+  figyelmeztetésnél a képernyő változatlan marad. Semmi nem kerül a
+  `terv.json`-ba, a séma nem változott. Részletek:
+  `docs/03-funkcionalis-spec.md` § 4 "Sikeres véglegesítés".

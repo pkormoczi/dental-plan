@@ -1399,6 +1399,162 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
   );
 });
 
+// 105. tétel: a sikerképernyő a GOMBNYOMÁSKORI puha/info figyelmeztetéseket
+// sorolja fel -- a lista a mai (mentés előtti) csekklista `soft`+`info`
+// tételeivel egyezik meg, de gombok nélkül, mert a piszkozat ekkor már
+// törölve van.
+describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'egy soft (0 Ft-os sor) ÉS egy info (törzsadat-eltérés) tétel a sikerképernyőn is megjelenik, gombok nélkül',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      // A quick-create után a törzsadat még csak a nevet tartalmazza -- a
+      // Terv adatai lapon kitöltött többi mező a masterrel szemben
+      // eltérést (fill-in) ad, ami a sikerképernyőn is megjelenő info-tétel.
+      await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Visszatekint');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      fireEvent.change(await screen.findByLabelText('Született'), { target: { value: '1990-01-01' } });
+      await user.type(screen.getByLabelText('TAJ'), '123 456 789');
+      await user.type(
+        screen.getByLabelText('Lakcím'),
+        '1113 Budapest, Bartók Béla út 42. 2/5',
+      );
+      await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
+      await user.type(screen.getByLabelText('E-mail'), 'teszt.visszatekint@example.hu');
+      await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'Érzéstelenítés');
+      await screen.findByText(/Egyedi tétel felvétele/);
+      await user.keyboard('{Enter}');
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      // Előfeltétel: mindkét tétel a gombnyomás ELŐTT is látszik, nem blokkol.
+      expect(await screen.findByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
+      expect(
+        await screen.findByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/),
+      ).toBeInTheDocument();
+      expect(finalizeBtn).not.toBeDisabled();
+
+      await user.click(finalizeBtn);
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
+
+      // A sikerképernyőn ugyanaz a két tétel a reszletek-névlistával együtt.
+      expect(
+        screen.getByText('Ezek a figyelmeztetések álltak fenn a véglegesítéskor:'),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
+      expect(screen.getByText(/Érintett sorok: Érzéstelenítés/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/),
+      ).toBeInTheDocument();
+
+      // Sem "Terv adatai", sem "Vissza a szerkesztőbe" gomb -- a piszkozat
+      // ekkor már törölve, nincs hová visszavinni.
+      expect(screen.queryByRole('button', { name: 'Terv adatai' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Vissza a szerkesztőbe' }),
+      ).not.toBeInTheDocument();
+      // A sikerképernyő saját két gombja változatlanul ott van.
+      expect(screen.getByRole('button', { name: 'Új terv indítása' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Korábbi tervek' })).toBeInTheDocument();
+    },
+    20000,
+  );
+
+  it(
+    'figyelmeztetés nélküli terv sikerképernyőjén nincs bevezető sor és nincs üres-állapot szöveg sem',
+    async () => {
+      const user = userEvent.setup();
+      // A garancia HU seed-szövege ma is placeholder (24. tétel, adattisztítás
+      // alatt) -- egy valódi szöveg kell, különben a "kimaradó szakasz" puha
+      // tétel a minden más szempontból tiszta tervnél is fennállna.
+      // Egy üres localStorage-nál a DemoStorage.init() a teljes seedet
+      // (benne a placeholder garanciával) újraírná (`resetDemoData()`) --
+      // az árlistát/beállításokat előre kiírva ez az ág kimarad, és az
+      // `ensureSeedTemplates()` csak a HIÁNYZÓ sablonokat pótolja, a már
+      // jelen lévő (nem placeholder) garanciát érintetlenül hagyja.
+      localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+      localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+      localStorage.setItem(
+        'dp:sablonok/garancia-hu-v1.md',
+        '# Garancia\n\nA kezelésekre 2 év garanciát vállalunk.',
+      );
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      // A quick-create csak a nevet írja a törzsadatba -- minden más mező
+      // kitöltése itt fill-in eltérést adna a törzsadathoz képest. Hogy a
+      // "hiányzó páciensadat" ÉS a "törzsadat-eltérés" egyaránt kimaradjon,
+      // a mezők kitöltése UTÁN a törzsadatot explicit szinkronizáljuk a
+      // terv adataival (lásd lent, "Törzsadat frissítése a tervből").
+      await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Tiszta');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      fireEvent.change(await screen.findByLabelText('Született'), { target: { value: '1990-01-01' } });
+      await user.type(screen.getByLabelText('TAJ'), '123 456 789');
+      await user.type(
+        screen.getByLabelText('Lakcím'),
+        '1113 Budapest, Bartók Béla út 42. 2/5',
+      );
+      await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
+      await user.type(screen.getByLabelText('E-mail'), 'teszt.tiszta@example.hu');
+
+      await user.click(await screen.findByRole('button', { name: 'Törzsadat frissítése a tervből' }));
+      const syncDialog = await screen.findByRole('dialog', { name: 'Törzsadat frissítése a tervből' });
+      await user.click(within(syncDialog).getByRole('checkbox', { name: 'Összes kijelölése' }));
+      await user.click(within(syncDialog).getByRole('button', { name: 'Törzsadat mentése' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await waitFor(() =>
+        expect(screen.getByText('A törzsadat és a terv adatai megegyeznek.')).toBeInTheDocument(),
+      );
+
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'Fogeltávolítás');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      const finalizeBtn = await screen.findByRole(
+        'button',
+        { name: /Véglegesítés és mentés/ },
+        { timeout: 10000 },
+      );
+      expect(finalizeBtn).not.toBeDisabled();
+
+      await user.click(finalizeBtn);
+      await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
+
+      expect(
+        screen.queryByText('Ezek a figyelmeztetések álltak fenn a véglegesítéskor:'),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Nincs figyelmeztetés vagy hiányzó adat — a terv véglegesíthető.'),
+      ).not.toBeInTheDocument();
+    },
+    20000,
+  );
+});
+
 // backlog-20: a lényegi sanitizálás/előtag-logika a
 // storage/paths.test.ts `buildDownloadFileName`-jét fedi -- itt csak azt,
 // hogy a "Letöltés" link ténylegesen az ő kimenetét használja.

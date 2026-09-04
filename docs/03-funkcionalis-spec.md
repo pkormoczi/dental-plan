@@ -1103,6 +1103,26 @@ A mentés után a terv-workflow héj (D36) fölött megjelenő "A terv elmentve
   fülére (§ 5, D54) — az utóbbi a teljes, több-pácienses áttekintő,
   másodlagos a napi munkához képest.
 
+Ha a véglegesítés pillanatában a fenti „Véglegesítési checklist" akár egy
+`soft` vagy `info` tétele fennállt, a panel a két meglévő amber jelzés
+(terv-címke, illetve piszkozat-takarítás írási hibája) UTÁN, a két gomb
+ELŐTT egy halk bevezető sort ("Ezek a figyelmeztetések álltak fenn a
+véglegesítéskor:") és magát a felsorolást is megjeleníti — ugyanazzal a
+`VeglegesitesChecklist` renderrel, mint a mentés előtti ág, de route- és
+guided-review gombok nélkül: a piszkozat ekkor már törölve van, egy
+„Vissza a szerkesztőbe" gomb nem a most mentett verzióba, hanem egy üres
+piszkozatba vinne. `hard` tétel definíció szerint nem szerepelhet itt,
+mert amíg van ilyen, a gomb letiltott, mentés sem történhet. A lista
+BEFAGYASZTOTT pillanatkép — a gombnyomáskori csekklista értéke, nem egy a
+sikerképernyőn újraszámolt élő állapot —, mert a mentés a törzsadatot a
+`torzsadat-elteres` info-sorhoz közben újraolvassa, ami egy élő
+újraszámolásnál más eredményt adhatna, mint amit a doki ténylegesen
+látott a gombnyomáskor. A lista tisztán megjelenítés: sem a `Plan`, sem
+bármely más séma nem kap tőle új mezőt, a lap elhagyásával eltűnik. Ha
+egyetlen `soft`/`info` tétel sem állt fenn, sem a bevezető sor, sem a
+lista, sem a checklist mentés előtti üres-állapot szövege nem jelenik
+meg — a képernyő ilyenkor a két gombbal és az útvonal-sorral zár.
+
 ### Letöltési fájlnév
 
 A „Letöltés" gomb (ez a képernyő) és a terv-lánc fa verziósorának „⋯"

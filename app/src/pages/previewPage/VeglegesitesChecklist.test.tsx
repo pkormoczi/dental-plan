@@ -122,3 +122,55 @@ describe('VeglegesitesChecklist -- szamlalo-jelvény', () => {
     expect(screen.queryByText(/Elavult árlistai pillanatkép \(1\)/)).not.toBeInTheDocument();
   });
 });
+
+// 105. tétel: a sikerképernyő az `onNavigate` prop nélkül hívja a
+// komponenst -- a piszkozat ekkor már törölve, egy route-gomb ide nem
+// mutathat.
+describe('VeglegesitesChecklist -- onNavigate nélküli, csak-olvasó mód', () => {
+  it('route-tal bíró tételen nincs gomb, a cím és a reszletek szövege megjelenik', () => {
+    render(
+      <Theme>
+        <VeglegesitesChecklist
+          csekklista={{
+            tetelek: [
+              {
+                id: 'nulla-osszegu-sor',
+                sulyossag: 'soft',
+                cim: 'A terv 1 0 Ft-os tételt tartalmaz.',
+                szamlalo: 1,
+                reszletek: [{ cim: 'Érintett sorok', nevek: ['Érzéstelenítés'] }],
+                route: '/terv',
+              },
+            ],
+          }}
+        />
+      </Theme>,
+    );
+
+    expect(screen.getByText('A terv 1 0 Ft-os tételt tartalmaz.')).toBeInTheDocument();
+    expect(screen.getByText('Érintett sorok: Érzéstelenítés')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Vissza a szerkesztőbe' })).not.toBeInTheDocument();
+  });
+
+  it('a nyelvi-review tételen nincs gomb nyelviReviewAction nélkül sem', () => {
+    render(
+      <Theme>
+        <VeglegesitesChecklist
+          csekklista={{
+            tetelek: [
+              {
+                id: 'nyelvi-review',
+                sulyossag: 'soft',
+                cim: 'Néhány kézzel írt szöveg nyelvi ellenőrzésre vár.',
+              },
+            ],
+          }}
+        />
+      </Theme>,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: 'Irányított ellenőrzés' }),
+    ).not.toBeInTheDocument();
+  });
+});

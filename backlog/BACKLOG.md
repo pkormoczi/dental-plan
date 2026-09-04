@@ -15,16 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 105. tétel: Sikerképernyő — mit fogadott el a doki véglegesítéskor
-
-  A `pages/PreviewPage.tsx` mentés utáni ága csak a sikerüzenetet, a
-  fájl-útvonalat és két gombot mutat; a véglegesítés-őr checklistje ebben
-  az ágban egyáltalán nem szerepel. Így a tudatosan elfogadott puha
-  figyelmeztetések (kézi ár, kimaradó szakasz, 0 Ft-os sor) ténye a
-  sikerképernyőn nyomtalanul elvész.
-  A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-105-sikerkepernyo-visszatekintes-terv.md`
-
 ### 106. tétel: Mentés-visszajelzés az árlista tétel-soroknál
 
   A Beállítások és a Kategóriák panel időközben megkapta a "Mentve"

@@ -19,7 +19,11 @@ import { buildToothVisualStates } from '../domain/toothVisual';
 import { feloldPatientDir, feloldTervCimke } from '../domain/torzsadatBetoltes';
 import type { Paciens, PlanRef } from '../domain/types';
 import { nyelviMismatchek } from '../domain/nyelviReview';
-import { vanKemenyBlokk, veglegesitesDiagnozis } from '../domain/veglegesitesOr';
+import {
+  vanKemenyBlokk,
+  veglegesitesDiagnozis,
+  type VeglegesitesCsekklista,
+} from '../domain/veglegesitesOr';
 import { TervDocument } from '../pdf/TervDocument';
 import { renderToothChartPng } from '../pdf/toothChartImage';
 import { VeglegesitesChecklist } from './previewPage/VeglegesitesChecklist';
@@ -55,6 +59,12 @@ export default function PreviewPage() {
   // a terv MÁR a lemezen van, ez legfeljebb egy elmaradt takarítás, nem
   // mentési hiba. Csak a siker-képernyőn jelenik meg, amber színnel.
   const [piszkozatTorlesHiba, setPiszkozatTorlesHiba] = useState<string | null>(null);
+  // A sikerképernyőn megjelenő, GOMBNYOMÁSKORI puha/info figyelmeztetés-lista
+  // -- befagyasztott pillanatkép, nem a mai renderben újraszámolt `csekklista`,
+  // mert a `doFinalize()` a mentés közben újraolvassa a páciens törzsadatát,
+  // ami a `torzsadat-elteres` tételt egy élő újraszámolásnál megjelentetné
+  // vagy eltüntetné ahhoz képest, amit a doki ténylegesen látott.
+  const [mentesiCsekklista, setMentesiCsekklista] = useState<VeglegesitesCsekklista | null>(null);
   // A webbel megegyező forrásból (design/toothChartSvg) canvason renderelt
   // fogtérkép-PNG a nyomtatványhoz -- lásd pdf/toothChartImage.ts. `null`,
   // amíg el nem készül, vagy ha a rajzolás meghiúsul (pl. jsdom teszt) --
@@ -290,6 +300,13 @@ export default function PreviewPage() {
   async function doFinalize() {
     if (!pdfInstance.blob) return;
 
+    // A GOMBNYOMÁSKORI csekklista -- a `csekklista` a closure-ön át a MOST
+    // renderelt értéket adja, a lenti `masterPaciens`-újraolvasás előtti
+    // állapotot. `hard` tétel itt definíció szerint nincs (a gomb `disabled`).
+    const mentesreVaroCsekklista: VeglegesitesCsekklista = {
+      tetelek: csekklista.tetelek.filter((t) => t.sulyossag !== 'hard'),
+    };
+
     // Csak vadonatúj lánchoz -- egy már mentett lánc címét a "Terv adatai"
     // lap `TervCimField`-jének "Mentés" gombja azonnal kiírta. A closure itt,
     // a `markPlanSaved` (ami a `piszkozatMeta`-t, benne a `tervCim`-et is
@@ -362,6 +379,7 @@ export default function PreviewPage() {
             : 'A piszkozat törlése váratlanul nem sikerült.',
         );
       }
+      setMentesiCsekklista(mentesreVaroCsekklista);
       setSavedRef(ref);
     } catch (err) {
       // P0-1: korábban nem volt catch itt -- egy kvótahiba vagy a
@@ -421,6 +439,14 @@ export default function PreviewPage() {
               elavult piszkozat-kártya, ott elvethető.
             </Callout.Text>
           </Callout.Root>
+        )}
+        {mentesiCsekklista && mentesiCsekklista.tetelek.length > 0 && (
+          <Box mb="5" style={{ textAlign: 'left' }}>
+            <Text as="p" size="2" color="gray" mb="2">
+              Ezek a figyelmeztetések álltak fenn a véglegesítéskor:
+            </Text>
+            <VeglegesitesChecklist csekklista={mentesiCsekklista} />
+          </Box>
         )}
         <Flex gap="3" justify="center">
           <Button onClick={startNewPlan}>Új terv indítása</Button>
