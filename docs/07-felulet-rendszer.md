@@ -69,6 +69,14 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   kattintható/billentyűzetes SVG adatvizualizáció ÉS beviteli eszköz —
   lásd `components/DentalChart.tsx`, `design/toothChartSvg.ts`) és a
   nyomtatvány (`pdf/TervDocument.tsx`, A4 layout).
+- A `components/NumberField.tsx` fókuszáláskor a teljes tartalmát kijelöli
+  (Excel-cella jelleg — rövid, egyben lecserélendő atomi érték), hogy a régi
+  érték törlése nélküli gépelés ne fűzze a beírt számjegyeket a meglévő
+  érték végéhez. Ez SZÁNDÉKOSAN nem terjed ki a
+  `pages/priceListAdmin/BufferedFields.tsx` (`BufferedTextField`/
+  `BufferedTextArea`, tétel név/leírás) mezőire — ott a doki tipikusan egy
+  mondat KÖZEPÉBE kattint egy elgépelés javításához, ahol a teljes kijelölés
+  többet ártana, mint használna.
 - `Table.Root` sűrűsége a sor szerepétől függ: `size="1"` a sűrű
   szerkesztőrácsokon (Árlista admin tétel-/kategória-táblázata, a
   tervszerkesztő sortáblázata), `size="2"` a letapogatásra/kattintásra

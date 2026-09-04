@@ -15,17 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 98. tétel: Számmezők tartalmának kijelölése fókuszáláskor
-
-  Sehol a kódbázisban nincs `select()` az `onFocus`-ban, és a `NumberField`
-  `<input>`-jén nincs `ref` sem. Emiatt egy meglévő értékre kattintva és
-  gépelve a számok összefűződnek (pl. `24000` + `28000` → `2400028000`). A
-  legrosszabb esetek az `autoFocus`-szal mountolódó mezők (árlista fix ár,
-  Előleg, Egyedi végösszeg). Érinti az összes `NumberField`-hívót
-  (`ItemEditor`, `TomegesArDialog`, `LineRow` darabszám és egységár,
-  `ElolegBlokk`, `EgyediVegosszegBlokk`).
-  **Terv:** `backlog/plans/backlog-98-szammezo-fokusz-kijeloles-terv.md`
-
 ### 99. tétel: Állapotfüggő gomb-címkék az árlista adminban
 
   A `pages/PriceListAdminPage.tsx` inaktiválás-gombjának `aria-label`-je

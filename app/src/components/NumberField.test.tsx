@@ -180,4 +180,45 @@ describe('NumberField', () => {
 
     expect(onDraftChange).toHaveBeenLastCalledWith(3);
   });
+
+  it('selects the entire content on focus', () => {
+    render(<NumberField value={24000} onCommit={vi.fn()} />);
+
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    input.focus();
+
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe(input.value.length);
+  });
+
+  it('typing over the focus-selected content replaces it instead of appending', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<NumberField value={24000} onCommit={onCommit} />);
+
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    input.focus();
+    await user.keyboard('28000');
+
+    expect(input.value).toBe('28000');
+  });
+
+  it('autoFocus-mounted fields are already selected on the first focus', () => {
+    render(<NumberField value={5000} onCommit={vi.fn()} autoFocus />);
+
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe(input.value.length);
+  });
+
+  it('an empty field has nothing to select on focus', () => {
+    render(<NumberField value={null} onCommit={vi.fn()} />);
+
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    input.focus();
+
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe(0);
+  });
 });

@@ -142,7 +142,13 @@ export default function NumberField({
           fontVariantNumeric: 'tabular-nums',
           ...style,
         }}
-        onFocus={() => setFocused(true)}
+        onFocus={(e) => {
+          setFocused(true);
+          // Excel-cella jelleg: fókuszáláskor a teljes tartalom kijelölve, hogy
+          // az első leütés lecserélje, ne a meglévő érték végéhez fűződjön
+          // (pl. "24000" mezőbe "28000"-et gépelve ne "2400028000" legyen).
+          e.currentTarget.select();
+        }}
         onChange={(e) => {
           setDraft(e.target.value);
           onDraftChange?.(parseDraft(e.target.value, unit));

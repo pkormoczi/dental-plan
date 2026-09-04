@@ -2495,3 +2495,16 @@ karbantartási kör négy önálló javítása.
   első névtalálat marad. Részletek: `docs/03-funkcionalis-spec.md` §
   Tételkereső és § Keresés és szűrők; `CLAUDE.md` "A UX kritikus pontja"
   és "Meglévő segédfüggvények".
+
+### 98. tétel: Számmezők tartalmának kijelölése fókuszáláskor — KÉSZ
+
+- **Méret:** kicsi — egyetlen komponens egysoros bővítése + 4 új teszteset.
+- **Megvalósítás:** a `components/NumberField.tsx` `onFocus`-a a natív
+  `select()`-et hívja a fókuszált mezőn, így a teljes tartalom kijelölve
+  fogadja a gépelést — a régi érték már nem fűződik a beírt számjegyekhez
+  (pl. `24000` mezőbe `28000`-et gépelve a mező `28000`-et mutat, nem
+  `2400028000`-et), az `autoFocus`-szal mountolódó mezőknél (árlista fix
+  ár, Előleg, Egyedi végösszeg) is már az első fókuszálásnál. A
+  `pages/priceListAdmin/BufferedFields.tsx` (tétel név/leírás
+  szövegmezők) szándékosan kimarad. Részletek:
+  `docs/07-felulet-rendszer.md` § Komponensek.
