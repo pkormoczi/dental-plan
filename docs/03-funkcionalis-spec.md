@@ -1601,6 +1601,29 @@ jelenik meg (`savosHatarForditott()`, `domain/money.ts`), de a mentés
 ettől még lefut. Kemény tiltás azért nincs, mert gépelés közben (a „tól"
 mező kitöltve, az „ig" még nem) a fordított állapot átmeneti.
 
+**Elgépelés-védelem az ár-mezőkön.** A hat ár-mező (HUF fix/tól/ig, EUR
+fix/tól/ig) mindegyike alatt két, egymást kiegészítő puha jelzés élhet,
+`domain/arElgepeles.ts`: a **relatív** detektor akkor szólal meg, ha az
+érték a sor kinyitásakori értékhez képest legalább ötszörösére nőtt vagy
+legfeljebb ötödére csökkent (ár-slotonként külön baseline — egy 45 000 →
+450 000 → 450 500 javítás-sorozatnál a jelzés a második commit után is
+él, mert a viszonyítási alap a MOUNT-kori érték marad, nem a megelőző
+commit); az **abszolút** detektor akkor, ha az érték legalább
+háromszorosa az árlista többi, `aktiv: true` tétele közül a legdrágábbnak
+ugyanabban a pénznemben (önkalibráló referencia, nem avul el az
+inflációval, és mindkét pénznemre magától működik). A relatív detektor
+0 (vagy hiányzó) baseline mellett néma — egy vadonatúj, „+ Új tétel"-ből
+frissen létrejött, 0 Ft-tal induló tétel első árazásánál kizárólag az
+abszolút detektor véd. Egy olyan ár-slot, ami a sor kinyitása UTÁN
+keletkezik (az ártípus-váltó `FIX` → `SAVOS` iránya, vagy a „+ EUR ár
+hozzáadása" gomb), baseline nélkül marad — ott is csak az abszolút
+detektor él, a váltás/hozzáadás maga sosem vált ki jelzést. A jelzés
+mellett egy „Visszaállítás" gomb a baseline értékére írja vissza az
+érintett slotot, a szokásos mező-commit úton; a jelzés (és a baseline) a
+sor bezárásáig él, séma-mező nélkül. A Tömeges árváltoztatás a nyitva
+maradt sor baseline-ját a művelet UTÁN újrarögzíti a friss értékre,
+jelzés nélkül — az szándékos, előnézetes művelet, nem elgépelés.
+
 Minden mezőszerkesztés (a szöveges mezők minden leütésre, a szám- és
 egyéb mezők commit-onként) a `priceList`-et updateren át, a mentés ELŐTT
 szinkron frissíti (D31, `docs/05-technologia.md`) — két, gyorsan egymást

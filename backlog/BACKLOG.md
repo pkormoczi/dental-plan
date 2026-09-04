@@ -15,17 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 96. tétel: Elgépelés-védelem az árlista árainál
-
-  A `pages/priceListAdmin/ItemEditor.tsx` `setFixPrice()`/`setSavosPrice()`
-  bármekkora értéket némán elfogad; a `NumberField`-nek nincs `max` propja.
-  Egy extra nulla azonnal élesedik, miközben a másik pénznem ára
-  ellentmondásban marad. Kért: puha (nem blokkoló) figyelmeztetés
-  szokatlanul nagy relatív változásnál, esetleg a HUF/EUR arány
-  elcsúszására is — az `ItemEditor` meglévő „fordított sáv"/„hosszú
-  leírás" figyelmeztetéseinek mintáján.
-  **Terv:** `backlog/plans/backlog-96-arelgepeles-vedelem-terv.md`
-
 ### 97. tétel: Kategórianévre is találjon a kezelés-kereső
 
   A `domain/search.ts` `nevEgyezik()` csak a tétel saját `nev.hu`/`nev.de`-

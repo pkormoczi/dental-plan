@@ -568,6 +568,18 @@ A D31 (`docs/01-attekintes-es-dontesek.md`) segédfüggvénye:
   admin), nem betöltési hiba — a `basePrice()`/`formatPrice()` mellett él,
   ugyanabban a fájlban, ahol a `SAVOS` szemantika a többi helye is van
 
+Az elgépelés-védelem tétel (`docs/03-funkcionalis-spec.md` § 6. „Sor
+kinyitása" „Elgépelés-védelem az ár-mezőkön") segédfüggvényei
+(`app/src/domain/arElgepeles.ts`), szintén ne írd újra őket:
+- `arSlotok(ar)` — egy `Tetel.ar` mind a hat lehetséges ár-slotja
+  (HUF/EUR × fix/tól/ig); az `ItemEditor` a szerkesztő MOUNTJAKOR ezt
+  rögzíti baseline-ként, séma-mező nélkül
+- `relativGyanus(ertek, baseline)` / `legdragabbMasikAktiv(tetelek,
+  kizartId, penznem)` / `abszolutGyanus(ertek, referencia)` / `arGyanu(…)`
+  — a relatív (5×/⅕ a baseline-hoz képest) és az abszolút (3× az árlista
+  többi aktív tételének csúcsárához képest, a szerkesztett tételt kizárva)
+  detektor, illetve a kettő egyben, relatív precedenciával
+
 Az automatikus darabszám tétel (`docs/02-domain-modell.md` § Fogszám
 kezelés, D32) segédfüggvényei, szintén ne írd újra őket:
 - `kovetettMennyiseg(fogak)` / `sorPatchKovetessel(sor, patch)`

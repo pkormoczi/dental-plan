@@ -88,6 +88,11 @@ export default function PriceListAdminPage() {
   // P0-8-hoz hasonlóan (SettingsPage) -- a `savePriceList` korábban `void`-olva
   // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
   const [saveError, setSaveError] = useState<string | null>(null);
+  // A Tömeges árváltoztatás után nő -- jelez a nyitott `ItemEditor`-nak, hogy
+  // az elgépelés-védelem baseline-ja a friss értékre újrarögzüljön, jelzés
+  // nélkül (docs/03-funkcionalis-spec.md § 6. "Sor kinyitása"): a tömeges
+  // művelet szándékos, saját előnézettel, nem elgépelés.
+  const [arBaselineToken, setArBaselineToken] = useState(0);
 
   /**
    * D30: minden TÉNYLEGES tartalmi változás a mai napra bélyegzi a
@@ -341,7 +346,12 @@ export default function PriceListAdminPage() {
   );
 
   function applyTomegesAr(idk: Set<string>, params: TomegesArParams): Promise<boolean> {
-    return commit((prev) => ({ ...prev, tetelek: alkalmazTomegesArat(prev.tetelek, idk, params) }));
+    const result = commit((prev) => ({ ...prev, tetelek: alkalmazTomegesArat(prev.tetelek, idk, params) }));
+    // Szinkron, a `.then` előtt -- a `priceList` a `commit()` hívása UTÁN, de
+    // MÉG a Promise visszatérése előtt frissül, tehát a friss lista és a
+    // token egyazon renderben landol a nyitott `ItemEditor`-nál.
+    setArBaselineToken((n) => n + 1);
+    return result;
   }
 
   return (
@@ -563,6 +573,8 @@ export default function PriceListAdminPage() {
                           <ItemEditor
                             item={it}
                             categories={sortedKategoriak}
+                            tetelek={priceList.tetelek}
+                            baselineToken={arBaselineToken}
                             onPatch={(p) => patchItem(it.id, p)}
                             autoFocusAr={it.id === frissTetelId}
                             pendingActivation={it.id === pendingActivationId}

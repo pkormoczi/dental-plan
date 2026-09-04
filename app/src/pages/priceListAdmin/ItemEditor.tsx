@@ -1,22 +1,68 @@
 // Kinyitott tétel-sor -- kiemelve a PriceListAdminPage.tsx-ből. Itt van
 // minden mező, köztük a kategória-mozgatás.
 
-import { useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Box, Button, Checkbox, Flex, Grid, IconButton, Select, Text } from '@radix-ui/themes';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Field, FieldGroup } from '../../components/Field';
 import NumberField from '../../components/NumberField';
 import { t } from '../../design/tokens';
 import { ALAP_KATEGORIA_SZIN } from '../../design/treatmentVisuals';
+import { arGyanu, arSlotok, legdragabbMasikAktiv, type ArBaseline } from '../../domain/arElgepeles';
 import { leirasTulHosszu } from '../../domain/leirasHossz';
-import { savosHatarForditott } from '../../domain/money';
-import type { Ar, Kategoria, Tetel } from '../../domain/types';
+import { formatMoney, savosHatarForditott } from '../../domain/money';
+import type { Ar, Kategoria, Penznem, Tetel } from '../../domain/types';
 import { BufferedTextArea, BufferedTextField } from './BufferedFields';
+
+/**
+ * Elgépelés-védelem egy ár-slot alatt (docs/03-funkcionalis-spec.md § 6.
+ * "Sor kinyitása") -- a `savosHatarForditott`/`leirasTulHosszu` mintájában
+ * amber, nem blokkoló szöveg, itt egy "Visszaállítás" akcióval kiegészítve.
+ * A gomb csak akkor jelenik meg, ha VAN érdemi baseline (nem hiányzik, és
+ * nem 0) -- egy vadonatúj tétel abszolút jelzésénél a "Visszaállítás: 0 Ft"
+ * nem javítás, csak a szöveg marad.
+ *
+ * SZÁNDÉKOSAN a `Field`-en KÍVÜL hívandó (lásd a hívási helyeket) -- egy
+ * `<label>` (`Field`) egy belé ágyazott `<button>`-nek a saját szövege
+ * helyett a label szövegét adná accessible name-nek.
+ */
+function ArFigyelmeztetes({
+  ertek,
+  baseline,
+  referencia,
+  penznem,
+  onReset,
+}: {
+  ertek: number;
+  baseline: number | undefined;
+  referencia: number | null;
+  penznem: Penznem;
+  onReset: (regi: number) => void;
+}) {
+  const gyanu = arGyanu(ertek, baseline, referencia);
+  if (!gyanu) return null;
+  return (
+    <Box mt="1">
+      <Text as="div" size="1" style={{ color: t.warn }}>
+        {gyanu === 'relativ'
+          ? `Szokatlanul nagy változás — a sor kinyitásakor ${formatMoney(baseline ?? 0, penznem, 'hu')} volt.`
+          : `Kirívóan magas ár — az árlista legdrágább aktív tétele ${formatMoney(referencia, penznem, 'hu')}.`}
+      </Text>
+      {baseline != null && baseline > 0 && (
+        <Button type="button" size="1" variant="soft" color="gray" mt="1" onClick={() => onReset(baseline)}>
+          Visszaállítás: {formatMoney(baseline, penznem, 'hu')}
+        </Button>
+      )}
+    </Box>
+  );
+}
 
 /** Kinyitott sor -- itt van minden mező, köztük a kategória-mozgatás. */
 export default function ItemEditor({
   item,
   categories,
+  tetelek,
+  baselineToken,
   onPatch,
   autoFocusAr,
   pendingActivation,
@@ -24,6 +70,10 @@ export default function ItemEditor({
 }: {
   item: Tetel;
   categories: Kategoria[];
+  /** A teljes árlista -- az abszolút elgépelés-detektor referenciájához (`legdragabbMasikAktiv`). */
+  tetelek: Tetel[];
+  /** A Tömeges árváltoztatás után nő -- a baseline ilyenkor a friss értékre újrarögzül, jelzés nélkül. */
+  baselineToken: number;
   onPatch: (patch: Partial<Tetel> | ((prev: Tetel) => Partial<Tetel>)) => void;
   /** Az Új tétel dialógusból frissen létrejött sorra igaz -- a HUF ár mező
    * kapja a fókuszt, mivel a doki a popupban csak nevet és kategóriát adott
@@ -38,6 +88,31 @@ export default function ItemEditor({
   const hufAr = item.ar.HUF ?? null;
   const eurAr = item.ar.EUR ?? null;
   const savos = hufAr?.tipus === 'SAVOS';
+
+  // A relatív elgépelés-detektor viszonyítási alapja -- a sor KINYITÁSAKORI
+  // érték, ár-slotonként, nem a megelőző commit (docs/03-funkcionalis-spec.md
+  // § 6. "Sor kinyitása"): egy 45 000 → 450 000 → 450 500 javítás-sorozatnál
+  // a "megelőző érték" alapú viszonyítás a második commit után elnémulna.
+  // Nincs hozzá `Tetel`-séma mező -- a sor bezárása (ItemEditor unmount)
+  // nyomtalanul elviszi, ugyanaz az elv, mint a `pendingActivationId`-nál.
+  const [baseline, setBaseline] = useState<ArBaseline>(() => arSlotok(item.ar));
+  // A Tömeges árváltoztatás után a baseline a friss értékre újrarögzül --
+  // RENDER KÖZBEN, nem effektben, hogy egy renderre se villanjon fel a hamis
+  // jelzés (React "adjusting state on prop change" mintája).
+  const [prevBaselineToken, setPrevBaselineToken] = useState(baselineToken);
+  if (prevBaselineToken !== baselineToken) {
+    setPrevBaselineToken(baselineToken);
+    setBaseline(arSlotok(item.ar));
+  }
+
+  const hufReferencia = useMemo(
+    () => legdragabbMasikAktiv(tetelek, item.id, 'HUF'),
+    [tetelek, item.id],
+  );
+  const eurReferencia = useMemo(
+    () => legdragabbMasikAktiv(tetelek, item.id, 'EUR'),
+    [tetelek, item.id],
+  );
 
   // A `NumberField` csak akkor hívja az `onCommit`-ot, ha az érték
   // ténylegesen VÁLTOZOTT (lásd `components/NumberField.tsx` `commit()`) --
@@ -239,12 +314,30 @@ export default function ItemEditor({
       <Grid columns="2" gap="3" mt="3">
         {savos && hufAr?.tipus === 'SAVOS' ? (
           <>
-            <Field label="HUF ár — tól">
-              <NumberField value={hufAr.min} min={0} onCommit={(v) => setSavosPrice({ min: v })} />
-            </Field>
-            <Field label="HUF ár — ig">
-              <NumberField value={hufAr.max} min={0} onCommit={(v) => setSavosPrice({ max: v })} />
-            </Field>
+            <Box>
+              <Field label="HUF ár — tól">
+                <NumberField value={hufAr.min} min={0} onCommit={(v) => setSavosPrice({ min: v })} />
+              </Field>
+              <ArFigyelmeztetes
+                ertek={hufAr.min}
+                baseline={baseline.HUF_MIN}
+                referencia={hufReferencia}
+                penznem="HUF"
+                onReset={(regi) => setSavosPrice({ min: regi })}
+              />
+            </Box>
+            <Box>
+              <Field label="HUF ár — ig">
+                <NumberField value={hufAr.max} min={0} onCommit={(v) => setSavosPrice({ max: v })} />
+              </Field>
+              <ArFigyelmeztetes
+                ertek={hufAr.max}
+                baseline={baseline.HUF_MAX}
+                referencia={hufReferencia}
+                penznem="HUF"
+                onReset={(regi) => setSavosPrice({ max: regi })}
+              />
+            </Box>
             {savosHatarForditott(hufAr) && (
               <Text as="div" size="1" mt="1" style={{ color: t.warn, gridColumn: '1 / -1' }}>
                 A „tól" nagyobb, mint az „ig" — fordított sáv, ellenőrizd.
@@ -252,15 +345,24 @@ export default function ItemEditor({
             )}
           </>
         ) : (
-          <Field label="HUF ár">
-            <NumberField
-              value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
-              min={0}
-              onCommit={setFixPrice}
-              onBlur={pendingActivation ? handleFixPriceBlur : undefined}
-              autoFocus={autoFocusAr}
+          <Box>
+            <Field label="HUF ár">
+              <NumberField
+                value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
+                min={0}
+                onCommit={setFixPrice}
+                onBlur={pendingActivation ? handleFixPriceBlur : undefined}
+                autoFocus={autoFocusAr}
+              />
+            </Field>
+            <ArFigyelmeztetes
+              ertek={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
+              baseline={baseline.HUF_FIX}
+              referencia={hufReferencia}
+              penznem="HUF"
+              onReset={(regi) => onPatch((prev) => ({ ar: { ...prev.ar, HUF: { tipus: 'FIX', ertek: regi } } }))}
             />
-          </Field>
+          </Box>
         )}
       </Grid>
 
@@ -279,22 +381,40 @@ export default function ItemEditor({
           </FieldGroup>
         ) : savos && eurAr.tipus === 'SAVOS' ? (
           <>
-            <Field label="EUR ár — tól (€)">
-              <NumberField
-                value={eurAr.min}
-                unit="EUR"
-                min={0}
-                onCommit={(v) => setEurSavos({ min: v })}
+            <Box>
+              <Field label="EUR ár — tól (€)">
+                <NumberField
+                  value={eurAr.min}
+                  unit="EUR"
+                  min={0}
+                  onCommit={(v) => setEurSavos({ min: v })}
+                />
+              </Field>
+              <ArFigyelmeztetes
+                ertek={eurAr.min}
+                baseline={baseline.EUR_MIN}
+                referencia={eurReferencia}
+                penznem="EUR"
+                onReset={(regi) => setEurSavos({ min: regi })}
               />
-            </Field>
-            <Field label="EUR ár — ig (€)">
-              <NumberField
-                value={eurAr.max}
-                unit="EUR"
-                min={0}
-                onCommit={(v) => setEurSavos({ max: v })}
+            </Box>
+            <Box>
+              <Field label="EUR ár — ig (€)">
+                <NumberField
+                  value={eurAr.max}
+                  unit="EUR"
+                  min={0}
+                  onCommit={(v) => setEurSavos({ max: v })}
+                />
+              </Field>
+              <ArFigyelmeztetes
+                ertek={eurAr.max}
+                baseline={baseline.EUR_MAX}
+                referencia={eurReferencia}
+                penznem="EUR"
+                onReset={(regi) => setEurSavos({ max: regi })}
               />
-            </Field>
+            </Box>
             {savosHatarForditott(eurAr) && (
               <Text as="div" size="1" mt="1" style={{ color: t.warn, gridColumn: '1 / -1' }}>
                 A „tól" nagyobb, mint az „ig" — fordított sáv, ellenőrizd.
@@ -317,6 +437,13 @@ export default function ItemEditor({
                   onCommit={setEurFix}
                 />
               </Field>
+              <ArFigyelmeztetes
+                ertek={eurAr.tipus === 'FIX' ? eurAr.ertek : 0}
+                baseline={baseline.EUR_FIX}
+                referencia={eurReferencia}
+                penznem="EUR"
+                onReset={setEurFix}
+              />
             </Box>
             <IconButton
               type="button"

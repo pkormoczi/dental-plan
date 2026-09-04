@@ -2459,3 +2459,20 @@ karbantartási kör négy önálló javítása.
   védőháló" bekezdés, § 4. „Véglegesítési checklist", § „Terv-workflow
   héj"; `CLAUDE.md` "Sérthetetlen szabályok" és "Meglévő
   segédfüggvények".
+
+### 96. tétel: Elgépelés-védelem az árlista árainál — KÉSZ
+
+- **Méret:** kicsi-közepes — egy új domain-modul + egy meglévő komponens
+  bővítése.
+- **Megvalósítás:** két, egymást kiegészítő puha detektor
+  (`domain/arElgepeles.ts`): a relatív (a sor kinyitásakori, ár-slotonként
+  rögzített baseline-hoz képest legalább ötszörös/ötödrészes ugrás) és az
+  abszolút (az árlista többi aktív tételének csúcsárához képest
+  háromszoros, önkalibráló referencia). Az `ItemEditor` mind a hat
+  ár-mező alatt megjeleníti a jelzést egy „Visszaállítás" akcióval, ami a
+  baseline-ra írja vissza az érintett slotot; a Tömeges árváltoztatás a
+  nyitva maradt sor baseline-ját a művelet után újrarögzíti, jelzés
+  nélkül. Sem a jelzés, sem a baseline nem kerül a `Tetel` sémába — a sor
+  bezárásával nyomtalanul elvész. Részletek:
+  `docs/03-funkcionalis-spec.md` § 6. „Sor kinyitása" „Elgépelés-védelem
+  az ár-mezőkön"; `CLAUDE.md` "Meglévő segédfüggvények".
