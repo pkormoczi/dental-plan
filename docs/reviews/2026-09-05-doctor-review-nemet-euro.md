@@ -65,13 +65,13 @@ A persona Horváth Péternél (meglévő, két verziós német/eurós terv-lánc
 - Gyakoriság: **minden alkalommal**, amikor egy már ismert, korábban más nyelven/pénznemben véglegesített tervű páciensnél a doki új terv-láncot indít
 - Érintett folyamat: 10, 12
 - Bizonyosság: **megfigyelt** (a fő ügynök önállóan reprodukálta: Horváth Péter "+ Új terv" gombjára kattintva a Terv adatai lap már Deutsch/EUR-ra volt állítva)
-- Dedup: **ÚJ** (a dokumentáció szerint ez D52 szerint szándékos viselkedés — `state/planIndulas.ts` `ujTervForrasPaciensbol()` a legfrissebb VÉGLEGES verzió nyelvét/pénznemét örökíti egy vadonatúj láncnál is —, de a szabály szerint a szándékosság ténye nem ok a megfigyelés elhagyására)
+- Dedup: **ÚJ** (a dokumentáció szerint (`docs/02-domain-modell.md` § „Nyelv és pénznem") ez szándékos viselkedés — `state/planIndulas.ts` `ujTervForrasPaciensbol()` a legfrissebb VÉGLEGES verzió nyelvét/pénznemét örökíti egy vadonatúj láncnál is —, de a szabály szerint a szándékosság ténye nem ok a megfigyelés elhagyására)
 - Helyzet és reprodukció: Horváth Péternek volt egy korábbi, véglegesített "All-on-X csomagok" (Deutsch/EUR) terv-lánca. Egy teljesen új, "Szájsebészet" nevű lánc indításakor a Terv adatai lap Nyelv/Pénznem rádiógombjai már Deutsch/EUR-ra álltak, tétel-felvitel vagy bármilyen szerkesztés előtt.
 - Orvosi elvárás: egy vadonatúj terv-láncnál számítanék az alapértelmezett (pl. a rendelő globális alapbeállítása szerinti) nyelvre/pénznemre, nem feltétlenül a páciens legutóbbi tervének nyelvére — bár ha a doki mindig ugyanazon a nyelven dolgozik egy adott külföldi pácienssel, ez az öröklés praktikus lehet.
 - Tapasztalt probléma: a doki első pillantásra nem feltétlenül veszi észre, hogy a nyelv/pénznem már nem az alapértelmezett — csak akkor tűnik fel, ha kifejezetten másikat szeretne, és véletlenül tovább is lép anélkül, hogy ellenőrizné.
 - Napi hatás: alacsony-közepes — ha a doki nem veszi észre az öröklött nyelvet/pénznemet, és a szokásos munkamódja szerint magyarul kezdene gépelni, a tételnevek rögtön németül jelennének meg, ami zavaró lehet, amíg rá nem jön az okra.
 - Jelenlegi kerülőút: a doki tudatosan ellenőrzi és szükség esetén visszaváltja a Nyelv/Pénznem mezőt, mielőtt tételt venne fel.
-- Javasolt javítási irány: mivel ez dokumentált tervezési döntés (D52), nem javaslok visszabontást — de érdemes lehet egy rövid, semleges jelzést adni ("a nyelv/pénznem a legutóbbi tervedből öröklődött"), hogy a doki tudatosan észlelje, nem csak alapértelmezést lát.
+- Javasolt javítási irány: mivel ez dokumentált tervezési döntés (`docs/02-domain-modell.md` § „Nyelv és pénznem"), nem javaslok visszabontást — de érdemes lehet egy rövid, semleges jelzést adni ("a nyelv/pénznem a legutóbbi tervedből öröklődött"), hogy a doki tudatosan észlelje, nem csak alapértelmezést lát.
 - Siker mércéje: a doki egy pillantással tudja, hogy a látott nyelv/pénznem miért az, ami — öröklött érték-e, vagy a rendelő alapértelmezése.
 
 ### 5. A "Beállítások → Nyomtatvány szövegei" fül mindig Magyarra nyit, akkor is, ha egy német tervről navigáltunk oda
@@ -119,9 +119,9 @@ A persona Horváth Péternél (meglévő, két verziós német/eurós terv-lánc
 
 ## 5. Ami jól működik
 
-- A pénznemváltás megerősítő dialógusa pontos, számszerű előrejelzést ad a hatásról ("2 sor ára frissül az árlistából"), és a váltás után az árak ténylegesen az árlistából, nem egyszerű árfolyam-átszámítással frissültek — pontosan a dokumentált D71 elvnek megfelelően.
+- A pénznemváltás megerősítő dialógusa pontos, számszerű előrejelzést ad a hatásról ("2 sor ára frissül az árlistából"), és a váltás után az árak ténylegesen az árlistából, nem egyszerű árfolyam-átszámítással frissültek — pontosan a `docs/02-domain-modell.md` § „Pénznemváltás" szerint dokumentált elvnek megfelelően.
 - Az egyedi végösszeg beállítása után a rendszer azonnal, helyesen kiszámolja és kétszer is megjeleníti a belőle adódó kedvezmény összegét — nem kell fejben számolgatni.
-- Az előleg-túllépés elleni védelem (D66) élesben pontosan a dokumentált módon viselkedik: a fizetendőt meghaladó előlegnél a "Fennmaradó rész" "—"-ra vált, a rendszer nem vág le semmit hallgatólagosan, és egyértelmű szöveggel kéri a doki tudatos javítását.
+- Az előleg-túllépés elleni védelem (`docs/02-domain-modell.md` § „Előleg") élesben pontosan a dokumentált módon viselkedik: a fizetendőt meghaladó előlegnél a "Fennmaradó rész" "—"-ra vált, a rendszer nem vág le semmit hallgatólagosan, és egyértelmű szöveggel kéri a doki tudatos javítását.
 - A tétel-felviteli billentyűzetes ciklus (gépel → nyíl → Enter → kereső ürül és visszakapja a fókuszt) nyelv-/pénznemváltás közbeni menetben is zökkenőmentesen, megbízhatóan működött.
 - A nyelvváltás után a tételnevek helyesen frissültek németre, az árak pedig a terv nyelvének megfelelő (pontos ezres elválasztós) számformátumot kapták, a pénznem-független elv szerint.
 - A generált német PDF-en a fizetési feltételek szövegébe az előleg összege dinamikusan, helyesen épült be ("eine Anzahlung von 300,00 €").
