@@ -619,9 +619,12 @@ describe('OsszesTervSection', () => {
 
     // A seed-verziókhoz nincs mentett PDF (csak terv.json) -- a lényeg, hogy a
     // menüpont a downloadVersion ágra fut, és a hiánya a SOR alatt, inline
-    // jelenik meg, nem alert()-tel (P1-2).
+    // jelenik meg, nem alert()-tel (P1-2). 103. tétel: seed-eredetű verzión ez
+    // a demó-magyarázó (info, nem piros) szöveg.
     await user.click(await verzioMenupont(user, card, 'Letöltés'));
-    expect(await within(card).findByText('Ehhez a verzióhoz nincs mentett PDF.')).toBeInTheDocument();
+    expect(
+      await within(card).findByText(/nincs mentett PDF, mert a beépített demó-adatkészletből származik/),
+    ).toBeInTheDocument();
   });
 
   // backlog-20: a sanitizálás/előtag lényegi lefedettsége a

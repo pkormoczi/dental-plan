@@ -48,7 +48,7 @@ import {
 } from './paths';
 import { seedPriceList } from './seed/priceList';
 import { seedSettings } from './seed/settings';
-import { seedPatientData, seedPatients, seedPlans } from './seed/plans';
+import { seedPatientData, seedPatients, seedPlans, seedVerzio } from './seed/plans';
 import {
   FIZETESI_FELTETELEK_DE_V1,
   FIZETESI_FELTETELEK_DE_V2,
@@ -373,6 +373,16 @@ export class DemoStorage implements PlanStorage {
   readRawFile(storageKey: string): string | null {
     if (!storageKey.startsWith(PREFIX)) return null;
     return localStorage.getItem(storageKey);
+  }
+
+  /**
+   * NEM a `PlanStorage` interfész része -- demó-only, a `listFileTree`/
+   * `readRawFile` mintáján: igaz, ha a hármas a beépített demó-készletből
+   * származik (`seed/plans.ts` `seedVerzio()`), aminek a `resetDemoData()`
+   * sosem ír PDF-bájtot.
+   */
+  isSeedVersion(ref: PlanRef): boolean {
+    return seedVerzio(ref);
   }
 
   async listPatients(): Promise<PatientFolder[]> {

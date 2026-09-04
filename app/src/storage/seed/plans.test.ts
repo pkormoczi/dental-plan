@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { basePrice } from '../../domain/money';
 import { ervenyesAktivitas, legutobbAktivPaciensek } from '../../domain/paciensAktivitas';
 import type { PatientFolder } from '../../domain/types';
-import { seedPatientData, seedPatients, seedPlans } from './plans';
+import { seedPatientData, seedPatients, seedPlans, seedVerzio } from './plans';
 import { seedPriceList } from './priceList';
 
 // A demó tervek tetelId-hivatkozásainak integritása. A hiba, amit ez a teszt
@@ -185,5 +185,29 @@ describe('seedPatients utolsoAktivitas (D39/D40)', () => {
     // Determinisztikus: ugyanaz a bemenet mindig ugyanazt a nevsorrendet adja.
     const ujra = legutobbAktivPaciensek(patientFolders, LIMIT).map((p) => p.nev);
     expect(ujra).toEqual(top.map((p) => p.nev));
+  });
+});
+
+// 103. tétel: a `seedVerzio()` az EGYETLEN forrás, amiből a "nincs mentett
+// PDF" oka (demó-készlet vs. valódi hiány) eldönthető -- lásd
+// docs/03-funkcionalis-spec.md § 11 "Mentett PDF".
+describe('seedVerzio', () => {
+  it('igaz minden seedPlans-beli hármasra', () => {
+    for (const { patientDir, planDir, versionDir } of seedPlans) {
+      expect(seedVerzio({ patientDir, planDir, versionDir })).toBe(true);
+    }
+  });
+
+  it('hamis egy nem seed-eredetű hármasra', () => {
+    expect(
+      seedVerzio({ patientDir: 'nincs-ilyen-paciens', planDir: 'terv', versionDir: 'v1_2026-01-01' }),
+    ).toBe(false);
+  });
+
+  it('hamis, ha csak a versionDir tér el egy létező seed-lánctól', () => {
+    const [elso] = seedPlans;
+    expect(
+      seedVerzio({ ...elso, versionDir: `${elso.versionDir}-nemletezo` }),
+    ).toBe(false);
   });
 });

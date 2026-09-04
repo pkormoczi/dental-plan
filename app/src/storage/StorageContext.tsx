@@ -2,12 +2,13 @@
 // fázisban a DemoStorage -> FileSystemStorage csere egyetlen sort érintsen
 // itt, semmit a képernyőkön (lásd CLAUDE.md "Két fázisú build").
 //
-// A `resetDemoData`/`clearAll`/`loadPlanPdf`/`listFileTree`/`readRawFile`
-// NEM a PlanStorage interface része -- ezek csak a mockup kényelmi
-// funkciói (a Filerendszer nézet demó-only vizualizációja is közéjük
-// tartozik), ezért külön mezőként vannak kitéve, nem az interfészen
-// keresztül. A FileSystemStorage-váltáskor ez a két mező egyszerűen
-// megszűnik, mert a doki onnantól a valódi Fájlkezelőt használja.
+// A `resetDemoData`/`clearAll`/`loadPlanPdf`/`listFileTree`/`readRawFile`/
+// `isSeedVersion` NEM a PlanStorage interface része -- ezek csak a mockup
+// kényelmi funkciói (a Filerendszer nézet demó-only vizualizációja is
+// közéjük tartozik), ezért külön mezőként vannak kitéve, nem az
+// interfészen keresztül. A FileSystemStorage-váltáskor ezek a mezők
+// egyszerűen megszűnnek, mert a doki onnantól a valódi Fájlkezelőt
+// használja.
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { DemoDraftStorage } from './DemoDraftStorage';
@@ -36,6 +37,8 @@ export interface StorageContextValue {
   listFileTree: () => DemoNode[];
   /** Filerendszer nézet: egy fa-csomópont nyers tartalma (`null`, ha ismeretlen/nem `dp:` kulcs). */
   readRawFile: (storageKey: string) => string | null;
+  /** Igaz, ha a hármas a beépített demó-készletből származik (sosincs mentett PDF-je). */
+  isSeedVersion: (ref: PlanRef) => boolean;
   /**
    * docs/05-technologia.md § Piszkozat-autosave: a PlanStorage MELLETTI,
    * testvér-doboz -- nem annak metódusa, mert a végleges alkalmazásban is
@@ -60,6 +63,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       loadLatestTemplateByBase: (base) => demo.loadLatestTemplateByBase(base),
       listFileTree: () => demo.listFileTree(),
       readRawFile: (storageKey) => demo.readRawFile(storageKey),
+      isSeedVersion: (ref) => demo.isSeedVersion(ref),
       drafts,
     };
   }, []);

@@ -16,7 +16,11 @@ import {
 } from '@radix-ui/react-icons';
 import Section from '../components/Section';
 import { ReadOnlyField } from '../components/Field';
-import PlanVersionActionDialog, { usePlanVersionActions } from '../components/PlanVersionActionDialog';
+import PlanVersionActionDialog, {
+  nincsMentettPdfHiba,
+  usePlanVersionActions,
+  VerzioAkcioUzenet,
+} from '../components/PlanVersionActionDialog';
 import FazisokBlokk from './tervReszletei/FazisokBlokk';
 import MentettPdfPanel from './tervReszletei/MentettPdfPanel';
 import PenzugyiOsszesites from './tervReszletei/PenzugyiOsszesites';
@@ -77,7 +81,7 @@ export default function TervReszleteiPage() {
   const planDir = rawPlanDir ?? '';
   const versionDir = rawVersionDir ?? '';
 
-  const { storage, loadPlanPdf } = useStorage();
+  const { storage, loadPlanPdf, isSeedVersion } = useStorage();
   const { priceList } = useAppState();
   const navigate = useNavigate();
   const location = useLocation();
@@ -233,7 +237,9 @@ export default function TervReszleteiPage() {
       const bytes = await loadPlanPdf({ patientDir, planDir, versionDir });
       if (!bytes) {
         win.close();
-        akciok.jelezHiba({ planDir, versionDir, message: 'Ehhez a verzióhoz nincs mentett PDF.' });
+        akciok.jelezHiba(
+          nincsMentettPdfHiba({ planDir, versionDir }, isSeedVersion({ patientDir, planDir, versionDir })),
+        );
         return;
       }
       const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
@@ -402,7 +408,13 @@ export default function TervReszleteiPage() {
               </Button>
             )
           )}
-          <Button size="1" variant="soft" color="gray" onClick={() => void megnyitasKulon()}>
+          <Button
+            size="1"
+            variant="soft"
+            color="gray"
+            disabled={pdfState.hianyzik}
+            onClick={() => void megnyitasKulon()}
+          >
             Megnyitás külön
           </Button>
           {pdfState.url ? (
@@ -433,14 +445,7 @@ export default function TervReszleteiPage() {
         </Flex>
       </Flex>
 
-      {akciok.hiba && (
-        <Callout.Root color="red" size="1" mb="3">
-          <Callout.Icon>
-            <CrossCircledIcon />
-          </Callout.Icon>
-          <Callout.Text>{akciok.hiba.message}</Callout.Text>
-        </Callout.Root>
-      )}
+      {akciok.hiba && <VerzioAkcioUzenet hiba={akciok.hiba} />}
 
       <Flex gap="2" align="center" mb="4" wrap="wrap">
         {regebbi ? (
@@ -502,6 +507,7 @@ export default function TervReszleteiPage() {
           toltes={pdfState.toltes}
           hianyzik={pdfState.hianyzik}
           hiba={pdfState.hiba}
+          demoEredetu={isSeedVersion({ patientDir, planDir, versionDir })}
         />
       </Box>
 

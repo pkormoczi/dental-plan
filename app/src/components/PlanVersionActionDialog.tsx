@@ -11,7 +11,8 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertDialog, Button, Flex } from '@radix-ui/themes';
+import { AlertDialog, Button, Callout, Flex } from '@radix-ui/themes';
+import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import {
   kellMegerosites,
   megerositesTartalom,
@@ -29,6 +30,36 @@ export interface VerzioAkcioHiba {
   planDir: string | null;
   versionDir: string | null;
   message: string;
+  /** Alapértelmezett `'hiba'` (piros) -- a demó-eredetű "nincs mentett PDF" eset
+   *  `'info'`-ként (semleges) kap jelzést, hogy ne mosódjon össze egy tényleges
+   *  hibával (103. tétel). */
+  sulyossag?: 'hiba' | 'info';
+}
+
+/**
+ * A "nincs mentett PDF" eset megosztott üzenete -- demó-eredetű verziónál
+ * (`storage/seed/plans.ts` `seedVerzio()`) információs hangnem, mert ez a
+ * demó-készlet elvárt korlátja, nem adathiba (103. tétel).
+ */
+export function nincsMentettPdfHiba(ref: VersionRef, demoEredetu: boolean): VerzioAkcioHiba {
+  return {
+    ...ref,
+    message: demoEredetu
+      ? 'Ehhez a verzióhoz nincs mentett PDF, mert a beépített demó-adatkészletből származik.'
+      : 'Ehhez a verzióhoz nincs mentett PDF.',
+    sulyossag: demoEredetu ? 'info' : 'hiba',
+  };
+}
+
+/** A `VerzioAkcioHiba` renderelése súlyosság szerint -- lásd a hívók fejléckommentjét. */
+export function VerzioAkcioUzenet({ hiba }: { hiba: VerzioAkcioHiba }) {
+  const info = hiba.sulyossag === 'info';
+  return (
+    <Callout.Root color={info ? 'gray' : 'red'} size="1" mb="2">
+      <Callout.Icon>{info ? <InfoCircledIcon /> : <CrossCircledIcon />}</Callout.Icon>
+      <Callout.Text>{hiba.message}</Callout.Text>
+    </Callout.Root>
+  );
 }
 
 export interface UsePlanVersionActionsOptions {

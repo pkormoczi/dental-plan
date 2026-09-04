@@ -54,7 +54,11 @@ import { workflowLepesFelirat } from '../domain/workflowLepesek';
 import type { PatientFolder, Plan, PlanFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import type { AktivDraft } from './useAktivDraft';
-import PlanVersionActionDialog, { usePlanVersionActions } from './PlanVersionActionDialog';
+import PlanVersionActionDialog, {
+  nincsMentettPdfHiba,
+  usePlanVersionActions,
+  VerzioAkcioUzenet,
+} from './PlanVersionActionDialog';
 import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
 
@@ -124,7 +128,7 @@ export default function PatientPlanChains({
   nyitottLancok,
   onLancValtas,
 }: PatientPlanChainsProps) {
-  const { storage, loadPlanPdf } = useStorage();
+  const { storage, loadPlanPdf, isSeedVersion } = useStorage();
   const { priceList } = useAppState();
   const navigate = useNavigate();
   const akciok = usePlanVersionActions({ patientDir: patient.dirName });
@@ -168,7 +172,9 @@ export default function PatientPlanChains({
         versionDir: ref.versionDir,
       });
       if (!bytes) {
-        akciok.jelezHiba({ ...ref, message: 'Ehhez a verzióhoz nincs mentett PDF.' });
+        akciok.jelezHiba(
+          nincsMentettPdfHiba(ref, isSeedVersion({ patientDir: patient.dirName, ...ref })),
+        );
         return;
       }
       // A verzió saját, MÁR betöltött terv.json-ja adja a nevet/statuszt --
@@ -329,12 +335,7 @@ export default function PatientPlanChains({
         </Flex>
       )}
       {akciok.hiba && akciok.hiba.planDir === null && akciok.hiba.versionDir === null && (
-        <Callout.Root color="red" size="1" mb="2">
-          <Callout.Icon>
-            <CrossCircledIcon />
-          </Callout.Icon>
-          <Callout.Text>{akciok.hiba.message}</Callout.Text>
-        </Callout.Root>
+        <VerzioAkcioUzenet hiba={akciok.hiba} />
       )}
 
       {aktivDraft && (
@@ -630,12 +631,7 @@ export default function PatientPlanChains({
                           </Flex>
                         </Flex>
                         {akciok.hiba?.planDir === plan.dirName && akciok.hiba.versionDir === v.dirName && (
-                          <Callout.Root color="red" size="1" mb="2">
-                            <Callout.Icon>
-                              <CrossCircledIcon />
-                            </Callout.Icon>
-                            <Callout.Text>{akciok.hiba.message}</Callout.Text>
-                          </Callout.Root>
+                          <VerzioAkcioUzenet hiba={akciok.hiba} />
                         )}
                       </Box>
                     );

@@ -2586,3 +2586,20 @@ karbantartási kör négy önálló javítása.
   kontraszt), a vitest-készlet a markup-szintű állításokat őrzi. Részletek:
   `docs/07-felulet-rendszer.md` § Szín, forma, sűrűség és § Billentyűzet;
   `docs/03-funkcionalis-spec.md` § Fogtérkép (kattintható).
+
+### 103. tétel: Demó-eredetű, PDF nélküli verziók üzenete — KÉSZ
+
+- **Méret:** kicsi — egy statikus seed-eredet predikátum, egy demó-only
+  storage-mező, a "nincs mentett PDF" üzenet két hangnemre bontása, és a
+  három érintett felület (Terv részletei panel + gombok, terv-lánc fa
+  `⋯` menüje) megosztott hibacsatornájának súlyosság-jelzése.
+- **Megvalósítás:** a demó-seed sosem ír PDF-bájtot egyik verzióhoz sem,
+  ezért egy tiszta predikátum eldönti, hogy egy adott
+  patientDir/planDir/versionDir hármas a beépített demó-készletből
+  származik-e — nem kerül új mező a `terv.json` sémájába. Seed-eredetű,
+  hiányzó PDF-nél egy semleges, információs szöveg jelenik meg ("a demó-
+  adatkészletből származik"), valódi (saját mentésű) hiánynál egy
+  figyelmeztető szöveg; mindkét esetben a "Megnyitás külön"/"Letöltés"
+  letiltott, betöltési HIBÁNÁL viszont változatlanul kattintható marad.
+  Részletek: `docs/03-funkcionalis-spec.md` § 11 "Mentett PDF"; `CLAUDE.md`
+  "Meglévő segédfüggvények".

@@ -15,16 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 103. tétel: Demó-eredetű, PDF nélküli verziók üzenete
-
-  A demó-seed csak `terv.json`-t ír, PDF-blobot nem, ezért minden seed-elt
-  „véglegesített" verziónál a `pages/tervReszletei/MentettPdfPanel.tsx`
-  semleges „Ehhez a verzióhoz nincs mentett PDF." üzenete jelenik meg, és a
-  Letöltés inaktív. Sem a terven, sem a betöltő állapotában nincs semmi,
-  amiből a demó-eredet megkülönböztethető lenne egy valódi, hiányzó
-  fájltól — bemutatáskor ez „elveszett dokumentum"-nak hat.
-  **Terv:** `backlog/plans/backlog-103-demo-eredetu-pdf-nelkuli-verziok-terv.md`
-
 ### 104. tétel: Terv-lánc listán jelzés a törzsadat ↔ pillanatkép eltérésről
 
   A `components/PatientPlanChains.tsx` sehol nem hívja a

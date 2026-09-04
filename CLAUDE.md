@@ -550,6 +550,23 @@ segédfüggvénye, szintén ne írd újra:
   lap beágyazott viewere és a Filerendszer nézet `FileContentPanel.tsx`-e
   — ne hozz létre harmadik, egyedi blob-URL-effektet PDF-bájtokhoz.
 
+A demó-eredetű, PDF nélküli verziók megkülönböztetése (`docs/03-
+funkcionalis-spec.md` § 11. "Mentett PDF") segédfüggvényei/komponensei,
+szintén ne írd újra őket:
+- `seedVerzio(ref)` (`app/src/storage/seed/plans.ts`) — igaz, ha a
+  `{ patientDir, planDir, versionDir }` hármas a beépített demó-készletből
+  származik; `DemoStorage.isSeedVersion(ref)` / `StorageContext`
+  `isSeedVersion` a demó-only felülete, a `listFileTree`/`readRawFile`
+  mintáján — NEM a `PlanStorage` interfész része, a `FileSystemStorage`-
+  váltáskor megszűnik
+- `nincsMentettPdfHiba(ref, demoEredetu)` / `VerzioAkcioUzenet`
+  (`app/src/components/PlanVersionActionDialog.tsx`) — a `VerzioAkcioHiba`
+  opcionális `sulyossag` mezőjét (alapértelmezett `'hiba'`, piros) állító
+  factory, illetve a hozzá tartozó, súlyosság szerint színező Callout; a
+  `PatientPlanChains.tsx` és a `TervReszleteiPage.tsx` mindhárom
+  „nincs mentett PDF" render-helye ezt hívja, hogy a demó/valódi-hiány
+  megkülönböztetés ne térjen el a felületek között
+
 A nyomtatvány dokumentum-szintű lábléc-magassága (`docs/04-nyomtatvany-
 spec.md` § "Lábléc — minden oldalon") segédfüggvényei, szintén ne írd
 újra őket:

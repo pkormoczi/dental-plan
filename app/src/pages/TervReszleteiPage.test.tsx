@@ -469,24 +469,15 @@ describe('TervReszleteiPage', () => {
     expect(callOrder).toEqual(['open', 'createObjectURL']);
   });
 
-  it('"Megnyitás külön" hiányzó PDF esetén bezárja az üres lapot és inline hibát mutat', async () => {
-    const mockWin = { location: { href: '' }, close: vi.fn() };
-    window.open = vi.fn(() => mockWin as unknown as Window) as unknown as typeof window.open;
-
-    const user = userEvent.setup();
+  it('103. tétel: demó-eredetű, PDF nélküli verzión a "Megnyitás külön" letiltott', async () => {
     // A seed-verziókhoz nincs mentett PDF -- a beágyazott viewer (75. tétel)
-    // ezt MÁR a lap betöltésekor jelzi, ugyanazzal a szöveggel, mint a
-    // "Megnyitás külön" saját hibaüzenete; kattintás után ezért két azonos
-    // szövegű előfordulás várható, nem egy.
+    // ezt a demó-magyarázó szöveggel jelzi, a "Megnyitás külön" pedig
+    // letiltott (mint a "Letöltés"), tehát az onClick-ágon lévő korábbi
+    // hibaüzenet UI-ból nem érhető el.
     renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
-    await screen.findByText('Ehhez a verzióhoz nincs mentett PDF.');
+    await screen.findByText(/beépített demó-adatkészletből származik/);
 
-    await user.click(screen.getByText('Megnyitás külön'));
-
-    await waitFor(() => expect(mockWin.close).toHaveBeenCalled());
-    await waitFor(() =>
-      expect(screen.getAllByText('Ehhez a verzióhoz nincs mentett PDF.')).toHaveLength(2),
-    );
+    expect(screen.getByRole('button', { name: 'Megnyitás külön' })).toBeDisabled();
   });
 
   it('75. tétel: mentett PDF-fel rendelkező verzión a beágyazott viewer az object URL-re mutat', async () => {
@@ -503,10 +494,38 @@ describe('TervReszleteiPage', () => {
     renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
     await screen.findByTestId('terv-reszletei-fejlec');
 
-    expect(screen.getByText('Ehhez a verzióhoz nincs mentett PDF.')).toBeInTheDocument();
+    expect(screen.getByText(/beépített demó-adatkészletből származik/)).toBeInTheDocument();
     expect(screen.queryByTitle('A verzió mentett PDF-je')).not.toBeInTheDocument();
     expect(screen.getByText('Pénzügyi összesítés')).toBeInTheDocument();
     expect(screen.getByText('1. kezelés — fogkő és tömés')).toBeInTheDocument();
+  });
+
+  it('103. tétel: valódi (nem seed) hiányzó PDF-nél a figyelmeztető szöveg jelenik meg, letiltott gombokkal', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const ref = await seeder.savePlan(makePlan(), new Uint8Array([1, 2, 3]));
+    localStorage.removeItem(`${PREFIX}paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}/pdf`);
+
+    renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
+
+    expect(await screen.findByText('A verzióhoz nem található mentett PDF.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Megnyitás külön' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Letöltés' })).toBeDisabled();
+  });
+
+  it('103. tétel: betöltési hibánál a "Megnyitás külön" kattintható marad, nem a hiányzó ág fut', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const ref = await seeder.savePlan(makePlan(), new Uint8Array([1, 2, 3]));
+    localStorage.setItem(
+      `${PREFIX}paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}/pdf`,
+      'nem-valid-base64!!!',
+    );
+
+    renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
+
+    expect(await screen.findByText(/A PDF betöltése nem sikerült/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Megnyitás külön' })).toBeEnabled();
   });
 
   it('75. tétel: a "Letöltés" link a meglévő fájlnév-konvenció szerinti download attribútumot kapja', async () => {

@@ -2172,6 +2172,22 @@ regenerálási kísérlet NÉLKÜL — a lap többi, JSON-ból származó tartal
 (fejléc, pénzügyi összesítés, fázisok, metaadat, páciens-pillanatkép) a
 hiba ELLENÉRE is olvasható marad.
 
+A HIÁNYZÓ eset két, eltérő hangnemű szövegre bomlik, mert két, doki
+szempontjából eltérő jelentésű állapotot takar: a beépített demó-adatkészlet
+egyetlen verziójához sem tartozik mentett PDF (a seedelés sosem ír
+PDF-bájtot), ez semleges, információs Calloutban jelenik meg; egy valódi,
+saját mentésű verzió hiányzó/törölt PDF-je viszont figyelmeztető (amber)
+Calloutot kap, mert ez tényleges adathiányra utalhat, aminek a doki utána
+akar nézni. Mindkét esetben a „Megnyitás külön" és a „Letöltés" is
+letiltott — nincs mit megnyitni/letölteni. Betöltési HIBÁNÁL (pl. sérült
+mentett adat) ez a két gomb ellenben kattintható marad, hogy legyen
+újrapróbálkozási út — ez a hiba-ág (piros Callout) a hiányzó-ágtól
+szándékosan külön állapot, sosem keverednek össze. Ugyanez a
+demó/valódi-hiány megkülönböztetés vonatkozik a § 5 terv-lánc fájának „⋯"
+menü „Letöltés" pontjára és a „Megnyitás külön" saját hibaágára is — egy
+megosztott üzenet-összeállító dönti el a szöveget és a Callout súlyosságát,
+hogy a három felület ne térjen el egymástól.
+
 **Verziónavigáció**: a lánc verziói dátum/verziószám szerint csökkenő
 sorrendben; a prev/next gombok a szomszédos verzió route-jára navigálnak,
 mindig `replace`-es navigációval — a láncon belüli lépegetés oldalirányú

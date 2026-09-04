@@ -36,6 +36,7 @@ import type {
   PatientRecord,
   Penznem,
   Plan,
+  PlanRef,
   Sor,
 } from '../../domain/types';
 import { buildPatientDirName, buildPlanDirName, buildVersionDirName } from '../paths';
@@ -1388,3 +1389,19 @@ export const seedPatientData: Array<{ patientDir: string; data: PatientMasterDat
   { patientDir: nagyDir, data: { schemaVersion: 1, paciensId: NAGY_PACIENS_ID, ...nagyEvaPaciens } },
   ...ujPaciensek.flatMap((p) => p.patientData),
 ];
+
+function seedVersionKey(ref: Pick<PlanRef, 'patientDir' | 'planDir' | 'versionDir'>): string {
+  return `${ref.patientDir}/${ref.planDir}/${ref.versionDir}`;
+}
+
+const SEED_VERSION_KEYS = new Set(seedPlans.map(seedVersionKey));
+
+/**
+ * Igaz, ha a hármas a beépített demó-készletből származik -- a
+ * `resetDemoData()` sosem ír PDF-bájtot a seed-verziókhoz (docs/03-
+ * funkcionalis-spec.md § 11 „Mentett PDF"), ezért ez az EGYETLEN forrás,
+ * amiből a "nincs mentett PDF" ok (demó vs. valódi hiány) eldönthető.
+ */
+export function seedVerzio(ref: Pick<PlanRef, 'patientDir' | 'planDir' | 'versionDir'>): boolean {
+  return SEED_VERSION_KEYS.has(seedVersionKey(ref));
+}
