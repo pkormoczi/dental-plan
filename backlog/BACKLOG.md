@@ -15,15 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 107. tétel: Duplikáció-jelölt chip megkülönböztető adattal
-
-  A `pages/paciensek/DuplikacioJavaslatok.tsx` chipje kizárólag minőségi
-  indoklást ír ki (pl. „azonos név"), a tényleges születési dátumot/
-  telefonszámot sosem — több hasonló nevű jelöltnél (apa/fiú, gyakori
-  vezetéknév) így nem lehet a chipről dönteni. A döntéseket lásd a
-  tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-107-duplikacio-jelolt-adat-terv.md`
-
 ### 108. tétel: Élő Összeg oszlop gépelés közben
 
   A `pages/planEditor/LineRow.tsx` Összeg cellája a committált propokból
@@ -43,6 +34,18 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   `useDiscardGuard` primitívjével. A testvér
   `pages/priceListAdmin/UjTetelDialog.tsx` szándékosan nem tartozik bele.
   **Terv:** `backlog/plans/backlog-109-uj-paciens-elvetes-megerosites-terv.md`
+
+### 113. tétel: Véglegesítési checklist "sablon nem érhető el a megfelelő nyelven" üzenete hamis, ha a magyar tartalék is placeholder
+
+  A `pages/PreviewPage.tsx` `loadOrFallback()` a HU-tartalékra eséskor
+  `fellback: true`-t állít be attól függetlenül, hogy a HU-tartalom maga
+  használható-e — emiatt egy mindkét nyelven placeholder szakasznál (ma:
+  Garancia) a checklist EGYSZERRE adja a helyes "kimarad a nyomtatványból"
+  ÉS a hamis "helyette a magyar szöveg jelenik meg" üzenetet, holott a
+  ténylegesen generált PDF-en semmilyen magyar szöveg nem jelenik meg ebből
+  a szakaszból. Forrás: `docs/reviews/2026-09-05-doctor-review-nemet-euro.md`
+  2. megállapítás.
+  **Terv:** `backlog/plans/backlog-113-sablon-fallback-jelzes-terv.md`
 
 ---
 ## NEM FEJLESZTÉS
@@ -156,18 +159,6 @@ Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
    biztonsági másolatra, a validációra és részleges hiba esetén a
    visszaállásra, valamint a régi adatokon futó migrációs tesztekre; az
    első `schemaVersion: 2` bevezetése már ezt a módszert kövesse.
-
-### 113. tétel: Véglegesítési checklist "sablon nem érhető el a megfelelő nyelven" üzenete hamis, ha a magyar tartalék is placeholder
-
-  A `pages/PreviewPage.tsx` `loadOrFallback()` a HU-tartalékra eséskor
-  `fellback: true`-t állít be attól függetlenül, hogy a HU-tartalom maga
-  használható-e — emiatt egy mindkét nyelven placeholder szakasznál (ma:
-  Garancia) a checklist EGYSZERRE adja a helyes "kimarad a nyomtatványból"
-  ÉS a hamis "helyette a magyar szöveg jelenik meg" üzenetet, holott a
-  ténylegesen generált PDF-en semmilyen magyar szöveg nem jelenik meg ebből
-  a szakaszból. Forrás: `docs/reviews/2026-09-05-doctor-review-nemet-euro.md`
-  2. megállapítás.
-  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
 
 ### 114. tétel: "Törzsadat létrehozása" lépés-elhagyási dialógus minden navigációnál újra felugrik
 

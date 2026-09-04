@@ -75,10 +75,33 @@ describe('UjPaciensDialog', () => {
 
     await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Kovács János');
 
-    expect(await screen.findByText('Kovács János (azonos név)')).toBeInTheDocument();
+    expect(await screen.findByText('Kovács János')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Ezt a pácienst választom: Kovács János' }),
     ).toBeInTheDocument();
+  });
+
+  it('betöltött pontos névegyezés a nyilvántartott születési dátumát/telefonját mutatja', async () => {
+    renderHarness(seededPatients);
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Kovács János');
+
+    expect(await screen.findByText('1978.03.14.', undefined, { timeout: 3000 })).toBeInTheDocument();
+    expect(await screen.findByText('+36 30 123 4567', undefined, { timeout: 3000 })).toBeInTheDocument();
+  });
+
+  it('betöltés előtt "adatok betöltése…", adat nélküli jelöltnél "nincs rögzített adat" jelenik meg', async () => {
+    renderHarness(syntheticPatients(1, 'Teszt Adatnélküli'));
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Teszt Adatnélküli');
+
+    expect(await screen.findByText('adatok betöltése…')).toBeInTheDocument();
+    // A szintetikus jelöltnek nincs valódi páciensmappája -- a betöltés a
+    // `megjelenitettTorzsadat()` üres (`uresTorzsadat()`) tartalékára esik
+    // vissza, tehát a jelölt betöltöttnek számít, de a DOB/telefon üres.
+    expect(await screen.findByText('nincs rögzített adat', undefined, { timeout: 3000 })).toBeInTheDocument();
   });
 
   it('hasonló nevű, egyező születési dátumú páciens javaslatként jelenik meg', async () => {
@@ -88,9 +111,9 @@ describe('UjPaciensDialog', () => {
     await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Nagy Éva Mária');
     await user.type(screen.getByLabelText('Született'), '1990-11-02');
 
-    expect(
-      await screen.findByText('Nagy Éva (hasonló név, egyező születési dátum)', undefined, { timeout: 3000 }),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Nagy Éva', undefined, { timeout: 3000 })).toBeInTheDocument();
+    expect(await screen.findByText('1990.11.02.', undefined, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.getByText('hasonló név')).toBeInTheDocument();
   });
 
   it('hasonló nevű, ellentmondó telefonú páciens NEM jelenik meg -- egy korábban megjelent javaslat is eltűnik, ha a telefon utólag ellentmondóra változik', async () => {
@@ -103,12 +126,13 @@ describe('UjPaciensDialog', () => {
     // egyezést talált -- csak ez után van értelme a "nem jelenik meg"
     // negatív állításnak (különben egy még-be-nem-töltött állapotot is
     // hamisan "sikeresnek" olvasnánk).
-    await screen.findByText('Nagy Éva (hasonló név, egyező telefon)', undefined, { timeout: 3000 });
+    await screen.findByText('Nagy Éva', undefined, { timeout: 3000 });
+    await screen.findByText('+36 20 555 1234', undefined, { timeout: 3000 });
 
     await user.clear(screen.getByLabelText('Telefon'));
     await user.type(screen.getByLabelText('Telefon'), '+36 20 999 9999');
 
-    await waitFor(() => expect(screen.queryByText(/Nagy Éva/)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('Nagy Éva')).not.toBeInTheDocument());
   });
 
   it('legfeljebb 3 javaslat látszik, a többi "+N további" mögött (D230)', async () => {
@@ -117,11 +141,11 @@ describe('UjPaciensDialog', () => {
 
     await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Teszt Duplikátum');
 
-    expect(await screen.findAllByText('Teszt Duplikátum (azonos név)')).toHaveLength(3);
+    expect(await screen.findAllByText('Teszt Duplikátum')).toHaveLength(3);
     expect(screen.getByText('+1 további')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /további/ }));
-    expect(await screen.findAllByText('Teszt Duplikátum (azonos név)')).toHaveLength(4);
+    expect(await screen.findAllByText('Teszt Duplikátum')).toHaveLength(4);
   });
 
   it('a Mentés lefuttatja az ellenőrzést, és megerősítést kér, ha van találat', async () => {
@@ -133,6 +157,7 @@ describe('UjPaciensDialog', () => {
 
     const dialog = await screen.findByRole('alertdialog');
     expect(within(dialog).getByText('Mégis új páciens létrehozása?')).toBeInTheDocument();
+    expect(within(dialog).getByText('Kovács János')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });
 
@@ -182,9 +207,10 @@ describe('UjPaciensDialog', () => {
   // ilyenkor `ellentmondas` még `false`, tehát a `valasztottJelolt()`
   // közvetlenül `onUseExisting`-et hívná, SOHA nem nyitná meg a
   // megerősítést, hiába vár rá a teszt akármeddig. Determinisztikus
-  // fix: a kattintás előtt megvárjuk, amíg a `DuplikacioJavaslatok.tsx`
-  // szövege ténylegesen jelzi a betöltött ellentmondást -- ezután a
-  // dialógus-nyitás már tisztán szinkron, nem igényel megnövelt timeoutot.
+  // fix: a kattintás előtt megvárjuk, amíg a chip ténylegesen jelzi a
+  // betöltött ellentmondást (a `⚠`-vel jelölt születési dátum-szöveg
+  // megjelenését) -- ezután a dialógus-nyitás már tisztán szinkron, nem
+  // igényel megnövelt timeoutot.
   it('ellentmondó adatú pontos találat kiválasztásakor megerősítés jelenik meg, a konkrét eltéréssel', async () => {
     const { onUseExisting } = renderHarness(seededPatients);
     const user = userEvent.setup();
@@ -192,11 +218,7 @@ describe('UjPaciensDialog', () => {
     await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Kovács János');
     await user.type(screen.getByLabelText('Született'), '1990-01-01');
 
-    await screen.findByText(
-      'Kovács János (azonos név, eltérő születési dátum)',
-      undefined,
-      { timeout: 5000 },
-    );
+    await screen.findByText('⚠ 1978.03.14.', undefined, { timeout: 5000 });
     const valasztomBtn = screen.getByRole('button', { name: 'Ezt a pácienst választom: Kovács János' });
     await user.click(valasztomBtn);
 

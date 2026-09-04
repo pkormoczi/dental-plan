@@ -16,6 +16,7 @@ import {
   JELOLT_MAX,
   nevJeloltek,
   type DuplikaciosJelolt,
+  type JeloltAdat,
 } from '../domain/paciensDuplikacio';
 import { paciensTorzsadatbol } from '../domain/paciensAdatok';
 import { loadTorzsadatok } from '../domain/torzsadatBetoltes';
@@ -28,7 +29,7 @@ export interface DuplikacioBemenet {
   telefon: string;
 }
 
-type TorzsadatCache = Record<string, { szuletesiIdo: string; telefon: string } | null>;
+type TorzsadatCache = Record<string, JeloltAdat | null>;
 
 /**
  * Nincs `setTimeout`-debounce -- a projekt sehol nem használ ilyet

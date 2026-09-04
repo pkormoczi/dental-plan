@@ -145,8 +145,31 @@ describe('duplikaciosJeloltek', () => {
     const kovacs = patient('Kovács János');
     const eredmeny = duplikaciosJeloltek([{ patient: kovacs, egyezes: 'nev-pontos' }], bemenet, {});
     expect(eredmeny).toEqual([
-      { patient: kovacs, egyezes: 'nev-pontos', szuletesiIdo: 'hianyzik', telefon: 'hianyzik', ellentmondas: false },
+      {
+        patient: kovacs,
+        egyezes: 'nev-pontos',
+        szuletesiIdo: 'hianyzik',
+        telefon: 'hianyzik',
+        ellentmondas: false,
+        betoltve: false,
+        adat: null,
+      },
     ]);
+  });
+
+  it('a be nem töltött jelölt megkülönböztethető a betöltött-de-üres jelölttől', () => {
+    const kovacs = patient('Kovács János');
+    const betoltveUres = duplikaciosJeloltek(
+      [{ patient: kovacs, egyezes: 'nev-pontos' }],
+      bemenet,
+      { [kovacs.dirName]: null },
+    );
+    expect(betoltveUres[0].betoltve).toBe(true);
+    expect(betoltveUres[0].adat).toBeNull();
+
+    const megNincsBetoltve = duplikaciosJeloltek([{ patient: kovacs, egyezes: 'nev-pontos' }], bemenet, {});
+    expect(megNincsBetoltve[0].betoltve).toBe(false);
+    expect(megNincsBetoltve[0].adat).toBeNull();
   });
 
   it('hasonló névegyezés be nem töltött fázis-2 adattal NEM jelenik meg (nincs felvillanó-majd-eltűnő javaslat)', () => {
@@ -163,7 +186,15 @@ describe('duplikaciosJeloltek', () => {
       { [kovacs.dirName]: { szuletesiIdo: '1990-01-01', telefon: '' } },
     );
     expect(eredmeny).toEqual([
-      { patient: kovacs, egyezes: 'nev-pontos', szuletesiIdo: 'ellentmond', telefon: 'hianyzik', ellentmondas: true },
+      {
+        patient: kovacs,
+        egyezes: 'nev-pontos',
+        szuletesiIdo: 'ellentmond',
+        telefon: 'hianyzik',
+        ellentmondas: true,
+        betoltve: true,
+        adat: { szuletesiIdo: '1990-01-01', telefon: '' },
+      },
     ]);
   });
 
@@ -185,7 +216,15 @@ describe('duplikaciosJeloltek', () => {
       { [hasonlo.dirName]: { szuletesiIdo: '1978-03-14', telefon: '' } },
     );
     expect(eredmeny).toEqual([
-      { patient: hasonlo, egyezes: 'nev-hasonlo', szuletesiIdo: 'egyezik', telefon: 'hianyzik', ellentmondas: false },
+      {
+        patient: hasonlo,
+        egyezes: 'nev-hasonlo',
+        szuletesiIdo: 'egyezik',
+        telefon: 'hianyzik',
+        ellentmondas: false,
+        betoltve: true,
+        adat: { szuletesiIdo: '1978-03-14', telefon: '' },
+      },
     ]);
   });
 

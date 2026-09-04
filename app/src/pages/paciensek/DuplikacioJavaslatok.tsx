@@ -9,17 +9,9 @@
 import { useState } from 'react';
 import { Box, Button, Flex, Text } from '@radix-ui/themes';
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
+import JeloltSor from './JeloltSor';
 import { JAVASLAT_LATHATO, type DuplikaciosJelolt } from '../../domain/paciensDuplikacio';
 import { t } from '../../design/tokens';
-
-function indoklas(jelolt: DuplikaciosJelolt): string {
-  const reszek = [jelolt.egyezes === 'nev-pontos' ? 'azonos név' : 'hasonló név'];
-  if (jelolt.szuletesiIdo === 'egyezik') reszek.push('egyező születési dátum');
-  if (jelolt.szuletesiIdo === 'ellentmond') reszek.push('eltérő születési dátum');
-  if (jelolt.telefon === 'egyezik') reszek.push('egyező telefon');
-  if (jelolt.telefon === 'ellentmond') reszek.push('eltérő telefon');
-  return reszek.join(', ');
-}
 
 export default function DuplikacioJavaslatok({
   jeloltek,
@@ -41,22 +33,23 @@ export default function DuplikacioJavaslatok({
         Már van hasonló nevű páciens — lehet, hogy inkább őt kellene megkeresni, nem újra
         felvinni.
       </Text>
-      <Flex direction="column" gap="1" mt="1">
+      <Flex direction="column" gap="2" mt="1">
         {lathatok.map((jelolt) => (
-          <Flex key={jelolt.patient.dirName} align="center" gap="2" wrap="wrap">
-            <Text size="1" color="gray">
-              {jelolt.patient.nev} ({indoklas(jelolt)})
-            </Text>
-            <Button
-              type="button"
-              variant="soft"
-              size="1"
-              aria-label={`Ezt a pácienst választom: ${jelolt.patient.nev}`}
-              onClick={() => onValaszt(jelolt)}
-            >
-              Ezt a pácienst választom
-            </Button>
-          </Flex>
+          <JeloltSor
+            key={jelolt.patient.dirName}
+            jelolt={jelolt}
+            akcio={
+              <Button
+                type="button"
+                variant="soft"
+                size="1"
+                aria-label={`Ezt a pácienst választom: ${jelolt.patient.nev}`}
+                onClick={() => onValaszt(jelolt)}
+              >
+                Ezt a pácienst választom
+              </Button>
+            }
+          />
         ))}
       </Flex>
       {!kibontva && tobbi > 0 && (

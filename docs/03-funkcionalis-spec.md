@@ -1516,13 +1516,22 @@ hogy új vagy visszatérő páciensről van szó, csak utána a konkrét személ
   „+N további" kibontással), a szűk jelölt-körre betöltött születési
   dátum/telefon szűrve tovább — ellentmondó adatnál a hasonló-nevű
   javaslat kiesik, a pontos névegyezés viszont jelöléssel bennmarad. Egy
-  javaslat „Ezt a pácienst választom" gombja a begépelt adatokat eldobva
-  a MEGLÉVŐ páciensre folytatja a flow-t (D203/D204); ha a talált adatok
+  javaslat sora a jelölt nyilvántartott születési dátumát/telefonját is
+  kiírja (nem csak azt, hogy „azonos név"), hogy több hasonló nevű
+  jelöltnél (apa/fiú, gyakori vezetéknév) a chipről el lehessen dönteni,
+  melyikük a keresett páciens: betöltés előtt „adatok betöltése…" áll,
+  adat híján „nincs rögzített adat"; ha egy mező (a DOB vagy a telefon)
+  ellentmond a begépeltnek, KIZÁRÓLAG az az egy érték kap `⚠` jelzést és
+  amber színt, a másik szürke marad; egy hasonló (nem pontos) névegyezésű
+  jelölt emellett egy halvány „hasonló név" jelzést is kap. Egy javaslat
+  „Ezt a pácienst választom" gombja a begépelt adatokat eldobva a
+  MEGLÉVŐ páciensre folytatja a flow-t (D203/D204); ha a talált adatok
   ELTÉRNEK a begépeltektől, egy megerősítő dialógus kéri a végső
   jóváhagyást. A Mentés gomb javaslat hiányában is mindig lefuttatja
   ugyanezt az ellenőrzést a végleges adatokra, mielőtt tényleg ment — ha
   talál ütközést, „Mégis új páciens létrehozása" explicit megerősítést
-  kér. Csak sikeres mentés után jön létre a valódi páciensrekord ÉS
+  kér, jelöltenként ugyanazzal a név + adat sorral, mint a javaslat-lista
+  chipje. Csak sikeres mentés után jön létre a valódi páciensrekord ÉS
   navigál a Terv adatai lapra — a felső, mindig látható gomb ÜRESEN nyitja
   a dialógust; a kártyán belüli no-match „Új páciens" opció (lásd lent) a
   begépelt névvel előtöltve nyitja ugyanezt.

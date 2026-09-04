@@ -2699,3 +2699,21 @@ karbantartási kör négy önálló javítása.
   a kommentek, a CSS custom property-k és a teszt-leírások házi `--`
   konvenciója érintetlen maradt. Részletek: `docs/07-felulet-rendszer.md`
   § "Nyelv és szövegek".
+
+### 107. tétel: Duplikáció-jelölt chip megkülönböztető adattal — KÉSZ
+
+- **Méret:** kicsi — egy domain modul bővítése két mezővel, egy új közös
+  komponens, két hívó felület átállítása rá.
+- **Megvalósítás:** a quick-create páciens-duplikáció javaslat-chipje és a
+  "Mégis új páciens létrehozása?" megerősítője a jelölt minőségi
+  indoklása (pl. „azonos név, eltérő születési dátum") helyett a jelölt
+  tényleges nyilvántartott születési dátumát/telefonját írja ki — ez már
+  megfizetett adat volt, a 2. fázis (`usePaciensDuplikacio`) betöltötte,
+  csak eldobta. Az `app/src/domain/paciensDuplikacio.ts`
+  `DuplikaciosJelolt` két új mezőt kapott (`betoltve`, `adat`), az új
+  `app/src/pages/paciensek/JeloltSor.tsx` a két hívó (`Duplikacio
+  Javaslatok.tsx`, `UjPaciensDialog.tsx`) közös név + adat sora:
+  ellentmondásnál KIZÁRÓLAG az érintett mező kap `⚠` jelzést és amber
+  színt, adat híján „nincs rögzített adat", betöltés előtt „adatok
+  betöltése…", hasonló névegyezésnél „hasonló név" jelzés. Részletek:
+  `docs/03-funkcionalis-spec.md` § „Új terv indítása".

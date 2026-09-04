@@ -797,7 +797,18 @@ segédfüggvényei/rétegei, szintén ne írd újra őket:
   `duplikaciosJeloltek` a szűk jelölt-körre betöltött DOB/telefonnal
   fésüli össze — ez az EGYETLEN hely, ahol eldől, hogy egy pontos
   névegyezés ellentmondó adat mellett is látszik-e (igen, jelöléssel),
-  egy hasonló névegyezés pedig nem (D42)
+  egy hasonló névegyezés pedig nem (D42). A `DuplikaciosJelolt` a
+  viszony-mezők (`szuletesiIdo`/`telefon`/`ellentmondas`) MELLETT a
+  jelölt betöltöttségét (`betoltve`) és tényleges DOB/telefon értékét
+  (`adat`) is hordozza, hogy a felület a jelölt nyilvántartott adatát is
+  megjeleníthesse, ne csak a viszony-jelölést
+- `app/src/pages/paciensek/JeloltSor.tsx` — a javaslat-chip (`Duplikacio
+  Javaslatok.tsx`) ÉS a „Mégis új páciens létrehozása?" megerősítő
+  (`UjPaciensDialog.tsx`) KÖZÖS név + adat sora: a jelölt neve, alatta
+  behúzva a nyilvántartott DOB/telefon (betöltés előtt „adatok
+  betöltése…", adat híján „nincs rögzített adat"), mezőnkénti `⚠`
+  jelöléssel az ellentmondó értéken, hasonló névegyezésnél „hasonló név"
+  jelzéssel
 - `loadTorzsadatok(storage, patients)` (`app/src/domain/torzsadatBetoltes.ts`)
   — a 2. fázis betöltője, a meglévő `loadMegjelenitettTorzsadat()` (D33)
   több páciensre, `dirName` szerint kulcsolva, sosem dobva. A

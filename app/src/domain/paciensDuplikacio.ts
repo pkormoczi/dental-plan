@@ -18,6 +18,11 @@ export interface NevJelolt {
   egyezes: NevEgyezes;
 }
 
+export interface JeloltAdat {
+  szuletesiIdo: string;
+  telefon: string;
+}
+
 export interface DuplikaciosJelolt extends NevJelolt {
   szuletesiIdo: AdatViszony;
   telefon: AdatViszony;
@@ -29,6 +34,10 @@ export interface DuplikaciosJelolt extends NevJelolt {
    * a pontos-egyezés ágon nyílik.
    */
   ellentmondas: boolean;
+  /** Lefutott-e már a jelöltre a 2. fázis (DOB/telefon betöltése). */
+  betoltve: boolean;
+  /** A jelölt nyilvántartott DOB/telefonja; `null`, ha még nincs betöltve, vagy nem olvasható. */
+  adat: JeloltAdat | null;
 }
 
 /** D230: a javaslat-lista alapból ennyit mutat, fölötte "+N további". */
@@ -166,7 +175,7 @@ function jeloltRang(j: DuplikaciosJelolt): number {
 export function duplikaciosJeloltek(
   jeloltek: NevJelolt[],
   bemenet: { nev: string; szuletesiIdo: string; telefon: string },
-  torzsadatByDir: Record<string, { szuletesiIdo: string; telefon: string } | null>,
+  torzsadatByDir: Record<string, JeloltAdat | null>,
 ): DuplikaciosJelolt[] {
   const eredmeny: DuplikaciosJelolt[] = [];
   for (const jelolt of jeloltek) {
@@ -174,7 +183,14 @@ export function duplikaciosJeloltek(
     const betoltve = dirName in torzsadatByDir;
     if (!betoltve) {
       if (jelolt.egyezes === 'nev-pontos') {
-        eredmeny.push({ ...jelolt, szuletesiIdo: 'hianyzik', telefon: 'hianyzik', ellentmondas: false });
+        eredmeny.push({
+          ...jelolt,
+          szuletesiIdo: 'hianyzik',
+          telefon: 'hianyzik',
+          ellentmondas: false,
+          betoltve: false,
+          adat: null,
+        });
       }
       continue;
     }
@@ -183,7 +199,7 @@ export function duplikaciosJeloltek(
     const telViszony = adat ? telefonViszony(bemenet.telefon, adat.telefon) : 'hianyzik';
     const ellentmondas = szulViszony === 'ellentmond' || telViszony === 'ellentmond';
     if (jelolt.egyezes === 'nev-hasonlo' && ellentmondas) continue;
-    eredmeny.push({ ...jelolt, szuletesiIdo: szulViszony, telefon: telViszony, ellentmondas });
+    eredmeny.push({ ...jelolt, szuletesiIdo: szulViszony, telefon: telViszony, ellentmondas, betoltve: true, adat });
   }
 
   return [...eredmeny].sort((a, b) => {

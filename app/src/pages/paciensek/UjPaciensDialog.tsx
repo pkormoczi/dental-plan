@@ -23,6 +23,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AlertDialog, Box, Button, Dialog, Flex, Grid, Text, TextField } from '@radix-ui/themes';
 import DuplikacioJavaslatok from './DuplikacioJavaslatok';
+import JeloltSor from './JeloltSor';
 import { Field } from '../../components/Field';
 import { usePaciensDuplikacio } from '../../components/usePaciensDuplikacio';
 import { t } from '../../design/tokens';
@@ -64,11 +65,7 @@ function megerositesCim(kind: Megerosites['kind']): string {
   return kind === 'megis-uj' ? 'Mégis új páciens létrehozása?' : 'A megadott adatok eltérnek';
 }
 
-function megerositesLeiras(megerosites: Megerosites): string {
-  if (megerosites.kind === 'megis-uj') {
-    const nevek = megerosites.jeloltek.map((j) => j.patient.nev).join(', ');
-    return `Hasonló nevű páciens már létezik: ${nevek}.\nHa mégis új rekordot hozol létre, két külön páciens fog szerepelni ehhez hasonló néven.`;
-  }
+function megerositesLeiras(megerosites: Extract<Megerosites, { kind: 'eltero-adat' }>): string {
   const j = megerosites.jelolt;
   const elteresek: string[] = [];
   if (j.szuletesiIdo === 'ellentmond') elteresek.push('a születési dátum');
@@ -262,9 +259,25 @@ export default function UjPaciensDialog({
             }}
           >
             <AlertDialog.Title>{megerosites && megerositesCim(megerosites.kind)}</AlertDialog.Title>
-            <AlertDialog.Description size="2" style={{ whiteSpace: 'pre-line' }}>
-              {megerosites && megerositesLeiras(megerosites)}
-            </AlertDialog.Description>
+            {megerosites?.kind === 'eltero-adat' ? (
+              <AlertDialog.Description size="2" style={{ whiteSpace: 'pre-line' }}>
+                {megerositesLeiras(megerosites)}
+              </AlertDialog.Description>
+            ) : (
+              megerosites && (
+                <>
+                  <AlertDialog.Description size="2">Hasonló nevű páciens már létezik:</AlertDialog.Description>
+                  <Flex direction="column" gap="2" mt="2">
+                    {megerosites.jeloltek.map((jelolt) => (
+                      <JeloltSor key={jelolt.patient.dirName} jelolt={jelolt} />
+                    ))}
+                  </Flex>
+                  <Text as="div" size="2" mt="2">
+                    Ha mégis új rekordot hozol létre, két külön páciens fog szerepelni ehhez hasonló néven.
+                  </Text>
+                </>
+              )
+            )}
             <Flex gap="3" mt="4" justify="end">
               <AlertDialog.Cancel>
                 <Button variant="soft" color="gray">
