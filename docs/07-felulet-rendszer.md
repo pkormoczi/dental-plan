@@ -302,9 +302,19 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   Ugyanígy nevesített kivétel a fogtérkép kattintható módjának
   kurzor-/kijelölés-gyűrűje (`.is-active`/`.is-picked`,
   `design/toothChartSvg.ts`): `ink` (semleges, billentyűzetes kurzor) és
-  `accent` (kijelölés a soronkénti választóban) `stroke`-ként, SOSEM
-  szövegszínként — ez a `accent` egyetlen engedélyezett felhasználási
-  módja a díszítővonalon kívül.
+  `accent` (kijelölés) `stroke`-ként, SOSEM szövegszínként — ez a `accent`
+  egyetlen engedélyezett felhasználási módja a díszítővonalon kívül. A
+  kurzor kétrétegű: az `ink` mag köré egy fehér kontraszt-réteg kerül, hogy
+  a fog fekete vonalrajza mellett is elváljon — mindkét réteg (és a
+  kijelölés-gyűrű is) képernyő-állandó CSS-pixelben vastag
+  (`vector-effect:non-scaling-stroke`), nem a rajz viewBox-egységében, hogy
+  a soronkénti választó (340 px) és a plan-szintű panelek (480 px) között
+  ne térjen el. Egy egyszerre fókuszált ÉS kijelölt fogon mindkét gyűrű
+  egyszerre látszik, koncentrikus sávokként, egymást nem takarva — a fog a
+  MÁR felvett fogain lépkedve ez a leggyakoribb eset. A kurzor csak a
+  fogtérkép billentyűzet-fókuszában (`:focus-visible`) jelenik meg, hogy
+  egy soha meg nem érintett fogtérképen ne üljön tartós, kijelölésnek
+  olvasható jelölés a kezdő fogon.
 - Státuszszín (piros, sárga, zöld) csak valódi állapotra: hiba,
   figyelmeztetés, sikeres mentés. Soha díszítésre.
 - EGY radius rendszer mindenhol.
@@ -349,7 +359,9 @@ Minden nézetnek van loading, empty és error állapota.
 - A fogtérkép (kattintható módban) EGY Tab-megállóként érhető el, nem
   32-ként — a fogak közti mozgás nyilakkal (roving kurzor,
   `aria-activedescendant`), `Enter`/`Szóköz` aktivál. 32 külön Tab-megálló
-  szétverné a Tab-sorrendet egy már amúgy is sűrű oldalon.
+  szétverné a Tab-sorrendet egy már amúgy is sűrű oldalon. A wrapper a
+  Radix minden más kontrolljával egyező `--focus-8` fókuszgyűrűt kapja
+  (`:focus-visible`), nem a böngésző alapértelmezését.
 - A tervszerkesztőben a fogtérkép egy csukott panel mögött van (lásd
   „Komponensek"): csukva a panel triggere az egyetlen Tab-megálló, a
   fogtérkép feltételes renderrel teljesen kiesik a Tab-sorrendből (nem

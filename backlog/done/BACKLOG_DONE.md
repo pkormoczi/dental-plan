@@ -2564,3 +2564,25 @@ karbantartási kör négy önálló javítása.
   inline `(N):` előtag elmaradt. Részletek:
   `docs/03-funkcionalis-spec.md` § „Véglegesítési checklist”; `CLAUDE.md`
   "Meglévő segédfüggvények".
+
+### 102. tétel: Fogtérkép billentyűzetes fókuszjelzőjének kontrasztja — KÉSZ
+
+- **Méret:** kicsi — a `design/toothChartSvg.ts` kurzor-CSS-e és
+  markup-injektálása, egy wrapper-class a `components/DentalChart.tsx`-ben,
+  plusz új tesztek és a böngészős checklist kiterjesztése.
+- **Megvalósítás:** a billentyűzetes kurzor (`is-active`) és a kijelölés
+  (`is-picked`) korábban ugyanazt a `.tooth-fill` stroke-ot versengve
+  használta, ezért egyszerre aktív és kijelölt fogon a kijelölés teljesen
+  elnyomta a kurzort, és a viewBox-egységben megadott vonalvastagság a
+  megjelenítéskor (340/480 px) szubpixelre zsugorodott. A kurzor mostantól
+  két külön, a fókuszált fog `.tooth-fill` path-jai ELÉ injektált réteg
+  (fehér kontraszt + ink, `vector-effect:non-scaling-stroke`), a kijelölés
+  pedig a `.tooth-fill` saját stroke-ja marad — egy egyszerre aktív és
+  kijelölt fogon mindkettő koncentrikus gyűrűként, egymást nem takarva
+  látszik. A kurzor csak a fogtérkép wrapperének billentyűzet-fókuszában
+  (`:focus-visible`) jelenik meg, a wrapper pedig a Radix-kontrollokéval
+  egyező `--focus-8` fókuszgyűrűt kapja. A vizuális igazolás a
+  `.claude/skills/browser-validation/` menetéhez tartozik (mértékek,
+  kontraszt), a vitest-készlet a markup-szintű állításokat őrzi. Részletek:
+  `docs/07-felulet-rendszer.md` § Szín, forma, sűrűség és § Billentyűzet;
+  `docs/03-funkcionalis-spec.md` § Fogtérkép (kattintható).

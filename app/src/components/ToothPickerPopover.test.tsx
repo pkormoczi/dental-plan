@@ -65,4 +65,18 @@ describe('ToothPickerPopover', () => {
     expect(await screen.findByRole('listbox')).toBeInTheDocument();
     expect(screen.queryByText(/szabad szöveget tartalmaz/)).not.toBeInTheDocument();
   });
+
+  it('a billentyűzetes kurzor a MÁR kijelölt fogon indul -- kombinált eset, is-active ÉS is-picked egyszerre', async () => {
+    const user = userEvent.setup();
+    renderPicker('16');
+
+    await user.click(screen.getByRole('button', { name: /Fogak kijelölése/ }));
+    const chart = await screen.findByRole('listbox');
+    expect(chart).toHaveAttribute('aria-activedescendant', 'tooth-16');
+    const tooth = chart.querySelector('[data-tooth="16"]') as Element;
+    expect(tooth).toHaveClass('is-active');
+    expect(tooth).toHaveClass('is-picked');
+    expect(tooth.innerHTML).toContain('tooth-kurzor-kontraszt');
+    expect(tooth.innerHTML).toContain('tooth-kurzor"');
+  });
 });

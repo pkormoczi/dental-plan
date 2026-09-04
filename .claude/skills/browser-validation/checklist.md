@@ -256,20 +256,65 @@ a DOM-ból). Nyitott panelnél:
 ```js
 () => {
   const cs = (e) => e && getComputedStyle(e);
-  const active = document.querySelector('.tooth.is-active .tooth-fill');
   const picked = document.querySelector('.tooth.is-picked .tooth-fill');
+  const kurzor = document.querySelector('.tooth.is-active .tooth-kurzor');
+  const kontraszt = document.querySelector('.tooth.is-active .tooth-kurzor-kontraszt');
   return {
-    activePaintOrder: cs(active)?.paintOrder,  // 'stroke'
-    activeStroke: cs(active)?.stroke,          // ink, rgb(45,45,45)
-    pickedPaintOrder: cs(picked)?.paintOrder,  // 'stroke'
-    pickedStroke: cs(picked)?.stroke,          // accent, rgb(247,116,9) -- MINT STROKE, megengedett
-    pickedColor: cs(picked)?.color,            // NEM lehet accent -- az szövegszín-használat lenne
+    pickedPaintOrder: cs(picked)?.paintOrder,     // 'stroke'
+    pickedStroke: cs(picked)?.stroke,             // accent, rgb(247,116,9) -- MINT STROKE, megengedett
+    pickedColor: cs(picked)?.color,               // NEM lehet accent -- az szövegszín-használat lenne
+    kurzorStroke: cs(kurzor)?.stroke,             // ink, rgb(45,45,45)
+    kurzorDisplay: cs(kurzor)?.display,           // 'inline' (a fogtérkép fókuszban van)
+    kontrasztStroke: cs(kontraszt)?.stroke,       // rgb(255,255,255)
   };
 }
 ```
-`.is-active` a plan-szintű (`role="toolbar"`) módban jön létre (nyíllal
-mozgó kurzor); `.is-picked` a soronkénti `ToothPickerPopover`
-(`role="listbox"`) módban, ha ott választasz egy fogat Enter-rel.
+`.is-active` a plan-szintű (`role="toolbar"`) MÓDBAN IS és a soronkénti
+`ToothPickerPopover` (`role="listbox"`) módban is létrejön (nyíllal mozgó
+kurzor) — a kurzort MOSTANTÓL nem a `.tooth-fill` saját stroke-ja adja,
+hanem két külön, a fókuszált fog csoportjába injektált `<path>` (fehér
+`.tooth-kurzor-kontraszt` + ink `.tooth-kurzor`, lásd
+`design/toothChartSvg.ts` `injectFocusCursor()`), és csak a fogtérkép
+billentyűzet-fókuszban (`:focus-visible`) látszik. `.is-picked` mindkét
+`szerep`-ben létrejöhet: a soronkénti `ToothPickerPopover`-ben ÉS a Terv
+részletei plan-szintű, `selectedTeeth`-tel hívott térképén is (nem csak a
+`role="listbox"` módban).
+
+**Fókuszhoz kötött megjelenés + wrapper fókuszgyűrű:**
+
+```js
+() => {
+  const toolbar = document.querySelector('[role="toolbar"], [role="listbox"]');
+  const kurzor = toolbar?.querySelector('.tooth-kurzor');
+  const cs = getComputedStyle(toolbar);
+  return {
+    beforeFocusDisplay: kurzor && getComputedStyle(kurzor).display, // 'none' fókusz előtt
+    wrapperOutlineWidth: cs.outlineWidth,   // '0px' fókusz előtt
+  };
+}
+```
+Tab a fogtérképre, majd ugyanez a lekérdezés: `wrapperOutlineWidth` `2px`-re
+vált, a kurzor `display`-je `inline`-ra; egérrel egy fogra kattintva a
+kurzor visszavált `none`-ra (a wrapper `:focus-visible`, nem `:focus`).
+
+**Vonalvastagság mindkét megjelenített szélességen** (a `vector-effect:
+non-scaling-stroke` miatt a mért CSS-pixel értéknek a 340 px-es popoverben
+és a 480 px-es panelekben egyeznie kell):
+
+```js
+() => {
+  const kurzor = document.querySelector('.tooth-kurzor');
+  const bbox = kurzor.getBoundingClientRect();
+  return { strokeWidthPx: getComputedStyle(kurzor).strokeWidth, bboxWidth: bbox.width };
+}
+```
+
+**Kombinált eset** (egy fog egyszerre `is-active` ÉS `is-picked` — a
+`ToothPickerPopover`-ben egy MÁR kijelölt fogra lépve gyakori): a fenti
+`paint-order` snippet mindhárom rétegét (`kurzorStroke`/`kontrasztStroke`/
+`pickedStroke`) egy ilyen fogon lekérdezve mindháromnak nem-`undefined`
+computed style-t kell adnia — a régi, forrás-sorrend szerinti elnyomás
+(a narancs teljesen eltakarja az inket) megszűnt.
 
 **Popover-geometria** (a `Table.Root` `ScrollArea`-levágás elleni portál-mód
 igazolása — `ItemPicker.tsx` `floating="portal"`, akkor aktív, ha egy sor

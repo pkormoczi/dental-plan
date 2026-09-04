@@ -20,7 +20,7 @@
 
 import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { FDI_MARADO, type FogterkepAllapot } from '../domain/toothVisual';
-import { buildToothChartSvg, CHART_ARIA_LABEL } from '../design/toothChartSvg';
+import { buildToothChartSvg, CHART_ARIA_LABEL, CHART_WRAPPER_CLASS } from '../design/toothChartSvg';
 
 const JAW_LEN = 16;
 
@@ -140,6 +140,7 @@ export default function DentalChart({
 
   return (
     <div
+      className={CHART_WRAPPER_CLASS}
       role={listbox ? 'listbox' : 'toolbar'}
       aria-multiselectable={listbox ? true : undefined}
       aria-label={

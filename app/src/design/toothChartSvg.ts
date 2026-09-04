@@ -24,6 +24,9 @@ import { isMaradoFog, type FogterkepAllapot } from '../domain/toothVisual';
 import { ALAP_KATEGORIA_SZIN } from './treatmentVisuals';
 
 export const CHART_ARIA_LABEL = 'Fogászati kezelési terv – érintett fogak vizuális jelölése';
+// A components/DentalChart.tsx interaktív wrapperének class-a -- innen
+// hivatkozik rá az INTERACTIVE_STYLE lent, a fókuszhoz kötött szabályokhoz.
+export const CHART_WRAPPER_CLASS = 'dp-fogterkep';
 
 const XML_DECL_RE = /^<\?xml[^>]*\?>\s*/;
 const ROOT_SVG_OPEN_RE = /<svg\b[^>]*>/;
@@ -40,21 +43,41 @@ const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 // asset fejléce) -- a bölcsességfog-vonalrajz klip-csoportjait NEM, azoknak
 // nincs data-tooth-juk.
 const TOOTH_GROUP_OPEN_RE = /<g id="tooth-(\d\d)" data-tooth="\d\d" class="tooth"([^>]*)>/g;
-// A kattintható mód aktív/kijelölt gyűrűje -- két KÜLÖN, class-vezérelt
-// csatorna: a `.tooth-fill` `fill`-je (currentColor) a kezelés kategóriáját
-// mutatja, ez a `stroke` pedig azt, hogy a fog épp a billentyűzetes kurzoron
-// van (`is-active`) / a soron belüli választóban ki van jelölve
-// (`is-picked`). `paint-order:stroke` a kitöltés ALÁ teszi a vonalat, hogy
-// külső gyűrűként olvasódjon, ne takarja a színt. NEM `:focus-visible`
-// pszeudo-osztály -- a fogcsoportok sosem kapnak DOM-fókuszt, a fókusz a
-// components/DentalChart.tsx wrapperén marad, `aria-activedescendant`-tal
-// mutatva az aktív fogra (lásd ott). `#f77409` itt szabályos: tokens.ts
-// "CSAK díszítés" + a fogtérkép kiemelése néven nevezett kivétel
-// (docs/07-felulet-rendszer.md), szövegszínként viszont soha nem használható.
+// A kattintható mód aktív/kijelölt gyűrűje -- két KÜLÖN csatorna: a
+// `.tooth-fill` `fill`-je (currentColor) a kezelés kategóriáját mutatja; a
+// billentyűzetes kurzor (`is-active`) és a kijelölés (`is-picked`) viszont
+// EGYSZERRE is látszania kell ugyanazon a fogon (a doki a MÁR felvett
+// fogakon lépked végig) -- egy elemnek egy stroke-ja van, tehát a kurzor
+// NEM a `.tooth-fill` saját stroke-ja, hanem `injectFocusCursor()` két
+// külön `<path>`-t másol a fókuszált fog `.tooth-fill` path-jai ELÉ
+// (`.tooth-kurzor-kontraszt` fehér, `.tooth-kurzor` ink, szaggatott). Mivel
+// SVG-ben a dokumentum-sorrend egyben a festési sorrend, a `.tooth-fill`
+// (mindig utoljára, tehát legfelül) lefedi a két új réteg belső felét --
+// kifelé koncentrikus sávok maradnak, ugyanaz a trükk, mint a `.tooth.
+// is-picked .tooth-fill` saját `paint-order:stroke`-ja, csak elem-szinten.
+// `vector-effect:non-scaling-stroke` mindenhol: a rajz viewBox-a 1576
+// egység, a megjelenítés 340 (ToothPickerPopover) / 480 px (a két plan-
+// szintű panel) -- enélkül egy viewBox-egységben megadott vastagság a
+// megjelenítéskor szubpixelre zsugorodna, és a két hívási hely között is
+// eltérne. A kurzor-rétegek alapból `display:none` -- csak a wrapper
+// (components/DentalChart.tsx, `CHART_WRAPPER_CLASS`) `:focus-visible`
+// állapotában látszanak, hogy egy soha meg nem érintett fogtérképen ne
+// üljön tartós, kijelölésnek olvasható jelölés a kezdő fogon. Ez a szabály
+// és a wrapper saját fókuszgyűrűje is EBBEN a `<style>`-ban él, ami
+// `dangerouslySetInnerHTML`-lel kerül a dokumentumba -- egy így beszúrt
+// `<style>` a teljes dokumentum stíluslapjai közé kerül, a szelektorai a
+// beszúrási pont FÖLÖTTI (wrapper) DOM-ra is hatnak, nem csak az SVG-n
+// belülre. `#f77409` itt szabályos: tokens.ts "CSAK díszítés" + a
+// fogtérkép kiemelése néven nevezett kivétel (docs/07-felulet-rendszer.md),
+// szövegszínként viszont soha nem használható.
 const INTERACTIVE_STYLE =
   '.tooth{cursor:pointer}' +
-  '.tooth.is-active .tooth-fill{stroke:#2D2D2D;stroke-width:3;stroke-dasharray:4 3;paint-order:stroke}' +
-  '.tooth.is-picked .tooth-fill{stroke:#f77409;stroke-width:8;paint-order:stroke}';
+  '.tooth-kurzor,.tooth-kurzor-kontraszt{fill:none;pointer-events:none;vector-effect:non-scaling-stroke;display:none}' +
+  `.${CHART_WRAPPER_CLASS}:focus-visible .tooth-kurzor,.${CHART_WRAPPER_CLASS}:focus-visible .tooth-kurzor-kontraszt{display:inline}` +
+  '.tooth-kurzor-kontraszt{stroke:#fff;stroke-width:12}' +
+  '.tooth-kurzor{stroke:#2D2D2D;stroke-width:8;stroke-dasharray:6 4}' +
+  '.tooth.is-picked .tooth-fill{stroke:#f77409;stroke-width:4;paint-order:stroke;vector-effect:non-scaling-stroke}' +
+  `.${CHART_WRAPPER_CLASS}:focus-visible{outline:2px solid var(--focus-8, #2D2D2D);outline-offset:2px;border-radius:6px}`;
 
 export interface ToothChartSvgOptions {
   /** 'responsive' (alap): width/height nélkül, CSS width:100% -- webes nézet. 'fixed': explicit pixelméret -- a canvas-adapterhez kell. */
@@ -75,7 +98,7 @@ export interface ToothChartSvgOptions {
   interactive?: boolean;
   /** Csak `interactive: true` esetén számít. `'button'` (alap): plan-szintű kattintás (sorugrás/új sor, VAGY -- ha `selectedTeeth` is jön -- a Terv részletei több fogas kijelölés-navigációja). `'option'`: a soron belüli választó, ahol több fog is kijelölhető (`aria-selected`). A két mód egymástól FÜGGETLEN a `selectedTeeth`-től -- a `szerep` dönt az ARIA-szemantikáról, a `selectedTeeth` a vizuális gyűrűről. */
   szerep?: 'button' | 'option';
-  /** Csak `interactive: true` esetén számít: ez a fog kapja az `is-active` kurzor-gyűrűt (billentyűzetes navigáció, lásd DentalChart.tsx `aria-activedescendant`). */
+  /** Csak `interactive: true` esetén számít: ez a fog kapja az `is-active` classt és a kétrétegű kurzor-gyűrűt (billentyűzetes navigáció, lásd DentalChart.tsx `aria-activedescendant`), `injectFocusCursor()`-on át. */
   focusedTooth?: string;
   /** Csak `interactive: true` esetén számít: ezek a fogak kapnak `is-picked` kijelölés-gyűrűt -- `szerep: 'option'` esetén ez adja az `aria-selected` értékét is, `szerep: 'button'` esetén (ha meg van adva) az `aria-pressed` értékét. */
   selectedTeeth?: readonly string[];
@@ -140,6 +163,7 @@ export function buildToothChartSvg(
   if (interactive) {
     svg = svg.replace('</style>', `${INTERACTIVE_STYLE}</style>`);
     svg = makeInteractive(svg, allapot, szerep, focusedTooth, selectedTeeth);
+    svg = injectFocusCursor(svg, focusedTooth);
   }
 
   if (showToothNumbers) {
@@ -189,6 +213,29 @@ function makeInteractive(
       `<g id="tooth-${fdi}" data-tooth="${fdi}" class="${classes}" role="${szerep}" ` +
       `aria-label="${fdi}. fog – ${cimke}"${ariaSelected}${ariaPressed}${rest}>`
     );
+  });
+}
+
+/**
+ * A billentyűzetes kurzor (`is-active`) fog csoportjába, a saját
+ * `.tooth-fill` path-jai ELÉ két extra réteget másol (fehér kontraszt +
+ * ink) -- lásd az `INTERACTIVE_STYLE` fejléckommentjét a festési sorrend
+ * indoklásáért. A `d` a statikus assetből jön (`chartSvgRaw`), nem doki-
+ * szerkesztett szöveg, ezért nem kell `escapeAttr()`-en átmennie. Csak a
+ * FÓKUSZÁLT fog kap extra réteget -- a másik 31 fog markupja érintetlen.
+ * `focusedTooth` hiányzó/érvénytelen (nem létező `<g>`-re mutató) értéke
+ * esetén a `replace` nem talál egyezést a fókuszált fdi-re, no-op marad.
+ */
+function injectFocusCursor(svg: string, focusedTooth: string | undefined): string {
+  if (!focusedTooth) return svg;
+  const toothGroupRe = /<g id="tooth-(\d\d)"([^>]*)>([\s\S]*?)<\/g>/g;
+  return svg.replace(toothGroupRe, (match, fdi: string, attrs: string, body: string) => {
+    if (fdi !== focusedTooth) return match;
+    const fillDs = [...body.matchAll(/<path class="tooth-fill" d="([^"]+)"\/>/g)].map((m) => m[1]);
+    const cursorLayers = fillDs
+      .map((d) => `<path class="tooth-kurzor-kontraszt" d="${d}"/><path class="tooth-kurzor" d="${d}"/>`)
+      .join('');
+    return `<g id="tooth-${fdi}"${attrs}>${cursorLayers}${body}</g>`;
   });
 }
 

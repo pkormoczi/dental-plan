@@ -66,6 +66,7 @@ describe('buildToothChartSvg', () => {
       expect(svg).not.toContain('aria-selected');
       expect(svg).not.toContain('is-active');
       expect(svg).not.toContain('is-picked');
+      expect(svg).not.toContain('tooth-kurzor');
       const rootTag = svg.match(/<svg[^>]*>/)![0];
       expect(rootTag).toContain('aria-hidden="true"');
       expect(svg).toContain('<title id="title">Fogászati kezelési terv');
@@ -139,6 +140,40 @@ describe('buildToothChartSvg', () => {
     it('szerep "button" selectedTeeth NÉLKÜL (a szerkesztő plan-szintű térképe) NINCS aria-pressed -- a markup bájtra változatlan', () => {
       const svg = buildToothChartSvg(makeAllapot({}), { interactive: true });
       expect(svg).not.toContain('aria-pressed');
+    });
+
+    it('a fókuszált fog kap kétrétegű kurzor-path-párt (kontraszt + ink), a szomszéd fog nem', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), { interactive: true, focusedTooth: '24' });
+      const g24 = svg.match(/<g id="tooth-24"[^>]*>([\s\S]*?)<\/g>/)![1];
+      expect(g24.indexOf('tooth-kurzor-kontraszt')).toBeGreaterThanOrEqual(0);
+      expect(g24.indexOf('tooth-kurzor-kontraszt')).toBeLessThan(g24.indexOf('tooth-kurzor"'));
+      expect(g24.indexOf('tooth-kurzor"')).toBeLessThan(g24.indexOf('tooth-fill'));
+      const g25 = svg.match(/<g id="tooth-25"[^>]*>([\s\S]*?)<\/g>/)![1];
+      expect(g25).not.toContain('tooth-kurzor');
+    });
+
+    it('focusedTooth nélkül egyik fog sem kap kurzor-path-ot (a <style> szabálya önmagában nem markup)', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), { interactive: true });
+      expect(svg.match(/<path class="tooth-kurzor/g)).toBeNull();
+    });
+
+    it('a <style> non-scaling-stroke-ot és a fókuszhoz kötött megjelenítést tartalmazza', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), { interactive: true });
+      expect(svg).toContain('vector-effect:non-scaling-stroke');
+      expect(svg).toContain('.dp-fogterkep:focus-visible .tooth-kurzor');
+      expect(svg).toContain('.dp-fogterkep:focus-visible{outline:');
+    });
+
+    it('kombinált eset: egy egyszerre fókuszált ÉS kijelölt fog is-active ÉS is-picked classt kap, kurzor-path-okkal együtt', () => {
+      const svg = buildToothChartSvg(makeAllapot({}), {
+        interactive: true,
+        focusedTooth: '16',
+        selectedTeeth: ['16'],
+      });
+      const g16 = svg.match(/<g id="tooth-16"[^>]*>([\s\S]*?)<\/g>/)![0];
+      expect(g16).toContain('class="tooth is-active is-picked"');
+      expect(g16).toContain('tooth-kurzor-kontraszt');
+      expect(g16).toContain('tooth-kurzor"');
     });
   });
 });

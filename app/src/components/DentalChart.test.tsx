@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import DentalChart from './DentalChart';
+import { CHART_WRAPPER_CLASS } from '../design/toothChartSvg';
 import type { KategoriaVizual } from '../design/treatmentVisuals';
 import type { FogterkepAllapot, FogVizualisAllapot } from '../domain/toothVisual';
 
@@ -48,6 +49,7 @@ describe('DentalChart', () => {
 
     const root = screen.getByRole('img', { name: /Fogászati kezelési terv/ });
     expect(root).toHaveStyle({ cursor: 'default' });
+    expect(root).not.toHaveClass(CHART_WRAPPER_CLASS);
   });
 
   it('onToothClick megadásakor a kattintott fog FDI-kódja érkezik a callbackbe', async () => {
@@ -63,11 +65,12 @@ describe('DentalChart', () => {
   });
 
   describe('billentyűzet (docs/07-felulet-rendszer.md "Billentyűzet" -- egérhasználat nélkül is felvihető)', () => {
-    it('onToothClick esetén role="toolbar", EGY tabIndex, aria-activedescendant az első fogon (18) indul', () => {
+    it('onToothClick esetén role="toolbar", EGY tabIndex, aria-activedescendant az első fogon (18) indul, a wrapper a fókuszgyűrű classt hordozza', () => {
       render(<DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} />);
       const root = screen.getByRole('toolbar');
       expect(root).toHaveAttribute('tabindex', '0');
       expect(root).toHaveAttribute('aria-activedescendant', 'tooth-18');
+      expect(root).toHaveClass(CHART_WRAPPER_CLASS);
     });
 
     it('ArrowRight a felső állcsonton belül lép, ArrowLeft a szélen NEM ugrik körbe (18/28 nem szomszédos fog)', async () => {

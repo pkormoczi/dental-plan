@@ -392,7 +392,10 @@ kezelés-kategóriánként színezve (lásd `app/src/design/treatmentVisuals.ts`
 - **Billentyűzet**: csukva a panel gombja egy sima Tab-megálló; nyitva a
   fogtérkép **is** egyetlen Tab-megállóként érhető el, nyilakkal lépked a
   fogak közt (`←`/`→` az állcsonton belül, `↑`/`↓` állcsontot vált
-  ugyanabban a pozícióban), `Enter`/`Szóköz` aktivál.
+  ugyanabban a pozícióban), `Enter`/`Szóköz` aktivál. A billentyűzetes
+  kurzor csak a fogtérkép fókuszában látszik, és egy már kijelölt fogon is
+  megkülönböztethető marad a kijelölés-gyűrűtől — lásd
+  `docs/07-felulet-rendszer.md` § Szín, forma, sűrűség.
 - A darabszám (`Db`) automatikusan követi a sor fogainak számát, amíg a doki
   kézzel felül nem írja (D32) — lásd „Sor mezői" és „Figyelmeztetés" lentebb.
   A fogtérkép-kattintással felvett új sor (fent) is ezen az úton indul.

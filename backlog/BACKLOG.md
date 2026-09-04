@@ -15,17 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 102. tétel: Fogtérkép billentyűzetes fókuszjelzőjének kontrasztja
-
-  A `design/toothChartSvg.ts` fókusz-stílusa vékony, szaggatott, sötét
-  körvonal, ami egy amúgy is fekete vonalrajzú, esetleg már színezett
-  fogon alig látszik; a `components/DentalChart.tsx` wrappernek nincs
-  saját fókusz-stílusa. A kiválasztott-állapot ugyanott jóval erősebb
-  (vastag, narancs) jelzést kap. A "UX kritikus pontja" (lásd CLAUDE.md)
-  szerint pont a billentyűzetes út a mérce. A vizuális igazolás a
-  `browser-validation` skillt igényli, unit teszttel nem zárható le.
-  **Terv:** `backlog/plans/backlog-102-fogterkep-fokuszjelzo-terv.md`
-
 ### 103. tétel: Demó-eredetű, PDF nélküli verziók üzenete
 
   A demó-seed csak `terv.json`-t ír, PDF-blobot nem, ezért minden seed-elt
