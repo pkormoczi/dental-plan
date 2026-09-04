@@ -770,6 +770,24 @@ tervbe”, „Új terv”) — egyik sem kivétel. A megerősített felülírás
 pillanatában a perzisztált piszkozat **azonnal** törlődik, nem a
 következő írási triggerre vár.
 
+A „Piszkozat folytatása” kártya és a fenti felülírás-őrök csak TÉNYLEGES
+szerkesztés után jeleznek — egy meglévő páciens puszta kiválasztása
+(„Meglévő páciens keresése…”, egy terv nélküli páciens „+ Új terv” gombja)
+önmagában NEM számít mentetlen munkának, mert ilyenkor csak a páciens
+törzsadata (név, elérhetőség stb.) tölti elő a draftot, ezt a doki egy
+gombnyomással bármikor újra elő tudja állítani ugyanannak a páciensnek az
+ismételt kiválasztásával. Ezzel szemben a „Másolás új tervbe” azonnal
+mentetlen munkának számít, mert egy MÁSIK terv teljes fázis/sor-struktúráját
+hozza át — ennek elvesztése valódi adatvesztés lenne. Az autosave-írás
+(fent) ettől függetlenül mindkét esetben egyformán fut — a
+`piszkozatTartalmas()` a törzsadat-előtöltés után is igazat ad, tehát a
+crash-recovery nem gyengül; kizárólag a „mentetlen munka” UI-jelzés
+(kártya, felülírás-őrök) különbözik. Egy böngésző-újraindítás utáni
+visszaállításnál a különbségtétel megszűnik: a visszaállított piszkozat —
+akár törzsadat-előtöltésből, akár szerkesztésből származott — mindig
+azonnal védettnek számít, mert a memóriabeli „még nem szerkesztett”
+állapot nem éli túl az újraindítást.
+
 Ha az automatikus mentés elhasal (pl. localStorage-kvóta), a hiba a Terv
 szerkesztőben is látszik, nem csak a Kezdőlapon — ott dolgozik a doki.
 Sikeres mentésnél a Terv szerkesztő fejlécében egy semleges „Piszkozat

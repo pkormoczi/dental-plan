@@ -2523,3 +2523,24 @@ karbantartási kör négy önálló javítása.
   `docs/07-felulet-rendszer.md` „Soronkénti akciók" sor-azonosítási
   szabályát elégíti ki. Részletek: `docs/03-funkcionalis-spec.md` § 6.
   „Tábla"; `docs/07-felulet-rendszer.md` § Komponensek.
+
+### 100. tétel: „Piszkozat folytatása" csak tényleges szerkesztés után — KÉSZ
+
+- **Méret:** kicsi — egy kötelező paraméter bővítés két produkciós
+  hívóhellyel, plusz 4 új teszteset.
+- **Megvalósítás:** az `AppStateValue.copyPlanIntoDraft` kapott egy
+  kötelező `kiindulas: 'alapallapot' | 'mentetlen-munka'` paramétert, ami
+  eldönti, hogy a betett `Plan` a `loadPlanIntoDraft` mintáját követve
+  tiszta alapállapotnak számít-e (`mentettPlan` a `next`-tel azonos
+  referenciára áll, `vanMentetlenPiszkozat` azonnal hamis), vagy a régi,
+  azonnal védett viselkedést kapja. A puszta törzsadat-előtöltés
+  (`ujTervForrasPaciensbol` eredménye, `components/PlanVersionActionDialog.tsx`
+  `ujTervPaciensAdataival`) mostantól `'alapallapot'`-tal hív — ez fedi le
+  mindhárom belépési pontot („Meglévő páciens keresése…”, „Első terv
+  indítása”, terv-lánc fa „Új terv”), mert mindhárom a megosztott
+  `usePlanVersionActions` hookon fut. A teljes terv-másolat
+  (`planMasolatKent`, „Másolás új tervbe”) VÁLTOZATLANUL azonnal védett
+  marad. Az autosave-írás (`piszkozatTartalmas()`) mindkét ágon egyformán
+  fut, a crash-recovery nem gyengült. Részletek:
+  `docs/03-funkcionalis-spec.md` § Autosave; `CLAUDE.md` "Meglévő
+  segédfüggvények".

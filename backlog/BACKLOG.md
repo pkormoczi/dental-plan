@@ -15,20 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 100. tétel: „Piszkozat folytatása" csak tényleges szerkesztés után
-
-  Egy MEGLÉVŐ páciens puszta kiválasztása a „Új terv indítása" lapon
-  azonnal „védendő piszkozatot" hoz létre: a `copyPlanIntoDraft` szándékosan
-  mentetlen állapotot állít be, a `domain/piszkozat.ts`
-  `piszkozatTartalmas()` pedig már a nem üres páciensnévre igazat ad —
-  egyetlen leütés nélkül. A Kezdőlap legfeltűnőbb eleme így „üres"
-  ránézésekre is felvillan, ami idővel leszoktatja a dokit a kártya
-  komolyan vételéről. Kért: kiindulási pillanatkép összevetése (a
-  `components/useDirtyDraft.ts` `draftDirty()` mintáján) — a meglévő
-  tesztek egy része a mai viselkedést rögzíti, azokat is felül kell
-  vizsgálni.
-  **Terv:** `backlog/plans/backlog-100-piszkozat-alapallapot-terv.md`
-
 ### 101. tétel: Véglegesítés-őr — puha figyelmeztetések rangsora és számlálója
 
   A `domain/veglegesitesOr.ts` checklist-tételei közül a `soft` szintűek

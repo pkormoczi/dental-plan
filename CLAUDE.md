@@ -375,10 +375,16 @@ tervként, D26, D57) segédfüggvényei, szintén ne írd újra őket:
   blokkot az élő törzsadatból építi (`paciensTorzsadatbol()`), felülírva
   a forrás verzió pillanatképét; a `paciensId` ettől függetlenül mindig a
   forrás tervből jön
-- `copyPlanIntoDraft(next)` (`app/src/state/AppState.tsx`) — a fenti két
-  függvény EREDMÉNYÉT teszi be a piszkozatba a `resetPlanDraft` mintáján
-  (nem a `loadPlanIntoDraft`-én): a másolat azonnal mentetlen munkának
-  számít, mert még soha nincs elmentve a saját `tervId` alatt
+- `copyPlanIntoDraft(next, kiindulas)` (`app/src/state/AppState.tsx`) — a
+  fenti két függvény EREDMÉNYÉT teszi be a piszkozatba, a `resetPlanDraft`
+  mintáján. A kötelező `kiindulas` paraméter dönti el, a `next` azonnal
+  mentetlen munkának számít-e (`'mentetlen-munka'`, a `planMasolatKent`
+  eredményének való, mert egy MÁSIK terv struktúráját hozza át, még soha
+  nincs elmentve a saját `tervId` alatt), vagy a `loadPlanIntoDraft`
+  mintáját követve tiszta alapállapotnak (`'alapallapot'`, a puszta
+  törzsadat-előtöltésnek — `ujTervForrasPaciensbol` eredménye — való, mert
+  az egy gombnyomással bármikor újraelőállítható) — lásd
+  `docs/03-funkcionalis-spec.md` § Autosave
 
 A verzió-szintű akciók tétel (`docs/03-funkcionalis-spec.md` § 5. „A
 verziósoron…", D58) segédfüggvénye, szintén ne írd újra:

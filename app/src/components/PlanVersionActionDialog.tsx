@@ -112,7 +112,11 @@ export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): Plan
         storage.loadPlan({ patientDir, planDir: ref.planDir, versionDir: ref.versionDir }),
         storage.loadPatientData(patientDir),
       ]);
-      copyPlanIntoDraft(planMasolatKent(plan, settings, todayIso(), master, priceList), patientDir);
+      copyPlanIntoDraft(
+        planMasolatKent(plan, settings, todayIso(), master, priceList),
+        'mentetlen-munka',
+        patientDir,
+      );
       navigate('/paciens');
     } catch (err) {
       setHiba({
@@ -129,7 +133,11 @@ export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): Plan
     if (!patientDir) return;
     try {
       const next = await ujTervForrasPaciensbol(storage, settings, priceList, patientDir);
-      copyPlanIntoDraft(next, patientDir);
+      // Puszta törzsadat-előtöltés, nem szerkesztés -- a doki egy gombnyomással
+      // bármikor újraelőállítja, tehát elvesztése nem valódi adatvesztés
+      // (docs/03-funkcionalis-spec.md § Autosave). Ezért 'alapallapot': a
+      // "Piszkozat folytatása" kártya csak TÉNYLEGES szerkesztés után jelenik meg.
+      copyPlanIntoDraft(next, 'alapallapot', patientDir);
       navigate('/paciens');
     } catch (err) {
       setHiba({

@@ -24,7 +24,7 @@ import { legutobbAktivPaciensek, UJ_TERV_RECENT_LIMIT } from '../domain/paciensA
 import type { Plan } from '../domain/types';
 
 function DraftProbe() {
-  const { plan } = useAppState();
+  const { plan, vanMentetlenPiszkozat } = useAppState();
   const sorCount = plan.fazisok.reduce((n, f) => n + f.sorok.length, 0);
   return (
     <div>
@@ -33,6 +33,7 @@ function DraftProbe() {
       <div data-testid="draft-telefon">{plan.paciens.telefon}</div>
       <div data-testid="draft-tervid">„{plan.tervId}”</div>
       <div data-testid="draft-sorcount">{sorCount}</div>
+      <div data-testid="draft-dirty">{String(vanMentetlenPiszkozat)}</div>
     </div>
   );
 }
@@ -424,6 +425,22 @@ describe('NewPlanPage', () => {
     expect(screen.getByTestId('draft-nev')).toHaveTextContent('Kovács János');
     expect(screen.getByTestId('draft-tervid')).toHaveTextContent('„”'); // üres tervId -- új tervlánc
     expect(screen.getByTestId('draft-sorcount')).toHaveTextContent('0');
+  });
+
+  // 100. tétel: egy meglévő páciens PUSZTA kiválasztása (törzsadat-előtöltés,
+  // szerkesztés nélkül) nem minősülhet "mentetlen munkának" -- a Kezdőlap
+  // "Piszkozat folytatása" kártyája enélkül minden puszta páciens-átnézésre
+  // felvillanna. Kontrasztként lásd a "Másolás új tervbe" tesztjét
+  // (PlanVersionActionDialog/PatientPlanChains oldalán), ahol ez VÁLTOZATLANUL
+  // azonnal igaz marad.
+  it('meglévő páciens puszta kiválasztása után NINCS mentetlen piszkozat', async () => {
+    const user = userEvent.setup();
+    renderNewPlan();
+
+    await user.click(await screen.findByRole('button', { name: /Kovács János/ }));
+
+    expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
+    expect(screen.getByTestId('draft-dirty')).toHaveTextContent('false');
   });
 
   it('"+ Új páciens" megerősítést kér mentetlen piszkozatnál -- Mégse megtartja', async () => {

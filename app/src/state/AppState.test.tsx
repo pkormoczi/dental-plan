@@ -56,7 +56,7 @@ function makeLoadedPlan(overrides: Partial<Plan> = {}): Plan {
 }
 
 function Probe() {
-  const { plan, settings, loadPlanIntoDraft, copyPlanIntoDraft, vanMentetlenPiszkozat, loadedOsszesitokDiff } =
+  const { plan, settings, setPlan, loadPlanIntoDraft, copyPlanIntoDraft, vanMentetlenPiszkozat, loadedOsszesitokDiff } =
     useAppState();
   return (
     <div>
@@ -65,8 +65,16 @@ function Probe() {
       <div data-testid="statusz">{plan.statusz}</div>
       <div data-testid="tervid">{plan.tervId}</div>
       <button onClick={() => loadPlanIntoDraft(makeLoadedPlan())}>load</button>
-      <button onClick={() => copyPlanIntoDraft(planMasolatKent(makeLoadedPlan(), settings, '2026-08-10'))}>
+      <button
+        onClick={() =>
+          copyPlanIntoDraft(planMasolatKent(makeLoadedPlan(), settings, '2026-08-10'), 'mentetlen-munka')
+        }
+      >
         copy
+      </button>
+      <button onClick={() => copyPlanIntoDraft(makeLoadedPlan(), 'alapallapot')}>copy-alapallapot</button>
+      <button onClick={() => setPlan((p) => ({ ...p, paciens: { ...p.paciens, telefon: '+36301234567' } }))}>
+        edit
       </button>
     </div>
   );
@@ -114,6 +122,42 @@ describe('copyPlanIntoDraft', () => {
     await user.click(await screen.findByRole('button', { name: 'load' }));
 
     expect(await screen.findByTestId('dirty')).toHaveTextContent('false');
+  });
+
+  // 100. tétel: a puszta törzsadat-előtöltés (kiindulas === 'alapallapot')
+  // a loadPlanIntoDraft mintáját követi -- a Kezdőlap "Piszkozat folytatása"
+  // kártyája csak TÉNYLEGES szerkesztés után jelenjen meg, ne egy meglévő
+  // páciens puszta kiválasztására.
+  it('alapallapot kiindulással a copyPlanIntoDraft után vanMentetlenPiszkozat hamis', async () => {
+    const user = userEvent.setup();
+    renderProbe();
+
+    await user.click(await screen.findByRole('button', { name: 'copy-alapallapot' }));
+
+    expect(await screen.findByTestId('dirty')).toHaveTextContent('false');
+  });
+
+  it('alapallapot kiindulás után egy tényleges szerkesztés vanMentetlenPiszkozat-ot igazra vált', async () => {
+    const user = userEvent.setup();
+    renderProbe();
+
+    await user.click(await screen.findByRole('button', { name: 'copy-alapallapot' }));
+    expect(await screen.findByTestId('dirty')).toHaveTextContent('false');
+
+    await user.click(screen.getByRole('button', { name: 'edit' }));
+
+    expect(await screen.findByTestId('dirty')).toHaveTextContent('true');
+  });
+
+  it('alapallapot kiindulás is kiíródik az autosave-en keresztül a dp:piszkozat kulcsra', async () => {
+    const user = userEvent.setup();
+    renderProbe();
+
+    await user.click(await screen.findByRole('button', { name: 'copy-alapallapot' }));
+
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+    const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+    expect(rec.plan.paciens.nev).toBe('Nagy Éva');
   });
 
   // D53 (48. tétel): a betöltött piszkozat statusz-a PISZKOZAT-ra áll --
@@ -259,6 +303,7 @@ function MetaProbe() {
         onClick={() =>
           copyPlanIntoDraft(
             planMasolatKent(makeLoadedPlan(), settings, '2026-08-10'),
+            'mentetlen-munka',
             'Teszt-Elek_abc123',
           )
         }

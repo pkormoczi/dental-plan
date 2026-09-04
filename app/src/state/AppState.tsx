@@ -47,20 +47,31 @@ interface AppStateValue {
    */
   loadPlanIntoDraft: (plan: Plan, patientDir?: string) => void;
   /**
-   * Beteszi a piszkozatba egy `planUjPaciensselTervhez`/`planMasolatKent`
-   * (domain/planCopy.ts, backlog-17) hívás EREDMÉNYÉT -- a hívó (
-   * OsszesTervSection.tsx) már elvégezte a tiszta transzformációt, ez a
-   * függvény csak a React-bekötésért felel. A `resetPlanDraft` mintáját
-   * követi, NEM a `loadPlanIntoDraft`-ét: a most kapott `next` MÉG SOHA
-   * nincs elmentve a saját `tervId` alatt (a `planMasolatKent` is üres
-   * `tervId`-t ad), tehát ténylegesen mentetlen munka -- ezért `plan` és
+   * Beteszi a piszkozatba egy `planUjPaciensselTervhez`/`planMasolatKent`/
+   * `ujTervForrasPaciensbol` hívás EREDMÉNYÉT -- a hívó már elvégezte a
+   * tiszta transzformációt, ez a függvény csak a React-bekötésért felel. A
+   * `resetPlanDraft` mintáját követi, NEM a `loadPlanIntoDraft`-ét, a
+   * `patientDir` ugyanúgy opcionális, mint ott (D37).
+   *
+   * A `kiindulas` dönti el, melyik ág fut: `'mentetlen-munka'`-nál `plan` és
    * `mentettPlan` szándékosan KÜLÖNBÖZŐ referencia lesz, `vanMentetlenPiszkozat`
-   * azonnal igaz. A `drafts.clear()` hívás (amit a `resetPlanDraft` a végén
-   * elvégez) itt NEM fut -- ott azért törlünk, mert egy ÜRES tervre váltunk,
-   * itt VAN tartalom, amit az autosave-effektnek meg kell őriznie. A
-   * `patientDir` ugyanúgy opcionális, mint a `loadPlanIntoDraft`-nál (D37).
+   * azonnal igaz -- ez a teljes terv-másolatnak (`planMasolatKent`) való,
+   * ami egy MÁSIK terv fázis/sor-struktúráját hozza át, és MÉG SOHA nincs
+   * elmentve a saját `tervId` alatt. `'alapallapot'`-nál a `loadPlanIntoDraft`
+   * mintáját követve `mentettPlan` a `next`-tel AZONOS referenciára áll,
+   * `vanMentetlenPiszkozat` azonnal hamis -- ez a puszta törzsadat-előtöltésnek
+   * (`ujTervForrasPaciensbol`) való, mert az egy gombnyomással bármikor
+   * újraelőállítható, elvesztése nem valódi adatvesztés (docs/03-
+   * funkcionalis-spec.md § Autosave). A megkülönböztetés kötelező, explicit
+   * paraméter -- egy alapértelmezett érték némán elrejtene egy jövőbeli,
+   * rosszul döntő hívóhelyet. A `drafts.clear()` hívás (amit a
+   * `resetPlanDraft` a végén elvégez) egyik ágon sem fut -- ott azért
+   * törlünk, mert egy ÜRES tervre váltunk, itt VAN tartalom, amit az
+   * autosave-effektnek meg kell őriznie (mindkét ágon, `kiindulas`-tól
+   * függetlenül -- az autosave triggere `piszkozatTartalmas(plan)`-ra épül,
+   * nem `vanMentetlenPiszkozat`-ra).
    */
-  copyPlanIntoDraft: (next: Plan, patientDir?: string) => void;
+  copyPlanIntoDraft: (next: Plan, kiindulas: 'alapallapot' | 'mentetlen-munka', patientDir?: string) => void;
   /**
    * Igaz, ha `plan`-en van olyan tartalom (`piszkozatTartalmas`), ami még
    * nincs a fájl-storage-ban -- azaz `plan` egy másik objektumreferencia,
@@ -410,12 +421,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setMentettPlan(friss);
         setPiszkozatMeta(patientDir ? { patientDir } : {});
       },
-      copyPlanIntoDraft: (next, patientDir) => {
+      copyPlanIntoDraft: (next, kiindulas, patientDir) => {
         setPlanState(next);
         setLoadedOsszesitokDiff(null);
         setFrissitettDatum(null);
         setOrvosFallback(null);
-        setMentettPlan(null);
+        setMentettPlan(kiindulas === 'alapallapot' ? next : null);
         setPiszkozatMeta(patientDir ? { patientDir } : {});
       },
       vanMentetlenPiszkozat: piszkozatTartalmas(plan) && plan !== mentettPlan,
