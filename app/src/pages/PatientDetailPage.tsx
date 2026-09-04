@@ -364,7 +364,6 @@ export default function PatientDetailPage() {
               aktivDraft={sajatAktivDraft}
               nyitottLancok={nyitottLancok}
               onLancValtas={setLancNyitva}
-              torzsadat={adatok}
               onLabelSaved={(planDir, tervCim) =>
                 setChainData((prev) =>
                   prev

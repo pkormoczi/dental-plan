@@ -1342,21 +1342,6 @@ checklist") segédfüggvénye/rétege, szintén ne írd újra őket:
   `components/PaciensBreadcrumb.tsx` mind elérje; a `feloldPatientDir()`
   (`domain/torzsadatBetoltes.ts`) mintáján, sosem dob
 
-A terv-lánc lista törzsadat-eltérés jelzése tétel (`docs/03-funkcionalis-
-spec.md` § 5. Terv-láncok és verziók, „Törzsadat ↔ pillanatkép eltérés
-jelzése") segédfüggvénye, szintén ne írd újra:
-- `paciensElteres(master, snapshot)` / `verzioElteresek(master,
-  plansByVersion)` (`app/src/domain/torzsadatElteres.ts`) — a MEGLÉVŐ
-  `masterSnapshotDiff()` (`domain/masterSnapshotDiff.ts`) újrahasználatával,
-  nincs második összehasonlító. `master === null`-nál (nincs lezárt
-  törzsadat, vagy nem olvasható) mindkettő üres eredményt ad — a
-  `megjelenitettTorzsadat()` élő fallbackje itt TILOS bemenetként, mert
-  attól minden régebbi verzió eltérőnek látszana a puszta korkülönbség
-  miatt. A `components/PatientPlanChains.tsx` hívja mindhárom jelzési
-  ponton (lánc-fejléc, verziósor, aktív piszkozat blokk); a törzsadatot
-  proppként kapja, a betöltési stratégia (a `plans`/`versionsByPlan`
-  mintáján) hívónként eltér
-
 A mentés-visszajelzés tétel (`docs/03-funkcionalis-spec.md` § 6.
 Kezelések és árak „Sor kinyitása" „Mentés-visszajelzés a soron",
 `docs/07-felulet-rendszer.md` § Komponensek) segédfüggvénye, szintén ne

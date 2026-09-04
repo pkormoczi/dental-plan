@@ -2619,6 +2619,9 @@ karbantartási kör négy önálló javítása.
   jelenik meg jelzés. A jelzés tisztán informatív, nem kattintható, nem
   módosít mentett adatot. Részletek: `docs/03-funkcionalis-spec.md` § 5
   "Terv-láncok és verziók"; `CLAUDE.md` "Meglévő segédfüggvények".
+- **A 112. tétel ezt teljesen visszabontotta** — a lánc-listás jelzés
+  kontextus és akció nélküli, N-szeresen ismétlődő zajnak bizonyult, ne
+  épülj rá.
 
 ### 105. tétel: Sikerképernyő — mit fogadott el a doki véglegesítéskor — KÉSZ
 
@@ -2658,3 +2661,23 @@ karbantartási kör négy önálló javítása.
   képernyőolvasó-visszajelzésről. Részletek: `docs/03-funkcionalis-
   spec.md` § 6 "Kezelések és árak" "Sor kinyitása"; `docs/07-felulet-
   rendszer.md` § Komponensek.
+
+### 112. tétel: A terv-lánc lista törzsadat-eltérés jelzésének visszabontása — KÉSZ
+
+- **Méret:** kicsi — egy domain modul törlése, egy komponens és két hívó
+  oldal visszaállítása az eltérés-jelzés bevezetése előtti állapotra.
+- **Megvalósítás:** a 104. tétel amber jelvényei (lánc-fejléc, verziósor,
+  aktív piszkozat blokk) teljesen eltűntek a Korábbi tervek fájáról. A
+  doki egy doctor-persona review lelete alapján nézte át a funkciót: a
+  jelvény kontextus nélküli számot mondott (nem derült ki, MI változott),
+  és mind a három archív verzió ugyanahhoz az egy törzsadathoz mérve
+  egyszerre villant sárgára egyetlen javítás után — zaj, nem információ.
+  A négy érintett akció közül három már fedett volt jelzés nélkül is
+  (Terv részletei tábla, Terv adatai szinkron-dialógus + véglegesítés-őr
+  INFO tétele, Másolás új tervbe élő törzsadata), a negyedik (Letöltés)
+  nem igényel figyelmeztetést, mert a mentett PDF szándékosan történeti
+  pillanatkép. A `domain/torzsadatElteres.ts` törölve; az
+  `OsszesTervSection.tsx` páciensenkénti extra `loadPatientData`-hívása
+  megszűnt. A négy megmaradó, akcióképes helyen (Terv részletei lap,
+  Terv adatai lap "Páciens törzsadata" szekció, véglegesítés-őr, Másolás
+  új tervbe) a törzsadat-eltérés jelzése változatlan.

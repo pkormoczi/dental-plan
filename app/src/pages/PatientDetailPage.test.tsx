@@ -258,40 +258,6 @@ describe('PatientDetailPage', () => {
     expect(await screen.findByRole('button', { name: '+ Új terv' })).toBeInTheDocument();
   });
 
-  // 104. tétel: a lánc-fa a MÁR betöltött törzsadatot adja le a
-  // PatientPlanChains-nek (nulla új storage-hívás) -- Kovács Jánosnak a
-  // seedben nincs paciens-adatok.json-ja, ezért ez a teszt kézzel ír egyet,
-  // a tervben lévőtől eltérő telefonszámmal.
-  it('eltérő törzsadat mellett a lánc-fejlécen és a verziósoron megjelenik a mezőszámos jelvény', async () => {
-    const seeder = new DemoStorage();
-    const kovacsPaciensId = seedPatients.find((p) => p.patientDir === kovacsDir)!.record.paciensId;
-    const kovacsSnapshot = seedPlans.find((e) => e.patientDir === kovacsDir)!.plan.paciens;
-    await seeder.savePatientData(kovacsDir, {
-      schemaVersion: 1,
-      paciensId: kovacsPaciensId,
-      ...kovacsSnapshot,
-      telefon: '+36 70 999 9999',
-    });
-
-    renderDetail(kovacsDir);
-
-    // Kovácsnak egyetlen lánca van -- alapból nyitva, tehát a verziósor is
-    // azonnal látszik, toggle nélkül.
-    const lancToggle = await screen.findByRole('button', { expanded: true });
-    expect(within(lancToggle).getByText('1 verzió eltér')).toBeInTheDocument();
-    const badge = screen.getByText('1 mező azóta módosult');
-    expect(badge).toBeInTheDocument();
-    expect(badge).toHaveAttribute('title', 'Telefon');
-  });
-
-  it('törzsadat nélküli páciensnél (Kovács János alapból) nincs törzsadat-eltérés jelvény', async () => {
-    renderDetail(kovacsDir);
-
-    const lancToggle = await screen.findByRole('button', { expanded: true });
-    expect(within(lancToggle).queryByText(/verzió eltér/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/mező azóta módosult/)).not.toBeInTheDocument();
-  });
-
   // A korábbi, oldal-szintű "N terv" burkoló toggle (páciens-szinten) itt
   // MA IS nincs (a 46. tétel előtt sem volt, D44) -- de a 46. tétel óta a
   // `PatientPlanChains` lánc-SZINTŰ toggle-je EZEN a tabon is érvényes,

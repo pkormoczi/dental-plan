@@ -238,34 +238,6 @@ describe('OsszesTervSection', () => {
     expect(await screen.findByText(/⚠ néhány verziója nem olvasható/)).toBeInTheDocument();
   });
 
-  // 104. tétel: a `standalone` fülön is jelenik meg a törzsadat-eltérés
-  // jelvénye, a beágyazott fához hasonlóan; egy sérült paciens-adatok.json
-  // némán kimarad (nincs jelzés annál a páciensnél), a többi páciens fája --
-  // beleértve a törzsadat-betöltés nélküli, sérülteket is -- ép marad.
-  it('a törzsadat-eltérés jelvénye a standalone fülön is megjelenik; egy sérült paciens-adatok.json némán kimarad', async () => {
-    const nagy = seedPlans.find((e) => e.plan.paciens.nev === 'Nagy Éva')!;
-    const masterKey = `dp:paciensek/${nagy.patientDir}/paciens-adatok.json`;
-    const original = localStorage.getItem(masterKey);
-    expect(original).not.toBeNull();
-    const master = JSON.parse(original!);
-    localStorage.setItem(masterKey, JSON.stringify({ ...master, telefon: '+36 70 000 0000' }));
-
-    const tothMasterKey = `dp:paciensek/${seedPlans.find((e) => e.plan.paciens.nev === 'Tóth Zoltán')!.patientDir}/paciens-adatok.json`;
-    localStorage.setItem(tothMasterKey, 'not valid json {{{');
-
-    renderHistory();
-
-    await screen.findByText('Nagy Éva');
-    const nagyCard = patientCard('Nagy Éva');
-    // Nagy Évának két lánca van -- a módosított telefon mindkettőt érinti.
-    expect((await within(nagyCard).findAllByText(/verzió eltér/)).length).toBeGreaterThan(0);
-
-    // A sérült törzsadatú Tóth Zoltán fája is rendben megjelenik, csak
-    // eltérés-jelzés nélkül -- a törzsadat-betöltés hibája nem hibaállapot.
-    const tothCard = patientCard('Tóth Zoltán');
-    expect(within(tothCard).queryByText(/verzió eltér/)).not.toBeInTheDocument();
-  });
-
   // backlog-11: a doki nyitás nélkül lássa, mennyi volt egy korábbi ajánlat.
   it('minden verziósor a saját osszesitok.fizetendo értékét mutatja', async () => {
     // Ugyanazon terv-lánc két verziója eltérő végösszeggel -- ez igazolja,
