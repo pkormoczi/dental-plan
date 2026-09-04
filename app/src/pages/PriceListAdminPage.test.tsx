@@ -22,6 +22,19 @@ function renderAdmin() {
   );
 }
 
+// A 99. tétel óta az "Aktív"/"Gyakori tétel" aria-label a tételnévvel és az
+// aktuális állapottal bővült (`<név> aktiválása`/`<név> inaktiválása` stb.) --
+// ez a két helper állapot-agnosztikusan találja meg ugyanazt a gombot, hogy a
+// tesztek ne törjenek el egy állapotváltáson (pl. inaktiválás utáni
+// reaktiválás) vagy egy jövőbeli szövegcsiszoláson.
+function aktivGomb(row: HTMLElement): HTMLElement {
+  return within(row).getByLabelText(/ (in)?aktiválása$/);
+}
+
+function gyakoriGomb(row: HTMLElement): HTMLElement {
+  return within(row).getByLabelText(/ (megjelölése gyakorinak|gyakori jelölés törlése)$/);
+}
+
 // A Kategóriák panel NavBar-navigáció elleni védelme (`useNavGuard`) csak a
 // valódi NavBar-ral, közös router-fában igazolható -- a `SettingsPage.test.tsx`
 // `renderSettingsWithNavBar()`-jának mintája.
@@ -146,7 +159,7 @@ describe('PriceListAdminPage', () => {
     const rowDiv = nameCell.parentElement!;
     const originalId = findItem(readPriceList(), 'CBCT').id;
 
-    await user.click(within(rowDiv).getByLabelText('Aktív'));
+    await user.click(aktivGomb(rowDiv));
     // A deaktiválás megerősítést kér -- a mai adat egy kattintás után még
     // változatlan.
     expect(findItem(readPriceList(), 'CBCT').aktiv).toBe(true);
@@ -164,7 +177,7 @@ describe('PriceListAdminPage', () => {
     const nameCell = await screen.findByText('CBCT');
     const rowDiv = nameCell.parentElement!;
 
-    await user.click(within(rowDiv).getByLabelText('Aktív'));
+    await user.click(aktivGomb(rowDiv));
     await user.click(await screen.findByRole('button', { name: 'Mégse' }));
 
     expect(findItem(readPriceList(), 'CBCT').aktiv).toBe(true);
@@ -176,13 +189,53 @@ describe('PriceListAdminPage', () => {
 
     const nameCell = await screen.findByText('CBCT');
     const rowDiv = nameCell.parentElement!;
-    await user.click(within(rowDiv).getByLabelText('Aktív'));
+    await user.click(aktivGomb(rowDiv));
     await user.click(await screen.findByRole('button', { name: 'Inaktiválás' }));
     expect(findItem(readPriceList(), 'CBCT').aktiv).toBe(false);
 
-    await user.click(within(rowDiv).getByLabelText('Aktív'));
+    await user.click(aktivGomb(rowDiv));
 
     expect(findItem(readPriceList(), 'CBCT').aktiv).toBe(true);
+  });
+
+  it('the "Aktív" button label names the item and states the action, not the state (99. tétel)', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    const rowDiv = nameCell.parentElement!;
+
+    expect(within(rowDiv).getByLabelText('CBCT inaktiválása')).toBeInTheDocument();
+
+    await user.click(aktivGomb(rowDiv));
+    await user.click(await screen.findByRole('button', { name: 'Inaktiválás' }));
+
+    expect(within(rowDiv).getByLabelText('CBCT aktiválása')).toBeInTheDocument();
+  });
+
+  it('the "Gyakori tétel" button label names the item and states the action, not the state (99. tétel)', async () => {
+    renderAdmin();
+    const nameCell = await screen.findByText('CBCT');
+    const rowDiv = nameCell.parentElement!;
+
+    expect(within(rowDiv).getByLabelText('CBCT megjelölése gyakorinak')).toBeInTheDocument();
+
+    fireEvent.click(gyakoriGomb(rowDiv));
+
+    expect(await within(rowDiv).findByLabelText('CBCT gyakori jelölés törlése')).toBeInTheDocument();
+  });
+
+  it('two different rows have distinguishable "Aktív" labels, each carrying its own item name (99. tétel)', async () => {
+    renderAdmin();
+
+    const aRow = (await screen.findByText('CBCT')).parentElement!;
+    const bRow = (await screen.findByText('Fognyaki tömés')).parentElement!;
+
+    const aLabel = aktivGomb(aRow).getAttribute('aria-label');
+    const bLabel = aktivGomb(bRow).getAttribute('aria-label');
+    expect(aLabel).not.toBe(bLabel);
+    expect(aLabel).toContain('CBCT');
+    expect(bLabel).toContain('Fognyaki tömés');
   });
 
   it('moving an item to a different category via the dropdown persists the new kategoriaId', async () => {
@@ -297,12 +350,12 @@ describe('PriceListAdminPage', () => {
     // A deaktiválás megerősítést kér (nem egy szinkron patch), tehát a
     // reaktiválás ága adja a konkurencia-próbát -- ez maradt egylépéses,
     // azonnali `patchItem` hívás.
-    await user.click(within(bRow).getByLabelText('Aktív'));
+    await user.click(aktivGomb(bRow));
     await user.click(await screen.findByRole('button', { name: 'Inaktiválás' }));
     expect(findItem(readPriceList(), 'Fognyaki tömés').aktiv).toBe(false);
 
-    fireEvent.click(within(aRow).getByLabelText('Gyakori tétel'));
-    fireEvent.click(within(bRow).getByLabelText('Aktív'));
+    fireEvent.click(gyakoriGomb(aRow));
+    fireEvent.click(aktivGomb(bRow));
 
     await waitFor(() => {
       const pl = readPriceList();
@@ -506,7 +559,7 @@ describe('PriceListAdminPage', () => {
       expect(screen.queryByLabelText('HUF ár')).not.toBeInTheDocument();
 
       const rowDiv = nameCell.parentElement!;
-      fireEvent.click(within(rowDiv).getByLabelText('Aktív'));
+      fireEvent.click(aktivGomb(rowDiv));
 
       // Rendes inaktív tétel -- a szem-ikon azonnal reaktivál, dialógus nélkül.
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
@@ -612,7 +665,7 @@ describe('PriceListAdminPage', () => {
 
     const nameCell = await screen.findByText('CBCT');
     const rowDiv = nameCell.parentElement!;
-    await user.click(within(rowDiv).getByLabelText('Gyakori tétel'));
+    await user.click(gyakoriGomb(rowDiv));
 
     const ma = todayIso();
     expect(readPriceList().arlistaVerzio).toBe(ma);
@@ -894,7 +947,7 @@ describe('PriceListAdminPage', () => {
       for (const item of itemsInSmallest) {
         const nameCell = await screen.findByText(item.nev.hu);
         const rowDiv = nameCell.parentElement!;
-        await user.click(within(rowDiv).getByLabelText('Aktív'));
+        await user.click(aktivGomb(rowDiv));
         await user.click(await screen.findByRole('button', { name: 'Inaktiválás' }));
       }
 

@@ -2508,3 +2508,18 @@ karbantartási kör négy önálló javítása.
   `pages/priceListAdmin/BufferedFields.tsx` (tétel név/leírás
   szövegmezők) szándékosan kimarad. Részletek:
   `docs/07-felulet-rendszer.md` § Komponensek.
+
+### 99. tétel: Állapotfüggő gomb-címkék az árlista adminban — KÉSZ
+
+- **Méret:** kicsi — két `aria-label` prop a táblasoron + a tesztfájl
+  meglévő lekérdezéseinek átállítása két állapot-agnosztikus helperre,
+  plusz 3 új célzott teszteset.
+- **Megvalósítás:** a `pages/PriceListAdminPage.tsx` táblasorán a
+  „Gyakori tétel" csillag és az „Aktív" szem `IconButton` `aria-label`-je
+  a statikus szöveg helyett `<tételnév> <állapotfüggő akció>` alakú lett
+  (`<név> megjelölése gyakorinak`/`<név> gyakori jelölés törlése`, `<név>
+  aktiválása`/`<név> inaktiválása`) — a szóhasználat a meglévő
+  megerősítő dialógusok szótövét követi, a tétel nevének bevonása a
+  `docs/07-felulet-rendszer.md` „Soronkénti akciók" sor-azonosítási
+  szabályát elégíti ki. Részletek: `docs/03-funkcionalis-spec.md` § 6.
+  „Tábla"; `docs/07-felulet-rendszer.md` § Komponensek.

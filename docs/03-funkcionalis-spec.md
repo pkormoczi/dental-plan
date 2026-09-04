@@ -1525,6 +1525,13 @@ megnevezés, HUF ár, EUR ár, aktív jelölő (szem ikon).
 **Egy tábla, két ár oszlop** — nem külön magyar és német nézet. Így egy
 pillantás megmutatja, hol hiányzik az EUR ár.
 
+A csillag és a szem ikon `aria-label`-je a tétel nevével kezdődik, utána
+az állapotfüggő akció (`docs/07-felulet-rendszer.md` „Soronkénti akciók"):
+a csillag `<név> megjelölése gyakorinak` / `<név> gyakori jelölés törlése`,
+a szem `<név> aktiválása` / `<név> inaktiválása` — utóbbi szóhasználata a
+lenti „Törlés helyett inaktiválás" megerősítő dialógusának szótövét
+követi.
+
 ### Árlista-verzió
 
 A fejlécben („verzió …") megjelenő `arlistaVerzio` MINDEN mentéskor a mai

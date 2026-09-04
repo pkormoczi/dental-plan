@@ -15,15 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 99. tétel: Állapotfüggő gomb-címkék az árlista adminban
-
-  A `pages/PriceListAdminPage.tsx` inaktiválás-gombjának `aria-label`-je
-  statikus „Aktív" string, ami sosem függ a tétel tényleges állapotától —
-  egy inaktivált tételnél is „Aktív"-ot mond, miközben az állapotot csak
-  az ikon és a sor áttetszősége jelzi. Ugyanez a hiba a „Gyakori tétel"
-  gombnál is. Kért: akció-alapú, állapotfüggő címke mindkét gombon.
-  **Terv:** `backlog/plans/backlog-99-allapotfuggo-gomb-cimkek-arlista-adminban-terv.md`
-
 ### 100. tétel: „Piszkozat folytatása" csak tényleges szerkesztés után
 
   Egy MEGLÉVŐ páciens puszta kiválasztása a „Új terv indítása" lapon

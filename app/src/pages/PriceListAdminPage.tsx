@@ -482,7 +482,9 @@ export default function PriceListAdminPage() {
                   </Table.Cell>
                 </Table.Row>
 
-                {items.map((it) => (
+                {items.map((it) => {
+                  const sorNeve = it.nev.hu.trim() || 'Névtelen tétel';
+                  return (
                   <Fragment key={it.id}>
                     <Table.Row
                       style={{ cursor: 'pointer', opacity: it.aktiv ? 1 : 0.5 }}
@@ -490,7 +492,11 @@ export default function PriceListAdminPage() {
                     >
                       <Table.Cell>
                         <IconButton
-                          aria-label="Gyakori tétel"
+                          aria-label={
+                            it.gyakori
+                              ? `${sorNeve} gyakori jelölés törlése`
+                              : `${sorNeve} megjelölése gyakorinak`
+                          }
                           variant="ghost"
                           color="gray"
                           size="1"
@@ -560,7 +566,7 @@ export default function PriceListAdminPage() {
 
                       <Table.Cell>
                         <IconButton
-                          aria-label="Aktív"
+                          aria-label={it.aktiv ? `${sorNeve} inaktiválása` : `${sorNeve} aktiválása`}
                           variant="ghost"
                           color="gray"
                           size="1"
@@ -598,7 +604,8 @@ export default function PriceListAdminPage() {
                       </Table.Row>
                     )}
                   </Fragment>
-                ))}
+                  );
+                })}
               </Fragment>
             ))}
           </Table.Body>

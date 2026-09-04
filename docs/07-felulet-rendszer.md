@@ -102,8 +102,14 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   `PatientPlanChains` verziósora), ahol a gombok a TELJES sorra ható
   akciók — ugyanez a szabály vonatkozik egy szerkeszthető lista soronkénti
   checkboxára is (pl. a Beállítások Orvosok listájának „Aktív" checkboxa,
-  `aria-label={\`${nev} aktív\`}`, D67), nem csak az `IconButton`-okra. A
-  szerkesztő `LineRow`-jának saját mezőjéhez kötött vezérlői (a Fog mező
+  `aria-label={\`${nev} aktív\`}`, D67), nem csak az `IconButton`-okra. Egy
+  ilyen soron belüli **állapotváltó** toggle (pl. az Árlista admin
+  „Aktív"/„Gyakori tétel" `IconButton`-ja) `aria-label`-je azt az AKCIÓT
+  nevezi meg, amit a kattintás a jelenlegi állapotból kivált (`<név>
+  inaktiválása`/`<név> aktiválása`), nem magát az állapotot — egy statikus
+  „Aktív" felirat egy már inaktivált tételnél is „Aktív"-ot mondana,
+  miközben az állapotot csak az ikon-alak és a sor áttetszősége jelzi,
+  ami képernyőolvasóval nem érhető el. A szerkesztő `LineRow`-jának saját mezőjéhez kötött vezérlői (a Fog mező
   melletti fogválasztó, az Ajánlati ár mező alatti `≈` becsült-ár
   kapcsoló, a Db mező melletti ⟳ visszakapcsoló, D32, valamint a név/ár/
   leírás mezőnkénti reset-vezérlők, D65) nem esnek e szabály alá —
