@@ -11,7 +11,7 @@ doki választ. A fájlalak: `backlog/CLAUDE.md`.
 
 ## Lépések
 
-1. Olvasd be a `backlog/*.md` (tervezett; a `CLAUDE.md` kivételével) és a `backlog/idea/*.md`
+1. Olvasd be a `backlog/*.md` (tervezett; a `CLAUDE.md` és a `README.md` kivételével) és a `backlog/idea/*.md`
    (ötlet) fájlokat, és a fejlécből vedd a `Type`, `Kerdes`, `Baseline` sorokat; a törzs első mondatát rövidítsd ~80
    karakterre.
 2. Írd ki táblázatban, két blokkban: előbb a gyökér (tervezett, implementálható), aztán az

@@ -68,7 +68,8 @@ const isContextFile = (f) =>
 // tervezett. Nincs Status sor -- két igazságforrás szétcsúszna, a git mv az állapotváltás.
 const backlogStatus = (f) => {
   if (/^backlog\/idea\/[^/]+\.md$/.test(f)) return 'idea';
-  if (/^backlog\/[^/]+\.md$/.test(f) && f !== 'backlog/CLAUDE.md') return 'planned';
+  // README.md a fejlesztői leírás a flow-ról, nem tétel -- a CLAUDE.md-vel együtt kivétel.
+  if (/^backlog\/[^/]+\.md$/.test(f) && f !== 'backlog/CLAUDE.md' && f !== 'backlog/README.md') return 'planned';
   return null;
 };
 const BACKLOG_TYPE = ['feature', 'bug', 'chore', 'doki'];
@@ -273,7 +274,9 @@ for (const file of files) {
   dRef(file, lines);
   legacyRef(file, lines);
   budget(file, content);
-  if (isContextFile(file)) anchor(file, lines);
+  // A backlog/README.md nem betöltődő context (nincs budget), de a skill-fájlokra mutató
+  // anchorai egy átnevezésnél pirosat adjanak.
+  if (isContextFile(file) || file === 'backlog/README.md') anchor(file, lines);
   const status = backlogStatus(file);
   if (status) backlogTetel(file, status, lines, content);
   if (isTestFile(file)) skipOnly(file, lines);
