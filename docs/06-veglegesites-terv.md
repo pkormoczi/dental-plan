@@ -5,12 +5,12 @@
 > mockuptól egy Windows és macOS alatt telepíthető, a fájlrendszerre író/olvasó Electron
 > alkalmazásig. A dokumentum **munkaközi tervdokumentum**, nem élő specifikáció — a `docs/`
 > többi fájljától eltérően ez idővel kiürül: ahogy a benne leírt döntések backlog-tételekké
-> válnak és megvalósulnak, a tartósan érvényes részük átköltözik a megfelelő `docs/02`–`05`/`07`
-> fájlba, ez a fájl pedig törlődik. Amíg ez nem történt meg, **ez az egyetlen hely**, ahol a
+> válnak és megvalósulnak, a tartósan érvényes részük a `PRODUCT.md`-be vagy a megfelelő nested
+> `CLAUDE.md`-be költözik, ez a fájl pedig törlődik. Amíg ez nem történt meg, **ez az egyetlen hely**, ahol a
 > 2. fázis döntései és indokaik együtt élnek.
 >
-> A dokumentum nem hivatkozik `D<szám>` azonosítóra és nem hoz létre újat — a `docs/01`
-> döntéstáblája lezárt (lásd `CLAUDE.md`). A benne szereplő döntések a jelen dokumentumon belül
+> A dokumentum nem hivatkozik `D<szám>` azonosítóra és nem hoz létre újat — a régi
+> döntéstábla legacy, lezárt (lásd `CLAUDE.md` Kommentek). A benne szereplő döntések a jelen dokumentumon belül
 > sorszámozottak (1–27), ez a szám csak ebben a fájlban él, és lezáráskor eltűnik vele együtt.
 
 ## 1. Miért, és mi változik
@@ -20,7 +20,7 @@ adminisztrációt és a PDF-generálást anélkül, hogy valódi páciensadat b�
 a böngészőjét (`DemoStorage`, `localStorage`, `dp:` prefix). Ez a validáció a végéhez ért — a
 következő lépés egy ténylegesen használható, telepíthető alkalmazás, ami a fájlrendszerre ír.
 
-**Ez a döntés felülírja a `docs/05-technologia.md` „Váltás Tauri-ra, ha kell" szakaszát.** Az a
+**Ez a döntés felülírja a korábbi technológia-leírás (ma legacy) „Váltás Tauri-ra, ha kell" szakaszát; a `PRODUCT.md § Két fázis` már Electront mond.** Az a
 szakasz ma Tauri-t nevezi meg desktop-célként, azzal, hogy „ez egy implementáció cseréje, nem
 újraírás — 1-2 nap, ha az interface tiszta". A doki döntése ehelyett **Electron**:
 
@@ -38,7 +38,7 @@ szakasz ma Tauri-t nevezi meg desktop-célként, azzal, hogy „ez egy implement
 
 **Mi marad érintetlen:** a domain logika (`app/src/domain/`), a UI (`app/src/pages/`,
 `app/src/components/`), a `PlanStorage` interfész (`app/src/storage/PlanStorage.ts`) és a
-mappastruktúra (`docs/02-domain-modell.md` „Mappastruktúra"). Ez pontosan azért lehetséges, mert
+mappastruktúra (`app/src/storage/CLAUDE.md`, `storage/paths.ts`). Ez pontosan azért lehetséges, mert
 a `CLAUDE.md` „Két fázisú build" szakasza ezt már a mockup megépítésekor kikényszerítette: minden
 képernyő a `PlanStorage`/`DraftStorage` interfészek mögött dolgozik, egyik implementációt sem
 ismeri közvetlenül.
@@ -67,19 +67,19 @@ kerül, a tétel maga hordozza tovább az indokot, ez a táblázat pedig lezáru
 | 10 | Elérhetetlen gyökérmappa induláskor → **blokkoló képernyő**, csak „Újrapróba"/„Másik mappa kiválasztása" | Kizárja, hogy a doki egy üres pácienslistát lásson és azt higgye, minden elveszett, miközben csak a Drive nem csatolt még |
 | 11 | Atomi írás (temp fájl + fsync + rename) + automatikus újrapróba zárolási hibán | A Drive kliens és a víruskereső rövid ideig zárolhat fájlokat Windowson (`EBUSY`/`EPERM`) — egy pár száz ms-os zárolás nem lehet látható hiba egy orvosi dokumentum mentésekor |
 | 12 | Első indítás: csak üres mappa vagy már a mi struktúránk (`arlista.json` + `paciensek/`) fogadható el | Kizárja, hogy a doki véletlenül egy más célú mappát (pl. a Dokumentumok gyökerét) jelöljön ki, és az app abba írjon bele |
-| 13 | „Letöltés" → **„Megnyitás"** (rendszer PDF-olvasó) + **„Másolás máshová"** (natív mentés-dialógus); a `Letöltések` mappa tiltott alapérték | Asztali appban a „letöltés" szó félrevezető — a fájl már a lemezen van a verziómappában. A `docs/01-attekintes-es-dontesek.md` már ma is tiltja a `Letöltések` mappát (OneDrive auto-szinkron kockázata) |
+| 13 | „Letöltés" → **„Megnyitás"** (rendszer PDF-olvasó) + **„Másolás máshová"** (natív mentés-dialógus); a `Letöltések` mappa tiltott alapérték | Asztali appban a „letöltés" szó félrevezető — a fájl már a lemezen van a verziómappában. A `PRODUCT.md § Adat- és deployment-korlátok` már ma is tiltja a `Letöltések` mappát (OneDrive auto-szinkron kockázata) |
 | 14 | Százas nagyságrend páciensszám — naiv, cache nélküli beolvasás elég | A mai `listPatients()` minden páciens `paciens.json`-ját beolvassa; pár száz fájlnál ez lokális lemezen és Drive-tükrözött mappán is elhanyagolható, cache-invalidálási hibalehetőség nélkül |
 | 15 | GitHub Actions építi mindkét telepítőt git tagre, GitHub Release-be | Egy Windows és egy macOS runner szükséges a két telepítőhöz (electron-builder nem tud megbízhatóan macOS-re keresztfordítani); a doki mindig ugyanonnan (Release oldal) tölti le mindkettőt |
 | 16 | Hatókör: runtime (Electron) + `FileSystemStorage` + I/O hibakezelés + Playwright `_electron` füst-teszt (27. döntés). **Kívül esik:** `terv.json` beágyazása a PDF-be (`pdf-lib`), sémamigrációs keretrendszer, backup/ZIP-export | Ezek önálló, jól körülhatárolt munkák, amik nem blokkolják a telepíthető app első kiadását — lásd §12 |
 | 17 | Végrehajtás sorrendje: **héj → storage-csere → demó-lebontás** | Minden mérföldkő végén futó, a dokinak megmutatható app áll elő; a kockázat szét van osztva, nem egy nagy, sokáig nem tesztelhető ágban gyűlik |
 | 18 | Diagnosztikai napló I/O-hibákról `userData`-ba, forgó/méretkorlátos fájlba, „Napló megnyitása" gombbal a Beállításokban. **Páciensnév és -adat sosem kerülhet bele** — de lásd a §5.4 pontosítást, mert az útvonal ÖNMAGÁBAN tartalmazza a páciens nevét | Egy „nem mentődött el" bejelentés után legyen mit megnézni; a GDPR 9. cikk szerinti különleges adat (`CLAUDE.md`) miatt a napló tartalma szigorúan technikai marad |
 | 19 | Gyökérmappa útvonala **gépenkénti lokális configban** (Electron `userData`), nem a `beallitasok.json`-ben; **egy-példány zár** (single-instance lock) kötelező | A `beallitasok.json` maga a gyökérmappában él (tyúk-tojás probléma), és a két gép útvonala amúgy is eltér. Az egy-példány zár kizárja, hogy két futó példány ugyanarra a mappára írjon egyszerre — pont az a versenyhelyzet, amit a 3. döntés (egy doki, sosem egyidejűleg) emberi szinten már kizár, de programozási hibából (két ikon véletlen dupla-indítása) még mindig előfordulhatna |
-| 20 | Induláskor **észleli a Drive-ütközéses fájlokat** (`... (1).json`, `*conflicted copy*` mintájú nevek a gyökérmappa fájljai között) és amber sávban jelzi — nem old fel semmit automatikusan | Lásd §5 „Külön alszakasz a Drive-ütközésekről" — a `docs/05-technologia.md` mai „append-only írásnál ez nem tud előfordulni" állítása csak a verziómappákra igaz, a felülírt fájlokra nem |
+| 20 | Induláskor **észleli a Drive-ütközéses fájlokat** (`... (1).json`, `*conflicted copy*` mintájú nevek a gyökérmappa fájljai között) és amber sávban jelzi — nem old fel semmit automatikusan | Lásd §5 „Külön alszakasz a Drive-ütközésekről" — a korábbi technológia-leírás (ma legacy) „append-only írásnál ez nem tud előfordulni" állítása csak a verziómappákra igaz, a felülírt fájlokra nem |
 | 21 | **macOS: ad-hoc aláírás + telepítő-script** — az electron-builder alapértelmezett ad-hoc aláírása, a Release mellé csomagolt `.command` segédscripttel (`xattr -dr com.apple.quarantine`), README-leírással | A csupasz aláíratlan `arm64` app el sem indulna, a fizetős Developer ID (évi ~99 USD) pedig a 2. döntés költség-elvével ütközne. Őszinte korlát: a scriptet **minden frissítés után** újra futtatni kell (a karantén letöltésenként újra rákerül), és első alkalommal magát a scriptet is jobbklikk → „Megnyitás"-sal kell indítani — ezt a telepítési útmutató explicit írja le |
 | 22 | **Eltávolításkor a `userData` is törlődik** (Windows: NSIS `deleteAppDataOnUninstall`; macOS: az útmutató kihúzási lépése) | A piszkozat-cache valódi páciensadatot tartalmazhat — eltávolítás után nem maradhat adat-morzsa a gépen, összhangban a „minden adatom a gyökérmappában van" elvárással. Ára: újratelepítéskor a gépenkénti config (6.1) is elvész, a mappa-választó varázsló újra lefut (~10 mp) |
 | 23 | **A `savePlan` index-írás hibája sosem rontja le a véglegesítés sikerét** — a verziómappa sikeres véglegesítése után a `paciens.json` index-frissítés hibája csak halk jelzés, a sikerképernyő megjelenik | Az index-írás pillanatában a dokumentum (terv.json + PDF) már tartósan a lemezen van; hibát mutatva a doki egy ténylegesen mentett tervet hinne elveszettnek, és az újrapróbálkozása duplikált `_v<n+1>`-et hozna létre — pontosan az a hibaosztály, amit a piszkozat-takarításnál a meglévő szabályrend már kizár (`CLAUDE.md` „Sérthetetlen szabályok") |
 | 24 | **`listPatients()`-hiba a páciens-identitás védőhálónál = amber, nem blokkoló checklist-tétel** („a névütközés-ellenőrzés nem futott le") | A védőháló kiegészítő védelem, nem az elsődleges kontroll — egy átmeneti Drive-olvasási hiba nem teheti használhatatlanná a véglegesítést; a konzervatív (kemény blokk) alternatíva elvetve |
-| 25 | **A piszkozat és a sablon-piszkozat cache renderer-`localStorage`-ban marad** Electron alatt is — a `DemoDraftStorage` változatlan | Nulla kódváltozás; a renderer localStorage fizikailag a `userData`-ban él, tehát az 5. döntés (gépenként lokális, sosem szinkronizált) és a 22. döntés (uninstall törli) automatikusan teljesül. **Ez felülírja a `docs/05-technologia.md` és a `CLAUDE.md` „a végleges alkalmazásban IndexedDB" kitételét** (ugyanúgy, ahogy §1 a Tauri-szakaszt) — a két fájl érintett sorai a mérföldkő-lezárási referencia-seprésben frissülnek. Az egyetlen kockázatot (protokollnév-váltás kiürítené a partíciót) a §11 már kezeli |
+| 25 | **A piszkozat és a sablon-piszkozat cache renderer-`localStorage`-ban marad** Electron alatt is — a `DemoDraftStorage` változatlan | Nulla kódváltozás; a renderer localStorage fizikailag a `userData`-ban él, tehát az 5. döntés (gépenként lokális, sosem szinkronizált) és a 22. döntés (uninstall törli) automatikusan teljesül. **Ez felülírja a korábbi „a végleges alkalmazásban IndexedDB" kitételt** (a régi technológia-leírásé és a régi `CLAUDE.md`-é volt; ma egyik sem él — ugyanúgy, ahogy §1 a Tauri-szakaszt). Az egyetlen kockázatot (protokollnév-váltás kiürítené a partíciót) a §11 már kezeli |
 | 26 | **mtime-őr: konfliktusnál választós dialógus, hatóköre csak a system-of-record felülírt fájlok** (`arlista.json`, `beallitasok.json`, `paciens-adatok.json`, `sablonok/*.md`); az index-tükrök (`paciens.json`, `terv-cimke.json`) last-write-wins | A kényszerített „töltsd be újra" a doki épp elvégzett munkáját (akár egy tömeges árváltoztatást) dobná el felülbírálat nélkül — ehelyett a doki lát két explicit következményt és dönt (a 4. döntés verzió-ütközés mintája). Az index-tükrök származtatott/újraírható adatok (sosem system of record), egy mtime-blokk rajtuk épp a 23. döntés „halk index-hiba" elvével ütközne |
 | 27 | **Playwright `_electron` füst-teszt már az 1. mérföldkőben**, mindkét CI-runneren (indulás, kezdőlap-képernyőkép, konzolhiba-mentesség) | ~40 sor + 1 devDependency, cserébe az egyetlen automatizált védelem az „el sem indul a csomagolt app" osztályú regressziók ellen — aláíratlan, kézzel telepített kiadásoknál különösen fontos |
 
@@ -199,7 +199,7 @@ gyökérmappába (lásd 19. döntés).
 
 A `PlanStorage` interfész (`app/src/storage/PlanStorage.ts`) mind a 17 metódusa (a 10.0
 mérföldkő bővítése — `listTemplates`, `loadPlanPdf`, `loadLatestTemplateByBase` — után 20) a
-`docs/02-domain-modell.md` „Mappastruktúra" szerinti fájlokra/mappákra képződik:
+az `app/src/storage/CLAUDE.md` szerinti mappastruktúra fájljaira/mappáira képződik:
 
 | Metódus | Fájlrendszeri művelet |
 |---|---|
@@ -213,11 +213,11 @@ mérföldkő bővítése — `listTemplates`, `loadPlanPdf`, `loadLatestTemplate
 | `loadPriceList()` / `loadSettings()` | `readFile` a gyökérből, ugyanaz a 3-lépéses validáció |
 | `savePriceList()` / `saveSettings()` | Atomi felülírás (4.3) |
 | `loadTemplate(name)` | `readFile(sablonok/<name>.md)` |
-| `saveTemplate(name, body)` | A legfrissebb `-vN.md` felülírása (nem új verzió — a fájlnév-verzió a létrehozáskori, utána fix, `docs/02` szerint) |
-| `loadPatientData(patientDir)` | `readFile(.../paciens-adatok.json)`, `null` ha `ENOENT` (hiányzó fájl = élő fallback, NEM hiba — `docs/02-domain-modell.md` § Páciens-szintű törzsadat) |
+| `saveTemplate(name, body)` | A legfrissebb `-vN.md` felülírása (nem új verzió — a fájlnév-verzió a létrehozáskori, utána fix) |
+| `loadPatientData(patientDir)` | `readFile(.../paciens-adatok.json)`, `null` ha `ENOENT` (hiányzó fájl = élő fallback, NEM hiba — `app/src/storage/CLAUDE.md`: a `paciens-adatok.json` a saját mezőire system of record) |
 | `savePatientData(...)` | Atomi felülírás + `paciens.json` `nev` mezőjének frissítése (két fájl, lásd 4.4) |
 | `createPatient(nev, ...)` | Mappa-létrehozás (`mkdir`) + két fájl írása egy logikailag atomi lépésben (4.4) |
-| `deletePatient(patientDir)` | `rm(recursive: true)` a teljes páciensmappán — az előfeltétel (`paciensTorlesAkadaly()`, `docs/03-funkcionalis-spec.md` § 10. Páciens részletei) a hívó (renderer/domain) felelőssége marad, változatlanul |
+| `deletePatient(patientDir)` | `rm(recursive: true)` a teljes páciensmappán — az előfeltétel (`paciensTorlesAkadaly()`, `app/src/domain/paciensTorles.ts`) a hívó (renderer/domain) felelőssége marad, változatlanul |
 
 ### 4.2 Atomi írás — az alap-primitívum
 
@@ -230,7 +230,7 @@ Minden **felülírt** fájl (nem verziómappa) ugyanazon az elven íródik:
 ```
 
 Ha az 1-2. lépés bármelyike hibázik, a célfájl **érintetlen marad** — nincs félig írt JSON.
-Ez a `docs/05-technologia.md` már ma megfogalmazott elvárása („neki kell sorosítania... hogy a
+Ez a korábbi technológia-leírás (ma legacy) már megfogalmazott elvárása („neki kell sorosítania... hogy a
 végeredmény sorrendje a hívási sorrendet kövesse") mellé teszi a hiányzó másik felet: az egyes
 írás maga is legyen csonkolás-biztos.
 
@@ -310,8 +310,8 @@ közben létrehozott `_v3`-at. A `FileSystemStorage.savePlan()` ezért **kétsze
 
 ### 4.6 Platformközi buktatók
 
-Ezek valódi, nem elméleti veszélyek — mindegyik közvetlenül a `docs/02-domain-modell.md`
-„az ékezetek maradnak, nincs transzliteráció" szabályából fakad:
+Ezek valódi, nem elméleti veszélyek — mindegyik közvetlenül a `PRODUCT.md § Adat- és deployment-korlátok`
+„az ékezetek maradnak" szabályából fakad (`app/src/storage/CLAUDE.md`, `paths.ts`):
 
 - **Unicode NFC/NFD normalizáció.** macOS (HFS+/APFS) a fájlneveket **dekomponált** (NFD)
   formában tárolja — egy `á` karakter két Unicode kódpontból áll (`a` + kombináló ékezet),
@@ -326,7 +326,7 @@ Ezek valódi, nem elméleti veszélyek — mindegyik közvetlenül a `docs/02-do
   teszttel kell lefedni (egy szintetikus NFD-kódolású könyvtárnév beolvasása).
 - **Kis-/nagybetű-érzéketlenség.** Az alapértelmezett APFS/HFS+ kis-/nagybetű-érzéketlen (de
   -megőrző), az NTFS érzékeny. Két páciens, akiknek a neve csak kis-/nagybetűben térne el,
-  Windowson két külön mappát kapna, Macen ütközne. A `docs/02` 6 karakteres id-szuffixuma
+  Windowson két külön mappát kapna, Macen ütközne. A mappanév 6 karakteres id-szuffixuma
   (`generateId()`) ezt gyakorlatilag kizárja, de a validációnak (`init()` és `createPatient()`)
   explicit ellenőriznie kell, hogy egy új mappanév case-insensitive módon se ütközzön meglévővel.
 - **Windows 260 karakteres útvonalkorlát.** A Drive-mount alatt hosszú lehet az útvonal
@@ -357,7 +357,7 @@ Ezek valódi, nem elméleti veszélyek — mindegyik közvetlenül a `docs/02-do
 
 ### 5.1 Külön alszakasz a Drive-ütközésekről
 
-A `docs/05-technologia.md` ma azt állítja, hogy a soha-felül-nem-írás elve itt fizetődik ki:
+A korábbi technológia-leírás (ma legacy) azt állítja, hogy a soha-felül-nem-írás elve itt fizetődik ki:
 „a Drive akkor csinál `conflicted copy`-t, ha egy fájl szinkron közben módosul.
 **Append-only írásnál ez nem tud előfordulni.**" **Ez csak a verziómappákra igaz.** Az
 `arlista.json`, `beallitasok.json`, `paciens.json`, `paciens-adatok.json`, `terv-cimke.json` és
@@ -428,7 +428,7 @@ kockázatot jelzi.
 **Ismert kivétel, amit ugyanekkor kell kezelni:** a `pages/settings/NyomtatvanyokTab.tsx`
 **közvetlenül `localStorage`-ba** ír egy piszkozat-cache-t, teljesen megkerülve a
 `PlanStorage`/`DraftStorage` interfészeket (ezt a `docs/reviews/2026-08-25-arch-react-review.md`
-már jelezte, de a `docs/05` mai szövege ezt még nem tartalmazza). Electron alatt `localStorage`
+már jelezte, de a régi technológia-leírás ezt nem tartalmazta). Electron alatt `localStorage`
 a renderer processben **létezik és működik** (Chromium built-in), tehát ez a kód **nem törik
 el** — de ez a fájl marad az egyetlen hely, ami nem a `FileSystemStorage`/`DraftStorage`
 rétegen keresztül perzisztál, és ezt a váltás pillanatában dokumentálni és megoldani kell (a
@@ -437,7 +437,7 @@ legegyszerűbb: ugyanoda kösse be, ahova a `DraftStorage` köti a piszkozat-cac
 ### 5.3 A diagnosztikai napló redakciója — pontosítás a 18. döntéshez
 
 A 18. döntés úgy fogalmaz, hogy a naplóba „csak útvonal és hibakód" kerülhet, páciensnév nem.
-**Ez önmagában ellentmondásos**, mert a `docs/02-domain-modell.md` mappastruktúrája szerint **az
+**Ez önmagában ellentmondásos**, mert a mappastruktúra (`app/src/storage/CLAUDE.md`) szerint **az
 útvonal maga tartalmazza a páciens nevét** (`paciensek/Kovács-János_ab12cd/...`). „Csak az
 útvonal" tehát pontosan azt szivárogtatná ki, amit a döntés tiltani akar.
 
@@ -467,7 +467,7 @@ Mindegyik helyen a „Letöltés" gomb két gombra bomlik:
   PDF-olvasójában nyitja meg a **már mentett** fájlt (nincs ideiglenes blob, nincs másolat).
 - **„Másolás máshová"** — `dialog.showSaveDialog()` natív mentés-dialógus, alapértelmezett
   fájlnévvel a meglévő `buildDownloadFileName()` (`storage/paths.ts`) függvényből, alapértelmezett
-  célmappával **kifejezetten NEM** a `Letöltések` mappa (13. döntés, `docs/01` már ma tiltja
+  célmappával **kifejezetten NEM** a `Letöltések` mappa (13. döntés, a `PRODUCT.md § Adat- és deployment-korlátok` már ma tiltja
   OneDrive auto-szinkron kockázata miatt).
 
 A `buildDownloadFileName()` maga változatlan marad — csak a hívási kontextus vált böngésző
@@ -790,7 +790,7 @@ import. Ez a legnagyobb, legkockázatosabb lépés.
 
 ### 10.3 Mérföldkő 3 — Demó lebontása
 
-**Mi történik:** §8 teljes tartalma, plusz a `docs/05-technologia.md` és `CLAUDE.md`
+**Mi történik:** §8 teljes tartalma, plusz a `PRODUCT.md § Két fázis` és a root `CLAUDE.md`
 átvezetése (a Tauri-bekezdés cseréje, a „Két fázisú build" szakasz frissítése az immár
 megvalósult állapotra).
 
@@ -829,22 +829,18 @@ változik), miközben a `FileSystemStorage` a saját, valódi-fájlrendszerre é
 kapja — a két réteg egyike sem teszteli a másikat helyette.
 
 **Konkrét buktatók, amikre a végrehajtáskor számítani kell:**
-- A repo saját `dokumentacioGuard.test.ts`-je **fájlonkénti relatív útvonal szerint** számolja a
-  `D<szám>`-hivatkozások számát egy baseline-hoz képest. Egy `DemoStorage.ts` → `InMemoryStorage.ts`
-  átnevezés/áthelyezés a teszt szemével egy vadonatúj fájlnak számít 0 baseline-nal — a benne
-  élő ~15 hivatkozás ezért „gyanús növekedésként" bukna. **A `dokumentacioGuard.baseline.json`-t
-  a mérföldkő ugyanabban a commitjában újra kell generálni.** Ez fordítva is igaz minden más
-  ebben a tervben mozgatott/törölt fájlra. Amit ez a teszt **külön véd**, és aminek **tilos
-  változnia**: a `docs/01` D-táblájának sorszáma és legmagasabb sorszáma — az egy lezárt,
-  történeti napló, ebből a migrációból egyetlen sor sem törölhető vagy mozdítható.
+- A `scripts/docs-check.mjs` nulla toleranciával tiltja a `D<szám>` hivatkozást és a legacy-mappára
+  mutatást, átnevezett/új fájlban is — az átnevezés önmagában nem töri. Amit viszont eltör: a
+  `CLAUDE.md`-k `symbol:`/`test:` anchorai a mozgatott fájlokra (`DemoStorage.test.ts`,
+  `paths.ts` stb.) feloldhatatlanná válnak. **Az anchorokat a mérföldkő ugyanabban a commitjában
+  át kell írni** — a `docs-check` pontos `fájl:sor`-ral mutatja őket.
 - A `DemoStorage.test.ts` (~750 sor) nagy része túléli az átnevezést, de a `resetDemoData`/
   `clearAll`/`listFileTree`/`readRawFile` tesztjei, a legacy-layout-migrációs blokk és a
   kvóta-injektálásos tesztek (`vi.spyOn(localStorage, 'setItem')`) törlendők vagy átírandók egy
   dobó `Map`-re.
 - A `test-setup.ts` meglévő `MemoryStorage` shimje **megmarad** — a piszkozat és a
   sablon-piszkozat cache a 25. döntés szerint változatlanul `localStorage`-t használ Electron
-  alatt is (a `docs/05`/`CLAUDE.md` „véglegesben IndexedDB" kitételének frissítése a
-  mérföldkő-lezárási referencia-seprés része).
+  alatt is (a korábbi „véglegesben IndexedDB" kitétel ma már sehol nem él).
 - `Home.test.tsx`, `AppState.test.tsx`, `AdatkezelesSection.test.tsx`, `FileTreeSection.test.tsx`,
   `OsszesTervSection.test.tsx` mindegyike tartalmaz a demó-viselkedéshez kötött feltevést
   (kommentben is jelölve némelyik) — ezeket egyenként át kell nézni, nem csak az importot cserélni.
@@ -861,7 +857,7 @@ Amit a fenti döntések még nem fednek le, és amit a végrehajtás előtt tuda
   legfrissebb tervet. A sémamigrációs keretrendszer (backlog, kidolgozásra vár tétel) szándékosan
   hatókörön kívül van ebben a tervben — ez egy **tudatosan vállalt kockázat**, aminek a mértéke
   attól függ, milyen gyakran vezetünk be új `schemaVersion`-t, és milyen gyorsan frissít a doki.
-- **A „docs/05-technologia.md 1-2 nap" becslés tarthatatlan** ehhez a hatókörhöz. Az interfész
+- **A korábbi technológia-leírás „1-2 nap" becslése tarthatatlan** ehhez a hatókörhöz. Az interfész
   valóban tiszta (ez sokat ér — nulla domain-/UI-kód változik), de az Electron-héj, az
   IPC-réteg, az atomi írás + újrapróba-logika, a teljes hibataxonómia, az első indítás
   varázslója, a blokkoló képernyő, a csomagolás és a kétplatformos CI együtt **nagyságrendekkel
@@ -882,7 +878,7 @@ Amit a fenti döntések még nem fednek le, és amit a végrehajtás előtt tuda
   megvalósítását felül kell vizsgálni a 2. mérföldkőnél, VAGY a validáció addig is a
   vite-dev-szerveres böngésző-úton marad (a renderer-kód ugyanaz, Electronban és böngészőben is),
   és csak a végső csomagolt app manuális, kézi ellenőrzést kap.
-- **A Google Drive „Tükrözés" mód kikényszeríthetetlensége.** A `docs/01-attekintes-es-dontesek.md`
+- **A Google Drive „Tükrözés" mód kikényszeríthetetlensége.** A `PRODUCT.md § Adat- és deployment-korlátok`
   már ma előírja, hogy a Drive kliens „Tükrözés" (Mirroring), ne „Streamelés" módban fusson —
   de ezt az app **nem tudja ellenőrizni vagy kikényszeríteni**, ez a doki gépén egy egyszeri,
   kézi beállítás, amit a telepítési útmutatónak kell hangsúlyoznia.
@@ -956,7 +952,7 @@ Amit a fenti döntések még nem fednek le, és amit a végrehajtás előtt tuda
 
 A hatókörön (16. döntés) kívül tudatosan hagyott munkák, saját jövőbeli backlog-tételként:
 
-- **`terv.json` beágyazása a PDF-be** (`pdf-lib`) — a `docs/05-technologia.md` már ma előírja
+- **`terv.json` beágyazása a PDF-be** (`pdf-lib`) — a `PRODUCT.md § Szándékos hiányok és nyitott kérdések` nyitott tételként tartja számon, a korábbi technológia-leírás már előírta
   („a `terv.json` beágyazása azért kell, mert a különálló JSON és PDF szét fog csúszni abban a
   pillanatban, amikor a doki e-mailben csak a PDF-et küldi el"), de **ma nincs megvalósítva**.
   Valódi fájlrendszernél ez a redundancia még többet ér (egy sérült/törölt `terv.json` mellett a
@@ -965,7 +961,7 @@ A hatókörön (16. döntés) kívül tudatosan hagyott munkák, saját jövőbe
   fájltípusonkénti verziólépések, mentés előtti biztonsági másolat, validáció, részleges hiba
   utáni visszaállás, régi adatokon futó migrációs tesztek. Ennek hiánya a fő forrása a §11 első
   kockázatának.
-- **Backup/ZIP-export funkció** — a `docs/01-attekintes-es-dontesek.md` ma annyit mond: „a Drive
+- **Backup/ZIP-export funkció** — a `PRODUCT.md § Adat- és deployment-korlátok` ma annyit mond: „a Drive
   szinkron nem backup: negyedévente kézi másolat külső lemezre". Egy appon belüli „teljes
   gyökérmappa mentése ZIP-be" akció ezt kikényszeríthetővé/emlékeztethetővé tenné, de ez a
   jelen terv hatókörén kívül marad.

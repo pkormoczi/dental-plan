@@ -18,8 +18,7 @@ nem maradhat.
 
 ## 2. `npm run docs-check`
 
-Az érintett fájlokban nulla találat, az összesített hibaszám nem nőtt a tétel
-kiindulásához képest. D-szám, legacy-hivatkozás, elrontott anchor, budget-túllépés →
+Zöld (0 hiba). D-szám, legacy-hivatkozás, elrontott anchor, budget-túllépés →
 javítás, nem allowlist.
 
 ## 3. Manual-check szelet

@@ -80,9 +80,8 @@ npm test
 npm run docs-check
 ```
 
-Ha bármelyik hibázik, javítsd és futtasd újra. A `docs-check` szabálya: az általad
-érintett fájlokban nulla találat, és az összesített hibaszám nem nőhet a kiindulási
-állapothoz képest.
+Ha bármelyik hibázik, javítsd és futtasd újra. A `docs-check` zöld (0 hiba) — D-szám,
+legacy-hivatkozás, elrontott anchor, budget-túllépés → javítás, nem allowlist.
 
 ## 6. Megállás és jelentés
 

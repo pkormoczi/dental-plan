@@ -1,4 +1,4 @@
-# Kezelési terv app — tervdokumentáció
+# Kezelési terv app
 
 Fogorvosi kezelési terv és árajánlat készítő alkalmazás, ami kiváltja a
 Mándoki Dental jelenlegi Excel + form control alapú megoldását.
@@ -11,71 +11,36 @@ Ez a mockup (1. fázis) — demó adatokkal, a böngészőben tárolva. Ne írj
 be valódi páciensadatot. A cél, hogy a doki végigkattintsa és
 visszajelezzen, mielőtt a fájlrendszeres verzió elkészül.
 
-A tervezési fázis (ez a dokumentumcsomag) lezárult, az implementáció az
-`app/` mappában folyik, két lépésben:
+Az implementáció az `app/` mappában folyik, két lépésben:
 
 1. **Mockup** — GitHub Pages-re deployolt, kattintható demó, demó adatokkal
    (`localStorage`, nincs valódi páciensadat-mentés). Ez a doki validációjára
    szolgál, mielőtt a fájlrendszeres verzió elkészül.
-2. **Végleges alkalmazás** — ugyanaz a kódbázis, a tárolóréteg lecserélve a
-   fájlrendszerre író implementációra (lásd `docs/05-technologia.md`).
+2. **Végleges alkalmazás** — ugyanaz a kódbázis Electron-héjban, a tárolóréteg
+   lecserélve a fájlrendszerre író implementációra (a terv:
+   `docs/06-veglegesites-terv.md`).
 
-## Tartalom
+## Hova nézz
 
 | Fájl | Mit tartalmaz |
 |---|---|
-| `docs/01-attekintes-es-dontesek.md` | Miért készül, mit vált ki, és minden eddigi döntés az indoklásával |
-| `docs/02-domain-modell.md` | Adatmodell, JSON sémák, mappastruktúra |
-| `docs/03-funkcionalis-spec.md` | Képernyők és viselkedés |
-| `docs/04-nyomtatvany-spec.md` | A generált PDF felépítése, tipográfia, márkaszínek |
-| `docs/05-technologia.md` | Stack, `PlanStorage` interface, PDF generálás, deployment |
-| `docs/07-felulet-rendszer.md` | Felület- és nyomtatvány-kinézeti szabályok — kötelező, nem javaslat |
-| `backlog/BACKLOG.md` | Még fejlesztendő tételek, technikai adósság, honnan jönnek az igények |
+| `PRODUCT.md` | Termékcél, napi flow, adat- és jogi korlátok, a nyomtatvány szerződéses szabályai, nem-cél, nyitott kérdések |
+| `CLAUDE.md` | Agent-context: repó-térkép, parancsok, sérthetetlen invariánsok anchorral, workflow (`/plan` → `/implement` → `/finish`) |
+| `app/src/CLAUDE.md` + `app/src/{domain,storage,pdf}/CLAUDE.md` | Felület-rendszer és a modulok mentális modellje, szándékos hiányok, „find before writing” index |
+| `docs/06-veglegesites-terv.md` | A 2. fázis (Electron + fájlrendszer) terve |
+| `backlog/BACKLOG.md` | Még fejlesztendő tételek és az aktív tervek (`backlog/plans/`) |
 | `data/arlista.seed.json` | **Kész seed adat** — 118 tétel, 12 kategória, az eredeti Excelből generálva |
 | `assets/mandoki-dental-logo.png` | Márkalogó, átlátszó háttér (navy eredeti — az app egy, a honlap arculatához átszínezett másolatot használ, `app/src/assets/logo.png`) |
-| `app/` | A tényleges implementáció — lásd `CLAUDE.md` |
+| `app/` | A tényleges implementáció — `cd app && npm run dev \| build \| lint \| test \| docs-check` |
 
-## Az MVP határa
+A 2026-09-05 előtti tervdokumentáció (áttekintés, domain-modell, funkcionális és
+nyomtatvány-spec, technológia, felület-rendszer, a lezárt backlog-tételek) a `docs` alatti
+`legacy` mappában él, történeti anyagként — normatív ereje nincs, semmi nem hivatkozik rá,
+és 2026-11-04 után törlődik.
 
-**Benne van:** magyar nyelvű terv készítés, árlista admin, PDF generálás
-és mentés a fájlrendszerre, korábbi tervek visszatöltése. A német nyelv
-*tartalma* (118 tételnév, EUR ár) 2026-08-06 óta kitöltött, a nyilatkozat
-és a fizetési feltételek szövege 2026-08-10 óta — a kapcsoló kipróbálható
-(D21), a hiányt az app számszerűen mutatja.
+## Az MVP határa és a nyitott kérdések
 
-**Nincs benne:** a német tételnevek **orvosi lektorálása**, illetve a
-nyilatkozat és a fizetési feltételek **jogi lektorálása** — mindhárom ma
-gépi/AI fordítás, a nyilatkozat/fizetési feltételek esetén a doki
-kifejezett, 2026-08-10-i döntése alapján lektorálás és jelölés nélkül
-élesítve (lásd lent, „Nyitott kérdések" #1). Az EUR árak
-**véglegesítése** is nyitott (ma egyszeri árfolyam-becslés, lásd
-`backlog/BACKLOG.md` 24. tétel). A nyomtatvány új garancia-szakaszának
-tényleges szövege sem kész — egyelőre helykitöltő mindkét nyelven, a
-doki adja meg (lásd lent, „Nyitott kérdések" #4). Szintén nincs benne:
-automatikus darabszám a fogszámokból, statisztikák, többfelhasználós
-működés, szerveroldali komponens.
-
-## Nyitott kérdések, amik a dokira várnak
-
-1. A német tételnevek orvosi lektorálása, valamint a nyilatkozat és a
-   fizetési feltételek szövegének **jogi lektorálása** — mindhárom ma
-   gépi/AI fordítás. A nyilatkozat/fizetési feltételek esetén ez jogi
-   munka lenne (a páciens aláírja): a projekt eredeti szabálya szerint
-   nem gépi fordítás töltötte volna ki, hanem a doki jogásza a
-   Beállítások képernyőn — a doki 2026-08-10-én kifejezetten úgy
-   döntött, hogy az AI-fordítás mégis éles szövegként kerüljön be,
-   lektorálás és jelölés nélkül (lásd `app/src/storage/seed/templates.ts`).
-   A lektorálás tehát továbbra is nyitott, csak már nem blokkolja a
-   nyomtatványt. (A PDF néhány további mondata — a sávos ár lábjegyzete,
-   D15 jogi védelme, az anyagköltség- és a kiskorú-figyelmeztetés, az
-   érvényességi mondat — szintén jogi lektorálást igényel, lásd
-   `docs/04-nyomtatvany-spec.md` „Nyelv" szakasza.)
-2. A cégadatok a lábléchez: adószám, cégjegyzékszám, és ha van ilyen
-   kötelezettség, működési engedély szám.
-3. Az árlista takarítása — lásd `backlog/BACKLOG.md` 24. tétel.
-4. A nyomtatvány garancia-szakaszának tényleges tartalma —
-   kezeléstípusonkénti garanciaidők, kivételek. Egyelőre helykitöltő
-   szöveg mindkét nyelven (magyarul és németül is), amíg a doki meg nem
-   adja a Beállítások → Nyomtatvány szövegei alatt.
-
-A további, még fejlesztendő tételek listája: `backlog/BACKLOG.md`.
+Mi van benne, mi nincs, és mi vár a dokira (német tételnevek orvosi és a nyilatkozat jogi
+lektorálása, garancia-szakasz szövege, cégadatok a lábléchez): `PRODUCT.md` „Nem cél” és
+„Szándékos hiányok és nyitott kérdések”. Az árlista takarítása külön doki-ülés:
+`backlog/BACKLOG.md` 24. tétel.

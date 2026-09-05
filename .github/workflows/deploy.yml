@@ -43,6 +43,10 @@ jobs:
         working-directory: app
         run: npm test
 
+      - name: Docs check
+        working-directory: app
+        run: npm run docs-check
+
       - name: Type-check + build
         working-directory: app
         run: npm run build

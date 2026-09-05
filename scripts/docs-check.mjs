@@ -30,22 +30,6 @@ const EXCLUDE_DIRS = [
   'dist',
 ];
 
-// A régi dokumentációs modell fájljai: a migráció végéig a helyükön maradnak,
-// utána docs/legacy/ alá kerülnek. Tartalmuk történeti, ezért nem scanneljük --
-// a RÁJUK mutató hivatkozás viszont bárhol máshol hiba (LEGACY_PATTERNS).
-const LEGACY_BOUND_DOCS = new Set([
-  'docs/01-attekintes-es-dontesek.md',
-  'docs/02-domain-modell.md',
-  'docs/03-funkcionalis-spec.md',
-  'docs/04-nyomtatvany-spec.md',
-  'docs/05-technologia.md',
-  'docs/07-felulet-rendszer.md',
-  'docs/D-SZAM-FORRASKOD-LELTAR.md',
-  'docs/PROBLEMS.md',
-  'docs/agent-first-documentation-model_V2.md',
-  'docs/agent-first-migracios-terv.md',
-]);
-
 // Valódi álpozitív tokenek (pl. egy fontnév), mindegyik mellé rövid indok.
 const ALLOW_D_TOKENS = new Set([]);
 
@@ -89,7 +73,7 @@ function collect({ dir, ext, recursive }) {
       if (isExcluded(rel)) continue;
       if (entry.isDirectory()) {
         if (recursive) walk(full);
-      } else if (ext.includes(path.extname(entry.name)) && !LEGACY_BOUND_DOCS.has(rel)) {
+      } else if (ext.includes(path.extname(entry.name))) {
         out.push(rel);
       }
     }

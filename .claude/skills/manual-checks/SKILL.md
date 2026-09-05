@@ -199,7 +199,7 @@ könyvtár hibája) — NE javítsd autonóm módon; jelentsd, és kérdezd meg 
 
 | Nem ellenőrizhető | Miért | Alternatíva |
 |---|---|---|
-| Pixelek/szöveg a PDF iframe-en belül | PDFium OOPIF; nincs `contentDocument`, nincs szövegréteg | `take_screenshot` + vizuális ellenőrzés; a PDF nyers bájtjainak `fetch`-elése a blob URL-ről (same-origin) |
+| Pixelek/szöveg a PDF iframe-en belül | PDFium OOPIF; nincs `contentDocument`, nincs szövegréteg | `take_screenshot` + vizuális ellenőrzés; a PDF nyers bájtjai a `createObjectURL`-nél elkapott `Blob`-ból (`initScript`) — a blob URL `fetch`-elését a CSP tiltja |
 | A letöltött fájl tényleges lemezre kerülése | Izolált profil, nincs download-inspection tool | Az anchor/blob hívások in-page instrumentálása kattintás előtt (fájlnév-szerződés, URL-szivárgás) |
 | `prefers-reduced-motion` | Az `emulate` tool nem támogat CSS media-feature emulációt | Jelezd „nem ellenőrizhető”-ként |
 | Tranziens betöltési állapot screenshotja | `navigate_page`/`click` kivárja a megnyugvást | Forráskód-szintű igazolás (lásd fent) |

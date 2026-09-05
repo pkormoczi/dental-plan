@@ -27,8 +27,8 @@
 - totals: `tervVegosszeg`, `elolegOsszegek`, `elolegTullepi`, `computeOsszesitok`, `osszesitokElter`
 - kitoltetlen: `kitoltetlenSorok`, `araztalanSorok`, `nullaOsszeguSorok`, `uresFazisok`
 - arKoveti: `arKoveti`, `arFrissites`, `arElteroSorok`, `frissArlistaval` (kézi ár ≠ `arKoveti`)
-- sorElteres: `sorElteres` (kedvezmény/felár osztályozás, a szín a hívóé) · orokoltJelzesek: `orokoltJelzesekkel`
-- priceListIds: `nextTetelId` (max-alapú) · penznemValtas: `penznemvaltasHatasa`
+- sorElteres: `sorElteres` (kedvezmény/felár, a szín a hívóé) · orokoltJelzesek: `orokoltJelzesekkel`
+- priceListIds: `nextTetelId` · penznemValtas: `penznemvaltasHatasa`
 - templates: `isPlaceholderTemplate`, `sablonNyomtathato` · piszkozat: `piszkozatTartalmas`
 - blankPlan: `createBlankPlan` · planCopy: `planMasolatKent` · orvosok: `orvosProblema`
-- paciensKotes: `paciensKotes` · paciensTorles: `paciensTorlesAkadaly`
+- paciensKotes: `paciensKotes` · paciensTorles: `paciensTorlesAkadaly` · arlistaSzures: `tetelIlleszkedik`

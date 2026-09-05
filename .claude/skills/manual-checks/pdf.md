@@ -19,13 +19,29 @@ csak a PDF-en látszik (`app/src/pdf/CLAUDE.md`).
 
 ## A PDF nyers bájtjai
 
-A blob same-origin, `fetch`-elhető a page kontextusból:
+**A blob URL `fetch`-elése a CSP miatt tiltott** (`connect-src 'self' data:` — a `blob:` séma
+szándékosan nincs benne; a konzolban „Refused to connect … Content Security Policy” jelenik meg,
+ami a snippet hibája, nem az appé). Ehelyett a `Blob` objektumot kell elkapni a létrejöttekor:
+`navigate_page` az `#/elonezet`-re **`initScript`-tel** (a piszkozat a `localStorage`-ban van,
+az előnézet újrarenderel):
+
+```js
+// navigate_page → initScript (minden más script előtt fut, friss dokumentumon)
+window.__dp = { blobs: [], created: [], revoked: [], clicks: [] };
+const co = URL.createObjectURL, re = URL.revokeObjectURL, ac = HTMLAnchorElement.prototype.click;
+URL.createObjectURL = function (b) { const u = co.call(URL, b); window.__dp.blobs.push(b); window.__dp.created.push(u); return u; };
+URL.revokeObjectURL = function (u) { window.__dp.revoked.push(u); return re.call(URL, u); };
+HTMLAnchorElement.prototype.click = function () { window.__dp.clicks.push(this.href); return ac.call(this); };
+```
+
+majd a „Véglegesítés és mentés” gomb megjelenése (`wait_for`) után:
 
 ```js
 async () => {
-  const f = document.querySelector('iframe[title="Kezelési terv előnézet"]');
-  if (!f || !f.src.startsWith('blob:')) return { error: 'no blob iframe' };
-  const buf = await (await fetch(f.src)).arrayBuffer();
+  const pdfs = window.__dp.blobs.filter(b => b && b.type === 'application/pdf');
+  const b = pdfs[pdfs.length - 1];
+  if (!b) return { error: 'no pdf blob captured', types: window.__dp.blobs.map(x => x && x.type) };
+  const buf = await b.arrayBuffer();
   const raw = new TextDecoder('latin1').decode(new Uint8Array(buf));
   return {
     bytes: buf.byteLength,
@@ -70,21 +86,20 @@ páciensnévben és a tételnévben egyaránt látszódjon.
 
 ## Letöltés-instrumentálás
 
-Csak friss oldalbetöltés után (lásd `SKILL.md`):
+Ugyanaz az `initScript`, mint fent (friss betöltésen, egyszer — lásd `SKILL.md`). A
+letöltés-gomb kattintása után (async flow esetén várj ~300–400 ms-et egy második
+`evaluate_script`-ben — a `downloadVersion`-szerű handlerek `await loadPlanPdf(...)`-ot
+futtatnak a blob létrehozása előtt):
 
 ```js
-() => {
-  window.__dp = { created: [], revoked: [], clicks: [] };
-  const co = URL.createObjectURL, re = URL.revokeObjectURL, ac = HTMLAnchorElement.prototype.click;
-  URL.createObjectURL = function (b) { const u = co.call(URL, b); window.__dp.created.push(u); return u; };
-  URL.revokeObjectURL = function (u) { window.__dp.revoked.push(u); return re.call(URL, u); };
-  HTMLAnchorElement.prototype.click = function () { window.__dp.clicks.push(this.href); return ac.call(this); };
-  return 'instrumented';
+async () => {
+  await new Promise(r => setTimeout(r, 400));
+  const d = window.__dp;
+  return { created: d.created.length, revoked: d.revoked.length, clicks: d.clicks,
+    external: d.created.concat(d.clicks).filter(u => !/^blob:http:\/\/localhost:\d+\//.test(u)) };
 }
 ```
 
-majd a letöltés-gomb kattintása után (async flow esetén várj ~300–400 ms-et egy
-második `evaluate_script`-ben, mielőtt `window.__dp`-t olvasod — a
-`downloadVersion`-szerű handlerek `await loadPlanPdf(...)`-ot futtatnak a blob
-létrehozása előtt). Várt: 1× `createObjectURL`, 1× `click`, `blob:` href, semmilyen
-külső URL.
+Várt: `external` üres (semmilyen nem-localhost URL). Az előnézet „Letöltés” gombja sima
+`<a href="blob:…" download>` link — ott a `clicks` üres marad (nincs script-kattintás), a
+verzió-oldali letöltésnél 1× `click`.
