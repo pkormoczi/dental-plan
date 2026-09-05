@@ -163,12 +163,12 @@ export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): Plan
     setHiba(null);
     if (!patientDir) return;
     try {
-      const next = await ujTervForrasPaciensbol(storage, settings, priceList, patientDir);
+      const { plan: next, oroklott } = await ujTervForrasPaciensbol(storage, settings, priceList, patientDir);
       // Puszta törzsadat-előtöltés, nem szerkesztés -- a doki egy gombnyomással
       // bármikor újraelőállítja, tehát elvesztése nem valódi adatvesztés.
       // Ezért 'alapallapot': a
       // "Piszkozat folytatása" kártya csak TÉNYLEGES szerkesztés után jelenik meg.
-      copyPlanIntoDraft(next, 'alapallapot', patientDir);
+      copyPlanIntoDraft(next, 'alapallapot', patientDir, oroklott);
       navigate('/paciens');
     } catch (err) {
       setHiba({

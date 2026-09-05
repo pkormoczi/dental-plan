@@ -18,7 +18,7 @@ import {
   type ReactNode,
 } from 'react';
 import { Box, Button, Flex, Text } from '@radix-ui/themes';
-import { createBlankPlan } from '../domain/blankPlan';
+import { createBlankPlan, type OroklottNyelvPenznem } from '../domain/blankPlan';
 import { ujVerzioOrvosa, type OrvosFallback } from '../domain/orvosok';
 import { piszkozatTartalmas } from '../domain/piszkozat';
 import { osszesitokElter } from '../domain/totals';
@@ -71,7 +71,12 @@ interface AppStateValue {
    * függetlenül -- az autosave triggere `piszkozatTartalmas(plan)`-ra épül,
    * nem `vanMentetlenPiszkozat`-ra).
    */
-  copyPlanIntoDraft: (next: Plan, kiindulas: 'alapallapot' | 'mentetlen-munka', patientDir?: string) => void;
+  copyPlanIntoDraft: (
+    next: Plan,
+    kiindulas: 'alapallapot' | 'mentetlen-munka',
+    patientDir?: string,
+    orokolt?: OroklottNyelvPenznem | null,
+  ) => void;
   /**
    * Igaz, ha `plan`-en van olyan tartalom (`piszkozatTartalmas`), ami még
    * nincs a fájl-storage-ban -- azaz `plan` egy másik objektumreferencia,
@@ -161,6 +166,19 @@ interface AppStateValue {
    */
   orvosFallback: OrvosFallback;
   /**
+   * Igaz, ha az aktuális piszkozat nyelve/pénzneme a `copyPlanIntoDraft`
+   * `orokolt` paraméteréből jött (a páciens legutóbb VÉGLEGESÍTETT
+   * tervéből, `ujTervForrasPaciensbol` -- 47. tétel) -- a `PatientPage`
+   * ebből dönti el, jelezzen-e (csak akkor, ha az örökölt érték eltér a
+   * rendelő alapértelmezésétől). A két mező EGYÜTT áll be (a forrás egy
+   * pár), de a `nyugtazOrokoltJelzes`-en át KÜLÖN-KÜLÖN tűnik el -- a doki
+   * a két dimenziót külön váltja.
+   */
+  orokoltNyelv: boolean;
+  orokoltPenznem: boolean;
+  /** A `plan.nyelv`/`plan.penznem` tényleges váltása után hívva végleg eltünteti az adott dimenzió `orokolt*` jelzését. */
+  nyugtazOrokoltJelzes: (dimenzio: 'nyelv' | 'penznem') => void;
+  /**
    * KIZÁRÓLAG updatert fogad, sosem kész objektumot -- a hívó a
    * JELENLEGI (a legutóbbi mentés óta esetleg már megváltozott) állapotra
    * épít, nem egy render-idejű closure-re zárt régi értékre. Az updater
@@ -202,6 +220,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [loadedOsszesitokDiff, setLoadedOsszesitokDiff] = useState<Osszesitok | null>(null);
   const [frissitettDatum, setFrissitettDatum] = useState<UjVerzioDatum | null>(null);
   const [orvosFallback, setOrvosFallback] = useState<OrvosFallback>(null);
+  const [orokoltNyelv, setOrokoltNyelv] = useState(false);
+  const [orokoltPenznem, setOrokoltPenznem] = useState(false);
   const [loadError, setLoadError] = useState<Error | null>(null);
   const [loadToken, setLoadToken] = useState(0);
   // Amit legutóbb a DraftStorage-ból olvastunk vagy oda írtunk -- csak a
@@ -342,6 +362,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setLoadedOsszesitokDiff(null);
     setFrissitettDatum(null);
     setOrvosFallback(null);
+    setOrokoltNyelv(false);
+    setOrokoltPenznem(false);
     // A dp: kulcsokat (a piszkozatot is) a clearAll()/resetDemoData() már
     // elsöpörte -- csak a memóriabeli piszkozat-állapotot kell nullázni.
     setMentettPlan(null);
@@ -368,6 +390,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setLoadedOsszesitokDiff(null);
         setFrissitettDatum(null);
         setOrvosFallback(null);
+        setOrokoltNyelv(false);
+        setOrokoltPenznem(false);
         setMentettPlan(null);
         setPiszkozatMentve(null);
         setPiszkozatHiba(null);
@@ -411,6 +435,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             : null,
         );
         setOrvosFallback(fallback);
+        setOrokoltNyelv(false);
+        setOrokoltPenznem(false);
         // A betöltött terv nem "mentetlen munka", amíg hozzá nem nyúlnak --
         // az első szerkesztés után az író effekt magától felülírja a régi
         // piszkozatot, külön törlés itt nem kell (6. döntés). UGYANAZT a
@@ -420,11 +446,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setMentettPlan(friss);
         setPiszkozatMeta(patientDir ? { patientDir } : {});
       },
-      copyPlanIntoDraft: (next, kiindulas, patientDir) => {
+      copyPlanIntoDraft: (next, kiindulas, patientDir, orokolt) => {
         setPlanState(next);
         setLoadedOsszesitokDiff(null);
         setFrissitettDatum(null);
         setOrvosFallback(null);
+        setOrokoltNyelv(orokolt != null);
+        setOrokoltPenznem(orokolt != null);
         setMentettPlan(kiindulas === 'alapallapot' ? next : null);
         setPiszkozatMeta(patientDir ? { patientDir } : {});
       },
@@ -456,12 +484,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setPiszkozatHiba(null);
         setFrissitettDatum(null);
         setOrvosFallback(null);
+        setOrokoltNyelv(false);
+        setOrokoltPenznem(false);
         setPiszkozatMeta({});
         await drafts.clear();
       },
       loadedOsszesitokDiff,
       frissitettDatum,
       orvosFallback,
+      orokoltNyelv,
+      orokoltPenznem,
+      nyugtazOrokoltJelzes: (dimenzio) => {
+        if (dimenzio === 'nyelv') setOrokoltNyelv(false);
+        else setOrokoltPenznem(false);
+      },
       // Optimista -- a memóriabeli állapot (ref + state) a mentés
       // ELŐTT frissül, hogy egy második, ugyanabban a tickben induló hívás
       // updatere már ezt lássa. Hibára SZÁNDÉKOSAN nem gördül vissza: a
@@ -493,6 +529,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     loadedOsszesitokDiff,
     frissitettDatum,
     orvosFallback,
+    orokoltNyelv,
+    orokoltPenznem,
     storage,
     drafts,
     reloadFromStorage,

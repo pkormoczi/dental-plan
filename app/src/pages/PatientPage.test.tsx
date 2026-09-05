@@ -2,16 +2,21 @@
 // CLAUDE.md "A UX kritikus pontja" -- ez a szomszédos képernyő, ahol a
 // terv nyelve/pénzneme eldől, mielőtt a doki a szerkesztőbe lép.
 
+import { useEffect, useRef } from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import PatientPage from './PatientPage';
 import { TestProviders } from '../testUtils';
 import { addDaysIso, formatLongDate, todayIso } from '../domain/date';
+import type { OroklottNyelvPenznem } from '../domain/blankPlan';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
+import { seedPatients } from '../storage/seed/plans';
 import { DemoStorage } from '../storage/DemoStorage';
+import { useAppState } from '../state/AppState';
 import type { Fazis, Paciens, Plan, Sor } from '../domain/types';
 
 function renderPatient() {
@@ -1233,5 +1238,222 @@ describe('PatientPage -- a nyelv- és pénznemváltás megerősítő gombja', ()
     const penznemDialog = await screen.findByRole('alertdialog');
     const penznemGomb = within(penznemDialog).getByRole('button', { name: 'Folytatás' });
     expect(penznemGomb.getAttribute('data-accent-color')).toBe(nyelvSzin);
+  });
+});
+
+// A 4. doctor-review-megállapítás (2026-09-05): a 47. tétel öröklése néma
+// volt -- a doki nem látta, hogy egy "+ Új terv" miért adott Deutsch/EUR
+// tervet. A jelzés forrása az `AppState` `orokoltNyelv`/`orokoltPenznem`
+// tranziens mezője, amit a `copyPlanIntoDraft` negyedik paramétere állít.
+describe('PatientPage -- örökölt nyelv/pénznem jelzése', () => {
+  function makePlan(overrides: Partial<Plan> = {}): Plan {
+    return {
+      schemaVersion: 1,
+      tervId: '',
+      verzio: 0,
+      statusz: 'PISZKOZAT',
+      nyelv: 'hu',
+      penznem: 'HUF',
+      keltezes: '2026-08-05',
+      ervenyesIg: '2026-11-03',
+      arlistaVerzio: '2026-07-01',
+      orvos: 'Dr. Mándoki István',
+      paciens: {
+        nev: 'Teszt Elek',
+        szuletesiIdo: '',
+        lakcim: '',
+        telefon: '',
+        email: '',
+        taj: '',
+        kiskoru: false,
+        torvenyesKepviselo: null,
+      },
+      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+      osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+      ...overrides,
+    };
+  }
+
+  function makeSor(overrides: Partial<Sor> = {}): Sor {
+    return {
+      tetelId: 't041',
+      nevSnapshot: 'Fogeltávolítás',
+      savos: false,
+      fogak: '11',
+      mennyiseg: 1,
+      listaEgysegar: 25000,
+      tenylegesEgysegar: 25000,
+      ...overrides,
+    };
+  }
+
+  /**
+   * `copyPlanIntoDraft` a valódi API-n át állítja az öröklés-jelzést -- a
+   * `dp:piszkozat` seedelése (a fájl többi blokkjának mintája) enélkül nem
+   * elég, mert a jelzés SZÁNDÉKOSAN tranziens, nem perzisztálódik (a plan
+   * 4. döntése). Csak azután fut, hogy az `AppStateProvider` a "Betöltés…"
+   * ágból kilépett -- a `value` addig `null`, a gyerekek (ez a komponens
+   * is) nem renderelnek.
+   */
+  function OrokoltHarness({
+    plan,
+    orokolt,
+  }: {
+    plan: Plan;
+    orokolt: OroklottNyelvPenznem | null;
+  }) {
+    const { copyPlanIntoDraft, markPlanSaved, plan: current } = useAppState();
+    const navigate = useNavigate();
+    const kesz = useRef(false);
+    useEffect(() => {
+      if (kesz.current) return;
+      kesz.current = true;
+      copyPlanIntoDraft(plan, 'alapallapot', undefined, orokolt);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    return (
+      <>
+        <button onClick={() => navigate('/terv')}>Kezelések (teszt)</button>
+        <button onClick={() => navigate('/paciens')}>Terv adatai (teszt)</button>
+        <button onClick={() => void markPlanSaved(current)}>Mentés (teszt)</button>
+        <Routes>
+          <Route path="/paciens" element={<PatientPage />} />
+          <Route path="/terv" element={<div data-testid="kezelesek-stub" />} />
+        </Routes>
+      </>
+    );
+  }
+
+  function renderHarness(plan: Plan, orokolt: OroklottNyelvPenznem | null) {
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+    return render(
+      <TestProviders initialEntries={['/paciens']}>
+        <OrokoltHarness plan={plan} orokolt={orokolt} />
+      </TestProviders>,
+    );
+  }
+
+  // A `Callout.Text` a doki-választotta nyelvet/pénznemet egy beágyazott,
+  // félkövér `<Text>`-ben adja vissza -- a testing-library `getByText`
+  // alapértelmezett szövegillesztése csak a KÖZVETLEN szöveg-gyerekeket
+  // veszi figyelembe, a beágyazott elem szövegét nem, ezért a mintának a
+  // beágyazás ELŐTTI, egyedi kezdő-szövegre kell szorítkoznia.
+  const nyelvJelzes = /A nyelv \(/;
+  const penznemJelzes = /A pénznem \(/;
+
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('de/EUR öröklés magyar/HUF alapértelmezés mellett mindkét szekcióban jelzést ad', async () => {
+    renderHarness(makePlan({ nyelv: 'de', penznem: 'EUR' }), { nyelv: 'de', penznem: 'EUR' });
+
+    expect(await screen.findByText(nyelvJelzes)).toBeInTheDocument();
+    expect(screen.getByText(penznemJelzes)).toBeInTheDocument();
+  });
+
+  it('de/HUF öröklés esetén csak a nyelv-szekcióban jelez -- a pénznem egyezik az alapértelmezéssel', async () => {
+    renderHarness(makePlan({ nyelv: 'de', penznem: 'HUF' }), { nyelv: 'de', penznem: 'HUF' });
+
+    expect(await screen.findByText(nyelvJelzes)).toBeInTheDocument();
+    expect(screen.queryByText(penznemJelzes)).toBeNull();
+  });
+
+  it('hu/HUF öröklés esetén sehol nem jelez -- megegyezik a rendelő alapértelmezésével', async () => {
+    renderHarness(makePlan({ nyelv: 'hu', penznem: 'HUF' }), { nyelv: 'hu', penznem: 'HUF' });
+
+    await screen.findByText('Dokumentum nyelve');
+    expect(screen.queryByText(nyelvJelzes)).toBeNull();
+    expect(screen.queryByText(penznemJelzes)).toBeNull();
+  });
+
+  it('öröklés nélkül (terv nélküli páciens, illetve csak PISZKOZAT előzmény) sehol nem jelez', async () => {
+    renderHarness(makePlan({ nyelv: 'de', penznem: 'EUR' }), null);
+
+    await screen.findByText('Dokumentum nyelve');
+    expect(screen.queryByText(nyelvJelzes)).toBeNull();
+    expect(screen.queryByText(penznemJelzes)).toBeNull();
+  });
+
+  it('nyelv átváltása után a nyelv-jelzés eltűnik, visszaváltáskor sem tér vissza, a pénznemé marad', async () => {
+    const user = userEvent.setup();
+    renderHarness(makePlan({ nyelv: 'de', penznem: 'EUR' }), { nyelv: 'de', penznem: 'EUR' });
+    await screen.findByText(nyelvJelzes);
+
+    await user.click(screen.getByRole('radio', { name: 'Magyar' }));
+    expect(screen.queryByText(nyelvJelzes)).toBeNull();
+    expect(screen.getByText(penznemJelzes)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
+    expect(screen.queryByText(nyelvJelzes)).toBeNull();
+    expect(screen.getByText(penznemJelzes)).toBeInTheDocument();
+  });
+
+  it('megszakított nyelvváltás-dialógusnál a jelzés marad', async () => {
+    const user = userEvent.setup();
+    renderHarness(
+      makePlan({
+        nyelv: 'de',
+        penznem: 'EUR',
+        fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [makeSor()] }],
+      }),
+      { nyelv: 'de', penznem: 'EUR' },
+    );
+    await screen.findByText(nyelvJelzes);
+
+    await user.click(screen.getByRole('radio', { name: 'Magyar' }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+
+    expect(screen.getByText(nyelvJelzes)).toBeInTheDocument();
+  });
+
+  it('Kezelések ↔ Terv adatai navigáció megőrzi a jelzést', async () => {
+    const user = userEvent.setup();
+    renderHarness(makePlan({ nyelv: 'de', penznem: 'EUR' }), { nyelv: 'de', penznem: 'EUR' });
+    await screen.findByText(nyelvJelzes);
+
+    await user.click(screen.getByRole('button', { name: 'Kezelések (teszt)' }));
+    await screen.findByTestId('kezelesek-stub');
+    await user.click(screen.getByRole('button', { name: 'Terv adatai (teszt)' }));
+
+    expect(await screen.findByText(nyelvJelzes)).toBeInTheDocument();
+    expect(screen.getByText(penznemJelzes)).toBeInTheDocument();
+  });
+
+  it('mentés után indított új piszkozaton nincs maradvány', async () => {
+    const user = userEvent.setup();
+    renderHarness(makePlan({ nyelv: 'de', penznem: 'EUR' }), { nyelv: 'de', penznem: 'EUR' });
+    await screen.findByText(nyelvJelzes);
+
+    await user.click(screen.getByRole('button', { name: 'Mentés (teszt)' }));
+
+    await waitFor(() => expect(screen.queryByText(nyelvJelzes)).toBeNull());
+    expect(screen.queryByText(penznemJelzes)).toBeNull();
+  });
+});
+
+describe('PatientPage -- örökölt nyelv/pénznem jelzése a valódi "+ Új terv" láncon', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('VEGLEGES de/EUR előzményű páciensnél "+ Új terv" után mindkét szekcióban jelzés látszik', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    const horvathDir = seedPatients.find((p) => p.record.nev === 'Horváth Péter')!.patientDir;
+    window.location.hash = `#/paciensek/${encodeURIComponent(horvathDir)}`;
+
+    await user.click(await screen.findByRole('button', { name: '+ Új terv' }));
+
+    expect(await screen.findByText('Dokumentum nyelve')).toBeInTheDocument();
+    // A `getByText` közvetlen-szöveg-gyerek korlátjáról lásd a fenti
+    // `describe` blokk `nyelvJelzes`/`penznemJelzes` kommentjét.
+    expect(screen.getByText(/A nyelv \(/)).toBeInTheDocument();
+    expect(screen.getByText(/A pénznem \(/)).toBeInTheDocument();
   });
 });

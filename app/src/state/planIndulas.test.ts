@@ -54,9 +54,10 @@ describe('ujTervForrasPaciensbol -- nyelv/pénznem-öröklés', () => {
 
     const uj = await ujTervForrasPaciensbol(storage, settings, priceList, ref.patientDir);
 
-    expect(uj.nyelv).toBe('de');
-    expect(uj.penznem).toBe('EUR');
-    expect(uj.paciens.nev).toBe('Örökös Ottó');
+    expect(uj.plan.nyelv).toBe('de');
+    expect(uj.plan.penznem).toBe('EUR');
+    expect(uj.plan.paciens.nev).toBe('Örökös Ottó');
+    expect(uj.oroklott).toEqual({ nyelv: 'de', penznem: 'EUR' });
   });
 
   it('terv nélküli, csak törzsadatos páciensnél a globális alapértékre esik vissza', async () => {
@@ -66,8 +67,9 @@ describe('ujTervForrasPaciensbol -- nyelv/pénznem-öröklés', () => {
 
     const uj = await ujTervForrasPaciensbol(storage, settings, priceList, folder.dirName);
 
-    expect(uj.nyelv).toBe('hu');
-    expect(uj.penznem).toBe('HUF');
+    expect(uj.plan.nyelv).toBe('hu');
+    expect(uj.plan.penznem).toBe('HUF');
+    expect(uj.oroklott).toBeNull();
   });
 
   it('törzsadattal ÉS VEGLEGES tervvel rendelkező páciensnél a törzsadat-ág is örököl', async () => {
@@ -83,9 +85,10 @@ describe('ujTervForrasPaciensbol -- nyelv/pénznem-öröklés', () => {
 
     // A paciens blokk a törzsadatból jön (nem a terv pillanatképéből) --
     // csak a nyelv/pénznem-öröklés forrása a terv.
-    expect(uj.paciens.nev).toBe('Törzsadatos Németh Nóra');
-    expect(uj.nyelv).toBe('de');
-    expect(uj.penznem).toBe('EUR');
+    expect(uj.plan.paciens.nev).toBe('Törzsadatos Németh Nóra');
+    expect(uj.plan.nyelv).toBe('de');
+    expect(uj.plan.penznem).toBe('EUR');
+    expect(uj.oroklott).toEqual({ nyelv: 'de', penznem: 'EUR' });
   });
 
   it('csak PISZKOZAT (soha nem véglegesített) tervű páciensnél a globális alapértékre esik vissza', async () => {
@@ -98,8 +101,9 @@ describe('ujTervForrasPaciensbol -- nyelv/pénznem-öröklés', () => {
 
     const uj = await ujTervForrasPaciensbol(storage, settings, priceList, ref.patientDir);
 
-    expect(uj.nyelv).toBe('hu');
-    expect(uj.penznem).toBe('HUF');
+    expect(uj.plan.nyelv).toBe('hu');
+    expect(uj.plan.penznem).toBe('HUF');
+    expect(uj.oroklott).toBeNull();
   });
 
   it('egy sérült terv.json mellett sem dob, a globális alapértékre esik vissza', async () => {
@@ -115,9 +119,10 @@ describe('ujTervForrasPaciensbol -- nyelv/pénznem-öröklés', () => {
 
     const uj = await ujTervForrasPaciensbol(storage, settings, priceList, folder.dirName);
 
-    expect(uj.nyelv).toBe('hu');
-    expect(uj.penznem).toBe('HUF');
-    expect(uj.paciens.nev).toBe('Sérült Terv Sára');
+    expect(uj.plan.nyelv).toBe('hu');
+    expect(uj.plan.penznem).toBe('HUF');
+    expect(uj.plan.paciens.nev).toBe('Sérült Terv Sára');
+    expect(uj.oroklott).toBeNull();
   });
 
   it('dob, ha a páciensnek sem törzsadata, sem olvasható terve nincs', async () => {

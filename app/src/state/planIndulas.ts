@@ -67,19 +67,36 @@ async function legfrissebbEsOroklesForras(
   return { legfrissebb, oroklesForras };
 }
 
+/**
+ * A `plan` mellett az öröklés TÉNYE is (`oroklott`) -- a 47. tétel a néma
+ * öröklésre épült, a 4. megállapítás (2026-09-05 doctor review) szerint ez
+ * a doki számára láthatatlan maradt. A hívó (`PatientPage.tsx`) ebből dönti
+ * el, jelezzen-e, amikor az örökölt érték eltér a rendelő
+ * alapértelmezésétől.
+ */
+export interface UjTervForras {
+  plan: Plan;
+  oroklott: OroklottNyelvPenznem | null;
+}
+
 export async function ujTervForrasPaciensbol(
   storage: PlanStorage,
   settings: Settings,
   priceList: PriceList,
   patientDir: string,
-): Promise<Plan> {
+): Promise<UjTervForras> {
   const adatok = await storage.loadPatientData(patientDir);
   const { legfrissebb, oroklesForras } = await legfrissebbEsOroklesForras(storage, patientDir);
 
-  if (adatok) return planUjTorzsadattal(adatok, settings, priceList, oroklesForras);
+  if (adatok) {
+    return { plan: planUjTorzsadattal(adatok, settings, priceList, oroklesForras), oroklott: oroklesForras };
+  }
 
   if (!legfrissebb) {
     throw new Error('Ehhez a pácienshez nincs sem törzsadata, sem olvasható korábbi terve.');
   }
-  return planUjPaciensselTervhez(legfrissebb, settings, priceList, oroklesForras);
+  return {
+    plan: planUjPaciensselTervhez(legfrissebb, settings, priceList, oroklesForras),
+    oroklott: oroklesForras,
+  };
 }

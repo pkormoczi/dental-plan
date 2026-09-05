@@ -29,7 +29,7 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes';
-import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import ChipGroup from '../components/ChipGroup';
 import { Field, FieldGroup, ReadOnlyField } from '../components/Field';
 import { useLepesGuard } from '../components/LepesGuardContext';
@@ -37,6 +37,7 @@ import { usePaciensKotes } from '../components/PaciensKotesContext';
 import Section from '../components/Section';
 import { lefedettseg } from '../domain/coverage';
 import { addDaysIso, formatLongDate } from '../domain/date';
+import { alapertelmezettPenznem } from '../domain/beallitasok';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import { aktivOrvosok } from '../domain/orvosok';
 import {
@@ -52,6 +53,9 @@ import TorzsadatSyncCard from './patientPage/TorzsadatSyncCard';
 import { useAppState } from '../state/AppState';
 
 type PendingChange = { kind: 'nyelv'; value: Nyelv } | { kind: 'penznem'; value: Penznem };
+
+/** A `ChipGroup` options és az öröklés-jelzés sávja közös nyelv-címkéje -- ne driftelhessen szét. */
+const NYELV_CIMKE: Record<Nyelv, string> = { hu: 'Magyar', de: 'Deutsch' };
 
 const TERV_SZINTU_NEV: Record<'vegosszeg' | 'eloleg', string> = {
   vegosszeg: 'az egyedi végösszeg',
@@ -111,7 +115,8 @@ function penznemDialogSzoveg(hatas: PenznemvaltasHatas, sorokSzama: number): str
 }
 
 export default function PatientPage() {
-  const { plan, setPlan, settings, priceList } = useAppState();
+  const { plan, setPlan, settings, priceList, orokoltNyelv, orokoltPenznem, nyugtazOrokoltJelzes } =
+    useAppState();
   const navigate = useNavigate();
   const { kerLepesValtas } = useLepesGuard();
   const { patientDir: kotottPatientDir, kotott, utkozok } = usePaciensKotes();
@@ -162,6 +167,7 @@ export default function PatientPage() {
       }
       return next;
     });
+    nyugtazOrokoltJelzes('nyelv');
   }
 
   function applyPenznem(penznem: Penznem) {
@@ -183,6 +189,7 @@ export default function PatientPage() {
       next.masikPenznemOsszegek = tervOsszegek.masikPenznemOsszegek;
       return next;
     });
+    nyugtazOrokoltJelzes('penznem');
   }
 
   function changeNyelv(nyelv: Nyelv) {
@@ -354,8 +361,8 @@ export default function PatientPage() {
           <ChipGroup
             value={plan.nyelv}
             options={[
-              ['hu', 'Magyar'],
-              ['de', 'Deutsch'],
+              ['hu', NYELV_CIMKE.hu],
+              ['de', NYELV_CIMKE.de],
             ]}
             onChange={changeNyelv}
           />
@@ -370,6 +377,19 @@ export default function PatientPage() {
               {cov.aktivOsszes - cov.deNevvel} / {cov.aktivOsszes} aktív tételnek nincs német
               neve — ezek <Text weight="bold">magyarul</Text> kerülnek a nyomtatványra. Az
               Árlistán pótolhatók.
+            </Callout.Text>
+          </Callout.Root>
+        )}
+
+        {orokoltNyelv && plan.nyelv !== settings.alapertelmezettNyelv && (
+          <Callout.Root color="gray" size="1" mt="2">
+            <Callout.Icon>
+              <InfoCircledIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              A nyelv (<Text weight="bold">{NYELV_CIMKE[plan.nyelv]}</Text>) a páciens legutóbbi
+              véglegesített tervéből öröklődött — a rendelő alapértelmezése{' '}
+              <Text weight="bold">{NYELV_CIMKE[settings.alapertelmezettNyelv]}</Text>.
             </Callout.Text>
           </Callout.Root>
         )}
@@ -396,6 +416,19 @@ export default function PatientPage() {
               Ebben a pénznemben ({plan.penznem}) egyetlen tétel sincs beárazva — a szerkesztő
               keresője nem fog találatot adni. Válts pénznemet, vagy töltsd ki az árakat az
               Árlistán.
+            </Callout.Text>
+          </Callout.Root>
+        )}
+
+        {orokoltPenznem && plan.penznem !== alapertelmezettPenznem(settings) && (
+          <Callout.Root color="gray" size="1" mt="2">
+            <Callout.Icon>
+              <InfoCircledIcon />
+            </Callout.Icon>
+            <Callout.Text>
+              A pénznem (<Text weight="bold">{plan.penznem}</Text>) a páciens legutóbbi
+              véglegesített tervéből öröklődött — a rendelő alapértelmezése{' '}
+              <Text weight="bold">{alapertelmezettPenznem(settings)}</Text>.
             </Callout.Text>
           </Callout.Root>
         )}
