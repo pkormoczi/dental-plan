@@ -25,7 +25,7 @@ const SCAN_ROOTS = [
   { dir: 'backlog', ext: ['.md'], recursive: true },
 ];
 // docs/PRODUCT.md a docs scan-rootból jön.
-const SCAN_FILES = ['CLAUDE.md', 'README.md'];
+const SCAN_FILES = ['CLAUDE.md', 'README.md', 'AGENTS.md'];
 const PRODUCT = 'docs/PRODUCT.md';
 const EXCLUDE_DIRS = [
   'app/src/assets',
@@ -59,10 +59,12 @@ const BUDGETS = [
   { match: (f) => f === PRODUCT, limit: 6000 },
   { match: (f) => /^app\/src\/.*CLAUDE\.md$/.test(f), limit: 2500 },
   { match: (f) => f === 'backlog/CLAUDE.md', limit: 1000 },
+  // AGENTS.md a hordozható belépő más agenteknek: mutat, nem duplikál.
+  { match: (f) => f === 'AGENTS.md', limit: 2500 },
 ];
 
 const isContextFile = (f) =>
-  f === 'CLAUDE.md' || f === PRODUCT || f === 'backlog/CLAUDE.md' || /^app\/src\/.*CLAUDE\.md$/.test(f);
+  f === 'CLAUDE.md' || f === 'AGENTS.md' || f === PRODUCT || f === 'backlog/CLAUDE.md' || /^app\/src\/.*CLAUDE\.md$/.test(f);
 
 // Egy tétel = egy fájl; a státusz a mappa: backlog/idea/<slug>.md ötlet, backlog/<slug>.md
 // tervezett. Nincs Status sor -- két igazságforrás szétcsúszna, a git mv az állapotváltás.
@@ -73,7 +75,9 @@ const backlogStatus = (f) => {
   return null;
 };
 const BACKLOG_TYPE = ['feature', 'bug', 'chore', 'doki'];
-const BACKLOG_HEADER_KEYS = ['Type', 'Source', 'Kerdes', 'Target', 'Baseline'];
+const BACKLOG_HEADER_KEYS = ['Type', 'Source', 'Kerdes', 'Prio', 'Target', 'Baseline'];
+// Prio-t csak a doki állítja; hiánya = még nincs döntés. Skill sosem írja magától.
+const BACKLOG_PRIO = ['now', 'next', 'later'];
 const BACKLOG_SECTIONS = ['## Goal', '## Current state', '## Approach', '## Decisions', '## Verification'];
 // Karakterben. Az idea egy bekezdés; a planned a V2 tervsablon -- a részlet a git historyé.
 const BACKLOG_BUDGET = { idea: 1500, planned: 6000 };
@@ -239,6 +243,9 @@ function backlogTetel(file, status, lines, content) {
   const type = header.Type;
   if (!BACKLOG_TYPE.includes(type)) {
     hiba(file, 1, rule, `Type: ${type ?? '(hiányzik)'} -- ${BACKLOG_TYPE.join(' | ')}`);
+  }
+  if (header.Prio !== undefined && !BACKLOG_PRIO.includes(header.Prio)) {
+    hiba(file, 1, rule, `Prio: ${header.Prio} -- ${BACKLOG_PRIO.join(' | ')} (a doki dönti el; hiánya = nincs döntés)`);
   }
   if (status === 'planned') {
     if (type === 'doki') {
