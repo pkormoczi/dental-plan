@@ -1,4 +1,4 @@
-// Mechanizmus-szintű teszt a NavGuardContext-re (D46) -- egy minimál stub
+// Mechanizmus-szintű teszt a NavGuardContext-re -- egy minimál stub
 // "védett" lap + a valódi NavBar, közös Providerben. A konkrét bekötések
 // (PatientDetailPage/SettingsPage) saját teszteikben fedettek
 // (PatientDetailPage.test.tsx, SettingsPage.test.tsx) -- ez a fájl csak a

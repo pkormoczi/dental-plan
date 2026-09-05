@@ -165,8 +165,8 @@ export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): Plan
     try {
       const next = await ujTervForrasPaciensbol(storage, settings, priceList, patientDir);
       // Puszta törzsadat-előtöltés, nem szerkesztés -- a doki egy gombnyomással
-      // bármikor újraelőállítja, tehát elvesztése nem valódi adatvesztés
-      // (docs/03-funkcionalis-spec.md § Autosave). Ezért 'alapallapot': a
+      // bármikor újraelőállítja, tehát elvesztése nem valódi adatvesztés.
+      // Ezért 'alapallapot': a
       // "Piszkozat folytatása" kártya csak TÉNYLEGES szerkesztés után jelenik meg.
       copyPlanIntoDraft(next, 'alapallapot', patientDir);
       navigate('/paciens');

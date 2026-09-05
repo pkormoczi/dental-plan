@@ -1,6 +1,5 @@
 // A páciens master <-> terv-piszkozat mezőszintű összevető dialógus --
-// backlog-40. docs/03-funkcionalis-spec.md § 2. Terv adatai "Páciens
-// törzsadata".
+// backlog-40.
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

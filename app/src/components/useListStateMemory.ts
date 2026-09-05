@@ -1,7 +1,6 @@
 // Lista keresőszövegének, scroll-pozíciójának ÉS a lista sorain belüli
 // összecsukható blokkok nyitottságának megőrzése route-váltás után-vissza
-// (D43, docs/03-funkcionalis-spec.md § 9. Páciensek; a nyitottság a 46.
-// tétel, D240, bővítése) -- KIZÁRÓLAG böngésző-"vissza" (POP) navigációnál
+// (a nyitottság a 46. tétel bővítése) -- KIZÁRÓLAG böngésző-"vissza" (POP) navigációnál
 // áll vissza; a NavBar linkjéről vagy más PUSH-ról érkező belépés mindig
 // tiszta listát ad. Modul-szintű `Map`-ben tartja az állapotot, NEM
 // böngészőtárban -- a keresőszöveg páciensnév-töredék lehet, ezt a
@@ -54,7 +53,7 @@ export function useListStateMemory(key: string, ready: boolean) {
 
   // A `q`/`nyitottak` state MELLETT vezetett tükör -- a `ment()`-nek a
   // MENTÉS pillanatában kell a teljes, aktuális `ListaAllapot`-ot írnia
-  // (`saveSettings`/`savePriceList` D31 mintája): két külön író (`setQ`,
+  // (a `saveSettings`/`savePriceList` updater-mintája): két külön író (`setQ`,
   // az `onScroll` listener, most már `setNyitott` is) mindegyike TELJES
   // rekordot ír a `memoria`-ba -- ha csak a saját closure-ükből olvasott
   // mezőt írnák, a másik kettő csendben visszaesne a mentéskori értékére.

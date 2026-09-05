@@ -4,11 +4,10 @@ import { useNavGuardState } from './NavGuardContext';
 import { t } from '../design/tokens';
 import logoUrl from '../assets/logo.png';
 
-// Végleges öt tételes fő navigáció, D34 (docs/01-attekintes-es-dontesek.md)
-// -- ez a forrásigazság az IA-ra, a docs/03-funkcionalis-spec.md
-// "Fő navigáció" szakasza ugyanezt írja le prózában. A korábban itt élt
-// négy átmeneti workflow-link (Páciens/Terv szerkesztő/Előnézet/Korábbi
-// tervek) a terv-workflow héj (backlog-31, D36) elkészültével megszűnt --
+// Végleges öt tételes fő navigáció -- ez a forrásigazság az IA-ra. A
+// korábban itt élt négy átmeneti workflow-link (Páciens/Terv
+// szerkesztő/Előnézet/Korábbi tervek) a terv-workflow héj (backlog-31)
+// elkészültével megszűnt --
 // a szerepüket a `TervWorkflowShell` breadcrumb+stepperje vette át.
 const FO_LINKS: Array<{ to: string; label: string }> = [
   { to: '/', label: 'Kezdőlap' },
@@ -30,9 +29,8 @@ function navLinkStyle(isActive: boolean) {
   };
 }
 
-// D46 (docs/01-attekintes-es-dontesek.md): a linkek kattintását el kell
-// fogni, ha van nem mentett módosítás egy D38-védett felületen
-// (`NavGuardContext`) -- a MEGLÉVŐ `useDiscardGuard`/`DiscardChangesDialog`
+// A linkek kattintását el kell fogni, ha egy felület mentetlen módosítást
+// regisztrált (`NavGuardContext`) -- a MEGLÉVŐ `useDiscardGuard`/`DiscardChangesDialog`
 // primitívet hívja újra, a context "van piszkozat" jelzőjével táplálva, nem
 // egy második megerősítő-mechanizmust bevezetve. Nem-dirty állapotban a
 // `NavLink` a szokásos módon navigál, `onClick` beavatkozás nélkül.

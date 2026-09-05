@@ -1,4 +1,4 @@
-// A "HU" jelvény -- D21/1.1: jelzi, hogy egy tétel neve/sora a terv nyelvén
+// A "HU" jelvény: jelzi, hogy egy tétel neve/sora a terv nyelvén
 // (jellemzően német) nem volt elérhető, ezért magyarra esett vissza. Közös a
 // tervszerkesztő keresője (planEditor/ItemPicker.tsx) és a felvett sorok
 // (pages/planEditor/LineRow.tsx) között -- ezért saját fájlban, hogy egyik se

@@ -1,12 +1,12 @@
-// Megosztott "elvetnéd a módosításokat?" megerősítő dialógus -- D38
-// (docs/07-felulet-rendszer.md § Komponensek). Korábban öt helyen
-// (PaciensekPage, PatientPlanChains, NewPlanPage, Home, PlanEditorPage)
+// Megosztott "elvetnéd a módosításokat?" megerősítő dialógus. Korábban öt
+// helyen (PaciensekPage, PatientPlanChains, NewPlanPage, Home, PlanEditorPage)
 // külön-külön bemásolt `AlertDialog` minta -- ez a hook+komponens pár a
-// mentetlen FORM-draft (nem a piszkozat-terv identitás, lásd D37) elhagyása
+// mentetlen FORM-draft (nem a globális piszkozat-terv identitása) elhagyása
 // elleni védelmet fedi le. A "piszkozat felülírása" (aktív terv-draft) guardok
 // (Home/NewPlanPage/PatientPlanChains) SZÁNDÉKOSAN nem lettek erre átállítva
-// -- más domaint védenek (D37), ez a komponens csak stílusmintaként áll
-// rendelkezésre nekik.
+// -- más domaint védenek: a globális terv-draft FELÜLÍRÁSÁT, ami autosave-elt,
+// ezért nála konfliktus csak egy új szerkesztési task indításakor áll elő;
+// ez a komponens csak stílusmintaként áll rendelkezésre nekik.
 
 import { useState, type RefObject } from 'react';
 import { AlertDialog, Button, Flex } from '@radix-ui/themes';

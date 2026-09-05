@@ -1,9 +1,9 @@
-// Terv-workflow héj -- backlog-31 (Terv workflow shell), redesign DP-003,
-// D36. A `/paciens`/`/terv`/`/elonezet` közös layout-route-ja (az app első
+// Terv-workflow héj -- backlog-31 (Terv workflow shell).
+// A `/paciens`/`/terv`/`/elonezet` közös layout-route-ja (az app első
 // nested route-mintája, react-router `Outlet`): állandó, kattintható
 // breadcrumb (`Páciensek > [páciens neve]`) + szabadon kattintható,
 // route-vezérelt 3-lépéses stepper (`Terv adatai -> Kezelések -> Előnézet
-// és véglegesítés`, D38 feliratai). A meglévő, laponkénti "Tovább" gombok
+// és véglegesítés` -- a stepper végleges feliratai). A meglévő, laponkénti "Tovább" gombok
 // (PatientPage.tsx, PlanEditorPage.tsx) ettől függetlenül, változatlanul
 // megmaradnak -- a stepper a szabad ugrálást adja hozzá, nem irányított
 // útvonalat vált ki.
@@ -26,7 +26,7 @@ export default function TervWorkflowShell() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
-  // D37: a piszkozat "utolsó workflow-lépése" -- a héj tudja MA IS, melyik
+  // A piszkozat "utolsó workflow-lépése" -- a héj tudja MA IS, melyik
   // route-on áll a doki (route-alapú stepper), ezért ez az egyetlen hely,
   // ahol ez a metaadat íródik, nem mindhárom oldalon külön.
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function TervWorkflowShell() {
     }
   }, [pathname, jelezWorkflowLepes]);
 
-  // backlog-40 (3. döntés, D161): a "Terv adatai" lépés ELŐRE (Kezelések/
+  // backlog-40 (3. döntés): a "Terv adatai" lépés ELŐRE (Kezelések/
   // Előnézet felé) elhagyásának ajánlat-jellegű elfogása
   // (components/LepesGuardContext.tsx). A hatókör szűkítése (kizárólag a
   // /paciens lépésről indított előrelépés) NEM itt dől el explicit módon --

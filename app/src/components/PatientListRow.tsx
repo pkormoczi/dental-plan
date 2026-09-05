@@ -1,12 +1,13 @@
-// Kompakt páciens-sor a Kezdőlap "Legutóbbi páciensek" listájához (D39,
-// docs/03-funkcionalis-spec.md § 1. Indítás) -- eredetileg a `Home.tsx`
+// Kompakt páciens-sor a Kezdőlap "Legutóbbi páciensek" listájához --
+// eredetileg a `Home.tsx`
 // helyi `RecentRow`-ja volt, a 38. tétel emelte ide. A Pácienslista
 // (`pages/paciensek/PatientTableRow.tsx`) SZÁNDÉKOSAN külön komponens
-// (D47) -- a `children` (aktivitás-szöveg) itt sor alatti tartalom, egy
+// -- a `children` (aktivitás-szöveg) itt sor alatti tartalom, egy
 // oszlopos táblázat-cellába ez nem ültethető át. Név + DOB + telefon,
 // KIVÉTELKÉNT csak a törzsadat-betöltési hiba kap jelzést -- a "Rögzített
 // törzsadat"/"Élő adat a legutóbbi tervből" két NORMÁL állapot nem kap
-// semmilyen jelvényt (D43).
+// semmilyen jelvényt -- egy normál állapot jelvénye nem hordoz döntési
+// információt, csak zajt.
 
 import type { ReactNode } from 'react';
 import { Flex, Text } from '@radix-ui/themes';
@@ -28,7 +29,7 @@ export default function PatientListRow({
 
   return (
     // Szándékosan location.state nélkül: a PatientDetailPage alapértelmezett
-    // tabja 'tervek' (D35) -- ha ez a default valaha megváltozna, ez a
+    // tabja 'tervek' -- ha ez a default valaha megváltozna, ez a
     // navigáció csendben rossz tabra nyitna.
     <Link
       to={`/paciensek/${encodeURIComponent(patient.dirName)}`}

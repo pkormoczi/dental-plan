@@ -27,8 +27,8 @@ export default function ToothPickerPopover({ fogak, allapot, onChange }: ToothPi
   const [open, setOpen] = useState(false);
   const parsed = parseTeeth(fogak);
   // Szabadszöveg-őr: a `parseTeeth` mindent-vagy-semmit dönt -- ha a mező
-  // akár egyetlen nem-FDI tokent (pl. "jobb felső", docs/02-domain-modell.md
-  // "Fogszám kezelés" szerint érvényes tartalom) tartalmaz, a fogtérkép NEM tudja
+  // akár egyetlen nem-FDI tokent (pl. "jobb felső" -- a Fog mező szabadszöveget
+  // is elbír, lásd app/src/domain/CLAUDE.md `parseTeeth`) tartalmaz, a fogtérkép NEM tudja
   // biztonságosan szerkeszteni azt. Némán felülírás helyett itt kérünk
   // megerősítést -- a doki gépelt szövege sosem tűnhet el észrevétlenül.
   const szabadSzoveg = fogak.trim() !== '' && !parsed.valid;

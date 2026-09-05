@@ -1,14 +1,15 @@
-// Megosztott "van-e éppen nem mentett piszkozat" jelző, D46
-// (docs/01-attekintes-es-dontesek.md) -- a D38 (`useDirtyDraft`/
-// `useDiscardGuard`/`DiscardChangesDialog`) hatóköre eredetileg csak a
+// Megosztott "van-e éppen nem mentett piszkozat" jelző -- a Mentés/Mégse
+// dirty-őr (`useDirtyDraft`/`useDiscardGuard`/`DiscardChangesDialog`)
+// hatóköre eredetileg csak a
 // lapon belüli elem-váltásra (sor-/tab-váltás) és a Mégse gombra terjedt
 // ki; ez a Context a NavBar-kattintásra is kiterjeszti, a MEGLÉVŐ
 // `useDiscardGuard`-ot újrahasznosítva, nem egy második megerősítő-
 // mechanizmust bevezetve.
 //
 // Egyetlen boolean, nem kulcsolt regisztry: ebben az egy-útvonalas SPA-ban
-// (HashRouter, egyszerre egy route renderel) egyszerre KIZÁRÓLAG egy D38-
-// védett felület lehet mountolva -- ha ez az invariáns valaha megdől (pl.
+// (HashRouter, egyszerre egy route renderel) egyszerre KIZÁRÓLAG egy
+// Mentés/Mégse-őrrel védett felület lehet mountolva -- ha ez az invariáns
+// valaha megdől (pl.
 // egy jövőbeli modális szerkesztő egy lap MELLETT mountolva), ezt a
 // designt újra kell gondolni.
 //
@@ -37,7 +38,7 @@ function useNavGuardContext(): NavGuardContextValue {
 }
 
 /**
- * Egy D38-védett felület hívja, a SAJÁT dirty state-jével -- a
+ * Egy Mentés/Mégse-őrrel védett felület hívja, a SAJÁT dirty state-jével -- a
  * `PatientDetailPage.tsx`/`SettingsPage.tsx` a már meglévő
  * `dirtyAdatai`/`templatesDirty` state-jét adja át, nincs plusz prop-fűzés.
  * Unmountkor `false`-ra állít vissza, hogy egy nem NavBar-on át történő

@@ -64,7 +64,7 @@ describe('DentalChart', () => {
     expect(onToothClick).toHaveBeenCalledWith('11');
   });
 
-  describe('billentyűzet (docs/07-felulet-rendszer.md "Billentyűzet" -- egérhasználat nélkül is felvihető)', () => {
+  describe('billentyűzet -- a teljes terv felvihető egérhasználat nélkül', () => {
     it('onToothClick esetén role="toolbar", EGY tabIndex, aria-activedescendant az első fogon (18) indul, a wrapper a fókuszgyűrű classt hordozza', () => {
       render(<DentalChart allapot={makeAllapot({})} onToothClick={vi.fn()} />);
       const root = screen.getByRole('toolbar');

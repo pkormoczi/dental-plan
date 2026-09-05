@@ -18,7 +18,7 @@ import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
 import type { Paciens, Plan } from '../domain/types';
 
-// D37: egy aktív, tartalmas piszkozat, opcionális patientDir/lastRoute
+// Egy aktív, tartalmas piszkozat, opcionális patientDir/lastRoute
 // metaadattal -- a `dp:piszkozat` kulcsba előre beírva, MIELŐTT a
 // StorageProvider renderelne (lásd Home.test.tsx azonos mintáját: a
 // DemoStorage.init() resetDemoData()-t futtatna hiányzó árlistánál, ami a
@@ -151,8 +151,6 @@ describe('TervWorkflowShell', () => {
     expect(within(breadcrumb).getByText('Teszt Elek')).toBeInTheDocument();
   });
 
-  // D37: a korábban dangling (D36 "leendő aktív draft lifecycle tétel
-  // hatóköre") előre-hivatkozás ezzel zárul le.
   it('ismert patientDir esetén a páciens-szegmens linkké válik a részletoldalára', async () => {
     await seedActiveDraft({ patientDir: 'Teszt-Piroska_abc123' });
     renderShell('/terv');
@@ -210,7 +208,7 @@ describe('TervWorkflowShell', () => {
   });
 });
 
-// backlog-40 (3. döntés, D161): a "Terv adatai" lépés ELŐRE elhagyásának
+// backlog-40 (3. döntés): a "Terv adatai" lépés ELŐRE elhagyásának
 // ajánlat-jellegű elfogása -- kizárólag VALÓDI ütközésnél (mindkét oldalon
 // van érték, és eltér, lásd `domain/masterSnapshotDiff.ts` `valodiUtkozesek`),
 // és kizárólag a stepper Kezelések/Előnézet linkjein + a PatientPage "Tovább"
@@ -270,7 +268,7 @@ describe('TervWorkflowShell -- backlog-40: lépés-elhagyási törzsadat-prompt'
     expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
 
     // Vissza a Terv adatai lépésre (backward -- nem elfogott), majd újra
-    // előre: ugyanarra a diffre a prompt NEM jelenik meg újra (D161).
+    // előre: ugyanarra a diffre a prompt NEM jelenik meg újra.
     await user.click(screen.getByRole('link', { name: /Terv adatai/ }));
     await screen.findByPlaceholderText('Kovács János');
     await user.click(screen.getByRole('link', { name: /Kezelések/ }));

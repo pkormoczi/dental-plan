@@ -1,4 +1,4 @@
-// EGY páciens terv-lánc -> verzió fája (D29), a hozzá tartozó akciókkal
+// EGY páciens terv-lánc -> verzió fája, a hozzá tartozó akciókkal
 // (Új verzió / Másolás új tervbe / Megnézés / Letöltés / Új terv /
 // terv-címke szerkesztés). Eredetileg az OsszesTervSection.tsx soronkénti
 // (`.map(patients...)`) JSX-e volt -- backlog-30 (Páciens detail shell)
@@ -71,7 +71,7 @@ export interface PatientPlanChainsProps {
   /** Legalább egy terv-lánc vagy verzió listázása/betöltése hibázott (P1-2). */
   unreadable: boolean;
   /**
-   * A fejlécsor alakja (D44), a hívó felület dönti el -- a komponens nem
+   * A fejlécsor alakja, a hívó felület dönti el -- a komponens nem
    * ismerheti, ki hívja, ugyanaz az elv, mint a `PatientEditorPanel`
    * callback-propjainál. `standalone`: páciensnév + „Páciens adatai”
    * kereszt-link + „Új terv” -- a Korábbi tervek listáján ez az EGYETLEN
@@ -94,7 +94,7 @@ export interface PatientPlanChainsProps {
    */
   onLabelSaved: (planDir: string, tervCim: string | null) => void;
   /**
-   * Az EGYETLEN globális, mentetlen piszkozat (D21) -- KIZÁRÓLAG akkor
+   * Az EGYETLEN globális, mentetlen piszkozat -- KIZÁRÓLAG akkor
    * átadva, ha ehhez a `patient`-hez tartozik (a hívó már szűrt
    * `sajatDraft()`-tal, `components/useAktivDraft.ts`, 46. tétel). A
    * komponens nem ellenőrzi újra a hovatartozást, ugyanaz a doktrína, mint
@@ -102,12 +102,12 @@ export interface PatientPlanChainsProps {
    */
   aktivDraft?: AktivDraft | null;
   /**
-   * planDir -> nyitva (46. tétel, D237/D250). Hiányzó kulcs = alapértelmezés
+   * planDir -> nyitva (46. tétel). Hiányzó kulcs = alapértelmezés
    * (csak a legfrissebb lánc, `rendezettLancok()[0]`, nyitva). Ha nincs
    * átadva (PatientDetailPage `embedded`), a komponens a saját, lokális
    * state-jében tartja a nyitottságot; ha VAN (OsszesTervSection `standalone`),
    * ez a prop az igazság forrása -- a POP-navigációs visszaállításhoz a
-   * lapnak kell birtokolnia (D240, `useListStateMemory`).
+   * lapnak kell birtokolnia (`useListStateMemory`).
    */
   nyitottLancok?: Record<string, boolean>;
   /** `nyitottLancok`-hoz tartozó író -- csak akkor hívódik, ha `nyitottLancok` is át van adva. */
@@ -135,7 +135,7 @@ export default function PatientPlanChains({
 
   const standalone = header === 'standalone';
 
-  // Lánc-szintű összecsukás (46. tétel, D237/D249/D250) -- FELVÁLTJA a
+  // Lánc-szintű összecsukás (46. tétel) -- FELVÁLTJA a
   // korábbi, kizárólag `standalone`-ban élő páciens-szintű "N terv"
   // kapcsolót: az most már redundáns lenne a lánc-szintű toggle mellett,
   // mindkét hívón egyformán. Override-map, a régi `expandedOverride ?? false`
@@ -205,7 +205,7 @@ export default function PatientPlanChains({
   }
 
   /**
-   * "Ugrás a legfrissebb verzióra" (50. tétel, D58, D24) -- azonos oldalon
+   * "Ugrás a legfrissebb verzióra" (50. tétel) -- azonos oldalon
    * belüli scroll+fókusz a lánc legfrissebb verziósorára, a MEGLÉVŐ
    * `data-plan={plan.dirName}` horgony felhasználásával (a lánc ilyenkor
    * MÁR nyitva van, a horgony a DOM-ban). A `DropdownMenu.Content`-en lent
@@ -255,7 +255,8 @@ export default function PatientPlanChains({
     }
   }
 
-  /** A ténylegesen megjelenített címke -- kézi vagy élő javaslat (D29). */
+  /** A ténylegesen megjelenített címke -- kézi vagy élő javaslat: a terv-mappa
+   * neve létrehozáskor fix, a címke attól függetlenül szabadon szerkeszthető. */
   function displayedLabel(plan: PlanFolder): string {
     const versions = versionsByPlan[plan.dirName] ?? [];
     const latest = versions[versions.length - 1];
@@ -278,7 +279,7 @@ export default function PatientPlanChains({
   return (
     <Box>
       {/* `embedded` fejlécben a páciensnév és a „Páciens adatai” kereszt-link
-          elmarad (D44): ott a körülvevő felület sticky fejléce és tab-sávja
+          elmarad: ott a körülvevő felület sticky fejléce és tab-sávja
           már kimondja mindkettőt. Az „Új terv” akciógomb mindkét változatban
           marad, és `standalone`-ban a névfejléc MELLETT van, nem benne: a
           páciensnév címke, a gomb akció -- egy Text-en belül a kettő
@@ -288,7 +289,7 @@ export default function PatientPlanChains({
           `t.brand` színével egy családban. `embedded`-ben a gomb teljes
           értékű CTA (alap méret, solid) -- egyenrangú a terv nélküli
           páciens üres állapotának „+ Új terv” gombjával, ugyanezen a
-          tabon. Cím nélkül (D44) a gomb jobbra zárva horgonyzódik a
+          tabon. Cím nélkül a gomb jobbra zárva horgonyzódik a
           tartalom-terület tetejéhez, egy vonalban a verzió-sorok jobb
           szélével (⋯ menü / összeg) -- ezért `justify="end"` csak
           `embedded`-ben, `standalone`-ban marad a default balra zárás. */}
@@ -324,7 +325,7 @@ export default function PatientPlanChains({
               + Új terv
             </Button>
           )}
-          {/* Kereszt-link a páciens törzsadatára (backlog-28/backlog-30, D33) --
+          {/* Kereszt-link a páciens törzsadatára (backlog-28/backlog-30) --
               gray/ghost, hogy a hangsúly az "Új terv" akción maradjon: ez csak
               navigáció, nem terv-létrehozó. */}
           {standalone && (
@@ -487,10 +488,10 @@ export default function PatientPlanChains({
               </Callout.Root>
             )}
 
-            {/* Feltételes render, NEM CSS-rejtés (docs/07-felulet-rendszer.md
-                "Billentyűzet") -- csukott lánc `⋯` gombjai kiesnek a
+            {/* Feltételes render, NEM CSS-rejtés (lásd app/src/CLAUDE.md
+                billentyűzet-szabálya) -- csukott lánc `⋯` gombjai kiesnek a
                 Tab-sorrendből, nem csak vizuálisan tűnnek el. Ismert,
-                docs-szentesített kompromisszum: csukott állapotban az
+                elfogadott kompromisszum: csukott állapotban az
                 `aria-controls` fenti nem létező id-re mutat -- ugyanez volt
                 igaz a korábbi page-szintű togglenál is. */}
             {lancNyitva && (
@@ -502,7 +503,7 @@ export default function PatientPlanChains({
                     const ref: VersionRef = { planDir: plan.dirName, versionDir: v.dirName };
                     const total = totalsByVersion[versionDataKey(plan.dirName, v.dirName)];
                     const versionPlan = plansByVersion[versionDataKey(plan.dirName, v.dirName)];
-                    // D53: "Új verzió" kizárólag a lánc legfrissebb
+                    // "Új verzió" kizárólag a lánc legfrissebb
                     // verziósorán engedett -- egy historical sorról indítva a
                     // doki tévesen azt hihetné, hogy a régi verziót
                     // folytatja, valójában egy új "fejet" hozna létre a
@@ -511,7 +512,7 @@ export default function PatientPlanChains({
                     const isLegfrissebb = v.dirName === legfrissebb?.dirName;
                     // "Legutóbbi" badge (46. tétel, 4. döntés): csak 2+
                     // verziós láncon -- egyverziós láncon funkciótlan dísz
-                    // lenne (docs/07 tiltja).
+                    // lenne (visszajelzés nélküli elem, app/src/CLAUDE.md tiltja).
                     const legutobbi = versions.length > 1 && isLegfrissebb;
                     return (
                       <Box key={v.dirName}>
@@ -536,8 +537,8 @@ export default function PatientPlanChains({
                             {/* A verzió végösszege (osszesitok.fizetendo) a saját
                                 terv.json-jából, a saját pénznemében -- külön, jobbra
                                 igazított elem, nem a bal oldali szöveghez fűzve
-                                (docs/07-felulet-rendszer.md: pénzérték jobbra,
-                                tabular-nums). Olvashatatlan verziónál "—". */}
+                                (pénzérték jobbra, tabular-nums). Olvashatatlan
+                                verziónál "—". */}
                             <Text
                               size="2"
                               weight="medium"
@@ -553,12 +554,12 @@ export default function PatientPlanChains({
                                 total?.nyelv ?? 'hu',
                               )}
                             </Text>
-                            {/* D58 (50. tétel): a legfrissebb soron két látható gomb --
-                                elsődleges "Új verzió", másodlagos "Megnézés" (docs/07
-                                "legfeljebb két látható gomb egy adatsoron"). Egy
+                            {/* 50. tétel: a legfrissebb soron két látható gomb --
+                                elsődleges "Új verzió", másodlagos "Megnézés"
+                                (legfeljebb két látható gomb egy adatsoron). Egy
                                 historical soron NINCS látható gomb, csak a `⋯` --
                                 onnan induló módosítás helyes útja a "Másolás új
-                                tervbe" (D53). */}
+                                tervbe". */}
                             {isLegfrissebb && (
                               <Flex align="center" gap="2">
                                 <Button size="1" onClick={() => akciok.inditas({ kind: 'open', ...ref })}>
@@ -579,7 +580,7 @@ export default function PatientPlanChains({
                                 {/* Az aria-label a terv-címkével ÉS a verziószámmal
                                     képzett: csupasz "v1 — további műveletek" két
                                     különböző terv-lánc esetén (mindkettő saját v1-gyel
-                                    indul, D29) ütközne -- a képernyőolvasó (és a teszt)
+                                    indul) ütközne -- a képernyőolvasó (és a teszt)
                                     nem tudná megkülönböztetni őket. */}
                                 <IconButton
                                   size="1"
@@ -650,11 +651,11 @@ export default function PatientPlanChains({
 
 /**
  * Az aktív, mentetlen piszkozat blokkja a láncok FÖLÖTT (46. tétel, 6.
- * döntés) -- tétel-/fázisszám és előlegösszeg nélkül (D247/D248), üres
- * (sor nélküli) piszkozatnál `osszeg: null` (D246). A `Card` egésze
+ * döntés) -- tétel-/fázisszám és előlegösszeg nélkül, üres
+ * (sor nélküli) piszkozatnál `osszeg: null`. A `Card` egésze
  * kattintható (a `PatientTableRow.tsx` `closest('a')`-mintájának
  * `closest('button')`-párja, hogy a "Folytatás" gomb kattintása ne
- * duplikálja a navigációt), PLUSZ egy külön "Folytatás" gomb (D244) -- ez
+ * duplikálja a navigációt), PLUSZ egy külön "Folytatás" gomb -- ez
  * utóbbi az elsődleges billentyűzetes út. NEM megy át a `runOrConfirm`
  * piszkozat-felülírás-őrön: a SAJÁT draft folytatása nem "felülírás".
  */

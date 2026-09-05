@@ -1,8 +1,8 @@
 // A NavBar eddig nem volt közvetlenül tesztelve, csak közvetve
 // (App.test.tsx a Filerendszer/DEMO linken keresztül). Ez a teszt a
-// docs/01-attekintes-es-dontesek.md D34 szerinti végleges öt tételes fő
-// navigáció pontos feliratát/sorrendjét fedi -- a korábban itt élt négy
-// átmeneti workflow-link a terv-workflow héjjal (D36) megszűnt.
+// végleges öt tételes fő navigáció pontos feliratát/sorrendjét fedi -- a
+// korábban itt élt négy
+// átmeneti workflow-link a terv-workflow héjjal megszűnt.
 
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -11,7 +11,7 @@ import { Theme } from '@radix-ui/themes';
 import NavBar from './NavBar';
 import { NavGuardProvider } from './NavGuardContext';
 
-// D46: a NavBar `useNavGuardState()`-et hív, ami Provider nélkül dob -- a
+// A NavBar `useNavGuardState()`-et hív, ami Provider nélkül dob -- a
 // kattintás-elfogás/megerősítő-dialógus mechanizmusát külön,
 // `NavGuardContext.test.tsx` fedi, ez a fájl a linkek feliratát/sorrendjét.
 function renderNavBar() {

@@ -1,5 +1,5 @@
-// Az EGYETLEN globális, mentetlen piszkozat (D21) feloldott páciensmappája
-// (46. tétel). Eredetileg a `PatientDetailPage.tsx` D50 törlés-őrének
+// Az EGYETLEN globális, mentetlen piszkozat feloldott páciensmappája
+// (46. tétel). Eredetileg a `PatientDetailPage.tsx` páciens-törlés-őrének
 // `draftPatientDir` effektje volt -- kiemelve, mert a terv-lánc fa
 // aktív-draft blokkja (`components/PatientPlanChains.tsx`) is ugyanezt a
 // feloldást igényli, és az `OsszesTervSection.tsx`-en (sok páciens egy lapon)

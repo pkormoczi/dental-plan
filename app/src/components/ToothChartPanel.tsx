@@ -2,9 +2,9 @@
 // pages/PlanEditorPage.tsx) -- a beavatkozás lista FÖLÖTT ül, alapból
 // csukva, a doki kattintására nyílik/csukódik. Feltételes render (nem
 // CSS-elrejtés): csukva a DentalChart egyetlen Tab-megállója is kiesik a
-// Tab-sorrendből, ahogy docs/07-felulet-rendszer.md "Billentyűzet" szakasza
+// Tab-sorrendből, ahogy az app/src/CLAUDE.md billentyűzet-szabálya
 // megköveteli egy nem-elérhető vezérlőtől. Nincs nyitás/csukás-animáció --
-// docs/07: "Ne tegyél animációt oda, ahol nincs visszajelzési funkciója."
+// animáció visszajelzési funkció nélkül tilos (app/src/CLAUDE.md).
 
 import { useState } from 'react';
 import { Button, Flex, Select, Text } from '@radix-ui/themes';

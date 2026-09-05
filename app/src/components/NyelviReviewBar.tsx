@@ -1,9 +1,8 @@
-// Irányított nyelvi review nem-modális sávja -- 65. tétel
-// (docs/01-attekintes-es-dontesek.md D72), tervdokumentum 5. döntés
-// (D467/D470). A `TervWorkflowShell.tsx`-ben mountolva, a
+// Irányított nyelvi review nem-modális sávja -- 65. tétel (a feloldás
+// szabálya: lásd app/src/domain/CLAUDE.md). A `TervWorkflowShell.tsx`-ben mountolva, a
 // `NyelviReviewContext.tsx` `aktiv` jelzésekor jelenik meg. A "még N
 // ellenőrizendő" szám és a következő cél MINDIG a JELENLEGI piszkozatból
-// élőben számolódik (`nyelviMismatchek()`, D473) -- ez a komponens a
+// élőben számolódik (`nyelviMismatchek()`) -- ez a komponens a
 // forrása, mert ennek van `plan`-hozzáférése, a Contextnek nincs.
 
 import { useEffect, useState } from 'react';
@@ -38,7 +37,7 @@ export default function NyelviReviewBar() {
   const jelenlegiKulcs = nyelviReview.cel ? celKulcs(nyelviReview.cel) : null;
   const jelenlegiMegVan = jelenlegiKulcs != null && mismatches.some((m) => celKulcs(m.cel) === jelenlegiKulcs);
 
-  // D468: auto-advance -- ha a session aktív, de nincs (még/már) érvényes
+  // Auto-advance -- ha a session aktív, de nincs (még/már) érvényes
   // cél (a jelenlegi "Nyelv ellenőrizve"-vel feloldódott, vagy a session
   // most indult cél nélkül), a következő élő mismatch-re lép; ha nincs
   // több, a session magától leáll.

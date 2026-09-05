@@ -1,4 +1,4 @@
-// A páciens-duplikáció detektálás (D42, domain/paciensDuplikacio.ts)
+// A páciens-duplikáció detektálás (domain/paciensDuplikacio.ts)
 // React-rétege -- `components/` a `useDirtyDraft.ts`/`DiscardChangesDialog.tsx`
 // precedense szerint (a `domain/` alatt nincs React, a hooknak két hívója
 // van: `UjPaciensDialog.tsx` és `PatientEditorPanel.tsx`).

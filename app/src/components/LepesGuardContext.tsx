@@ -1,12 +1,12 @@
-// Terv-workflow "lépés elhagyása" ajánlat -- backlog-40 (3. döntés,
-// redesign D161). KÜLÖN mechanizmus a `NavGuardContext`-től (D46): az "van
+// Terv-workflow "lépés elhagyása" ajánlat -- backlog-40 (3. döntés).
+// KÜLÖN mechanizmus a `NavGuardContext`-től: az "van
 // nem mentett módosítás -> elvetnéd?" boolean nem illik ide, a terv-draft
-// autosave-el (D37) -- itt egy AJÁNLAT hangzik el (frissítenéd a
+// autosave-el -- itt egy AJÁNLAT hangzik el (frissítenéd a
 // törzsadatot, mielőtt továbblépsz?), nem egy adatvesztés elleni blokk.
 //
 // A hatókör szűk és szándékos: KIZÁRÓLAG a `/paciens` lépés ELŐRE
 // (Kezelések/Előnézet felé) elhagyását fedi -- a NavBar-navigációt és a
-// breadcrumb-ot a D38/D46 guard-ja már védi, ott egy MÁSODIK, ajánlat-
+// breadcrumb-ot az elvetés-megerősítő guard (`useDiscardGuard`) már védi, ott egy MÁSODIK, ajánlat-
 // jellegű prompt zavaró lenne.
 //
 // A `useBlocker` itt nem használható (a `HashRouter`, `App.tsx`, nem data
@@ -19,7 +19,7 @@
 // a piszkozaton" boolean-je) a `TervWorkflowShell`-ben él, nem itt és nem a
 // `TorzsadatSyncCard`-ban -- a `PatientPage` (és vele a kártya) minden
 // lépésváltáskor unmountol, a `TervWorkflowShell` viszont a workflow teljes
-// életciklusán át mountolva marad (layout-route, D36). A `TorzsadatSyncCard`
+// életciklusán át mountolva marad (layout-route). A `TorzsadatSyncCard`
 // csak REGISZTRÁLJA a saját döntési logikáját (`useLepesElhagyas`), a
 // `PatientPage` "Tovább" gombja pedig a `kerLepesValtas`-t hívja
 // (`useLepesGuard`) -- mindkettő ezen a Contexten keresztül éri el a

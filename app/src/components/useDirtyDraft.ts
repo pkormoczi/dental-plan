@@ -1,5 +1,4 @@
-// Megosztott dirty-draft primitív -- D38 (docs/07-felulet-rendszer.md
-// § Komponensek): korábban a `PatientEditorPanel` saját, bespoke
+// Megosztott dirty-draft primitív: korábban a `PatientEditorPanel` saját, bespoke
 // referencia-tartotta `initializedRef`/`JSON.stringify`-mintáját három hívó
 // (PatientEditorPanel, SettingsPage sablon-szekció, PatientDetailPage tab-váltás)
 // duplikálná külön-külön -- ez az EGYETLEN hely, ahol ez a logika él.

@@ -1,5 +1,5 @@
-// Címke-fölött-mező elrendezés (docs/07-felulet-rendszer.md: "Címke az input
-// FÖLÖTT. Soha placeholder címke helyett."). Eredetileg a PriceListAdminPage.tsx
+// Címke-fölött-mező elrendezés (lásd app/src/CLAUDE.md: címke az input
+// FÖLÖTT, soha placeholder címke helyett). Eredetileg a PriceListAdminPage.tsx
 // helyi helpere volt; az Árlista admin sor-szerkesztője és az Új tétel dialógus
 // (pages/priceListAdmin/UjTetelDialog.tsx) is használja -- innen a saját fájl,
 // hogy egyik se importáljon a másikból (körkörös import, lásd HuChip.tsx ugyanezen

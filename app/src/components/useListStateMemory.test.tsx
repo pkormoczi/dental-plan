@@ -90,7 +90,7 @@ describe('useListStateMemory', () => {
     expect(scrollToSpy).toHaveBeenCalledWith(0, 480);
   });
 
-  // 46. tétel (D240): a lánc-nyitottság ugyanazon a POP-only elven áll
+  // 46. tétel: a lánc-nyitottság ugyanazon a POP-only elven áll
   // vissza, mint a keresőszöveg.
   it('böngésző-"vissza" (POP) navigációnál visszaáll a nyitottsági állapot is', async () => {
     const user = userEvent.setup();

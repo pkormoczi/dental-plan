@@ -1,12 +1,12 @@
-// Irányított nyelvi review -- 65. tétel (docs/01-attekintes-es-dontesek.md
-// D72), a tervdokumentum 5. döntése. Tranziens SESSION-állapot (nem
+// Irányított nyelvi review -- 65. tétel (a feloldás szabálya: lásd
+// app/src/domain/CLAUDE.md). Tranziens SESSION-állapot (nem
 // perzisztált), a `TervWorkflowShell.tsx`-ben mountolva -- ez a
 // `/paciens`-`/terv`-`/elonezet` egyetlen közös őse, hogy a session
 // túlélje a route-váltást (a doki a `PreviewPage`-ről indítja, a
 // `PlanEditorPage`-en navigál).
 //
-// KÜLÖN mechanizmus a `NavGuardContext`-től (D46) és a
-// `LepesGuardContext`-től (D48) -- más a szemantika (nem "van nem mentett
+// KÜLÖN mechanizmus a `NavGuardContext`-től és a
+// `LepesGuardContext`-től -- más a szemantika (nem "van nem mentett
 // piszkozat" és nem "lépés-elhagyás ajánlat"), nem épül rájuk és nem
 // keverendő össze velük. A `StorageContext.tsx`/`NavGuardContext.tsx`
 // mintáját követi: `createContext<T | null>`, a `useNyelviReview()`
@@ -15,7 +15,7 @@
 // A JELENLEGI cél (`cel`) az EGYETLEN állapot, amit ez a Context tart --
 // a "hány szöveg van még hátra" mindig a JELENLEGI piszkozatból élőben
 // számolódik (`domain/nyelviReview.ts` `nyelviMismatchek()`), nem egy itt
-// tárolt, befagyott lista (D473) -- ezt a `NyelviReviewBar.tsx` hívja,
+// tárolt, befagyott lista -- ezt a `NyelviReviewBar.tsx` hívja,
 // aminek van `plan`-hozzáférése (`useAppState()`), ennek a Contextnek
 // nincs.
 
@@ -26,7 +26,7 @@ interface NyelviReviewContextValue {
   aktiv: boolean;
   /** A JELENLEGI navigációs cél, vagy `null`, ha a session aktív, de még nincs kiválasztott cél. */
   cel: ReviewCel | null;
-  /** A "Vissza" gomb session-előzménye (D474/D475) -- ez a NAVIGÁCIÓS történet, nem a hátralévő sor. */
+  /** A "Vissza" gomb session-előzménye -- ez a NAVIGÁCIÓS történet, nem a hátralévő sor. */
   elozmeny: ReviewCel[];
   /** Session indítása egy célra ugorva, üres előzménnyel. */
   indit: (elsoCel: ReviewCel) => void;

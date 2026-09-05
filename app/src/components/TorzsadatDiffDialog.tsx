@@ -1,7 +1,6 @@
-// A páciens-törzsadat (paciens-adatok.json, D33) és a terv-piszkozat
+// A páciens-törzsadat (paciens-adatok.json) és a terv-piszkozat
 // paciens-blokkja közötti mezőszintű összevető/szinkronizáló dialógus --
-// backlog-40 (redesign DP-016). Radix Themes `Dialog`, NEM `AlertDialog`
-// (docs/07-felulet-rendszer.md "Mezős felugró ablak"): a checkbox-táblázat
+// backlog-40. Radix Themes `Dialog`, NEM `AlertDialog`: a checkbox-táblázat
 // tényleges mezőválasztás, nem puszta megerősítés.
 //
 // HÁROM hívási móddal fut ugyanaz a komponens:
@@ -15,7 +14,7 @@
 //    továbblépését is jelenti -- innen az `onSkip`, ami a `onOpenChange`-
 //    en és a "Mégse" gombon is átveszi a vezérlést, lásd lent.
 //
-// Íráshiba (5. döntés, D214) csak a draft→master irányban fordulhat elő
+// Íráshiba (5. döntés) csak a draft→master irányban fordulhat elő
 // (master→draft egy szinkron `setPlan`, sosem dob) -- a dialógus NYITVA
 // marad, "Újra" újrapróbálja UGYANAZT az írást, a másik gomb (skip módban
 // "Folytatás írás nélkül", egyébként "Mégse") a draftot érintetlenül hagyva
@@ -61,8 +60,7 @@ export default function TorzsadatDiffDialog({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Minden megnyitáskor tiszta lappal indul -- D10/D159: alapból SEMMI
-  // nincs kijelölve.
+  // Minden megnyitáskor tiszta lappal indul -- alapból SEMMI nincs kijelölve.
   useEffect(() => {
     if (open) {
       setKijelolt(new Set());

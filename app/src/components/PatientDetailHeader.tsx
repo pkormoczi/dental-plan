@@ -1,8 +1,8 @@
-// A páciens-részletoldal (backlog-30, D235-D236) sticky, kompakt fejléce:
+// A páciens-részletoldal (backlog-30) sticky, kompakt fejléce:
 // név + születési dátum + telefon, görgetéskor a lap tetején marad. Az app
 // ELSŐ `position: sticky` használata -- nincs mit reuse-olni, tiszta új
-// réteg. Az adatforrás a `megjelenitettTorzsadat()` (domain/paciensAdatok.ts,
-// D33) eredménye, változtatás nélkül -- a fejléc csak megjeleníti.
+// réteg. Az adatforrás a `megjelenitettTorzsadat()` (domain/paciensAdatok.ts)
+// eredménye, változtatás nélkül -- a fejléc csak megjeleníti.
 
 import type { ReactNode } from 'react';
 import { Flex, Text } from '@radix-ui/themes';
@@ -34,8 +34,8 @@ export default function PatientDetailHeader({
         zIndex: 1,
         // t.page (nem t.surface): a sáv marad átlátszatlan -- kell, hogy a
         // görgő tartalom ne lásszon át alatta --, de lapszínű, hogy ne
-        // üssön el "card"-ként a szürke oldalháttértől (docs/07: nincs card
-        // doboz adat körül).
+        // üssön el "card"-ként a szürke oldalháttértől (nincs card doboz
+        // adat körül).
         background: t.page,
         borderBottom: `1px solid ${t.uiLine}`,
       }}

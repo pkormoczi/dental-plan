@@ -1,5 +1,4 @@
-// Másolás új tervbe: páciens-identitás védőháló --
-// docs/03-funkcionalis-spec.md § "Páciens adatai". A `TervWorkflowShell.tsx`
+// Másolás új tervbe: páciens-identitás védőháló. A `TervWorkflowShell.tsx`
 // legkülső eleme mountolja, hogy a `PatientPage`/`TorzsadatSyncCard`/
 // `PaciensBreadcrumb`/`PreviewPage` egyaránt elérje -- a `NyelviReviewContext`
 // mintáján: `createContext<T | null>`, a `usePaciensKotes()` accessor

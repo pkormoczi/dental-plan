@@ -4,11 +4,11 @@
 // adapter, lásd pdf/toothChartImage.ts), így nincs két külön "melyik fog
 // milyen színű" logika a két felületen.
 //
-// docs/07-felulet-rendszer.md kifejezett kivétele a Radix-only szabály alól:
+// Kifejezett kivétel a Radix-only szabály alól (lásd app/src/CLAUDE.md):
 // "a fogtérkép (funkcionális SVG adatvizualizáció) és a nyomtatvány".
 //
-// Billentyűzet (docs/07-felulet-rendszer.md "Billentyűzet" -- "A teljes terv
-// felvihető egérhasználat nélkül"): NEM a 32 fog kap egyenként fókuszt --
+// Billentyűzet (lásd app/src/CLAUDE.md: a fogtérkép EGY Tab-megálló, a
+// teljes terv felvihető egérhasználat nélkül): NEM a 32 fog kap egyenként fókuszt --
 // az 32 Tab-megállót jelentene, és a `dangerouslySetInnerHTML` minden
 // `allapot`-változáskor (pl. egy leütés a Fog mezőben) kicseréli a teljes
 // befecskendezett DOM-ot, ami elvesztené a fókuszt egy DOM-elemre kötve.

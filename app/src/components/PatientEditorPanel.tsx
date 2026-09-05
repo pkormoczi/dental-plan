@@ -1,20 +1,20 @@
-// A páciens-törzsadat (paciens-adatok.json, D33) szerkesztő panelje --
+// A páciens-törzsadat (paciens-adatok.json) szerkesztő panelje --
 // eredetileg a PaciensekPage.tsx helyi `PatientEditor`-a volt, backlog-30
-// (Páciens detail shell) emelte ide, majd a 38. tétel (D43) óta a
+// (Páciens detail shell) emelte ide, majd a 38. tétel óta a
 // PatientDetailPage.tsx "Páciens adatai" tabja az EGYETLEN hívási helye --
 // a PaciensekPage.tsx lista azóta tiszta navigációs lista. A
 // `PatientPage.tsx` "Személyes adatok" mezőelrendezését követi (közös
 // `components/Field`-del), de Card doboz nélkül
-// (docs/07-felulet-rendszer.md: "Nincs card doboz adat körül") és explicit
+// (nincs card doboz adat körül) és explicit
 // Mentés/Mégse gombpárral, mert itt -- ellentétben a terv-piszkozattal,
 // ami folyamatosan autosave-el -- egy zárt fájl jön létre az első
-// mentéskor (D33).
+// mentéskor.
 //
 // Nincs "Korábbi tervek" kereszt-link a panel alján -- a hívó
 // (PatientDetailPage.tsx) tabsora már kínálja ugyanezt a váltást, egy
-// második, alul elhelyezett gomb csak megismételné (D44).
+// második, alul elhelyezett gomb csak megismételné.
 //
-// Mentéskor duplikáció-ellenőrzés fut (D42, redesign D208) -- csak
+// Mentéskor duplikáció-ellenőrzés fut -- csak
 // save-time, a `UjPaciensDialog.tsx`-szel ellentétben NINCS inline
 // javaslat-lista: itt nem "válassz helyette" a kérdés (ez egy MÁR nyitott
 // páciens szerkesztése, nem egy új rekord felvitele), csak egy egyszerű
@@ -22,7 +22,7 @@
 // `patients` listát a komponens saját maga tölti be -- a hívó
 // (`PatientDetailPage.tsx`) nem tart kéznél egy friss, teljes listát.
 //
-// Kétállású render (D45): alapból olvasó nézet
+// Kétállású render: alapból olvasó nézet
 // (`ReadOnlyField`-ekkel, a MENTETT `displayed` alapból, nem a draftból),
 // egy "Szerkesztés" gombbal a mai input-mezős nézetre váltva -- így a
 // puszta megnyitás sosem indít piszkozatot. A `kezdoMod` prop a
@@ -60,7 +60,7 @@ export default function PatientEditorPanel({
   fallbackPlan: Plan | null | undefined;
   fallbackLoading: boolean;
   fallbackError: string | null;
-  /** Quick-create után a hívó szerkesztés módban jelzi a nyitást (D45). */
+  /** Quick-create után a hívó szerkesztés módban jelzi a nyitást. */
   kezdoMod?: Mod;
   onDirtyChange: (dirty: boolean) => void;
   onSaved: (saved: PatientMasterData) => void;
@@ -130,7 +130,7 @@ export default function PatientEditorPanel({
       setMegprobaltMenteni(false);
       setMod('nezet');
     } catch (err) {
-      // Mentési hiba: a draft ÉS a szerkesztés mód érintetlen marad (D38) --
+      // Mentési hiba: a draft ÉS a szerkesztés mód érintetlen marad --
       // a doki beírt adata nem veszhet el egy sikertelen íráskor.
       setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
     } finally {
