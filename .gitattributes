@@ -1,0 +1,12 @@
+# LF minden szöveges fájlra, a helyi core.autocrlf-től függetlenül --
+# a repo blob-jai már ma is LF-esek, ez csak explicitté teszi.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.ico binary
+*.pdf binary
