@@ -3,3 +3,5 @@ dist/
 .idea/
 .DS_Store
 .claude/worktrees/
+# doctor-review futások képernyőképei — átmeneti munkatermék, a jelentés szövege a tartós tartalom
+docs/reviews/screens/
