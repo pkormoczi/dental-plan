@@ -1,5 +1,6 @@
 # osszetett-csomagtetel
 Type: feature
+Prio: later
 Source: korábbi ötlet-jegyzet
 Kerdes: Az Árlista-nap után, valós használatban kevésnek bizonyul-e a `csomag` jelölő + „mi van benne?” leírás?
 

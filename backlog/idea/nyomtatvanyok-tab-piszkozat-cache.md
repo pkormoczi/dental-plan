@@ -1,5 +1,6 @@
 # nyomtatvanyok-tab-piszkozat-cache
 Type: chore
+Prio: later
 Source: agent-first dokumentációs migráció follow-up
 
 A `pages/settings/NyomtatvanyokTab.tsx` sablon-piszkozat cache-e ma közvetlen `localStorage`,

@@ -1,5 +1,6 @@
 # tomeges-emlekezteto-feltaras
 Type: feature
+Prio: later
 Source: Réka feedback 2026-08
 
 Esedékes kontrollok (pl. fogkő-eltávolítás) és közelgő időpontok automatikus jelzése, tömeges

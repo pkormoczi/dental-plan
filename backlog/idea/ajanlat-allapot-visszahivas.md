@@ -1,5 +1,6 @@
 # ajanlat-allapot-visszahivas
 Type: feature
+Prio: later
 Source: Réka feedback 2026-08
 
 A terv dokumentum-életciklusától (`PISZKOZAT`/`VEGLEGES`) függetlenül követhető legyen, hogy egy

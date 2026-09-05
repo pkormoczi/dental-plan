@@ -1,5 +1,6 @@
 # sema-migracios-keret
 Type: chore
+Prio: later
 Source: doki felvetés
 
 Hogyan alakulnak át a rendelő meglévő JSON-fájljai, amikor egy adatséma megváltozik. Fájltípusonkénti,

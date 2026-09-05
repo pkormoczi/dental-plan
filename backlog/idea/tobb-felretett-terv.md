@@ -1,5 +1,6 @@
 # tobb-felretett-terv
 Type: feature
+Prio: later
 Source: doki felvetés
 
 Az egyetlen aktív böngészős piszkozat mellett a doki tartósan is félretehessen több

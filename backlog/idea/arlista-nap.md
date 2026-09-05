@@ -1,5 +1,6 @@
 # arlista-nap
 Type: doki
+Prio: later
 Source: adattisztítás, a doki közös ülésén gyűjthető
 
 Fél nap, egy ülésben, nincs hozzá kód:

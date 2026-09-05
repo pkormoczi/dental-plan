@@ -1,5 +1,6 @@
 # legacy-doksi-torlese
 Type: chore
+Prio: later
 Source: agent-first dokumentációs migráció follow-up
 
 2026-11-04 után, külön commitban: a `docs` alatti karantén-mappa (a 2026-09-05 előtti

@@ -1,5 +1,6 @@
 # terv-kuldes-emailben
 Type: feature
+Prio: later
 Source: doki felvetés
 
 A már elkészült PDF-et a tervben rögzített e-mail-címre, kevés lépésben lehessen elküldeni a

@@ -1,5 +1,6 @@
 # eeszt-integracio-feltaras
 Type: feature
+Prio: later
 Source: doki felvetés, más fogászati szoftverekben látott integráció
 
 Betegdokumentáció és EESZT-integráció lehetőségének feltárása — távlati termékbővítés. A

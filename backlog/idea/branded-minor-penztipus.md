@@ -1,5 +1,6 @@
 # branded-minor-penztipus
 Type: chore
+Prio: later
 Source: agent-first dokumentációs migráció follow-up
 
 Branded `Minor` pénztípus az `app/src/domain/money.ts`-ben, a `Sor`/`Plan` pénzmezőire

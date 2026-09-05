@@ -1,5 +1,6 @@
 # numberfield-penzmezo-megerosites
 Type: bug
+Prio: now
 Source: docs/reviews/2026-09-05-doctor-review-nemet-euro.md 6. megállapítás
 Target: master
 Baseline: b6c3430781afbfc51b390fcbc802354b63c1b609
