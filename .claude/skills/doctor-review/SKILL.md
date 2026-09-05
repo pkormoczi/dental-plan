@@ -1,6 +1,6 @@
 ---
 name: doctor-review
-description: Simulates the app's real end user — István, a first-time, low-IT-literacy fogorvos — walking a lay-language clinic-day scenario through the running Mándoki Dental app in an isolated Chrome, then fact-checks the raw log, inspects the saved screenshots for visual defects, runs a small systematic break-test, and produces a prioritized Hungarian findings report with a user-test readiness verdict. Complements code-and-architecture-review (developer lens) and browser-validation (spec-compliance lens) with the missing user-experience lens; never edits application code. Invoke explicitly with /doctor-review [scenario-slug].
+description: Simulates the app's real end user — István, a first-time, low-IT-literacy fogorvos — walking a lay-language clinic-day scenario through the running Mándoki Dental app in an isolated Chrome, then fact-checks the raw log, inspects the saved screenshots for visual defects, runs a small systematic break-test, and produces a prioritized Hungarian findings report with a user-test readiness verdict. Complements code-and-architecture-review (developer lens) and manual-checks (spec-compliance lens) with the missing user-experience lens; never edits application code. Invoke explicitly with /doctor-review [scenario-slug].
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ disable-model-invocation: true
 ## Cél
 
 A `code-and-architecture-review` a fejlesztői nézőpontot fedi le
-(architektúra, kód-egészség), a `browser-validation` a specifikáció-nézőpontot
+(architektúra, kód-egészség), a `manual-checks` a specifikáció-nézőpontot
 (kontraszt, PDF-bájtok, billentyűzet-geometria) — egyik sem azt méri, hogy
 **István, a 45 éves, az informatikától távol álló fogorvos, aki ma látja
 először az appot**, segítség nélkül el tudja-e végezni a napi munkát benne
@@ -51,7 +51,7 @@ nyilvánvalóan fiktív nevek/adatok (GDPR 9. cikk).
 3. **Dev szerver.** `cd app && npm run dev` háttérben; a tényleges portot a
    szerver kimenetéből olvasd (Vite 5174+-ra léphet, ha az 5173 foglalt).
 4. **Determinisztikus reset.** Kövesd szó szerint a
-   `.claude/skills/browser-validation/SKILL.md` „Determinisztikus reset —
+   `.claude/skills/manual-checks/SKILL.md` „Determinisztikus reset —
    KRITIKUS gotcha" szakaszát: `dp:` kulcsok törlése `evaluate_script`-tel,
    majd `about:blank` → app URL két lépéses újratöltés (egy közvetlen
    ugyanarra-az-URL-re navigálás SPA no-op, nem old ki reload-ot). Egy
@@ -131,10 +131,10 @@ fájlnevükre hivatkozik.
 ### 2b. Vizuális lencse — a képernyőképek átnézése
 
 Nyisd meg sorban a képernyőkép-mappa MINDEN képét (`Read`), és mindegyiken
-menj végig ezen a checklisten, a `docs/07-felulet-rendszer.md` ismeretében,
+menj végig ezen a checklisten, az `app/src/CLAUDE.md` felület-szabályainak ismeretében,
 de **kizárólag olyan hibát jegyezve, amit egy laikus is észrevenne a
 képen** — a mérhető spec-eltérések (kontraszt-arány, fókuszgyűrű
-vastagsága, popover-geometria, PDF-bájtok) a `browser-validation` dolga,
+vastagsága, popover-geometria, PDF-bájtok) a `manual-checks` dolga,
 ide nem kerülnek:
 
 - levágott, csonkolt („…"), dobozából kilógó szöveg, szám, név;

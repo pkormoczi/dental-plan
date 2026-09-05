@@ -7,7 +7,9 @@ tétel nem hoz létre és nem hivatkozik új D-számra.
 
 **Számozás:** a tételek sorszáma stabil azonosító, nem prioritás. Lezárt
 tétel száma véglegesen nyugdíjazva, soha nem osztható ki újra — az új tételek a sorozatot onnan folytatják,
-ahol a legutóbb kiosztott szám állt.
+ahol a legutóbb kiosztott szám állt. A lezárt tételek szakasza törlődik innen, ezért a
+következő szabad szám forrása kizárólag ez a sor (a `/plan` írja át):
+**Legutóbb kiosztott szám:** 118
 
 **Sorrend:** a listákon belül hasznosság szerint — a napi fájdalom
 mérete × gyakorisága, holtversenynél a kisebb munka előre. 

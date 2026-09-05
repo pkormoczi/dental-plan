@@ -55,13 +55,12 @@ Read, in this order:
      visibly on screen.
 
 This skill **never launches a browser**. Per CLAUDE.md's "Böngésző-automatizálás" rule,
-browser-based checks for this app are the manually-invoked `browser-validation` skill's job,
+browser-based checks for this app are the manually-invoked `manual-checks` skill's job,
 not this one's. Static reading of headings, labels, button text, and visible copy is enough
 to describe what the doctor can do on each screen.
 
-Do **not** read `docs/03-funkcionalis-spec.md` as a source. That's a developer-facing spec;
 FEATURES.md describes what the doctor actually sees and can do, sourced only from the UI
-itself, in the UI's own words where possible.
+itself, in the UI's own words where possible — not from developer-facing context files.
 
 ## Step 3 — Filter: is this feature-worthy?
 

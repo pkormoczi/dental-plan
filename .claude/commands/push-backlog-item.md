@@ -5,7 +5,7 @@ disable-model-invocation: true
 
 # Várakozó backlog-commitok push-olása
 
-Ezt a parancsot azután add ki, hogy egy vagy több `/implement-backlog-item`
+Ezt a parancsot azután add ki, hogy egy vagy több `/finish <slug>`
 futás helyi masteren commitolt, te kézzel ellenőrizted az eredményt, és
 jónak találtad. Nincs branch, nincs PR — a helyi master egyenesen
 origin/master-re kerül.
