@@ -16,6 +16,7 @@ import { useMentesJelzo } from '../../components/useMentesJelzo';
 import type { Nyelv } from '../../domain/types';
 import { t } from '../../design/tokens';
 import { stripMarkdownHeading } from '../../pdf/markdownLite';
+// oxlint-disable-next-line no-restricted-imports -- csak a `dp:` kulcs-prefix kell, hogy a demó „Minden adat törlése" prefix-seprése ezt a cache-t is elvigye (lásd lent)
 import { PREFIX } from '../../storage/DemoStorage';
 import { TEMPLATE_HEADINGS } from '../../storage/seed/templates';
 import { useStorage } from '../../storage/StorageContext';
@@ -43,6 +44,7 @@ const TEMPLATE_DRAFT_CACHE_KEY = `${PREFIX}sablon-piszkozat`;
 
 function readTemplateDraftCache(): Record<string, string> {
   try {
+    // oxlint-disable-next-line no-restricted-globals -- tudatos kivétel, lásd a TEMPLATE_DRAFT_CACHE_KEY fölötti kommentet
     const raw = localStorage.getItem(TEMPLATE_DRAFT_CACHE_KEY);
     return raw ? (JSON.parse(raw) as Record<string, string>) : {};
   } catch {
@@ -52,6 +54,7 @@ function readTemplateDraftCache(): Record<string, string> {
 
 function writeTemplateDraftCache(cache: Record<string, string>): void {
   try {
+    // oxlint-disable-next-line no-restricted-globals -- tudatos kivétel, lásd a TEMPLATE_DRAFT_CACHE_KEY fölötti kommentet
     localStorage.setItem(TEMPLATE_DRAFT_CACHE_KEY, JSON.stringify(cache));
   } catch {
     // Alacsony tét (csak szövegbevitel elvesztésének kockázata, nincs
@@ -82,6 +85,7 @@ function clearTemplateDraftCacheEntry(base: string): void {
  */
 export function clearAllTemplateDraftCache(): void {
   try {
+    // oxlint-disable-next-line no-restricted-globals -- tudatos kivétel, lásd a TEMPLATE_DRAFT_CACHE_KEY fölötti kommentet
     localStorage.removeItem(TEMPLATE_DRAFT_CACHE_KEY);
   } catch {
     // Lásd writeTemplateDraftCache -- alacsony tét, néma no-op.

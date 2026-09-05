@@ -350,6 +350,27 @@ describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmé
     expect(screen.getAllByText('45 000 Ft').length).toBeGreaterThan(0);
   });
 
+  it('a terv-szintű kedvezmény összege, aránya és a "kedvezmény" szó SOHA nem jelenik meg a nyomtatványon -- csak a két összeg', () => {
+    // A kedvezmény jogilag csak a szerkesztő belső segédlete: a páciens által
+    // aláírt dokumentumon egyedül a listaár-referencia és a fizetendő állhat.
+    const { container } = renderKerekVegosszeg(5000);
+    const szoveg = container.textContent ?? '';
+    expect(szoveg).not.toMatch(/kedvezm/i);
+    expect(szoveg).not.toMatch(/rabatt/i);
+    expect(szoveg).not.toContain('5 000 Ft');
+    expect(szoveg).not.toMatch(/[−-]\s?\d+\s?%/);
+    expect(screen.getByText('40 000 Ft')).toBeInTheDocument();
+  });
+
+  it('a sor-szintű ár-eltérés (listaár > ajánlati ár) sem kap kedvezmény-jelvényt vagy százalékot a nyomtatványon', () => {
+    const { container } = renderDoc(false, 'hu', { lista: 45000, tenyleges: 40000 });
+    const szoveg = container.textContent ?? '';
+    expect(szoveg).not.toMatch(/kedvezm/i);
+    expect(szoveg).not.toMatch(/[−-]\s?\d+\s?%/);
+    expect(szoveg).not.toContain('5 000 Ft');
+    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
+  });
+
   it('az előleg a CSÖKKENTETT végösszeghez képest dől el, hogy túllépi-e a határt', () => {
     renderKerekVegosszeg(5000, 20000);
     // 40 000 Ft fizetendő, 20 000 Ft előleg -> 20 000 Ft fennmaradó (nem a

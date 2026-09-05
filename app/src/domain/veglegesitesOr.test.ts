@@ -127,6 +127,22 @@ describe('veglegesitesDiagnozis', () => {
     expect(tetel(diag, 'hianyzo-paciensadat')).toBeUndefined();
   });
 
+  it('üres ervenyesIg az "ervenyes-ig-hianyzik" hard tételt adja -- üres dátum "Invalid Date"-ként kerülne a szerződésre', () => {
+    const plan = makePlan([[sor()]], { ervenyesIg: '   ' });
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+    expect(tetel(diag, 'ervenyes-ig-hianyzik')?.sulyossag).toBe('hard');
+    expect(tetel(diag, 'ervenyes-ig-hianyzik')?.route).toBe('/paciens');
+    expect(vanKemenyBlokk(diag)).toBe(true);
+  });
+
+  it('nem dátumnak parsolható ervenyesIg ugyanezt a hard tételt adja', () => {
+    const plan = makePlan([[sor()]], { ervenyesIg: 'nem-datum' });
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+    expect(tetel(diag, 'ervenyes-ig-hianyzik')?.sulyossag).toBe('hard');
+  });
+
   it('meg nem nevezett sor a "kitoltetlen-sor" hard tételben jelenik meg, a nullaOsszeguSorok puhájában NEM', () => {
     const plan = makePlan([[sor({ tetelId: '', nevSnapshot: '', fogak: '16' })]]);
     const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);

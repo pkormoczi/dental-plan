@@ -123,6 +123,20 @@ export function veglegesitesDiagnozis(
     });
   }
 
+  // Üres vagy érvénytelen érték a `formatLongDate`-en át „Invalid Date"-ként
+  // kerülne egy szerződéses dokumentumra. A Terv adatai lap a mező
+  // elhagyásakor visszaállítja az alapértéket, de egy betöltött fájl vagy egy
+  // a lapot megkerülő patch ezt kijátszhatja -- a véglegesítés-őr az utolsó
+  // védvonal, ezért kemény blokk.
+  if (!plan.ervenyesIg.trim() || Number.isNaN(Date.parse(plan.ervenyesIg))) {
+    tetelek.push({
+      id: 'ervenyes-ig-hianyzik',
+      sulyossag: 'hard',
+      cim: 'Az ajánlat érvényességi dátuma hiányzik vagy érvénytelen.',
+      route: '/paciens',
+    });
+  }
+
   // 94. tétel: a piszkozathoz kötött páciensmappa MÁS páciens azonosító
   // adatai mellé, egy MÁSIK létező páciens nevével mentődne -- GDPR 9.
   // cikk szerinti különleges adatot érintő azonosítási kollízió egy

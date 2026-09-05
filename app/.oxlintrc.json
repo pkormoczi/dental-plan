@@ -3,6 +3,53 @@
   "plugins": ["react", "typescript", "oxc"],
   "rules": {
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+    "react/only-export-components": ["warn", { "allowConstantExport": true }],
+    "no-restricted-globals": [
+      "error",
+      {
+        "name": "fetch",
+        "message": "Páciens- és kezelési adat nem hagyhatja el a gépet -- hálózati hívás tilos."
+      },
+      {
+        "name": "XMLHttpRequest",
+        "message": "Páciens- és kezelési adat nem hagyhatja el a gépet -- hálózati hívás tilos."
+      },
+      {
+        "name": "WebSocket",
+        "message": "Páciens- és kezelési adat nem hagyhatja el a gépet -- hálózati hívás tilos."
+      },
+      {
+        "name": "EventSource",
+        "message": "Páciens- és kezelési adat nem hagyhatja el a gépet -- hálózati hívás tilos."
+      },
+      {
+        "name": "localStorage",
+        "message": "Tároló csak a PlanStorage/DraftStorage interfészen át (storage/), a StorageContext-ből."
+      },
+      {
+        "name": "sessionStorage",
+        "message": "Tároló csak a PlanStorage/DraftStorage interfészen át (storage/), a StorageContext-ből."
+      }
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["**/storage/DemoStorage", "**/storage/DemoDraftStorage"],
+            "message": "Konkrét tároló-implementációt csak a storage/ importálhat; kívülről a StorageContext (useStorage) az egyetlen út."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/storage/**", "src/**/*.test.*", "src/**/testFixtures.tsx", "src/test-setup.ts"],
+      "rules": {
+        "no-restricted-globals": "off",
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
 }
