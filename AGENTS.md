@@ -27,9 +27,9 @@ masteren, commit nélkül → **kézi ellenőrzés a munkafán** → lezárás (
 azonnali push; a master-push Pages-re élesít). Minden állapotváltozás azonnal commit + push.
 
 Git-lépések scriptben, a gyökérből (`--help` mindnél):
-- `scripts/workflow/sync.mjs [--gate]` — fetch, ff-merge, megbukott push; kiírja a HEAD-et.
+- `scripts/workflow/sync.mjs` — fetch, ff-merge; push-olatlan commitnál kapu, majd push; kiírja a HEAD-et.
 - `scripts/workflow/commit-push.mjs -m "…" [--trailer …]… -- <path>…` — csak a path-ok, docs-check, commit, push.
-- `scripts/workflow/drift.mjs <slug> [--set] | --all` — a terv `Baseline`-ja óta változott-e app-kód.
+- `scripts/workflow/drift.mjs <slug> | --all` — a terv `Baseline`-ja óta változott-e app-kód (csak jelez).
 - `scripts/workflow/close.mjs <slug> --title "…"` — teljes kapu, `git rm` tételfájl, commit, push.
 → file:scripts/workflow/sync.mjs; file:scripts/workflow/commit-push.mjs; file:scripts/workflow/drift.mjs; file:scripts/workflow/close.mjs
 

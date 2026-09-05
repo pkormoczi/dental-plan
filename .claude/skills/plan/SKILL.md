@@ -29,6 +29,8 @@ tervezett, újratervezésre előbb mondd ki, mi bukott meg benne.
 
 ## Előkészítés — mielőtt egy kérdést is felteszel
 
+0. `node scripts/workflow/sync.mjs` — a feltárás a friss `origin/master`-en induljon; jegyezd
+   meg a kiírt HEAD-et (írás előtt ehhez képest nézed, változott-e közben az app).
 1. Olvasd el a tétel fájlját (vagy a felvetést) és a `Source:` szerinti forrást, ha van.
 2. Olvasd el a `docs/PRODUCT.md`-t (különösen a **Nem cél** és a **Szándékos hiányok és nyitott
    kérdések** szakaszt), a root `CLAUDE.md` **Hard invariants** listáját és az érintett terület
@@ -41,14 +43,17 @@ tervezett, újratervezésre előbb mondd ki, mi bukott meg benne.
 4. A nested `CLAUDE.md`-k „Find before writing” indexét nézd át — a döntéseknek a meglévő
    helperekre kell épülniük. Ez tájékozódás, nem szignatúra-tervezés.
 
-## `--quick` — a bug-sáv
+## `--quick` — a kis kockázatú sáv
 
-Csak akkor, ha a tétel `Type: bug` (vagy a felvetés egyértelműen az), és reprodukálható
-leírás + elvárt viselkedés adott. Nincs interjú: Goal = repro + elvárt viselkedés; Current
-state = az érintett fájl(ok) és a meglévő teszt; Approach = a javítás határa, egy mondat;
-Decisions = `- nincs`; Verification = regressziós teszt a megfigyelhető viselkedésre. Ha az
-előkészítés vagy az írás közben döntési ág bukkan fel (két javítási irány, invariáns-érintés,
-scope-kérdés), állj le, mondd ki, és folytasd a normál interjúval.
+Akkor jár, ha a tétel kockázata kicsi, nem a `Type`-ja miatt: `Type: bug` reprodukálható
+leírással + elvárt viselkedéssel; vagy `chore`/`feature`, ha nincs nyitott termékdöntés, nem
+érint hard invariánst, és a doki által látható viselkedés változatlan vagy egy mondatban
+leírható. Nincs interjú: Goal = repro + elvárt viselkedés (vagy az egy mondat); Current
+state = az érintett fájl(ok) és a meglévő teszt; Approach = a változás határa, egy mondat;
+Decisions = `- nincs` (vagy a technikai rutindöntés egy sorban, indokkal); Verification =
+teszt a megfigyelhető viselkedésre. Ha az előkészítés vagy az írás közben döntési ág bukkan
+fel (két irány, invariáns-érintés, scope-kérdés, látható viselkedés), állj le, mondd ki, és
+folytasd a normál interjúval.
 
 ## Hogyan dolgozz — az interjú
 
@@ -61,7 +66,14 @@ scope-kérdés), állj le, mondd ki, és folytasd a normál interjúval.
 5. **Foglald össze menet közben** — minden lezárt ág után ismételd vissza a döntést.
 6. **Állj meg, ha nincs egyezés** — „majdnem kész” állapotban ne írj.
 
-Szabályok: sose feltételezz, kérdezz; egyszerre egy téma; tolj vissza konkrétan (a
+**Mit kérdezz és mit dönts el magad.** Kérdezz, ha a döntés termékszintű: a doki által
+látható viselkedés, scope-határ (mi nem tartozik ide), elfogadási feltétel, hard invariáns
+vagy Nem cél érintése, adat/jogi korlát. Dönts magad — és a `Decisions`-ben egy sorban
+indokold —, ha rutin technikai kérdés a meglévő architektúrán belül: helper helye, fájlnév,
+melyik meglévő mintát követed, teszt szerkezete. Az interjú tárgya a cél, a látható
+viselkedés, a kizárt scope és az elfogadás; a „hogyan” az agenté.
+
+Szabályok: termékkérdésben ne feltételezz, kérdezz; egyszerre egy téma; tolj vissza konkrétan (a
 `docs/PRODUCT.md` szakaszára, az invariánsra vagy a létező tételre hivatkozva, nem
 általánosságban); vess fel elvetett alternatívát is; legyél direkt; kövesd, mely ágak
 zárultak le.
@@ -122,10 +134,13 @@ hagyta az összefoglalót. Mutasd meg a teljes tervezett tartalmat, és csak kif
 jóváhagyás után írj. Két megerősítési pont: 1) jelölt-választás (csak többötletes forrásnál,
 új fájl esetén), 2) a végleges fájltartalom.
 
-**Közvetlenül írás előtt**, a jóváhagyás után: `node scripts/workflow/sync.mjs` (fetch, ff-merge,
-megbukott push felvitele; ha megáll, állj meg és jelentsd). A sync után, ha a gyökérben már van
-`backlog/<slug>.md` (párhuzamos session tervezte), állj meg. A `Baseline` = a sync által kiírt
-HEAD SHA.
+**Közvetlenül írás előtt**, a jóváhagyás után: újra `node scripts/workflow/sync.mjs` (ha megáll,
+állj meg és jelentsd). A sync után, ha a gyökérben már van `backlog/<slug>.md` (párhuzamos session
+tervezte), állj meg. Ha a HEAD eltér az előkészítés 0. lépésében megjegyzettől, nézd meg:
+`git diff --stat <kezdő HEAD>..HEAD -- app data assets` — ha nem üres, a `Current state` minden
+pointerét ellenőrizd újra a friss kódon; ha egy döntés nem áll meg, állj meg és kérdezz; csak
+utána írj. A `Baseline` = az írás előtti (utolsó sync által kiírt) HEAD SHA — így a terv
+feltevései és a Baseline ugyanahhoz a kódhoz tartoznak.
 
 **Írás után, commit + push:**
 

@@ -1,16 +1,18 @@
 ---
 name: implement
-description: Implement one planned backlog item from its file (backlog/<slug>.md in the backlog root — the folder is the status) on the local master — validation, sync (scripts/workflow/sync.mjs), baseline-drift preflight (scripts/workflow/drift.mjs), implementation within the plan's scope, then the quality gate (build, lint, test, docs-check). Stops WITHOUT committing and hands the doki a numbered manual test list — the manual check happens on the working tree, because /finish commits and pushes at once. --worktree runs the same in a dedicated git worktree for parallel sessions. Invoke explicitly with /implement <slug>.
+description: Implement one planned backlog item from its file (backlog/<slug>.md in the backlog root — the folder is the status) on the local master — validation, sync (scripts/workflow/sync.mjs), baseline-drift preflight (scripts/workflow/drift.mjs, report-only), implementation within the plan's scope, the quality gate (build, lint, test, docs-check), the plan's manual-check slice if any, and a diff self-review against the plan. Stops WITHOUT committing and hands the doki a numbered manual test list — the manual check happens on the working tree, because /finish commits and pushes at once. --worktree runs the same in a dedicated git worktree for parallel sessions. Invoke explicitly with /implement <slug>.
 argument-hint: <slug> [--worktree]
 disable-model-invocation: true
 ---
 
 # /implement <slug> [--worktree]
 
-Egy már megtervezett tételt visz végig a tételfájltól a zöld minőségi kapuig, és
+Egy már megtervezett tételt visz végig a tételfájltól a zöld kapuig és a kézi átadásig, és
 **ott megáll — nem commitol**. Itt van a doki kézi kapuja: a munkafán ellenőriz, mert a
-`/finish` commitol és azonnal pushol, a master-push pedig a Pages-re élesít. A lezárás
-(docs, a tételfájl törlése, commit, push) a `/finish <slug>` dolga. A fájlalak: `backlog/CLAUDE.md`.
+`/finish` commitol és azonnal pushol, a master-push pedig a Pages-re élesít. Minden gépi és
+böngészős ellenőrzés **az átadás előtt** fut le, hogy a doki által kipróbált és a publikált
+viselkedés ugyanaz legyen. A lezárás (docs, a tételfájl törlése, commit, push) a
+`/finish <slug>` dolga. A fájlalak: `backlog/CLAUDE.md`.
 
 Alapértelmezés: a helyi `master`-en, worktree és PR nélkül — egy session-re való.
 `--worktree`: elkülönített worktree, párhuzamos sessionökhöz (lásd a végén).
@@ -26,25 +28,28 @@ fejlécét. **Állj meg**, ha:
   `/plan <slug>` (bugnál `--quick`),
 - `Type: doki` — emberi teendő, nem implementálható,
 - a `git status` a feladathoz nem tartozó, commitolatlan módosítást mutat — kérdezd
-  meg a dokit, mi legyen vele; ne építs rá és ne írd felül. (A `/finish` mindent commitol,
-  ami a munkafán van — ezért kell itt tisztának lennie.)
+  meg a dokit, mi legyen vele; ne építs rá és ne írd felül. A `/finish` a követett
+  módosításokat és az `app/`, `docs/`, `data/`, `assets/` alatti új fájlokat commitolja; más
+  helyen álló új fájl (pl. jegyzet a gyökérben) a lezárást megállítja.
 
 ## 2. Sync
 
-`node scripts/workflow/sync.mjs` — fetch, ff-merge az `origin/master`-re, és ha megbukott
-push maradt a masteren, felviszi. Ha a script megáll (divergencia, nem master, félbehagyott
-rebase), **állj meg és jelentsd** a kimenetét.
+`node scripts/workflow/sync.mjs` — fetch, ff-merge az `origin/master`-re; ha megbukott
+vagy félbeszakadt futásból push-olatlan commit maradt, a teljes kapu után felviszi. Ha a
+script megáll (nem master, félbehagyott rebase, piros kapu), **állj meg és jelentsd** a
+kimenetét.
 
 ## 3. Preflight — baseline-drift
 
-`node scripts/workflow/drift.mjs <slug>`:
+`node scripts/workflow/drift.mjs <slug>` — csak jelez, a `Baseline` sort nem írja át:
 
 - **exit 0** (a `Baseline` óta nem változott app-kód): tovább.
 - **exit 2** (a stat kiírva): a `Current state` minden fájljára/symboljára/tesztjére nézd meg,
-  létezik-e még és változott-e (a stat + a symbol/tesztnév grep-je). Jelentsd egy rövid listában,
-  mi mozdult el és érinti-e a plan feltevéseit. Ha a plan valamely döntése emiatt nem áll meg,
-  **állj meg** és kérdezz. Ha állnak: `node scripts/workflow/drift.mjs <slug> --set` (a
-  `Baseline` sor HEAD-re íródik; a `/finish` commitja viszi).
+  létezik-e még és változott-e (a stat + a symbol/tesztnév grep-je). Ha a plan valamely döntése
+  emiatt nem áll meg, **állj meg** és kérdezz. Ha állnak, folytasd; a záró jelentés mondja ki,
+  mi mozdult el és miért áll a plan. A tervfájlhoz ne nyúlj — ha mégis módosítani kell (döntés
+  változott), az külön `commit-push.mjs -m "backlog: plan <slug> frissítve"`, különben a
+  `/finish` megáll rajta.
 - **exit 1**: hibás vagy ismeretlen `Baseline` — állj meg és jelentsd.
 
 ## 4. Implementáció
@@ -75,13 +80,28 @@ npm run docs-check
 Ha bármelyik hibázik, javítsd és futtasd újra. A `docs-check` zöld (0 hiba) — D-szám,
 legacy-hivatkozás, elrontott anchor, budget-túllépés → javítás, nem allowlist.
 
+## 5b. Manual-check szelet
+
+Nézd meg a plan `Verification` szakaszát. Ha manual-check szelet van bejelölve (`pdf`,
+`visual-css`, `keyboard-a11y`), futtasd most: `/manual-checks <szelet>` — izolált Chrome,
+seed adat, a jelentés a `docs/reviews/`-ba (untracked marad, a `/finish` lezáró commitja
+viszi). Ha a szelet a tételhez tartozó találatot ad, javítsd és ismételd az 5. lépést; ami
+nem a tételé, az a jelentésben marad a doki döntésére (`/idea`-val vehető fel).
+
+## 5c. Diff-önellenőrzés
+
+`git diff` (és `git status`) a plan ellen, három kérdés, három sor a jelentésbe:
+teljesül-e a `Goal` a leírt megfigyelhető viselkedéssel; maradt-e kezeletlen szélső eset,
+amit a plan vagy a teszt említ; került-e a diffbe a tételhez nem tartozó módosítás (ha igen,
+vedd ki, vagy mondd ki, miért kell). Nem architektúra-review — csak ez a három kérdés.
+
 ## 6. Megállás és jelentés
 
 **Ne commitolj.** Foglald össze:
 
-- mi valósult meg, a plan döntéseihez igazítva;
-- a plan `Verification` mely tételei teljesültek (tests, typecheck/lint, docs-check),
-  és melyik manual-check szelet van még hátra (azt a `/finish` futtatja);
+- mi valósult meg, a plan döntéseihez igazítva; drift esetén mi mozdult el és miért áll a plan;
+- a plan `Verification` mely tételei teljesültek (tests, typecheck/lint, docs-check,
+  manual-check szelet), és a diff-önellenőrzés három sora;
 - egy **számozott, kézi tesztelési lista** a dokinak — a munkafán, `npm run dev` mellett;
 - egyértelmű jelzés: *„A kód a munkafán van, commitolatlan. Ellenőrizd a lista szerint; a
   `/finish <slug>` commitol és azonnal az `origin/master`-re pushol, ami a Pages-re élesít.”*;

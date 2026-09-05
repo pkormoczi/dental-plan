@@ -1,6 +1,6 @@
 ---
 name: finish
-description: Close one implemented, manually verified backlog item — fix loop on the quality gate, docs-check, the plan's manual-check slice if any, documentation ONLY when non-derivable context appeared, then scripts/workflow/close.mjs (final gate, git rm backlog/<slug>.md, commit "<slug>: <cím>", immediate push to origin/master; on a worktree branch: rebase, force-with-lease, PR). Call it only AFTER the doki checked the working tree — the master push deploys to Pages. Invoke explicitly with /finish <slug>.
+description: Close one implemented, manually verified backlog item — fix loop on the quality gate (stop and hand back to the doki if a fix changes visible behaviour), docs-check, documentation ONLY when non-derivable context appeared, then scripts/workflow/close.mjs (scope guard, final gate, git rm backlog/<slug>.md, commit "<slug>: <cím>", immediate push to origin/master; on a worktree branch: rebase, force-with-lease, PR; resumes an interrupted run). Call it only AFTER the doki checked the working tree — the master push deploys to Pages. Invoke explicitly with /finish <slug>.
 argument-hint: <slug> [--worktree]
 disable-model-invocation: true
 ---
@@ -16,23 +16,19 @@ sorrendje kötelező, egyik sem ugorható át; ahol „állj meg” van, ott nin
 
 Az `app/` alatt: `npm run build`, `npm run lint`, `npm test`. Bármi piros → javítsd,
 futtasd újra. A tesztnevek konkrét, megfigyelhető viselkedést írjanak le; `.skip`/`.only`
-nem maradhat. (A végleges, bizonyító kapu az 5. lépés scriptjében fut újra.)
+nem maradhat. (A végleges, bizonyító kapu a 4. lépés scriptjében fut újra.)
+
+**Ha a javítás a doki által látott viselkedést változtatja** (nem csak típus, teszt, lint
+vagy szöveg a kódban), **állj meg**: add vissza a tételt a dokinak a kézi tesztlista érintett
+pontjaival, és csak az újbóli ellenőrzés után folytasd. A kipróbált és a publikált viselkedés
+nem térhet el.
 
 ## 2. `npm run docs-check`
 
 Zöld (0 hiba). D-szám, legacy-hivatkozás, elrontott anchor, budget-túllépés →
 javítás, nem allowlist.
 
-## 3. Manual-check szelet
-
-Nézd meg a plan `Verification` szakaszát. Ha manual-check szelet van bejelölve (`pdf`,
-`visual-css`, `keyboard-a11y`), futtasd: `/manual-checks <szelet>` — izolált Chrome,
-seed adat, a jelentés a `docs/reviews/`-ba (a lezáró commit viszi). Ha a szelet találatot
-ad, ami a tételhez tartozik, **itt javítsd** (ez már implementációs kontextus, nem review),
-és ismételd az 1–2. lépést; ami nem a tételé, az a jelentésben marad a doki döntésére
-(`/idea`-val vehető fel).
-
-## 4. Dokumentáció — csak ha kell
+## 3. Dokumentáció — csak ha kell
 
 Default: **nincs docs-diff**, és ezt a záró jelentés kimondja. Írj csak akkor, ha a
 tétel olyan contextet hozott létre, ami kódból és tesztből nem levezethető:
@@ -49,7 +45,7 @@ tétel olyan contextet hozott létre, ami kódból és tesztből nem levezethet�
 Nincs „döntések átvezetése” prózába, nincs referencia-seprés, nincs lezárt-tétel napló.
 A tervfájl tartalma nem kerül át sehova — a git history elég.
 
-## 5. Lezárás — `close.mjs`
+## 4. Lezárás — `close.mjs`
 
 ```
 node scripts/workflow/close.mjs <slug> --title "<cím>" --body "<1–2 mondat magyarul>" \
@@ -57,17 +53,29 @@ node scripts/workflow/close.mjs <slug> --title "<cím>" --body "<1–2 mondat ma
 ```
 
 A cím a tételfájl `## Goal` mondatának rövid alakja; a commit első sora `<slug>: <cím>`. A
-script sorban: fetch + ff (ha utána a `backlog/<slug>.md` nincs meg, máshol lezárták → megáll);
-a **teljes kapu** (`build`, `lint`, `test`, `docs-check`); `git rm backlog/<slug>.md`; minden
-munkafa-változás stage-elése (ezért kellett az `/implement` 1. lépésében tiszta fa); commit;
-`git push origin master`. Ha az origin közben előrelépett: rebase, **a kapu újra**, push;
-konfliktusnál a rebase félben marad — a doki oldja fel, `git rebase --continue`, majd
-`node scripts/workflow/sync.mjs --gate`.
+script sorban: fetch + ff; **hatókör-őr** (untracked fájl csak `app/ docs/ data/ assets/` alatt
+mehet a commitba); a **teljes kapu** (`build`, `lint`, `test`, `docs-check`);
+`git rm backlog/<slug>.md`; a követett módosítások és az engedett új fájlok stage-elése;
+commit; `git push origin master`. Ha az origin közben előrelépett: rebase, **a kapu újra**,
+push.
 
-Ha a script megáll, jelentsd a kimenetét és **ne kerüld meg kézi `git commit`/`push`-sal**:
-piros kapu → vissza az 1. lépésre; egyéb → a doki dönt.
+Ha a script megáll, jelentsd a kimenetét és **ne kerüld meg kézi `git commit`/`push`-sal**.
+A három tipikus megállás és a teendő:
 
-## 6. Záró jelentés
+- **untracked fájl a körön kívül** — a doki dönt: törli, ignore-olja vagy külön commitolja
+  (`commit-push.mjs`), aztán újra `/finish`;
+- **a tervfájl módosított, a `git rm` megtagadta** — ha a módosítás kell:
+  `commit-push.mjs -m "backlog: plan <slug> frissítve" -- backlog/<slug>.md`; ha nem:
+  `git checkout -- backlog/<slug>.md`; aztán újra;
+- **rebase-konfliktus a push előtt** — a rebase félben marad; a doki feloldja,
+  `git rebase --continue`, majd `node scripts/workflow/sync.mjs` (a kapu újra fut a push
+  előtt). Piros kapu a rebase után: javítás, majd szintén `sync.mjs`.
+
+**Folytatás-mód:** ha a lezáró commit már létezik (a script egy korábbi futása a push vagy a
+PR előtt szakadt meg), ugyanez a hívás felismeri (`<slug>: …` tárgyú, push-olatlan commit),
+nem commitol újra: kapu, majd a hiányzó publikálási lépés. Tiszta munkafát követel.
+
+## 5. Záró jelentés
 
 - mi valósult meg, a plan döntéseihez igazítva;
 - a commit rövid SHA-ja és a mondat: *„fent az `origin/master`-en, a Pages deploy elindult”*;
@@ -79,11 +87,11 @@ piros kapu → vissza az 1. lépésre; egyéb → a doki dönt.
 
 ## `--worktree` mód
 
-Az 1–4. lépés a worktree-ben fut (`.claude/worktrees/<slug>`, a `/implement --worktree`
-hagyta ott). Az 5. lépés ugyanaz a `close.mjs` hívás: a script a nem-master branchen
+Az 1–3. lépés a worktree-ben fut (`.claude/worktrees/<slug>`, a `/implement --worktree`
+hagyta ott). A 4. lépés ugyanaz a `close.mjs` hívás: a script a nem-master branchen
 commit után `git rebase origin/master`-t futtat (base-változásnál a kapu újra; konfliktusnál
 megáll, a rebase félben marad — a doki oldja fel és `git rebase --continue`, majd újra
-`/finish <slug> --worktree`), `git push --force-with-lease -u`, és `gh pr create --base master`
-(ha nincs még PR; a `gh` hiánya nem hiba, ilyenkor a PR kézi). A záró jelentésben a worktree
-útvonala, a branch neve és a PR URL-je. Ne hívd az `ExitWorktree`-t — a doki dönt a worktree
-sorsáról.
+`/finish <slug> --worktree`, ami folytatás-módban megy tovább), `git push --force-with-lease -u`,
+és `gh pr create --base master` (ha nincs még PR; a `gh` hiánya vagy hibája nem hiba, ilyenkor
+a PR kézi). A záró jelentésben a worktree útvonala, a branch neve és a PR URL-je. Ne hívd az
+`ExitWorktree`-t — a doki dönt a worktree sorsáról.
