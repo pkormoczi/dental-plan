@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom/vitest';
+import { format } from 'node:util';
+import { afterEach, beforeEach } from 'vitest';
 
 // Whether `globalThis.localStorage` is already defined going into this file
 // is Node-version-dependent (Node 22+ ships an experimental global gated
@@ -96,3 +98,30 @@ if (!Element.prototype.scrollIntoView) {
 // `useListStateMemory.ts` scroll-visszaállítása hívja) -- a fenti
 // scrollIntoView-stub mintáján felülírva egy no-op-ra.
 window.scrollTo = () => {};
+
+// A React nesting-figyelmeztetései (`In HTML, <p> cannot be a descendant of
+// <p>.` és társai) puszta `console.error`-ok -- egyetlen teszt sem bukik el
+// tőlük, így érvénytelen DOM észrevétlenül élesbe mehet. Az `In HTML, ` mind a
+// négy nesting-üzenet közös prefixe és semmi másé, ezért az `ErrorBoundary`
+// szándékos logja és a jövőbeli hibakezelés-tesztek nem esnek el tőle.
+const eredetiConsoleError = console.error;
+let domNestingHibak: string[] = [];
+
+console.error = (...args: Parameters<typeof console.error>) => {
+  if (typeof args[0] === 'string' && args[0].startsWith('In HTML, ')) {
+    domNestingHibak.push(format(...args));
+  }
+  eredetiConsoleError(...args);
+};
+
+beforeEach(() => {
+  domNestingHibak = [];
+});
+
+afterEach(() => {
+  const hibak = domNestingHibak;
+  domNestingHibak = [];
+  if (hibak.length > 0) {
+    throw new Error(`Érvénytelen DOM-beágyazás a renderelt fában:\n${hibak.join('\n')}`);
+  }
+});

@@ -96,8 +96,11 @@ export function VeglegesitesChecklist({
                 {felirat}
               </Badge>
             ))}
+            {/* `as="span"` + `display: block`, nem `as="p"`: a szülő a Radix
+                `Callout.Text`, ami maga egy `<p>` (az `asChild`-ja hard-kódolva
+                `false`, tehát nem kerülhető meg) -- egy `<p>` itt érvénytelen DOM. */}
             {tetel.reszletek?.map((reszlet) => (
-              <Text as="p" key={reszlet.cim} size="1" mt="1">
+              <Text as="span" key={reszlet.cim} size="1" mt="1" style={{ display: 'block' }}>
                 {reszlet.cim}: {reszlet.nevek.slice(0, 8).join('; ')}
                 {reszlet.nevek.length > 8 ? ` … és további ${reszlet.nevek.length - 8}` : ''}
               </Text>

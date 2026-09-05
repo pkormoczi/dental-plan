@@ -121,6 +121,24 @@ describe('VeglegesitesChecklist -- szamlalo-jelvény', () => {
     expect(screen.getByText('Elavult árlistai pillanatkép: Fogeltávolítás')).toBeInTheDocument();
     expect(screen.queryByText(/Elavult árlistai pillanatkép \(1\)/)).not.toBeInTheDocument();
   });
+
+  it('a reszletek sora külön elemként, de érvényes DOM-mal jelenik meg', () => {
+    const { container } = renderChecklist({
+      tetelek: [
+        {
+          id: 'ar-elteres',
+          sulyossag: 'soft',
+          cim: 'Néhány sor ára eltér a mai árlistától.',
+          szamlalo: 1,
+          reszletek: [{ cim: 'Elavult árlistai pillanatkép', nevek: ['Fogeltávolítás'] }],
+        },
+      ],
+    });
+
+    expect(screen.getByText('Néhány sor ára eltér a mai árlistától.')).toBeInTheDocument();
+    expect(screen.getByText('Elavult árlistai pillanatkép: Fogeltávolítás')).toBeInTheDocument();
+    expect(container.querySelector('p p')).toBeNull();
+  });
 });
 
 // 105. tétel: a sikerképernyő az `onNavigate` prop nélkül hívja a
