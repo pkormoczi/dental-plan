@@ -79,6 +79,8 @@ Az aláírt PDF-ből következő szabályok — jogi, nem stíluskérdések:
 - Szerveroldali komponens bármilyen formában.
 - EESZT-integráció és e-mail-küldés az appból: legfeljebb távlati backlog-ötlet, nem az MVP része.
 - A `Fog` mező jegyzetmezővé válása elfogadott (szabadszöveget elbír, automatika ekkor nem indul).
+- Kezdőlapi páciens-kereső: nem, amíg az állomány pár száz alatt marad — a Páciensek lap keresője egy
+  kattintás, a kezdőlap 5-ös recent-listája a napi eseteket fedi.
 
 ## Szándékos hiányok és nyitott kérdések
 
