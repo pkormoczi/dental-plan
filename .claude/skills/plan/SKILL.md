@@ -1,91 +1,89 @@
 ---
 name: plan
-description: Interview the user about one backlog item or one new idea (from backlog/ideas or a freeform prompt) branch by branch until every decision is resolved, then write backlog/plans/<slug>.md (Goal / Current state / Approach / Decisions / Verification, with a Baseline SHA). For ideas not yet in BACKLOG.md it also assigns the next tétel-szám from the BACKLOG.md header counter and writes the ### N. tétel entry. Never writes application code and never edits the source notes it reads. Invoke explicitly with /plan <slug>.
-argument-hint: <slug> [tétel-szám | ötlet-forrás]
+description: Take one backlog item from idea to implementation-ready. Interviews the user branch by branch until every decision is resolved, then rewrites backlog/<slug>.md in place as Status: planned (Goal / Current state / Approach / Decisions / Verification, Target + Baseline). Input is an existing Status: idea file or a freeform prompt (then the file is created first, with the /idea dedup). --quick skips the interview for an unambiguous bug. Never writes application code, never accepts Type: doki, never commits. Invoke explicitly with /plan <slug> [--quick].
+argument-hint: <slug> [--quick]
 disable-model-invocation: true
 ---
 
-# /plan <slug>
+# /plan <slug> [--quick]
 
 ## Cél
 
-Egy döntést végigvinni implementáció-indításig, és az eredményt egy rövid, az
-implementáló session számára olvasható tervfájlba írni. A kiinduló ötlet jöhet:
+Egy tételt döntésről döntésre implementáció-indításig vinni, és az eredményt a tétel saját
+fájljába írni: `backlog/<slug>.md`, `Status: planned`. A bemenet:
 
-- **A)** egy már számozott, de terv nélküli `backlog/BACKLOG.md` tételből,
-- **B1)** a `backlog/ideas/` egy konkrét, a hívó által kijelölt ötletéből,
-- **B2)** egy szabadon, a hívásban vagy a beszélgetésben leírt felvetésből.
+- egy létező `backlog/<slug>.md` `Status: idea` fájl, vagy
+- egy szabad felvetés a hívásban / a beszélgetésben — ekkor a fájlt is ez a skill hozza
+  létre, a `/idea` dedup-lépésével.
 
-A `<slug>` kötelező, kebab-case, a fájlnév és a későbbi `/implement <slug>` /
-`/finish <slug>` hívások azonosítója. A kimenet mindig `backlog/plans/<slug>.md`.
+A `<slug>` kötelező, kebab-case: a fájlnév és a későbbi `/implement <slug>` / `/finish <slug>`
+azonosítója. A fájlalak és a fejléc-értékkészlet: `backlog/CLAUDE.md`.
 
-**Ez a skill soha nem ír és nem módosít alkalmazáskódot** (`app/`, `data/`,
-`assets/` alatt semmit), és soha nem módosítja a forrás-jegyzeteket
-(`backlog/ideas/` csak olvasásra). Amit ír:
-
-- az új `backlog/plans/<slug>.md` fájlt,
-- A módban: a meglévő tétel végére egyetlen `**Terv:**` sort, ha még hiányzik,
-- B módban: az új `### N. tétel` bekezdést a `KIDOLGOZOTT` blokk VÉGÉRE, és a
-  fejléc `**Legutóbb kiosztott szám:**` sorának átírását `N`-re.
+**Ez a skill soha nem ír és nem módosít alkalmazáskódot** (`app/`, `data/`, `assets/` alatt
+semmit), nem nyúl más backlog-fájlhoz, nem rangsorol, és nem commitol. `Type: doki` tételt
+nem fogad el — az emberi teendő, nem tervezhető; `Status: planned` fájlt sem — az már kész,
+újratervezésre előbb mondd ki, mi bukott meg benne.
 
 ## Előkészítés — mielőtt egy kérdést is felteszel
 
-1. Olvasd el a célzott tételt (A mód) vagy a forrás-szakaszt / a felvetést (B mód).
-2. Olvasd el a `PRODUCT.md`-t (különösen a **Nem cél** és a **Szándékos hiányok és
-   nyitott kérdések** szakaszt), a root `CLAUDE.md` **Hard invariants** listáját és
-   az érintett terület nested `CLAUDE.md`-jét (`app/src`, `domain`, `storage`, `pdf`).
-   Ezek nem tárgyalási alap — ha egy döntési ág ütközik velük, EXPLICIT vesd fel,
-   ne csendben kerülgesd, és ne csendben fogadd el az ütközést.
-3. Fuss át a `backlog/BACKLOG.md` **NEM FEJLESZTÉS** és **EGYÉB ötletek** szakaszán —
-   ha a felvetés egy már mérlegelt és elvetett irány, mondd ki, és kérdezd meg, mi
-   változott azóta.
-4. A nested `CLAUDE.md`-k „Find before writing” indexét nézd át — a döntéseknek a
-   meglévő helperekre kell épülniük. Ez tájékozódás, nem szignatúra-tervezés.
+1. Olvasd el a tétel fájlját (vagy a felvetést) és a `Source:` szerinti forrást, ha van.
+2. Olvasd el a `PRODUCT.md`-t (különösen a **Nem cél** és a **Szándékos hiányok és nyitott
+   kérdések** szakaszt), a root `CLAUDE.md` **Hard invariants** listáját és az érintett terület
+   nested `CLAUDE.md`-jét (`app/src`, `domain`, `storage`, `pdf`). Ezek nem tárgyalási alap —
+   ha egy döntési ág ütközik velük, EXPLICIT vesd fel, ne csendben kerülgesd, és ne csendben
+   fogadd el az ütközést.
+3. Dedup: `ls backlog/` slugjai és `Source:` sorai + `PRODUCT.md` Nem cél. Ha a felvetés egy
+   már mérlegelt és elvetett irány, mondd ki, és kérdezd meg, mi változott azóta; ha egy
+   létező tétel fedi, ne nyiss újat.
+4. A nested `CLAUDE.md`-k „Find before writing” indexét nézd át — a döntéseknek a meglévő
+   helperekre kell épülniük. Ez tájékozódás, nem szignatúra-tervezés.
 
-**Több-ötletes nyers jegyzetnél** (a hívó egy egész `backlog/ideas/*.md` fájlra mutat,
-konkrét ötlet nélkül): első lépésben sorold fel a fájlban azonosítható különálló
-ötleteket, mindegyik mellett jelezve, ha már lefedi egy meglévő tétel, ha elvetett
-irány, vagy ha `PRODUCT.md` nem-céllal / hard invariánssal ütközik. A jelöltek nem
-esnek ki emiatt — a felhasználó választ pontosan EGYET. Egy `/plan` futás mindig
-egyetlen tételt visz végig.
+## `--quick` — a bug-sáv
+
+Csak akkor, ha a tétel `Type: bug` (vagy a felvetés egyértelműen az), és reprodukálható
+leírás + elvárt viselkedés adott. Nincs interjú: Goal = repro + elvárt viselkedés; Current
+state = az érintett fájl(ok) és a meglévő teszt; Approach = a javítás határa, egy mondat;
+Decisions = `- nincs`; Verification = regressziós teszt a megfigyelhető viselkedésre. Ha az
+előkészítés vagy az írás közben döntési ág bukkan fel (két javítási irány, invariáns-érintés,
+scope-kérdés), állj le, mondd ki, és folytasd a normál interjúval.
 
 ## Hogyan dolgozz — az interjú
 
 1. **Olvasd a felvetést** — értsd meg, mit mond a felhasználó eddig.
-2. **Térképezd fel a döntési fát** — adatmodell, mappa-/fájlszerkezet, UX, szélső
-   esetek, meglévő invariánsokra gyakorolt hatás.
-3. **Ágazz egyszerre egyet** — a legnagyobb hatású bizonytalansággal kezdve; ne lépj
-   tovább, amíg az ág nincs lezárva.
+2. **Térképezd fel a döntési fát** — adatmodell, mappa-/fájlszerkezet, UX, szélső esetek,
+   meglévő invariánsokra gyakorolt hatás.
+3. **Ágazz egyszerre egyet** — a legnagyobb hatású bizonytalansággal kezdve; ne lépj tovább,
+   amíg az ág nincs lezárva.
 4. **Nevezd meg a függőségeket** — ha egy döntés korlátoz egy másikat, mondd ki.
 5. **Foglald össze menet közben** — minden lezárt ág után ismételd vissza a döntést.
 6. **Állj meg, ha nincs egyezés** — „majdnem kész” állapotban ne írj.
 
 Szabályok: sose feltételezz, kérdezz; egyszerre egy téma; tolj vissza konkrétan (a
-`PRODUCT.md` szakaszára, az invariánsra vagy az elvetett tételre hivatkozva, nem
-általánosságban); vess fel elvetett alternatívát is; legyél direkt; kövesd, mely
-ágak zárultak le.
+`PRODUCT.md` szakaszára, az invariánsra vagy a létező tételre hivatkozva, nem
+általánosságban); vess fel elvetett alternatívát is; legyél direkt; kövesd, mely ágak
+zárultak le.
 
 ## Korlátok — amit ez a skill SOHA nem tesz
 
 - Nem ír és nem módosít alkalmazáskódot — mintakódot, „illusztrációs” snippetet sem.
 - Nem ír függvényszignatúrát, típusdefiníciót vagy implementációs részletességű
-  fájlstruktúra-tervet. A `Current state` és az `Approach` fájl-/symbol-szintű
-  pointer, nem implementációs terv.
-- Nem módosítja a `backlog/ideas/` fájlokat — ismétlődő futásnál a 3. előkészítő
-  lépés dedup-ellenőrzése a védelem, nem egy visszajelölés.
-- Nem priorizál: a tételszám stabil azonosító, nem rangsor; az új tétel mindig a
-  `KIDOLGOZOTT` blokk végére kerül.
+  fájlstruktúra-tervet. A `Current state` és az `Approach` fájl-/symbol-szintű pointer, nem
+  implementációs terv.
 - Nem implementál és nem zár le semmit — az a `/implement` és a `/finish` dolga.
 
-## Kimenet — a tervfájl
+## Kimenet — a tételfájl
 
-`backlog/plans/<slug>.md`, **legfeljebb 6000 karakter**, magyarul (a séma-mezőneveket
-nem fordítjuk, lásd root `CLAUDE.md` Domain szókincs):
+`backlog/<slug>.md`, **legfeljebb 6000 karakter**, magyarul (a séma-mezőneveket nem
+fordítjuk, lásd root `CLAUDE.md` Domain szókincs). A meglévő `Type:` és `Source:` sor
+megmarad; a `Kerdes:` sor törlődik, ha a tervezés megválaszolta.
 
 ```md
 # <slug>
+Status: planned
+Type: feature|bug|chore
+Source: <honnan>
 Target: master
-Baseline: <git rev-parse origin/master a tervezés pillanatában>
+Baseline: <git rev-parse HEAD írás előtt>
 
 ## Goal
 Egy mondat: mit lát másképp a doki.
@@ -109,46 +107,25 @@ Csak valódi választásnál, egy sor / döntés:
       (a kadencia-tábla a `.claude/skills/manual-checks/SKILL.md`-ben); különben törölni
 ```
 
-A `Baseline` a `git fetch origin` utáni `git rev-parse origin/master`. A tervfájl a
-`/finish` után törlődik — a git history a történetiség, ezért ne írj bele semmit,
-amit később „meg akarnál találni”: ami tartós context, az a `/finish` 4. lépésében
-`PRODUCT.md`-be vagy nested `CLAUDE.md`-be kerül.
-
-## Kimenet — a `BACKLOG.md` bejegyzés
-
-A módban: ha a tétel még nem hivatkozik a tervfájlra, egyetlen sor a tétel végére:
-`**Terv:** \`backlog/plans/<slug>.md\``.
-
-B módban az új tétel, a meglévő `KIDOLGOZOTT` tételek formájában, a blokk VÉGÉRE:
-
-```md
-### N. tétel: <cím>
-
-  (<forrás-hivatkozás: „a backlog/ideas/<fájlnév> alapján”, vagy semmi>) — a jelenlegi
-  hiány/fájdalom röviden, majd mit vezet be a tétel; explicit kizárt scope-bulletek, ha
-  voltak. A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/<slug>.md`
-```
-
-**Számozás.** `N` = a `BACKLOG.md` fejlécének `**Legutóbb kiosztott szám:** M` sora
-szerinti `M + 1`; ugyanabban az írásban a sor `N`-re íródik át. A lezárt tételek
-szakasza törlődik a fájlból, ezért a szabad számot SOHA nem a fájlban látható
-legnagyobb tételszámból, hanem kizárólag ebből a számlálóból kell venni.
+A tervfájl a `/finish` után törlődik — a git history a történetiség, ezért ne írj bele
+semmit, amit később „meg akarnál találni”: ami tartós context, az a `/finish` 4. lépésében
+`PRODUCT.md`-be vagy nested `CLAUDE.md`-be kerül. D-szám és legacy-hivatkozás tilos
+(docs-check).
 
 ## Megerősítés írás előtt
 
-Ne írj a lemezre, amíg a döntési fa minden ága le nincs zárva ÉS a felhasználó jóvá
-nem hagyta az összefoglalót. Mutasd meg a teljes tervezett tartalmat, és csak kifejezett
-jóváhagyás után írj. B módban két megerősítési pont: 1) jelölt-választás (csak
-több-ötletes jegyzetnél), 2) a végleges tartalom — EGYSZERRE az új `### N. tétel`
-bekezdés ÉS a tervfájl.
+Ne írj a lemezre, amíg a döntési fa minden ága le nincs zárva ÉS a felhasználó jóvá nem
+hagyta az összefoglalót. Mutasd meg a teljes tervezett tartalmat, és csak kifejezett
+jóváhagyás után írj. Két megerősítési pont: 1) jelölt-választás (csak többötletes forrásnál,
+új fájl esetén), 2) a végleges fájltartalom.
 
-**Közvetlenül írás előtt**, a jóváhagyás után: `git fetch origin`, majd az
-`origin/master` `backlog/BACKLOG.md`-jének fejléc-számlálóját ÉS a helyi fájlét
-olvasd újra — párhuzamos session közben kioszthatott egy számot. Ha a számláló
-elmozdult, válts a következő szabad számra, és jelezd. A `Baseline`-t is ekkor vedd.
+**Közvetlenül írás előtt**, a jóváhagyás után: `git fetch origin`; ha a helyi master lemaradt
+az `origin/master`-től, `git pull --ff-only origin master` (divergencia esetén állj meg és
+jelentsd); `git ls-tree origin/master backlog/` — ha ott már van azonos slug (párhuzamos
+session), állj meg. A `Baseline` = `git rev-parse HEAD` ekkor. Ha a helyi master előrébb jár
+az originnál (push-olatlan commitok), a záró jelentés mondja ki.
 
 ## Záró jelentés
 
-A létrehozott fájl(ok), a kiosztott szám (B mód), és a következő lépés:
+A megírt fájl, a `Baseline`, a lezárt `Kerdes:` (ha volt), és a következő lépés:
 `/implement <slug>`.

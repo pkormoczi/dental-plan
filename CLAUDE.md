@@ -1,6 +1,6 @@
 # Repo
 `app/` Vite + React + TS — az egyetlen szerkesztett könyvtár · `docs/06-veglegesites-terv.md` a 2. fázis
-(Electron) terve · `backlog/` nyitott tételek + aktív tervek · `data/`, `assets/` referencia ·
+(Electron) terve · `backlog/` egy fájl = egy nyitott tétel (idea|planned) · `data/`, `assets/` referencia ·
 `scripts/` repo-checkek.
 
 # Parancsok
@@ -46,7 +46,7 @@ canvas→PNG, popover-geometria) a `/manual-checks` skill fedi — kézzel indí
 
 # Kommentek
 Csak WHY, invariáns vagy gotcha. Nincs „mit csinál”. Nincs `D<szám>`/`DP-<szám>` döntési azonosító,
-backlog-tételszám, `backlog/` vagy legacy-doksi hivatkozás. Ha a WHY termékszándék: `PRODUCT.md §
+backlog-slug, `backlog/` vagy legacy-doksi hivatkozás. Ha a WHY termékszándék: `PRODUCT.md §
 <cím>`; ha discovery: a nested `CLAUDE.md` neve. Meglévő kommenthez csak akkor nyúlj, ha hamissá vált.
 
 # Dokumentáció
@@ -59,5 +59,6 @@ redundanciát keress.
 Nincs `.skip`/`.only`. A tesztnév konkrét, megfigyelhető viselkedést ír le, D-szám nélkül.
 
 # Workflow
-`/plan <slug>` → `/implement <slug>` → `/finish <slug>`. A `/update-changelog` és `/update-features`
-külön, kézi hívásra fut — a lezárás végén csak emlékeztetőt írj rájuk.
+`/idea <slug>` → `/plan <slug> [--quick]` → `/implement <slug>` → `/finish <slug>`; `/backlog` listáz.
+A `/update-changelog` és `/update-features` külön, kézi hívásra fut — a lezárás végén csak
+emlékeztetőt írj rájuk.

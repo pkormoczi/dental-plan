@@ -1,15 +1,15 @@
 ---
 name: implement
-description: Implement one planned backlog item from its plan file (backlog/plans/<slug>.md, or a legacy backlog-N-*-terv.md) on the local master — validation, ff-only sync, baseline-drift preflight, implementation within the plan's scope, then the quality gate (build, lint, test, docs-check). Stops WITHOUT committing; /finish closes the item. --worktree runs the same in a dedicated git worktree for parallel sessions. Invoke explicitly with /implement <slug>.
-argument-hint: <slug | backlog-N-…-terv.md> [--worktree]
+description: Implement one planned backlog item from its file (backlog/<slug>.md with Status: planned) on the local master — validation, ff-only sync, baseline-drift preflight, implementation within the plan's scope, then the quality gate (build, lint, test, docs-check). Stops WITHOUT committing; /finish closes the item. --worktree runs the same in a dedicated git worktree for parallel sessions. Invoke explicitly with /implement <slug>.
+argument-hint: <slug> [--worktree]
 disable-model-invocation: true
 ---
 
 # /implement <slug> [--worktree]
 
-Egy már megtervezett tételt visz végig a tervfájltól a zöld minőségi kapuig, és
-**ott megáll — nem commitol**. A lezárás (docs, tervfájl törlése, `BACKLOG.md`,
-commit) a `/finish <slug>` dolga.
+Egy már megtervezett tételt visz végig a tételfájltól a zöld minőségi kapuig, és
+**ott megáll — nem commitol**. A lezárás (docs, a tételfájl törlése, commit) a
+`/finish <slug>` dolga. A fájlalak: `backlog/CLAUDE.md`.
 
 Alapértelmezés: a helyi `master`-en, worktree és PR nélkül — egy session-re való.
 `--worktree`: elkülönített worktree, párhuzamos sessionökhöz (lásd a végén).
@@ -18,18 +18,11 @@ Kövesd a lépéseket sorban, megállás nélkül, amíg valamelyik kifejezetten
 
 ## 1. Validáció
 
-Az argumentum kétféle lehet:
+A tételfájl `backlog/<slug>.md`. Olvasd ki a fejlécét. **Állj meg**, ha:
 
-- `<slug>` → a tervfájl `backlog/plans/<slug>.md` (új formátum: `Target`/`Baseline`
-  fejléc, `Goal`/`Current state`/`Approach`/`Decisions`/`Verification`);
-- `backlog-N-<cím>-terv.md` → a tervfájl `backlog/plans/backlog-N-<cím>-terv.md`
-  (régi formátum: `Probléma`/`Döntések`/`Érintett helyek`/`Tesztelés`, baseline nélkül).
-
-Keresd meg a `backlog/BACKLOG.md`-ben a tervfájlra `**Terv:**` sorral hivatkozó
-`### N. tétel` bekezdést. **Állj meg**, ha:
-
-- a tervfájl nem létezik,
-- nincs rá hivatkozó tétel, vagy az a `NEM FEJLESZTÉS` alatt van,
+- a fájl nem létezik,
+- `Status:` nem `planned` — egy `idea` előbb `/plan <slug>` (bugnál `--quick`),
+- `Type: doki` — emberi teendő, nem implementálható,
 - a `git status` a feladathoz nem tartozó, commitolatlan módosítást mutat — kérdezd
   meg a dokit, mi legyen vele; ne építs rá és ne írd felül.
 
@@ -43,8 +36,8 @@ Keresd meg a `backlog/BACKLOG.md`-ben a tervfájlra `**Terv:**` sorral hivatkoz�
 
 ## 3. Preflight — baseline-drift
 
-Csak új formátumú tervnél. Olvasd ki a `Target` és `Baseline` sort, és hasonlítsd a
-`Baseline`-t a `git rev-parse origin/master`-hez.
+Olvasd ki a `Target` és `Baseline` sort, és hasonlítsd a `Baseline`-t a
+`git rev-parse origin/master`-hez.
 
 - **Egyezik:** tovább.
 - **Eltér:** a `Current state` minden fájljára/symboljára/tesztjére: létezik-e még, és
@@ -53,14 +46,12 @@ Csak új formátumú tervnél. Olvasd ki a `Target` és `Baseline` sort, és has
   Ha a plan valamely döntése emiatt nem áll meg, **állj meg** és kérdezz. Csak ezután
   írd át a plan `Baseline` sorát az aktuális SHA-ra.
 
-Régi formátumú tervnél nincs baseline: egy figyelmeztetéssel jelezd, hogy az „Érintett
-helyek” szakaszt a kód mai állapotával kézzel vetetted össze, mielőtt írnál.
-
 ## 4. Implementáció
 
-Implementáld a plan `Approach` + `Decisions` (régi: „Döntések”) scope-ját — ne bővítsd,
+Implementáld a plan `Approach` + `Decisions` scope-ját — ne bővítsd,
 és ne kerekítsd le egy ott nem eldöntött irányba. Ha menet közben a plan hibásnak
-bizonyul, állj meg és mondd ki; ne dönts helyette csendben.
+bizonyul, állj meg és mondd ki; ne dönts helyette csendben. Ha közben a tételhez nem
+tartozó hibát vagy teendőt találsz, ne javítsd: `/idea <slug>` a záró jelentés után.
 
 Új logika előtt a terület nested `CLAUDE.md`-jének „Find before writing” indexét nézd
 át (`app/src`, `domain`, `storage`, `pdf`) — ne duplikálj meglévő helpert. A

@@ -1,7 +1,7 @@
 ---
 name: finish
-description: Close one implemented backlog item — quality gate (build, lint, test), docs-check, the plan's manual-check slice if any, documentation ONLY when non-derivable context appeared, then git rm the plan file, delete the item's section from BACKLOG.md, and commit on the local master. Stops after the commit; pushing is /push-backlog-item. --worktree instead rebases, pushes with --force-with-lease and opens the PR. Invoke explicitly with /finish <slug>.
-argument-hint: <slug | backlog-N-…-terv.md> [--worktree]
+description: Close one implemented backlog item — quality gate (build, lint, test), docs-check, the plan's manual-check slice if any, documentation ONLY when non-derivable context appeared, then git rm backlog/<slug>.md and commit on the local master with a "<slug>: <cím>" subject. Stops after the commit; pushing is /push-backlog-item. --worktree instead rebases, pushes with --force-with-lease and opens the PR. Invoke explicitly with /finish <slug>.
+argument-hint: <slug> [--worktree]
 disable-model-invocation: true
 ---
 
@@ -27,8 +27,7 @@ Nézd meg a plan `Verification` szakaszát. Ha manual-check szelet van bejelölv
 `visual-css`, `keyboard-a11y`), futtasd: `/manual-checks <szelet>` — izolált Chrome,
 seed adat, a jelentés a `docs/reviews/`-ba. Ha a szelet találatot ad, ami a tételhez
 tartozik, javítsd és ismételd az 1–2. lépést; ami nem a tételé, az a jelentésben marad
-a doki döntésére. Régi formátumú tervnél (nincs `Verification` checkbox) a
-`.claude/skills/manual-checks/SKILL.md` kadencia-táblája dönt a változás típusa alapján.
+a doki döntésére (`/idea`-val vehető fel).
 
 ## 4. Dokumentáció — csak ha kell
 
@@ -47,25 +46,20 @@ tétel olyan contextet hozott létre, ami kódból és tesztből nem levezethet�
 Nincs „döntések átvezetése” prózába, nincs referencia-seprés, nincs lezárt-tétel napló.
 A tervfájl tartalma nem kerül át sehova — a git history elég.
 
-## 5. Tervfájl és `BACKLOG.md`
+## 5. A tételfájl
 
-**Konkurencia-ellenőrzés előbb:** `git fetch origin`, és nézd meg az `origin/master`
-`backlog/BACKLOG.md`-jét. Ha a tétel szakasza ott már nincs meg (máshol lezárták),
-**állj meg és jelentsd**.
+**Konkurencia-ellenőrzés előbb:** `git fetch origin`, majd
+`git ls-tree origin/master backlog/<slug>.md`. Ha a fájl ott már nincs meg (máshol
+lezárták), **állj meg és jelentsd**.
 
-Azután:
-
-- `git rm backlog/plans/<tervfájl>` (a slug-fájl vagy a régi `backlog-N-*-terv.md`);
-- töröld a `### N. tétel` teljes szakaszát a `backlog/BACKLOG.md`-ből — ne jelöld
-  KÉSZ-nek, ne hagyj stubot;
-- a fejléc `**Legutóbb kiosztott szám:**` sorát **ne csökkentsd** — a szám végleg
-  nyugdíjazott.
+Azután `git rm backlog/<slug>.md` — ne jelöld késznek, ne hagyj stubot, ne írj naplót
+sehova: a git history a történet.
 
 ## 6. Commit — és megállás
 
 Stage-eld a tétel fájljait, és commitolj a helyi masteren. Első sor:
-`<N>. tétel: <a BACKLOG.md-beli rövid cím>`; törzs: 1–2 mondat magyarul arról, mi
-valósult meg; a repó szokásos lábléce.
+`<slug>: <cím>` — a cím a tételfájl `## Goal` mondatának rövid alakja; törzs: 1–2 mondat
+magyarul arról, mi valósult meg; a repó szokásos lábléce.
 
 **Itt állj meg.** Nincs `git push`, nincs PR — a doki kézi ellenőrzése után a
 `/push-backlog-item` parancs dolga.
@@ -96,7 +90,7 @@ hagyta ott). A 6. lépés helyett:
    --worktree`. Konfliktussal zárult rebase után az 1–2. lépés kapuját futtasd újra.
 3. **Push:** `git push --force-with-lease` (mindig ezzel, első pushnál is).
 4. **PR:** `gh pr view` — ha nincs nyitott PR: `gh pr create --base master --title
-   "<N>. tétel: <cím>" --body "<1–2 mondat, tesztlépések nélkül>"`, a PR-leírás a repó
+   "<slug>: <cím>" --body "<1–2 mondat, tesztlépések nélkül>"`, a PR-leírás a repó
    szokásos láblécével. Ha a `gh` hiányzik vagy nincs bejelentkezve, a push attól még
    fusson le, és a jelentés mondja ki, hogy a PR-t kézzel kell létrehozni.
 5. A záró jelentésben a worktree útvonala, a branch neve és a PR URL-je. Ne hívd az

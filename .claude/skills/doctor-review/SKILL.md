@@ -182,15 +182,15 @@ Minden találat `Lencse: rontás`, `megfigyelt` bizonyossággal.
 ### 2d. Dedup és rangsor
 
 1. **Dedup-címke.** Olvasd át a `docs/reviews/*doctor-review*.md` korábbi
-   jelentéseket, a `backlog/BACKLOG.md`-t és a
-   `backlog/ideas/USER_FEEDBACK.md`-t, és minden megállapítást jelölj:
+   jelentéseket és a `backlog/*.md` tételfájlokat (slug és `Source:` sor), és minden
+   megállapítást jelölj:
    - `ÚJ`;
    - `MÁR JELZETT (<korábbi review-fájl neve>, <n>. megállapítás)`;
    - `ISMÉT (<korábbi review-fájl neve>, <n>. megállapítás)` — ha a
      korábbi jelentés óta a `git log -- <érintett fájl(ok)>` szerint volt
      a területet érintő commit, azaz a jelenség javítási kísérlet UTÁN is
      fennáll. Írd oda a commit rövid hash-ét;
-   - `MÁR TERVEZETT (BACKLOG N. tétel)`.
+   - `MÁR TERVEZETT (backlog/<slug>.md)`.
    Az ismétlődés megerősítő jel, nem zaj — ne hagyd ki emiatt a
    megállapítást. A korábbi jelentések tartósan a `docs/reviews/`-ban
    maradnak, dátum-prefixszel; ez a dedup egyetlen forrása, külön
@@ -244,11 +244,8 @@ Utána a hat kötelező szekció:
    `Helyzet és reprodukció` (képfájl-névvel), `Orvosi elvárás`,
    `Tapasztalt probléma`, `Napi hatás`, `Jelenlegi kerülőút`, `Javasolt
    javítási irány`, `Siker mércéje`. **Minden `Blokkoló` és `Súlyos`
-   tétel végén** egy `Backlog-kész blokk`: a `backlog/BACKLOG.md` tétel-
-   formátumában (`### N. tétel: <cím>` fejléc `N` helyett `?`-lel, majd a
-   bekezdés a hibával, a forrás-jelentés hivatkozásával) előre megírt
-   szakasz, amit a felhasználó kézzel átmásol és sorszámoz. **A skill nem
-   ír a `BACKLOG.md`-be.**
+   tétel végén** a javasolt backlog-slug (`Backlog: <slug>` — a Lezárás
+   ebből ír tételfájlt; `MÁR TERVEZETT` találatnál a meglévő slug).
 3. **Nehezen felfedezhető vagy kihasználatlan funkciók** — ami létezik, de
    István nem találta meg vagy nem ismerte fel; külön jelölve, hogy
    megtalálta-e végül, és hány próbálkozásból.
@@ -259,8 +256,8 @@ Utána a hat kötelező szekció:
    valódi felhasználó válasza; konkrét múltbeli viselkedésre kérdezve,
    nem véleményre. **Fix, minden jelentésben szereplő tétel:** „A napi
    munkádban mindig egy pácienstől indulsz, vagy előfordul, hogy a
-   korábbi terveket keresed, páciens nélkül?" (a
-   `backlog/ideas/USER_FEEDBACK.md` nyitott kérdése).
+   korábbi terveket keresed, páciens nélkül?" (az app ma a páciensből
+   indulásra épít — ez a feltevés nyitott).
 6. **Nem ellenőrizhető** — ami a lenti táblába esik, és a forgatókönyvben
    előjött.
 
@@ -299,8 +296,17 @@ bizonyosságú a jelentésben.
 
 ## Lezárás
 
-Állítsd le a dev szervert. A jelentés a `docs/reviews/`-ban marad. A valódi
-találatok a `backlog/BACKLOG.md`-be a felhasználó kézi döntésével
-vándorolnak, a `Backlog-kész blokk`-ok alapján. A képernyőkép-mappa
-törölhető. A záró üzenetben sorold fel a `Blokkoló` és `Súlyos` tételeket
-egy sorban egyenként, és a `User-teszt készültség` ítéletet.
+Állítsd le a dev szervert. A jelentés a `docs/reviews/`-ban marad.
+
+**Tételfájlok.** Minden `ÚJ` vagy `ISMÉT` dedup-címkéjű `Blokkoló` és `Súlyos`
+megállapításból írj egy `backlog/<slug>.md`-t `Status: idea`-val (a fájlalak:
+`backlog/CLAUDE.md`): `Type: bug` (reprodukált hiba) vagy `feature` (hiányzó
+viselkedés), `Source: docs/reviews/<ez a jelentés> N. megállapítás`, egy bekezdés a
+`Tapasztalt probléma` + `Orvosi elvárás` sorokból, ≤ 1500 karakter. Előtte `ls backlog/`
+— azonos slug vagy azonos `Source:` esetén ne írj újat. `MÁR TERVEZETT` találatnál
+semmit. A `Közepes`/`Kis` megállapítások a jelentésben maradnak, a doki `/idea`-val
+veszi fel, amit akar. A skill app-kódot továbbra sem módosít, és nem commitol.
+
+A képernyőkép-mappa törölhető. A záró üzenetben sorold fel a `Blokkoló` és `Súlyos`
+tételeket egy sorban egyenként a létrehozott slugjukkal, és a `User-teszt készültség`
+ítéletet.

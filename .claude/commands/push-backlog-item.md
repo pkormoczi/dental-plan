@@ -27,8 +27,8 @@ ez a parancs kizárólag a helyi master push-olására való.
 
 Ha ez üres, jelentsd, hogy nincs mit push-olni, és állj meg.
 
-Egyébként jegyezd meg a listát (tétel-számok a commit-üzenetek első
-sorából) a záró jelentéshez.
+Egyébként jegyezd meg a listát (a tételek slugja a commit-üzenetek első
+sorából, `<slug>: <cím>` alakban) a záró jelentéshez.
 
 ## 3. Push
 
