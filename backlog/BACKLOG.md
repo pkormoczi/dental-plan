@@ -47,6 +47,72 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
   2. megállapítás.
   **Terv:** `backlog/plans/backlog-113-sablon-fallback-jelzes-terv.md`
 
+### 114. tétel: "Törzsadat létrehozása" lépés-elhagyási dialógus minden navigációnál újra felugrik
+
+  A `pages/patientPage/TorzsadatSyncCard.tsx` `handleLepesElhagyas()` a
+  törzsadat nélküli páciens ágán (`torzsadat === null`) minden
+  meghívásnál felugrasztja a létrehozási ajánlatot — a testvér diff-ág
+  `elutasitottDiffId` memóriájával ellentétben nincs "már eldöntöttem ezen
+  a piszkozaton" jelzője, ezért egy már kihagyott ajánlat minden "Terv
+  adatai" lap-elhagyásnál újra megjelenik. Forrás:
+  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 1. megállapítás.
+  **Terv:** `backlog/plans/backlog-114-torzsadat-letrehozas-emlekezet-terv.md`
+
+### 115. tétel: Nyelv-/pénznemváltás megerősítő dialógusának gombszín-inkonzisztenciája
+
+  A `pages/PatientPage.tsx` megerősítő `AlertDialog`-jának "Folytatás"
+  gombja kizárólag nyelvváltásnál kap piros színt
+  (`color={pending?.kind === 'nyelv' ? 'red' : undefined}`), a
+  funkcionálisan azonos jellegű (nem-destruktív, csak neveket/árakat
+  frissítő) pénznemváltásnál nem — a piros szín itt nem tükröz valódi
+  extra kockázatot. Forrás:
+  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 3. megállapítás.
+  **Terv:** `backlog/plans/backlog-115-nyelv-penznem-gombszin-terv.md`
+
+### 116. tétel: "Nyomtatvány szövegei" fül mindig magyarra nyit, függetlenül a hívó terv nyelvétől
+
+  A `pages/settings/NyomtatvanyokTab.tsx` belső nyelv-váltója
+  (`templateLang`) mindig `'hu'`-val inicializálódik — egy nem-magyar terv
+  Előnézetéről a checklist "Nyomtatvány szövegei" gombjával navigálva a
+  doki mindig egy plusz kattintással vált a terv tényleges nyelvére.
+  Forrás: `docs/reviews/2026-09-05-doctor-review-nemet-euro.md`
+  5. megállapítás.
+  **Terv:** `backlog/plans/backlog-116-nyomtatvanyok-tab-nyelv-elovalasztas-terv.md`
+
+### 117. tétel: Új terv-lánc nyelv-/pénznem-öröklésének jelzése
+
+  Egy vadonatúj terv-lánc a páciens legutóbbi véglegesített tervének
+  nyelvét/pénznemét örökli (szándékos, `docs/02-domain-modell.md` § „Nyelv és
+  pénznem”), de erről a Terv adatai lap semmilyen jelzést nem ad — a doki csak
+  akkor veszi észre, ha kifejezetten másikat szeretne. A tétel az öröklést nem
+  bontja vissza, csak egy semleges, dimenziónkénti jelzést tesz a „Dokumentum
+  nyelve” és a „Pénznem” szekcióba, kizárólag ott, ahol az örökölt érték eltér
+  az adott dimenzió globális alapértelmezésétől. Kizárva: a „Másolás új
+  tervbe” és az „Új verzió” útvonal, a véglegesítés-őr bővítése, és bármilyen
+  akciógomb a jelzésben. Forrás:
+  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 4. megállapítás.
+  **Terv:** `backlog/plans/backlog-117-orokolt-nyelv-penznem-jelzes-terv.md`
+
+### 118. tétel: A NumberField pénz-mezőinek megerősítése
+
+  A `components/NumberField.tsx` EUR beviteli módja `de-DE` szerint,
+  ezres jellel formáz (`"9.000,00"`), a `parseEuroInput` viszont ezt nem
+  tudja visszaolvasni — 1000 € fölött a mező olyan szöveget mutat, amit a
+  saját parsere `null`-ként ért, ezért egy kurzoros szerkesztés némán
+  visszaugrik a régi értékre. Emellett a ~14 px-es ▲/▼ léptető ráúszik az
+  input jobb szélére, fókusz nélkül, azonnal commitál ±1 alapegységet, és
+  az Escape nem vonja vissza — egy elkattintás hang nélkül átír egy
+  szerződéses összeget. A tétel ezért kivizsgálásból javítássá alakult: az
+  EUR beviteli megjelenítés csoportosítás nélkülivé válik, a néma
+  visszaállás jelzést kap, a léptetés (gomb és nyíl egyaránt) elmarad a
+  pénz-mezőkről, a darabszám/százalék mezőkön változatlanul megmarad. A
+  `formatMoney` képernyős/PDF-es számformátuma nem változik, a
+  commit-on-blur elv nem kerül visszabontásra. Az eredetileg kért, kézi
+  böngészős újrateszt záró verifikációként marad benne. Forrás:
+  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 6. megállapítás.
+  A döntéseket lásd a tervdokumentumban.
+  **Terv:** `backlog/plans/backlog-118-numberfield-penzmezo-megerosites-terv.md`
+
 ---
 ## NEM FEJLESZTÉS
 
@@ -159,58 +225,4 @@ Fél nap, egyetlen ülésen begyűjthető, nincs hozzá tervdokumentum:
    biztonsági másolatra, a validációra és részleges hiba esetén a
    visszaállásra, valamint a régi adatokon futó migrációs tesztekre; az
    első `schemaVersion: 2` bevezetése már ezt a módszert kövesse.
-
-### 114. tétel: "Törzsadat létrehozása" lépés-elhagyási dialógus minden navigációnál újra felugrik
-
-  A `pages/patientPage/TorzsadatSyncCard.tsx` `handleLepesElhagyas()` a
-  törzsadat nélküli páciens ágán (`torzsadat === null`) minden
-  meghívásnál felugrasztja a létrehozási ajánlatot — a testvér diff-ág
-  `elutasitottDiffId` memóriájával ellentétben nincs "már eldöntöttem ezen
-  a piszkozaton" jelzője, ezért egy már kihagyott ajánlat minden "Terv
-  adatai" lap-elhagyásnál újra megjelenik. Forrás:
-  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 1. megállapítás.
-  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
-
-### 115. tétel: Nyelv-/pénznemváltás megerősítő dialógusának gombszín-inkonzisztenciája
-
-  A `pages/PatientPage.tsx` megerősítő `AlertDialog`-jának "Folytatás"
-  gombja kizárólag nyelvváltásnál kap piros színt
-  (`color={pending?.kind === 'nyelv' ? 'red' : undefined}`), a
-  funkcionálisan azonos jellegű (nem-destruktív, csak neveket/árakat
-  frissítő) pénznemváltásnál nem — a piros szín itt nem tükröz valódi
-  extra kockázatot. Forrás:
-  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 3. megállapítás.
-  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
-
-### 116. tétel: "Nyomtatvány szövegei" fül mindig magyarra nyit, függetlenül a hívó terv nyelvétől
-
-  A `pages/settings/NyomtatvanyokTab.tsx` belső nyelv-váltója
-  (`templateLang`) mindig `'hu'`-val inicializálódik — egy nem-magyar terv
-  Előnézetéről a checklist "Nyomtatvány szövegei" gombjával navigálva a
-  doki mindig egy plusz kattintással vált a terv tényleges nyelvére.
-  Forrás: `docs/reviews/2026-09-05-doctor-review-nemet-euro.md`
-  5. megállapítás.
-  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
-
-### 117. tétel: Új terv-lánc nyelv-/pénznem-öröklésének jelzése
-
-  Egy vadonatúj terv-lánc a páciens legutóbbi véglegesített tervének
-  nyelvét/pénznemét örökli (D52, szándékos), de erről a Terv adatai lap
-  semmilyen jelzést nem ad — a doki csak akkor veszi észre, ha kifejezetten
-  másik nyelvet/pénznemet szeretne. Tisztázandó, hogy egy semleges
-  "öröklődött a legutóbbi tervedből" jelzés elegendő megoldás-e. Forrás:
-  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 4. megállapítás.
-  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
-
-### 118. tétel: Az előleg-mező (EUR, cent-alapú NumberField) programozott kitöltésnél tapasztalt eltérésének kivizsgálása
-
-  Egy böngésző-automatizálási menetben az Előleg mező (EUR) egy
-  programozott mezőkitöltés után az elvárt érték helyett egy, a
-  `NumberField` `step()` cent-lépésével egyező eltérést mutatott (300,00 €
-  → 300,01 € a várt 900,00 € helyett) — kézi begépeléssel a persona nem
-  tudta reprodukálni, ezért valószínűleg automatizálási műtermék, de mivel
-  pénzügyi mezőt érint, egy fejlesztői, kézi böngészős újrateszt indokolt a
-  `NumberField` `step()`/billentyűkezelésén. Forrás:
-  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 6. megállapítás.
-  **Állapot:** Tervezés szükséges (grill-me) — a felhasználó külön elvégzi.
 
