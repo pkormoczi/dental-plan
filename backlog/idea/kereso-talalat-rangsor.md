@@ -1,17 +1,18 @@
 # kereso-talalat-rangsor
 Type: feature
-Source: doctor-review elso-megnyitas (2026-09-05), 11. megállapítás
+Source: doctor-review elso-megnyitas (2026-09-05), 11. megállapítás; doctor-review nagy-terv (2026-09-05), 1. megállapítás
 
-A „koron” keresésre a doki első képernyőjén az „Impl. ideiglenes korona” (Szájsebészet), a
-teleszkóp- és az ideiglenes koronák állnak, a fémkerámia és a cirkon korona csak görgetve — pedig
-a napi munkában azok a gyakoriak. Ok: a névtalálatok rangsor nélkül, az árlista sorrendjében
-jönnek (`available.filter(nevEgyezik)`, `app/src/pages/planEditor/ItemPicker.tsx`), és a 12-es
-találat-limit ebből a sorrendből vág. Elvárt: a részszó-találatok rangsorolása a találat helye
-szerint — a tétel nevének elejére vagy szóhatárra eső egyezés előrébb, mint a szó belsejébe eső
-(„Korona…” előbb, mint „Impl. ideiglenes korona”) —, és a `gyakori` jelölésű tételek a lista
-elejére. A `gyakori` fele csak az `arlista-nap` adatmunkája után hoz látható változást: ma mind a
-118 tétel `gyakori: false`. Változatlan marad a kétnyelvű egyezés szabálya
-(`app/src/domain/search.ts` `nevEgyezik`) és a kétszintű szerkezet (névtalálat, alatta a
-„Kategória: …” fejléc) — a rangsor csak az 1. szinten belül rendez. A doki másik felvetése
-(magasabb találati lista) nyitva marad. A `kereso-fogszam-egyedi-tetel` ugyanezt a listát érinti
-más okból — a két tétel implementálási sorrendje számít.
+A tételkereső névtalálatai rangsor nélkül, az árlista sorrendjében jönnek
+(`available.filter(nevEgyezik)`, `app/src/pages/planEditor/ItemPicker.tsx`), és a 12-es limit ebből
+vág — így a kiemelt első találat gyakran nem a keresett tétel. A nagy-terv menetben ez háromból
+háromszor fordult elő, és egyszer Enterrel egy rossz sor („Gyökértömés eltávolítása”, 20 000 Ft)
+be is került a tervbe; utána a doki minden találatot végigolvasott és egérrel kattintott — a
+billentyűzetes ciklus előnye elveszett. Repro: „gyökértömés”, „neodent”, „implantátumfej”,
+„ideiglenes”, „koron” — a kiemelt sor egyikben sem az, amit a doki keresett. Elvárt: a
+névtalálatok rangsorolása — szó eleji vagy szóhatárra eső egyezés előrébb a szó belsejébe esőnél,
+a `gyakori` tételek előre, a csomag-kategóriák („All-on-X csomagok”) hátrébb. A `gyakori` fele
+csak az `arlista-nap` adatmunkája után látszik: ma mind a 118 tétel `gyakori: false`. Alternatíva,
+ha a rangsor önmagában nem elég: eltérő kategóriájú 1. és 2. találatnál az Enter ne válasszon
+magától. Változatlan a kétnyelvű `nevEgyezik` (`app/src/domain/search.ts`) és a kétszintű szerkezet
+(névtalálat, alatta „Kategória: …”). A `kereso-fogszam-egyedi-tetel` ugyanezt a listát érinti más
+okból — az implementálási sorrend számít.
