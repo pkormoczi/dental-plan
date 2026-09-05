@@ -73,7 +73,7 @@ describe('reviewIrasUtan', () => {
     expect(reviewIrasUtan(null, 'Régi', 'Új', 'de')).toEqual({ authoredInLanguage: 'de' });
   });
 
-  it('D480: MÁR mismatch-elt mezőn a teljes átírás (akár a másik nyelvre fordítva) sem old fel automatikusan -- a metaadat érintetlen marad', () => {
+  it('MÁR mismatch-elt mezőn a teljes átírás (akár a másik nyelvre fordítva) sem old fel automatikusan -- a metaadat érintetlen marad', () => {
     // A doki 'hu'-n gépelt, a dokumentum azóta 'de'-re váltott -- a sor
     // 'de' nyelven MISMATCH-elt (nincs reviewedForLanguage). Egy teljes,
     // akár szó szerint lefordított átírás sem stampel új authored nyelvet.

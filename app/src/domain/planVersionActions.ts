@@ -5,9 +5,7 @@
 // `NewPlanPage.tsx` köztes választója és a `PatientDetailPage.tsx` üres
 // állapota) egyaránt ezt hívja, hogy a megerősítő dialógus szövege és a
 // piszkozat-felülírás-őr feltétele ne driftelhessen szét a hívóhelyek
-// között. Lásd `docs/03-funkcionalis-spec.md` § 5. "Terv-láncok és
-// verziók" — "A négy terv-létrehozási út" és az utána következő
-// bekezdések.
+// között.
 
 export interface VersionRef {
   planDir: string;

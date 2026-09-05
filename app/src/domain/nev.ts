@@ -1,4 +1,4 @@
-// A tétel nevének nyelvfüggő feloldása. D21: a `plan.nyelv` a nyomtatvány
+// A tétel nevének nyelvfüggő feloldása. A `plan.nyelv` a nyomtatvány
 // szövegét vezérli -- a 118 tétel német neve gépi/AI-fordítás, orvos által
 // nem lektorálva, ezért egy-egy tételnél
 // előfordulhat hiányzó/pontatlan `de` név; a feloldás ilyenkor magyarra esik
@@ -24,8 +24,7 @@ export function resolveNev(nev: LokalizaltSzoveg, nyelv: Nyelv): FeloldottNev {
  * `nevSnapshot`-ja pontosan azt használja -- azaz a sor még "követi" az
  * árlistát ezen a nyelven. Ez a mag-összehasonlítás adja mind a szerkesztő
  * jelvényét (`sorFallback`, a JELENLEGI nyelvvel), mind a nyelváltás
- * névmegőrzését (`PatientPage.tsx` `applyNyelv`, a RÉGI nyelvvel) --
- * docs/01-attekintes-es-dontesek.md D24.
+ * névmegőrzését (`PatientPage.tsx` `applyNyelv`, a RÉGI nyelvvel).
  */
 export function nevKoveti(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
   const arlistaiNev = nyelv === 'hu' ? tetel.nev.hu : tetel.nev.de;
@@ -34,7 +33,7 @@ export function nevKoveti(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
 
 /**
  * Igaz, ha a sor neve kézzel eltér attól, amit a felvétel pillanatában
- * kapott volna -- nyelvfüggetlen, a `nevKoveti`-től (D24) eltérő kérdésre
+ * kapott volna -- nyelvfüggetlen, a `nevKoveti`-től eltérő kérdésre
  * válaszol. `resolveNev()`-hez mér, NEM `nevKoveti()`-hez: a `nevKoveti`
  * DE terven `nev.de == null`-nál mindig `false`, mert a MEGLÉVŐ,
  * fordítás-hiányt jelző kérdésre (`sorFallback`) válaszol -- ezzel a
@@ -69,8 +68,7 @@ export type SorFallbackOk =
  *
  * `tetelId`-hez kötött sornál a `nevKoveti` dönt: ha a tételnek nincs neve
  * ezen a nyelven, `'nincsForditas'`; ha van, de a sor mást mond (a doki
- * kézzel pontosította), `'elterAzArlistatol'` --
- * docs/03-funkcionalis-spec.md § Nyelv és pénznem (D21).
+ * kézzel pontosította), `'elterAzArlistatol'`.
  */
 export function sorFallback(
   sor: Sor,
@@ -87,7 +85,7 @@ export function sorFallback(
 
 /**
  * A `Tetel.leiras` adott nyelvű szövege, hiányzó fordításnál üres string
- * -- D27 (nincs HU-visszaesés a leírásra), kiemelve, mert a `leirasKoveti`
+ * (nincs HU-visszaesés a leírásra), kiemelve, mert a `leirasKoveti`
  * és a `domain/sorMezok.ts` `sorMezokTetelbol` mellett a backlog-60
  * leírás-reset a harmadik hívó.
  */
@@ -98,7 +96,7 @@ export function arlistaiLeiras(tetel: Tetel, nyelv: Nyelv): string {
 /**
  * Igaz, ha a `Sor.leirasSnapshot` pontosan azt a leírást viseli, amit a
  * `Tetel.leiras` adna az adott nyelven -- a `nevKoveti` párja, de NEM ő maga:
- * a leírásnak nincs HU-visszaesése (D27, docs/01-attekintes-es-dontesek.md),
+ * a leírásnak nincs HU-visszaesése,
  * ezért a hiányzó fordítást itt -- a `nevKoveti`-től eltérően -- üres stringgé normalizáljuk
  * az összehasonlítás előtt, nem `!= null` őrrel zárjuk ki. Enélkül egy
  * hu->de->hu oda-vissza nyelváltás elveszítené az eredeti magyar leírást: a

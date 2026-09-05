@@ -47,7 +47,7 @@ describe('torzsadatBetoltes', () => {
   });
 
   describe('loadUtolsoTerv', () => {
-    it('a legfrissebb verziót adja vissza, két önálló terv-lánc közül is (D29)', async () => {
+    it('a legfrissebb verziót adja vissza, két önálló terv-lánc közül is', async () => {
       // Nagy Éva seed-adata: b7d2e4 lánc v1 (2026-06-10) + v2 (2026-07-22),
       // és egy MÁSIK lánc, e6f0y3 (2026-08-01) -- ez utóbbi a legfrissebb.
       const patients = await storage.listPatients();

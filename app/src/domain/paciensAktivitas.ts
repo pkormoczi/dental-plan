@@ -1,9 +1,8 @@
-// Páciensenkénti "legutóbbi jelentős aktivitás" (D39,
-// docs/03-funkcionalis-spec.md § 1. Indítás) -- a Kezdőlap recent-páciens
+// Páciensenkénti "legutóbbi jelentős aktivitás" -- a Kezdőlap recent-páciens
 // listájának egyetlen forrása. Az `utolsoAktivitas` mező három meglévő
 // storage-írási pont (createPatient, savePatientData, savePlan) egyikén
-// frissül, sosem egy páciens/terv puszta megnyitásán -- ez adja D19-et
-// (nem "megnyitás", tényleges tartalmi módosítás).
+// frissül, sosem egy páciens/terv puszta megnyitásán (nem "megnyitás",
+// hanem tényleges tartalmi módosítás számít aktivitásnak).
 
 import { formatRelativIdo } from './date';
 import type { AktivitasTipus, PatientActivity, PatientFolder } from './types';
@@ -21,7 +20,7 @@ export function ujAktivitas(tipus: AktivitasTipus, most: Date = new Date()): Pat
 }
 
 /**
- * Tolerant parse a `paciens.json` indexéből (D29: puszta index, soha nem
+ * Tolerant parse a `paciens.json` indexéből (puszta index, soha nem
  * dobhat egy sérült/ismeretlen alakú mezőn) -- ismeretlen `tipus`, hiányzó
  * vagy nem parse-olható `idopont` esetén `undefined`, a páciens ilyenkor
  * egyszerűen kimarad a recent listából, nem béníthatja meg azt.
@@ -36,17 +35,18 @@ export function ervenyesAktivitas(value: unknown): PatientActivity | undefined {
 
 export const RECENT_PACIENS_LIMIT = 5;
 
-// Az /uj-terv köztes páciensválasztó (D56) SZÁNDÉKOSAN eltérő, nagyobb
-// limitje a Kezdőlap RECENT_PACIENS_LIMIT-jétől (D39/D40) -- ugyanaz a
+// Az /uj-terv köztes páciensválasztó SZÁNDÉKOSAN eltérő, nagyobb
+// limitje a Kezdőlap RECENT_PACIENS_LIMIT-jétől (ez a doki tényleges
+// elsődleges belépési pontja, itt többet ér a hosszabb lista) -- ugyanaz a
 // legutobbAktivPaciensek() helper, más limit-paraméterrel hívva.
 export const UJ_TERV_RECENT_LIMIT = 15;
 
 /**
- * A legutóbbi jelentős aktivitású páciensek, csökkenő sorrendben (D190/D191).
+ * A legutóbbi jelentős aktivitású páciensek, csökkenő sorrendben.
  * `utolsoAktivitas` nélküli páciens nem kerül a listába. Tiszta függvény --
  * nincs I/O, a hívó adja a MÁR betöltött `PatientFolder[]`-t (Home és az
- * /uj-terv köztes páciensválasztó, `NewPlanPage.tsx`, is ugyanezt hívja,
- * D224/D40). Nem mutálja a bemenetet.
+ * /uj-terv köztes páciensválasztó, `NewPlanPage.tsx`, is ugyanezt hívja).
+ * Nem mutálja a bemenetet.
  */
 export function legutobbAktivPaciensek(patients: PatientFolder[], limit: number): PatientFolder[] {
   return patients
@@ -66,7 +66,7 @@ const AKTIVITAS_CIMKE: Record<AktivitasTipus, string> = {
 
 /**
  * "Terv véglegesítve · 2 órája" -- az EGYETLEN hely, ahol egy aktivitás-sor
- * szövege eldől (D190/D225); a Home és a `NewPlanPage.tsx` (D40) is ezt
+ * szövege eldől; a Home és a `NewPlanPage.tsx` is ezt
  * hívja, a `AKTIVITAS_CIMKE` térkép modul-privát marad, hogy a két hely ne
  * tudjon egymástól eltérő szöveget komponálni.
  */

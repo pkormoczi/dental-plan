@@ -1,5 +1,5 @@
-// Páciens-szintű törzsadat (paciens-adatok.json, D33,
-// docs/02-domain-modell.md § Páciens- és terv-mappa). Ugyanaz a minta, mint
+// Páciens-szintű törzsadat (paciens-adatok.json, lásd
+// app/src/storage/CLAUDE.md). Ugyanaz a minta, mint
 // a terv-címke élő auto-javaslata (`tervCim.ts`): a döntés -- lezárt fájl
 // vagy élő fallback -- EGYETLEN helyen, egy `??`-szerű ágban dől el, itt
 // `megjelenitettTorzsadat()`-ben.
@@ -22,7 +22,7 @@ export function uresTorzsadat(nev: string, paciensId: string): PatientMasterData
   };
 }
 
-/** A fallback előállítása egy már mentett terv `paciens` pillanatképéből (D7 -- a pillanatkép változatlan marad, csak kiindulópontként szolgál). */
+/** A fallback előállítása egy már mentett terv `paciens` pillanatképéből (a pillanatkép változatlan marad, csak kiindulópontként szolgál). */
 export function torzsadatTervbol(paciens: Paciens, paciensId: string): PatientMasterData {
   return { schemaVersion: 1, paciensId, ...paciens };
 }

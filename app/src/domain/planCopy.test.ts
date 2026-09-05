@@ -105,7 +105,7 @@ describe('planUjPaciensselTervhez', () => {
     expect(plan.paciens).toBe(eredetiPaciens);
   });
 
-  // D29: a paciensId a másolatot UGYANABBAN a páciens-mappában tartja --
+  // A paciensId a másolatot UGYANABBAN a páciens-mappában tartja --
   // enélkül a storage.savePlan() tévesen egy MÁSIK páciens-mappát nyitna.
   it('a forrás paciensId-jét viszi tovább, hogy a másolat ugyanabban a páciens-mappában maradjon', () => {
     const plan = makePlan();
@@ -113,7 +113,7 @@ describe('planUjPaciensselTervhez', () => {
     expect(uj.paciensId).toBe('pac1');
   });
 
-  // D534 (47. tétel): a nyelv/pénznem-öröklés az `oroklott` paraméteren át
+  // 47. tétel: a nyelv/pénznem-öröklés az `oroklott` paraméteren át
   // jut el a createBlankPlan()-be, nem a forrás `plan`-ből.
   it('az oroklott nyelvet/pénznemet veszi át, nem a forrás terv nyelvét/pénznemét', () => {
     const plan = makePlan(); // nyelv: 'de', penznem: 'EUR'
@@ -137,7 +137,7 @@ function makeTorzsadat(overrides: Partial<PatientMasterData> = {}): PatientMaste
   return { schemaVersion: 1, paciensId: 'pacT', ...paciens, ...overrides };
 }
 
-// D33 (backlog-28): planUjTorzsadattal a törzsadatból indít -- a
+// backlog-28: planUjTorzsadattal a törzsadatból indít -- a
 // planUjPaciensselTervhez párja, csak más forrásból.
 describe('planUjTorzsadattal', () => {
   it('a törzsadatból épített paciens blokkot és a paciensId-t viszi át, minden más a friss createBlankPlan() alapértéke', () => {
@@ -165,7 +165,8 @@ describe('planUjTorzsadattal', () => {
     expect(adatok.nev).toBe(eredetiNev);
   });
 
-  // D534 (47. tétel)
+  // 47. tétel: meglévő páciensnél az új lánc a legutóbb véglegesített terv
+  // nyelvét/pénznemét örökli, ne váltson csendben vissza a globális defaultra.
   it('az oroklott nyelvet/pénznemet veszi át', () => {
     const adatok = makeTorzsadat();
     const uj = planUjTorzsadattal(adatok, settings, priceList, { nyelv: 'de', penznem: 'EUR' });
@@ -175,7 +176,7 @@ describe('planUjTorzsadattal', () => {
 });
 
 describe('planMasolatKent', () => {
-  // D63: az orvos NEM tartozik az "mindent átvisz" körbe -- lásd külön
+  // Az orvos NEM tartozik az "mindent átvisz" körbe -- lásd külön
   // describe lent, saját fixture-rel (itt a forrás orvosa és a default
   // egybeesne, ami álpozitív lenne).
   it('az azonosító/állapot/dátum és az orvos kivételével mindent átvisz a forrásból', () => {
@@ -183,8 +184,8 @@ describe('planMasolatKent', () => {
     const masolat = planMasolatKent(plan, settings, '2026-08-10');
 
     expect(masolat.paciens).toEqual(plan.paciens);
-    // D29: paciensId is átjön -- a másolat ugyanabban a páciens-mappában
-    // nyit új terv-láncot (D26 érintetlen: nem verzióként csúszik be).
+    // paciensId is átjön -- a másolat ugyanabban a páciens-mappában
+    // nyit új terv-láncot (nem verzióként csúszik be).
     expect(masolat.paciensId).toBe(plan.paciensId);
     expect(masolat.nyelv).toBe(plan.nyelv);
     expect(masolat.penznem).toBe(plan.penznem);
@@ -192,8 +193,7 @@ describe('planMasolatKent', () => {
     expect(masolat.arlistaVerzio).toBe(plan.arlistaVerzio);
     expect(masolat.elolegOsszeg).toBe(plan.elolegOsszeg);
     expect(masolat.kedvezmenyOsszeg).toBe(plan.kedvezmenyOsszeg);
-    // docs/02-domain-modell.md § Tétel-leírás: ugyanúgy pillanatkép-jellegű,
-    // mint nyelv/penznem -- öröklődik, nem nullázódik.
+    // Ugyanúgy pillanatkép-jellegű, mint nyelv/penznem -- öröklődik, nem nullázódik.
     expect(masolat.leirasokMutatasa).toBe(plan.leirasokMutatasa);
   });
 
@@ -230,7 +230,7 @@ describe('planMasolatKent', () => {
     expect(plan.osszesitok).toBe(eredetiOsszesitok);
   });
 
-  // D57: a master paraméter nélkül a mai viselkedés marad -- a forrás
+  // A master paraméter nélkül a mai viselkedés marad -- a forrás
   // pillanatképe másolódik, törzsadat híján ez az egyetlen elérhető forrás.
   it('master nélkül a forrás paciens pillanatképét viszi át', () => {
     const plan = makePlan();
@@ -238,7 +238,7 @@ describe('planMasolatKent', () => {
     expect(masolat.paciens).toEqual(plan.paciens);
   });
 
-  // D57: masterrel a paciens blokk minden mezője a törzsadatból jön, a
+  // Masterrel a paciens blokk minden mezője a törzsadatból jön, a
   // forrás pillanatképe helyett.
   it('master megadásával a paciens blokk a törzsadatból jön, nem a forrás pillanatképéből', () => {
     const plan = makePlan();
@@ -269,7 +269,7 @@ describe('planMasolatKent', () => {
     expect(masolat.paciens).not.toEqual(plan.paciens);
   });
 
-  // D26: a paciensId a másolatot a FORRÁS páciens-mappájában tartja --
+  // A paciensId a másolatot a FORRÁS páciens-mappájában tartja --
   // masterrel is, a master saját paciensId-je nem veheti át a szerepét.
   it('masterrel is a forrás paciensId-jét viszi tovább, nem a masterét', () => {
     const plan = makePlan();
@@ -309,7 +309,7 @@ describe('planMasolatKent', () => {
     expect(master.nev).toBe(eredetiNev);
   });
 
-  // D63: az orvos MINDIG a globális default, a forrásé sosem másolódik --
+  // Az orvos MINDIG a globális default, a forrásé sosem másolódik --
   // a forrás orvosa itt SZÁNDÉKOSAN eltér a defaulttól, hogy a teszt ne
   // hamis-pozitívan menjen át (lásd a fenti "mindent átvisz" teszt kommentjét).
   it('az orvos mindig a globális default, a forrásé sosem másolódik', () => {
@@ -336,7 +336,8 @@ describe('planMasolatKent', () => {
     expect(masolat.orvos).not.toBe(plan.orvos);
   });
 
-  // D75: a "Csak ajánlat" állapot NEM öröklődik másoláskor -- ellentétben
+  // A "Csak ajánlat" állapot NEM öröklődik másoláskor: a másolat mindig
+  // teljes dokumentumból indul, a forrás állapotától függetlenül -- ellentétben
   // az "Új verzió" nyitással (frissDatummal, ujVerzioDatum.test.ts).
   it('a csakAjanlat mindig false-ra áll, függetlenül a forrás állapotától', () => {
     const plan = makePlan({ csakAjanlat: true });
@@ -345,10 +346,10 @@ describe('planMasolatKent', () => {
   });
 });
 
-// backlog-61 (D70): a 49. tétel 2. döntésének (VÁRAKOZÓ) végrehajtása --
+// backlog-61: a 49. tétel 2. döntésének (VÁRAKOZÓ) végrehajtása --
 // a `priceList` paraméter a default-following sorokat az aktuális
 // árlistára frissíti (`domain/arKoveti.ts` `frissArlistaval()`).
-describe('planMasolatKent — priceList paraméterrel (D70)', () => {
+describe('planMasolatKent — priceList paraméterrel', () => {
   const ujPriceList: PriceList = {
     schemaVersion: 1,
     arlistaVerzio: '2026-08-01',

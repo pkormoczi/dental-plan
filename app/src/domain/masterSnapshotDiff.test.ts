@@ -1,5 +1,4 @@
 // Páciens master <-> terv-piszkozat mezőszintű összevetése -- backlog-40.
-// docs/03-funkcionalis-spec.md § 2. Terv adatai "Páciens törzsadata".
 
 import { describe, expect, it } from 'vitest';
 import {

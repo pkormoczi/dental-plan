@@ -1,10 +1,10 @@
-// Sor <-> árlista ár-követés (backlog-61, D70). A `mennyiseg.ts` mintáján
+// Sor <-> árlista ár-követés (backlog-61). A `mennyiseg.ts` mintáján
 // önálló, `Sor`-tudatos modul: a `nev.ts` a névfeloldás helye, itt az árra
 // vonatkozó, ugyanolyan szerepű komparátor/diagnosztika/patch-builder él.
 //
 // Az ár-követés DERIVED, nincs hozzá tárolt flag a sémában (a `nevKoveti`/
 // `leirasKoveti` mintája) -- a `listaEgysegar` már ma is a felvitelkori
-// pillanatkép (D7), a követés MINDIG levezethető belőle a mai árlistával
+// pillanatkép, a követés MINDIG levezethető belőle a mai árlistával
 // összevetve.
 
 import { basePrice } from './money';
@@ -71,7 +71,7 @@ export interface ArElteroSorok {
 /**
  * A tervben lévő sorok közül azok neve, amik eltérnek a mai árlistától --
  * két okra bontva. A véglegesítés-őr `ar-elteres` puha csekklista-tételéhez
- * (D73, `domain/veglegesitesOr.ts`).
+ * (`domain/veglegesitesOr.ts`).
  */
 export function arElteroSorok(plan: Plan, priceList: PriceList): ArElteroSorok {
   const eredmeny: ArElteroSorok = { elavult: [], keziAr: [] };
@@ -89,8 +89,8 @@ export function arElteroSorok(plan: Plan, priceList: PriceList): ArElteroSorok {
  * A `plan` sorai közül azok frissítése a MAI árlistára, amik a forrásban
  * mindhárom dimenzióban (ár ÉS név ÉS leírás) követték az árlistát -- a
  * `frissDatummal()` (domain/ujVerzioDatum.ts) mintájú tiszta transzformáció,
- * a "Másolás új tervbe" default-following útjához (49. tétel 2. döntése,
- * D70). Minden más sor érintetlen marad (D7). A `plan.arlistaVerzio` a
+ * a "Másolás új tervbe" default-following útjához (49. tétel 2. döntése).
+ * Minden más sor érintetlen marad. A `plan.arlistaVerzio` a
  * `priceList.arlistaVerzio`-ra áll.
  *
  * Az ár-dimenzióhoz SZÁNDÉKOSAN NEM az `arKoveti()`-t használja: az a MAI
@@ -126,7 +126,7 @@ export function frissArlistaval(plan: Plan, priceList: PriceList): Plan {
         listaEgysegar: ujAr,
         tenylegesEgysegar: ujAr,
         savos: ar.tipus === 'SAVOS',
-        // D72: a sor default-following állapotba kerül (visszaáll az
+        // A sor default-following állapotba kerül (visszaáll az
         // árlistai szövegre) -- nincs mit nyelvileg ellenőrizni rajta.
         nevNyelv: null,
         leirasNyelv: null,

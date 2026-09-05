@@ -1,6 +1,6 @@
-// docs/03-funkcionalis-spec.md § Autosave: az "érintetlen, üres
-// piszkozatot (ami megegyezik a friss createBlankPlan() eredményével) nem
-// perzisztáljuk -- csak az első tartalmi módosítás után kezd írni". Ez a
+// Autosave-szabály: az érintetlen, üres piszkozatot (ami megegyezik a friss
+// createBlankPlan() eredményével) nem perzisztáljuk -- csak az első tartalmi
+// módosítás után kezd írni. Ez a
 // "tartalmas piszkozat" definíciója, amit az AppState (írási trigger) és a
 // Home/OsszesTervSection (felülírás elleni AlertDialog) egyaránt használ --
 // ne írd újra máshol.
@@ -71,8 +71,8 @@ export function piszkozatTartalmas(plan: Plan): boolean {
 }
 
 /**
- * Hová navigáljon a piszkozat "Megnyitás"/"Folytatás" akciója: a D37
- * `piszkozatLastRoute` metaadata, ha ismert, egyébként a névkitöltés
+ * Hová navigáljon a piszkozat "Megnyitás"/"Folytatás" akciója: a
+ * `piszkozatLastRoute` metaadat, ha ismert, egyébként a névkitöltés
  * heurisztikája (a Home.tsx eredeti kifejezése, 46. tétel óta kiemelve --
  * a Kezdőlap kártyája ÉS a terv-lánc fa aktív-draft blokkja is ezt hívja,
  * ne másolódjon).

@@ -1,6 +1,6 @@
-// Páciens master (paciens-adatok.json, D33) <-> terv-piszkozat paciens-
-// blokk mezőszintű összevetése -- backlog-40 (redesign DP-016). A D33
-// invariánsa (nincs automatikus szinkron egyik irányban sem) változatlan
+// Páciens master (paciens-adatok.json) <-> terv-piszkozat paciens-
+// blokk mezőszintű összevetése -- backlog-40. Az
+// invariáns (nincs automatikus szinkron egyik irányban sem) változatlan
 // marad; ez a modul csak az összevetéshez ad tiszta, I/O-mentes építőkövet
 // mindkét irányú, EXPLICIT szinkron-művelethez
 // (components/TorzsadatDiffDialog.tsx, pages/patientPage/TorzsadatSyncCard.tsx).
@@ -39,7 +39,7 @@ function ertekEgyezik(a: unknown, b: unknown): boolean {
 
 /**
  * Csak az ELTÉRŐ mezőket adja vissza (a `TorzsadatDiffDialog` táblája csak
- * ezeket listázza, docs/03-funkcionalis-spec.md § 2. Terv adatai). Az
+ * ezeket listázza). Az
  * "üres az egyik oldalon, kitöltött a másikon" IS eltérésnek számít --
  * ellentétben a `paciensDuplikacio.ts` `AdatViszony`-jával (ahol a hiányzó
  * adat sosem "ellentmond"), itt pont az a kérdés, átvegyük-e a másik oldal
@@ -88,7 +88,7 @@ export function valodiUtkozesek(elteresek: MezoElteres[], master: Paciens, snaps
 
 /**
  * Stabil aláírás egy konkrét (master, snapshot) eltérés-állapothoz -- a
- * "diffenként egyszer" lépés-elhagyási prompt (3. döntés, D161) ezzel dönti
+ * "diffenként egyszer" lépés-elhagyási prompt ezzel dönti
  * el, hogy a doki MÁR látta-e és elutasította-e pontosan EZT az eltérést.
  * Csak a mezőkulcsok listája nem lenne elég: egy átszerkesztett érték is
  * "más" diffnek számít, ezért mindkét oldal ÉRTÉKE is az aláírás része.

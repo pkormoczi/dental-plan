@@ -11,7 +11,7 @@ import type { PlanStorage } from '../storage/PlanStorage';
 
 /**
  * Egy verzió végösszege a saját terv.json-jából -- a pénznem és a nyelv is
- * verziónként jön (D21): a `nyelv` a `formatMoney` ezres/tizedes
+ * verziónként jön: a `nyelv` a `formatMoney` ezres/tizedes
  * elválasztójához kell (52. tétel), nem csak megjelenítő metaadat.
  */
 export interface VersionTotal {
@@ -88,7 +88,7 @@ export async function loadPlanChainData(
 }
 
 /**
- * EGY lánc "rendezési dátuma" (46. tétel, D186): a legfrissebb VÉGLEGESÍTETT
+ * EGY lánc "rendezési dátuma" (46. tétel): a legfrissebb VÉGLEGESÍTETT
  * verziójának `isoDate`-je -- a MÁR betöltött `plansByVersion`-ből, nincs új
  * storage-hívás. `null`, ha a láncnak nincs VEGLEGES verziója (ma nem
  * fordul elő: a `storage.savePlan()` egyetlen hívója a PreviewPage.tsx
@@ -116,7 +116,7 @@ export function legfrissebbVeglegesVerzio(
 
 /**
  * A láncok listája a legfrissebb VÉGLEGESÍTETT verzió dátuma szerint
- * csökkenően (D186) -- `legfrissebbVeglegesVerzio()`-val, a `plans`
+ * csökkenően -- `legfrissebbVeglegesVerzio()`-val, a `plans`
  * másolatán (nem mutálja a bemenetet). Kulcs nélküli lánc (nincs VEGLEGES
  * verziója) a lista VÉGÉRE kerül; holtversenynél a nagyobb `verzio`, majd
  * a `planDir` (`localeCompare('hu')`) dönt -- nem a `sort` stabilitására

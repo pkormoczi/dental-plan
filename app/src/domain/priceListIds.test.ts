@@ -10,7 +10,7 @@ describe('nextTetelId', () => {
     expect(nextTetelId([{ id: 't001' }, { id: 't003' }, { id: 't002' }])).toBe('t004');
   });
 
-  it('törlés után nem ismétli meg a legnagyobb korábbi id-t (D17)', () => {
+  it('törlés után nem ismétli meg a legnagyobb korábbi id-t', () => {
     // A t003 törölve/inaktiválva sincs a listában, de az id-je akkor sem
     // hasznosul újra -- ez a max-alapú (nem hossz-alapú) számítás lényege.
     const megmaradt = [{ id: 't001' }, { id: 't002' }, { id: 't004' }];

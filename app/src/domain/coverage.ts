@@ -1,5 +1,5 @@
 // A német tartalom készültségének számlálása -- a Terv adatai lap
-// figyelmeztetéseihez és a Beállítások készültség-kijelzőjéhez (D21).
+// figyelmeztetéseihez és a Beállítások készültség-kijelzőjéhez.
 //
 // Szándékosan NEM azonos a PriceListAdminPage "hiányzik az EUR ár"
 // számlálójával (lásd pages/PriceListAdminPage.tsx): az admin MINDEN

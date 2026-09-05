@@ -1,6 +1,4 @@
-// Páciens-duplikáció kétfázisú detektálása (D42,
-// docs/03-funkcionalis-spec.md § „Új terv indítása" / § 9. Páciensek) --
-// külön modul a `paciensKereses.ts`-től, mert az a keresődoboz szöveg⊂név
+// Páciens-duplikáció kétfázisú detektálása -- külön modul a `paciensKereses.ts`-től, mert az a keresődoboz szöveg⊂név
 // relevancia-rendezője, ez pedig NÉV↔NÉV hasonlóság. 1. fázis (ez a modul):
 // tisztán `PatientFolder[]`-ből, olcsón, minden leütésre futtatható. 2. fázis
 // (a `torzsadatBetoltes.ts` `loadTorzsadatok`-ja): a szűk jelölt-körre
@@ -40,7 +38,7 @@ export interface DuplikaciosJelolt extends NevJelolt {
   adat: JeloltAdat | null;
 }
 
-/** D230: a javaslat-lista alapból ennyit mutat, fölötte "+N további". */
+/** A javaslat-lista alapból ennyit mutat, fölötte "+N további". */
 export const JAVASLAT_LATHATO = 3;
 /** A 2. fázis (DOB/telefon) betöltésének felső korlátja egy begépelt névre. */
 export const JELOLT_MAX = 10;
@@ -90,7 +88,7 @@ function egyezoTokenSzam(aTokenek: string[], bTokenek: string[]): number {
  * 1. fázis: olcsó, csak `PatientFolder[]`-t igénylő névszűrés. Küszöb
  * `min(2, min(|A|,|B|))` egyező tokenpár -- egy önmagában begépelt
  * vezetéknév is felszínre hozza az azonos vezetéknevű pácienseket (a max-3
- * megjelenítési korlát, D230, ezt kezelhetővé teszi), egytokenes nevek
+ * megjelenítési korlát ezt kezelhetővé teszi), egytokenes nevek
  * pedig egyetlen egyező tokennel is jelöltek. Szándékosan NEM
  * Levenshtein/fuzzy-egyezés.
  */

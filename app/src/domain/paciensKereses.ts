@@ -1,13 +1,11 @@
-// Az /uj-terv köztes páciensválasztó (D29, D40,
-// docs/03-funkcionalis-spec.md § „Új terv indítása") relevancia-rendezője
+// Az /uj-terv köztes páciensválasztó relevancia-rendezője
 // 2+ karakteres kereséshez -- külön modul a `search.ts`-től, mert az a
 // kétnyelvű ártétel-név-egyezés (`nevEgyezik`) helye, ez páciensnév-rangsor.
 //
-// A `keresoKulcs`/`torzsadatEgyezik` pár (D43,
-// docs/03-funkcionalis-spec.md § 9. Páciensek) a Pácienslista bővült
+// A `keresoKulcs`/`torzsadatEgyezik` pár a Pácienslista bővült
 // keresése: névre a fenti `norm()`-mintát követi, számjegyre a tárolt
 // születési dátum/telefon számjegysorára illeszkedik -- a telefonnál a
-// `telefonKulcs()` (`domain/paciensDuplikacio.ts`, D42) normalizált alakját
+// `telefonKulcs()` (`domain/paciensDuplikacio.ts`) normalizált alakját
 // is bevonja, hogy a `06 20…`/`+36 20…` előtag ne számítson.
 
 import { telefonKulcs } from './paciensDuplikacio';

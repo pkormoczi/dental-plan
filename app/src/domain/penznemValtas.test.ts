@@ -313,7 +313,7 @@ describe('nincsListaar', () => {
     expect(nincsListaar(sor({ tetelId: '' }), undefined, 'EUR')).toBe(false);
   });
 
-  it('hamis ismeretlen tetelId-nél (D17: a pillanatkép-ár továbbra is érvényes)', () => {
+  it('hamis ismeretlen tetelId-nél (a pillanatkép-ár továbbra is érvényes)', () => {
     expect(nincsListaar(sor({ tetelId: 'regi-torolt' }), undefined, 'EUR')).toBe(false);
   });
 });

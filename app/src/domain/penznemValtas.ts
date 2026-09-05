@@ -1,10 +1,9 @@
 // Pénznemváltás -- a `Sor` mindig a JELENLEGI `plan.penznem` árpárját
 // tartja a `listaEgysegar`/`tenylegesEgysegar` mezőkben (implicit
-// pénznemű, D21). Pénznemváltáskor korábban a sorok törlődtek
+// pénznemű). Pénznemváltáskor korábban a sorok törlődtek
 // (`PatientPage.tsx` régi `applyPenznem()`), mert nem volt hova
 // "elmenteni" a másik pénznem állapotát. A `Sor.masikPenznemAr` additív
-// stash-mezője (domain/types.ts) ezt oldja fel -- lásd D71
-// (docs/01-attekintes-es-dontesek.md).
+// stash-mezője (domain/types.ts) ezt oldja fel.
 
 import { basePrice } from './money';
 import type { Penznem, Plan, PriceList, Sor, Tetel } from './types';
@@ -15,8 +14,8 @@ import type { Penznem, Plan, PriceList, Sor, Tetel } from './types';
  * eredet-nyilvántartás, ugyanúgy, mint a `savos` "≈" kapcsolónál). A BELÉPŐ
  * pénznem ára ebben a sorrendben dől el:
  * 1. `sor.masikPenznemAr` -- a doki korábban már beállított egy értéket
- *    ebben a pénznemben, azt sosem írjuk felül némán az árlistával (D24
- *    szelleme: kézzel írt érték nem vész el egy oda-vissza váltásban).
+ *    ebben a pénznemben, azt sosem írjuk felül némán az árlistával (kézzel
+ *    írt érték nem vész el egy oda-vissza váltásban).
  * 2. `tetel.ar[ujPenznem]` -- ha a tétel beárazott az új pénznemben,
  *    `basePrice()` adja mindkét mezőt, pontosan úgy, mint felvételkor
  *    (`domain/sorMezok.ts` `sorMezokTetelbol`).
@@ -24,8 +23,7 @@ import type { Penznem, Plan, PriceList, Sor, Tetel } from './types';
  *    beárazva az új pénznemben); a doki kézzel tölti ki.
  *
  * A `savos` mező érintetlen marad: soronkénti, szabad, kétirányú
- * doki-kapcsoló (docs/03-funkcionalis-spec.md § Sor mezői), nem
- * pénznemből derivált érték.
+ * doki-kapcsoló, nem pénznemből derivált érték.
  */
 export function sorPenznemValtassal(sor: Sor, ujPenznem: Penznem, tetel: Tetel | undefined): Sor {
   const kilepoAr = { listaEgysegar: sor.listaEgysegar, tenylegesEgysegar: sor.tenylegesEgysegar };
@@ -135,8 +133,8 @@ export function tervOsszegekPenznemValtassal(
  * nincs beárazva az adott pénznemben (`ar[penznem] == null`) -- az
  * EGYETLEN hely, ahol ez eldől (`pages/planEditor/LineRow.tsx` Listaár
  * cellája és a `kitoltetlen.ts` `araztalanSorok()` is ezt hívja). Egy ismeretlen
- * `tetelId` (a tétel már nincs az árlistában, D17) NEM számít hiányzónak
- * -- a pillanatkép-ár (D7) továbbra is érvényes, egy téves hard block
+ * `tetelId` (a tétel már nincs az árlistában) NEM számít hiányzónak
+ * -- a pillanatkép-ár továbbra is érvényes, egy téves hard block
  * rosszabb lenne, mint a régi szám megjelenítése. Egyedi sor (üres
  * `tetelId`) sem számít hiányzónak -- annak sosincs értelmezhető
  * árlistai referenciaára, ez nem "hiány", hanem a sor jellege

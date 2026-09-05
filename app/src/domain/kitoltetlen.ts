@@ -11,7 +11,7 @@
 //
 // Szándékosan MÁS, mint `toothVisual.ts` `hianyzoTetel`-je -- az egy MA MÁR
 // az árlistából törölt/átnevezett `tetelId`-re mutató sort jelez (a
-// `nevSnapshot`/ár pillanatkép D7 szerint továbbra is érvényes, csak a
+// `nevSnapshot`/ár pillanatkép továbbra is érvényes, csak a
 // mai árlistával nem egyeztethető), ez pedig egy SOSEM megnevezett sort.
 
 import { nincsListaar } from './penznemValtas';
@@ -62,7 +62,7 @@ export function nullaOsszeguSorok(plan: Plan): string[] {
 }
 
 /**
- * KEMÉNY blokk (62. tétel, D71): névvel ellátott sorok, amiknek a tétele
+ * KEMÉNY blokk (62. tétel): névvel ellátott sorok, amiknek a tétele
  * nincs beárazva a terv pénznemében (`nincsListaar()`, domain/penznemValtas.ts),
  * ÉS a doki még nem adott meg kézi ajánlati árat (`tenylegesEgysegar === 0`).
  * Szándékosan KEMÉNY, nem a `nullaOsszeguSorok` puha ágán -- egy ilyen sor
@@ -91,7 +91,7 @@ export interface UresFazis {
 }
 
 /**
- * KEMÉNY blokk (D103): 0 soros fázisok, terv sorrendben -- a nyomtatvány
+ * KEMÉNY blokk: 0 soros fázisok, terv sorrendben -- a nyomtatvány
  * (`pdf/TervDocument.tsx`) a `fazisok` tömböt feltétel nélkül végigrendereli,
  * egy ilyen fázis üres fejlécként kerülne a papírra.
  */
@@ -113,7 +113,7 @@ export interface HianyzoCsomagLeiras {
 }
 
 /**
- * PUHA diagnosztika (docs/02-domain-modell.md § Tétel-leírás) -- szándékosan
+ * PUHA diagnosztika -- szándékosan
  * KÜLÖN a fenti `kitoltetlenSorok` kemény blokkjától: azon sorok, amik egy
  * `csomag: true` tételre hivatkoznak, de a leírásuk üres. A `PreviewPage`
  * `confirmStep`-láncába kerül (megerősíthető, átugorható), NEM ide.

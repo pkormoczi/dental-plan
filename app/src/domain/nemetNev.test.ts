@@ -177,7 +177,7 @@ describe('igazolatlanNemetNevek', () => {
   });
 });
 
-describe('igazolatlanNemetKategoriak (D404)', () => {
+describe('igazolatlanNemetKategoriak', () => {
   it('magyar terven üres eredményt ad', () => {
     const plan = makePlan([[sor({ tetelId: 't1', fogak: '16' })]], { nyelv: 'hu' });
     expect(igazolatlanNemetKategoriak(plan, priceList)).toEqual([]);

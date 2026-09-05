@@ -155,7 +155,7 @@ describe('veglegesitesDiagnozis', () => {
     expect(tetel(diag, 'nulla-osszegu-sor')).toBeUndefined();
   });
 
-  it('üres fázis a "ures-fazis" hard tételt adja (D103)', () => {
+  it('üres fázis a "ures-fazis" hard tételt adja', () => {
     const plan = makePlan([[sor()], []]);
     const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
 
@@ -170,7 +170,7 @@ describe('veglegesitesDiagnozis', () => {
     expect(tetel(diag, 'hianyzo-paciensadat')?.sulyossag).toBe('soft');
   });
 
-  describe('nemet-nev (D74/D133)', () => {
+  describe('nemet-nev', () => {
     it('fordítás nélküli tétel érintetlen sorral a "nincsArlistaiNev" csoportba kerül, hard tétel', () => {
       const plan = makePlan([[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás' })]], { nyelv: 'de' });
       const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
@@ -227,7 +227,7 @@ describe('veglegesitesDiagnozis', () => {
     });
   });
 
-  describe('nemet-kategoria-nev (D404)', () => {
+  describe('nemet-kategoria-nev', () => {
     const priceListKategoriaval: PriceList = {
       ...priceList,
       kategoriak: [
@@ -279,8 +279,7 @@ describe('veglegesitesDiagnozis', () => {
     const bekapcsolva = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
     expect(tetel(bekapcsolva, 'hianyzo-leiras')?.sulyossag).toBe('soft');
 
-    // Kikapcsolt leirasokMutatasa mellett a hiány nem érinti a nyomtatványt
-    // -- docs/02-domain-modell.md § Tétel-leírás.
+    // Kikapcsolt leirasokMutatasa mellett a hiány nem érinti a nyomtatványt.
     const kikapcsolva = veglegesitesDiagnozis(plan, priceList, false, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
     expect(tetel(kikapcsolva, 'hianyzo-leiras')).toBeUndefined();
   });
@@ -373,10 +372,10 @@ describe('veglegesitesDiagnozis', () => {
     expect(vanKemenyBlokk(diag)).toBe(false);
   });
 
-  // 65. tétel (D72): a doki kézzel írt szövegeinek nyelvi review-ja --
+  // 65. tétel: a doki kézzel írt szövegeinek nyelvi review-ja --
   // SZÁNDÉKOSAN külön a "nemet-nev" tételtől (az az ÁRLISTAI fordítás/
   // igazolás hiányát jelzi), lásd `domain/nyelviReview.ts`.
-  describe('nyelvi-review (65. tétel, D72)', () => {
+  describe('nyelvi-review (65. tétel)', () => {
     it('kézzel átírt sornév, ami nem a terv nyelvén íródott, a "nyelvi-review" soft tételt adja', () => {
       const plan = makePlan([[sor({ nevNyelv: { authoredInLanguage: 'de' } })]]);
       const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
@@ -403,7 +402,7 @@ describe('veglegesitesDiagnozis', () => {
     });
   });
 
-  it('62. tétel (D71): a terv pénznemében beárazatlan, 0 Ft-os sor az "araztalan-sor" hard tételben jelenik meg -- a "nulla-osszegu-sor" puha tétel ettől függetlenül, a 0 összeg miatt szintén jelez', () => {
+  it('62. tétel: a terv pénznemében beárazatlan, 0 Ft-os sor az "araztalan-sor" hard tételben jelenik meg -- a "nulla-osszegu-sor" puha tétel ettől függetlenül, a 0 összeg miatt szintén jelez', () => {
     const plan = makePlan(
       [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', listaEgysegar: 0, tenylegesEgysegar: 0 })]],
       { penznem: 'EUR' },
@@ -442,7 +441,7 @@ describe('veglegesitesDiagnozis', () => {
 
   // sablon-fallback / nyilatkozat-placeholder -- a hívó (PreviewPage) MÁR
   // feloldott TÉNYként adja át, ez a modul sosem tölt be sablont maga.
-  describe('sablon (D576+/C8)', () => {
+  describe('sablon', () => {
     it('sablonFallback igaz esetén "sablon-fallback" soft tételt ad', () => {
       const plan = makePlan([[sor()]]);
       const diag = veglegesitesDiagnozis(
@@ -534,7 +533,7 @@ describe('veglegesitesDiagnozis', () => {
   });
 
   // backlog-40: a master↔snapshot eltérés INFO-szintű tétel -- lásd a
-  // `masterSnapshotDiff` doc-kommentjét (D162).
+  // `masterSnapshotDiff` doc-kommentjét.
   describe('torzsadat-elteres (backlog-40)', () => {
     it('master nélkül nem ad tételt', () => {
       const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, null, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
@@ -588,8 +587,9 @@ describe('veglegesitesDiagnozis', () => {
     });
   });
 
-  // D68: a kezelőorvos-blokk KEMÉNY tétel.
-  describe('orvos (D68)', () => {
+  // A kezelőorvos-blokk KEMÉNY tétel: az aláírás-blokk kezelőorvos-neve
+  // jogilag releváns, üres vagy nem aktív név nem kerülhet a papírra.
+  describe('orvos', () => {
     it('üres orvos esetén hard tételt ad, "hianyzik" szöveggel', () => {
       const plan = makePlan([[sor()]], { orvos: '' });
       const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
@@ -622,8 +622,10 @@ describe('veglegesitesDiagnozis', () => {
   });
 });
 
-// D66: az előleg túllépése KEMÉNY tétel.
-describe('eloleg-tullep (D66)', () => {
+// Az előleg túllépése KEMÉNY tétel: abszolút összeg, nincs 0–100%-os
+// szorítás, egy utólagos sortörlés az előleg alá viheti a fizetendőt -- a
+// doki rendezi, nincs automatikus levágás.
+describe('eloleg-tullep', () => {
   function tetelEloleg(plan: Plan) {
     return tetel(
       veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES),
@@ -639,7 +641,7 @@ describe('eloleg-tullep (D66)', () => {
     expect(tetelEloleg(makePlan([[sor()]], { elolegOsszeg: 5000 }))).toBeUndefined(); // fizetendő 10000
   });
 
-  it('az előleg pontosan egyenlő a fizetendővel -- nincs tétel, ez legitim (D327)', () => {
+  it('az előleg pontosan egyenlő a fizetendővel -- nincs tétel, ez legitim', () => {
     expect(tetelEloleg(makePlan([[sor()]], { elolegOsszeg: 10000 }))).toBeUndefined();
   });
 

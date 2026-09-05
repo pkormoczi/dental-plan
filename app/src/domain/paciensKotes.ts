@@ -1,7 +1,5 @@
-// Másolás új tervbe: páciens-identitás védőháló --
-// docs/03-funkcionalis-spec.md § "Páciens adatai". SZÁNDÉKOSAN külön modul a
-// `paciensDuplikacio.ts`-től: az ott (docs/03-funkcionalis-spec.md §
-// "Új terv indítása" — a köztes páciens-választó) PONTOS és HASONLÓ
+// Másolás új tervbe: páciens-identitás védőháló. SZÁNDÉKOSAN külön modul a
+// `paciensDuplikacio.ts`-től: az ott (a köztes páciens-választó) PONTOS és HASONLÓ
 // névtalálatokat is felsoroló, javaslat-jellegű detektálás egy ÚJ páciens
 // quick-create pillanatában fut; ez a modul egy MÁR KÖTÖTT piszkozat Név
 // mezőjét méri a meglévő páciensekhez képest, kizárólag PONTOS egyezésre,

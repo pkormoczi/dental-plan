@@ -1,10 +1,10 @@
-// Kezelőorvos-választás és öröklési szabályok (docs/01-attekintes-es-dontesek.md
-// D63/D64). Az EGYETLEN hely, ahol a `Settings.inaktivOrvosok`/
+// Kezelőorvos-választás és öröklési szabályok. Az EGYETLEN hely, ahol a
+// `Settings.inaktivOrvosok`/
 // `alapertelmezettOrvos` szemantikája eldől -- ne dekódold újra máshol.
 
 import type { Settings } from './types';
 
-/** Pontos, trim-tolerő névegyezés -- a `plan.orvos` NÉV-pillanatkép (D63),
+/** Pontos, trim-tolerő névegyezés -- a `plan.orvos` NÉV-pillanatkép,
  * nem keresés, ezért nem `norm()` (az a `domain/search.ts` ékezetfüggetlen
  * kétnyelvű tételnév-keresésének eszköze). */
 function azonosNev(a: string, b: string): boolean {
@@ -32,8 +32,8 @@ export function alapertelmezettOrvosNeve(settings: Settings): string {
 /** A `ujVerzioOrvosa` fallback-jelzése -- `null`, ha nem történt visszaesés. */
 export type OrvosFallback = { regi: string; uj: string } | null;
 
-/** Egy „Új verzió” nyitásakor a forrás terv orvosának öröklése/fallback-je
- * (D63): aktív forrás -- változatlan, `fallback: null`; inaktív/törölt (árva)
+/** Egy „Új verzió” nyitásakor a forrás terv orvosának öröklése/fallback-je:
+ * aktív forrás -- változatlan, `fallback: null`; inaktív/törölt (árva)
  * forrás -- a globális default, `fallback`-ben a régi/új név; üres forrás --
  * a globális default, `fallback: null` (nincs korábbi név, amiről az
  * info-sáv szólhatna). */
@@ -52,8 +52,8 @@ export function ujVerzioOrvosa(
 
 export type OrvosProblema = 'hianyzik' | 'nem-aktiv';
 
-/** A véglegesítés-őr kemény blokkjához (docs/03-funkcionalis-spec.md § 4.
- * Előnézet és véglegesítés) -- MÁR FELOLDOTT aktív névlistát kap, nem
+/** A véglegesítés-őr kemény blokkjához (lásd app/src/domain/CLAUDE.md) --
+ * MÁR FELOLDOTT aktív névlistát kap, nem
  * `Settings`-et (a `veglegesitesOr.ts` szerződése szerint minden bemenete
  * előre feloldott, a `leirasokMutatasa`/`master` paraméterek mintájára). */
 export function orvosProblema(orvos: string, aktivNevek: string[]): OrvosProblema | null {

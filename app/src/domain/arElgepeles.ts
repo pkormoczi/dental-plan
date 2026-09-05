@@ -1,5 +1,5 @@
-// Elgépelés-védelem az Árlista admin ár-mezőin (docs/03-funkcionalis-spec.md
-// § 6. "Sor kinyitása") -- két, egymást kiegészítő detektor: a sor
+// Elgépelés-védelem az Árlista admin ár-mezőin -- két, egymást kiegészítő
+// detektor: a sor
 // kinyitásakori értékhez viszonyított relatív ugrás, illetve az árlista
 // többi aktív tételéhez viszonyított kirívó nagyságrend. Mindkettő
 // szándékosan puha (nem betöltési/mentési hiba), a `savosHatarForditott()`/

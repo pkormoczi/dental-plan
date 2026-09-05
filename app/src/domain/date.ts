@@ -1,7 +1,8 @@
 // Dátumszámítás. Az "Az ajánlat X napjáig érvényes" szöveg számított dátum,
-// nem "N napig érvényes" szöveg -- lásd docs/04-nyomtatvany-spec.md.
+// nem "N napig érvényes" szöveg -- lásd PRODUCT.md § A nyomtatvány
+// szerződéses dokumentum.
 //
-// D21: a hosszú/rövid formátum nyelvfüggő (a nyelv vezérli a nyomtatvány
+// A hosszú/rövid formátum nyelvfüggő (a nyelv vezérli a nyomtatvány
 // szövegét, lásd domain/types.ts "Nyelv"). A `nyelv` paraméter szándékosan
 // kötelező, nem defaultos -- egy alapérték elrejtene egy kihagyott hívási
 // helyet.
@@ -37,7 +38,8 @@ export function formatLongDate(isoDate: string, nyelv: Nyelv): string {
 
 /**
  * hu: "2026.08.05."  de: "05.08.2026"
- * A fejléc/lábléc metaadatához (docs/04-nyomtatvany-spec.md). Kézzel
+ * A fejléc/lábléc metaadatához (lásd PRODUCT.md § A nyomtatvány szerződéses
+ * dokumentum). Kézzel
  * összerakva, nem Intl-lel -- a de-DE Intl vezető nulla nélküli napot adna
  * (pl. "5.11.2026"), ez viszont a lábléc jogi metaadata.
  */
@@ -49,7 +51,7 @@ export function formatShortDate(isoDate: string, nyelv: Nyelv): string {
 /**
  * A piszkozat-autosave "Piszkozat mentve"/"Utolsó módosítás" időbélyege
  * (Home.tsx, pages/planEditor/PlanEditorHeader.tsx) -- NEM a nyomtatvány
- * (docs/04-nyomtatvany-spec.md) formátuma, ezért nem `formatLongDate`/
+ * formátuma, ezért nem `formatLongDate`/
  * `formatShortDate`: azok tisztán naptári dátumot (nap felbontás, UTC-re
  * rögzítve) formáznak, ide viszont egy tényleges időpillanat (dátum +
  * óra:perc, a böngésző időzónájában) kell. Mindig magyar (`hu-HU`) --
@@ -74,8 +76,8 @@ function localMidnight(d: Date): number {
 }
 
 /**
- * A Kezdőlap recent-páciens sorának "2 órája"/"tegnap"/"3 napja" jelzése
- * (docs/03-funkcionalis-spec.md § 1. Indítás, D39). Szándékosan NEM
+ * A Kezdőlap recent-páciens sorának "2 órája"/"tegnap"/"3 napja" jelzése.
+ * Szándékosan NEM
  * `Intl.RelativeTimeFormat`: `hu`/`numeric:'auto'` "2 órával ezelőtt"-et ad
  * (nem "2 órája"-t), és a hét/hónap egységnél naptári periódusra hivatkozik,
  * nem eltelt időre (`-1 week` -> "előző hét", ami egy 6 napos elemre

@@ -1,5 +1,4 @@
-// Puha hosszkorlát-figyelmeztetés a tétel-/sor-leírásra
-// (docs/02-domain-modell.md § Tétel-leírás) -- két hívó van rá (Árlista
+// Puha hosszkorlát-figyelmeztetés a tétel-/sor-leírásra -- két hívó van rá (Árlista
 // admin `ItemEditor` ÉS a tervszerkesztő `LineRow`), ezért domain-szintű
 // segédfüggvény, nem UI-réteg duplikátum.
 

@@ -1,4 +1,4 @@
-// Páciens törlésének feltételei (backlog-41, D50, D154). Tiszta függvény,
+// Páciens törlésének feltételei (backlog-41). Tiszta függvény,
 // nincs I/O -- a hívó (`PatientDetailPage.tsx`) adja a MÁR betöltött
 // `PlanChainData`-t (`domain/planChainData.ts`) és a saját aktív draftjának
 // hovatartozását, ugyanúgy, mint pl. a `legutobbAktivPaciensek()`.
@@ -17,7 +17,7 @@ export type TorlesAkadaly = 'veglegesitett-terv' | 'aktiv-piszkozat' | 'nem-olva
  *    ("már mentve volt" = `tervId`), ami más kérdésre válaszol (van-e kár
  *    elveszíteni való piszkozat-tartalom, nem hogy a mentett terv aláírt-e).
  * 2. `aktiv-piszkozat` -- a doki JELENLEGI, mentetlen piszkozata ehhez a
- *    pácienshez tartozik (a hívó a `feloldPatientDir()`-rel, D48, dönti el).
+ *    pácienshez tartozik (a hívó a `feloldPatientDir()`-rel dönti el).
  * 3. `nem-olvashato` -- `chainData` hiányzik vagy `unreadable`. Enélkül egy
  *    sérült, valójában VÉGLEGESÍTETT verzió (ami emiatt hiányzik a
  *    `plansByVersion`-ből) csendben "nincs véglegesített terve"-ként

@@ -3,11 +3,12 @@
 // A pénz egész számként tárolódik a pénznem alapegységében:
 // HUF -> forint, EUR -> cent. Így nincs lebegőpontos hiba az összegzésben.
 // Ez szerződéses dokumentum: ne improvizálj toLocaleString()-gel, ez a
-// docs/04-nyomtatvany-spec.md kötelező formátuma.
+// nyomtatvány kötelező formátuma -- lásd PRODUCT.md § A nyomtatvány
+// szerződéses dokumentum.
 
 import type { Ar, Nyelv, Penznem } from './types';
 
-// D21/52. tétel: az ezres/tizedes ELVÁLASZTÓ a dokumentum NYELVÉTŐL függ
+// Az ezres/tizedes ELVÁLASZTÓ a dokumentum NYELVÉTŐL függ
 // (hu-HU szóköz, de-DE pont), a tizedesjegyek száma és a pénznemjel a
 // PÉNZNEMTŐL -- innen a Record<Nyelv, string> locale-map, a domain/date.ts
 // LONG_DATE_LOCALE mintáján. A `nyelv` paraméter szándékosan kötelező, nem
@@ -70,7 +71,7 @@ export function savosHatarForditott(ar: Ar | null | undefined): boolean {
  * P0-5 találat pont az volt, hogy a doki centet gépel euró helyett.
  * `parseEuroInput`/`formatCentForInput` a `NumberField` `unit="EUR"`
  * módjának a fordítópárja: a tárolás VÁLTOZATLANUL cent marad
- * (docs/02-domain-modell.md), csak a beviteli mező mértékegysége más.
+ * (lásd app/src/domain/CLAUDE.md), csak a beviteli mező mértékegysége más.
  */
 export function parseEuroInput(text: string): number | null {
   const normalized = text.trim().replace(',', '.');

@@ -1,4 +1,4 @@
-// Segédfüggvény a Korábbi tervek fájának (páciens → terv → verzió, D29)
+// Segédfüggvény a Korábbi tervek fájának (páciens → terv → verzió)
 // "legutóbb módosított lánc legfrissebb verziója" kiválasztásához -- ezt
 // használja az OsszesTervSection páciensszintű "Új terv" gombja (melyik verzió
 // `paciens` blokkját vigye tovább) és az /uj-terv "Meglévő páciens
@@ -15,7 +15,7 @@ export interface PlanVersionLocation {
  * Az összes terv-lánc összes verziója, a `keltezes`-t kódoló `isoDate`
  * szerint csökkenően, holtversenynél a nagyobb `verzio`, majd a `planDir`
  * (`localeCompare('hu')`) szerint -- a `rendezettLancok()` determinizmus-
- * mintája (`planChainData.ts`). A 47. tétel (D534) öröklési bejárásának
+ * mintája (`planChainData.ts`). A 47. tétel öröklési bejárásának
  * alapja: onnan indulva csökkenő sorrendben kell megtalálni az első
  * VEGLEGES verziót, nem csak a legfrissebbet.
  */
@@ -53,7 +53,7 @@ export function latestVersionAcrossPlans(
  * láncra szűkített komparátora) -- `null`, ha a láncnak nincs olvasható
  * verziója. A `versions` tömb sorrendjétől független (a `DemoStorage`
  * `verzio` szerint növekvőn ad vissza, de ez nem szerződés) -- a lánc
- * fejlécének (46. tétel, D238) EZ a "legfrissebb verzió" forrása, nem
+ * fejlécének (46. tétel) EZ a "legfrissebb verzió" forrása, nem
  * `versions[versions.length - 1]`.
  */
 export function legfrissebbVerzio(versions: PlanVersion[]): PlanVersion | null {

@@ -42,7 +42,7 @@ describe('osszesitokElter', () => {
     expect(diff).toEqual({ kezelesekOsszesen: 25000, kedvezmeny: 5000, fizetendo: 20000 });
   });
 
-  it('does NOT mutate or overwrite the passed-in mentett value (D7: the snapshot is the truth)', () => {
+  it('does NOT mutate or overwrite the passed-in mentett value (the snapshot is the truth)', () => {
     const mentett = { kezelesekOsszesen: 25000, kedvezmeny: 0, fizetendo: 25000 };
     const mentettCopy = { ...mentett };
     osszesitokElter(mentett, fazisok);
@@ -61,11 +61,11 @@ describe('tervVegosszeg (backlog-16)', () => {
     expect(tervVegosszeg(fazisok, 5000)).toBe(15000);
   });
 
-  it('a sorok összegét meghaladó kedvezménynél 0-ra padlóz, soha nem negatív (D25)', () => {
+  it('a sorok összegét meghaladó kedvezménynél 0-ra padlóz, soha nem negatív', () => {
     expect(tervVegosszeg(fazisok, 25000)).toBe(0);
   });
 
-  it('negatív eltérésnél (felár) a sorok összege fölé emel, nincs felső korlát (D69)', () => {
+  it('negatív eltérésnél (felár) a sorok összege fölé emel, nincs felső korlát', () => {
     expect(tervVegosszeg(fazisok, -5000)).toBe(25000);
   });
 });
@@ -87,7 +87,7 @@ describe('computeOsszesitok terv-szintű kedvezménnyel (backlog-16)', () => {
     });
   });
 
-  it('negatív eltérésnél (felár) a fizetendő nő, az osszesitok.kedvezmeny negatív (D69)', () => {
+  it('negatív eltérésnél (felár) a fizetendő nő, az osszesitok.kedvezmeny negatív', () => {
     expect(computeOsszesitok(fazisok, -3000)).toEqual({
       kezelesekOsszesen: 25000,
       kedvezmeny: 2000,
@@ -103,7 +103,7 @@ describe('osszesitokElter terv-szintű kedvezménnyel (backlog-16)', () => {
   });
 });
 
-describe('elolegOsszegek (D66: abszolút összeg)', () => {
+describe('elolegOsszegek (abszolút összeg)', () => {
   it('az előleg alatt marad a fizetendőnek, a fennmaradó rész a különbség', () => {
     expect(elolegOsszegek(820000, 410000)).toEqual({ eloleg: 410000, fennmarado: 410000 });
   });
@@ -127,7 +127,7 @@ describe('elolegOsszegek (D66: abszolút összeg)', () => {
   });
 });
 
-describe('elolegTullepi (D66)', () => {
+describe('elolegTullepi', () => {
   it('igaz, ha az előleg nagyobb a fizetendőnél', () => {
     expect(elolegTullepi(45000, 50000)).toBe(true);
   });

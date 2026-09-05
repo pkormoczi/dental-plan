@@ -47,7 +47,7 @@ describe('createBlankPlan', () => {
     expect(plan.penznem).toBe('HUF');
   });
 
-  // D534 (47. tétel): egy meglévő páciens legutóbb véglegesített tervéből
+  // 47. tétel: egy meglévő páciens legutóbb véglegesített tervéből
   // örökölt nyelv/pénznem felülírja a globális alapértéket.
   it('örökölt nyelv/pénznem érvényesül a globális alapérték helyett', () => {
     const plan = createBlankPlan(settings, priceList, { nyelv: 'de', penznem: 'EUR' });
@@ -61,7 +61,7 @@ describe('createBlankPlan', () => {
     expect(plan.penznem).toBe('HUF');
   });
 
-  // D63: az orvos mindig a globális alapértelmezett orvos, a fenti
+  // Az orvos mindig a globális alapértelmezett orvos, a fenti
   // nyelv/pénznem-örökléstől függetlenül -- lásd domain/orvosok.test.ts a
   // feloldás részletes eseteire.
   it('az orvos az explicit alapertelmezettOrvos', () => {
@@ -84,7 +84,7 @@ describe('createBlankPlan', () => {
     expect(createBlankPlan(s, priceList).orvos).toBe('');
   });
 
-  // D75: friss terv mindig "Csak ajánlat" nélkül indul.
+  // Friss terv mindig "Csak ajánlat" nélkül indul.
   it('a csakAjanlat alapból false', () => {
     expect(createBlankPlan(settings, priceList).csakAjanlat).toBe(false);
   });

@@ -3,8 +3,8 @@
 // `paciensAdatok.ts` marad tisztán pure, a `DemoStorage` is importálja).
 // A `loadMegjelenitettTorzsadat` a Kezdőlap recent listája (max 5 páciens,
 // eager) alatt fut. A `loadTorzsadatok` ugyanezt TÖBB páciensre futtatja --
-// egyrészt a Pácienslista (D43) TELJES, látható listájára egyszerre, a
-// `OsszesTervSection` végösszeg-betöltésének mintájára, másrészt (D42) egy
+// egyrészt a Pácienslista TELJES, látható listájára egyszerre, a
+// `OsszesTervSection` végösszeg-betöltésének mintájára, másrészt egy
 // szűk jelölt-körre, a `domain/paciensDuplikacio.ts` 2. fázisának
 // betöltőjeként.
 
@@ -76,7 +76,7 @@ export async function loadMegjelenitettTorzsadat(
 
 /**
  * `loadMegjelenitettTorzsadat()` TÖBB páciensre, `dirName` szerint
- * kulcsolva -- a duplikáció-detektálás (D42) jelölt-körének betöltője.
+ * kulcsolva -- a duplikáció-detektálás jelölt-körének betöltője.
  * Sosem dob (a `loadMegjelenitettTorzsadat` maga sem dob), egy sérült
  * páciens `hiba` mezőt kap, a többit nem érinti (P1-2 mintája).
  */
@@ -96,7 +96,7 @@ export async function loadTorzsadatok(
 
 /**
  * A draft-hoz tartozó páciensmappa nevének feloldása a master-összevetéshez
- * (backlog-40). A `piszkozatPatientDir` (D37, `state/AppState.tsx`)
+ * (backlog-40). A `piszkozatPatientDir` (`state/AppState.tsx`)
  * best-effort ismert -- lehet `null` (pl. funkció előtti perzisztált
  * piszkozat). Tartalék: `plan.paciensId` -> `listPatients()` -> `dirName`,
  * ugyanaz a feloldás, mint amit a `DemoStorage.doSavePlan()` is használ
@@ -121,12 +121,12 @@ export async function feloldPatientDir(
 export interface TervCimkeRef {
   patientDir: string;
   planDir: string;
-  /** `null` = nincs terv-cimke.json, a UI az élő javaslatot mutatja (D29). */
+  /** `null` = nincs terv-cimke.json, a UI az élő javaslatot mutatja. */
   tervCim: string | null;
 }
 
 /**
- * A `TervCimField` (backlog-51, D61) lánc-mappa- és tárolt-címke-feloldása,
+ * A `TervCimField` (backlog-51) lánc-mappa- és tárolt-címke-feloldása,
  * a `feloldPatientDir()` mintáján. Üres `tervId`-nél (vadonatúj, még sosem
  * mentett lánc) `null`-t ad, STORAGE-HÍVÁS NÉLKÜL -- nincs `planDir`, amihez
  * a `terv-cimke.json`-t keresni lehetne. Sosem dob (P1-2 minta): egy

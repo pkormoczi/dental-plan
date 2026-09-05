@@ -1,4 +1,4 @@
-// Domain típusok — a docs/02-domain-modell.md JSON sémái szerint szó szerint.
+// Domain típusok — a lemezre írt JSON sémák szó szerinti alakja.
 // A mezőnevek magyarul vannak, ezek a lemezre (és itt: localStorage-ba) írt
 // séma kulcsai — ne fordítsd le őket. Lásd CLAUDE.md "Domain szókincs".
 
@@ -13,8 +13,8 @@ export interface LokalizaltSzoveg {
 }
 
 /**
- * Egy kézzel gépelt szabad szöveg nyelvi review-állapota (D72,
- * `domain/nyelviReview.ts`). `authoredInLanguage`: melyik nyelven íródott a
+ * Egy kézzel gépelt szabad szöveg nyelvi review-állapota
+ * (`domain/nyelviReview.ts`). `authoredInLanguage`: melyik nyelven íródott a
  * szöveg JELENLEGI tartalma. `reviewedForLanguage`: ha nem `null`/hiányzó,
  * a doki explicit elfogadta a szöveget erre a (az `authoredInLanguage`-től
  * eltérő) nyelvre is -- a mismatch-figyelmeztetést KIZÁRÓLAG ez oldja fel,
@@ -39,7 +39,7 @@ export interface Kategoria {
   sorrend: number;
   /**
    * Fogtérkép-szín, hex (pl. `#4dabf7`). Additív mező — nincs
-   * `schemaVersion`-emelés (D18), tehát egy régebbi, localStorage-ban élő
+   * `schemaVersion`-emelés, tehát egy régebbi, localStorage-ban élő
    * árlistán hiányozhat. Ilyenkor a
    * `design/treatmentVisuals.ts` `kategoriaVizual()`-ja semleges szürkére
    * esik vissza, nem hiba — ez az EGYETLEN hely, ahol ez a visszaesés eldől.
@@ -59,14 +59,14 @@ export interface Tetel {
   /** Csak az importból; a doksi szerint az első admin-mentés után elhagyható. */
   forrasSor?: number;
   /**
-   * Kétnyelvű "mi van benne" leírás (docs/02-domain-modell.md § Tétel-leírás). Additív
+   * Kétnyelvű "mi van benne" leírás. Additív
    * mező, nincs `schemaVersion`-emelés -- hiányzó mező = a doki még nem adott
    * meg leírást ehhez a tételhez.
    */
   leiras?: LokalizaltSzoveg;
   /**
    * true esetén a véglegesítés-őr figyelmeztet, ha az erre hivatkozó soron
-   * nincs leírás (D27, docs/01-attekintes-es-dontesek.md). Additív mező,
+   * nincs leírás. Additív mező,
    * hiányzó mező = nem csomag jellegű.
    */
   csomag?: boolean;
@@ -91,7 +91,7 @@ export interface Paciens {
   torvenyesKepviselo: string | null;
 }
 
-/** Egy sor a tervben — pillanatkép (D7): a nevet és az árat a felvétel pillanatában rögzíti. */
+/** Egy sor a tervben — pillanatkép: a nevet és az árat a felvétel pillanatában rögzíti. */
 export interface Sor {
   tetelId: string;
   nevSnapshot: string;
@@ -111,7 +111,7 @@ export interface Sor {
    * doki kézzel felülbírálta, a sor levált -- lásd `sorPatchKovetessel()`
    * (domain/mennyiseg.ts). Additív mező, hiányzó mező = a mező bevezetése
    * előtt mentett sor, ami KÉZINEK számít -- egy régi terven a fogak-alapú
-   * felülírás némán átírná a doki szándékos darabszámát (D24 mintája).
+   * felülírás némán átírná a doki szándékos darabszámát.
    */
   mennyisegKezi?: boolean;
   /**
@@ -127,11 +127,11 @@ export interface Sor {
    */
   masikPenznemAr?: { listaEgysegar: number; tenylegesEgysegar: number } | null;
   /**
-   * A `nevSnapshot` nyelvi review-metaadata (D72) -- `domain/nyelviReview.ts`.
+   * A `nevSnapshot` nyelvi review-metaadata -- `domain/nyelviReview.ts`.
    * `null`/hiányzó = a szöveg árlistát követ, vagy a mező bevezetése előtti
    * sor -- egyik esetben sincs mit ellenőrizni. Csak KÉZZEL írt szövegen
    * értelmezhető; ez az ELSŐ TÁROLT nyelvi jelző a `Sor`-on, szemben a
-   * derived komparátorokkal (`nevKoveti`/`arKoveti`, D70) -- azért tárolt,
+   * derived komparátorokkal (`nevKoveti`/`arKoveti`) -- azért tárolt,
    * mert "milyen nyelven gépelte a doki" utólag semmiből nem vezethető le.
    */
   nevNyelv?: NyelviReview | null;
@@ -160,9 +160,9 @@ export interface Fazis {
   megnevezes: string;
   megjegyzes: string;
   sorok: Sor[];
-  /** A `megnevezes` nyelvi review-metaadata (D72) -- lásd `Sor.nevNyelv`. */
+  /** A `megnevezes` nyelvi review-metaadata -- lásd `Sor.nevNyelv`. */
   megnevezesNyelv?: NyelviReview | null;
-  /** A `megjegyzes` nyelvi review-metaadata (D72) -- lásd `Sor.nevNyelv`. */
+  /** A `megjegyzes` nyelvi review-metaadata -- lásd `Sor.nevNyelv`. */
   megjegyzesNyelv?: NyelviReview | null;
   /**
    * Igaz, ha a fázis megjegyzése egy KORÁBBI tervből másolt szöveg
@@ -197,7 +197,7 @@ export interface Plan {
   /**
    * Fogtechnikai munkát tartalmazó kezelésnél a munka megkezdésekor
    * fizetendő előleg ABSZOLÚT ÖSSZEGE, a pénznem alapegységében (HUF:
-   * forint, EUR: cent) -- D66. `null` (vagy hiányzó mező egy régi
+   * forint, EUR: cent). `null` (vagy hiányzó mező egy régi
    * `terv.json`-ben) = a doki nem jelölte be, nincs előleg-sor a
    * nyomtatványon. A korábbi, százalék-alapú `elolegSzazalek` mezőt (a
    * végösszegből élőben számolt, drift-mentes érték) a doki tudatosan
@@ -212,24 +212,25 @@ export interface Plan {
   /**
    * Terv-szintű egyedi végösszeg: a sorok összegéből LEVONT, ELŐJELES fix
    * eltérés, amivel a doki egyedi végösszegre zárja az alkut -- pozitív =
-   * kedvezmény, negatív = felár (D69). `null` (vagy hiányzó mező egy régi
+   * kedvezmény, negatív = felár. `null` (vagy hiányzó mező egy régi
    * `terv.json`-ben) = nincs terv-szintű eltérés. FIX ÖSSZEG tárolódik, nem
-   * a begépelt cél-végösszeg (D25) -- különben egy utólagos sormódosítás
+   * a begépelt cél-végösszeg -- különben egy utólagos sormódosítás
    * némán átírná az eltérést. Ne keverd a `plan.osszesitok.kedvezmeny`-nyel:
    * az a KIMENET (sor- és terv-szintű eltérés a listaártól együtt), ez a
    * BEMENET. `schemaVersion` nem emelkedett, a mező opcionális, a
-   * séma-kulcs neve a D69 névváltás után is `kedvezmenyOsszeg` maradt.
+   * séma-kulcs neve a „Kerek végösszeg" → „Egyedi végösszeg" átnevezés után
+   * is `kedvezmenyOsszeg` maradt.
    */
   kedvezmenyOsszeg?: number | null;
   /**
-   * Nyomtatásra kerüljenek-e a sorok leírásai (docs/02-domain-modell.md § Tétel-leírás).
+   * Nyomtatásra kerüljenek-e a sorok leírásai.
    * Additív mező, `schemaVersion` nem emelkedett -- hiányzó mező = `true` (a
    * mező bevezetése előtti terv.json).
    */
   leirasokMutatasa?: boolean;
   /**
-   * A páciens-mappa azonosítója (docs/02-domain-modell.md § Páciens- és
-   * terv-mappa, D29). Hiányzó/üres = a terv még nincs elmentve, a storage
+   * A páciens-mappa azonosítója (lásd app/src/storage/CLAUDE.md).
+   * Hiányzó/üres = a terv még nincs elmentve, a storage
    * savePlan()-kor tölti ki. NE keverd a `tervId`-vel: egy páciens-mappa
    * (egy `paciensId`) több terv-láncot (több `tervId`-t) is tartalmazhat.
    * Additív mező, `schemaVersion` nem emelkedett.
@@ -237,10 +238,10 @@ export interface Plan {
   paciensId?: string;
   /**
    * "Csak ajánlat" mód: a nyilatkozat + aláírás oldal kimarad a PDF-ből
-   * (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés). Additív
+   * (lásd app/src/pdf/CLAUDE.md). Additív
    * mező, `schemaVersion` nem emelkedett -- hiányzó mező = `false`. A
    * piszkozatban ez a doki NYERS kézi választása; a placeholder-nyilatkozat
-   * miatti kényszer (D23) sosem íródik ide szerkesztés közben, csak a
+   * miatti kényszer sosem íródik ide szerkesztés közben, csak a
    * véglegesítéskor mentett érték a ténylegesen kiadott PDF pillanatképe.
    */
   csakAjanlat?: boolean;
@@ -258,8 +259,7 @@ export interface Plan {
 }
 
 /**
- * A "jelentős aktivitás" típusa és időbélyege egy páciensen (D39,
- * docs/03-funkcionalis-spec.md § 1. Indítás). Csak a LEGUTÓBBI esemény
+ * A "jelentős aktivitás" típusa és időbélyege egy páciensen. Csak a LEGUTÓBBI esemény
  * marad meg -- nem napló --, és kizárólag tényleges tartalmi íráskor
  * frissül (`domain/paciensAktivitas.ts` `ujAktivitas`); egy páciens/terv
  * puszta megnyitása/megtekintése sosem ír bele.
@@ -273,15 +273,15 @@ export interface PatientActivity {
 }
 
 /**
- * paciens.json -- egy páciens-mappa azonosító-/kereső-indexe (D29). SOHA
+ * paciens.json -- egy páciens-mappa azonosító-/kereső-indexe. SOHA
  * nem system of record: a `nev` kizárólag kereséshez és előtöltéshez való
- * gyorsítótár, a `terv.json` `paciens` blokkja marad a pillanatkép (D7,
- * docs/02-domain-modell.md § Páciens- és terv-mappa).
+ * gyorsítótár, a `terv.json` `paciens` blokkja marad a pillanatkép (lásd
+ * app/src/storage/CLAUDE.md).
  *
  * `utolsoAktivitas` additív mező, `schemaVersion` nem emelkedett -- hiánya
  * azt jelenti, a páciensen még nem történt jelentős aktivitás (vagy egy
  * funkció előtti/legacy rekordról van szó), nem hibaállapot. Puszta index
- * mezőként egy sérült/ismeretlen alakú értéke sosem dobhat (D29) --
+ * mezőként egy sérült/ismeretlen alakú értéke sosem dobhat --
  * `domain/paciensAktivitas.ts` `ervenyesAktivitas()` némán `undefined`-re
  * esik vissza, ellentétben a `PatientMasterData` szigorú validációjával.
  */
@@ -294,9 +294,9 @@ export interface PatientRecord {
 
 /**
  * terv-cimke.json -- a terv-mappa gyökerén, a verziómappákon KÍVÜL, ezért a
- * D4 (verziómappát soha nem írunk felül) rá nem vonatkozik: bármikor
+ * „verziómappát soha nem írunk felül" szabály rá nem vonatkozik: bármikor
  * szabadon átírható, akár egy már véglegesített terven is, új verzió
- * nyitása nélkül (D29, docs/02-domain-modell.md § Páciens- és terv-mappa).
+ * nyitása nélkül (lásd app/src/storage/CLAUDE.md).
  */
 export interface PlanLabel {
   schemaVersion: 1;
@@ -305,14 +305,15 @@ export interface PlanLabel {
 
 /**
  * paciens-adatok.json -- egy páciens-mappa ÉLŐ, terv-mentéstől független
- * törzsadata (D33, docs/02-domain-modell.md § Páciens- és terv-mappa).
+ * törzsadata (lásd app/src/storage/CLAUDE.md).
  * Ellentétben a `PatientRecord`-dal és a `PlanLabel`-lel, ez VALÓDI system
  * of record a saját mezőire: a doki itt tartja a páciens jelenleg érvényes
  * elérhetőségét/adatait, akár terv nélkül is. A `terv.json` `paciens`
- * blokkja ettől függetlenül marad pillanatkép (D7) -- nincs automatikus
+ * blokkja ettől függetlenül marad pillanatkép -- nincs automatikus
  * szinkron egyik irányban sem, lásd `domain/paciensAdatok.ts`. A
- * verziómappákon KÍVÜL, a páciens-mappa gyökerén él, ezért D4 rá nem
- * vonatkozik, de -- a `terv-cimke.json`-tól eltérően -- nincs "üres =
+ * verziómappákon KÍVÜL, a páciens-mappa gyökerén él, ezért az append-only
+ * verziómappa-szabály rá nem vonatkozik, de -- a `terv-cimke.json`-tól
+ * eltérően -- nincs "üres =
  * törlés vissza az élő fallbackre" szemantikája: a fájl létrejötte után a
  * törzsadat lezárt.
  */
@@ -361,7 +362,7 @@ export interface Settings {
 /**
  * Egy páciensmappa a paciensek/ fában (lásd storage/paths.ts). A `nev` a
  * `paciens.json`-ből jön -- nem a mappanév visszafejtése és nem egy
- * betöltött `terv.json`-é (D29). Az `utolsoAktivitas` a `paciens.json`
+ * betöltött `terv.json`-é. Az `utolsoAktivitas` a `paciens.json`
  * ugyanezen mezőjének tükre -- ez teszi lehetővé, hogy a Kezdőlap recent
  * listája (`domain/paciensAktivitas.ts` `legutobbAktivPaciensek`) a
  * `listPatients()` eredményéből dolgozzon, `paciens.json` újraolvasása
@@ -375,7 +376,7 @@ export interface PatientFolder {
 }
 
 /**
- * Egy terv-mappa (terv-lánc) egy páciensen belül (D29). `tervCim: null` =
+ * Egy terv-mappa (terv-lánc) egy páciensen belül. `tervCim: null` =
  * nincs kézzel átírt `terv-cimke.json` -- a UI ilyenkor élő auto-javaslatot
  * mutat (`domain/tervCim.ts` `megjelenitettTervCim`), nem `null`-t.
  */

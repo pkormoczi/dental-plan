@@ -1,10 +1,10 @@
 // Terv-címke auto-javaslata -- a Korábbi tervek fán megjelenő terv-lánc
-// címe, amíg a doki kézzel át nem írja (docs/02-domain-modell.md § Páciens-
-// és terv-mappa, D29). A domináns kategória a legnagyobb ÖSSZEGŰ (nem a
+// címe, amíg a doki kézzel át nem írja (lásd app/src/storage/CLAUDE.md).
+// A domináns kategória a legnagyobb ÖSSZEGŰ (nem a
 // legtöbb sorból álló) kategória, mert egy nagy értékű beavatkozás jobban
 // jellemzi a tervet, mint egy olcsó, de gyakori tétel; holtversenynél a
 // kisebb `sorrend`-ű kategória nyer -- ugyanaz a precedencia-elv, mint a
-// fogtérkép ütközésfeloldásában (D28, `resolveToothVisual`,
+// fogtérkép ütközésfeloldásában (`resolveToothVisual`,
 // domain/toothVisual.ts).
 
 import { sorOsszeg } from './totals';

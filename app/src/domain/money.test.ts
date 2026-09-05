@@ -7,7 +7,6 @@ describe('formatMoney', () => {
   });
 
   it('formats EUR from cents with two decimals and comma', () => {
-    // docs/04-nyomtatvany-spec.md: "1.234,56 €"
     expect(formatMoney(123456, 'EUR', 'de')).toBe('1.234,56 €');
   });
 
@@ -91,7 +90,7 @@ describe('basePrice', () => {
     expect(basePrice({ tipus: 'FIX', ertek: 25000 })).toBe(25000);
   });
 
-  it('returns min for SAVOS (D15: min is the editable default)', () => {
+  it('returns min for SAVOS (min is the editable default)', () => {
     expect(basePrice({ tipus: 'SAVOS', min: 38000, max: 65000 })).toBe(38000);
   });
 

@@ -1,7 +1,7 @@
 // Véglegesítés-őr -- a PreviewPage.tsx tartalmi validációjának tiszta,
-// React-mentes magja (docs/03-funkcionalis-spec.md § 4. Előnézet és
-// véglegesítés). Egységes, navigálható `hard`/`soft`/`info` tétel-lista
-// modellt ad (D73) -- a korábbi, szekvenciális megerősítő-lánc
+// React-mentes magja (lásd app/src/domain/CLAUDE.md). Egységes,
+// navigálható `hard`/`soft`/`info` tétel-lista
+// modellt ad -- a korábbi, szekvenciális megerősítő-lánc
 // (`VEGLEGESITES_LEPESEK`/`kovetkezoLepes`) megszűnt: a puha tételek NEM
 // blokkolnak és nem kérnek "Folytatás"-t, a sorrend a checklist RENDER-
 // sorrendje, nem egy bejárt állapotgép. A meglévő domain-függvényeket
@@ -9,8 +9,9 @@
 // `domain/nemetNev.ts`, `domain/nev.ts`.
 //
 // A `PreviewPage.tsx`-ben marad: a React state, a checklist RENDERelése,
-// a `doFinalize()`, és az `isPlaceholderTemplate()`-re épülő D23-zár (a
-// nyilatkozat+aláírás blokk letiltása) -- ez utóbbi nem ehhez a listához,
+// a `doFinalize()`, és az `isPlaceholderTemplate()`-re épülő placeholder-zár
+// (a nyilatkozat+aláírás blokk letiltása: a jogász „még nincs lezárva"
+// jelölésű szövege nem kerülhet aláírásra) -- ez utóbbi nem ehhez a listához,
 // hanem a nyilatkozat blokk renderjéhez tartozik (a `nyilatkozat-
 // placeholder` tétel itt csak a TÉNYT jelzi, a kényszerített offer-only
 // mód a hívó dolga).
@@ -207,7 +208,7 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // KEMÉNY blokk (62. tétel, D71): egy beárazatlan tétel 0 Ft-tal nem
+  // KEMÉNY blokk (62. tétel): egy beárazatlan tétel 0 Ft-tal nem
   // kerülhet aláírandó dokumentumra -- a doki vagy kézi ajánlati árat ad,
   // vagy törli/másik pénznemre vált.
   const araztalanSorokLista = araztalanSorok(plan, priceList);
@@ -222,8 +223,11 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // D74/D133: minden látható sornak legyen igazolt német neve -- árlistai
-  // nev.de-t követő VAGY D72 szerint igazoltan németül írt kézi szöveg.
+  // DE terven minden látható sornak igazoltan német neve legyen -- árlistai
+  // nev.de-t követő, VAGY a doki explicit „Nyelv ellenőrizve" akciójával
+  // németnek igazolt kézi szöveg. A szerkesztő HU-visszaesése csak
+  // munkaállapot: aláírandó német dokumentumon magyar tételnév nem
+  // elfogadható.
   const { nincsArlistaiNev, ellenorizetlenKeziNev } = igazolatlanNemetNevek(plan, priceList);
   if (nincsArlistaiNev.length + ellenorizetlenKeziNev.length > 0) {
     const reszletek: CsekklistaReszlet[] = [];
@@ -243,8 +247,9 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // D74/D404: a fogtérkép-legendán ténylegesen megjelenő kategóriának
-  // legyen német neve.
+  // A fogtérkép-legendán ténylegesen megjelenő kategóriának is legyen német
+  // neve -- egy lefordítatlan legenda-felirat ugyanúgy nem elfogadható egy
+  // aláírandó német dokumentumon, mint egy tételnév.
   const nemetKategoriak = igazolatlanNemetKategoriak(plan, priceList);
   if (nemetKategoriak.length > 0) {
     tetelek.push({
@@ -299,7 +304,7 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // 65. tétel (D72) -- a doki SAJÁT, szabadon gépelt szövegeinek nyelve,
+  // 65. tétel -- a doki SAJÁT, szabadon gépelt szövegeinek nyelve,
   // SZÁNDÉKOSAN külön a fenti `nemet-nev` tételtől (az az ÁRLISTAI
   // fordítás/igazolás hiányát jelzi).
   const nyelviMismatchekLista = nyelviMismatchek(plan);
@@ -343,7 +348,7 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // PUHA figyelmeztetés (backlog-61, D70) -- az árlista-eltérés
+  // PUHA figyelmeztetés (backlog-61) -- az árlista-eltérés
   // (kedvezmény/felár vagy elavult pillanatkép) legitim állapot is lehet.
   const arElteresek = arElteroSorok(plan, priceList);
   if (arElteresek.elavult.length + arElteresek.keziAr.length > 0) {
@@ -409,8 +414,10 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // backlog-40 (D162/D163): a páciens törzsadata INFO-szintű, nem blokkoló
-  // jelzés -- a véglegesítés önmagában nem kényszerít szinkronizálást (D9/D33).
+  // backlog-40: a páciens törzsadata INFO-szintű, nem blokkoló jelzés -- a
+  // törzsadat és a terv `paciens` pillanatképe között nincs automatikus
+  // szinkron egyik irányban sem, az átvétel mindig explicit doki-akció, a
+  // véglegesítés nem kényszeríti ki.
   const masterElteresek = master ? masterSnapshotDiff(master, plan.paciens) : [];
   if (masterElteresek.length > 0) {
     tetelek.push({

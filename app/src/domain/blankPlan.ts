@@ -31,12 +31,14 @@ export function fazisNevGeneralt(nev: string, pos: number): boolean {
 export const ELSO_FAZIS_NEV = generaltFazisNev(1);
 
 /**
- * D52 öröklési forrása -- egy meglévő páciens legutóbb VÉGLEGESÍTETT
- * tervének nyelve/pénzneme, amit egy új lánc induláskor átvesz. Szűken
+ * Az öröklés forrása -- egy meglévő páciens legutóbb VÉGLEGESÍTETT
+ * tervének nyelve/pénzneme, amit egy új lánc induláskor átvesz: egy
+ * visszatérő, korábban németül/EUR-ban tárgyalt páciensnél az új terv ne
+ * váltson csendben vissza magyar/HUF alapértékre. Szűken
  * `nyelv`/`penznem`-re szorítva (nem egy teljes `Plan`), hogy a bővítés ne
  * nyisson csendes utat más mező átvételére -- az `orvos` ezen a paraméteren
- * SOSEM örökölhető, mert saját önálló globális default-forrása van (D63,
- * `domain/orvosok.ts` `alapertelmezettOrvosNeve()`).
+ * SOSEM örökölhető, mert saját önálló globális default-forrása van
+ * (`domain/orvosok.ts` `alapertelmezettOrvosNeve()`).
  */
 export interface OroklottNyelvPenznem {
   nyelv: Nyelv;
@@ -49,7 +51,7 @@ export function createBlankPlan(
   oroklott?: OroklottNyelvPenznem | null,
 ): Plan {
   const today = todayIso();
-  // D21: a nyelv és a pénznem független -- a német páciens Magyarországon
+  // A nyelv és a pénznem független -- a német páciens Magyarországon
   // forintban is fizethet. Öröklés híján `settings.alapertelmezettNyelv`
   // dönt (a német nyelv mindig választható, nincs hozzá engedélyező
   // kapcsoló).
@@ -88,7 +90,6 @@ export function createBlankPlan(
     elolegOsszeg: null,
     // A doki kapcsolója a szerkesztőben -- alapból nincs terv-szintű kedvezmény.
     kedvezmenyOsszeg: null,
-    // Alapból bekapcsolva -- docs/02-domain-modell.md § Tétel-leírás.
     leirasokMutatasa: true,
     // Új terv alapból teljes dokumentum -- a doki kapcsolója az Előnézet lapon.
     csakAjanlat: false,

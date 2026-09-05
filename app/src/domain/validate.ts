@@ -102,7 +102,7 @@ export function assertSettingsShape(data: unknown, fileKind = 'beallitasok.json'
   const s = data as Record<string, unknown>;
   if (s.rendelo == null || typeof s.rendelo !== 'object') fail(fileKind, 'hiányzik a "rendelo" mező');
   if (!isArray(s.orvosok)) fail(fileKind, 'hiányzik vagy nem tömb az "orvosok" mező');
-  // Opcionális mező -- csak akkor validálunk, ha jelen van (D63); az
+  // Opcionális mező -- csak akkor validálunk, ha jelen van; az
   // `alapertelmezettOrvos`-hoz nem kell guard, egy hibás érték némán az első
   // aktív névre esik vissza, nem crash-el (domain/orvosok.ts).
   if (s.inaktivOrvosok != null && !isArray(s.inaktivOrvosok)) {
@@ -111,7 +111,7 @@ export function assertSettingsShape(data: unknown, fileKind = 'beallitasok.json'
   if (!isFiniteNumber(s.ervenyessegNap)) fail(fileKind, '"ervenyessegNap" nem véges szám');
 }
 
-// D33: a paciens-adatok.json -- ellentétben a puszta index-fájlokkal
+// A paciens-adatok.json -- ellentétben a puszta index-fájlokkal
 // (paciens.json, terv-cimke.json, amik `parseJson` után némán a mappanévre/
 // élő javaslatra esnek vissza sérülés esetén) -- valódi system of record,
 // tehát egy sérült fájl itt betöltési hibaként kell felszínre kerüljön, nem

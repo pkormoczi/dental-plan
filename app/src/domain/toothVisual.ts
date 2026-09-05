@@ -6,8 +6,9 @@
 // külön "melyik fog milyen színű" logika.
 //
 // A `kategoriaId -> szín` leképezés render-időben, a JELENLEGI árlistából
-// oldódik fel -- ez szándékosan feszíti a D7 pillanatkép-elvét (lásd
-// CLAUDE.md), de csak a SZÍN kozmetikai szinten: a `nevSnapshot` és az árak
+// oldódik fel -- ez szándékosan feszíti a pillanatkép-elvet (mentett sor =
+// pillanatkép, lásd app/src/domain/CLAUDE.md), de csak a SZÍN kozmetikai
+// szinten: a `nevSnapshot` és az árak
 // továbbra is a felvétel pillanatát tükrözik, változatlanul. Ha egy sor
 // `tetelId`-je nincs a mai árlistában, a fog semleges "Egyéb" színt kap, és
 // ezt a `hianyzoTetel` jelzi -- nem tűnhet el némán.
@@ -73,8 +74,7 @@ export interface FogterkepAllapot {
 /**
  * Egy fogon több kezelés is lehet (pl. gyökérkezelés + korona ugyanazon a
  * fogon) -- a megjelenő szín a legkisebb `sorrend`-ű kategóriáé (a
- * kategória-lista sorrendje egyben fontossági sorrend is, D28
- * `docs/01-attekintes-es-dontesek.md`). Holtversenynél (két
+ * kategória-lista sorrendje egyben fontossági sorrend is). Holtversenynél (két
  * kategória azonos `sorrend`-del -- rendes adaton nem fordulhat elő) az
  * `id` dönt, hogy az eredmény determinisztikus maradjon. Az
  * `ISMERETLEN_KATEGORIA` (`sorrend: Infinity`) így sosem nyerhet egy valódi

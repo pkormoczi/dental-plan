@@ -85,7 +85,7 @@ describe('frissDatummal', () => {
     expect(friss.ervenyesIg).toBe('2026-09-08');
   });
 
-  it('a sorok ára, nevSnapshot-ja és tetelId-je változatlan marad (D7)', () => {
+  it('a sorok ára, nevSnapshot-ja és tetelId-je változatlan marad', () => {
     const plan = makePlan();
     const friss = frissDatummal(plan, settings, '2026-08-09');
     expect(friss.fazisok).toEqual(plan.fazisok);
@@ -109,7 +109,7 @@ describe('frissDatummal', () => {
     expect(plan.keltezes).toBe(eredetiKeltezes);
   });
 
-  // D75: "Új verzió" nyitásakor a "Csak ajánlat" állapot öröklődik --
+  // "Új verzió" nyitásakor a "Csak ajánlat" állapot öröklődik --
   // ellentétben a másolással (planCopy.test.ts).
   it('a csakAjanlat változatlanul öröklődik', () => {
     const plan = makePlan({ csakAjanlat: true });

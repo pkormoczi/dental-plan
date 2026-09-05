@@ -113,7 +113,7 @@ describe('arlistaiLeiras (backlog-60)', () => {
     expect(arlistaiLeiras(tetelLeirassal, 'hu')).toBe('Implantátum\nFelépítmény');
   });
 
-  it('hiányzó fordításnál üres stringet ad -- D27, nincs HU-visszaesés', () => {
+  it('hiányzó fordításnál üres stringet ad -- nincs HU-visszaesés', () => {
     expect(arlistaiLeiras(tetelLeirassal, 'de')).toBe('');
   });
 });
@@ -142,7 +142,7 @@ describe('leirasKoveti', () => {
     );
   });
 
-  it('hiányzó DE leírásnál az üres snapshot "követi"-nek számít -- nincs HU-visszaesés (D27)', () => {
+  it('hiányzó DE leírásnál az üres snapshot "követi"-nek számít -- nincs HU-visszaesés', () => {
     expect(leirasKoveti(sor({ leirasSnapshot: '' }), tetelLeirassal, 'de')).toBe(true);
   });
 

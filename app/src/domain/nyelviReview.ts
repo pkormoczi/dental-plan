@@ -1,4 +1,4 @@
-// Manuális szövegek nyelvi review-ja (D72, 65. tétel). A doki szabadon
+// Manuális szövegek nyelvi review-ja (65. tétel). A doki szabadon
 // gépelt szövegei (sornév, sorleírás, fázisnév, fázis-megjegyzés) a
 // nyomtatványra kerülnek -- ez a modul jelzi, ha egy ilyen szöveg nem a
 // dokumentum nyelvén íródott. SZÁNDÉKOSAN KÜLÖN modul a `nev.ts`
@@ -35,7 +35,7 @@ export function nyelviMismatch(meta: NyelviReview | null | undefined, nyelv: Nye
  *
  * Ha a mező MÁR mismatch-elt (`nyelviMismatch(elozo, nyelv)` igaz) a
  * szerkesztés PILLANATÁBAN, egy tényleges tartalmi változás is ÉRINTETLENÜL
- * hagyja a metaadatot -- D480: egy másik nyelven történő teljes átírás
+ * hagyja a metaadatot -- egy másik nyelven történő teljes átírás
  * (akár szó szerinti fordítás) sem old fel automatikusan, nincs "jelentős
  * változás" heurisztika, kizárólag az explicit "Nyelv ellenőrizve" akció
  * (`reviewElfogadva`) teheti ezt.
@@ -43,7 +43,7 @@ export function nyelviMismatch(meta: NyelviReview | null | undefined, nyelv: Nye
  * Egyébként (nem volt mismatch -- akár mert nem volt metaadat, akár mert a
  * review épp a jelenlegi nyelvre szólt) egy valódi tartalmi változás friss
  * szerzőségnek számít a JELENLEGI dokumentumnyelven, minden korábbi
- * elfogadás elveszik (D479).
+ * elfogadás elveszik.
  */
 export function reviewIrasUtan(
   elozo: NyelviReview | null | undefined,

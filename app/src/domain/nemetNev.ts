@@ -1,5 +1,7 @@
-// Német nyelvi teljesség a nyomtatványon -- KEMÉNY véglegesítés-blokk
-// (D74). SZÁNDÉKOSAN külön modul: a `nev.ts` `sorFallback()`-ja azt méri,
+// Német nyelvi teljesség a nyomtatványon -- KEMÉNY véglegesítés-blokk: egy
+// aláírandó német dokumentumon lefordítatlan magyar tételnév/kategórianév
+// jogilag és kommunikációsan nem elfogadható.
+// SZÁNDÉKOSAN külön modul: a `nev.ts` `sorFallback()`-ja azt méri,
 // van-e ÁRLISTAI német fordítás, a `nyelviReview.ts` pedig azt, hogy a
 // doki SAJÁT, kézzel gépelt szövege milyen nyelvű -- a CLAUDE.md szerint a
 // két kérdés szándékosan külön él. Ez a modul a kettőt KOMPONÁLJA egy
@@ -14,7 +16,7 @@ import type { Plan, PriceList, Sor, Tetel } from './types';
 /**
  * Igaz, ha a sor neve igazoltan németül van -- vagy azért, mert az
  * árlistai német nevet követi (`nevKoveti`), vagy azért, mert a doki
- * kézzel írt/átírt szövege a D72 review-metaadat szerint igazoltan
+ * kézzel írt/átírt szövege a review-metaadat szerint igazoltan
  * németre íródott (`nevNyelv`, nem mismatch). A `tetelId`-je a mai
  * árlistában nem található sort (törölt/átnevezett tétel) szándékosan
  * kihagyja -- ugyanaz a leniency, mint a `sorFallback()`-nál
@@ -36,7 +38,7 @@ export interface IgazolatlanNemetNevek {
 
 /**
  * A tervben lévő, nyelvileg nem igazolt német nevű sorok, javítási út
- * szerint két listára bontva (D74/D133). Csak `nyelv === 'de'` terven ad
+ * szerint két listára bontva. Csak `nyelv === 'de'` terven ad
  * eredményt -- magyar terven a német nyelvi teljesség nem releváns.
  */
 export function igazolatlanNemetNevek(plan: Plan, priceList: PriceList): IgazolatlanNemetNevek {
@@ -56,7 +58,7 @@ export function igazolatlanNemetNevek(plan: Plan, priceList: PriceList): Igazola
 
 /**
  * A fogtérkép-legendán ténylegesen megjelenő (`buildToothVisualStates`
- * `jelmagyarazat`), de német név nélküli kategóriák magyar neve -- D404.
+ * `jelmagyarazat`), de német név nélküli kategóriák magyar neve.
  * A tervben NEM használt kategória hiányzó német neve szándékosan nem
  * blokkol, csak ami ténylegesen a nyomtatványra kerül. Az
  * `ISMERETLEN_KATEGORIA` (üres `id`) kimarad -- az nem valódi kategória

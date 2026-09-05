@@ -8,7 +8,7 @@ describe('assertKnownSchemaVersion', () => {
     ).not.toThrow();
   });
 
-  it('rejects a newer-than-known version with a readable message (D18)', () => {
+  it('rejects a newer-than-known version with a readable message', () => {
     expect(() => assertKnownSchemaVersion({ schemaVersion: 2 }, 'terv')).toThrow(
       SchemaVersionError,
     );

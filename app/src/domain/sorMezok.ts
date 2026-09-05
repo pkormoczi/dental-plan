@@ -7,10 +7,9 @@ import type { Nyelv, Penznem, Sor, Tetel } from './types';
  * új sor felvitelénél (`addLine`) és egy a fogtérképről létrehozott, tétel
  * nélküli sor utólagos kitöltésénél (`LineRow` beágyazott `ItemPicker`-je),
  * hogy az árazási logika (SAVOS -> min) egy helyen éljen -- lásd
- * `domain/money.ts` `basePrice()`, CLAUDE.md "Meglévő segédfüggvények",
- * ne írd újra.
+ * `domain/money.ts` `basePrice()` és app/src/domain/CLAUDE.md, ne írd újra.
  *
- * 62. tétel (D71): egy `currency`-ben nem beárazott tétel (`ar[currency] ==
+ * 62. tétel: egy `currency`-ben nem beárazott tétel (`ar[currency] ==
  * null`) is felvehető -- a keresőben ma már megjelenik (`available` a
  * PlanEditorPage-en nem szűr pénznemre). Ilyenkor a sor `listaEgysegar`/
  * `tenylegesEgysegar` `0`-n indul, "hiányzó ár" állapotban -- lásd
@@ -40,9 +39,9 @@ export function sorMezokTetelbol(
     savos: ar?.tipus === 'SAVOS',
     listaEgysegar: base,
     tenylegesEgysegar: base,
-    // D27 (docs/01): nincs HU-visszaesés a leírásra, hiányzó fordítás = üres.
+    // Nincs HU-visszaesés a leírásra, hiányzó fordítás = üres.
     leirasSnapshot: arlistaiLeiras(item, nyelv),
-    // D72: árlistát követő szöveg -- nincs mit nyelvileg ellenőrizni.
+    // Árlistát követő szöveg -- nincs mit nyelvileg ellenőrizni.
     nevNyelv: null,
     leirasNyelv: null,
   };
@@ -80,7 +79,7 @@ export function sorMezokEgyedibol(
     listaEgysegar: 0,
     tenylegesEgysegar: 0,
     leirasSnapshot: '',
-    // D72: a begépelt egyedi név a doki saját szövege -- ez tölti be a
+    // A begépelt egyedi név a doki saját szövege -- ez tölti be a
     // `sorFallback` 'egyedi' ágának deklarált vakfoltját ("nem
     // ellenőrizhető, milyen nyelven íródott", domain/nev.ts).
     nevNyelv: { authoredInLanguage: nyelv },

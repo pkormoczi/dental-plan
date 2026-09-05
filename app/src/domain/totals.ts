@@ -1,5 +1,5 @@
-// Osszegzesi logika. Az osszesitok mezo a fajlban szamit igaznak (lasd
-// schema.ts / docs/02-domain-modell.md "Miert van osszesitok, ha szarmaztathato"),
+// Osszegzesi logika. Az osszesitok mezo a fajlban szamit igaznak (az alairt
+// papirral kell egyeznie, nem az ujraszamolt ertekkel -- lasd app/src/domain/CLAUDE.md),
 // ez a modul allitja elo veglegesiteskor es szamolja ujra betolteskor
 // az osszehasonlitashoz.
 
@@ -32,10 +32,10 @@ export function sorokListaOsszeg(fazisok: Fazis[]): number {
 /**
  * A terv tényleges végösszege (Fizetendő): a sorok összege mínusz a
  * terv-szintű, ELŐJELES eltérés (`kedvezmenyOsszeg` -- pozitív kedvezmény,
- * negatív felár, D69). Ez az EGYETLEN hely, ahol a Fizetendő eldől -- a
+ * negatív felár). Ez az EGYETLEN hely, ahol a Fizetendő eldől -- a
  * szerkesztő, a nyomtatvány és a `computeOsszesitok` is ezt hívja.
  *
- * SOHA nem ad negatívat: az eltérés fix összeg (D25), tehát utólagos
+ * SOHA nem ad negatívat: az eltérés fix összeg, tehát utólagos
  * sortörléskor a kedvezmény-ág a sorok összege fölé kerülhet -- ilyenkor 0
  * a fizetendő, nem negatív szám az aláírandó papíron. A szerkesztő ezt
  * külön jelzi.
@@ -47,7 +47,7 @@ export function tervVegosszeg(fazisok: Fazis[], kedvezmenyOsszeg?: number | null
 export interface ElolegOsszegek {
   eloleg: number;
   /**
-   * `null`, ha az előleg meghaladja a fizetendőt (D66) -- ilyenkor a
+   * `null`, ha az előleg meghaladja a fizetendőt -- ilyenkor a
    * fennmaradó rész nem értelmezhető negatív számként a nyomtatványon/
    * szerkesztőben, a hívó „—"-t jelenít meg helyette. A véglegesítés-őr
    * ezt az esetet kemény blokkal fogja meg (`elolegTullepi`), de a szerkesztő
@@ -58,7 +58,7 @@ export interface ElolegOsszegek {
 
 /**
  * Az előleg meghaladja-e a fizetendőt -- ez az EGYETLEN hely, ahol ez a
- * határ eldől; az `elolegOsszegek` és a véglegesítés-őr is ezt hívja (D66).
+ * határ eldől; az `elolegOsszegek` és a véglegesítés-őr is ezt hívja.
  */
 export function elolegTullepi(fizetendo: number, eloleg: number): boolean {
   return eloleg > fizetendo;
@@ -66,11 +66,11 @@ export function elolegTullepi(fizetendo: number, eloleg: number): boolean {
 
 /**
  * Az előleg és a fennmaradó rész összege egy adott (abszolút) előleg-
- * összeghez (D66 -- korábban százalékból számolt, drift-mentes érték volt,
+ * összeghez (korábban százalékból számolt, drift-mentes érték volt,
  * a doki tudatosan fix összegre váltott).
  *
  * A `fizetendo` a TÉNYLEGES (kedvezménnyel csökkentett) végösszeg, nem a
- * listaáras -- a páciens ehhez képest fizet előleget (D9: a nyomtatványon
+ * listaáras -- a páciens ehhez képest fizet előleget (a nyomtatványon
  * amúgy sem látszik a kedvezmény). A fennmaradó részt KIVONÁSSAL adja, nem
  * külön kerekítéssel, hogy a két szám mindig pontosan a `fizetendo`-t adja
  * ki -- kivéve, ha az előleg túllépi a fizetendőt, ott `fennmarado: null`.
@@ -93,8 +93,8 @@ export const ELOLEG_SZAZALEK_KEREKITES = 1000;
  * Egy 0-100 közé szorított előleg-százalékot vált a Fizetendőből ABSZOLÚT
  * összeggé, felfelé kerekítve a legközelebbi `ELOLEG_SZAZALEK_KEREKITES`
  * többszörösére. A százalék ez után NEM tárolódik és nem számol újra -- csak
- * beviteli segéd az `elolegOsszeg` mezőhöz (docs/03-funkcionalis-spec.md §
- * Előleg), a felkerekítés miatt a Fizetendő fölé is vihet, ezt a hívó a mai
+ * beviteli segéd az `elolegOsszeg` mezőhöz, a felkerekítés miatt a
+ * Fizetendő fölé is vihet, ezt a hívó a mai
  * `elolegTullepi()` úton kezeli.
  */
 export function elolegSzazalekbol(fizetendo: number, szazalek: number): number {
@@ -122,7 +122,7 @@ export function computeOsszesitok(
  * hívta eddig a computeOsszesitok-ot, betöltéskor senki nem hasonlította
  * össze. `null`, ha a mentett és az élőben újraszámolt érték egyezik;
  * egyébként az újraszámolt érték, hogy a hívó megjeleníthesse a diffet.
- * SOHA nem írja felül a mentett `osszesitok`-ot (D7: a snapshot az igazság).
+ * SOHA nem írja felül a mentett `osszesitok`-ot (a snapshot az igazság).
  */
 export function osszesitokElter(
   mentett: Osszesitok,

@@ -1,4 +1,4 @@
-// Mezőszintű validáció a páciens-törzsadat szerkesztőjéhez (D45) --
+// Mezőszintű validáció a páciens-törzsadat szerkesztőjéhez --
 // ellentétben a `validate.ts`-szel (JSON betöltési határ, throw alapú
 // alakellenőrzés), ez a doki gépelését ellenőrzi, és hibaszöveget ad
 // vissza, nem dob. Mindkét mező opcionális -- üres bemenetnél nincs hiba.

@@ -1,4 +1,6 @@
-// Fogak -> darabszám követés (D14 részleges újranyitása, backlog-27). A
+// Fogak -> darabszám követés (backlog-27) -- az egységtípus explicit,
+// tételenkénti besorolása szándékosan kimaradt: a `parseTeeth()`
+// mindent-vagy-semmit heurisztikája ugyanezt éri el adminmunka nélkül. A
 // `teeth.ts`-től szándékosan külön modul: az ott lévő függvények tiszta
 // FDI-string parserek, nem ismerik a `Sor` típust; a `Sor`-tudatos
 // szinkronizálás helye a `nev.ts` precedense (nevKoveti/leirasKoveti).
