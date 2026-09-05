@@ -456,6 +456,23 @@ describe('veglegesitesDiagnozis', () => {
       expect(tetel(diag, 'sablon-fallback')?.sulyossag).toBe('soft');
     });
 
+    // 5. megállapítás (doctor-review): a checklist route-ja a HÍVÓ terv
+    // nyelvén nyitja a Nyomtatványok fület, hogy a doki ne kelljen még
+    // egyet kattintania a Deutsch chipre.
+    it('sablonFallback esetén a route a terv nyelvét viszi (nyelv=de)', () => {
+      const plan = makePlan([[sor()]], { nyelv: 'de' });
+      const diag = veglegesitesDiagnozis(
+        plan,
+        priceList,
+        true,
+        NO_MASTER,
+        AKTIV_ORVOSOK,
+        { ...NO_SABLON, sablonFallback: true },
+        NO_NEV_UTKOZES,
+      );
+      expect(tetel(diag, 'sablon-fallback')?.route).toBe('/beallitasok?tab=nyomtatvanyok&nyelv=de');
+    });
+
     it('nyilatkozatPlaceholder igaz esetén "nyilatkozat-placeholder" info tételt ad, nem blokkol', () => {
       const plan = makePlan([[sor()]]);
       const diag = veglegesitesDiagnozis(
@@ -471,7 +488,7 @@ describe('veglegesitesDiagnozis', () => {
       expect(vanKemenyBlokk(diag)).toBe(false);
     });
 
-    it('a "nyilatkozat-placeholder" tétel a Beállítások Nyomtatványok fülére navigál', () => {
+    it('a "nyilatkozat-placeholder" tétel magyar tervről a Beállítások Nyomtatványok fülére, Magyar nyelvre navigál', () => {
       const plan = makePlan([[sor()]]);
       const diag = veglegesitesDiagnozis(
         plan,
@@ -482,7 +499,21 @@ describe('veglegesitesDiagnozis', () => {
         { ...NO_SABLON, nyilatkozatPlaceholder: true },
         NO_NEV_UTKOZES,
       );
-      expect(tetel(diag, 'nyilatkozat-placeholder')?.route).toBe('/beallitasok?tab=nyomtatvanyok');
+      expect(tetel(diag, 'nyilatkozat-placeholder')?.route).toBe('/beallitasok?tab=nyomtatvanyok&nyelv=hu');
+    });
+
+    it('a "nyilatkozat-placeholder" tétel német tervről a Nyomtatványok fülre, Deutsch nyelvre navigál', () => {
+      const plan = makePlan([[sor()]], { nyelv: 'de' });
+      const diag = veglegesitesDiagnozis(
+        plan,
+        priceList,
+        true,
+        NO_MASTER,
+        AKTIV_ORVOSOK,
+        { ...NO_SABLON, nyilatkozatPlaceholder: true },
+        NO_NEV_UTKOZES,
+      );
+      expect(tetel(diag, 'nyilatkozat-placeholder')?.route).toBe('/beallitasok?tab=nyomtatvanyok&nyelv=de');
     });
 
     // A fizetési feltételek/garancia placeholder- vagy üres szövege a hívó
@@ -504,6 +535,7 @@ describe('veglegesitesDiagnozis', () => {
       expect(t?.sulyossag).toBe('soft');
       expect(t?.szamlalo).toBe(1);
       expect(t?.reszletek?.[0].nevek).toEqual(['Garancia']);
+      expect(t?.route).toBe('/beallitasok?tab=nyomtatvanyok&nyelv=hu');
       expect(vanKemenyBlokk(diag)).toBe(false);
     });
 

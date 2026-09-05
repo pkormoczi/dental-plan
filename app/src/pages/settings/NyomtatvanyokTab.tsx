@@ -7,6 +7,7 @@
 // fordítva.
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Box, Button, Callout, Flex, Text, TextArea } from '@radix-ui/themes';
 import { Field } from '../../components/Field';
 import ChipGroup from '../../components/ChipGroup';
@@ -31,6 +32,13 @@ const TEMPLATE_SLOTS: Array<{ key: TemplateSlotKey; label: string; rows: number 
 
 function templateBase(key: TemplateSlotKey, nyelv: Nyelv): string {
   return `${key}-${nyelv}`;
+}
+
+/** A checklist "Nyomtatvány szövegei" gombja (domain/veglegesitesOr.ts
+ * `nyomtatvanyokRoute`) a `nyelv` query paraméterrel jelöli ki az induló
+ * nyelvi chipet -- érvénytelen/hiányzó paraméter Magyarra esik vissza. */
+function toNyelv(value: string | null): Nyelv {
+  return value === 'de' ? 'de' : 'hu';
 }
 
 // Ad hoc localStorage-cache a sablonszerkesztő piszkozatához --
@@ -94,11 +102,17 @@ export function clearAllTemplateDraftCache(): void {
 
 export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const { storage, loadLatestTemplateByBase } = useStorage();
+  const [searchParams] = useSearchParams();
 
   // A tárolóból betöltött szöveg base-enként ("igazság") és a jelenleg
   // rá mutató verziófájl neve -- a mai draftDirty (useDirtyDraft) ehhez a
   // "saved" oldalhoz hasonlítja a szerkesztőmezők piszkozatát.
-  const [templateLang, setTemplateLang] = useState<Nyelv>('hu');
+  //
+  // `templateLang` kezdőértéke a `nyelv` query paraméterből (lazy init) --
+  // kizárólag a KEZDETI mount pillanatában, a `SettingsPage.tsx` `tab`
+  // paraméterének mintáján: nincs param->state szinkron effekt, egy már
+  // mountolt tabon a nyelvváltás kizárólag a ChipGroup-on át történhet.
+  const [templateLang, setTemplateLang] = useState<Nyelv>(() => toNyelv(searchParams.get('nyelv')));
   const [templateNames, setTemplateNames] = useState<Record<string, string>>({});
   const [savedTemplateTexts, setSavedTemplateTexts] = useState<Record<string, string>>({});
   const {

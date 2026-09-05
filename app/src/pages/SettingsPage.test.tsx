@@ -19,11 +19,11 @@ function renderSettings() {
 }
 
 // 87. tétel: a véglegesítés-őr "nyilatkozat-placeholder" checklist-tétele
-// (`domain/veglegesitesOr.ts`) `/beallitasok?tab=nyomtatvanyok`-ra navigál --
-// a query paraméter kizárólag a KEZDETI mountot vezérli.
-function renderSettingsOnTemplatesTab() {
+// (`domain/veglegesitesOr.ts`) `/beallitasok?tab=nyomtatvanyok&nyelv=...`-ra
+// navigál -- a query paraméterek kizárólag a KEZDETI mountot vezérlik.
+function renderSettingsOnTemplatesTab(path = '/beallitasok?tab=nyomtatvanyok') {
   return render(
-    <TestProviders initialEntries={['/beallitasok?tab=nyomtatvanyok']}>
+    <TestProviders initialEntries={[path]}>
       <SettingsPage />
     </TestProviders>,
   );
@@ -75,6 +75,45 @@ describe('SettingsPage', () => {
     renderSettingsOnTemplatesTab();
     await screen.findByText('Beállítások');
     expect(screen.getByRole('tab', { name: /Nyomtatványok/ })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  // 5. megállapítás (doctor-review): a checklist route-ja a hívó terv
+  // nyelvét a `nyelv` query paraméterben viszi -- a tab ezt olvassa
+  // kezdőértéknek, hogy a doki ne kattintson még egyet a Deutsch chipre.
+  describe('?tab=nyomtatvanyok&nyelv=... nyelv-előválasztás', () => {
+    it('nyelv=de esetén a Deutsch chip aktív és a német seed-szöveg látszik', async () => {
+      renderSettingsOnTemplatesTab('/beallitasok?tab=nyomtatvanyok&nyelv=de');
+      await screen.findByText('Beállítások');
+
+      const panel = screen.getByRole('tabpanel');
+      expect(within(panel).getByRole('radio', { name: 'Deutsch' })).toHaveAttribute('aria-checked', 'true');
+      const nyilatkozat = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+      expect(nyilatkozat.value).toContain('Der Auftraggeber bestellt die im BEHANDLUNGSPLAN');
+    });
+
+    it('nyelv=hu esetén a Magyar chip aktív', async () => {
+      renderSettingsOnTemplatesTab('/beallitasok?tab=nyomtatvanyok&nyelv=hu');
+      await screen.findByText('Beállítások');
+
+      const panel = screen.getByRole('tabpanel');
+      expect(within(panel).getByRole('radio', { name: 'Magyar' })).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('nyelv paraméter nélkül Magyar chip aktív', async () => {
+      renderSettingsOnTemplatesTab('/beallitasok?tab=nyomtatvanyok');
+      await screen.findByText('Beállítások');
+
+      const panel = screen.getByRole('tabpanel');
+      expect(within(panel).getByRole('radio', { name: 'Magyar' })).toHaveAttribute('aria-checked', 'true');
+    });
+
+    it('érvénytelen nyelv értékre Magyar chip aktív', async () => {
+      renderSettingsOnTemplatesTab('/beallitasok?tab=nyomtatvanyok&nyelv=xx');
+      await screen.findByText('Beállítások');
+
+      const panel = screen.getByRole('tabpanel');
+      expect(within(panel).getByRole('radio', { name: 'Magyar' })).toHaveAttribute('aria-checked', 'true');
+    });
   });
 
   describe('Rendelő adatai', () => {

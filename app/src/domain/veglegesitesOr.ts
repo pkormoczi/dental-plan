@@ -45,7 +45,8 @@ export type CsekklistaRoute =
   | '/terv'
   | '/arlista'
   | '/beallitasok'
-  | '/beallitasok?tab=nyomtatvanyok';
+  | '/beallitasok?tab=nyomtatvanyok&nyelv=hu'
+  | '/beallitasok?tab=nyomtatvanyok&nyelv=de';
 
 export interface CsekklistaReszlet {
   cim: string;
@@ -68,6 +69,12 @@ export interface VeglegesitesCsekklista {
 /** Igaz, ha a listában van legalább egy `hard` tétel -- a Véglegesítés gomb ekkor letiltott. */
 export function vanKemenyBlokk(csekklista: VeglegesitesCsekklista): boolean {
   return csekklista.tetelek.some((t) => t.sulyossag === 'hard');
+}
+
+/** A sablon-tételek route-ja a HÍVÓ terv nyelvén nyitja a Nyomtatványok fület --
+ * lásd `NyomtatvanyokTab.tsx` `templateLang` kezdőértékét. */
+function nyomtatvanyokRoute(nyelv: Plan['nyelv']): CsekklistaRoute {
+  return nyelv === 'de' ? '/beallitasok?tab=nyomtatvanyok&nyelv=de' : '/beallitasok?tab=nyomtatvanyok&nyelv=hu';
 }
 
 const NYELVI_REVIEW_MEZO_CIMKE: Record<ReviewMezo, string> = {
@@ -274,7 +281,7 @@ export function veglegesitesDiagnozis(
       cim: 'A szakasz szövege hiányzik, vagy még jogi lektorálásra vár — a címével együtt kimarad a nyomtatványból.',
       szamlalo: sablon.kihagyottSzekciok.length,
       reszletek: [{ cim: 'Kimaradó szakaszok', nevek: sablon.kihagyottSzekciok }],
-      route: '/beallitasok?tab=nyomtatvanyok',
+      route: nyomtatvanyokRoute(plan.nyelv),
     });
   }
 
@@ -285,7 +292,7 @@ export function veglegesitesDiagnozis(
       cim:
         'A tervhez tartozó sablon nem érhető el a megfelelő nyelven (hiányzik, vagy még jogi ' +
         'lektorálásra vár) — helyette a magyar szöveg jelenik meg a nyomtatványon.',
-      route: '/beallitasok?tab=nyomtatvanyok',
+      route: nyomtatvanyokRoute(plan.nyelv),
     });
   }
 
@@ -410,7 +417,7 @@ export function veglegesitesDiagnozis(
         'A nyilatkozat szövege ezen a nyelven hiányzik, vagy még jogi lektorálásra vár — a ' +
         'nyilatkozat és aláírás oldal emiatt nem kerülhet a nyomtatványra, a „Csak ajánlat” mód ' +
         'kényszerítve van.',
-      route: '/beallitasok?tab=nyomtatvanyok',
+      route: nyomtatvanyokRoute(plan.nyelv),
     });
   }
 

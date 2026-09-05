@@ -41,7 +41,8 @@ const ROUTE_GOMB_FELIRAT: Record<CsekklistaRoute, string> = {
   '/terv': 'Vissza a szerkesztőbe',
   '/arlista': 'Árlista',
   '/beallitasok': 'Beállítások',
-  '/beallitasok?tab=nyomtatvanyok': 'Nyomtatvány szövegei',
+  '/beallitasok?tab=nyomtatvanyok&nyelv=hu': 'Nyomtatvány szövegei',
+  '/beallitasok?tab=nyomtatvanyok&nyelv=de': 'Nyomtatvány szövegei',
 };
 
 export interface VeglegesitesChecklistProps {
