@@ -7,13 +7,13 @@ import { seedPriceList } from './priceList';
 
 // A demó tervek tetelId-hivatkozásainak integritása. A hiba, amit ez a teszt
 // megfog: egy LÉTEZŐ, de ROSSZ tételre mutató id -- a sor szövege és ára
-// ilyenkor is helyes marad (nevSnapshot/listaEgysegar pillanatkép, D7), de a
+// ilyenkor is helyes marad (nevSnapshot/listaEgysegar pillanatkép), de a
 // fogtérkép (domain/toothVisual.ts) a jelenlegi árlistából olvassa a
 // kategóriát az id alapján, tehát csendben rossz színt ad. A puszta
 // létezés-ellenőrzés ezt nem fogja meg, az ár-egyezés igen.
 //
 // Hatókör: kizárólag a demó/seed adat. Éles, véglegesített terveken a
-// pillanatkép SZÁNDÉKOSAN eltérhet a mai árlistától (D7, árlista-frissítés
+// pillanatkép SZÁNDÉKOSAN eltérhet a mai árlistától (árlista-frissítés
 // után) -- ott ugyanez az állítás hamis pozitív lenne.
 //
 // Névre nincs assertion: a nevSnapshot a demóban is lehet pontosabb az
@@ -63,11 +63,11 @@ describe('seedPlans tetelId-integritás', () => {
   );
 });
 
-// D29: a páciens-entitás bevezetése óta minden seed tervnek explicit
+// A páciens-entitás bevezetése óta minden seed tervnek explicit
 // paciensId-vel kell a saját páciens-mappájához tartoznia -- ez a teszt
 // fogná meg, ha egy új seed terv paciensId nélkül vagy egy `seedPatients`-be
 // fel nem vett azonosítóval kerülne be.
-describe('seedPlans paciensId-integritás (D29)', () => {
+describe('seedPlans paciensId-integritás', () => {
   const patientDirsByPaciensId = new Map(
     seedPatients.map(({ patientDir, record }) => [record.paciensId, patientDir]),
   );
@@ -86,7 +86,7 @@ describe('seedPlans paciensId-integritás (D29)', () => {
     expect(patientDirsByPaciensId.get(paciensId!)).toBe(patientDir);
   });
 
-  it('ugyanahhoz a tervId-hez tartozó verziók ugyanabban a planDir-ben vannak (D4)', () => {
+  it('ugyanahhoz a tervId-hez tartozó verziók ugyanabban a planDir-ben vannak', () => {
     const planDirByTervId = new Map<string, string>();
     for (const { planDir, plan } of seedPlans) {
       const existing = planDirByTervId.get(plan.tervId);
@@ -107,10 +107,10 @@ describe('seedPlans paciensId-integritás (D29)', () => {
   });
 });
 
-// D33 (backlog-28): a seedPatientData SZÁNDÉKOSAN csak egy páciensnek
+// backlog-28: a seedPatientData SZÁNDÉKOSAN csak egy páciensnek
 // (Nagy Éva) ad paciens-adatok.json-t -- a demónak mindkét állapotot
 // (rögzített törzsadat vs. élő fallback) mutatnia kell.
-describe('seedPatientData (D33)', () => {
+describe('seedPatientData', () => {
   it('minden bejegyzés egy seedPatients-beli patientDir-re és a hozzá tartozó paciensId-re mutat', () => {
     const patientDirsByRecord = new Map(seedPatients.map(({ patientDir, record }) => [patientDir, record]));
     for (const { patientDir, data } of seedPatientData) {
@@ -125,7 +125,7 @@ describe('seedPatientData (D33)', () => {
   });
 });
 
-// backlog-41 (D50): a páciens-törlés csak akkor kipróbálható friss demó
+// backlog-41: a páciens-törlés csak akkor kipróbálható friss demó
 // adaton, ha legalább egy seed páciensnek nincs terv-lánca -- mindenki
 // másnak van (legalább egy) VEGLEGES verziója, ami a törlést blokkolná.
 describe('seedPatients terv nélküli demó páciens (backlog-41)', () => {
@@ -136,7 +136,7 @@ describe('seedPatients terv nélküli demó páciens (backlog-41)', () => {
   });
 });
 
-// D39/D40: a Kezdőlap és az /uj-terv köztes páciensválasztó recent listája
+// A Kezdőlap és az /uj-terv köztes páciensválasztó recent listája
 // üres állapotot mutatna friss demón, ha a seed pácienseknek nincs
 // utolsoAktivitas-uk -- ez a teszt a pontos időbélyeget SZÁNDÉKOSAN nem
 // vizsgálja (betöltési időhöz képesti relatív eltolásból származik, lásd
@@ -145,7 +145,7 @@ describe('seedPatients terv nélküli demó páciens (backlog-41)', () => {
 // `legutobbAktivPaciensek` a SAJÁT rendezési szabálya szerint determinisztikus
 // sorrendet ad -- adatvezérelten, a konkrét pácienslistától függetlenül,
 // hogy a demó-készlet bővítése ne törje meg ezt a tesztet.
-describe('seedPatients utolsoAktivitas (D39/D40)', () => {
+describe('seedPatients utolsoAktivitas', () => {
   const patientFolders: PatientFolder[] = seedPatients.map(({ patientDir, record }) => ({
     dirName: patientDir,
     paciensId: record.paciensId,
@@ -189,8 +189,7 @@ describe('seedPatients utolsoAktivitas (D39/D40)', () => {
 });
 
 // 103. tétel: a `seedVerzio()` az EGYETLEN forrás, amiből a "nincs mentett
-// PDF" oka (demó-készlet vs. valódi hiány) eldönthető -- lásd
-// docs/03-funkcionalis-spec.md § 11 "Mentett PDF".
+// PDF" oka (demó-készlet vs. valódi hiány) eldönthető.
 describe('seedVerzio', () => {
   it('igaz minden seedPlans-beli hármasra', () => {
     for (const { patientDir, planDir, versionDir } of seedPlans) {

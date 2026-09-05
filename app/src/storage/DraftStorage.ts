@@ -1,8 +1,8 @@
 // Külön, kicsi interfész a
-// PlanStorage MELLETT, nem alatta -- docs/05-technologia.md architektúra-
-// diagramja az IndexedDB-t testvér-dobozként rajzolja a PlanStorage mellett
-// ("IndexedDB -- csak piszkozat-autosave, nem system of record"), ez a
-// különválasztás szándékos. Mockupban egy localStorage-alapú implementáció
+// PlanStorage MELLETT, nem alatta -- a végleges architektúrában az IndexedDB
+// a PlanStorage testvér-doboza ("csak piszkozat-autosave, nem system of
+// record", lásd app/src/storage/CLAUDE.md), ez a különválasztás szándékos.
+// Mockupban egy localStorage-alapú implementáció
 // (DemoDraftStorage), a 2. fázisban IndexedDB-alapú váltja -- ezen a
 // felületen kívül semmi nem tudhat arról, melyik fut éppen.
 
@@ -15,7 +15,7 @@ export type WorkflowRoute = '/paciens' | '/terv' | '/elonezet';
  * UI-workflow metaadat a piszkozathoz -- nem a terv TARTALMA (nem `Plan`-mező,
  * nem kerül papírra), csak navigációs segédlet: melyik pácienshez tartozik a
  * draft, és melyik lépésen járt a doki. Mindkettő "best effort": hiányuk nem
- * hibaállapot, csak a fallback-heurisztikák lépnek életbe (D37).
+ * hibaállapot, csak a fallback-heurisztikák lépnek életbe.
  */
 export interface DraftMeta {
   /** A páciens-mappa neve, ha a draft indításakor már ismert volt. */
@@ -23,8 +23,8 @@ export interface DraftMeta {
   /** Az utolsó workflow-route, amit a doki meglátogatott ezzel a piszkozattal. */
   lastRoute?: WorkflowRoute;
   /**
-   * A "Terv adatai" lap cím mezőjébe beírt érték (backlog-51, D61) -- NEM a
-   * terv tartalma, a cím a `terv-cimke.json`-ban él (D29), ez csak a beírt
+   * A "Terv adatai" lap cím mezőjébe beírt érték (backlog-51) -- NEM a
+   * terv tartalma, a cím a `terv-cimke.json`-ban él, ez csak a beírt
    * érték túlélje a `/paciens` -> `/terv` -> `/elonezet` navigációt. Az üres
    * string VALÓDI érték (a doki kiürítette a mezőt); `undefined` azt
    * jelenti, hogy a mezőhöz még nem nyúltak -- a kettő megkülönböztetése

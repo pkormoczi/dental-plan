@@ -1,5 +1,5 @@
-// beallitasok.json seed -- docs/02-domain-modell.md példája szerint.
-// adoszam/cegjegyzekszam üresen: a doki tölti ki (lásd README "Nyitott kérdések").
+// adoszam/cegjegyzekszam üresen: a doki tölti ki (lásd PRODUCT.md § Szándékos
+// hiányok és nyitott kérdések).
 
 import type { Settings } from '../../domain/types';
 

@@ -1,12 +1,12 @@
 // Mockup-implementáció a DraftStorage-hoz -- lásd DraftStorage.ts fejléce és
-// docs/05-technologia.md § Piszkozat-autosave. localStorage, a `dp:piszkozat` kulcson,
+// app/src/storage/CLAUDE.md. localStorage, a `dp:piszkozat` kulcson,
 // a DemoStorage.ts PREFIX konstansát újrahasznosítva, hogy a "Minden adat
 // törlése"/"Demó adat visszaállítása" gomb prefix-seprése (DemoStorage.ts
 // `clearAll()`) a piszkozatot is elsöpörje, külön kód nélkül.
 //
 // FONTOS: az olvasási út szó szerint a DemoStorage.loadPlan() háromlépcsős
 // mintáját követi (parseJson -> assertKnownSchemaVersion -> assertPlanShape)
-// -- D18 a piszkozatra is vonatkozik, egy magasabb sémaverziójú vagy sérült
+// -- a schemaVersion-szabály a piszkozatra is vonatkozik, egy magasabb sémaverziójú vagy sérült
 // perzisztált piszkozatot a betöltést meg kell tagadni, érthető üzenettel,
 // nem néma eldobással (7. döntés).
 
@@ -34,8 +34,8 @@ export class DemoDraftStorage implements DraftStorage {
     assertKnownSchemaVersion(rec, 'piszkozat');
     assertKnownSchemaVersion(rec.plan, 'piszkozat');
     assertPlanShape(rec.plan, 'piszkozat');
-    // A patientDir/lastRoute PUHA (nem `plan`-tartalom, csak navigációs tipp,
-    // D37) -- egy szemetes/idegen érték némán elmarad, nem dobja el az egész
+    // A patientDir/lastRoute PUHA (nem `plan`-tartalom, csak navigációs
+    // tipp) -- egy szemetes/idegen érték némán elmarad, nem dobja el az egész
     // piszkozatot. Régi (a mező bevezetése előtti) rekordnál mindkettő
     // hiányzik, ami ugyanezt az ágat futtatja.
     if (typeof rec.patientDir !== 'string') delete rec.patientDir;

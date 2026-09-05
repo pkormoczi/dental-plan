@@ -71,7 +71,7 @@ describe('buildDemoFileTree', () => {
       ...SAMPLE_KEYS,
       `${PREFIX}valami`,
       `${PREFIX}paciensek/x/rejtelyes.txt`,
-      // D29 előtti legacy 2-szintű alak (patientDir/versionDir/terv.json)
+      // Páciens-entitás előtti legacy 2-szintű alak (patientDir/versionDir/terv.json)
       `${PREFIX}paciensek/Legacy-Pati_zzzzzz/2026-01-01_v1/terv.json`,
       'nincs-dp-prefix.json',
     ];
@@ -83,7 +83,7 @@ describe('buildDemoFileTree', () => {
     expect(flat.some((n) => n.name === 'nincs-dp-prefix.json')).toBe(false);
   });
 
-  // D33 (backlog-28): a paciens-adatok.json a paciens.json mellett, a
+  // backlog-28: a paciens-adatok.json a paciens.json mellett, a
   // páciens-mappa gyökerén él -- mindkettőnek látszania kell, egy terv-
   // mappával azonos mélységű, de attól eltérő nevű hasonló alak (pl. egy
   // páciens-mappa alatti, terv-cimke.json-hoz hasonló mélységű, de rossz

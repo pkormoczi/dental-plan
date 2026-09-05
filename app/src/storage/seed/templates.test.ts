@@ -24,8 +24,8 @@ describe('seed templates', () => {
     expect(NYILATKOZAT_HU_V1).toContain('{{orvos}}');
   });
 
-  // Garancia szakasz a nyomtatványon (docs/04-nyomtatvany-spec.md § „2.
-  // blokk — fizetési feltételek és garancia" § „Garancia"): ellentétben a
+  // Garancia szakasz a nyomtatványon (lásd PRODUCT.md § Szándékos hiányok
+  // és nyitott kérdések): ellentétben a
   // fenti négy sablonnal, itt
   // SZÁNDÉKOSAN a MAGYAR is placeholder -- az eredeti Excelben nincs
   // garancia-szöveg, a doki adja meg. A német ebből következően is

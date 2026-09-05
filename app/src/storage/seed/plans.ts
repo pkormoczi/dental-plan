@@ -2,15 +2,15 @@
 // Nagy Éva, Tóth Zoltán -- lásd lent) alkotta az eredeti, kis demót; ez a
 // szakasz onnantól 19 TOVÁBBI pácienssel bővíti a készletet (22 összesen),
 // hogy a Pácienslista, a Korábbi tervek, az /uj-terv köztes páciensválasztó
-// (35. tétel, D40) és a Kezdőlap "Legutóbbi páciensek" (D39) valódi,
+// és a Kezdőlap "Legutóbbi páciensek" valódi,
 // sokféle adaton kézzel tesztelhető legyen: több terv-lánc egy páciensen,
-// több verzió láncként (D4 append-only), EUR pénznem, német nyelv (D21),
-// sávos ár (D15) -- természetes SAVOS tételből ÉS a doki kézzel becsültre
+// több verzió láncként (append-only), EUR pénznem, német nyelv,
+// sávos ár -- természetes SAVOS tételből ÉS a doki kézzel becsültre
 // billentett jelzésével egy FIX tételen --, terv-szintű kerek végösszeg
-// kedvezmény (D25), előleg (elolegOsszeg, D66), egyedi (árlistán kívüli) sor,
-// kézzel átírt/HU-visszaeső névjelvény (D21 `sorFallback`), kiskorú +
-// törvényes képviselő, valamint a törzsadat mindkét állapota (D33:
-// `paciens-adatok.json` megvan / élő fallback a legutóbbi tervből) és egy
+// kedvezmény, előleg (elolegOsszeg), egyedi (árlistán kívüli) sor,
+// kézzel átírt/HU-visszaeső névjelvény (`sorFallback`), kiskorú +
+// törvényes képviselő, valamint a törzsadat mindkét állapota
+// (`paciens-adatok.json` megvan / élő fallback a legutóbbi tervből) és egy
 // `utolsoAktivitas` nélküli, legacy-migrációt szimuláló páciens is.
 //
 // A tetelId-k egyetlen hiteles forrása a data/arlista.seed.json (a
@@ -130,7 +130,7 @@ const kovacsFazisok: Fazis[] = [
         fogak: '35, 36',
         mennyiseg: 2,
         listaEgysegar: 135000,
-        tenylegesEgysegar: 115000, // szándékos kedvezmény -- a szerkesztőben −X%, a PDF-en nem (D9)
+        tenylegesEgysegar: 115000, // szándékos kedvezmény -- a szerkesztőben −X%, a PDF-en nem
       },
     ],
   },
@@ -227,8 +227,7 @@ const nagyEvaV2 = buildPlan({
   arlistaVerzio: ARLISTA_VERZIO,
   orvos: 'Dr. Mándoki István',
   paciens: nagyEvaPaciens,
-  // A visszatérő páciens korábbi fázisa megmarad, plusz egy új -- lásd
-  // docs/03-funkcionalis-spec.md "5. Korábbi tervek".
+  // A visszatérő páciens korábbi fázisa megmarad, plusz egy új.
   fazisok: [
     ...nagyEvaV1Fazisok,
     {
@@ -250,7 +249,7 @@ const nagyEvaV2 = buildPlan({
   ],
 });
 
-// Második, önálló terv-lánc UGYANAHHOZ a pácienshez (D29) -- ez mutatja meg
+// Második, önálló terv-lánc UGYANAHHOZ a pácienshez -- ez mutatja meg
 // a Korábbi tervek fáján, hogy egy páciens-mappa több terv-láncot is
 // tartalmazhat, és hogy 2+ lánc esetén a páciens-blokk alapból csukva nyílik.
 const nagyEvaSzures = buildPlan({
@@ -347,7 +346,7 @@ export interface SeedPlanEntry {
  * számolt javaslatból képződik, és utána minden későbbi verzióra
  * változatlanul érvényes -- pontosan úgy, ahogy éles használatban is a
  * `storage.savePlan()` csak a lánc létrehozásakor dönti el a mappanevet
- * (D29). Ha egy chain-hez tartozó `versions` tömb 2+ elemű, csak az [0]
+ *. Ha egy chain-hez tartozó `versions` tömb 2+ elemű, csak az [0]
  * indexű (legkorábbi keltezésű) alapján számol.
  */
 function toEntries(patientDir: string, versions: Plan[]): SeedPlanEntry[] {
@@ -385,7 +384,7 @@ interface SorTerv {
   egyediAr?: number;
   fogak?: string;
   mennyiseg?: number;
-  /** A doki kézzel jelöli becsültnek a sort -- a sor `savos` mezője, FÜGGETLENÜL az árlistai ártípustól (D15). */
+  /** A doki kézzel jelöli becsültnek a sort -- a sor `savos` mezője, FÜGGETLENÜL az árlistai ártípustól. */
   savosOverride?: boolean;
   /** Soronkénti kedvezmény százalékban (0-100) -- a `tenylegesEgysegar` ebből számít. */
   kedvezmenySzazalek?: number;
@@ -393,10 +392,10 @@ interface SorTerv {
   nevOverride?: string;
   leirasSnapshot?: string;
   /**
-   * A `nevOverride` nyelvi review-metaadata (65. tétel, D72) --
+   * A `nevOverride` nyelvi review-metaadata (65. tétel) --
    * `domain/nyelviReview.ts`. A `sorFallback`-tól ELTÉRŐEN ez akkor is
    * látszik, ha a terv nyelve MAGYAR: a demó ezt mutatja meg (a
-   * `sorFallback` `hu` terven mindig `null`-t ad, D21).
+   * `sorFallback` `hu` terven mindig `null`-t ad).
    */
   nevNyelvOverride?: Nyelv;
 }
@@ -479,9 +478,9 @@ interface UjPaciensTerv {
   kiskoru?: boolean;
   torvenyesKepviselo?: string | null;
   lancok: LancTerv[];
-  /** Hiányzó = nincs `utolsoAktivitas` (legacy-migrációt szimuláló edge case, D39). */
+  /** Hiányzó = nincs `utolsoAktivitas` (legacy-migrációt szimuláló edge case). */
   aktivitas?: { tipus: AktivitasTipus; msEzelott: number };
-  /** `true` esetén a páciens lezárt `paciens-adatok.json` törzsadatot is kap (D33). */
+  /** `true` esetén a páciens lezárt `paciens-adatok.json` törzsadatot is kap. */
   patientData?: boolean;
 }
 
@@ -646,7 +645,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
     ],
   },
   // Implantátum + korona, 3 verzió -- a felépítmény sora KÉZZEL becsültre
-  // billentve (savosOverride), holott árlistailag FIX árú tétel (D15). A
+  // billentve (savosOverride), holott árlistailag FIX árú tétel. A
   // legfrissebb aktivitás "az imént" sávban.
   {
     paciensId: 'kissma',
@@ -716,8 +715,8 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
               },
               {
                 megnevezes: '3. kezelés — kontroll',
-                // 65. tétel (D72): a doki tévedésből németül gépelte át a
-                // sor nevét egy MAGYAR terven -- ezt a `sorFallback` (D21)
+                // 65. tétel: a doki tévedésből németül gépelte át a
+                // sor nevét egy MAGYAR terven -- ezt a `sorFallback`
                 // sosem jelezné (hu terven mindig `null`-t ad), a nyelvi
                 // review viszont igen.
                 sorok: [
@@ -763,7 +762,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
     ],
   },
   // Teljes szájrehabilitáció, terv-szintű kerek végösszeg kedvezménnyel
-  // (D25) a v2-n. Törzsadata lezárt.
+  // a v2-n. Törzsadata lezárt.
   {
     paciensId: 'varazs', // Varga Zsófia
     nev: 'Varga Zsófia',
@@ -796,7 +795,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
       },
     ],
   },
-  // Nagy implantációs munka, előleggel (elolegOsszeg, D66) -- a v2-n
+  // Nagy implantációs munka, előleggel (elolegOsszeg) -- a v2-n
   // vezetik be, amikor a doki eldönti a fogtechnikai munka előlegét (v2
   // összege 340 000 Ft sorösszeghez képest kerekített ~30%). Nincs törzsadat.
   {
@@ -882,9 +881,9 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
       },
     ],
   },
-  // Kivehető fogpótlás, 3 verzió, előleggel a lánc ELEJÉTŐL (D25/előleg
+  // Kivehető fogpótlás, 3 verzió, előleggel a lánc ELEJÉTŐL (kedvezmény/előleg
   // pár, hogy ne csak a "menet közben bevezetett" esetet lássuk). Az összeg
-  // (D66) verziónként kerekítve követi a sorösszeg kb. felét (25 000 / 50 000;
+  // verziónként kerekítve követi a sorösszeg kb. felét (25 000 / 50 000;
   // 115 000 / 230 000; 120 000 / 245 000) -- mivel abszolút összeg, nem
   // automatikusan élő arány. Nincs törzsadat.
   {
@@ -928,7 +927,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
   },
   // Egyedi (árlistán kívüli) sor + leírás-pillanatkép demója, NÉMET nyelvű
   // tervben -- a magyarul gépelt egyedi sor itt az 'egyedi' HU-visszaesési
-  // jelvényt mutatja (sorFallback, D21). Nincs törzsadat.
+  // jelvényt mutatja (sorFallback). Nincs törzsadat.
   {
     paciensId: 'takaes',
     nev: 'Takács Eszter',
@@ -1007,8 +1006,8 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
       },
     ],
   },
-  // Külföldi (EUR, de magyarul beszélő) páciens -- a pénznem D21 szerint
-  // FÜGGETLEN a nyelvtől: itt a nyelv marad 'hu'. Törzsadata lezárt.
+  // Külföldi (EUR, de magyarul beszélő) páciens -- a pénznem FÜGGETLEN a
+  // nyelvtől: itt a nyelv marad 'hu'. Törzsadata lezárt.
   {
     paciensId: 'lakare',
     nev: 'Lakatos Réka',
@@ -1056,7 +1055,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
   },
   // Parodontológiai kezelés, NÉMET nyelven -- a 2. sor nevSnapshot-ja
   // KÉZZEL átírva a német tétel-névtől eltérőre ('elterAzArlistatol',
-  // sorFallback, D21). Nincs törzsadat.
+  // sorFallback). Nincs törzsadat.
   {
     paciensId: 'simoma',
     nev: 'Simon Máté',
@@ -1179,7 +1178,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
     ],
   },
   // Fogfehérítés és esztétika, 2 verzió, kis terv-szintű kedvezménnyel a
-  // v2-n (második D25 példa). Törzsadata lezárt.
+  // v2-n (második kedvezmény-példa). Törzsadata lezárt.
   {
     paciensId: 'pappkr',
     nev: 'Papp Krisztina',
@@ -1257,7 +1256,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
       },
     ],
   },
-  // Legacy-migrációt szimuláló edge case (D39): NINCS utolsoAktivitas --
+  // Legacy-migrációt szimuláló edge case: NINCS utolsoAktivitas --
   // ilyenkor a páciens a Kezdőlap/páciensválasztó recent listájából kimarad,
   // de kereséssel továbbra is megtalálható. Nincs törzsadat.
   {
@@ -1313,7 +1312,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
       },
     ],
   },
-  // Terv nélküli páciens (backlog-41, D50) -- a Páciensek képernyőn felvéve,
+  // Terv nélküli páciens -- a Páciensek képernyőn felvéve,
   // de még nincs kezelési terve. Lezárt törzsadata van, de a Korábbi
   // tervek listán NEM jelenik meg (nincs terv-lánca, `OsszesTervSection.tsx`
   // ezt a filtert alkalmazza). E nélkül friss demó adaton EGYETLEN páciens
@@ -1347,7 +1346,7 @@ export const seedPlans: SeedPlanEntry[] = [
   ...ujPaciensek.flatMap((p) => p.plans),
 ];
 
-/** A `paciens.json` indexrekordok -- lásd docs/02-domain-modell.md § Páciens- és terv-mappa. */
+/** A `paciens.json` indexrekordok -- lásd app/src/storage/CLAUDE.md. */
 export const seedPatients: Array<{ patientDir: string; record: PatientRecord }> = [
   {
     patientDir: kovacsDir,
@@ -1380,7 +1379,7 @@ export const seedPatients: Array<{ patientDir: string; record: PatientRecord }> 
 ];
 
 /**
- * A `paciens-adatok.json` törzsadatok (D33) -- a demó mindkét állapotot
+ * A `paciens-adatok.json` törzsadatok -- a demó mindkét állapotot
  * mutatja: néhány páciens "rögzített törzsadat", a többi "élő adat a
  * legutóbbi tervből" (nincs saját fájljuk, a Páciensek képernyő a
  * legfrissebb `terv.json` `paciens` blokkjából mutat élő fallbacket).
@@ -1398,8 +1397,7 @@ const SEED_VERSION_KEYS = new Set(seedPlans.map(seedVersionKey));
 
 /**
  * Igaz, ha a hármas a beépített demó-készletből származik -- a
- * `resetDemoData()` sosem ír PDF-bájtot a seed-verziókhoz (docs/03-
- * funkcionalis-spec.md § 11 „Mentett PDF"), ezért ez az EGYETLEN forrás,
+ * `resetDemoData()` sosem ír PDF-bájtot a seed-verziókhoz, ezért ez az EGYETLEN forrás,
  * amiből a "nincs mentett PDF" ok (demó vs. valódi hiány) eldönthető.
  */
 export function seedVerzio(ref: Pick<PlanRef, 'patientDir' | 'planDir' | 'versionDir'>): boolean {

@@ -1,6 +1,6 @@
 // A PlanStorage interfészt egyetlen React Context mögé rejti, hogy a 2.
 // fázisban a DemoStorage -> FileSystemStorage csere egyetlen sort érintsen
-// itt, semmit a képernyőkön (lásd CLAUDE.md "Két fázisú build").
+// itt, semmit a képernyőkön (lásd PRODUCT.md § Két fázis).
 //
 // A `resetDemoData`/`clearAll`/`loadPlanPdf`/`listFileTree`/`readRawFile`/
 // `isSeedVersion` NEM a PlanStorage interface része -- ezek csak a mockup
@@ -40,7 +40,7 @@ export interface StorageContextValue {
   /** Igaz, ha a hármas a beépített demó-készletből származik (sosincs mentett PDF-je). */
   isSeedVersion: (ref: PlanRef) => boolean;
   /**
-   * docs/05-technologia.md § Piszkozat-autosave: a PlanStorage MELLETTI,
+   * Lásd app/src/storage/CLAUDE.md: a PlanStorage MELLETTI,
    * testvér-doboz -- nem annak metódusa, mert a végleges alkalmazásban is
    * külön marad (IndexedDB a FileSystemStorage mellett, nem alatta).
    */

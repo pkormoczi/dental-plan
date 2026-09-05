@@ -137,7 +137,7 @@ describe('buildDownloadFileName', () => {
   });
 });
 
-describe('buildPlanDirName / parsePlanDirName (D29)', () => {
+describe('buildPlanDirName / parsePlanDirName', () => {
   it('builds <szlugosított cím>_id6', () => {
     expect(buildPlanDirName('Fogpótlás', 'a3f9c1')).toBe('Fogpótlás_a3f9c1');
   });
@@ -189,7 +189,7 @@ describe('nextVersionNumber', () => {
   });
 });
 
-describe('assertVersionDirAvailable (D4 append-only)', () => {
+describe('assertVersionDirAvailable (append-only)', () => {
   it('does not throw for a free directory name', () => {
     expect(() => assertVersionDirAvailable(['2026-08-05_v1'], '2026-08-19_v2')).not.toThrow();
   });

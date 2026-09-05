@@ -160,7 +160,7 @@ describe('copyPlanIntoDraft', () => {
     expect(rec.plan.paciens.nev).toBe('Nagy Éva');
   });
 
-  // D53 (48. tétel): a betöltött piszkozat statusz-a PISZKOZAT-ra áll --
+  // 48. tétel: a betöltött piszkozat statusz-a PISZKOZAT-ra áll --
   // enélkül a szerkesztő fejléce hamisan "véglegesítve"-t mutatna, és a
   // letöltés elmaradna a PISZKOZAT- előtagtól, holott a forrás mai naptól
   // nincs elmentve. A tervId (a lánc-hovatartozás jele) ezzel szemben
@@ -183,7 +183,7 @@ function PriceListUpdaterProbe() {
       <div data-testid="cat-count">{priceList.kategoriak.length}</div>
       <button
         onClick={() => {
-          // Szándékosan NEM await-elve egymás után -- a D31 lényege pont az,
+          // Szándékosan NEM await-elve egymás után -- az updater-szerződés lényege pont az,
           // hogy két ilyen, egy tickben indított hívás egymás hatását ne
           // dobja el.
           void savePriceList((prev) => ({
@@ -283,7 +283,7 @@ function FailingPriceListProbe() {
   );
 }
 
-// D37: patientDir/lastRoute -- a piszkozat UI-workflow metaadata, a
+// patientDir/lastRoute -- a piszkozat UI-workflow metaadata, a
 // DraftRecord-ban perzisztálva, de NEM a Plan tartalma.
 function MetaProbe() {
   const {
@@ -327,7 +327,7 @@ function renderMetaProbe() {
   );
 }
 
-describe('D37: piszkozat-metaadat (patientDir/lastRoute)', () => {
+describe('piszkozat-metaadat (patientDir/lastRoute)', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -396,7 +396,7 @@ describe('D37: piszkozat-metaadat (patientDir/lastRoute)', () => {
   });
 });
 
-// D63: a loadPlanIntoDraft orvos-öröklése/fallback-je -- a betöltött terv
+// A loadPlanIntoDraft orvos-öröklése/fallback-je -- a betöltött terv
 // orvosa (`makeLoadedPlan().orvos === 'Dr. Mándoki István'`, a seed egyetlen
 // orvosa) marad, HA aktív; ha időközben deaktiválták, a globális default
 // orvosra esik vissza, `orvosFallback`-ben jelezve.
@@ -435,7 +435,7 @@ function renderOrvosProbe() {
   );
 }
 
-describe('D63: loadPlanIntoDraft orvos-öröklés/fallback', () => {
+describe('loadPlanIntoDraft orvos-öröklés/fallback', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -530,12 +530,12 @@ describe('D63: loadPlanIntoDraft orvos-öröklés/fallback', () => {
   });
 });
 
-// D31: a savePriceList/saveSettings context-metódus KIZÁRÓLAG updatert fogad,
+// A savePriceList/saveSettings context-metódus KIZÁRÓLAG updatert fogad,
 // és a `priceList`/`settings` állapot a mentés ELŐTT, szinkron frissül
 // (`settingsRef`/`priceListRef` + `apply*`, AppState.tsx) -- ezek a tesztek
 // pont ezt a szerződést pin-elik, nem a hívóoldali PriceListAdminPage/
 // SettingsPage kód konkrét viselkedését (azt lásd ott).
-describe('savePriceList / saveSettings -- D31 updater szerződés', () => {
+describe('savePriceList / saveSettings -- updater szerződés', () => {
   beforeEach(() => {
     localStorage.clear();
   });

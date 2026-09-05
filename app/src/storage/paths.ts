@@ -1,6 +1,6 @@
 // Mappanév- és verziólogika -- adapter-független, mindkét PlanStorage
 // implementáció (DemoStorage, majd FileSystemStorage) ugyanezt használja.
-// Lásd docs/02-domain-modell.md "Mappastruktúra" és "Mappanév szabályok".
+// Lásd app/src/storage/CLAUDE.md.
 
 // Tiltott karakterek Windows fájlnévben, plusz a záró pont/szóköz.
 // Az ékezeteket SZÁNDÉKOSAN nem transzliteráljuk -- a doki a Fájlkezelőben
@@ -18,7 +18,7 @@ export function sanitizeNamePart(raw: string): string {
 
 const ID_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-/** 6 karakteres, stabil azonosító -- ez lesz a `paciensId` és a `tervId` is (D29). */
+/** 6 karakteres, stabil azonosító -- ez lesz a `paciensId` és a `tervId` is. */
 export function generateId(): string {
   let id = '';
   for (let i = 0; i < 6; i++) {
@@ -45,7 +45,7 @@ export function splitHungarianName(fullName: string): {
 /**
  * `Vezeteknev-Keresztnev` -- a páciensmappa-név és a letöltési fájlnév
  * (`buildDownloadFileName`) közös névrésze, hogy a doki a Fájlkezelőben a
- * kettőt egymás mellé tudja tenni (docs/03-funkcionalis-spec.md § 4/5).
+ * kettőt egymás mellé tudja tenni.
  */
 export function buildPatientNameSlug(fullName: string): string {
   const { vezeteknev, keresztnev } = splitHungarianName(fullName);
@@ -53,7 +53,7 @@ export function buildPatientNameSlug(fullName: string): string {
   return parts.join('-');
 }
 
-/** `Vezeteknev-Keresztnev_<id6>` -- lásd docs/02-domain-modell.md. */
+/** `Vezeteknev-Keresztnev_<id6>`. */
 export function buildPatientDirName(fullName: string, patientId: string): string {
   return `${buildPatientNameSlug(fullName)}_${patientId}`;
 }
@@ -83,8 +83,7 @@ export function parsePatientDirName(
 }
 
 /**
- * `<szlugosított terv-cím>_<id6>` -- lásd docs/02-domain-modell.md § Páciens-
- * és terv-mappa (D29). A mappanév a terv-mappa LÉTREHOZÁSAKOR keletkezik és
+ * `<szlugosított terv-cím>_<id6>`. A mappanév a terv-mappa LÉTREHOZÁSAKOR keletkezik és
  * utána örökre FIX marad, akkor is, ha a doki később átírja a megjelenített
  * (`terv-cimke.json`-beli vagy automatikusan javasolt) címkét -- pontosan
  * úgy, ahogy a páciensmappa neve sem követi a páciensnév utólagos javítását.
@@ -105,7 +104,7 @@ export function parsePlanDirName(dirName: string): { tervCim: string; planId: st
 
 const VERSION_DIR_RE = /^(\d{4}-\d{2}-\d{2})_v(\d+)$/;
 
-/** `<ISO dátum>_v<n>` -- lásd docs/02-domain-modell.md. */
+/** `<ISO dátum>_v<n>`. */
 export function buildVersionDirName(isoDate: string, verzio: number): string {
   return `${isoDate}_v${verzio}`;
 }
@@ -127,12 +126,12 @@ export function nextVersionNumber(existingVersionDirNames: string[]): number {
   return versions.length ? Math.max(...versions) + 1 : 1;
 }
 
-/** D4: verziómappát soha nem írunk felül. */
+/** Verziómappát soha nem írunk felül: aláírt szerződést nem lehet visszamenőleg átírni. */
 export class VersionConflictError extends Error {
   constructor(dirName: string) {
     super(
       `A(z) "${dirName}" verziómappa már létezik. Verziómappát soha nem ` +
-        `írunk felül (D4) — ez hiba a hívó kódban, nem a felhasználó adatában.`,
+        `írunk felül — a verziómappák append-only-k; ez hiba a hívó kódban, nem a felhasználó adatában.`,
     );
     this.name = 'VersionConflictError';
   }
@@ -149,8 +148,7 @@ export function assertVersionDirAvailable(
 
 /**
  * Letöltött PDF fájlneve -- `[PISZKOZAT-]kezelesi-terv-<névrész>-<tervId>
- * [-<suffix>].pdf`, lásd docs/03-funkcionalis-spec.md § 4. Előnézet és
- * véglegesítés. Primitív paraméterekkel, `Plan` típus nélkül -- a `paths.ts`
+ * [-<suffix>].pdf`. Primitív paraméterekkel, `Plan` típus nélkül -- a `paths.ts`
  * a domain-rétegtől függetlenül marad, az `isDraft` eldöntése (mi számít
  * piszkozatnak) a hívó dolga.
  */

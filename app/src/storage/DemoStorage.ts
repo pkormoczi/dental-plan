@@ -1,12 +1,12 @@
 // Mockup-tárolóréteg: localStorage. A kulcsok szándékosan ugyanazt az
 // útvonalstruktúrát követik, mint amit a végleges FileSystemStorage majd a
-// lemezre ír (lásd docs/02-domain-modell.md "Mappastruktúra") -- ez nem
+// lemezre ír (lásd app/src/storage/CLAUDE.md) -- ez nem
 // dísz, hanem annak a biztosítéka, hogy a paths.ts logika már itt éles
 // terhelés alatt fut.
 //
-// FONTOS: ez csak demó -- nincs benne a docs/05-technologia.md-ben leírt
-// séma-migráció (a mockup csak az 1-es schemaVersion-t ismeri), és a
-// terv.json PDF-be ágyazása (pdf-lib) is a 2. fázisra marad.
+// FONTOS: ez csak demó -- nincs benne séma-migráció (a mockup csak az 1-es
+// schemaVersion-t ismeri), és a terv.json PDF-be ágyazása (pdf-lib) is a
+// 2. fázisra marad (lásd PRODUCT.md § Szándékos hiányok és nyitott kérdések).
 
 import { javasoltTervCim } from '../domain/tervCim';
 import { paciensIndexNev, uresTorzsadat } from '../domain/paciensAdatok';
@@ -71,8 +71,8 @@ const DEFAULT_TEMPLATES: Array<[string, string]> = [
 ];
 
 /**
- * Exportált, mert a DemoDraftStorage (docs/05-technologia.md
- * § Piszkozat-autosave) is ezt a prefixet használja a `dp:piszkozat` kulcsához -- ez adja
+ * Exportált, mert a DemoDraftStorage (lásd app/src/storage/CLAUDE.md) is
+ * ezt a prefixet használja a `dp:piszkozat` kulcsához -- ez adja
  * a garanciát, hogy a lenti `clearAll()` prefix-seprése (és vele a "Minden
  * adat törlése"/"Demó adat visszaállítása" gomb) a piszkozatot is eltünteti,
  * külön kód nélkül. Egy literál duplikálása itt driftelhetne.
@@ -95,7 +95,7 @@ function patientDataKey(patientDir: string): string {
  * A páciens-mappa gyökerén élő fájlok neve -- a `listPlans` ezekkel szűri
  * ki a terv-mappák közül (különben egy új gyökér-fájl hamis terv-láncként
  * jelenne meg). Egy `Set`, hogy egy jövőbeli harmadik gyökér-fájl (pl. egy
- * D33-hoz hasonló újabb tétel) egyetlen helyen bővítse a listát.
+ * újabb gyökér-fájl) egyetlen helyen bővítse a listát.
  */
 const PATIENT_ROOT_FILES = new Set(['paciens.json', 'paciens-adatok.json']);
 
@@ -137,16 +137,17 @@ function escapeRegExp(s: string): string {
 
 export class DemoStorage implements PlanStorage {
   /**
-   * D31: minden író (`savePlan`, `savePriceList`, `saveSettings`) EGYETLEN
+   * Minden író (`savePlan`, `savePriceList`, `saveSettings`) EGYETLEN
    * közös láncba fut be -- két egymást gyorsan követő hívás (pl. dupla
    * kattintás, vagy egy admin-mezőn gyors egymás utáni szerkesztés)
    * enélkül egymással versenyezve írna, és fordított sorrendben landolhatna
    * (`savePlan`-nál ráadásul ugyanazt a verziószámot is kiszámolhatná --
-   * P0-1/P1-5, D4 sérülne). A lánc mindig `undefined`-re fut ki, sikeres
+   * P0-1/P1-5, és egy már meglévő verziómappa íródna felül -- tervet soha
+   * nem írunk felül). A lánc mindig `undefined`-re fut ki, sikeres
    * vagy hibás hívás után is, hogy egy korábbi hiba ne akassza meg a
    * rákövetkező mentéseket. Ma a `localStorage.setItem` szinkron, tehát ez
-   * a lánc önmagában no-op -- a `FileSystemStorage`-váltásnál
-   * (`docs/05-technologia.md`, 2. fázis) válik éles védelemmé, ahol egy
+   * a lánc önmagában no-op -- a `FileSystemStorage`-váltásnál (2. fázis)
+   * válik éles védelemmé, ahol egy
    * `createWritable`/`write`/`close` írás nem atomi, és két párhuzamos
    * writable ugyanarra a fájlra csonka tartalmat is okozhatna, nem csak
    * fordított sorrendet.
@@ -168,13 +169,13 @@ export class DemoStorage implements PlanStorage {
       this.resetDemoData();
       return;
     }
-    // D29: aki a páciens-entitás bevezetése előtt már használta a demót,
+    // Aki a páciens-entitás bevezetése előtt már használta a demót,
     // annak a régi (páciens → verzió) 2 szintű mappaszerkezete megvan a
     // localStorage-ban -- ezt egyszeri migrációval alakítjuk át a mostani
     // (páciens → terv → verzió) 3 szintűre, hogy a korábban felvitt saját
     // teszttervei ne vesszenek el.
     this.migrateLegacyLayout();
-    // D21: aki a német sablonok bevezetése előtt már használta a demót,
+    // Aki a német sablonok bevezetése előtt már használta a demót,
     // annak az árlistája megvan, tehát resetDemoData() itt nem futna le
     // újra -- enélkül a nyilatkozat-de-v1.md sosem jönne létre neki, és a
     // PreviewPage üres/hibás sablonnal futna németre váltva. Idempotens:
@@ -195,7 +196,7 @@ export class DemoStorage implements PlanStorage {
     for (const { patientDir, record } of seedPatients) {
       localStorage.setItem(patientRecordKey(patientDir), JSON.stringify(record));
     }
-    // D33: csak EGY seed pácienshez -- a demónak mindkét állapotot mutatnia
+    // Csak EGY seed pácienshez -- a demónak mindkét állapotot mutatnia
     // kell (lezárt törzsadat vs. élő fallback a legutóbbi tervből), lásd
     // seed/plans.ts.
     for (const { patientDir, data } of seedPatientData) {
@@ -217,7 +218,8 @@ export class DemoStorage implements PlanStorage {
   }
 
   /**
-   * D29 egyszeri migrációja: a régi `<patientDir>/<ISO>_v<n>/…` alakú
+   * A páciens-entitás bevezetésének egyszeri migrációja: a régi
+   * `<patientDir>/<ISO>_v<n>/…` alakú
    * kulcsokat páciensenként egy új terv-mappa alá tereli (minden régi
    * verzió UGYANABBA az egy terv-láncba kerül -- a régi szerkezet ezt úgyis
    * feltételezte), és felveszi a hiányzó `paciens.json` indexet. A
@@ -289,7 +291,7 @@ export class DemoStorage implements PlanStorage {
     }
 
     // Nincs utolsoAktivitas: az egyetlen elérhető időbélyeg itt a `keltezes`
-    // (üzleti, doki által szabadon szerkeszthető dátum, D22) -- abból
+    // (üzleti, doki által szabadon szerkeszthető dátum) -- abból
     // szintetizálni fals, akár JÖVŐBELI wall-clock időt adna, ami a pácienst
     // örökre a recent lista tetejére ragasztaná. A hiányzó mező a következő
     // valódi íráskor magától gyógyul.
@@ -472,17 +474,18 @@ export class DemoStorage implements PlanStorage {
   }
 
   /**
-   * D4: mindig új verziómappát hoz létre. Ha a `plan.paciensId` egy már
+   * Mindig új verziómappát hoz létre, meglévőt sosem ír felül (aláírt
+   * szerződést nem lehet visszamenőleg átírni). Ha a `plan.paciensId` egy már
    * létező páciensmappához tartozik, oda kerül az új terv/verzió;
    * egyébként új páciensmappa jön létre. Ugyanígy a `plan.tervId`-hoz
    * tartozó terv-mappa: ha létezik, oda kerül az új verzió, egyébként új
-   * terv-mappa nyílik a páciensen belül (D29). A verziószámot a storage
-   * számolja ki -- a hívó nem adhat meg tetszőlegeset (ez a D4
-   * kikényszerítése).
+   * terv-mappa nyílik a páciensen belül. A verziószámot a storage
+   * számolja ki -- a hívó nem adhat meg tetszőlegeset (ez tartja a láncot
+   * append-only-ban).
    *
    * P0-1/P1-5: soros végrehajtás (`savingChain`) + a három `setItem` egy
    * try/catch-ben -- ha bármelyik írás elhasal (pl. kvótahiba), egyik kulcs
-   * sem marad félkész állapotban (D4: verziómappát soha nem hagyunk
+   * sem marad félkész állapotban (verziómappát soha nem hagyunk
    * csonkán), és két gyors egymás utáni hívás nem számolhatja ki ugyanazt a
    * verziószámot.
    */
@@ -519,9 +522,9 @@ export class DemoStorage implements PlanStorage {
     const finalPlan: Plan = { ...plan, schemaVersion: 1, tervId, verzio, paciensId };
     const planKeyStr = planKey(patientDir, planDir, versionDir);
     const pdfKeyStr = pdfKey(patientDir, planDir, versionDir);
-    // paciens.json index -- kereséshez/előtöltéshez, sosem system of record
-    // (D29): a most mentett plan.paciens.nev-re frissül, HACSAK nincs lezárt
-    // paciens-adatok.json (D33) -- akkor az a törzsadat marad az igazság a
+    // paciens.json index -- kereséshez/előtöltéshez, sosem system of record:
+    // a most mentett plan.paciens.nev-re frissül, HACSAK nincs lezárt
+    // paciens-adatok.json -- akkor az a törzsadat marad az igazság a
     // névre is, a terv-mentés nem írhatja felül némán (paciensIndexNev).
     const existingPatientData = await this.loadPatientData(patientDir);
     const patientRecord: PatientRecord = {
@@ -642,7 +645,7 @@ export class DemoStorage implements PlanStorage {
   }
 
   /**
-   * D33: `null`, ha még nincs `paciens-adatok.json` -- ez a hívónak az élő
+   * `null`, ha még nincs `paciens-adatok.json` -- ez a hívónak az élő
    * fallbackre lépés jele (`domain/paciensAdatok.ts`
    * `megjelenitettTorzsadat`), NEM hiba. Ellentétben a `paciens.json`/
    * `terv-cimke.json` index-fájlokkal, egy SÉRÜLT törzsadat itt betöltési
@@ -661,7 +664,7 @@ export class DemoStorage implements PlanStorage {
   /**
    * A `paciens.json` index `nev`-jét is frissíti a törzsadatéra -- enélkül a
    * Páciensek/Korábbi tervek listákban a régi név látszana a következő
-   * terv-mentésig (D33).
+   * terv-mentésig.
    */
   async savePatientData(patientDir: string, data: PatientMasterData): Promise<void> {
     return this.enqueue(async () => {
@@ -678,7 +681,7 @@ export class DemoStorage implements PlanStorage {
 
   /**
    * Vadonatúj, terv nélküli páciens (backlog-28, 6. döntés) -- mindkét
-   * gyökér-fájlt megírja. A `kezdoAdatok` (backlog-36, D15) a quick-create
+   * gyökér-fájlt megírja. A `kezdoAdatok` (backlog-36) a quick-create
    * dialógus opcionális szuletesiIdo/telefon mezőit terjeszti az
    * `uresTorzsadat()` alapértékére.
    */
@@ -699,7 +702,7 @@ export class DemoStorage implements PlanStorage {
   }
 
   /**
-   * A teljes páciensmappa törlése (backlog-41, D50) -- egyetlen
+   * A teljes páciensmappa törlése (backlog-41) -- egyetlen
    * prefix-seprés, mert a `listPatients()` BÁRMELY, a mappa alatti kulcsból
    * levezeti a páciens létezését (lásd ott): egy részleges törlés
    * dirnév-ből visszafejtett nevű szellem-pácienst hagyna vissza. A záró

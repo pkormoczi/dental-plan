@@ -1,7 +1,6 @@
-// P1-6 (kiemelve DemoStorage.ts-ből, docs/05-technologia.md § Piszkozat-
-// autosave): a piszkozat-storage (DemoDraftStorage.ts) ugyanezt a
-// JSON-beolvasási mintát igényli, mint a DemoStorage -- CLAUDE.md "használd,
-// ne írd újra" szerint egy helyen kell élnie, nem duplikálva.
+// Kiemelve a DemoStorage.ts-ből: a piszkozat-storage (DemoDraftStorage.ts)
+// ugyanezt a JSON-beolvasási mintát igényli, mint a DemoStorage -- egy
+// helyen kell élnie, nem duplikálva (lásd app/src/storage/CLAUDE.md).
 
 /**
  * `JSON.parse`, ember-olvasható hibaüzenettel, ha a fájl (localStorage-kulcs)

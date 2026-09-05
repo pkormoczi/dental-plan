@@ -85,7 +85,7 @@ describe('DemoStorage', () => {
     expect(loaded.tervId).toHaveLength(6);
   });
 
-  it('savePlan on an existing tervId appends v2 without touching v1 (D4)', async () => {
+  it('savePlan on an existing tervId appends v2 without touching v1', async () => {
     const plan = makeBlankPlan();
     const ref1 = await storage.savePlan(plan, new Uint8Array([1]));
     const v1 = await storage.loadPlan(ref1);
@@ -107,7 +107,7 @@ describe('DemoStorage', () => {
     expect(versions.map((v) => v.verzio)).toEqual([1, 2]);
   });
 
-  // D29: a paciensId egy már létező páciens-mappához köti az új tervet, de
+  // A paciensId egy már létező páciens-mappához köti az új tervet, de
   // egy ÚJ (üres) tervId egy MÁSIK terv-mappát nyit ugyanabban a
   // páciens-mappában -- ez a "második terv-lánc ugyanahhoz a pácienshez" eset.
   it('savePlan for a new tervId under an existing paciensId opens a second plan folder in the SAME patient folder', async () => {
@@ -222,7 +222,7 @@ describe('DemoStorage', () => {
     expect(untouched).toBe('# Nyilatkozat\n\nA doki saját szövege.\n');
   });
 
-  it('rejects loading a plan with a newer-than-known schemaVersion (D18)', async () => {
+  it('rejects loading a plan with a newer-than-known schemaVersion', async () => {
     const plan = makeBlankPlan();
     const ref = await storage.savePlan(plan, new Uint8Array());
     const key = `dp:paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}/terv.json`;
@@ -241,7 +241,7 @@ describe('DemoStorage', () => {
     vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
       callCount++;
       // Az ELSŐ hívás (terv.json) sikeres, a MÁSODIK (a pdf) elhasal --
-      // pont ez a részleges-írás forgatókönyv, amit a D4 tilt.
+      // pont ez a részleges-írás forgatókönyv: verziómappa sosem maradhat csonkán.
       if (callCount === 2) throw new DOMException('QuotaExceededError');
       originalSetItem(key, value);
     });
@@ -282,14 +282,14 @@ describe('DemoStorage', () => {
     expect(versions.map((v) => v.verzio).sort()).toEqual([1, 2, 3]);
   });
 
-  // D31: a `savePriceList`/`saveSettings` a `savePlan`-nal KÖZÖS
+  // A `savePriceList`/`saveSettings` a `savePlan`-nal KÖZÖS
   // `savingChain`-en fut (`enqueue`) -- ma a `localStorage.setItem` szinkron,
   // tehát ez a lánc önmagában no-op, de a `savePlan` BELSŐ útja (`listPatients`/
   // `listPlans`/`listVersions`) több valódi `await`-en megy át, mielőtt a
   // tényleges `setItem`-ekhez érne. Ha a `savePriceList` NEM ugyanabba a
   // láncba futna, a saját (awaitok nélküli) írása jóval előbb landolna, mint
   // a vele egy tickben induló `savePlan` írásai -- ez a teszt pont ezt zárja ki.
-  it('a savePriceList egy vele egy tickben induló savePlan MÖGÉ sorosodik, nem előzi meg (D31)', async () => {
+  it('a savePriceList egy vele egy tickben induló savePlan MÖGÉ sorosodik, nem előzi meg', async () => {
     const order: string[] = [];
     const originalSetItem = localStorage.setItem.bind(localStorage);
     vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
@@ -332,10 +332,10 @@ describe('DemoStorage', () => {
     await expect(storage.loadPlan(ref)).rejects.toThrow(/szerkezete nem érvényes/);
   });
 
-  // D33 (backlog-28): a paciens-adatok.json -- élő, terv-mentéstől független
+  // backlog-28: a paciens-adatok.json -- élő, terv-mentéstől független
   // törzsadat, ellentétben a puszta index-fájlokkal (paciens.json,
   // terv-cimke.json).
-  describe('paciens-adatok.json (D33)', () => {
+  describe('paciens-adatok.json', () => {
     it('loadPatientData null-t ad, ha még nincs törzsadat -- ez a fallbackre lépés jele, nem hiba', async () => {
       const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
       expect(await storage.loadPatientData(ref.patientDir)).toBeNull();
@@ -368,7 +368,7 @@ describe('DemoStorage', () => {
       expect(await storage.listPlans(folder.dirName)).toEqual([]);
     });
 
-    // backlog-36, D15: a quick-create dialógus születési dátumot/telefont is
+    // backlog-36: a quick-create dialógus születési dátumot/telefont is
     // felvehet -- egy logikailag atomi lépésben kerül a paciens-adatok.json-ba,
     // nem egy utólagos savePatientData-val (az hamis 'torzsadat-mentve'
     // aktivitást írna egy frissen létrehozott páciensre).
@@ -430,14 +430,14 @@ describe('DemoStorage', () => {
       expect((await storage.loadPatientData(folder.dirName))?.nev).toBe('Törzsadat Neve');
     });
 
-    it('savePlan a terv paciens.nev-jét írja az indexbe, ha nincs törzsadat (a meglévő D29 viselkedés változatlan)', async () => {
+    it('savePlan a terv paciens.nev-jét írja az indexbe, ha nincs törzsadat (a meglévő index-viselkedés változatlan)', async () => {
       const plan = makeBlankPlan();
       const ref = await storage.savePlan(plan, new Uint8Array([1]));
       const patients = await storage.listPatients();
       expect(patients.find((p) => p.dirName === ref.patientDir)?.nev).toBe('Teszt Elek');
     });
 
-    it('rejects loading a paciens-adatok.json with a newer-than-known schemaVersion (D18)', async () => {
+    it('rejects loading a paciens-adatok.json with a newer-than-known schemaVersion', async () => {
       const folder = await storage.createPatient('Séma Teszt');
       const key = `dp:paciensek/${folder.dirName}/paciens-adatok.json`;
       const raw = JSON.parse(localStorage.getItem(key)!);
@@ -454,7 +454,7 @@ describe('DemoStorage', () => {
     });
   });
 
-  describe('deletePatient (backlog-41, D50)', () => {
+  describe('deletePatient (backlog-41)', () => {
     it('törli a páciens minden kulcsát -- paciens.json, paciens-adatok.json, terv-cimke.json, terv.json, pdf', async () => {
       const folder = await storage.createPatient('Törlendő Páciens');
       const plan = makeBlankPlan({ paciensId: folder.paciensId });
@@ -502,7 +502,7 @@ describe('DemoStorage', () => {
     });
   });
 
-  describe('utolsoAktivitas (D39)', () => {
+  describe('utolsoAktivitas', () => {
     it('createPatient "letrehozva" aktivitást ír', async () => {
       const folder = await storage.createPatient('Aktivitás Teszt');
       expect(folder.utolsoAktivitas?.tipus).toBe('letrehozva');
@@ -539,7 +539,7 @@ describe('DemoStorage', () => {
       expect(record?.utolsoAktivitas?.tipus).toBe('terv-veglegesitve');
     });
 
-    it('listPatients elvisel egy szemetes utolsoAktivitas mezőt -- a páciens megmarad, csak a mező marad el (D29)', async () => {
+    it('listPatients elvisel egy szemetes utolsoAktivitas mezőt -- a páciens megmarad, csak a mező marad el', async () => {
       const folder = await storage.createPatient('Szemetes Aktivitás');
       const key = `dp:paciensek/${folder.dirName}/paciens.json`;
       const raw = JSON.parse(localStorage.getItem(key)!);
@@ -552,7 +552,7 @@ describe('DemoStorage', () => {
       expect(record?.utolsoAktivitas).toBeUndefined();
     });
 
-    // D39/D40: a demó-készlet egy páciense (Császár Tibor) SZÁNDÉKOSAN nem
+    // A demó-készlet egy páciense (Császár Tibor) SZÁNDÉKOSAN nem
     // kap utolsoAktivitas-t -- egy legacy-migrációt szimuláló edge case
     // (lásd storage/seed/plans.ts), ezért a várt darabszámot a seed
     // forrásából számoljuk, nem "mindenki"-t állítunk.
@@ -626,7 +626,7 @@ describe('DemoStorage', () => {
       expect(planNode.children.some((n) => n.name === 'terv-cimke.json')).toBe(true);
     });
 
-    // D33: a paciens-adatok.json mappa-gyökéri fájl -- se hamis terv-
+    // A paciens-adatok.json mappa-gyökéri fájl -- se hamis terv-
     // mappaként (listPlans), se láthatatlanul (demoFileTree allowlist) nem
     // szabad megjelennie.
     it('createPatient után a paciens-adatok.json megjelenik a páciens-mappa gyökerén, terv-mappa nélkül', async () => {
@@ -662,7 +662,7 @@ describe('DemoStorage', () => {
     });
   });
 
-  // D29 -- egyszeri migráció a régi (páciens → verzió) 2 szintű
+  // Egyszeri migráció a régi (páciens → verzió) 2 szintű
   // localStorage-szerkezetről az újra (páciens → terv → verzió).
   describe('legacy layout migration', () => {
     const legacyPatientDir = 'Legacy-Pati_zzzzzz';
@@ -690,7 +690,7 @@ describe('DemoStorage', () => {
       expect(migrated!.nev).toBe('Legacy Pati');
       expect(migrated!.paciensId).toBe('zzzzzz');
       // A migráció nem szintetizál utolsoAktivitas-t -- az egyetlen elérhető
-      // időbélyeg a `keltezes` (üzleti dátum, D22), abból nem szabad.
+      // időbélyeg a `keltezes` (üzleti dátum), abból nem szabad.
       expect(migrated!.utolsoAktivitas).toBeUndefined();
 
       const plans = await storage.listPlans(legacyPatientDir);

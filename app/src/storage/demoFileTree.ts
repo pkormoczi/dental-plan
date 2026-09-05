@@ -5,13 +5,13 @@
 // piszkozat-cache-ek soha nem jelennek meg) egyetlen egyszerű unit
 // teszttel garantálható legyen, DemoStorage-példány nélkül.
 //
-// ALLOWLIST, nem denylist: csak a docs/02-domain-modell.md
-// "Mappastruktúra" szerinti alakok kerülnek be -- minden más (a
-// `dp:piszkozat` ÉS a `dp:sablon-piszkozat` draft-cache-ek, a D29 előtti
-// legacy 2-szintű mappaszerkezet, bármilyen jövőbeli, még nem ismert
+// ALLOWLIST, nem denylist: csak az alább felismert kulcsalakok kerülnek
+// be -- minden más (a `dp:piszkozat` ÉS a `dp:sablon-piszkozat`
+// draft-cache-ek, a páciens-entitás előtti legacy 2-szintű
+// mappaszerkezet, bármilyen jövőbeli, még nem ismert
 // kulcsalak) némán kimarad. A fa a `PlanStorage` vetülete legyen, nem a
 // nyers `localStorage`-é -- a draft-cache-ek a végleges architektúrában
-// IndexedDB, nem fájl (docs/05-technologia.md § Piszkozat-autosave).
+// IndexedDB, nem fájl.
 
 import type { PlanRef } from '../domain/types';
 

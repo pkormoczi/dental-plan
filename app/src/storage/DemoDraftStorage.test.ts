@@ -75,7 +75,7 @@ describe('DemoDraftStorage', () => {
     await expect(drafts.load()).rejects.toThrow(/nem érvényes JSON/);
   });
 
-  it('rejects loading a draft with a newer-than-known schemaVersion on the record (D18)', async () => {
+  it('rejects loading a draft with a newer-than-known schemaVersion on the record', async () => {
     await drafts.save(makeBlankPlan());
     const raw = JSON.parse(localStorage.getItem('dp:piszkozat')!);
     raw.schemaVersion = 2;
@@ -83,7 +83,7 @@ describe('DemoDraftStorage', () => {
     await expect(drafts.load()).rejects.toThrow(/újabb verziójával/);
   });
 
-  it('rejects loading a draft whose embedded Plan has a newer-than-known schemaVersion (D18)', async () => {
+  it('rejects loading a draft whose embedded Plan has a newer-than-known schemaVersion', async () => {
     await drafts.save(makeBlankPlan());
     const raw = JSON.parse(localStorage.getItem('dp:piszkozat')!);
     raw.plan.schemaVersion = 2;
@@ -107,8 +107,8 @@ describe('DemoDraftStorage', () => {
     vi.restoreAllMocks();
   });
 
-  // D37: patientDir/lastRoute -- UI-workflow metaadat, nem a Plan tartalma.
-  describe('meta (patientDir/lastRoute, D37)', () => {
+  // patientDir/lastRoute -- UI-workflow metaadat, nem a Plan tartalma.
+  describe('meta (patientDir/lastRoute)', () => {
     it('roundtrips patientDir and lastRoute when save() is called with meta', async () => {
       const rec = await drafts.save(makeBlankPlan(), {
         patientDir: 'Teszt-Elek_abc123',
@@ -148,9 +148,9 @@ describe('DemoDraftStorage', () => {
     });
   });
 
-  // backlog-51 (D61): a "Terv adatai" cím mező beírt értéke -- ugyanaz a
+  // backlog-51: a "Terv adatai" cím mező beírt értéke -- ugyanaz a
   // puha, UI-workflow metaadat mintázat, mint a patientDir/lastRoute.
-  describe('meta (tervCim, D61)', () => {
+  describe('meta (tervCim)', () => {
     it('roundtrips a non-empty tervCim', async () => {
       const rec = await drafts.save(makeBlankPlan(), { tervCim: 'Fogpótlás felső ívben' });
       expect(rec.tervCim).toBe('Fogpótlás felső ívben');

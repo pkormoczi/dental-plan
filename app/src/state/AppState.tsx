@@ -2,9 +2,9 @@
 // szerkesztett terv piszkozata. A piszkozat memóriában él, de MINDEN
 // tartalmi módosításra azonnal perzisztálódik is a DraftStorage-on keresztül
 // (mockupban localStorage, lásd storage/DemoDraftStorage.ts) -- frissítés
-// vagy összeomlás után visszaáll. Ez a docs/03-funkcionalis-spec.md
-// "Autosave" szakaszának korábbra hozott terve (eredetileg a 2. fázisra,
-// IndexedDB-vel ütemezve), mert a valós fájdalom már a mockup-fázisban
+// vagy összeomlás után visszaáll. Az autosave eredetileg a 2. fázisra
+// (IndexedDB-vel) volt ütemezve, de előbbre került, mert a valós fájdalom
+// már a mockup-fázisban
 // jelentkezett.
 
 import {
@@ -38,11 +38,11 @@ interface AppStateValue {
   resetPlanDraft: () => void;
   /**
    * Betölt egy korábbi tervet a piszkozatba szerkesztésre (lásd "Korábbi
-   * tervek"). A `patientDir` opcionális -- ahol a hívó már ismeri (D37), a
+   * tervek"). A `patientDir` opcionális -- ahol a hívó már ismeri, a
    * `DraftRecord`-ba is bekerül (a workflow-héj breadcrumb-linkjéhez és a
    * Kezdőlap "Megnyitás" utáni discard-navigációhoz), ahol nem (pl. még nem
    * létező páciens), hiányzik, és a fallback-viselkedés lép életbe. A
-   * betöltött terv `statusz`-a PISZKOZAT-ra áll (D53) -- a `tervId` (a
+   * betöltött terv `statusz`-a PISZKOZAT-ra áll -- a `tervId` (a
    * lánc-hovatartozás jele) érintetlen marad.
    */
   loadPlanIntoDraft: (plan: Plan, patientDir?: string) => void;
@@ -51,7 +51,7 @@ interface AppStateValue {
    * `ujTervForrasPaciensbol` hívás EREDMÉNYÉT -- a hívó már elvégezte a
    * tiszta transzformációt, ez a függvény csak a React-bekötésért felel. A
    * `resetPlanDraft` mintáját követi, NEM a `loadPlanIntoDraft`-ét, a
-   * `patientDir` ugyanúgy opcionális, mint ott (D37).
+   * `patientDir` ugyanúgy opcionális, mint ott.
    *
    * A `kiindulas` dönti el, melyik ág fut: `'mentetlen-munka'`-nál `plan` és
    * `mentettPlan` szándékosan KÜLÖNBÖZŐ referencia lesz, `vanMentetlenPiszkozat`
@@ -61,8 +61,8 @@ interface AppStateValue {
    * mintáját követve `mentettPlan` a `next`-tel AZONOS referenciára áll,
    * `vanMentetlenPiszkozat` azonnal hamis -- ez a puszta törzsadat-előtöltésnek
    * (`ujTervForrasPaciensbol`) való, mert az egy gombnyomással bármikor
-   * újraelőállítható, elvesztése nem valódi adatvesztés (docs/03-
-   * funkcionalis-spec.md § Autosave). A megkülönböztetés kötelező, explicit
+   * újraelőállítható, elvesztése nem valódi adatvesztés. A megkülönböztetés
+   * kötelező, explicit
    * paraméter -- egy alapértelmezett érték némán elrejtene egy jövőbeli,
    * rosszul döntő hívóhelyet. A `drafts.clear()` hívás (amit a
    * `resetPlanDraft` a végén elvégez) egyik ágon sem fut -- ott azért
@@ -78,7 +78,7 @@ interface AppStateValue {
    * mint a legutóbb onnan betöltött/oda mentett terv. Ez vezérli a Home
    * "Piszkozat folytatása" kártyáját és a felülírás elleni AlertDialog-okat
    * (Home "+ Új kezelési terv", OsszesTervSection mindhárom terv-létrehozó
-   * gombja) -- lásd docs/03-funkcionalis-spec.md § Autosave.
+   * gombja).
    */
   vanMentetlenPiszkozat: boolean;
   /** Az utolsó sikeres automatikus piszkozat-mentés ISO időbélyege, vagy `null`. */
@@ -86,13 +86,13 @@ interface AppStateValue {
   /** A piszkozat visszaállításának vagy írásának hibaüzenete, vagy `null`. */
   piszkozatHiba: string | null;
   /**
-   * D37: a piszkozathoz best-effort ismert páciens-mappa, vagy `null`, ha nem
+   * A piszkozathoz best-effort ismert páciens-mappa, vagy `null`, ha nem
    * ismert (pl. a "+ Új páciens" ág). A `TervWorkflowShell` breadcrumb-
    * linkjéhez és a `PlanEditorPage` discard-navigációjához.
    */
   piszkozatPatientDir: string | null;
   /**
-   * D37: a piszkozattal utoljára meglátogatott workflow-route, vagy `null`,
+   * A piszkozattal utoljára meglátogatott workflow-route, vagy `null`,
    * ha nincs (funkció előtti perzisztált draft, vagy még egy lépést sem
    * látott). A Kezdőlap "Megnyitás" gombja ide navigál, a mai
    * névkitöltés-heurisztika fallbackként megmarad.
@@ -106,7 +106,7 @@ interface AppStateValue {
    */
   jelezWorkflowLepes: (route: WorkflowRoute) => void;
   /**
-   * D61 (backlog-51): a "Terv adatai" lap cím mezőjébe beírt érték, vagy
+   * backlog-51: a "Terv adatai" lap cím mezőjébe beírt érték, vagy
    * `null`, ha még nem nyúltak hozzá (a mező ilyenkor a `TervCimField`
    * saját `mentettLabel`/`javasoltTervCim()` fallback-jét mutatja). Az üres
    * string (a doki kiürítette a mezőt) VALÓS `''`, nem `null` -- lásd
@@ -129,8 +129,7 @@ interface AppStateValue {
   /**
    * Véglegesítés után hívandó (PreviewPage.tsx `doFinalize` sikerág) -- a
    * most fájlba írt `persisted` Plan-t "mentett" állapotúnak jelöli, és
-   * törli a perzisztált piszkozatot. Ez a docs/03-funkcionalis-spec.md
-   * véglegesítés-láncának 4. lépése ("A piszkozat törlése").
+   * törli a perzisztált piszkozatot.
    */
   markPlanSaved: (persisted: Plan) => Promise<void>;
   /**
@@ -144,7 +143,7 @@ interface AppStateValue {
    */
   loadedOsszesitokDiff: Osszesitok | null;
   /**
-   * docs/03-funkcionalis-spec.md § Korábbi terv új verzióra nyitása (D22):
+   * Új verzió dátuma BETÖLTÉSKOR bélyegződik (lásd app/src/domain/CLAUDE.md):
    * a `loadPlanIntoDraft`-tal betöltött terv `keltezes`/`ervenyesIg`-e itt
    * már a mai napra és az aktuális `settings.ervenyessegNap`-ra frissült
    * (nem a régi terv dátuma) -- ez az
@@ -154,7 +153,7 @@ interface AppStateValue {
    */
   frissitettDatum: UjVerzioDatum | null;
   /**
-   * D63: a `loadPlanIntoDraft`-tal betöltött terv orvosa időközben inaktívvá
+   * A `loadPlanIntoDraft`-tal betöltött terv orvosa időközben inaktívvá
    * vált (vagy törölték), ezért a piszkozat a globális alapértelmezett
    * orvosra esett vissza -- a `frissitettDatum` mintájára, a
    * `PlanEditorPage` ugyanabban a semleges info-sávban jelzi. `null`, ha
@@ -162,12 +161,12 @@ interface AppStateValue {
    */
   orvosFallback: OrvosFallback;
   /**
-   * D31: KIZÁRÓLAG updatert fogad, sosem kész objektumot -- a hívó a
+   * KIZÁRÓLAG updatert fogad, sosem kész objektumot -- a hívó a
    * JELENLEGI (a legutóbbi mentés óta esetleg már megváltozott) állapotra
    * épít, nem egy render-idejű closure-re zárt régi értékre. Az updater
    * PONTOSAN EGYSZER, SZINKRON fut le, még az írás előtt (lásd lent a
    * `settingsRef`/`applySettings` kommentjét) -- ez szerződés: pl. egy
-   * azonosító-számítást (D17) az updateren BELÜL kell elvégezni, különben
+   * azonosító-számítást az updateren BELÜL kell elvégezni, különben
    * két gyors egymás utáni hívás ugyanazt az id-t generálná.
    */
   saveSettings: (updater: (prev: Settings) => Settings) => Promise<void>;
@@ -197,7 +196,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [mentettPlan, setMentettPlan] = useState<Plan | null>(null);
   const [piszkozatMentve, setPiszkozatMentve] = useState<string | null>(null);
   const [piszkozatHiba, setPiszkozatHiba] = useState<string | null>(null);
-  // D37: UI-workflow metaadat (patientDir/lastRoute) -- nem a Plan tartalma,
+  // UI-workflow metaadat (patientDir/lastRoute) -- nem a Plan tartalma,
   // lásd storage/DraftStorage.ts DraftMeta.
   const [piszkozatMeta, setPiszkozatMeta] = useState<DraftMeta>({});
   const [loadedOsszesitokDiff, setLoadedOsszesitokDiff] = useState<Osszesitok | null>(null);
@@ -215,7 +214,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   // már törölt piszkozatot, pusztán a navigációból (lásd az író effektust).
   const piszkozatKiirvaRef = useRef(false);
 
-  // D31: a `settings`/`priceList` state MELLETT vezetett tükör -- a
+  // A `settings`/`priceList` state MELLETT vezetett tükör -- a
   // `saveSettings`/`savePriceList` updaternek a MENTÉS ELŐTT, SZINKRON kell
   // elérnie a legfrissebb értéket (a `useState` closure csak a következő
   // renderben frissülne, ami a mentés await-je alatt már elavult lenne két,
@@ -386,15 +385,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         });
       },
       loadPlanIntoDraft: (p, patientDir) => {
-        // D22 (docs/01-attekintes-es-dontesek.md): a dátumbélyeg itt,
+        // A dátumbélyeg itt,
         // betöltéskor íródik, nem véglegesítéskor -- a PreviewPage a
         // `pdfInstance`-t a `plan` state-ből rendereli, egy késői írás a
         // mentett JSON-t és a már korábban renderelt PDF-blob-ot szétcsúsztatná.
-        // D53: a `statusz` is itt áll vissza PISZKOZAT-ra -- a betöltött
+        // A `statusz` is itt áll vissza PISZKOZAT-ra -- a betöltött
         // piszkozat a FOLYTATÁS állapotát tükrözi, nem a forrás verzió lezárt
         // állapotát (a fejléc "véglegesítve" jelvénye és a letöltés
         // PISZKOZAT- előtagja enélkül tévesen a forrásét mutatná).
-        // D63: az orvos-öröklés/fallback ugyanitt, egy önálló lépésként --
+        // Az orvos-öröklés/fallback ugyanitt, egy önálló lépésként --
         // NEM a `frissDatummal()`-ba építve (annak szerződése kizárólag a két
         // dátummezőre szól, és a `planMasolatKent` is ezt hívja, ahol a
         // szabály MÁSKÉNT dől el, lásd domain/planCopy.ts).
@@ -463,7 +462,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       loadedOsszesitokDiff,
       frissitettDatum,
       orvosFallback,
-      // D31: optimista -- a memóriabeli állapot (ref + state) a mentés
+      // Optimista -- a memóriabeli állapot (ref + state) a mentés
       // ELŐTT frissül, hogy egy második, ugyanabban a tickben induló hívás
       // updatere már ezt lássa. Hibára SZÁNDÉKOSAN nem gördül vissza: a
       // begépelt érték a képernyőn marad (a hibasáv emellett jelenik meg,

@@ -56,15 +56,15 @@ Megrendelő a kezelési tervben szereplő kezelés sorozat elvégzésével, az e
 - Fizetési mód: készpénz, egészségpénztári kártya, vagy bankkártyás utalás.
 `;
 
-// D21: a német sablonok is szükségesek ahhoz, hogy egy német nyelvű terv
+// A német sablonok is szükségesek ahhoz, hogy egy német nyelvű terv
 // egyáltalán véglegesíthető legyen (lásd storage/DemoStorage.ts
 // `ensureSeedTemplates`).
 //
 // Eredetileg ez a két szöveg placeholder volt: a német fordítás jogi munka,
 // mert a páciens aláírja, ezért a projekt korábbi szabálya szerint nem
 // gépi/AI fordítás töltötte volna ki, hanem a doki jogásza a Beállítások
-// képernyőn (lásd docs/01-attekintes-es-dontesek.md, "Nyitott kérdések,
-// amik a dokira várnak" #1). A doki 2026-08-10-én kifejezetten úgy döntött,
+// képernyőn (lásd PRODUCT.md § Szándékos hiányok és nyitott kérdések). A
+// doki 2026-08-10-én kifejezetten úgy döntött,
 // hogy ehelyett AI-fordítás kerüljön be, jelölés (és a hozzá kötött
 // biztonsági zár, lásd `isPlaceholderTemplate`/PreviewPage) NÉLKÜL -- tehát
 // ez a két szöveg NEM esett át jogi lektoráláson. Ha ez változna (pl. a
@@ -97,8 +97,8 @@ Der Auftraggeber stimmt der Durchführung der im Behandlungsplan aufgeführten B
 - Zahlungsart: Bargeld, Gesundheitskassenkarte oder Kartenüberweisung.
 `;
 
-// Garancia szakasz a nyomtatványon (docs/04-nyomtatvany-spec.md § „2. blokk
-// — fizetési feltételek és garancia" § „Garancia"): az eredeti Excelben
+// Garancia szakasz a nyomtatványon (lásd PRODUCT.md § Szándékos hiányok és
+// nyitott kérdések): az eredeti Excelben
 // nincs garancia-szöveg, tehát -- a fenti kettővel ellentétben -- itt a
 // MAGYAR sem valódi, lektorált tartalom, hanem
 // szándékos placeholder: a doki adja meg (kezeléstípusonkénti

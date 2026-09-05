@@ -31,10 +31,10 @@ function makeBlankPlan(overrides: Partial<Plan> = {}): Plan {
   };
 }
 
-// D534 (47. tétel): a nyelv/pénznem-öröklés a `ujTervForrasPaciensbol()`
+// 47. tétel: a nyelv/pénznem-öröklés a `ujTervForrasPaciensbol()`
 // mindkét ágán (törzsadat és `paciens` pillanatkép) ugyanabból a forrásból
 // (a páciens legutóbb VÉGLEGESÍTETT terve) történik.
-describe('ujTervForrasPaciensbol -- nyelv/pénznem-öröklés (D534)', () => {
+describe('ujTervForrasPaciensbol -- nyelv/pénznem-öröklés', () => {
   let storage: DemoStorage;
 
   beforeEach(async () => {
