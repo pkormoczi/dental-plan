@@ -1,6 +1,6 @@
 # elonezet-vissza-iframe-hibaoldal
 Type: bug
-Source: doctor-review nagy-terv (2026-09-05), 4. megállapítás
+Source: doctor-review nagy-terv (2026-09-05), 4. megállapítás; doctor-review papirrol (2026-09-05), 6. megállapítás
 
 Az Előnézeten a böngésző Vissza gombja a beágyazott PDF-nézegetőt lépteti vissza, nem az appot: a
 `<iframe src={pdfInstance.url}>` (`app/src/pages/PreviewPage.tsx`) blob-URL-váltása bekerül a
@@ -11,4 +11,6 @@ betöltődik, böngésző Vissza. Elvárt: a böngésző Vissza az Előnézetrő
 hibaoldal nélkül — akár úgy, hogy az iframe blob-URL cseréje ne kerüljön a history-ba
 (`location.replace` az iframe-en belül, vagy a nézegető `key`-es remountolása `src`-csere helyett),
 akár úgy, hogy az app egy `popstate`-figyeléssel a Kezelések lapra navigál. Nem ide tartozik a
-sikerképernyő utáni Vissza-viselkedés (`sikerkepernyo-nyomtatas-letoltes` kizárt scope-ja).
+sikerképernyő utáni Vissza-viselkedés (`sikerkepernyo-nyomtatas-letoltes` kizárt scope-ja). A
+papirrol futásban ez történt kétszer egymás után, és ez volt a menet egyetlen pontja, ahol a
+doki kollégát hívna.

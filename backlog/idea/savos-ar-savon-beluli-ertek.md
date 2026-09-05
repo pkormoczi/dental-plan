@@ -1,6 +1,6 @@
 # savos-ar-savon-beluli-ertek
 Type: bug
-Source: 2026-09-05 doctor-review (nagy terv) 2. megállapítás
+Source: 2026-09-05 doctor-review (nagy terv) 2. megállapítás; papirrol (2026-09-05), 3. megállapítás
 
 Sávos árú tételnél a sor az alsó árral jön be, a csatornaszámot senki nem kérdezi, és ha a doki
 a sávon belüli valós árat írja be, az app felárnak minősíti. Repró: „gyökértömés” → „Gyökértömés
@@ -13,4 +13,6 @@ nyomtatványra nem kerül (nem kerül). Elvárt: a sávon belüli ajánlati ár 
 felár/kedvezmény jelvényt és ne számítson eltérésnek — ehhez a sor a sáv határait
 pillanatképként tárolja, ugyanaz a feltétel, mint a savos-felso-hatar-nyomtatvanyon tételnél;
 a „Felár” helyett a listaártól való eltérés semleges megnevezése; az előnézeti figyelmeztetés
-mondja ki, hogy ez a papírra nem kerül. Nem tartozik ide a csatornaszám-választó a sávos tételen.
+mondja ki, hogy ez a papírra nem kerül. Nem tartozik ide a csatornaszám-választó a sávos tételen. A papirrol futásban ugyanez a felár
+egy egyidejű kedvezménnyel nettózódik, és ez a nyomtatvány összesítőjén is megjelenik
+(`nyomtatvany-osszesites-netto-felar`).
