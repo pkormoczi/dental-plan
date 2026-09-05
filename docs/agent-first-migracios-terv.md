@@ -561,7 +561,10 @@ Commit: `skillek: /plan, /implement, /finish, /manual-checks — a régi backlog
    „Nyitott kérdések" szakaszok tartalma a `PRODUCT.md`-be ment — itt csak egy hivatkozás
    marad rá. A `(D21)`, `D15` említések törölve.
 5. `app/src/assets/fonts/README.md` 1 D-ref javítása (az `assets/` ki van zárva a scanből,
-   de ne maradjon).
+   de ne maradjon). `docs/06-veglegesites-terv.md` 17 `docs/0X-` hivatkozása → `PRODUCT.md`
+   vagy nested `CLAUDE.md` szakaszra (az őr F1 óta jelzi). A `docs-check.mjs`
+   `LEGACY_BOUND_DOCS` listája törölhető (a fájlok már `docs/legacy/` alatt, amit a
+   `EXCLUDE_DIRS` kizár).
 6. `.github/workflows/deploy.yml`: `- name: Docs check` lépés `npm run docs-check` a
    `Run tests` után.
 7. `npm run docs-check` **zöld**; teljes suite zöld; `/run` a CSP-vel (PDF-előnézet, letöltés,
@@ -626,8 +629,8 @@ Commit: `docs: régi dokumentáció legacy-karanténba, dokumentacioGuard törö
 
 | Fázis | Commit | Dátum | Megjegyzés |
 |---|---|---|---|
-| F0 | (commit előtt) | 2026-09-05 | CSP Vite-pluginnal: `connect-src 'self' data:` (react-pdf font/logó fetch + yoga wasm data-URL), `script-src 'wasm-unsafe-eval'` (a böngészős próba a wasm-fordítást blokkolta), `frame-src blob:` (PDF iframe), dev-only `script-src 'unsafe-inline'` (plugin-react preamble). Lint: hálózati globálisok + `localStorage` + `DemoStorage`-import tiltva, `NyomtatvanyokTab` kivétel disable-sorokkal; `Lint` lépés a CI-ben. `ervenyes-ig-hianyzik` hard tétel + 2 teszt. 2 negatív PDF-teszt (terv- és sor-szintű kedvezmény). |
-| F1 | | | |
+| F0 | `b0cc6ca` | 2026-09-05 | CSP Vite-pluginnal: `connect-src 'self' data:` (react-pdf font/logó fetch + yoga wasm data-URL), `script-src 'wasm-unsafe-eval'` (a böngészős próba a wasm-fordítást blokkolta), `frame-src blob:` (PDF iframe), dev-only `script-src 'unsafe-inline'` (plugin-react preamble). Lint: hálózati globálisok + `localStorage` + `DemoStorage`-import tiltva, `NyomtatvanyokTab` kivétel disable-sorokkal; `Lint` lépés a CI-ben. `ervenyes-ig-hianyzik` hard tétel + 2 teszt. 2 negatív PDF-teszt (terv- és sor-szintű kedvezmény). |
+| F1 | (commit előtt) | 2026-09-05 | `scripts/docs-check.mjs` + `npm run docs-check`. Első futás: 288 fájl, **1367 hiba** (legacy-ref 375, d-ref 990, budget 2: `CLAUDE.md` 24353/4000, `app/src/CLAUDE.md` 76456/2500; anchor 0, skip-only 0). A tíz legacy-be szánt `docs/*.md` név szerint kizárva F10-ig (`LEGACY_BOUND_DOCS`). Anchor csak `→ <típus>:` alak után, a prózai nyíl nem anchor. |
 | F2 | | | falszifikációs teszt: …/6, pótolva: … |
 | F3–F8 | | | |
 | F9 | | | |
