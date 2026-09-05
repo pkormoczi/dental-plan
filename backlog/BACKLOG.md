@@ -15,16 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 108. tétel: Élő Összeg oszlop gépelés közben
-
-  A `pages/planEditor/LineRow.tsx` Összeg cellája a committált propokból
-  számol, az ár mező pedig — a darabszámmal ellentétben — nem ad át élő
-  piszkozat-értéket, így gépelés közben az Összeg a régi értéken marad, a
-  mező pedig átmenetileg vezető nullát mutathat. A commit-on-blur maga
-  szándékos, nem ezt kell visszabontani.
-  A döntéseket lásd a tervdokumentumban.
-  **Terv:** `backlog/plans/backlog-108-elo-osszeg-oszlop-terv.md`
-
 ### 109. tétel: Új páciens gyorsfelvétel — elvetés-megerősítés
 
   A `pages/paciensek/UjPaciensDialog.tsx` tisztán helyi állapotot tart,

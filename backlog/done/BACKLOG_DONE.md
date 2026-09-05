@@ -2717,3 +2717,15 @@ karbantartási kör négy önálló javítása.
   színt, adat híján „nincs rögzített adat", betöltés előtt „adatok
   betöltése…", hasonló névegyezésnél „hasonló név" jelzés. Részletek:
   `docs/03-funkcionalis-spec.md` § „Új terv indítása".
+
+### 108. tétel: Élő Összeg oszlop gépelés közben — KÉSZ
+
+- **Méret:** kicsi — egy komponens két új draft-state mezővel, a meglévő
+  `mennyisegDraft` mintáján.
+- **Megvalósítás:** a `LineRow.tsx` Összeg cellája ezentúl az Ajánlati ár ÉS
+  a darabszám mező piszkozatából (nem a committált propokból) számol, a
+  meglévő `sorOsszeg()` (`domain/totals.ts`) hívásával — gépelés közben
+  blur nélkül frissül, üres/érvénytelen piszkozatnál a committált értéket
+  mutatja. A fázis-összesen, a sticky „Mindösszesen”, az Előleg és az
+  Egyedi végösszeg szándékosan változatlanul, csak commit után frissül.
+  Részletek: `docs/03-funkcionalis-spec.md` § „Sor mezői".

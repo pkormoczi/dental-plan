@@ -903,3 +903,134 @@ describe('PlanEditorPage -- 90. tétel: másolt terv örökölt szakmai-tartalom
     await waitFor(() => expect(screen.queryByText('örökölt')).not.toBeInTheDocument());
   });
 });
+
+describe('PlanEditorPage -- 108. tétel: élő Összeg oszlop gépelés közben', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    // Az EUR-teszt a teljes App-ot (HashRouter) rendereli -- a
+    // window.location.hash a jsdom window-on nem reset a tesztek között.
+    window.location.hash = '';
+  });
+
+  /** A soron belüli Összeg cella (az utolsó előtti oszlop, a Törlés gomb előtt). */
+  function osszegCella(priceField: HTMLElement) {
+    const row = priceField.closest('tr') as HTMLTableRowElement;
+    return row.cells[row.cells.length - 2];
+  }
+
+  it('az Ajánlati ár mezőbe gépelve az Összeg blur nélkül, azonnal frissül', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = await screen.findByLabelText('Ajánlati egységár');
+    const osszeg = osszegCella(priceField);
+    expect(osszeg).toHaveTextContent('20 000 Ft');
+
+    await user.clear(priceField);
+    await user.type(priceField, '12000');
+
+    expect(osszeg).toHaveTextContent('12 000 Ft');
+  });
+
+  it('a darabszám mezőbe gépelve az Összeg a többszörösét mutatja, blur nélkül', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = await screen.findByLabelText('Ajánlati egységár');
+    const osszeg = osszegCella(priceField);
+    const mennyisegField = screen.getByLabelText('Darabszám');
+
+    await user.clear(mennyisegField);
+    await user.type(mennyisegField, '3');
+
+    expect(osszeg).toHaveTextContent('60 000 Ft');
+  });
+
+  it('az ár mező teljes kiürítésekor az Összeg a törlés előtti committált értéket mutatja, nem 0 Ft-ot', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = (await screen.findByLabelText('Ajánlati egységár')) as HTMLInputElement;
+    const osszeg = osszegCella(priceField);
+
+    await user.clear(priceField);
+    expect(osszeg).toHaveTextContent('20 000 Ft');
+
+    await user.tab();
+    expect(priceField.value).toBe('20000');
+    expect(osszeg).toHaveTextContent('20 000 Ft');
+  });
+
+  it('Escape a mezőben: a mező és az Összeg is egyszerre áll vissza a committált értékre', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = (await screen.findByLabelText('Ajánlati egységár')) as HTMLInputElement;
+    const osszeg = osszegCella(priceField);
+
+    await user.clear(priceField);
+    await user.type(priceField, '12000');
+    expect(osszeg).toHaveTextContent('12 000 Ft');
+
+    await user.keyboard('{Escape}');
+    expect(priceField.value).toBe('20000');
+    expect(osszeg).toHaveTextContent('20 000 Ft');
+  });
+
+  it('EUR-terven az élő Összeg a helyes euró-értéket mutatja, nem a centben értelmezett számot', async () => {
+    const user = userEvent.setup();
+    seedWithIntactPriceList();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+    await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt EUR');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await screen.findByText('Pénznem');
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
+    await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'cbct');
+    await user.click(await screen.findByText('CBCT'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const priceField = screen.getByLabelText('Ajánlati egységár') as HTMLInputElement;
+    const osszeg = osszegCella(priceField);
+
+    await user.clear(priceField);
+    await user.type(priceField, '35,50');
+
+    expect(osszeg).toHaveTextContent('35,50 €');
+    expect(osszeg).not.toHaveTextContent('0,36 €');
+  });
+
+  it('gépelés közben a "Fázis összesen" és a "Mindösszesen" NEM változik, csak commit után', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = (await screen.findByLabelText('Ajánlati egységár')) as HTMLInputElement;
+    await screen.findByText(/Fázis összesen:/);
+    expect(screen.getByText(/Fázis összesen:/).parentElement).toHaveTextContent('20 000 Ft');
+    expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('20 000 Ft');
+
+    await user.clear(priceField);
+    await user.type(priceField, '12000');
+
+    // Az Összeg cella már 12 000 Ft, de a Fázis összesen és a Mindösszesen még a régi.
+    expect(screen.getByText(/Fázis összesen:/).parentElement).toHaveTextContent('20 000 Ft');
+    expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('20 000 Ft');
+
+    await user.tab();
+    await waitFor(() =>
+      expect(screen.getByText(/Fázis összesen:/).parentElement).toHaveTextContent('12 000 Ft'),
+    );
+    expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('12 000 Ft');
+  });
+});

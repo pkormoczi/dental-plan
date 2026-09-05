@@ -19,6 +19,7 @@ import { sorElteres } from '../../domain/sorElteres';
 import { sorMezokEgyedibol, sorMezokTetelbol } from '../../domain/sorMezok';
 import { invalidFdiTokens, parseTeeth } from '../../domain/teeth';
 import type { FogterkepAllapot } from '../../domain/toothVisual';
+import { sorOsszeg } from '../../domain/totals';
 import type { Kategoria, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
 import { fogId, keresoId, leirasId, nevId } from './elemIdk';
 import ItemPicker from './ItemPicker';
@@ -88,6 +89,10 @@ export default function LineRow({
   const [mennyisegDraft, setMennyisegDraft] = useState(line.mennyiseg);
   useEffect(() => setMennyisegDraft(line.mennyiseg), [line.mennyiseg]);
   const mismatch = teeth.valid && teeth.teeth.length !== mennyisegDraft;
+  // Az Összeg cella élő követéséhez -- ugyanaz a minta, mint a
+  // `mennyisegDraft`-nál fentebb.
+  const [arDraft, setArDraft] = useState(line.tenylegesEgysegar);
+  useEffect(() => setArDraft(line.tenylegesEgysegar), [line.tenylegesEgysegar]);
   // A visszakapcsoló ⟳ gomb (a Db cellában) akkor jelenik meg, ha a sor
   // levált a fogak-követéstől, ÉS van mihez visszakapcsolni -- lásd
   // `sorPatchKovetessel` (domain/mennyiseg.ts) 1. szabálya.
@@ -374,6 +379,7 @@ export default function LineRow({
                   // képest.
                   onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
                 }
+                onDraftChange={(v) => setArDraft(v ?? line.tenylegesEgysegar)}
                 textAlign="right"
                 // 62. tétel (D71): beárazatlan tétel, még kézi ár nélkül -- a
                 // kedvezmény-/felár-kiemeléssel azonos slot, csak
@@ -427,7 +433,14 @@ export default function LineRow({
       </Table.Cell>
 
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>
-        {formatMoney(line.tenylegesEgysegar * line.mennyiseg, currency, nyelv)}
+        {/* Gépelés közben is követi az ár- és darabszám-mezőt -- a
+            committált Összeg csak commit-on-blur (P1-4) után frissülne,
+            ami a doki éppen gépelt számáról adna elavult visszajelzést. */}
+        {formatMoney(
+          sorOsszeg({ ...line, tenylegesEgysegar: arDraft, mennyiseg: mennyisegDraft }),
+          currency,
+          nyelv,
+        )}
       </Table.Cell>
 
       <Table.Cell>
