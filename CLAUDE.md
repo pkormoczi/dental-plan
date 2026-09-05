@@ -1,5 +1,5 @@
 # Repo
-`app/` Vite + React + TS — az egyetlen szerkesztett könyvtár · `docs/06-veglegesites-terv.md` a 2. fázis
+`app/` Vite + React + TS — az egyetlen szerkesztett könyvtár · `docs/desktop-app-migration-plan.md` a 2. fázis
 (Electron) terve · `backlog/` egy fájl = egy tétel: `idea/` ötlet, gyökér tervezett · `data/`, `assets/` referencia ·
 `scripts/` repo-checkek.
 

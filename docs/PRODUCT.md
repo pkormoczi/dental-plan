@@ -45,7 +45,7 @@ készítésére — nem termék, nincs több rendelő, nincs bejelentkezés. Az 
    kerül bele. Cél: a doki validálja a UX-et.
 2. **Végleges**: Electron + `FileSystemStorage` a `PlanStorage` interfész mögött; minden más (domain,
    UI, PDF) változatlan. Egy Chromium mindkét platformon = bájtra azonos PDF. Terv:
-   `docs/06-veglegesites-terv.md`.
+   `docs/desktop-app-migration-plan.md`.
 
 ## A nyomtatvány szerződéses dokumentum
 

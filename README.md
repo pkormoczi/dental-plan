@@ -18,7 +18,7 @@ Az implementáció az `app/` mappában folyik, két lépésben:
    szolgál, mielőtt a fájlrendszeres verzió elkészül.
 2. **Végleges alkalmazás** — ugyanaz a kódbázis Electron-héjban, a tárolóréteg
    lecserélve a fájlrendszerre író implementációra (a terv:
-   `docs/06-veglegesites-terv.md`).
+   `docs/desktop-app-migration-plan.md`).
 
 ## Hova nézz
 
@@ -27,7 +27,7 @@ Az implementáció az `app/` mappában folyik, két lépésben:
 | `docs/PRODUCT.md` | Termékcél, napi flow, adat- és jogi korlátok, a nyomtatvány szerződéses szabályai, nem-cél, nyitott kérdések |
 | `CLAUDE.md` | Agent-context: repó-térkép, parancsok, sérthetetlen invariánsok anchorral, workflow (`/idea` → `/plan` → `/implement` → `/finish`) |
 | `app/src/CLAUDE.md` + `app/src/{domain,storage,pdf}/CLAUDE.md` | Felület-rendszer és a modulok mentális modellje, szándékos hiányok, „find before writing” index |
-| `docs/06-veglegesites-terv.md` | A 2. fázis (Electron + fájlrendszer) terve |
+| `docs/desktop-app-migration-plan.md` | A 2. fázis (Electron + fájlrendszer) terve |
 | `backlog/` | Egy fájl = egy nyitott tétel, slug-névvel: `idea/` az ötlet, a gyökér a tervezett; a modell a `backlog/CLAUDE.md`-ben |
 | `data/arlista.seed.json` | **Kész seed adat** — 118 tétel, 12 kategória, az eredeti Excelből generálva |
 | `assets/mandoki-dental-logo.png` | Márkalogó, átlátszó háttér (navy eredeti — az app egy, a honlap arculatához átszínezett másolatot használ, `app/src/assets/logo.png`) |
