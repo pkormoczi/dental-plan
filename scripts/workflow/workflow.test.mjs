@@ -57,13 +57,94 @@ function repo() {
     g(work, 'commit', '-q', '-m', msg);
     g(work, 'push', '-q', 'origin', 'master');
   };
-  const plan = (slug) => {
-    write(`backlog/${slug}.md`, `# ${slug}\nType: chore\nTarget: master\nBaseline: ${g(work, 'rev-parse', 'HEAD')}\n\n## Goal\nx\n`);
+  // later: true -> backlog/later/<slug>.md, Prio: later (a mappa a Prio tükre).
+  const plan = (slug, { later = false } = {}) => {
+    const dir = later ? 'backlog/later' : 'backlog';
+    const prio = later ? 'Prio: later\n' : '';
+    write(`${dir}/${slug}.md`, `# ${slug}\nType: chore\n${prio}Target: master\nBaseline: ${g(work, 'rev-parse', 'HEAD')}\n\n## Goal\nx\n`);
     commitPush(`backlog: plan ${slug}`);
   };
+  const idea = (slug, { later = false } = {}) => {
+    const dir = later ? 'backlog/idea/later' : 'backlog/idea';
+    write(`${dir}/${slug}.md`, `# ${slug}\nType: chore\n${later ? 'Prio: later\n' : ''}\nx\n`);
+    commitPush(`backlog: +${slug}`);
+  };
   const cleanup = () => rmSync(tmp, { recursive: true, force: true });
-  return { work, origin, run, gateSteps, originHead, count, write, commitPush, plan, cleanup };
+  return { work, origin, run, gateSteps, originHead, count, write, commitPush, plan, idea, cleanup };
 }
+
+test('close a later/ alatti tervezett tételt is megtalálja és törli', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x', { later: true });
+  r.write('app/src/a.txt', 'b\n');
+  const res = r.run('close', ['x', '--title', 'cím']);
+  assert.equal(res.status, 0, res.err);
+  assert.equal(g(r.work, 'log', '-1', '--format=%s'), 'x: cím');
+  assert.equal(existsSync(path.join(r.work, 'backlog/later/x.md')), false);
+  assert.equal(r.originHead(), g(r.work, 'rev-parse', 'HEAD'));
+});
+
+test('close megáll, ha a tétel még idea/ alatt van', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.idea('x', { later: true });
+  const res = r.run('close', ['x', '--title', 'cím']);
+  assert.equal(res.status, 1);
+  assert.match(res.err, /idea\/ alatt/);
+  assert.deepEqual(r.gateSteps(), []);
+});
+
+test('drift --all a gyökér és a later/ tervezett tételeit is listázza', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('a');
+  r.plan('b', { later: true });
+  const res = r.run('drift', ['--all']);
+  assert.equal(res.status, 0, res.err);
+  assert.deepEqual(res.out.split('\n').sort(), ['a\tok', 'b\tok']);
+});
+
+test('prio: later a fejlécbe és later/ alá mozgat, none vissza -- egy-egy commit az originen', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.idea('x');
+  const before = r.count();
+  let res = r.run('prio', ['x', 'later', '--trailer', 'Co-Authored-By: T <t@t>']);
+  assert.equal(res.status, 0, res.err);
+  assert.equal(existsSync(path.join(r.work, 'backlog/idea/x.md')), false);
+  assert.equal(readFileSync(path.join(r.work, 'backlog/idea/later/x.md'), 'utf-8'), '# x\nType: chore\nPrio: later\n\nx\n');
+  assert.equal(g(r.work, 'log', '-1', '--format=%s'), 'backlog: prio x later');
+  assert.match(g(r.work, 'log', '-1', '--format=%b'), /Co-Authored-By/);
+  assert.equal(g(r.work, 'status', '--porcelain'), '');
+  assert.equal(r.count(), before + 1);
+  assert.equal(r.originHead(), g(r.work, 'rev-parse', 'HEAD'));
+  res = r.run('prio', ['x', 'none']);
+  assert.equal(res.status, 0, res.err);
+  assert.equal(readFileSync(path.join(r.work, 'backlog/idea/x.md'), 'utf-8'), '# x\nType: chore\n\nx\n');
+  assert.equal(existsSync(path.join(r.work, 'backlog/idea/later/x.md')), false);
+  assert.equal(r.count(), before + 2);
+  res = r.run('prio', ['x', 'next']);
+  assert.equal(res.status, 0, res.err);
+  assert.equal(readFileSync(path.join(r.work, 'backlog/idea/x.md'), 'utf-8'), '# x\nType: chore\nPrio: next\n\nx\n');
+});
+
+test('prio megáll két mappában élő slugnál és módosított tételnél', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.idea('x');
+  r.idea('y');
+  r.write('backlog/idea/later/x.md', '# x\nType: chore\nPrio: later\n\nx\n');
+  r.commitPush('dupla');
+  let res = r.run('prio', ['x', 'next']);
+  assert.equal(res.status, 1);
+  assert.match(res.err, /több helyen/);
+  r.write('backlog/idea/y.md', '# y\nType: chore\n\ny módosítva\n');
+  res = r.run('prio', ['y', 'next']);
+  assert.equal(res.status, 1);
+  assert.match(res.err, /módosított/);
+  assert.equal(readFileSync(path.join(r.work, 'backlog/idea/y.md'), 'utf-8'), '# y\nType: chore\n\ny módosítva\n');
+});
 
 test('commit-push megáll idegen stage-elt fájl mellett, és nem nyúl hozzá', (t) => {
   const r = repo();

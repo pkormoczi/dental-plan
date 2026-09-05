@@ -182,7 +182,8 @@ Minden találat `Lencse: rontás`, `megfigyelt` bizonyossággal.
 ### 2d. Dedup és rangsor
 
 1. **Dedup-címke.** Olvasd át a `docs/reviews/*doctor-review*.md` korábbi
-   jelentéseket és a `backlog/*.md` + `backlog/idea/*.md` tételfájlokat (slug és `Source:` sor), és minden
+   jelentéseket és a backlog négy mappájának (`backlog/`, `backlog/later/`, `backlog/idea/`,
+   `backlog/idea/later/`) tételfájljait (slug és `Source:` sor), és minden
    megállapítást jelölj:
    - `ÚJ`;
    - `MÁR JELZETT (<korábbi review-fájl neve>, <n>. megállapítás)`;

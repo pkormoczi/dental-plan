@@ -1,6 +1,6 @@
 ---
 name: idea
-description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/idea/<slug>.md files (header Type, optional Source, Kerdes and Prio, one paragraph, ≤1500 chars), then commit and push them at once (scripts/workflow/commit-push.mjs) so the item is shared state from the start. Dedups against existing backlog slugs and docs/PRODUCT.md § Nem cél, splits a multi-idea note (feedback list, review report) into separate files the user picks from. Never writes application code, never plans, never sets Prio on its own. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl].
+description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/idea/<slug>.md files (or backlog/idea/later/<slug>.md when the caller explicitly said Prio later; header Type, optional Source, Kerdes and Prio, one paragraph, ≤1500 chars), then commit and push them at once (scripts/workflow/commit-push.mjs) so the item is shared state from the start. Dedups against existing backlog slugs (all four folders) and docs/PRODUCT.md § Nem cél, splits a multi-idea note (feedback list, review report) into separate files the user picks from. Never writes application code, never plans, never decides Prio on its own. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl].
 argument-hint: <slug> [szöveg | forrás-fájl]
 disable-model-invocation: true
 ---
@@ -11,13 +11,15 @@ disable-model-invocation: true
 
 Egy nyers felvetést — a doki ötlete, egy feedback-lista sora, egy review-jelentés
 megállapítása, egy menet közben talált bug, egy kód-housekeeping teendő — azonnal a
-backlog egy tételévé tenni: `backlog/idea/<slug>.md` — a státusz a mappa. Nincs inbox, nincs
-várólista: ami nem fájl, az nincs. A fájlalak és az értékkészlet: `backlog/CLAUDE.md`.
+backlog egy tételévé tenni: `backlog/idea/<slug>.md` — a státusz a mappa; ha a hívó kimondta,
+hogy `later`, akkor `backlog/idea/later/<slug>.md` (a `later/` mappa a `Prio: later` tükre, a
+docs-check őrzi). Nincs inbox, nincs várólista: ami nem fájl, az nincs. A fájlalak és az
+értékkészlet: `backlog/CLAUDE.md`.
 
 A tétel innen két irányba mehet: `/plan <slug>` (kidolgozás) vagy `git rm` + commit-push (elvetés —
 ha az elvetés termékszintű, egy sor a `docs/PRODUCT.md` Nem cél szakaszába, „nem X, amíg Y” alakban).
 
-**Ez a skill soha nem ír app-kódot, nem tervez, és `Prio:`-t magától nem ír.** A fájlt írás
+**Ez a skill soha nem ír app-kódot, nem tervez, és `Prio:`-t magától nem dönt el.** A fájlt írás
 után **azonnal commitolja és pusholja** — a backlog minden állapotváltozása megosztott állapot.
 
 ## Bemenet
@@ -31,7 +33,8 @@ után **azonnal commitolja és pusholja** — a backlog minden állapotváltozá
 ## Lépések
 
 1. **Olvasd el a forrást**, és a `docs/PRODUCT.md` Nem cél szakaszát.
-2. **Dedup.** `ls backlog backlog/idea` — slugok mindkét mappában és a fájlok `Source:` sorai. Ha egy
+2. **Dedup.** `ls backlog backlog/later backlog/idea backlog/idea/later` — slugok mind a négy
+   mappában és a fájlok `Source:` sorai. Ha egy
    létező tétel már fedi a felvetést, ne nyiss újat: mondd meg, melyik, és állj meg. Ha a felvetés a
    `docs/PRODUCT.md` Nem cél szerint elvetett irány vagy hard invariánst sért, mondd ki — a tétel
    ettől még felvehető (a doki dönt), de a bekezdés első mondata jelezze az ütközést.
@@ -46,23 +49,24 @@ után **azonnal commitolja és pusholja** — a backlog minden állapotváltozá
 6. **`Source:`** honnan jött: review-jelentés + megállapítás sorszáma, „Réka feedback
    <hónap>”, „doki felvetés”, „<slug> implementálása közben talált”. Legacy-dokumentumra és
    D-számra nem hivatkozhat (docs-check).
-7. **`Prio:`** (`now` | `next` | `later`) csak akkor, ha a doki a hívásban vagy a beszélgetésben
-   kimondta. Ne kérdezz rá, ne javasolj — hiánya azt jelenti, még nincs döntés.
+7. **`Prio:`** (`now` | `next` | `later`) csak akkor, ha a doki vagy a fejlesztő a hívásban vagy a
+   beszélgetésben kimondta. Ne kérdezz rá, ne javasolj — hiánya azt jelenti, még nincs döntés.
+   `later`-nél a fájl helye `backlog/idea/later/<slug>.md`, különben `backlog/idea/<slug>.md`.
 8. **Mutasd meg a teljes fájltartalmat**, és csak kifejezett jóváhagyás után írj.
 9. **Commit + push:** `node scripts/workflow/commit-push.mjs -m "backlog: +<slug>" --trailer
-   "Co-Authored-By: …" --trailer "Claude-Session: …" -- backlog/idea/<slug>.md` (több fájl egy
+   "Co-Authored-By: …" --trailer "Claude-Session: …" -- backlog/idea[/later]/<slug>.md` (több fájl egy
    futásban: egy commit, `backlog: +a, +b`, minden path a `--` után). A script docs-checket futtat,
    commitol, pushol; ha megáll (piros docs-check, megbukott push), jelentsd a kimenetét — ne
    kerüld meg kézi `git`-tel.
 
-## A fájl — `backlog/idea/<slug>.md`
+## A fájl — `backlog/idea/<slug>.md` (`later`-nél `backlog/idea/later/<slug>.md`)
 
 ```md
 # <slug>
 Type: feature|bug|chore|doki
 Source: <honnan>
 Kerdes: <csak ha van>
-Prio: <csak ha a doki kimondta: now|next|later>
+Prio: <csak ha a doki vagy a fejlesztő kimondta: now|next|later>
 
 Egy bekezdés: mi a fájdalom / mi hiányzik, mit látna másképp a doki; bugnál repro + elvárt
 viselkedés; ha van explicit kizárt scope, egy mondatban. Legfeljebb 1500 karakter — a

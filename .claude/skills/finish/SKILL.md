@@ -1,6 +1,6 @@
 ---
 name: finish
-description: Close one implemented, manually verified backlog item — fix loop on the quality gate (stop and hand back to the doki if a fix changes visible behaviour), docs-check, documentation ONLY when non-derivable context appeared, then scripts/workflow/close.mjs (scope guard, final gate, git rm backlog/<slug>.md, commit "<slug>: <cím>", immediate push to origin/master; on a worktree branch: rebase, force-with-lease, PR; resumes an interrupted run). Call it only AFTER the doki checked the working tree — the master push deploys to Pages. Invoke explicitly with /finish <slug>.
+description: Close one implemented, manually verified backlog item — fix loop on the quality gate (stop and hand back to the doki if a fix changes visible behaviour), docs-check, documentation ONLY when non-derivable context appeared, then scripts/workflow/close.mjs (scope guard, final gate, git rm backlog[/later]/<slug>.md, commit "<slug>: <cím>", immediate push to origin/master; on a worktree branch: rebase, force-with-lease, PR; resumes an interrupted run). Call it only AFTER the doki checked the working tree — the master push deploys to Pages. Invoke explicitly with /finish <slug>.
 argument-hint: <slug> [--worktree]
 disable-model-invocation: true
 ---
@@ -55,7 +55,8 @@ node scripts/workflow/close.mjs <slug> --title "<cím>" --body "<1–2 mondat ma
 A cím a tételfájl `## Goal` mondatának rövid alakja; a commit első sora `<slug>: <cím>`. A
 script sorban: fetch + ff; **hatókör-őr** (untracked fájl csak `app/ docs/ data/ assets/` alatt
 mehet a commitba); a **teljes kapu** (`build`, `lint`, `test`, `docs-check`);
-`git rm backlog/<slug>.md`; a követett módosítások és az engedett új fájlok stage-elése;
+`git rm backlog[/later]/<slug>.md` (a tételt a `Prio` szerinti mappában találja meg); a
+követett módosítások és az engedett új fájlok stage-elése;
 commit; `git push origin master`. Ha az origin közben előrelépett: rebase, **a kapu újra**,
 push.
 
@@ -65,8 +66,8 @@ A három tipikus megállás és a teendő:
 - **untracked fájl a körön kívül** — a doki dönt: törli, ignore-olja vagy külön commitolja
   (`commit-push.mjs`), aztán újra `/finish`;
 - **a tervfájl módosított, a `git rm` megtagadta** — ha a módosítás kell:
-  `commit-push.mjs -m "backlog: plan <slug> frissítve" -- backlog/<slug>.md`; ha nem:
-  `git checkout -- backlog/<slug>.md`; aztán újra;
+  `commit-push.mjs -m "backlog: plan <slug> frissítve" -- <a tételfájl útvonala, a close.mjs
+  kiírja>`; ha nem: `git checkout -- <útvonal>`; aztán újra;
 - **rebase-konfliktus a push előtt** — a rebase félben marad; a doki feloldja,
   `git rebase --continue`, majd `node scripts/workflow/sync.mjs` (a kapu újra fut a push
   előtt). Piros kapu a rebase után: javítás, majd szintén `sync.mjs`.

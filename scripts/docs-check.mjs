@@ -3,8 +3,8 @@
 // legacy-dokumentumra mutató hivatkozás, (3) az agent-context fájlok budgetje,
 // (4) a context-fájlok path-qualified anchorai feloldhatók, (5) nincs
 // elnémított/kiemelt teszt, (6) a backlog/ tételfájlok fejléce és budgetje --
-// a státusz a mappa (backlog/idea/ = ötlet, backlog/ gyökér = tervezett), nincs
-// Status sor; a tétel-anchorokat nem oldja fel: az elavulást az /implement
+// a státusz a mappa (backlog/idea/ = ötlet, backlog/ gyökér = tervezett), mindkettő
+// alatt later/ = Prio: later, nincs Status sor; a tétel-anchorokat nem oldja fel: az elavulást az /implement
 // baseline-preflightja fogja. Bármely találat exit 1.
 //
 // Futtatás: `node scripts/docs-check.mjs` a repó gyökeréből, vagy
@@ -67,16 +67,22 @@ const isContextFile = (f) =>
   f === 'CLAUDE.md' || f === 'AGENTS.md' || f === PRODUCT || f === 'backlog/CLAUDE.md' || /^app\/src\/.*CLAUDE\.md$/.test(f);
 
 // Egy tétel = egy fájl; a státusz a mappa: backlog/idea/<slug>.md ötlet, backlog/<slug>.md
-// tervezett. Nincs Status sor -- két igazságforrás szétcsúszna, a git mv az állapotváltás.
+// tervezett, mindkettő alatt later/ a Prio: later tételeké (a mappa és a Prio sor egyezését
+// a backlogTetel őrzi). Nincs Status sor -- két igazságforrás szétcsúszna, a git mv az
+// állapotváltás. Más mélységű backlog-útvonal (pl. later/later/) nem tétel: a futó ciklus hibát ad.
 const backlogStatus = (f) => {
-  if (/^backlog\/idea\/[^/]+\.md$/.test(f)) return 'idea';
+  const m = /^backlog\/(idea\/)?(later\/)?([^/]+)\.md$/.exec(f);
+  if (!m) return null;
   // README.md a fejlesztői leírás a flow-ról, nem tétel -- a CLAUDE.md-vel együtt kivétel.
-  if (/^backlog\/[^/]+\.md$/.test(f) && f !== 'backlog/CLAUDE.md' && f !== 'backlog/README.md') return 'planned';
-  return null;
+  if (!m[1] && !m[2] && (f === 'backlog/CLAUDE.md' || f === 'backlog/README.md')) return null;
+  return { status: m[1] ? 'idea' : 'planned', later: Boolean(m[2]) };
 };
+// Mappanevek, amik nem lehetnek slugok: backlog/later.md egy "later" nevű tervezett tétel lenne.
+const BACKLOG_RESERVED = ['idea', 'later'];
 const BACKLOG_TYPE = ['feature', 'bug', 'chore', 'doki'];
 const BACKLOG_HEADER_KEYS = ['Type', 'Source', 'Kerdes', 'Prio', 'Target', 'Baseline'];
-// Prio-t csak a doki állítja; hiánya = még nincs döntés. Skill sosem írja magától.
+// Prio-t a doki vagy a fejlesztő mondja ki; hiánya = még nincs döntés. Skill sosem dönti el
+// magától, csak a kimondott értéket könyveli (prio.mjs).
 const BACKLOG_PRIO = ['now', 'next', 'later'];
 const BACKLOG_SECTIONS = ['## Goal', '## Current state', '## Approach', '## Decisions', '## Verification'];
 // Karakterben. Az idea egy bekezdés; a planned a V2 tervsablon -- a részlet a git historyé.
@@ -218,11 +224,14 @@ function anchor(file, lines) {
 
 const backlogSlugs = new Map();
 
-function backlogTetel(file, status, lines, content) {
+function backlogTetel(file, { status, later }, lines, content) {
   const rule = 'backlog-tetel';
   const name = path.posix.basename(file, '.md');
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) {
     hiba(file, 1, rule, `a fájlnév nem kebab-case slug: "${name}.md"`);
+  }
+  if (BACKLOG_RESERVED.includes(name)) {
+    hiba(file, 1, rule, `"${name}" foglalt mappanév, nem lehet slug`);
   }
   if (lines[0] !== `# ${name}`) {
     hiba(file, 1, rule, `az 1. sor "# ${name}" legyen -- a slug a fájlnév, nincs külön cím`);
@@ -245,11 +254,22 @@ function backlogTetel(file, status, lines, content) {
     hiba(file, 1, rule, `Type: ${type ?? '(hiányzik)'} -- ${BACKLOG_TYPE.join(' | ')}`);
   }
   if (header.Prio !== undefined && !BACKLOG_PRIO.includes(header.Prio)) {
-    hiba(file, 1, rule, `Prio: ${header.Prio} -- ${BACKLOG_PRIO.join(' | ')} (a doki dönti el; hiánya = nincs döntés)`);
+    hiba(file, 1, rule, `Prio: ${header.Prio} -- ${BACKLOG_PRIO.join(' | ')} (a doki vagy a fejlesztő mondja ki; hiánya = nincs döntés)`);
+  }
+  // A later/ mappa a Prio: later tükre, mindkét irányban: a fájlfa és a fejléc ne csússzon szét.
+  if ((header.Prio === 'later') !== later) {
+    hiba(
+      file,
+      1,
+      rule,
+      later
+        ? `later/ alatt áll, de Prio: ${header.Prio ?? '(hiányzik)'} -- a mappa követi a Prio-t: git mv a szülőmappába, vagy Prio: later (prio.mjs)`
+        : `Prio: later, de nem later/ alatt áll -- git mv backlog${status === 'idea' ? '/idea' : ''}/later/${name}.md (prio.mjs)`,
+    );
   }
   if (status === 'planned') {
     if (type === 'doki') {
-      hiba(file, 1, rule, 'Type: doki a gyökérben -- emberi teendő sosem tervezett, a helye backlog/idea/');
+      hiba(file, 1, rule, 'Type: doki tervezett tételként -- emberi teendő sosem tervezett, a helye backlog/idea[/later]/');
     }
     if (header.Target !== 'master') hiba(file, 1, rule, 'a gyökérben tervezett tétel áll: "Target: master" kell');
     if (!/^[0-9a-f]{40}$/.test(header.Baseline ?? '')) {
@@ -284,8 +304,11 @@ for (const file of files) {
   // A backlog/README.md nem betöltődő context (nincs budget), de a skill-fájlokra mutató
   // anchorai egy átnevezésnél pirosat adjanak.
   if (isContextFile(file) || file === 'backlog/README.md') anchor(file, lines);
-  const status = backlogStatus(file);
-  if (status) backlogTetel(file, status, lines, content);
+  const st = backlogStatus(file);
+  if (st) backlogTetel(file, st, lines, content);
+  else if (file.startsWith('backlog/') && file !== 'backlog/CLAUDE.md' && file !== 'backlog/README.md') {
+    hiba(file, 1, 'backlog-tetel', 'ismeretlen backlog-útvonal -- csak backlog/[idea/][later/]<slug>.md lehet tétel');
+  }
   if (isTestFile(file)) skipOnly(file, lines);
 }
 

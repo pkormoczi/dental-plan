@@ -14,10 +14,11 @@ import {
   run, parseArgs, WorkflowError, ROOT, git, gate, commit, head, currentBranch, isClean,
   requireNoRebase, fetchOrigin, ffPull, pushMaster, untrackedFiles, underPaths, closingCommit,
 } from './lib.mjs';
+import { findItem } from './backlogPath.mjs';
 
 const HELP = `node scripts/workflow/close.mjs <slug> --title "<cím>" [--body "<1-2 mondat>"] [--trailer "<K: v>"]...
   masteren: fetch + ff; untracked csak app/ docs/ data/ assets/ alatt (más: megáll); build+lint+test+docs-check;
-            git rm backlog/<slug>.md (módosított tervfájlnál megáll); követett módosítások + engedett untracked;
+            git rm backlog[/later]/<slug>.md (módosított tervfájlnál megáll); követett módosítások + engedett untracked;
             commit "<slug>: <cím>"; push (nem-ff: rebase, kapu újra, push).
   branchen: ugyanaz, majd rebase origin/master-re (base-változásnál kapu újra), push --force-with-lease,
             gh pr create ha nincs PR (a gh hiánya/hibája nem hiba, a PR ilyenkor kézi).
@@ -72,7 +73,12 @@ run(() => {
   requireNoRebase();
   const branch = currentBranch();
   const onMaster = branch === 'master';
-  const item = `backlog/${slug}.md`;
+  // A tervezett tétel a gyökérben vagy a later/ alatt él (a Prio dönti el) -- a feloldás közös.
+  const found = findItem(slug);
+  if (found?.status === 'idea') {
+    throw new WorkflowError(`${found.path}: még idea/ alatt van -- előbb /plan ${slug}`);
+  }
+  const item = found?.path ?? `backlog/${slug}.md`;
   const subject = `${slug}: ${a.title}`;
 
   fetchOrigin();
@@ -83,7 +89,7 @@ run(() => {
   if (!existsSync(path.join(ROOT, item))) {
     const existing = closingCommit(slug);
     if (!existing) {
-      throw new WorkflowError(`${item} nincs meg, és nincs push-olatlan "${slug}: …" commit -- máshol már lezárták, vagy még idea/ alatt van`);
+      throw new WorkflowError(`nincs backlog[/later]/${slug}.md, és nincs push-olatlan "${slug}: …" commit -- máshol már lezárták?`);
     }
     if (!isClean()) {
       throw new WorkflowError(`folytatás-mód: a lezáró commit ${existing.slice(0, 7)} már létezik, de a munkafa nem tiszta -- commitolatlan módosítással nem publikálok`);

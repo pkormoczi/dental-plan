@@ -1,27 +1,26 @@
 // Baseline-drift: a tervezett tétel Baseline SHA-ja óta változott-e app-kód (app/, data/,
 // assets/). Backlog- és docs-commit nem drift -- ezért nem SHA-egyezést nézünk. Csak jelez:
 // a Baseline sosem íródik át (a módosított tervfájl a lezárást akasztaná meg).
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { run, parseArgs, WorkflowError, ROOT, git } from './lib.mjs';
+import { findItem, listItems } from './backlogPath.mjs';
 
 const HELP = `node scripts/workflow/drift.mjs <slug> | --all
-  <slug>: a backlog/<slug>.md Baseline-ja és HEAD közti diff --stat az app/ data/ assets/ alatt.
+  <slug>: a backlog[/later]/<slug>.md Baseline-ja és HEAD közti diff --stat az app/ data/ assets/ alatt.
           exit 0 = nincs drift; exit 2 = drift (a stat kiírva); exit 1 = hiba.
-  --all:  minden tervezett tételre egy sor: <slug> TAB ok|drift  (fetch nélkül).`;
+  --all:  minden tervezett tételre (gyökér és later/) egy sor: <slug> TAB ok|drift  (fetch nélkül).`;
 
 const CODE_PATHS = ['app', 'data', 'assets'];
 
 function baselineOf(slug) {
-  const file = path.join(ROOT, 'backlog', `${slug}.md`);
-  let text;
-  try {
-    text = readFileSync(file, 'utf-8');
-  } catch {
-    throw new WorkflowError(`nincs backlog/${slug}.md a gyökérben -- idea/ alatt van? előbb /plan`);
+  const item = findItem(slug);
+  if (!item || item.status !== 'planned') {
+    throw new WorkflowError(`nincs tervezett backlog[/later]/${slug}.md -- idea/ alatt van? előbb /plan`);
   }
+  const text = readFileSync(path.join(ROOT, item.path), 'utf-8');
   const m = /^Baseline:\s*([0-9a-f]{40})\s*$/m.exec(text);
-  if (!m) throw new WorkflowError(`backlog/${slug}.md: nincs érvényes "Baseline: <40 hex>" sor`);
+  if (!m) throw new WorkflowError(`${item.path}: nincs érvényes "Baseline: <40 hex>" sor`);
   return m[1];
 }
 
@@ -36,9 +35,7 @@ run(() => {
   const a = parseArgs(process.argv.slice(2), { flags: ['all'] });
   if (a.help) return console.log(HELP);
   if (a.all) {
-    const items = readdirSync(path.join(ROOT, 'backlog'))
-      .filter((f) => f.endsWith('.md') && f !== 'CLAUDE.md' && f !== 'README.md')
-      .map((f) => f.slice(0, -3));
+    const items = listItems().filter((i) => i.status === 'planned').map((i) => i.slug);
     for (const slug of items) {
       try {
         console.log(`${slug}\t${driftStat(baselineOf(slug)) ? 'drift' : 'ok'}`);

@@ -22,7 +22,7 @@ Fogorvosi kezelési-terv készítő (Vite + React + TS az `app/` alatt), egy fej
 
 ## Kapu és flow
 Kapu az `app/` alatt: `npm run build`, `lint`, `test`, `docs-check` — mind zöld, allowlist nincs.
-Egy tétel: ötlet (`backlog/idea/<slug>.md`) → terv (`backlog/<slug>.md`) → implementáció a
+Egy tétel: ötlet (`backlog/idea[/later]/`) → terv (`backlog[/later]/`) → implementáció a
 masteren, commit nélkül → **kézi ellenőrzés a munkafán** → lezárás (tételfájl törlése, commit,
 azonnali push; a master-push Pages-re élesít). Minden állapotváltozás azonnal commit + push.
 
@@ -34,4 +34,4 @@ Git-lépések scriptben, a gyökérből (`--help` mindnél):
 → file:scripts/workflow/sync.mjs; file:scripts/workflow/commit-push.mjs; file:scripts/workflow/drift.mjs; file:scripts/workflow/close.mjs
 
 Claude Code-ban ugyanez skill (`.claude/skills/*/SKILL.md`); más agent a scripteket hívja és a
-skill-fájl lépéseit követi. Review csak jelent; `Prio:`-t csak a doki ír.
+skill-fájl lépéseit követi. Review csak jelent; `Prio`-t doki/fejlesztő mond ki.

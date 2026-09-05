@@ -11,9 +11,10 @@ disable-model-invocation: true
 
 Egy tételt döntésről döntésre implementáció-indításig vinni, és az eredményt a tétel saját
 fájljába írni, a fájlt az `idea/` mappából a gyökérbe víve — a státusz a mappa:
-`git mv backlog/idea/<slug>.md backlog/<slug>.md`. A bemenet:
+`git mv backlog/idea[/later]/<slug>.md backlog[/later]/<slug>.md` (a `Prio` megmarad, a
+`later/` almappa követi: `Prio: later` ⇔ `later/`, a docs-check őrzi). A bemenet:
 
-- egy létező `backlog/idea/<slug>.md` fájl, vagy
+- egy létező `backlog/idea/<slug>.md` vagy `backlog/idea/later/<slug>.md` fájl, vagy
 - egy szabad felvetés a hívásban / a beszélgetésben — ekkor a fájlt is ez a skill hozza
   létre, a `/idea` dedup-lépésével.
 
@@ -21,10 +22,10 @@ A `<slug>` kötelező, kebab-case: a fájlnév és a későbbi `/implement <slug
 azonosítója. A fájlalak és a fejléc-értékkészlet: `backlog/CLAUDE.md`.
 
 **Ez a skill soha nem ír és nem módosít alkalmazáskódot** (`app/`, `data/`, `assets/` alatt
-semmit), nem nyúl más backlog-fájlhoz, és `Prio:`-t magától nem ír. A tervfájlt írás után
+semmit), nem nyúl más backlog-fájlhoz, és `Prio:`-t magától nem dönt el. A tervfájlt írás után
 **azonnal commitolja és pusholja** — a terv megosztott állapot, mielőtt implementáció indul.
 `Type: doki` tételt
-nem fogad el — az emberi teendő, nem tervezhető; a gyökérben már meglévő `backlog/<slug>.md`-t sem — az már
+nem fogad el — az emberi teendő, nem tervezhető; a már tervezett `backlog[/later]/<slug>.md`-t sem — az már
 tervezett, újratervezésre előbb mondd ki, mi bukott meg benne.
 
 ## Előkészítés — mielőtt egy kérdést is felteszel
@@ -37,7 +38,7 @@ tervezett, újratervezésre előbb mondd ki, mi bukott meg benne.
    nested `CLAUDE.md`-jét (`app/src`, `domain`, `storage`, `pdf`). Ezek nem tárgyalási alap —
    ha egy döntési ág ütközik velük, EXPLICIT vesd fel, ne csendben kerülgesd, és ne csendben
    fogadd el az ütközést.
-3. Dedup: `ls backlog backlog/idea` slugjai és `Source:` sorai + `docs/PRODUCT.md` Nem cél. Ha a felvetés egy
+3. Dedup: `ls backlog backlog/later backlog/idea backlog/idea/later` slugjai és `Source:` sorai + `docs/PRODUCT.md` Nem cél. Ha a felvetés egy
    már mérlegelt és elvetett irány, mondd ki, és kérdezd meg, mi változott azóta; ha egy
    létező tétel fedi, ne nyiss újat.
 4. A nested `CLAUDE.md`-k „Find before writing” indexét nézd át — a döntéseknek a meglévő
@@ -88,7 +89,7 @@ zárultak le.
 
 ## Kimenet — a tételfájl
 
-`backlog/<slug>.md` a gyökérben (`git mv` az `idea/`-ból), **legfeljebb 6000 karakter**, magyarul (a séma-mezőneveket nem
+`backlog/<slug>.md` a gyökérben, `Prio: later`-nél `backlog/later/<slug>.md` (`git mv` az `idea[/later]/`-ból), **legfeljebb 6000 karakter**, magyarul (a séma-mezőneveket nem
 fordítjuk, lásd root `CLAUDE.md` Domain szókincs). A meglévő `Type:`, `Source:` és `Prio:` sor
 megmarad; a `Kerdes:` sor törlődik, ha a tervezés megválaszolta.
 
@@ -147,11 +148,11 @@ feltevései és a Baseline ugyanahhoz a kódhoz tartoznak.
 ```
 node scripts/workflow/commit-push.mjs -m "backlog: plan <slug>" \
   --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" \
-  -- backlog/idea/<slug>.md backlog/<slug>.md
+  -- backlog/idea[/later]/<slug>.md backlog[/later]/<slug>.md
 ```
 
 (mindkét path kell, hogy a `git mv` átnevezésként kerüljön a commitba; szabad felvetésből
-induló, új fájlnál csak a gyökérbeli). A script docs-checket futtat, commitol, pushol; ha megáll,
+induló, új fájlnál csak a cél-útvonal). A script docs-checket futtat, commitol, pushol; ha megáll,
 jelentsd a kimenetét, ne kerüld meg kézi `git`-tel.
 
 ## Záró jelentés

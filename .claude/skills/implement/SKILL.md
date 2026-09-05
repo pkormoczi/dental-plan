@@ -21,10 +21,10 @@ Kövesd a lépéseket sorban, megállás nélkül, amíg valamelyik kifejezetten
 
 ## 1. Validáció
 
-A tételfájl `backlog/<slug>.md` — a gyökérben, mert a státusz a mappa. Olvasd ki a
-fejlécét. **Állj meg**, ha:
+A tételfájl `backlog/<slug>.md` vagy `backlog/later/<slug>.md` (a `Prio: later` tétel is
+tervezett és implementálható) — a státusz a mappa. Olvasd ki a fejlécét. **Állj meg**, ha:
 
-- a fájl a gyökérben nem létezik — ha `backlog/idea/<slug>.md`-ként megvan, előbb
+- a fájl egyik helyen sem létezik — ha `backlog/idea[/later]/<slug>.md`-ként megvan, előbb
   `/plan <slug>` (bugnál `--quick`),
 - `Type: doki` — emberi teendő, nem implementálható,
 - a `git status` a feladathoz nem tartozó, commitolatlan módosítást mutat — kérdezd

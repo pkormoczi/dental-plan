@@ -19,13 +19,17 @@ script-változásnál frissítendő.
 Egy fájl = egy tétel, a fájlnév a kebab-case `slug`, ami az első sor (`# <slug>`) és minden
 későbbi parancs azonosítója is. **A státusz a mappa:** `backlog/idea/<slug>.md` ötlet,
 `backlog/<slug>.md` a gyökérben tervezett (implementálható). Nincs `Status:` sor, index, sorszám.
-Prioritás van, de csak a dokié: opcionális `Prio: now|next|later`, amit skill sosem ír magától.
+Prioritás van: opcionális `Prio: now|next|later`, amit a doki vagy a fejlesztő mond ki — skill
+sosem dönti el magától, csak a kimondott értéket könyveli. **A `later/` almappa a `Prio: later`
+tükre** mindkét szint alatt (`backlog/idea/later/`, `backlog/later/`): a `now`, `next` és a
+Prio-nélküli tétel a szülőmappában marad, így a fájlfa és a `/backlog` alaplistája csak azt
+mutatja, ami döntésre vár vagy soron következik. A mappa és a fejléc egyezését a `docs-check` őrzi.
 Az állapotváltás egyetlen `git mv`; a kész tétel törlődik, nem „done"-ra kerül; a történet a git
 history. **Minden állapotváltozás azonnal commit + push** — a backlog megosztott állapot, nincs
 untracked tétel és nincs a helyi masteren várakozó commit. Elvetett irány sem marad itt: egy sor
 a `docs/PRODUCT.md` Nem cél szakaszába, „nem X, amíg Y" alakban.
 
-| | `idea/<slug>.md` (ötlet) | `<slug>.md` a gyökérben (tervezett) |
+| | `idea[/later]/<slug>.md` (ötlet) | `[later/]<slug>.md` a gyökérben (tervezett) |
 |---|---|---|
 | Kötelező fejléc | `# <slug>`, `Type:` | `# <slug>`, `Type:`, `Target: master`, `Baseline: <40 hex>` |
 | Opcionális fejléc | `Source:`, `Kerdes:`, `Prio:` | `Source:`, `Prio:` (a `Kerdes:` törlődik, ha a tervezés megválaszolta) |
@@ -54,8 +58,8 @@ oldja fel a konfliktust"), ott a fejlesztő szerep értendő.
 
 ```mermaid
 stateDiagram-v2
-    Otlet: backlog/idea/slug.md — commitolva, origin/master-en
-    Tervezett: backlog/slug.md (Target, Baseline, 5 szakasz) — commitolva, origin/master-en
+    Otlet: backlog/idea[/later]/slug.md — commitolva, origin/master-en
+    Tervezett: backlog[/later]/slug.md (Target, Baseline, 5 szakasz) — commitolva, origin/master-en
     Kesz: munkafa kód kész, zöld kapu + manual-check + diff-önellenőrzés, commitolatlan — a doki kézi kapuja
     Lezart: origin/master-en a "slug: cím" commit, a tételfájl törölve, Pages deploy fut
     PR: worktree-branch, PR nyitva
@@ -63,6 +67,7 @@ stateDiagram-v2
     [*] --> Otlet: /idea slug (commit-push)
     Otlet --> Tervezett: /plan slug [--quick] (git mv + commit-push)
     Otlet --> [*]: elvetés, git rm + commit-push (+ PRODUCT.md Nem cél sor)
+    Otlet --> Otlet: /backlog slug prio (prio.mjs: Prio sor + later/ mappa + commit-push; tervezettnél ugyanígy)
     Tervezett --> Kesz: /implement slug (nincs commit)
     Kesz --> Lezart: /finish slug (close.mjs: kapu, git rm, commit, push)
     Kesz --> PR: /finish slug --worktree (close.mjs: rebase, force-with-lease, gh pr create)
@@ -89,7 +94,8 @@ szerződése kimond.
 | `sync.mjs` | `git fetch`; ff-merge az `origin/master`-re; ha `origin/master..HEAD` nem üres (csak megbukott vagy félbeszakadt futás maradványa lehet): **teljes kapu**, majd push; kiírja a HEAD SHA-t | nem `master`; félbehagyott rebase; piros kapu; ff-merge ütközik commitolatlan fájllal |
 | `commit-push.mjs -m … [--body …] [--trailer …]… -- <path>…` | **hatókör-őr**: ha a megadott path-okon kívül stage-elt változás van, megáll; csak a megadott path-ok stage-elése (átnevezésnél mindkettő; már `git rm`-elt path elfogadott); `docs-check`; commit; push. Nem-ff push: `rebase --autostash`, `docs-check` újra, push | idegen stage-elt fájl; nincs változás a path-okon; piros docs-check; rebase-konfliktus (félben marad; teendő: feloldás, `git rebase --continue`, `sync.mjs`) |
 | `drift.mjs <slug> \| --all` | a terv `Baseline`-ja és HEAD közt `git diff --stat -- app data assets`; exit 0 nincs drift, **exit 2** drift (a stat kiírva). **Csak jelez, a `Baseline` sosem íródik át.** `--all`: minden tervezett tételre `slug<TAB>ok\|drift` | nincs tervezett fájl; hibás/ismeretlen `Baseline` |
-| `close.mjs <slug> --title … [--body …] [--trailer …]…` | masteren: fetch + ff; **hatókör-őr** (untracked fájl csak `app/ docs/ data/ assets/` alatt); **teljes kapu**; `git rm backlog/<slug>.md` (**módosított tervfájlnál megáll**); követett módosítások + engedett untracked; commit `<slug>: <cím>`; push (nem-ff: rebase, **kapu újra**, push). Nem-master branchen: commit után `rebase origin/master` (base-változásnál kapu újra), `push --force-with-lease -u`, `gh pr create` ha nincs PR (a `gh` hiánya/hibája csak üzenet). **Folytatás-mód**: ha a tervfájl hiányzik, de van push-olatlan `<slug>: …` commit, nem commitol újra — tiszta fát követel, kapu, majd a hiányzó publikálási lépés | a tervfájl hiányzik és nincs lezáró commit („máshol lezárták"); követetlen tervfájl; untracked a körön kívül; piros kapu; módosított tervfájl; rebase-konfliktus; folytatásnál piszkos fa |
+| `prio.mjs <slug> <now\|next\|later\|none> [--trailer …]…` | a KIMONDOTT `Prio` lekönyvelése: a tételt a négy mappában megkeresi (`backlogPath.mjs`), a fejléc `Prio:` sorát írja/törli, ha a mappa nem egyezik (`later` ⇔ `later/`) `git mv`, majd `commit-push.mjs -m "backlog: prio <slug> <érték>"` | nincs ilyen slug, vagy két mappában is él; a tétel nem követett vagy módosított; a `commit-push` megáll (a fejléc és a mappa ekkor már átírva, a hibaüzenet a folytató parancsot adja) |
+| `close.mjs <slug> --title … [--body …] [--trailer …]…` | masteren: fetch + ff; **hatókör-őr** (untracked fájl csak `app/ docs/ data/ assets/` alatt); **teljes kapu**; `git rm backlog[/later]/<slug>.md` (**módosított tervfájlnál megáll**); követett módosítások + engedett untracked; commit `<slug>: <cím>`; push (nem-ff: rebase, **kapu újra**, push). Nem-master branchen: commit után `rebase origin/master` (base-változásnál kapu újra), `push --force-with-lease -u`, `gh pr create` ha nincs PR (a `gh` hiánya/hibája csak üzenet). **Folytatás-mód**: ha a tervfájl hiányzik, de van push-olatlan `<slug>: …` commit, nem commitol újra — tiszta fát követel, kapu, majd a hiányzó publikálási lépés | a tervfájl hiányzik és nincs lezáró commit („máshol lezárták"); követetlen tervfájl; untracked a körön kívül; piros kapu; módosított tervfájl; rebase-konfliktus; folytatásnál piszkos fa |
 
 A kapu = `npm run build`, `lint`, `test`, `docs-check` az `app/` alatt, sorban. Két elv áll
 minden script mögött: **ha a tesztelés óta változott a base, a kapu újra fut** (push-olatlan
@@ -97,13 +103,15 @@ commitra nincs bizonyíték, hogy ellenőrzött — ezért a `sync` sem pushol k
 commit hatóköre gépi őr**, nem ígéret. A `commit-push` csak backlog/docs fájlt visz, ott a
 `docs-check` a kapu.
 
-**Teszt.** `npm run test:workflow` az `app/` alól (CI-ban is): tíz integrációs eset ideiglenes
+**Teszt.** `npm run test:workflow` az `app/` alól (CI-ban is): tizenöt integrációs eset ideiglenes
 bare origin + klón repón, a kapu helyett a `WORKFLOW_GATE_CMD` marker-parancs fut — idegen
 stage-elt fájl, módosított tervfájl, körön kívüli untracked, piros kapu (nincs push, nincs
-commit), folytatás-mód, boldog út masteren és branchen (rebase + kapu újra + branch push). A
-két környezeti varrat (`WORKFLOW_ROOT`, `WORKFLOW_GATE_CMD`) éles futásban nincs beállítva.
+commit), folytatás-mód, boldog út masteren és branchen (rebase + kapu újra + branch push), a
+`later/` alatti tervezett tétel lezárása és driftje, a `prio.mjs` oda-vissza mozgatása és őrei. A
+két környezeti varrat (`WORKFLOW_ROOT`, `WORKFLOW_GATE_CMD`) éles futásban nincs beállítva. A
+négy backlog-mappát egyetlen modul ismeri (`backlogPath.mjs`), minden script onnan old fel slugot.
 
-→ file:scripts/workflow/lib.mjs; file:scripts/workflow/sync.mjs; file:scripts/workflow/commit-push.mjs; file:scripts/workflow/drift.mjs; file:scripts/workflow/close.mjs; file:scripts/workflow/workflow.test.mjs
+→ file:scripts/workflow/lib.mjs; file:scripts/workflow/backlogPath.mjs; file:scripts/workflow/sync.mjs; file:scripts/workflow/commit-push.mjs; file:scripts/workflow/drift.mjs; file:scripts/workflow/prio.mjs; file:scripts/workflow/close.mjs; file:scripts/workflow/workflow.test.mjs
 
 ---
 
@@ -116,11 +124,12 @@ Mindegyiknél ugyanaz a hat mező. A lépések részletei a hivatkozott fájlban
 - **Bemenet:** kebab-case slug, és vagy egy-két mondat, vagy egy forrás-fájl (pl. review-jelentés),
   vagy semmi (akkor a beszélgetés a forrás). Többötletes forrásnál ötletenként javasol slugot, a
   felhasználó választ.
-- **Előfeltétel — megáll, ha:** létező tétel (a két mappa slugjai vagy `Source:` sorai) már fedi a
+- **Előfeltétel — megáll, ha:** létező tétel (a négy mappa slugjai vagy `Source:` sorai) már fedi a
   felvetést. Nem cél / hard invariáns ütközést kimond, de a tétel felvehető.
-- **Létrehoz/mozgat:** `backlog/idea/<slug>.md` a teljes tartalom bemutatása és jóváhagyás után,
-  majd `commit-push.mjs -m "backlog: +<slug>"`. `Prio:` csak akkor, ha a doki kimondta.
-- **Soha nem:** ír app-kódot, tervez, ír magától `Prio`-t, kerül meg megbukott scriptet kézi `git`-tel.
+- **Létrehoz/mozgat:** `backlog/idea/<slug>.md` — kimondott `later`-nél `backlog/idea/later/<slug>.md`
+  — a teljes tartalom bemutatása és jóváhagyás után, majd `commit-push.mjs -m "backlog: +<slug>"`.
+  `Prio:` csak akkor, ha a doki vagy a fejlesztő kimondta.
+- **Soha nem:** ír app-kódot, tervez, dönt magától `Prio`-t, kerül meg megbukott scriptet kézi `git`-tel.
 - **Hol áll meg:** a commit az `origin/master`-en.
 - **Következő:** `/plan <slug>`, kis kockázatú tételnél `/plan <slug> --quick`.
 
@@ -186,14 +195,21 @@ Mindegyiknél ugyanaz a hat mező. A lépések részletei a hivatkozott fájlban
 
 → file:.claude/skills/finish/SKILL.md
 
-### `/backlog`
+### `/backlog [--all]` és `/backlog <slug> <now|next|later|none>`
 
-- **Bemenet:** nincs. **Előfeltétel:** nincs; csak olvas.
-- **Létrehoz/mozgat:** semmit. Két tábla (`slug | Prio | Type | Kerdes | első mondat`): gyökér,
-  aztán `idea/`, mindkettőn belül `now → next → later → nincs Prio`; a `Type: doki` külön;
-  összesítés; a gyökér tételeinél `drift.mjs --all` → `baseline elmozdult` jelzés; hibás fejléc
-  külön. A végén **legfeljebb 3 indokolt javaslat** `Prio` nélküli tételre, „a doki dönt" zárással.
-- **Soha nem:** módosít fájlt, nem fetchel, nem ír `Prio`-t.
+- **Bemenet:** nincs (listázás), `--all`, vagy `<slug> <érték>` (átsorolás).
+- **Listázás — létrehoz/mozgat:** semmit. Két tábla (`slug | Prio | Type | Kerdes | első mondat`):
+  tervezett (gyökér + `later/`), aztán ötlet (`idea/` + `idea/later/`), mindkettőn belül
+  `now → next → nincs Prio`; **a `later` tételek alapból egyetlen `+N later` sorban**, `--all`-lal
+  a táblában (`… → later → nincs Prio`); a `Type: doki` külön; összesítés (a later-ek nyitott
+  `Kerdes`-einek számával); a tervezett tételeknél `drift.mjs --all` → `baseline elmozdult` jelzés;
+  hibás fejléc külön. A végén **legfeljebb 3 indokolt javaslat** `Prio` nélküli tételre, „ez
+  javaslat, nem döntés" zárással.
+- **Átsorolás — létrehoz/mozgat:** a kimondott értéket a `prio.mjs` könyveli: `Prio:` sor, `git mv`
+  a `later/`-be vagy onnan ki, `commit-push.mjs -m "backlog: prio <slug> <érték>"`. Érték nélkül
+  nem indul.
+- **Soha nem:** fetchel; nem dönt `Prio`-t (csak kimondottat hajt végre); nem kerül meg megállt
+  scriptet kézi `git`-tel.
 
 → file:.claude/skills/backlog/SKILL.md
 
@@ -224,15 +240,17 @@ parancssort ad — `/idea <javasolt-slug> docs/reviews/<jelentés>` — dedup-je
 ## 6. A gépi őr: `docs-check`
 
 `npm run docs-check` az `app/` alól (vagy `node scripts/docs-check.mjs` a gyökérből), a CI-ban, a
-`commit-push` és a `close` előtt. A `backlog/` alatt rekurzívan minden `.md`-t átnéz, a státuszt az
-útvonalból dönti el — kivéve a `CLAUDE.md`-t és ezt a `README.md`-t. Bármely találat exit 1,
-allowlist nincs.
+`commit-push` és a `close` előtt. A `backlog/` alatt rekurzívan minden `.md`-t átnéz, a státuszt és
+a `later`-t az útvonalból dönti el (`backlog/[idea/][later/]<slug>.md`) — kivéve a `CLAUDE.md`-t és
+ezt a `README.md`-t; más mélységű backlog-útvonal hiba. Bármely találat exit 1, allowlist nincs.
 
-**Amit megfog (tételfájlon):** a fájlnév kebab-case slug és az 1. sor `# <slug>`; a slug egyedi a
-két mappa között; a fejléc csak `Type`, `Source`, `Kerdes`, `Prio`, `Target`, `Baseline` kulcsot
-tartalmaz (`Status:` hiba); `Type` a négy érték egyike, a gyökérben `doki` tilos; `Prio` csak
-`now|next|later`; a gyökérben `Target: master`, `Baseline: <40 hex>` és az öt szakasz kötelező,
-`idea/` alatt `Target`/`Baseline` tilos; budget 1500 / 6000; sehol D-szám vagy legacy-útvonal.
+**Amit megfog (tételfájlon):** a fájlnév kebab-case slug (az `idea` és a `later` foglalt) és az
+1. sor `# <slug>`; a slug egyedi a négy mappa között; a fejléc csak `Type`, `Source`, `Kerdes`,
+`Prio`, `Target`, `Baseline` kulcsot tartalmaz (`Status:` hiba); `Type` a négy érték egyike,
+tervezett tételben `doki` tilos; `Prio` csak `now|next|later`; **`Prio: later` ⇔ `later/`
+almappa, mindkét irányú eltérés hiba**; tervezett tételben `Target: master`, `Baseline: <40 hex>`
+és az öt szakasz kötelező, `idea/` alatt `Target`/`Baseline` tilos; budget 1500 / 6000; sehol
+D-szám vagy legacy-útvonal.
 
 **Amit nem fog meg:** a `Current state` pointereit nem oldja fel — az elavulást a `drift.mjs` +
 az `/implement` preflightja fogja; szemantikai igazságot nem bizonyít. Anchorokat (nyíl után
@@ -266,7 +284,7 @@ két session párhuzamosan dolgozik két tételen.
 - **`/update-changelog`** — laikus nyelvű, dátumozott `docs/CHANGELOG.md`-bejegyzés; **`/update-features`**
   — a `docs/FEATURES.md` képernyőnkénti pillanatképe. Mindkettő külön, kézi hívás, megerősítés
   után ír, és a végén `commit-push.mjs`-sel commitol + pushol. A `/finish` csak emlékeztet rájuk.
-- **Elvetés.** `git rm backlog/idea/<slug>.md` + `commit-push.mjs -m "backlog: -<slug>"`; ha az
+- **Elvetés.** `git rm backlog/idea[/later]/<slug>.md` + `commit-push.mjs -m "backlog: -<slug>"`; ha az
   elvetés termékszintű, egy sor a `docs/PRODUCT.md` Nem cél szakaszába, ugyanabban a commitban.
   → product:#nem-cel
 
@@ -301,7 +319,7 @@ PR-en zár.
 | Nincs branch/PR alapból | egy fejlesztő; a PR-koreográfia költsége nagyobb, mint a haszna; a Pages mockup demó adattal fut | `close.mjs` master-mód; `--worktree` csak párhuzamos sessionre (ott PR-CI van) |
 | Base-változás után a kapu újra | tiszta rebase is összefésül nem tesztelt kombinációt | `pushMaster({ regate })`, `close.mjs` branch-mód |
 | Drift = app-kód diff, nem SHA-egyezés; a Baseline nem íródik át | a backlog-commitok minden tervet „elmozdult"-nak mutatnának; a módosított tervfájl a lezárást akasztaná | `drift.mjs`; `/plan` írás előtti app-diff |
-| `Prio` a dokié, a skill legfeljebb javasol | az agent ne priorizáljon a doki helyett, de a lista ne fejben éljen | `docs-check` értékkészlet; `/backlog` ≤ 3 javaslat; `/idea`, `/plan` nem ír `Prio`-t |
+| `Prio` kimondott döntés (doki vagy fejlesztő), a skill legfeljebb javasol; a `later/` mappa a `Prio: later` tükre | az agent ne priorizáljon az ember helyett, de a lista ne fejben éljen; a fájlfa és az alaplista a „nem most" nélkül legyen olvasható, két igazságforrás nélkül | `docs-check` értékkészlet + `later/` ⇔ `Prio: later` őr; `/backlog` ≤ 3 javaslat, átsorolás csak kimondott értékkel (`prio.mjs`); `/idea`, `/plan` nem dönt `Prio`-t |
 | **Interjú a termékdöntésé, a technikai rutin az agenté** | a „mindent kérdezz" az emberre terheli az agent munkáját; a döntés ott legyen, ahol a tudás | `/plan` „Mit kérdezz és mit dönts el magad"; `--quick` kockázat alapján |
 | Ötlet és terv sosem ír app-kódot | a „mintakód" is döntés | `/idea`, `/plan` Korlátok |
 | `/implement` nem bővít scope-ot, nem commitol | olvasható commit; a doki előbb a munkafát nézi | `/implement` 4., 5c., 6. |

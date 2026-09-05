@@ -758,7 +758,7 @@ node scripts/workflow/commit-push.mjs -m "review: arch-react <YYYY-MM-DD>" \
 command per `Critical` and `Major` finding with `Status: NEW`:
 `/idea <suggested-slug> docs/reviews/<this report>` — with the suggested `Type`
 (`bug` when behaviour is wrong, `chore` when structural) and a dedup note
-(check `ls backlog backlog/idea` first: an existing slug or identical `Source:`
+(check `ls backlog backlog/later backlog/idea backlog/idea/later` first: an existing slug or identical `Source:`
 means "already tracked", no command). `Minor` and `Observation` stay in the
 report only. Still no application code changes.
 

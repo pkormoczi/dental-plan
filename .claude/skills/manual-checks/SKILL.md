@@ -196,7 +196,7 @@ node scripts/workflow/commit-push.mjs -m "review: manual-checks <szelet> <YYYY-M
 A `/finish` 3. lépéséből hívva nincs külön commit: a lezáró commit viszi a jelentést.
 
 A záró üzenetben minden `Kritikus` találathoz egy kész parancssor: `/idea <javasolt-slug>
-docs/reviews/<ez a jelentés>` (dedup: `ls backlog backlog/idea`, meglévő slug vagy azonos
+docs/reviews/<ez a jelentés>` (dedup: `ls backlog backlog/later backlog/idea backlog/idea/later`, meglévő slug vagy azonos
 `Source:` → „már felvéve”, parancs nélkül). Kódot ez a skill nem javít — rendszerszintű
 találatnál (sok fájlt érintő vizuális döntés, upstream könyvtár hibája) is csak jelent.
 
