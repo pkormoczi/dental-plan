@@ -59,6 +59,6 @@ redundanciát keress.
 Nincs `.skip`/`.only`. A tesztnév konkrét, megfigyelhető viselkedést ír le, D-szám nélkül.
 
 # Workflow
-`/idea <slug>` → `/plan <slug> [--quick]` → `/implement <slug>` → `/finish <slug>`; `/backlog` listáz.
-A `/update-changelog` és `/update-features` külön, kézi hívásra fut — a lezárás végén csak
-emlékeztetőt írj rájuk.
+`/idea <slug>` → `/plan <slug> [--quick]` → `/implement <slug>` → kézi ellenőrzés a munkafán →
+`/finish <slug>`; `/backlog` listáz. Minden skill commitol és azonnal pushol (`scripts/workflow/`);
+a master-push a Pages-re élesít. `/update-changelog`, `/update-features`: külön, kézi hívás.
