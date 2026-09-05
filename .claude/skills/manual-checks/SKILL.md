@@ -185,7 +185,7 @@ a végső ítélethez a PDF-bájt- vagy képernyőkép-bizonyíték számít.
 `docs/reviews/YYYY-MM-DD-manual-checks-<szelet>.md` (az `all` egy fájlba, szeletenként
 szakaszolva), a `code-and-architecture-review` konvenciója szerint
 (`Kritikus`/`Közepes`/`Apró`). A végén: futásidő percben. Átmeneti munkatermék: a
-valódi találatok `backlog/<slug>.md` idea-fájlba vándorolnak (`/idea`), utána a
+valódi találatok `backlog/idea/<slug>.md` fájlba vándorolnak (`/idea`), utána a
 jelentés törölhető.
 
 Ha egy találat **egyértelmű, kicsi, célzott** felület-szabály-sértés (pl. egy

@@ -1,5 +1,4 @@
 # arlista-nap
-Status: idea
 Type: doki
 Source: adattisztítás, a doki közös ülésén gyűjthető
 

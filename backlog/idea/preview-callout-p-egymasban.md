@@ -1,5 +1,4 @@
 # preview-callout-p-egymasban
-Status: idea
 Type: bug
 Source: agent-first migráció F10 böngészős ellenőrzése
 

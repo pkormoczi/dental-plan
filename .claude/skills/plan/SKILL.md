@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Take one backlog item from idea to implementation-ready. Interviews the user branch by branch until every decision is resolved, then rewrites backlog/<slug>.md in place as Status: planned (Goal / Current state / Approach / Decisions / Verification, Target + Baseline). Input is an existing Status: idea file or a freeform prompt (then the file is created first, with the /idea dedup). --quick skips the interview for an unambiguous bug. Never writes application code, never accepts Type: doki, never commits. Invoke explicitly with /plan <slug> [--quick].
+description: Take one backlog item from idea to implementation-ready. Interviews the user branch by branch until every decision is resolved, then git-mv's backlog/idea/<slug>.md to backlog/<slug>.md and rewrites it (Goal / Current state / Approach / Decisions / Verification, Target + Baseline). Input is an existing backlog/idea/<slug>.md or a freeform prompt (then the file is created first, with the /idea dedup). --quick skips the interview for an unambiguous bug. Never writes application code, never accepts Type: doki, never commits. Invoke explicitly with /plan <slug> [--quick].
 argument-hint: <slug> [--quick]
 disable-model-invocation: true
 ---
@@ -10,9 +10,10 @@ disable-model-invocation: true
 ## Cél
 
 Egy tételt döntésről döntésre implementáció-indításig vinni, és az eredményt a tétel saját
-fájljába írni: `backlog/<slug>.md`, `Status: planned`. A bemenet:
+fájljába írni, a fájlt az `idea/` mappából a gyökérbe víve — a státusz a mappa:
+`git mv backlog/idea/<slug>.md backlog/<slug>.md`. A bemenet:
 
-- egy létező `backlog/<slug>.md` `Status: idea` fájl, vagy
+- egy létező `backlog/idea/<slug>.md` fájl, vagy
 - egy szabad felvetés a hívásban / a beszélgetésben — ekkor a fájlt is ez a skill hozza
   létre, a `/idea` dedup-lépésével.
 
@@ -21,8 +22,8 @@ azonosítója. A fájlalak és a fejléc-értékkészlet: `backlog/CLAUDE.md`.
 
 **Ez a skill soha nem ír és nem módosít alkalmazáskódot** (`app/`, `data/`, `assets/` alatt
 semmit), nem nyúl más backlog-fájlhoz, nem rangsorol, és nem commitol. `Type: doki` tételt
-nem fogad el — az emberi teendő, nem tervezhető; `Status: planned` fájlt sem — az már kész,
-újratervezésre előbb mondd ki, mi bukott meg benne.
+nem fogad el — az emberi teendő, nem tervezhető; a gyökérben már meglévő `backlog/<slug>.md`-t sem — az már
+tervezett, újratervezésre előbb mondd ki, mi bukott meg benne.
 
 ## Előkészítés — mielőtt egy kérdést is felteszel
 
@@ -32,7 +33,7 @@ nem fogad el — az emberi teendő, nem tervezhető; `Status: planned` fájlt se
    nested `CLAUDE.md`-jét (`app/src`, `domain`, `storage`, `pdf`). Ezek nem tárgyalási alap —
    ha egy döntési ág ütközik velük, EXPLICIT vesd fel, ne csendben kerülgesd, és ne csendben
    fogadd el az ütközést.
-3. Dedup: `ls backlog/` slugjai és `Source:` sorai + `PRODUCT.md` Nem cél. Ha a felvetés egy
+3. Dedup: `ls backlog backlog/idea` slugjai és `Source:` sorai + `PRODUCT.md` Nem cél. Ha a felvetés egy
    már mérlegelt és elvetett irány, mondd ki, és kérdezd meg, mi változott azóta; ha egy
    létező tétel fedi, ne nyiss újat.
 4. A nested `CLAUDE.md`-k „Find before writing” indexét nézd át — a döntéseknek a meglévő
@@ -73,13 +74,12 @@ zárultak le.
 
 ## Kimenet — a tételfájl
 
-`backlog/<slug>.md`, **legfeljebb 6000 karakter**, magyarul (a séma-mezőneveket nem
+`backlog/<slug>.md` a gyökérben (`git mv` az `idea/`-ból), **legfeljebb 6000 karakter**, magyarul (a séma-mezőneveket nem
 fordítjuk, lásd root `CLAUDE.md` Domain szókincs). A meglévő `Type:` és `Source:` sor
 megmarad; a `Kerdes:` sor törlődik, ha a tervezés megválaszolta.
 
 ```md
 # <slug>
-Status: planned
 Type: feature|bug|chore
 Source: <honnan>
 Target: master
@@ -121,8 +121,8 @@ jóváhagyás után írj. Két megerősítési pont: 1) jelölt-választás (csa
 
 **Közvetlenül írás előtt**, a jóváhagyás után: `git fetch origin`; ha a helyi master lemaradt
 az `origin/master`-től, `git pull --ff-only origin master` (divergencia esetén állj meg és
-jelentsd); `git ls-tree origin/master backlog/` — ha ott már van azonos slug (párhuzamos
-session), állj meg. A `Baseline` = `git rev-parse HEAD` ekkor. Ha a helyi master előrébb jár
+jelentsd); `git ls-tree origin/master backlog/` — ha a gyökérben már van azonos slug (párhuzamos
+session tervezte), állj meg. A `Baseline` = `git rev-parse HEAD` ekkor. Ha a helyi master előrébb jár
 az originnál (push-olatlan commitok), a záró jelentés mondja ki.
 
 ## Záró jelentés

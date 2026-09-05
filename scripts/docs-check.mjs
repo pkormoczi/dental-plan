@@ -2,9 +2,10 @@
 // igazságot nem bizonyít. Hat szabály: (1) nincs D-szám hivatkozás, (2) nincs
 // legacy-dokumentumra mutató hivatkozás, (3) az agent-context fájlok budgetje,
 // (4) a context-fájlok path-qualified anchorai feloldhatók, (5) nincs
-// elnémított/kiemelt teszt, (6) a backlog/ tételfájlok fejléce és budgetje
-// (a tétel-anchorokat nem oldja fel: az elavulást az /implement baseline-
-// preflightja fogja). Bármely találat exit 1.
+// elnémított/kiemelt teszt, (6) a backlog/ tételfájlok fejléce és budgetje --
+// a státusz a mappa (backlog/idea/ = ötlet, backlog/ gyökér = tervezett), nincs
+// Status sor; a tétel-anchorokat nem oldja fel: az elavulást az /implement
+// baseline-preflightja fogja. Bármely találat exit 1.
 //
 // Futtatás: `node scripts/docs-check.mjs` a repó gyökeréből, vagy
 // `npm run docs-check` az app/ alól -- a gyökeret a saját helyéből számolja.
@@ -21,7 +22,7 @@ const SCAN_ROOTS = [
   { dir: 'app/src', ext: ['.ts', '.tsx', '.css', '.md'], recursive: true },
   { dir: '.claude', ext: ['.md'], recursive: true },
   { dir: 'docs', ext: ['.md'], recursive: false },
-  { dir: 'backlog', ext: ['.md'], recursive: false },
+  { dir: 'backlog', ext: ['.md'], recursive: true },
 ];
 const SCAN_FILES = ['CLAUDE.md', 'PRODUCT.md', 'README.md'];
 const EXCLUDE_DIRS = [
@@ -61,11 +62,15 @@ const BUDGETS = [
 const isContextFile = (f) =>
   f === 'CLAUDE.md' || f === 'PRODUCT.md' || f === 'backlog/CLAUDE.md' || /^app\/src\/.*CLAUDE\.md$/.test(f);
 
-// backlog/<slug>.md = egy tétel; a fejléc a fájlrendszerből olvasható státusz, ezért kötött.
-const isBacklogTetel = (f) => /^backlog\/[^/]+\.md$/.test(f) && f !== 'backlog/CLAUDE.md';
-const BACKLOG_STATUS = ['idea', 'planned'];
+// Egy tétel = egy fájl; a státusz a mappa: backlog/idea/<slug>.md ötlet, backlog/<slug>.md
+// tervezett. Nincs Status sor -- két igazságforrás szétcsúszna, a git mv az állapotváltás.
+const backlogStatus = (f) => {
+  if (/^backlog\/idea\/[^/]+\.md$/.test(f)) return 'idea';
+  if (/^backlog\/[^/]+\.md$/.test(f) && f !== 'backlog/CLAUDE.md') return 'planned';
+  return null;
+};
 const BACKLOG_TYPE = ['feature', 'bug', 'chore', 'doki'];
-const BACKLOG_HEADER_KEYS = ['Status', 'Type', 'Source', 'Kerdes', 'Target', 'Baseline'];
+const BACKLOG_HEADER_KEYS = ['Type', 'Source', 'Kerdes', 'Target', 'Baseline'];
 const BACKLOG_SECTIONS = ['## Goal', '## Current state', '## Approach', '## Decisions', '## Verification'];
 // Karakterben. Az idea egy bekezdés; a planned a V2 tervsablon -- a részlet a git historyé.
 const BACKLOG_BUDGET = { idea: 1500, planned: 6000 };
@@ -204,48 +209,51 @@ function anchor(file, lines) {
   });
 }
 
-function backlogTetel(file, lines, content) {
+const backlogSlugs = new Map();
+
+function backlogTetel(file, status, lines, content) {
   const rule = 'backlog-tetel';
-  const name = file.slice('backlog/'.length, -'.md'.length);
+  const name = path.posix.basename(file, '.md');
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) {
     hiba(file, 1, rule, `a fájlnév nem kebab-case slug: "${name}.md"`);
   }
   if (lines[0] !== `# ${name}`) {
     hiba(file, 1, rule, `az 1. sor "# ${name}" legyen -- a slug a fájlnév, nincs külön cím`);
   }
+  if (backlogSlugs.has(name)) {
+    hiba(file, 1, rule, `a "${name}" slug már létezik: ${backlogSlugs.get(name)} -- egy tétel egy helyen él, az állapotváltás git mv`);
+  }
+  backlogSlugs.set(name, file);
   const header = {};
   for (let i = 1; i < lines.length && lines[i].trim() !== ''; i++) {
     const m = /^([A-Za-z]+):\s*(.*)$/.exec(lines[i]);
     if (!m || !BACKLOG_HEADER_KEYS.includes(m[1])) {
-      hiba(file, i + 1, rule, `ismeretlen fejléc-sor: "${lines[i]}" -- engedett: ${BACKLOG_HEADER_KEYS.join(', ')}`);
+      hiba(file, i + 1, rule, `ismeretlen fejléc-sor: "${lines[i]}" -- engedett: ${BACKLOG_HEADER_KEYS.join(', ')}; a státusz a mappa, nem sor`);
       continue;
     }
     header[m[1]] = m[2].trim();
   }
-  const { Status: status, Type: type } = header;
-  if (!BACKLOG_STATUS.includes(status)) {
-    hiba(file, 1, rule, `Status: ${status ?? '(hiányzik)'} -- ${BACKLOG_STATUS.join(' | ')}`);
-  }
+  const type = header.Type;
   if (!BACKLOG_TYPE.includes(type)) {
     hiba(file, 1, rule, `Type: ${type ?? '(hiányzik)'} -- ${BACKLOG_TYPE.join(' | ')}`);
   }
-  if (type === 'doki' && status === 'planned') {
-    hiba(file, 1, rule, 'Type: doki sosem planned -- emberi teendő, a /plan és az /implement nem fogadja');
-  }
   if (status === 'planned') {
-    if (header.Target !== 'master') hiba(file, 1, rule, 'planned tételhez "Target: master" kell');
+    if (type === 'doki') {
+      hiba(file, 1, rule, 'Type: doki a gyökérben -- emberi teendő sosem tervezett, a helye backlog/idea/');
+    }
+    if (header.Target !== 'master') hiba(file, 1, rule, 'a gyökérben tervezett tétel áll: "Target: master" kell');
     if (!/^[0-9a-f]{40}$/.test(header.Baseline ?? '')) {
-      hiba(file, 1, rule, 'planned tételhez "Baseline: <40 hex>" kell (git rev-parse a tervezés pillanatában)');
+      hiba(file, 1, rule, 'a gyökérben tervezett tétel áll: "Baseline: <40 hex>" kell (git rev-parse a tervezés pillanatában)');
     }
     for (const s of BACKLOG_SECTIONS) {
-      if (!lines.some((l) => l.trim() === s)) hiba(file, 1, rule, `hiányzó szakasz: "${s}"`);
+      if (!lines.some((l) => l.trim() === s)) hiba(file, 1, rule, `hiányzó szakasz: "${s}" -- ötlet a backlog/idea/ alá való`);
     }
+  } else if (header.Baseline || header.Target) {
+    hiba(file, 1, rule, 'idea/ alatt nincs Target/Baseline -- a tervezett tétel a gyökérbe kerül (git mv)');
   }
   const limit = BACKLOG_BUDGET[status];
-  if (limit) {
-    const n = [...content].length;
-    if (n > limit) hiba(file, 1, 'budget', `${n} / ${limit} karakter -- ${status} tétel; tömöríts, a részlet a git historyé`);
-  }
+  const n = [...content].length;
+  if (n > limit) hiba(file, 1, 'budget', `${n} / ${limit} karakter -- ${status} tétel; tömöríts, a részlet a git historyé`);
 }
 
 function skipOnly(file, lines) {
@@ -264,7 +272,8 @@ for (const file of files) {
   legacyRef(file, lines);
   budget(file, content);
   if (isContextFile(file)) anchor(file, lines);
-  if (isBacklogTetel(file)) backlogTetel(file, lines, content);
+  const status = backlogStatus(file);
+  if (status) backlogTetel(file, status, lines, content);
   if (isTestFile(file)) skipOnly(file, lines);
 }
 

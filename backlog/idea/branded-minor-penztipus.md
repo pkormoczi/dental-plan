@@ -1,5 +1,4 @@
 # branded-minor-penztipus
-Status: idea
 Type: chore
 Source: agent-first dokumentációs migráció follow-up
 

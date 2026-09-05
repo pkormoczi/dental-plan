@@ -1,5 +1,4 @@
 # tobb-felretett-terv
-Status: idea
 Type: feature
 Source: doki felvetés
 

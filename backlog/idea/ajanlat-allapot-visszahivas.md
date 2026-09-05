@@ -1,5 +1,4 @@
 # ajanlat-allapot-visszahivas
-Status: idea
 Type: feature
 Source: Réka feedback 2026-08
 

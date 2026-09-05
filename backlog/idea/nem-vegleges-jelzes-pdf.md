@@ -1,5 +1,4 @@
 # nem-vegleges-jelzes-pdf
-Status: idea
 Type: feature
 Source: korábbi ötlet-jegyzet
 Kerdes: Van-e valós eset, amikor nem végleges PDF megy a páciensnek, és elég-e hozzá a `PISZKOZAT-` fájlnév-előtag?

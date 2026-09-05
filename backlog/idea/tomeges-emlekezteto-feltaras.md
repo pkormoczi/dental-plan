@@ -1,5 +1,4 @@
 # tomeges-emlekezteto-feltaras
-Status: idea
 Type: feature
 Source: Réka feedback 2026-08
 

@@ -1,5 +1,4 @@
 # eeszt-integracio-feltaras
-Status: idea
 Type: feature
 Source: doki felvetés, más fogászati szoftverekben látott integráció
 

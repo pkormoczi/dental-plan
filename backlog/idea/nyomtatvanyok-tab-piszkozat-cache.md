@@ -1,5 +1,4 @@
 # nyomtatvanyok-tab-piszkozat-cache
-Status: idea
 Type: chore
 Source: agent-first dokumentációs migráció follow-up
 

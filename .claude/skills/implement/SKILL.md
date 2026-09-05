@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Implement one planned backlog item from its file (backlog/<slug>.md with Status: planned) on the local master — validation, ff-only sync, baseline-drift preflight, implementation within the plan's scope, then the quality gate (build, lint, test, docs-check). Stops WITHOUT committing; /finish closes the item. --worktree runs the same in a dedicated git worktree for parallel sessions. Invoke explicitly with /implement <slug>.
+description: Implement one planned backlog item from its file (backlog/<slug>.md in the backlog root — the folder is the status) on the local master — validation, ff-only sync, baseline-drift preflight, implementation within the plan's scope, then the quality gate (build, lint, test, docs-check). Stops WITHOUT committing; /finish closes the item. --worktree runs the same in a dedicated git worktree for parallel sessions. Invoke explicitly with /implement <slug>.
 argument-hint: <slug> [--worktree]
 disable-model-invocation: true
 ---
@@ -18,10 +18,11 @@ Kövesd a lépéseket sorban, megállás nélkül, amíg valamelyik kifejezetten
 
 ## 1. Validáció
 
-A tételfájl `backlog/<slug>.md`. Olvasd ki a fejlécét. **Állj meg**, ha:
+A tételfájl `backlog/<slug>.md` — a gyökérben, mert a státusz a mappa. Olvasd ki a
+fejlécét. **Állj meg**, ha:
 
-- a fájl nem létezik,
-- `Status:` nem `planned` — egy `idea` előbb `/plan <slug>` (bugnál `--quick`),
+- a fájl a gyökérben nem létezik — ha `backlog/idea/<slug>.md`-ként megvan, előbb
+  `/plan <slug>` (bugnál `--quick`),
 - `Type: doki` — emberi teendő, nem implementálható,
 - a `git status` a feladathoz nem tartozó, commitolatlan módosítást mutat — kérdezd
   meg a dokit, mi legyen vele; ne építs rá és ne írd felül.

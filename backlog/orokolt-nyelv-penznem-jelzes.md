@@ -1,5 +1,4 @@
 # orokolt-nyelv-penznem-jelzes
-Status: planned
 Type: feature
 Source: docs/reviews/2026-09-05-doctor-review-nemet-euro.md 4. megállapítás
 Target: master

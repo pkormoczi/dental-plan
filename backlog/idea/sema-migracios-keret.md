@@ -1,5 +1,4 @@
 # sema-migracios-keret
-Status: idea
 Type: chore
 Source: doki felvetés
 

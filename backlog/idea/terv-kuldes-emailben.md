@@ -1,5 +1,4 @@
 # terv-kuldes-emailben
-Status: idea
 Type: feature
 Source: doki felvetés
 

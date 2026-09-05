@@ -746,10 +746,10 @@ Use `-2`, `-3`, etc. for additional same-day runs.
 ## Backlog items after the report
 
 For every `Critical` and `Major` finding with `Status: NEW` write one
-`backlog/<slug>.md` with `Status: idea` (file shape: `backlog/CLAUDE.md`):
+`backlog/idea/<slug>.md` (file shape: `backlog/CLAUDE.md`):
 `Type: bug` when behaviour is wrong, `chore` when it is structural;
 `Source: docs/reviews/<this report> <finding id>`; one paragraph from
-Evidence + Why it matters, ≤ 1500 chars. Check `ls backlog/` first — an
+Evidence + Why it matters, ≤ 1500 chars. Check `ls backlog backlog/idea` first — an
 existing slug or an identical `Source:` means no new file. `Minor` and
 `Observation` stay in the report only. Still no application code changes,
 no commit.

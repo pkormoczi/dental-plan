@@ -182,7 +182,7 @@ Minden találat `Lencse: rontás`, `megfigyelt` bizonyossággal.
 ### 2d. Dedup és rangsor
 
 1. **Dedup-címke.** Olvasd át a `docs/reviews/*doctor-review*.md` korábbi
-   jelentéseket és a `backlog/*.md` tételfájlokat (slug és `Source:` sor), és minden
+   jelentéseket és a `backlog/*.md` + `backlog/idea/*.md` tételfájlokat (slug és `Source:` sor), és minden
    megállapítást jelölj:
    - `ÚJ`;
    - `MÁR JELZETT (<korábbi review-fájl neve>, <n>. megállapítás)`;
@@ -299,10 +299,10 @@ bizonyosságú a jelentésben.
 Állítsd le a dev szervert. A jelentés a `docs/reviews/`-ban marad.
 
 **Tételfájlok.** Minden `ÚJ` vagy `ISMÉT` dedup-címkéjű `Blokkoló` és `Súlyos`
-megállapításból írj egy `backlog/<slug>.md`-t `Status: idea`-val (a fájlalak:
+megállapításból írj egy `backlog/idea/<slug>.md`-t (a fájlalak:
 `backlog/CLAUDE.md`): `Type: bug` (reprodukált hiba) vagy `feature` (hiányzó
 viselkedés), `Source: docs/reviews/<ez a jelentés> N. megállapítás`, egy bekezdés a
-`Tapasztalt probléma` + `Orvosi elvárás` sorokból, ≤ 1500 karakter. Előtte `ls backlog/`
+`Tapasztalt probléma` + `Orvosi elvárás` sorokból, ≤ 1500 karakter. Előtte `ls backlog backlog/idea`
 — azonos slug vagy azonos `Source:` esetén ne írj újat. `MÁR TERVEZETT` találatnál
 semmit. A `Közepes`/`Kis` megállapítások a jelentésben maradnak, a doki `/idea`-val
 veszi fel, amit akar. A skill app-kódot továbbra sem módosít, és nem commitol.

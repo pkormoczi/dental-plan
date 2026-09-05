@@ -1,5 +1,4 @@
 # savos-felso-hatar-nyomtatvanyon
-Status: idea
 Type: feature
 Source: korábbi ötlet-jegyzet
 Kerdes: Szeretné-e a doki a páciensnek megmutatni a „legrosszabb esetben mennyi” összeget, vagy ez félrevezető/horgonyzó?

@@ -1,6 +1,6 @@
 ---
 name: idea
-description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/<slug>.md files with Status: idea (header Status/Type, optional Source and Kerdes, one paragraph, ≤1500 chars). Dedups against existing backlog slugs and PRODUCT.md § Nem cél, splits a multi-idea note (feedback list, review report) into separate files the user picks from. Never writes application code, never plans, never commits. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl].
+description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/idea/<slug>.md files (header Type, optional Source and Kerdes, one paragraph, ≤1500 chars). Dedups against existing backlog slugs and PRODUCT.md § Nem cél, splits a multi-idea note (feedback list, review report) into separate files the user picks from. Never writes application code, never plans, never commits. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl].
 argument-hint: <slug> [szöveg | forrás-fájl]
 disable-model-invocation: true
 ---
@@ -11,7 +11,7 @@ disable-model-invocation: true
 
 Egy nyers felvetést — a doki ötlete, egy feedback-lista sora, egy review-jelentés
 megállapítása, egy menet közben talált bug, egy kód-housekeeping teendő — azonnal a
-backlog egy tételévé tenni: `backlog/<slug>.md`, `Status: idea`. Nincs inbox, nincs
+backlog egy tételévé tenni: `backlog/idea/<slug>.md` — a státusz a mappa. Nincs inbox, nincs
 várólista: ami nem fájl, az nincs. A fájlalak és az értékkészlet: `backlog/CLAUDE.md`.
 
 A tétel innen két irányba mehet: `/plan <slug>` (kidolgozás) vagy `git rm` (elvetés — ha az
@@ -30,7 +30,7 @@ elvetés termékszintű, egy sor a `PRODUCT.md` Nem cél szakaszába, „nem X, 
 ## Lépések
 
 1. **Olvasd el a forrást**, és a `PRODUCT.md` Nem cél szakaszát.
-2. **Dedup.** `ls backlog/` — slugok és a fájlok `Source:` sorai. Ha egy létező tétel már fedi a
+2. **Dedup.** `ls backlog backlog/idea` — slugok mindkét mappában és a fájlok `Source:` sorai. Ha egy létező tétel már fedi a
    felvetést, ne nyiss újat: mondd meg, melyik, és állj meg. Ha a felvetés a `PRODUCT.md` Nem
    cél szerint elvetett irány vagy hard invariánst sért, mondd ki — a tétel ettől még
    felvehető (a doki dönt), de a bekezdés első mondata jelezze az ütközést.
@@ -38,7 +38,7 @@ elvetés termékszintű, egy sor a `PRODUCT.md` Nem cél szakaszába, „nem X, 
    mondat, és a dedup-/ütközés-jelzés. A felhasználó választ — egyet vagy többet. Egy futás
    több fájlt is írhat, de csak kiválasztottat.
 4. **`Type`:** `feature` | `bug` (reprodukálható hiba) | `chore` (kód-housekeeping, refactor,
-   őr-erősítés) | `doki` (emberi teendő, adatmunka — sosem lesz planned). Ha nem egyértelmű,
+   őr-erősítés) | `doki` (emberi teendő, adatmunka — sosem kerül a gyökérbe). Ha nem egyértelmű,
    kérdezz.
 5. **`Kerdes:`** csak akkor, ha a tétel sorsa egy konkrét doki-kérdésen múlik — a kérdés
    múltbeli viselkedésre kérdezzen, ne véleményre.
@@ -47,11 +47,10 @@ elvetés termékszintű, egy sor a `PRODUCT.md` Nem cél szakaszába, „nem X, 
    D-számra nem hivatkozhat (docs-check).
 7. **Mutasd meg a teljes fájltartalmat**, és csak kifejezett jóváhagyás után írj.
 
-## A fájl
+## A fájl — `backlog/idea/<slug>.md`
 
 ```md
 # <slug>
-Status: idea
 Type: feature|bug|chore|doki
 Source: <honnan>
 Kerdes: <csak ha van>

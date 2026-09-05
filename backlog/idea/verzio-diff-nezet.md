@@ -1,5 +1,4 @@
 # verzio-diff-nezet
-Status: idea
 Type: feature
 Source: korábbi ötlet-jegyzet
 Kerdes: A verziónkénti végösszeg és a külön megtekintés mellett kell-e a dokinak sorszintű összehasonlítás?

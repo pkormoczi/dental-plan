@@ -1,5 +1,4 @@
 # fogterkep-hozzaadas-fazisvalasztas
-Status: idea
 Type: feature
 Source: Réka feedback 2026-08
 Kerdes: Maradjon-e a fogtérkép kattintható tétel-hozzáadó, vagy csak információs ábra legyen?

@@ -1,5 +1,4 @@
 # numberfield-penzmezo-megerosites
-Status: planned
 Type: bug
 Source: docs/reviews/2026-09-05-doctor-review-nemet-euro.md 6. megállapítás
 Target: master

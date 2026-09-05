@@ -1,5 +1,4 @@
 # nyelv-penznem-gombszin
-Status: planned
 Type: bug
 Source: docs/reviews/2026-09-05-doctor-review-nemet-euro.md 3. megállapítás
 Target: master

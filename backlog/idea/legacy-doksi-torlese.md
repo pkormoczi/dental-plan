@@ -1,5 +1,4 @@
 # legacy-doksi-torlese
-Status: idea
 Type: chore
 Source: agent-first dokumentációs migráció follow-up
 
