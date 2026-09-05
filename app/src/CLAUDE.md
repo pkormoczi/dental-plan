@@ -775,7 +775,11 @@ adatlap "Páciens törzsadata") segédfüggvényei/komponensei, szintén ne írd
   `useLepesElhagyas(handler)` — a "Terv adatai" lépés ELŐRE elhagyásának
   ajánlat-jellegű elfogása, a `TervWorkflowShell.tsx`-ben élő state fölött;
   KÜLÖN mechanizmus a D46 `NavGuardContext`-től (más a szemantika, lásd a
-  fájl fejlécét), nem építendő rá és nem keverendő össze vele
+  fájl fejlécét), nem építendő rá és nem keverendő össze vele. KÉT,
+  egymástól független "diffenként/eldöntésenként egyszer" memóriát tart —
+  az `elutasitottDiffId` a diff-ágé, a `letrehozasPromptEldontve` boolean a
+  törzsadat-hiány ág "Törzsadat létrehozása" ajánlatáé (utóbbinak nincs
+  megkülönböztetendő tartalma, ezért elég egy boolean, nem egy azonosító)
 - `pages/patientPage/TorzsadatSyncCard.tsx` — a "Páciens törzsadata"
   eltérés-jelzés, a Terv adatai lap "Páciens adatai" szekciójába ágyazva
   (backlog-51 óta kártyakeret NÉLKÜL, `Separator` + halvány alcím — lásd

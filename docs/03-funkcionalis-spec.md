@@ -302,7 +302,10 @@ a rész kimarad.
   ütközésnek, nem szakítja félbe a workflow-t. Ugyanarra az eltérésre a
   prompt a workflow-n belül nem jelenik meg újra, amíg a diff nem változik.
   Ha nincs törzsadat, ugyanez a lépés egy (alapból kijelöletlen) opciót ad a
-  törzsadat azonnali létrehozására.
+  törzsadat azonnali létrehozására — ezt az ajánlatot is csak egyszer teszi
+  fel a workflow-n belül: kihagyás (vagy Escape/kívülre kattintás) után nem
+  tér vissza ismételt oda-vissza navigációnál, a diff-ág fenti szabályának
+  mintáján.
 - **Írási hiba** (kizárólag a piszkozat → master irányban) esetén a dialógus
   nyitva marad, a hibaüzenet mellett „Újra” (ugyanaz az írás újra) vagy —
   csak a lépés-elhagyási prompt módban — „Folytatás írás nélkül” (a

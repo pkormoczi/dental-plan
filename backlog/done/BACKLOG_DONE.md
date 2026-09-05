@@ -2764,3 +2764,19 @@ karbantartási kör négy önálló javítása.
   meg, a valótlan „helyette a magyar szöveg jelenik meg" nem. Részletek:
   `docs/03-funkcionalis-spec.md` § Véglegesítési checklist és § Sablon-
   placeholder őr.
+
+### 114. tétel: "Törzsadat létrehozása" lépés-elhagyási dialógus minden navigációnál újra felugrik — KÉSZ
+
+- **Méret:** kicsi — egy új boolean mezőpár a meglévő
+  `LepesGuardContext`/`TervWorkflowShell` állapotban, a testvér diff-ág
+  mintáján, plusz egy integrációs teszt.
+- **Megvalósítás:** a `TorzsadatSyncCard.tsx` törzsadat-hiány ága
+  (`torzsadat === null`) mostantól egy `letrehozasPromptEldontve` boolean-t
+  is figyelembe vesz a "Törzsadat létrehozása" ajánlat felugrasztásakor —
+  a mezőt a "Kihagyás, tovább lépek" gomb (és az Escape/kívülre kattintás,
+  ami ugyanazt a `skipLetrehozasPrompt()`-ot hívja) állítja igazra. A
+  memória a `elutasitottDiffId`-hez hasonlóan a `TervWorkflowShell`-ben
+  él, ezért túléli a Kezelések ↔ Terv adatai oda-vissza navigációt, de a
+  workflow teljes elhagyásakor (a héj unmountjával) nullázódik. Részletek:
+  `docs/03-funkcionalis-spec.md` § 2. „Páciens adatai" „Páciens
+  törzsadata (D48)" bekezdés.

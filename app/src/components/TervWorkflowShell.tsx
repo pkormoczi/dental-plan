@@ -46,6 +46,7 @@ export default function TervWorkflowShell() {
   const lepesHandlerRef = useRef<LepesHandler | null>(null);
   lepesHandlerRef.current = lepesHandler;
   const [elutasitottDiffId, setElutasitottDiffId] = useState<string | null>(null);
+  const [letrehozasPromptEldontve, setLetrehozasPromptEldontve] = useState(false);
 
   const kerLepesValtas = useCallback((proceed: () => void) => {
     if (lepesHandlerRef.current?.(proceed)) return;
@@ -62,8 +63,10 @@ export default function TervWorkflowShell() {
       regisztralLepesHandler: (handler: LepesHandler | null) => setLepesHandler(() => handler),
       elutasitottDiffId,
       setElutasitottDiffId,
+      letrehozasPromptEldontve,
+      setLetrehozasPromptEldontve,
     }),
-    [kerLepesValtas, elutasitottDiffId],
+    [kerLepesValtas, elutasitottDiffId, letrehozasPromptEldontve],
   );
 
   function handleLepesClick(e: React.MouseEvent, to: WorkflowRoute) {

@@ -15,17 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 114. tétel: "Törzsadat létrehozása" lépés-elhagyási dialógus minden navigációnál újra felugrik
-
-  A `pages/patientPage/TorzsadatSyncCard.tsx` `handleLepesElhagyas()` a
-  törzsadat nélküli páciens ágán (`torzsadat === null`) minden
-  meghívásnál felugrasztja a létrehozási ajánlatot — a testvér diff-ág
-  `elutasitottDiffId` memóriájával ellentétben nincs "már eldöntöttem ezen
-  a piszkozaton" jelzője, ezért egy már kihagyott ajánlat minden "Terv
-  adatai" lap-elhagyásnál újra megjelenik. Forrás:
-  `docs/reviews/2026-09-05-doctor-review-nemet-euro.md` 1. megállapítás.
-  **Terv:** `backlog/plans/backlog-114-torzsadat-letrehozas-emlekezet-terv.md`
-
 ### 115. tétel: Nyelv-/pénznemváltás megerősítő dialógusának gombszín-inkonzisztenciája
 
   A `pages/PatientPage.tsx` megerősítő `AlertDialog`-jának "Folytatás"

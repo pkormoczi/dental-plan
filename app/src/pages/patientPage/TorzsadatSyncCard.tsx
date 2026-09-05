@@ -31,7 +31,12 @@ type ManualDialog = 'master-to-draft' | 'draft-to-master' | null;
 export default function TorzsadatSyncCard() {
   const { plan, setPlan, piszkozatPatientDir } = useAppState();
   const { storage } = useStorage();
-  const { elutasitottDiffId, setElutasitottDiffId } = useLepesGuard();
+  const {
+    elutasitottDiffId,
+    setElutasitottDiffId,
+    letrehozasPromptEldontve,
+    setLetrehozasPromptEldontve,
+  } = useLepesGuard();
   // 94. tétel: amíg a Név mező egy MÁSIK, létező páciensre illik pontosan,
   // egyik draft->master írási út sem tilthat el a doki elől -- a "Törzsadat
   // frissítése a tervből" gomb, a "Törzsadat létrehozása a terv adataiból"
@@ -150,6 +155,7 @@ export default function TorzsadatSyncCard() {
     setLetrehozasPromptOpen(false);
     setLetrehozzaMost(false);
     setLetrehozasHiba(null);
+    setLetrehozasPromptEldontve(true);
     runProceed();
   }
 
@@ -180,7 +186,7 @@ export default function TorzsadatSyncCard() {
       // kínálható fel -- a lépésváltás akadálytalanul megy tovább, a
       // blokk a véglegesítésnél áll (domain/veglegesitesOr.ts).
       if (nevUtkozes) return false;
-      if (torzsadat === null && !loadError) {
+      if (torzsadat === null && !loadError && !letrehozasPromptEldontve) {
         proceedRef.current = proceed;
         setLetrehozzaMost(false);
         setLetrehozasHiba(null);
@@ -193,7 +199,7 @@ export default function TorzsadatSyncCard() {
       setLepesPromptOpen(true);
       return true;
     },
-    [nevUtkozes, torzsadat, loadError, utkozesek.length, diffId, elutasitottDiffId],
+    [nevUtkozes, torzsadat, loadError, letrehozasPromptEldontve, utkozesek.length, diffId, elutasitottDiffId],
   );
 
   useLepesElhagyas(patientDir ? handleLepesElhagyas : null);

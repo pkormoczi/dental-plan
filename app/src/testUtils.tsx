@@ -30,6 +30,8 @@ function TestLepesGuardProvider({ children }: { children: ReactNode }) {
       regisztralLepesHandler: () => {},
       elutasitottDiffId: null,
       setElutasitottDiffId: () => {},
+      letrehozasPromptEldontve: false,
+      setLetrehozasPromptEldontve: () => {},
     }),
     [],
   );

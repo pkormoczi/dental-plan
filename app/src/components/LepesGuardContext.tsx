@@ -14,8 +14,9 @@
 // `e.preventDefault()` + a tényleges navigáció csak `proceed()` hívásakor
 // történik meg.
 //
-// A state (a regisztrált handler ÉS a "diffenként egyszer" elutasítás-
-// memória) a `TervWorkflowShell`-ben él, nem itt és nem a
+// A state (a regisztrált handler ÉS KÉT lépés-elhagyási memória -- a
+// diffenkénti elutasítás, plusz a törzsadat-hiány ág "már eldöntöttem ezen
+// a piszkozaton" boolean-je) a `TervWorkflowShell`-ben él, nem itt és nem a
 // `TorzsadatSyncCard`-ban -- a `PatientPage` (és vele a kártya) minden
 // lépésváltáskor unmountol, a `TervWorkflowShell` viszont a workflow teljes
 // életciklusán át mountolva marad (layout-route, D36). A `TorzsadatSyncCard`
@@ -35,6 +36,9 @@ export interface LepesGuardValue {
   /** A legutóbb elutasított diff azonosítója (backlog-40, `domain/masterSnapshotDiff.ts` `diffAzonosito`) -- `null`, ha nincs ilyen. */
   elutasitottDiffId: string | null;
   setElutasitottDiffId: (id: string | null) => void;
+  /** Igaz, ha a doki már döntött (kihagyta vagy létrehozta) a törzsadat-hiány ág "Törzsadat létrehozása" ajánlatáról ezen a piszkozaton -- ellentétben az `elutasitottDiffId`-vel nincs megkülönböztetendő tartalma, a törzsadat-hiány bináris állapot. */
+  letrehozasPromptEldontve: boolean;
+  setLetrehozasPromptEldontve: (v: boolean) => void;
 }
 
 const LepesGuardContext = createContext<LepesGuardValue | null>(null);
@@ -57,9 +61,23 @@ export function useLepesGuard(): {
   kerLepesValtas: (proceed: () => void) => void;
   elutasitottDiffId: string | null;
   setElutasitottDiffId: (id: string | null) => void;
+  letrehozasPromptEldontve: boolean;
+  setLetrehozasPromptEldontve: (v: boolean) => void;
 } {
-  const { kerLepesValtas, elutasitottDiffId, setElutasitottDiffId } = useLepesGuardContext();
-  return { kerLepesValtas, elutasitottDiffId, setElutasitottDiffId };
+  const {
+    kerLepesValtas,
+    elutasitottDiffId,
+    setElutasitottDiffId,
+    letrehozasPromptEldontve,
+    setLetrehozasPromptEldontve,
+  } = useLepesGuardContext();
+  return {
+    kerLepesValtas,
+    elutasitottDiffId,
+    setElutasitottDiffId,
+    letrehozasPromptEldontve,
+    setLetrehozasPromptEldontve,
+  };
 }
 
 /**

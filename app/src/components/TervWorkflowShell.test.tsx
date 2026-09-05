@@ -313,6 +313,38 @@ describe('TervWorkflowShell -- backlog-40: lépés-elhagyási törzsadat-prompt'
     expect(screen.queryByText('Kezelések-oldal')).toBeNull();
   });
 
+  // backlog-114: a törzsadat-hiány ág (a diff-ág testvére) ugyanezt a
+  // "diffenként/eldöntésenként egyszer" memóriát kapja -- a Kovács János
+  // demó-seed páciensnek nincs önálló törzsadata (fallback ág).
+  async function seedKovacsNoMasterDraft() {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const kovacs = (await seeder.listPatients()).find((p) => p.nev === 'Kovács János')!;
+    await seedDraftWithPaciens(kovacs.dirName, paciens({ nev: 'Kovács János' }), kovacs.paciensId);
+    return kovacs;
+  }
+
+  it('törzsadat nélküli páciensnél a "Törzsadat létrehozása" ajánlat kihagyás után nem jelenik meg újra oda-vissza navigációnál', async () => {
+    const user = userEvent.setup();
+    await seedKovacsNoMasterDraft();
+    renderShell('/paciens');
+    await screen.findByPlaceholderText('Kovács János');
+
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Kihagyás, tovább lépek' }));
+    expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
+
+    // Vissza a Terv adatai lépésre, majd újra előre: a kihagyott ajánlat
+    // NEM tér vissza, a navigáció akadálytalan mindkét irányban.
+    await user.click(screen.getByRole('link', { name: /Terv adatai/ }));
+    await screen.findByPlaceholderText('Kovács János');
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+
+    expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+  });
+
   it('NavBar-navigációra a prompt NEM jelenik meg -- a teljes App-on át kilépés a workflow-ból azonnal navigál', async () => {
     const user = userEvent.setup();
     await seedUtkozoMasterEsDraft();
