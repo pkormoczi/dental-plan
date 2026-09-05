@@ -5,7 +5,11 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+// WORKFLOW_ROOT / WORKFLOW_GATE_CMD: teszt-varratok -- a workflow.test.mjs ideiglenes repón
+// futtatja a parancsokat, a kapu helyett egy marker-parancsot. Éles futásban nincsenek beállítva.
+export const ROOT = process.env.WORKFLOW_ROOT
+  ? path.resolve(process.env.WORKFLOW_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const APP = path.join(ROOT, 'app');
 
 export class WorkflowError extends Error {
@@ -33,7 +37,10 @@ export function git(args, { allowFail = false, quiet = true } = {}) {
 // Az argumentum fix script-név, nem felhasználói bemenet.
 export function npm(script) {
   console.log(`\n▶ npm run ${script}  (app/)`);
-  const r = spawnSync(`npm run ${script}`, { cwd: APP, stdio: 'inherit', shell: true });
+  const override = process.env.WORKFLOW_GATE_CMD;
+  const r = override
+    ? spawnSync(override, { cwd: ROOT, stdio: 'inherit', shell: true, env: { ...process.env, WORKFLOW_GATE_STEP: script } })
+    : spawnSync(`npm run ${script}`, { cwd: APP, stdio: 'inherit', shell: true });
   if (r.status !== 0) {
     throw new WorkflowError(`npm run ${script} piros -- javítsd, és futtasd újra ezt a parancsot`);
   }
@@ -47,13 +54,32 @@ export function gate() {
 export const head = () => git(['rev-parse', 'HEAD']).out;
 export const currentBranch = () => git(['branch', '--show-current']).out;
 export const unpushed = () => git(['log', 'origin/master..HEAD', '--oneline']).out;
+export const isClean = () => git(['status', '--porcelain']).out === '';
+export const stagedFiles = () => git(['diff', '--cached', '--name-only']).out.split('\n').filter(Boolean);
+export const untrackedFiles = () => git(['ls-files', '--others', '--exclude-standard']).out.split('\n').filter(Boolean);
+
+// Egy path-lista alá tartozik-e a fájl (a path lehet könyvtár is).
+export const underPaths = (file, paths) =>
+  paths.some((p) => {
+    const dir = p.replace(/\/+$/, '');
+    return file === dir || file.startsWith(`${dir}/`);
+  });
+
+// A már létező, push-olatlan lezáró commit egy tételhez -- a close.mjs folytatás-módja ebből
+// tudja, hogy nem új commit kell, hanem a hiányzó publikálási lépés.
+export function closingCommit(slug) {
+  const line = git(['log', 'origin/master..HEAD', '--format=%H%x09%s']).out
+    .split('\n')
+    .find((l) => l.split('\t')[1]?.startsWith(`${slug}: `));
+  return line ? line.split('\t')[0] : null;
+}
 
 export function requireNoRebase() {
   for (const d of ['rebase-merge', 'rebase-apply']) {
     if (existsSync(path.resolve(ROOT, git(['rev-parse', '--git-path', d]).out))) {
       throw new WorkflowError(
         'félbehagyott rebase van a repóban -- oldd fel a konfliktust, `git rebase --continue`, ' +
-          'majd `node scripts/workflow/sync.mjs --gate` (a base változott, a kapu újra kötelező)',
+          'majd `node scripts/workflow/sync.mjs` (a base változott, a kapu újra fut a push előtt)',
       );
     }
   }
@@ -71,15 +97,14 @@ export function fetchOrigin() {
 const isAncestor = (a, b) => git(['merge-base', '--is-ancestor', a, b], { allowFail: true }).status === 0;
 
 // Fetch után: ha az origin előrébb jár, ff-merge (nem `pull`, mert az a pull.rebase beállítás
-// miatt tiszta munkafát követelne); ha a helyi jár előrébb, az push-teendő; ha egyik sem, divergencia.
+// miatt tiszta munkafát követelne); ha a helyi jár előrébb, az push-teendő; ha mindkettő
+// (divergencia), azt a push-lépés rebase-e oldja fel -- itt csak jelezzük.
 export function ffPull() {
   const remote = git(['rev-parse', 'origin/master']).out;
   if (remote === head() || isAncestor(remote, 'HEAD')) return;
   if (!isAncestor('HEAD', remote)) {
-    throw new WorkflowError(
-      'a helyi master és az origin/master divergál -- nézd meg: git log --oneline --graph master origin/master; ' +
-        'a script nem rebase-el helyetted',
-    );
+    console.log('a helyi master és az origin/master divergál -- a push előtt rebase és kapu lesz');
+    return;
   }
   const r = git(['merge', '--ff-only', 'origin/master'], { allowFail: true });
   if (r.status !== 0) {
@@ -104,7 +129,7 @@ export function pushMaster({ regate }) {
   if (r.status !== 0) {
     throw new WorkflowError(
       'a rebase konfliktusba futott, félben marad (nincs --abort, nincs automatikus feloldás).\n' +
-        `${r.err}\nOldd fel, git rebase --continue, majd: node scripts/workflow/sync.mjs --gate`,
+        `${r.err}\nOldd fel, git rebase --continue, majd: node scripts/workflow/sync.mjs (a kapu újra fut a push előtt)`,
     );
   }
   console.log('\ntiszta rebase -- a base változott, a kapu újra fut a push előtt');

@@ -1,14 +1,18 @@
 // Megadott path-ok commitja és azonnali push-a: backlog-tétel (/idea, /plan),
 // review-jelentés, docs-skill. Commit előtt docs-check; rebase után docs-check újra.
+// Hatókör-őr: ha a megadott körön kívül már stage-elt változás van, megáll -- a commit az
+// egész indexet vinné, és idegen kód kerülne egy docs-commitba, csak docs-checkkel.
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import {
   run, parseArgs, WorkflowError, ROOT, requireNoRebase, requireMaster, git, docsCheck, commit, pushMaster,
+  stagedFiles, underPaths,
 } from './lib.mjs';
 
 const HELP = `node scripts/workflow/commit-push.mjs -m "<tárgy>" [--body "<szöveg>"] [--trailer "<Kulcs: érték>"]... -- <path>...
-  Csak a megadott path-okat stage-eli (átnevezésnél a régi és az új path is kell), docs-check,
-  commit, git push origin master (nem-ff: rebase, docs-check újra, push).`;
+  Megáll, ha a megadott path-okon kívül stage-elt változás van. Csak a megadott path-okat stage-eli
+  (átnevezésnél a régi és az új path is kell), docs-check, commit, git push origin master
+  (nem-ff: rebase, docs-check újra, push).`;
 
 run(() => {
   const a = parseArgs(process.argv.slice(2), { valued: ['body'] });
@@ -17,6 +21,13 @@ run(() => {
   if (!a.paths.length) throw new WorkflowError('nincs path a `--` után');
   requireNoRebase();
   requireMaster();
+  const foreign = stagedFiles().filter((f) => !underPaths(f, a.paths));
+  if (foreign.length) {
+    throw new WorkflowError(
+      `a megadott körön kívül stage-elt változás van, nem commitolok:\n  ${foreign.join('\n  ')}\n` +
+        'Vedd ki a stage-ből (git restore --staged <fájl>) vagy commitold külön, aztán újra.',
+    );
+  }
   // Egy `git rm`-mel már törölt path se a munkafában, se az indexben nincs -- a `git add` fatal-t
   // adna rá; ha a HEAD-ben megvan, a törlése már stage-elt, csak kihagyjuk az add-ból.
   const addable = a.paths.filter((p) => {

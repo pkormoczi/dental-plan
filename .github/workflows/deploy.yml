@@ -3,8 +3,12 @@ name: Deploy mockup to GitHub Pages
 # A tényleges alkalmazás az app/ almappában van -- lásd CLAUDE.md
 # "Két fázisú build". Ez a workflow csak a mockupot (1. fázis) deployolja.
 
+# PR-en csak a build-job fut (a worktree-ág merge előtti bizonyítéka); élesítés csak
+# master-pushra és kézi indításra.
 on:
   push:
+    branches: [master]
+  pull_request:
     branches: [master]
   workflow_dispatch:
 
@@ -43,6 +47,10 @@ jobs:
         working-directory: app
         run: npm test
 
+      - name: Workflow script tests
+        working-directory: app
+        run: npm run test:workflow
+
       - name: Docs check
         working-directory: app
         run: npm run docs-check
@@ -58,6 +66,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
