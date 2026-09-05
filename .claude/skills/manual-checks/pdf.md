@@ -65,7 +65,7 @@ ezt ellenőrizd, mielőtt „X font nincs beágyazva” következtetést vonsz l
 
 ## Placeholder-zár valós bájtokon
 
-`PRODUCT.md § A nyomtatvány szerződéses dokumentum`: placeholder-jelölésű nyilatkozat
+`docs/PRODUCT.md § A nyomtatvány szerződéses dokumentum`: placeholder-jelölésű nyilatkozat
 mellett a nyilatkozat+aláírás oldal nem kerülhet PDF-be. A Beállításokban írj
 `[PLACEHOLDER` törzsű nyilatkozatot a terv nyelvén, mentsd, térj vissza az előnézetre,
 és hasonlítsd össze a `pageCount`-ot előtte/utána (3 → 2 várt).

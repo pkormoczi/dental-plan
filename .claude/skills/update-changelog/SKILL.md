@@ -1,6 +1,6 @@
 ---
 name: update-changelog
-description: Draft a plain-language, non-technical CHANGELOG.md entry describing a feature or fix that was just implemented and reviewed. Use once per completed feature or fix, at commit time — not per commit, and not for internal-only changes. Never invoked automatically; user must run it explicitly with /update-changelog.
+description: Draft a plain-language, non-technical docs/CHANGELOG.md entry describing a feature or fix that was just implemented and reviewed. Use once per completed feature or fix, at commit time — not per commit, and not for internal-only changes. Never invoked automatically; user must run it explicitly with /update-changelog.
 disable-model-invocation: true
 ---
 
@@ -22,7 +22,7 @@ several commits; those collapse into ONE entry.
 
 Find what actually changed since the last changelog entry:
 
-1. Read the most recent dated entry in `CHANGELOG.md` to find the reference point.
+1. Read the most recent dated entry in `docs/CHANGELOG.md` to find the reference point.
 2. Run `git log` and `git diff` from that point (or from the start of the current feature branch/
    session if the repo is not the reference point — ask if ambiguous) to the current state.
 3. Pull the actual commit dates alongside the log, e.g.
@@ -113,15 +113,15 @@ the very top.
 
 ## Step 5 — Confirm before writing
 
-Never write directly to `CHANGELOG.md` without showing the drafted entry first. Present the exact
+Never write directly to `docs/CHANGELOG.md` without showing the drafted entry first. Present the exact
 text you intend to add and wait for explicit approval. If a filtered-out change is borderline,
 mention it was left out and why, so the decision is visible — but don't add a "kihagyva" note
 into the actual changelog file itself.
 
 ## Notes
 
-- This skill only produces content for `CHANGELOG.md` in the repo. It does not solve how the
+- This skill only produces content for `docs/CHANGELOG.md` in the repo. It does not solve how the
   doctor/assistant actually read it (raw `.md` files in a git repo aren't accessible to a
   non-technical audience) — that's a separate distribution decision.
-- If `CHANGELOG.md` doesn't exist yet, create it with a one-line Hungarian header explaining what
+- If `docs/CHANGELOG.md` doesn't exist yet, create it with a one-line Hungarian header explaining what
   the document is, before the first dated section.

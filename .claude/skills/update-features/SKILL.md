@@ -1,6 +1,6 @@
 ---
 name: update-features
-description: Rewrite FEATURES.md — the plain-language, screen-by-screen summary of what the app can do — by reviewing the current UI source. Use when asked to refresh/update the feature list. Never invoked automatically; user must run it explicitly with /update-features.
+description: Rewrite docs/FEATURES.md — the plain-language, screen-by-screen summary of what the app can do — by reviewing the current UI source. Use when asked to refresh/update the feature list. Never invoked automatically; user must run it explicitly with /update-features.
 disable-model-invocation: true
 ---
 
@@ -8,13 +8,13 @@ disable-model-invocation: true
 
 ## Audience
 
-Same audience as `CHANGELOG.md`: a dentist and their assistant, zero technical background.
+Same audience as `docs/CHANGELOG.md`: a dentist and their assistant, zero technical background.
 Every bullet must be understandable without technical vocabulary. If a sentence needs a
 technical term to make sense, rewrite it around the term, don't define it.
 
-## FEATURES.md vs. CHANGELOG.md — do not conflate them
+## docs/FEATURES.md vs. docs/CHANGELOG.md — do not conflate them
 
-| | `CHANGELOG.md` | `FEATURES.md` |
+| | `docs/CHANGELOG.md` | `docs/FEATURES.md` |
 |---|---|---|
 | Question | What changed? | What can the app do? |
 | Model | dated log, append-only | snapshot, rewritten every run |
@@ -31,7 +31,7 @@ may mention it as an optional step, but running it is always a separate, explici
 
 ## Step 1 — Scope (a hint, not the source of truth)
 
-Run `git log -1 --format=%H -- FEATURES.md` to find the last update, then look at what
+Run `git log -1 --format=%H -- docs/FEATURES.md` to find the last update, then look at what
 changed in `app/src/pages/` and `app/src/components/` since then. Use this **only** to
 decide which screens are worth re-reading closely — the actual content always comes from
 Step 2's fresh read of the current source, never from commit messages or diffs alone. Code
@@ -59,7 +59,7 @@ browser-based checks for this app are the manually-invoked `manual-checks` skill
 not this one's. Static reading of headings, labels, button text, and visible copy is enough
 to describe what the doctor can do on each screen.
 
-FEATURES.md describes what the doctor actually sees and can do, sourced only from the UI
+docs/FEATURES.md describes what the doctor actually sees and can do, sourced only from the UI
 itself, in the UI's own words where possible — not from developer-facing context files.
 
 ## Step 3 — Filter: is this feature-worthy?
@@ -89,7 +89,7 @@ not the implementation — same banned-terms list as `/update-changelog`: `refak
 
 `FeatureOverviewCard.tsx` parses this file with `parseSections(featuresNyers, { alcimek: true })`
 (`app/src/domain/markdownSections.ts`) — the same minimal parser `ChangelogCard` uses for
-`CHANGELOG.md` (called there *without* `{ alcimek: true }`, so `CHANGELOG.md` never needs to
+`docs/CHANGELOG.md` (called there *without* `{ alcimek: true }`, so `docs/CHANGELOG.md` never needs to
 know about the third line shape below). It understands three line shapes:
 
 - `## <cím>` — starts a section
@@ -112,13 +112,13 @@ actually meets it (e.g. language/currency choice goes under `Páciensek`, since 
 it's set — the plan-editing/preview screens have no nav link of their own, they're reached
 through the patient workflow shell).
 
-The file opens with `# Funkciók` and a one-line explanation, exactly like `CHANGELOG.md`
+The file opens with `# Funkciók` and a one-line explanation, exactly like `docs/CHANGELOG.md`
 opens with `# Változásnapló` — this line is outside any `##` section, so the parser (and the
 card) ignores it.
 
 ## Step 6 — Confirm before writing
 
-Never write directly to `FEATURES.md` without showing the drafted content first — including
+Never write directly to `docs/FEATURES.md` without showing the drafted content first — including
 anything you're removing or rewording, not just what's new. Present the full new content and
 wait for explicit approval. This file gets rewritten wholesale, not appended to, so a bad run
 can silently delete something true; the confirmation step is the safety net.
@@ -127,5 +127,5 @@ can silently delete something true; the confirmation step is the safety net.
 
 - Shares `parseSections()` (`app/src/domain/markdownSections.ts`) with `ChangelogCard` — do
   not write a second parser for this file.
-- If `FEATURES.md` doesn't exist yet, this run creates it from scratch via Steps 1–4 above
+- If `docs/FEATURES.md` doesn't exist yet, this run creates it from scratch via Steps 1–4 above
   (Step 1 will simply find no prior state, which is fine).

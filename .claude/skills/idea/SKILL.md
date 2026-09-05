@@ -1,6 +1,6 @@
 ---
 name: idea
-description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/idea/<slug>.md files (header Type, optional Source and Kerdes, one paragraph, ≤1500 chars). Dedups against existing backlog slugs and PRODUCT.md § Nem cél, splits a multi-idea note (feedback list, review report) into separate files the user picks from. Never writes application code, never plans, never commits. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl].
+description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/idea/<slug>.md files (header Type, optional Source and Kerdes, one paragraph, ≤1500 chars). Dedups against existing backlog slugs and docs/PRODUCT.md § Nem cél, splits a multi-idea note (feedback list, review report) into separate files the user picks from. Never writes application code, never plans, never commits. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl].
 argument-hint: <slug> [szöveg | forrás-fájl]
 disable-model-invocation: true
 ---
@@ -15,7 +15,7 @@ backlog egy tételévé tenni: `backlog/idea/<slug>.md` — a státusz a mappa. 
 várólista: ami nem fájl, az nincs. A fájlalak és az értékkészlet: `backlog/CLAUDE.md`.
 
 A tétel innen két irányba mehet: `/plan <slug>` (kidolgozás) vagy `git rm` (elvetés — ha az
-elvetés termékszintű, egy sor a `PRODUCT.md` Nem cél szakaszába, „nem X, amíg Y” alakban).
+elvetés termékszintű, egy sor a `docs/PRODUCT.md` Nem cél szakaszába, „nem X, amíg Y” alakban).
 
 **Ez a skill soha nem ír app-kódot, nem tervez, nem rangsorol és nem commitol.**
 
@@ -29,9 +29,9 @@ elvetés termékszintű, egy sor a `PRODUCT.md` Nem cél szakaszába, „nem X, 
 
 ## Lépések
 
-1. **Olvasd el a forrást**, és a `PRODUCT.md` Nem cél szakaszát.
+1. **Olvasd el a forrást**, és a `docs/PRODUCT.md` Nem cél szakaszát.
 2. **Dedup.** `ls backlog backlog/idea` — slugok mindkét mappában és a fájlok `Source:` sorai. Ha egy létező tétel már fedi a
-   felvetést, ne nyiss újat: mondd meg, melyik, és állj meg. Ha a felvetés a `PRODUCT.md` Nem
+   felvetést, ne nyiss újat: mondd meg, melyik, és állj meg. Ha a felvetés a `docs/PRODUCT.md` Nem
    cél szerint elvetett irány vagy hard invariánst sért, mondd ki — a tétel ettől még
    felvehető (a doki dönt), de a bekezdés első mondata jelezze az ütközést.
 3. **Többötletes forrásnál** sorold fel a különálló jelölteket: javasolt slug, `Type`, egy

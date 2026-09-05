@@ -24,7 +24,9 @@ const SCAN_ROOTS = [
   { dir: 'docs', ext: ['.md'], recursive: false },
   { dir: 'backlog', ext: ['.md'], recursive: true },
 ];
-const SCAN_FILES = ['CLAUDE.md', 'PRODUCT.md', 'README.md'];
+// docs/PRODUCT.md a docs scan-rootból jön.
+const SCAN_FILES = ['CLAUDE.md', 'README.md'];
+const PRODUCT = 'docs/PRODUCT.md';
 const EXCLUDE_DIRS = [
   'app/src/assets',
   '.claude/worktrees',
@@ -54,13 +56,13 @@ const LEGACY_PATTERNS = [
 // Karakterben (nem byte-ban): a budget a betöltött context méretét méri.
 const BUDGETS = [
   { match: (f) => f === 'CLAUDE.md', limit: 4000 },
-  { match: (f) => f === 'PRODUCT.md', limit: 6000 },
+  { match: (f) => f === PRODUCT, limit: 6000 },
   { match: (f) => /^app\/src\/.*CLAUDE\.md$/.test(f), limit: 2500 },
   { match: (f) => f === 'backlog/CLAUDE.md', limit: 1000 },
 ];
 
 const isContextFile = (f) =>
-  f === 'CLAUDE.md' || f === 'PRODUCT.md' || f === 'backlog/CLAUDE.md' || /^app\/src\/.*CLAUDE\.md$/.test(f);
+  f === 'CLAUDE.md' || f === PRODUCT || f === 'backlog/CLAUDE.md' || /^app\/src\/.*CLAUDE\.md$/.test(f);
 
 // Egy tétel = egy fájl; a státusz a mappa: backlog/idea/<slug>.md ötlet, backlog/<slug>.md
 // tervezett. Nincs Status sor -- két igazságforrás szétcsúszna, a git mv az állapotváltás.
@@ -155,7 +157,7 @@ function slug(heading) {
 let productSlugs = null;
 function productHeadingSlugs() {
   if (productSlugs) return productSlugs;
-  const abs = path.join(ROOT, 'PRODUCT.md');
+  const abs = path.join(ROOT, PRODUCT);
   productSlugs = new Set();
   if (existsSync(abs)) {
     for (const line of readFileSync(abs, 'utf-8').split('\n')) {
@@ -175,8 +177,8 @@ function resolveAnchor(raw) {
   const [, type, p, rest] = m;
   if (type === 'product') {
     if (p || !rest) return `product-anchor alakja product:#<slug>: "${raw}"`;
-    if (!existsSync(path.join(ROOT, 'PRODUCT.md'))) return `nincs PRODUCT.md, a product-anchor feloldhatatlan: "${raw}"`;
-    if (!productHeadingSlugs().has(rest)) return `nincs "${rest}" ##/### címsor a PRODUCT.md-ben`;
+    if (!existsSync(path.join(ROOT, PRODUCT))) return `nincs ${PRODUCT}, a product-anchor feloldhatatlan: "${raw}"`;
+    if (!productHeadingSlugs().has(rest)) return `nincs "${rest}" ##/### címsor a ${PRODUCT}-ben`;
     return null;
   }
   if (!p || !existsSync(path.join(ROOT, p))) return `nem létező fájl: "${p}"`;

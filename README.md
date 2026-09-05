@@ -24,7 +24,7 @@ Az implementáció az `app/` mappában folyik, két lépésben:
 
 | Fájl | Mit tartalmaz |
 |---|---|
-| `PRODUCT.md` | Termékcél, napi flow, adat- és jogi korlátok, a nyomtatvány szerződéses szabályai, nem-cél, nyitott kérdések |
+| `docs/PRODUCT.md` | Termékcél, napi flow, adat- és jogi korlátok, a nyomtatvány szerződéses szabályai, nem-cél, nyitott kérdések |
 | `CLAUDE.md` | Agent-context: repó-térkép, parancsok, sérthetetlen invariánsok anchorral, workflow (`/idea` → `/plan` → `/implement` → `/finish`) |
 | `app/src/CLAUDE.md` + `app/src/{domain,storage,pdf}/CLAUDE.md` | Felület-rendszer és a modulok mentális modellje, szándékos hiányok, „find before writing” index |
 | `docs/06-veglegesites-terv.md` | A 2. fázis (Electron + fájlrendszer) terve |
@@ -41,6 +41,6 @@ nyomtatvány-spec, technológia, felület-rendszer, a lezárt backlog-tételek) 
 ## Az MVP határa és a nyitott kérdések
 
 Mi van benne, mi nincs, és mi vár a dokira (német tételnevek orvosi és a nyilatkozat jogi
-lektorálása, garancia-szakasz szövege, cégadatok a lábléchez): `PRODUCT.md` „Nem cél” és
+lektorálása, garancia-szakasz szövege, cégadatok a lábléchez): `docs/PRODUCT.md` „Nem cél” és
 „Szándékos hiányok és nyitott kérdések”. Az árlista takarítása külön doki-ülés:
 `backlog/idea/arlista-nap.md`.

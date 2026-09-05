@@ -1,5 +1,5 @@
 // A DEMO oldal Funkciók füle: rövid, képernyőnkénti áttekintés egy új
-// felhasználónak, mielőtt belevágna. A gyökér FEATURES.md nyers tartalma
+// felhasználónak, mielőtt belevágna. A docs/FEATURES.md nyers tartalma
 // épül be build-időben (Vite `?raw` import, a ChangelogCard mintájára) -- a
 // listát a `/update-features` skill tartja karban, szakaszonként a mögöttük
 // álló képernyő funkcióit csoportosítva.
@@ -7,7 +7,7 @@
 import { Box, Card, Heading, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import { parseSections } from '../domain/markdownSections';
-import featuresNyers from '../../../FEATURES.md?raw';
+import featuresNyers from '../../../docs/FEATURES.md?raw';
 
 export default function FeatureOverviewCard() {
   const szakaszok = parseSections(featuresNyers, { alcimek: true });

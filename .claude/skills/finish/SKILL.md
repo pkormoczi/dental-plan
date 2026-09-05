@@ -34,7 +34,7 @@ a doki döntésére (`/idea`-val vehető fel).
 Default: **nincs docs-diff**, és ezt a záró jelentés kimondja. Írj csak akkor, ha a
 tétel olyan contextet hozott létre, ami kódból és tesztből nem levezethető:
 
-- termékszándék, nem-cél, jogi/adat-korlát → `PRODUCT.md` megfelelő szakasza (a `##`
+- termékszándék, nem-cél, jogi/adat-korlát → `docs/PRODUCT.md` megfelelő szakasza (a `##`
   címek slugja anchor-cél, ne változzon);
 - discovery vagy gotcha (hol a párja, mit ne építs újra, mit nem lát a jsdom) → az
   érintett nested `CLAUDE.md`, **egy állítás egy sor**, path-qualified anchorral

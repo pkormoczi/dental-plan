@@ -10,7 +10,7 @@ disable-model-invocation: true
 ## Cél
 
 Az `app/src/CLAUDE.md` (felület-rendszer), az `app/src/pdf/CLAUDE.md` és a
-`PRODUCT.md § A nyomtatvány szerződéses dokumentum` azon szabályai, amiket a
+`docs/PRODUCT.md § A nyomtatvány szerződéses dokumentum` azon szabályai, amiket a
 vitest-készlet **strukturálisan nem tud** ellenőrizni:
 
 - `app/src/main.tsx` betölti a Radix Themes CSS-t és a Robotót; `app/src/test-setup.ts`
@@ -51,7 +51,7 @@ Ez a skill soha nem módosítja a `.mcp.json`-t (követett, verzió-pinnelt:
 pont), és soha nem javasol kapcsolódást futó, valós Chrome-hoz.
 
 **Soha ne gépelj valódi páciensadatot a böngészőbe** — csak seed/demó adat
-(`PRODUCT.md § Adat- és deployment-korlátok`, GDPR 9. cikk). A demó adat
+(`docs/PRODUCT.md § Adat- és deployment-korlátok`, GDPR 9. cikk). A demó adat
 visszaállítása lent.
 
 ---

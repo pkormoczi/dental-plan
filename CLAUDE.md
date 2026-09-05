@@ -7,11 +7,11 @@
 `cd app && npm run dev | build | lint | test | docs-check`
 
 # Product context
-`PRODUCT.md` — termékcél, napi flow, nem-cél, adat/jogi korlátok. Nested `CLAUDE.md`: `app/src`
+`docs/PRODUCT.md` — termékcél, napi flow, nem-cél, adat/jogi korlátok. Nested `CLAUDE.md`: `app/src`
 (felület-rendszer), `app/src/domain`, `app/src/storage`, `app/src/pdf` — automatikusan betöltődnek.
 
 # Authority
-Aktuális viselkedés: kód + futó tesztek. Szándék és nem-cél: `PRODUCT.md`. A `CLAUDE.md` contextet ad,
+Aktuális viselkedés: kód + futó tesztek. Szándék és nem-cél: `docs/PRODUCT.md`. A `CLAUDE.md` contextet ad,
 nem írhat felül tesztet vagy típust.
 
 # Hard invariants

@@ -28,12 +28,12 @@ tervezett, újratervezésre előbb mondd ki, mi bukott meg benne.
 ## Előkészítés — mielőtt egy kérdést is felteszel
 
 1. Olvasd el a tétel fájlját (vagy a felvetést) és a `Source:` szerinti forrást, ha van.
-2. Olvasd el a `PRODUCT.md`-t (különösen a **Nem cél** és a **Szándékos hiányok és nyitott
+2. Olvasd el a `docs/PRODUCT.md`-t (különösen a **Nem cél** és a **Szándékos hiányok és nyitott
    kérdések** szakaszt), a root `CLAUDE.md` **Hard invariants** listáját és az érintett terület
    nested `CLAUDE.md`-jét (`app/src`, `domain`, `storage`, `pdf`). Ezek nem tárgyalási alap —
    ha egy döntési ág ütközik velük, EXPLICIT vesd fel, ne csendben kerülgesd, és ne csendben
    fogadd el az ütközést.
-3. Dedup: `ls backlog backlog/idea` slugjai és `Source:` sorai + `PRODUCT.md` Nem cél. Ha a felvetés egy
+3. Dedup: `ls backlog backlog/idea` slugjai és `Source:` sorai + `docs/PRODUCT.md` Nem cél. Ha a felvetés egy
    már mérlegelt és elvetett irány, mondd ki, és kérdezd meg, mi változott azóta; ha egy
    létező tétel fedi, ne nyiss újat.
 4. A nested `CLAUDE.md`-k „Find before writing” indexét nézd át — a döntéseknek a meglévő
@@ -60,7 +60,7 @@ scope-kérdés), állj le, mondd ki, és folytasd a normál interjúval.
 6. **Állj meg, ha nincs egyezés** — „majdnem kész” állapotban ne írj.
 
 Szabályok: sose feltételezz, kérdezz; egyszerre egy téma; tolj vissza konkrétan (a
-`PRODUCT.md` szakaszára, az invariánsra vagy a létező tételre hivatkozva, nem
+`docs/PRODUCT.md` szakaszára, az invariánsra vagy a létező tételre hivatkozva, nem
 általánosságban); vess fel elvetett alternatívát is; legyél direkt; kövesd, mely ágak
 zárultak le.
 
@@ -109,7 +109,7 @@ Csak valódi választásnál, egy sor / döntés:
 
 A tervfájl a `/finish` után törlődik — a git history a történetiség, ezért ne írj bele
 semmit, amit később „meg akarnál találni”: ami tartós context, az a `/finish` 4. lépésében
-`PRODUCT.md`-be vagy nested `CLAUDE.md`-be kerül. D-szám és legacy-hivatkozás tilos
+`docs/PRODUCT.md`-be vagy nested `CLAUDE.md`-be kerül. D-szám és legacy-hivatkozás tilos
 (docs-check).
 
 ## Megerősítés írás előtt

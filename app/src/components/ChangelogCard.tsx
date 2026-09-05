@@ -1,12 +1,12 @@
-// A DEMO oldal Változásnapló füle: a gyökér CHANGELOG.md nyers tartalma
+// A DEMO oldal Változásnapló füle: a docs/CHANGELOG.md nyers tartalma
 // épül be build-időben (Vite `?raw` import), hogy ne kelljen kézzel
 // duplikálni a szöveget -- a napló mindig azzal szinkronban marad, amit a
-// repo gyökerében szerkesztünk.
+// repo docs/ mappájában szerkesztünk.
 
 import { Box, Card, Heading, Text } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import { parseSections } from '../domain/markdownSections';
-import changelogNyers from '../../../CHANGELOG.md?raw';
+import changelogNyers from '../../../docs/CHANGELOG.md?raw';
 
 export default function ChangelogCard() {
   const szakaszok = parseSections(changelogNyers);
