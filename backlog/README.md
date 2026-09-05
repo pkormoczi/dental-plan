@@ -92,10 +92,10 @@ szerződése kimond.
 | Script | Mit csinál | Megáll (exit 1), ha |
 |---|---|---|
 | `sync.mjs` | `git fetch`; ff-merge az `origin/master`-re; ha `origin/master..HEAD` nem üres (csak megbukott vagy félbeszakadt futás maradványa lehet): **teljes kapu**, majd push; kiírja a HEAD SHA-t | nem `master`; félbehagyott rebase; piros kapu; ff-merge ütközik commitolatlan fájllal |
-| `commit-push.mjs -m … [--body …] [--trailer …]… -- <path>…` | **hatókör-őr**: ha a megadott path-okon kívül stage-elt változás van, megáll; csak a megadott path-ok stage-elése (átnevezésnél mindkettő; már `git rm`-elt path elfogadott); `docs-check`; commit; push. Nem-ff push: `rebase --autostash`, `docs-check` újra, push | idegen stage-elt fájl; nincs változás a path-okon; piros docs-check; rebase-konfliktus (félben marad; teendő: feloldás, `git rebase --continue`, `sync.mjs`) |
+| `commit-push.mjs -m … [--body …] [--trailer …]… [--no-push] -- <path>…` | **hatókör-őr**: ha a megadott path-okon kívül stage-elt változás van, megáll; csak a megadott path-ok stage-elése (átnevezésnél mindkettő; már `git rm`-elt path elfogadott); `docs-check`; commit; push. Nem-ff push: `rebase --autostash`, `docs-check` újra, push. **`--no-push`**: `docs-check` + commit, push nélkül (`/implement-batch`-nak, a `docs/reviews/` manual-check jelentéshez) | idegen stage-elt fájl; nincs változás a path-okon; piros docs-check; rebase-konfliktus (félben marad; teendő: feloldás, `git rebase --continue`, `sync.mjs`) |
 | `drift.mjs <slug> \| --all` | a terv `Baseline`-ja és HEAD közt `git diff --stat -- app data assets`; exit 0 nincs drift, **exit 2** drift (a stat kiírva). **Csak jelez, a `Baseline` sosem íródik át.** `--all`: minden tervezett tételre `slug<TAB>ok\|drift` | nincs tervezett fájl; hibás/ismeretlen `Baseline` |
 | `prio.mjs <slug> <now\|next\|later\|none> [--trailer …]…` | a KIMONDOTT `Prio` lekönyvelése: a tételt a négy mappában megkeresi (`backlogPath.mjs`), a fejléc `Prio:` sorát írja/törli, ha a mappa nem egyezik (`later` ⇔ `later/`) `git mv`, majd `commit-push.mjs -m "backlog: prio <slug> <érték>"` | nincs ilyen slug, vagy két mappában is él; a tétel nem követett vagy módosított; a `commit-push` megáll (a fejléc és a mappa ekkor már átírva, a hibaüzenet a folytató parancsot adja) |
-| `close.mjs <slug> --title … [--body …] [--trailer …]…` | masteren: fetch + ff; **hatókör-őr** (untracked fájl csak `app/ docs/ data/ assets/` alatt); **teljes kapu**; `git rm backlog[/later]/<slug>.md` (**módosított tervfájlnál megáll**); követett módosítások + engedett untracked; commit `<slug>: <cím>`; push (nem-ff: rebase, **kapu újra**, push). Nem-master branchen: commit után `rebase origin/master` (base-változásnál kapu újra), `push --force-with-lease -u`, `gh pr create` ha nincs PR (a `gh` hiánya/hibája csak üzenet). **Folytatás-mód**: ha a tervfájl hiányzik, de van push-olatlan `<slug>: …` commit, nem commitol újra — tiszta fát követel, kapu, majd a hiányzó publikálási lépés | a tervfájl hiányzik és nincs lezáró commit („máshol lezárták"); követetlen tervfájl; untracked a körön kívül; piros kapu; módosított tervfájl; rebase-konfliktus; folytatásnál piszkos fa |
+| `close.mjs <slug> --title … [--body …] [--trailer …]… [--batch]` | masteren: fetch + ff; **hatókör-őr** (untracked fájl csak `app/ docs/ data/ assets/` alatt); **teljes kapu**; `git rm backlog[/later]/<slug>.md` (**módosított tervfájlnál megáll**); követett módosítások + engedett untracked; commit `<slug>: <cím>`; push (nem-ff: rebase, **kapu újra**, push). Nem-master branchen: commit után `rebase origin/master` (base-változásnál kapu újra), `push --force-with-lease -u`, `gh pr create` ha nincs PR (a `gh` hiánya/hibája csak üzenet). **Folytatás-mód**: ha a tervfájl hiányzik, de van push-olatlan `<slug>: …` commit, nem commitol újra — tiszta fát követel, kapu, majd a hiányzó publikálási lépés. **`--batch`** (`/implement-batch`-nak): csak masteren, nincs fetch/ff (a divergenciát a záró `sync.mjs` oldja); csökkentett kapu (`build+lint+test`, a `docs-check` a záró kapuba tolódik); commit, **nincs push**; már ebben a batchben lezárt tételnél (push-olatlan `<slug>: …` commit) kapu és commit nélkül továbblép | a tervfájl hiányzik és nincs lezáró commit („máshol lezárták"); követetlen tervfájl; untracked a körön kívül; piros kapu; módosított tervfájl; rebase-konfliktus; folytatásnál piszkos fa; `--batch` nem-masteren |
 
 A kapu = `npm run build`, `lint`, `test`, `docs-check` az `app/` alatt, sorban. Két elv áll
 minden script mögött: **ha a tesztelés óta változott a base, a kapu újra fut** (push-olatlan
@@ -103,13 +103,15 @@ commitra nincs bizonyíték, hogy ellenőrzött — ezért a `sync` sem pushol k
 commit hatóköre gépi őr**, nem ígéret. A `commit-push` csak backlog/docs fájlt visz, ott a
 `docs-check` a kapu.
 
-**Teszt.** `npm run test:workflow` az `app/` alól (CI-ban is): tizenöt integrációs eset ideiglenes
-bare origin + klón repón, a kapu helyett a `WORKFLOW_GATE_CMD` marker-parancs fut — idegen
-stage-elt fájl, módosított tervfájl, körön kívüli untracked, piros kapu (nincs push, nincs
+**Teszt.** `npm run test:workflow` az `app/` alól (CI-ban is): tizenkilenc integrációs eset
+ideiglenes bare origin + klón repón, a kapu helyett a `WORKFLOW_GATE_CMD` marker-parancs fut —
+idegen stage-elt fájl, módosított tervfájl, körön kívüli untracked, piros kapu (nincs push, nincs
 commit), folytatás-mód, boldog út masteren és branchen (rebase + kapu újra + branch push), a
-`later/` alatti tervezett tétel lezárása és driftje, a `prio.mjs` oda-vissza mozgatása és őrei. A
-két környezeti varrat (`WORKFLOW_ROOT`, `WORKFLOW_GATE_CMD`) éles futásban nincs beállítva. A
-négy backlog-mappát egyetlen modul ismeri (`backlogPath.mjs`), minden script onnan old fel slugot.
+`later/` alatti tervezett tétel lezárása és driftje, a `prio.mjs` oda-vissza mozgatása és őrei,
+`close --batch` (csökkentett kapu, nincs push, már-lezárt tétel átlépése, nem-masteren megáll) és
+`commit-push --no-push`. A két környezeti varrat (`WORKFLOW_ROOT`, `WORKFLOW_GATE_CMD`) éles
+futásban nincs beállítva. A négy backlog-mappát egyetlen modul ismeri (`backlogPath.mjs`), minden
+script onnan old fel slugot.
 
 → file:scripts/workflow/lib.mjs; file:scripts/workflow/backlogPath.mjs; file:scripts/workflow/sync.mjs; file:scripts/workflow/commit-push.mjs; file:scripts/workflow/drift.mjs; file:scripts/workflow/prio.mjs; file:scripts/workflow/close.mjs; file:scripts/workflow/workflow.test.mjs
 
@@ -194,6 +196,28 @@ Mindegyiknél ugyanaz a hat mező. A lépések részletei a hivatkozott fájlban
 - **Következő:** nincs; a tétel útja itt ér véget.
 
 → file:.claude/skills/finish/SKILL.md
+
+### `/implement-batch <slug> <slug>...`
+
+- **Bemenet:** slug-lista, `backlog/idea[/later]/<slug>.md` és/vagy `backlog[/later]/<slug>.md`
+  vegyesen.
+- **Előfeltétel — megáll, ha:** egy slug nem létezik, két mappában él, vagy `Type: doki`; a
+  preflight `sync.mjs`-e megáll.
+- **Létrehoz/mozgat:** tételenként — `/plan --quick` ha még ötlet; `drift.mjs` (a batch 2. tételétől
+  az exit 2 normális); app-kód a plan scope-jában; csökkentett kapu (`build+lint+test`); diff-
+  önellenőrzés; `close.mjs <slug> --batch` (commit, **nincs push**). A ciklus után `/manual-checks
+  all` és `commit-push.mjs --no-push` a jelentésre; a végén egyetlen `sync.mjs` (**teljes kapu**,
+  benne a `docs-check` először a batchben, majd **egy push** az egész láncra).
+- **Soha nem:** vár emberi ellenőrzésre tételenként — ez a **tudatosan kihagyott** doki kézi kapuja;
+  nem visz batchbe `Type: doki`-t, nyitott `Kerdes:`-t vagy hard invariánst/Nem célt érintő döntést.
+- **Elakadás:** piros kapu vagy megbukott terv esetén a tétel kimarad (munkafa visszaáll az előző
+  tétel állapotára), a többi megy tovább; termékdöntést kérő elakadásnál a batch megáll.
+- **Hol áll meg:** a lánc az `origin/master`-en, a Pages deploy fut. A jelentés: tétel-táblázat
+  (lezárva / kimaradt + ok), a felvitt commit-tartomány, a manual-checks találatai.
+- **Következő:** nincs (a batchen belüli minden tétel útja itt ér véget); a `/manual-checks`
+  `Kritikus` találataira `/idea`.
+
+→ file:.claude/skills/implement-batch/SKILL.md
 
 ### `/backlog [--all]` és `/backlog <slug> <now|next|later|none>`
 
@@ -316,6 +340,7 @@ PR-en zár.
 | **A commit hatóköre gépi őr** | a „csak a tétel fájljai" ígéret volt: az index többi része és a körön kívüli untracked fájl csendben bekerülhetett | `commit-push` idegen-stage őr; `close` untracked-kör; `git rm` módosított tervfájlon megáll; `workflow.test.mjs` |
 | **Megszakadt futás folytatható, ellenőrizetlen commit nem publikálódik** | a push-olatlan commitra nincs bizonyíték, hogy kapun átment | `sync` mindig kapuzik; `close` folytatás-mód; `workflow.test.mjs` |
 | **A kézi kapu a munkafa, a `/finish` előtt — és minden gépi/böngészős ellenőrzés előtte** | a master-push Pages-re élesít; a kipróbált és a publikált viselkedés ne térjen el | `/implement` 5b/5c + tesztlista; `/finish` 1. lépés visszaad viselkedésváltozásnál |
+| `/implement-batch` a doki kézi kapuját tudatosan kihagyja, cserébe böngészős bizonyíték (`/manual-checks all`) még a záró push előtt | csak gépileg bizonyítható tételre való; a jsdom-vakfoltot a `/manual-checks` fedi, nem a doki, hogy a batch emberi kör nélkül maradhasson | `/implement-batch` „Mikor NE ezt használd”; a záró `sync.mjs` mindenképp kapuzik push előtt |
 | Nincs branch/PR alapból | egy fejlesztő; a PR-koreográfia költsége nagyobb, mint a haszna; a Pages mockup demó adattal fut | `close.mjs` master-mód; `--worktree` csak párhuzamos sessionre (ott PR-CI van) |
 | Base-változás után a kapu újra | tiszta rebase is összefésül nem tesztelt kombinációt | `pushMaster({ regate })`, `close.mjs` branch-mód |
 | Drift = app-kód diff, nem SHA-egyezés; a Baseline nem íródik át | a backlog-commitok minden tervet „elmozdult"-nak mutatnának; a módosított tervfájl a lezárást akasztaná | `drift.mjs`; `/plan` írás előtti app-diff |

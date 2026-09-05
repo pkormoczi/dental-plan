@@ -9,13 +9,14 @@ import {
   stagedFiles, underPaths,
 } from './lib.mjs';
 
-const HELP = `node scripts/workflow/commit-push.mjs -m "<tárgy>" [--body "<szöveg>"] [--trailer "<Kulcs: érték>"]... -- <path>...
+const HELP = `node scripts/workflow/commit-push.mjs -m "<tárgy>" [--body "<szöveg>"] [--trailer "<Kulcs: érték>"]... [--no-push] -- <path>...
   Megáll, ha a megadott path-okon kívül stage-elt változás van. Csak a megadott path-okat stage-eli
   (átnevezésnél a régi és az új path is kell), docs-check, commit, git push origin master
-  (nem-ff: rebase, docs-check újra, push).`;
+  (nem-ff: rebase, docs-check újra, push).
+  --no-push: docs-check + commit, push nélkül -- /implement-batch-nak, a záró sync.mjs viszi fel.`;
 
 run(() => {
-  const a = parseArgs(process.argv.slice(2), { valued: ['body'] });
+  const a = parseArgs(process.argv.slice(2), { valued: ['body'], flags: ['no-push'] });
   if (a.help) return console.log(HELP);
   if (!a.m) throw new WorkflowError('hiányzik a -m "<tárgy>"');
   if (!a.paths.length) throw new WorkflowError('nincs path a `--` után');
@@ -41,6 +42,10 @@ run(() => {
   console.log(`stage-elve:\n${staged}`);
   docsCheck();
   const sha = commit({ subject: a.m, body: a.body, trailers: a.trailer });
+  if (a['no-push']) {
+    console.log(`\ncommit ${sha.slice(0, 7)} helyben, push nélkül`);
+    return;
+  }
   const { rebased } = pushMaster({ regate: docsCheck });
   console.log(`\ncommit ${sha.slice(0, 7)} fent az origin/master-en${rebased ? ' (rebase után)' : ''}`);
 });

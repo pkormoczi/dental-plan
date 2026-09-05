@@ -16,13 +16,16 @@ import {
 } from './lib.mjs';
 import { findItem } from './backlogPath.mjs';
 
-const HELP = `node scripts/workflow/close.mjs <slug> --title "<cím>" [--body "<1-2 mondat>"] [--trailer "<K: v>"]...
+const HELP = `node scripts/workflow/close.mjs <slug> --title "<cím>" [--body "<1-2 mondat>"] [--trailer "<K: v>"]... [--batch]
   masteren: fetch + ff; untracked csak app/ docs/ data/ assets/ alatt (más: megáll); build+lint+test+docs-check;
             git rm backlog[/later]/<slug>.md (módosított tervfájlnál megáll); követett módosítások + engedett untracked;
             commit "<slug>: <cím>"; push (nem-ff: rebase, kapu újra, push).
   branchen: ugyanaz, majd rebase origin/master-re (base-változásnál kapu újra), push --force-with-lease,
             gh pr create ha nincs PR (a gh hiánya/hibája nem hiba, a PR ilyenkor kézi).
-  folytatás: ha a tervfájl már hiányzik, de van push-olatlan "<slug>: …" commit: kapu, majd csak a publikálás.`;
+  folytatás: ha a tervfájl már hiányzik, de van push-olatlan "<slug>: …" commit: kapu, majd csak a publikálás.
+  --batch:  /implement-batch-nak. Csak masteren; nincs fetch/ff (a divergenciát a záró sync.mjs rebase-e oldja);
+            csökkentett kapu (build+lint+test, a docs-check a záró kapuba tolódik); commit, NINCS push; már ebben
+            a batchben lezárt tételnél (push-olatlan "<slug>: …" commit) kapu és commit nélkül továbblép.`;
 
 const ALLOWED_UNTRACKED = ['app', 'docs', 'data', 'assets'];
 
@@ -65,7 +68,7 @@ function publishBranch({ slug, branch, subject, body, needGate }) {
 }
 
 run(() => {
-  const a = parseArgs(process.argv.slice(2), { valued: ['title', 'body'] });
+  const a = parseArgs(process.argv.slice(2), { valued: ['title', 'body'], flags: ['batch'] });
   if (a.help) return console.log(HELP);
   const slug = a._[0];
   if (!slug) throw new WorkflowError('hiányzik a <slug>');
@@ -73,6 +76,7 @@ run(() => {
   requireNoRebase();
   const branch = currentBranch();
   const onMaster = branch === 'master';
+  if (a.batch && !onMaster) throw new WorkflowError('--batch csak masteren -- worktree-batch nincs a hatókörben');
   // A tervezett tétel a gyökérben vagy a later/ alatt él (a Prio dönti el) -- a feloldás közös.
   const found = findItem(slug);
   if (found?.status === 'idea') {
@@ -81,8 +85,12 @@ run(() => {
   const item = found?.path ?? `backlog/${slug}.md`;
   const subject = `${slug}: ${a.title}`;
 
-  fetchOrigin();
-  if (onMaster) ffPull();
+  // Batchben N tétel commitol egymás után, fetch/ff nélkül -- a divergenciát a záró sync.mjs
+  // rebase-e oldja fel egyszer, a batch végén.
+  if (!a.batch) {
+    fetchOrigin();
+    if (onMaster) ffPull();
+  }
 
   let sha;
   let resumed = false;
@@ -90,6 +98,10 @@ run(() => {
     const existing = closingCommit(slug);
     if (!existing) {
       throw new WorkflowError(`nincs backlog[/later]/${slug}.md, és nincs push-olatlan "${slug}: …" commit -- máshol már lezárták?`);
+    }
+    if (a.batch) {
+      console.log(`már lezárva ebben a batchben: ${existing.slice(0, 7)} -- kapu és commit nélkül továbblép`);
+      return;
     }
     if (!isClean()) {
       throw new WorkflowError(`folytatás-mód: a lezáró commit ${existing.slice(0, 7)} már létezik, de a munkafa nem tiszta -- commitolatlan módosítással nem publikálok`);
@@ -108,7 +120,8 @@ run(() => {
           'Töröld, ignore-old, vagy commitold külön (commit-push.mjs), aztán újra.',
       );
     }
-    gate();
+    // Batchben a docs-check a záró sync.mjs-be tolódik -- redundáns lenne tételenként futni.
+    gate(a.batch ? ['build', 'lint', 'test'] : undefined);
     const rm = git(['rm', '-q', '--', item], { allowFail: true });
     if (rm.status !== 0) {
       throw new WorkflowError(
@@ -122,6 +135,11 @@ run(() => {
     if (rest.length) git(['add', '--', ...rest]);
     console.log(`\nstage-elve:\n${git(['diff', '--cached', '--name-status']).out}`);
     sha = commit({ subject, body: a.body, trailers: a.trailer });
+  }
+
+  if (a.batch) {
+    console.log(`\ncommit ${sha.slice(0, 7)} helyben, push nélkül -- a batch végén a sync.mjs viszi fel, teljes kapuval`);
+    return;
   }
 
   if (onMaster) {

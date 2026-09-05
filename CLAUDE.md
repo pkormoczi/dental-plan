@@ -39,10 +39,10 @@ A JSON-kulcsok magyarul vannak és a lemezre írt séma részei — kódban nem 
 A chrome-devtools MCP KIZÁRÓLAG izolált módban futhat. TILOS a configba: `--autoConnect`,
 `--browserUrl`, vagy `--user-data-dir` a fejlesztő valós Chrome-profiljára. TILOS futó Chrome-hoz
 csatlakozni vagy remote debuggingot bekapcsolni bármilyen böngészőben. Ha egy feladat valós profilt
-igényelne (bejelentkezés, korábbi mappa-engedély), ne kerüld meg: jelezd, és javasolj alternatívát a
-`PlanStorage` teszt-implementációjával. Kikényszerítés: a követett, verzió-pinnelt `.mcp.json`
-(`--isolated`). A jsdom-ban strukturálisan nem ellenőrizhető réteget (kontraszt, valódi PDF,
-canvas→PNG, popover-geometria) a `/manual-checks` skill fedi — kézzel indítva, sose automatikusan.
+igényelne (bejelentkezés, mappa-engedély), ne kerüld meg: jelezd, és javasolj `PlanStorage`
+teszt-implementációt. Kikényszerítés: a követett, verzió-pinnelt `.mcp.json` (`--isolated`). A
+jsdom nem ellenőrizhető rétegét (kontraszt, valódi PDF, canvas→PNG, popover-geometria) a
+`/manual-checks` fedi — kézzel, sose automatikusan.
 
 # Kommentek
 Csak WHY, invariáns vagy gotcha. Nincs „mit csinál”. Nincs `D<szám>`/`DP-<szám>` döntési azonosító,
@@ -60,5 +60,6 @@ Nincs `.skip`/`.only`. A tesztnév konkrét, megfigyelhető viselkedést ír le,
 
 # Workflow
 `/idea <slug>` → `/plan <slug> [--quick]` → `/implement <slug>` → kézi ellenőrzés a munkafán →
-`/finish <slug>`; `/backlog` listáz. Minden skill commitol és azonnal pushol (`scripts/workflow/`);
-a master-push a Pages-re élesít. `/update-changelog`, `/update-features`: külön, kézi hívás.
+`/finish <slug>`; `/backlog` listáz; `/implement-batch <slug>...` több tételt egy pushsal, kézi
+kapu nélkül. Skillek commitolnak, pusholnak (`scripts/workflow/`); master-push → Pages.
+`/update-changelog`, `/update-features`: külön, kézi hívás.

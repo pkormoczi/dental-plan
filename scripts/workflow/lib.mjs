@@ -47,8 +47,10 @@ export function npm(script) {
 }
 
 export const docsCheck = () => npm('docs-check');
-export function gate() {
-  for (const s of ['build', 'lint', 'test', 'docs-check']) npm(s);
+// steps: /implement-batch a per-tétel körben a docs-check-et a záró sync.mjs-be tolja
+// (redundáns lenne N-szer futtatni) -- a default a teljes, bizonyító kapu.
+export function gate(steps = ['build', 'lint', 'test', 'docs-check']) {
+  for (const s of steps) npm(s);
 }
 
 export const head = () => git(['rev-parse', 'HEAD']).out;

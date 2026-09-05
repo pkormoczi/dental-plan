@@ -275,6 +275,63 @@ test('close piros kapu után a commit nem jön létre, és a lezárás megismét
   assert.equal(r.count(), before + 1);
 });
 
+test('close --batch: csökkentett kapu, commit helyben, nincs push', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x');
+  r.write('app/src/a.txt', 'b\n');
+  const before = r.count();
+  const originBefore = r.originHead();
+  const res = r.run('close', ['x', '--title', 'cím', '--batch']);
+  assert.equal(res.status, 0, res.err);
+  assert.match(res.out, /push nélkül/);
+  assert.equal(r.count(), before + 1);
+  assert.equal(g(r.work, 'log', '-1', '--format=%s'), 'x: cím');
+  assert.equal(existsSync(path.join(r.work, 'backlog/x.md')), false);
+  assert.equal(r.originHead(), originBefore);
+  assert.deepEqual(r.gateSteps(), ['build', 'lint', 'test']);
+});
+
+test('close --batch: már lezárt tétel másodszori hívásnál kapu és commit nélkül továbblép', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x');
+  r.write('app/src/a.txt', 'b\n');
+  let res = r.run('close', ['x', '--title', 'cím', '--batch']);
+  assert.equal(res.status, 0, res.err);
+  const afterFirst = r.count();
+  const gateAfterFirst = r.gateSteps();
+  res = r.run('close', ['x', '--title', 'cím', '--batch']);
+  assert.equal(res.status, 0, res.err);
+  assert.match(res.out, /már lezárva ebben a batchben/);
+  assert.equal(r.count(), afterFirst);
+  assert.deepEqual(r.gateSteps(), gateAfterFirst);
+});
+
+test('close --batch megáll, ha nem masteren fut', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x');
+  g(r.work, 'checkout', '-q', '-b', 'x');
+  const res = r.run('close', ['x', '--title', 'cím', '--batch']);
+  assert.equal(res.status, 1);
+  assert.match(res.err, /csak masteren/);
+  assert.deepEqual(r.gateSteps(), []);
+});
+
+test('commit-push --no-push: commitol, de nem pushol', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.write('backlog/idea/x.md', '# x\nType: chore\n\nx\n');
+  const originBefore = r.originHead();
+  const res = r.run('commit-push', ['-m', 'backlog: +x', '--no-push', '--', 'backlog/idea/x.md']);
+  assert.equal(res.status, 0, res.err);
+  assert.match(res.out, /push nélkül/);
+  assert.equal(g(r.work, 'log', '-1', '--format=%s'), 'backlog: +x');
+  assert.equal(r.originHead(), originBefore);
+  assert.deepEqual(r.gateSteps(), ['docs-check']);
+});
+
 test('close branchen: rebase az előrelépett origin/master-re, kapu újra, branch push', (t) => {
   const r = repo();
   t.after(r.cleanup);
