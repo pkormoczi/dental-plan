@@ -111,6 +111,7 @@ export default function EgyediVegosszegBlokk({
             <Box style={{ width: 120 }}>
               <NumberField
                 value={celVegosszeg}
+                penz
                 min={0}
                 unit={currency}
                 aria-label="Egyedi végösszeg"

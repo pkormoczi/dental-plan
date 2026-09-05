@@ -72,6 +72,9 @@ export function savosHatarForditott(ar: Ar | null | undefined): boolean {
  * `parseEuroInput`/`formatCentForInput` a `NumberField` `unit="EUR"`
  * módjának a fordítópárja: a tárolás VÁLTOZATLANUL cent marad
  * (lásd app/src/domain/CLAUDE.md), csak a beviteli mező mértékegysége más.
+ * A két függvény egymás fordítópárja -- a beviteli formátum ezért sosem
+ * tartalmazhat olyan jelet, amit a parser nem olvas vissza (lásd lent, ezres
+ * elválasztó nélkül).
  */
 export function parseEuroInput(text: string): number | null {
   const normalized = text.trim().replace(',', '.');
@@ -81,9 +84,15 @@ export function parseEuroInput(text: string): number | null {
   return Math.round(euro * 100);
 }
 
+// Ezres elválasztó NÉLKÜL -- a de-DE alapértelmezett csoportosítás pontot
+// használ (pl. "9.000,00"), amit a `parseEuroInput` fent kétértelműség miatt
+// szándékosan NEM fogad el; enélkül 1000 € fölött a mező olyan szöveget
+// mutatna, amit a saját parsere nem olvas vissza, és blurkor némán
+// visszaállna (doctor-review 2026-09-05, 6. megállapítás).
 export function formatCentForInput(cent: number): string {
   return (cent / 100).toLocaleString('de-DE', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
+    useGrouping: false,
   });
 }

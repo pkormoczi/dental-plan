@@ -266,6 +266,7 @@ export default function TomegesArDialog({
               <Field label="Százalék">
                 <NumberField
                   value={szazalek}
+                  penz={false}
                   min={0}
                   aria-label="Százalék"
                   onCommit={setSzazalek}

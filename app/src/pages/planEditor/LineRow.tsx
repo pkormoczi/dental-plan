@@ -302,6 +302,7 @@ export default function LineRow({
           <Box flexGrow="1">
             <NumberField
               value={line.mennyiseg}
+              penz={false}
               min={1}
               onCommit={(v) => onPatch({ mennyiseg: v })}
               onDraftChange={(v) => setMennyisegDraft(v ?? line.mennyiseg)}
@@ -370,6 +371,7 @@ export default function LineRow({
             <Box flexGrow="1">
               <NumberField
                 value={line.tenylegesEgysegar}
+                penz
                 unit={currency}
                 min={0}
                 onCommit={(v) =>

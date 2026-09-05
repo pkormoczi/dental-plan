@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { basePrice, formatMoney, formatPrice, savosHatarForditott } from './money';
+import {
+  basePrice,
+  formatCentForInput,
+  formatMoney,
+  formatPrice,
+  parseEuroInput,
+  savosHatarForditott,
+} from './money';
 
 describe('formatMoney', () => {
   it('formats HUF as thousands-separated integer with Ft suffix', () => {
@@ -59,6 +66,18 @@ describe('formatMoney', () => {
     it('DE + HUF 4-jegyű összegnél is tagol -- a hu-HU 4-jegyű kivétele locale-specifikus, nem C4-szabály', () => {
       expect(formatMoney(5000, 'HUF', 'de')).toBe('5.000 Ft');
     });
+  });
+});
+
+describe('formatCentForInput / parseEuroInput', () => {
+  it('1000 € fölött sincs ezres elválasztó', () => {
+    expect(formatCentForInput(900000)).toBe('9000,00');
+  });
+
+  it('a beviteli formátum visszaolvasható a saját parserével', () => {
+    for (const cent of [82500, 30000, 900000, 1234567]) {
+      expect(parseEuroInput(formatCentForInput(cent))).toBe(cent);
+    }
   });
 });
 

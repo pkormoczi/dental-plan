@@ -366,10 +366,11 @@ describe('PriceListAdminPage', () => {
 
   // Ugyanaz az updater-konkurencia, de az `ar` objektumot EGÉSZBEN cserélő írások
   // (toggleType/setFixPrice/setEurFix stb.) között: egy HUF-ár blur-commit
-  // közben induló EUR-stepper kattintás korábban a stale `item.ar`-t
+  // közben induló EUR-mező blur-commit korábban a stale `item.ar`-t
   // spread-elte volna vissza, elveszítve a másik pénznem közben committált
-  // értékét.
-  it('HUF ár blur-commit után azonnali EUR-stepper kattintás mindkét árat megőrzi (updater-konkurencia)', async () => {
+  // értékét. (A pénzmezőn a numberfield-penzmezo-megerosites tétel óta nincs
+  // ▲/▼ stepper -- a második commitot itt egy másik blur váltja ki.)
+  it('HUF ár blur-commit után azonnali EUR-ár blur-commit mindkét árat megőrzi (updater-konkurencia)', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -379,11 +380,11 @@ describe('PriceListAdminPage', () => {
 
     const hufInput = screen.getByLabelText('HUF ár');
     const eurInput = screen.getByLabelText('EUR ár (€)');
-    const eurStepper = within(eurInput.parentElement!).getByRole('button', { name: 'Növelés' });
 
     fireEvent.change(hufInput, { target: { value: '55000' } });
     fireEvent.blur(hufInput);
-    fireEvent.click(eurStepper);
+    fireEvent.change(eurInput, { target: { value: '0,01' } });
+    fireEvent.blur(eurInput);
 
     await waitFor(() => {
       const cbct = findItem(readPriceList(), 'CBCT');

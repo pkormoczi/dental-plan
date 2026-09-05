@@ -13,6 +13,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { t } from '../design/tokens';
 import { formatCentForInput, parseEuroInput } from '../domain/money';
+import { useMentesJelzo } from './useMentesJelzo';
 
 // Radix TextField.Root méretéhez igazítva (a NumberField a szomszéd
 // mezőkkel, pl. a "fogak" TextField.Root-tal egy sorban áll) -- nincs
@@ -36,6 +37,14 @@ export interface NumberFieldProps {
   /** `null` = nincs érték (pl. egy tételnek nincs EUR ára) -- üresen jelenik meg, nem "0". */
   value: number | null;
   onCommit: (next: number) => void;
+  /**
+   * Szerződéses összeget hordoz-e a mező -- KÖTELEZŐ, mert a `unit` megléte
+   * nem különbözteti meg a HUF ár-mezőt a darabszámtól (`unit` alapból is
+   * 'HUF'). `penz` mezőn nincs ▲/▼ gomb és a nyíl-billentyű nem léptet: egy
+   * ±1 Ft/cent sosem hasznos szerződéses összegen, a véletlen elmozdulás
+   * kockázata viszont valós (doctor-review 2026-09-05, 6. megállapítás).
+   */
+  penz: boolean;
   /** 'EUR': a mező euróban jelenik meg, a commit centben történik (a tárolás változatlan). */
   unit?: 'HUF' | 'EUR';
   /** Ez alatti (parseolt) érték nem commitálódik -- visszaáll az utolsó ismert értékre. */
@@ -77,6 +86,7 @@ function parseDraft(text: string, unit: 'HUF' | 'EUR'): number | null {
 export default function NumberField({
   value,
   onCommit,
+  penz,
   unit = 'HUF',
   min,
   onDraftChange,
@@ -88,6 +98,10 @@ export default function NumberField({
 }: NumberFieldProps) {
   const [focused, setFocused] = useState(false);
   const [draft, setDraft] = useState(() => formatForDisplay(value, unit));
+  // Rövid, magától elmúló jelzés a néma visszaálláshoz -- a projekt meglévő
+  // ref-alapú, unmountkor takarító időzítő-primitívje (lásd useMentesJelzo.ts
+  // fejlécét: negyedik kézi setTimeout-másolat helyett ezt hasznosítja újra).
+  const { saved: revertJelzesLathato, jelez: mutatRevertJelzest } = useMentesJelzo(2500);
 
   // A `value` propból csak akkor szinkronizálunk, ha a mező NINCS
   // fókuszban -- így egy időközben érkező (pl. reset utáni) prop-frissítés
@@ -103,8 +117,13 @@ export default function NumberField({
     const parsed = parseDraft(draft, unit);
     if (parsed == null || !Number.isFinite(parsed) || (min != null && parsed < min)) {
       // Üres/érvénytelen/min alatti érték -- SOHA nem esik 0-ra, az utolsó
-      // ismert értékre áll vissza (P0-4).
-      setDraft(formatForDisplay(value, unit));
+      // ismert értékre áll vissza (P0-4). A visszaállás NEM néma (lásd a
+      // review 6. megállapítását): csak akkor jelez, ha a piszkozat tényleg
+      // eltért a visszaállított megjelenítéstől, hogy egy üres -> üres blur
+      // (pl. az ElolegBlokk frissen bekapcsolt mezőjén) ne fusson riasztásba.
+      const visszaallitott = formatForDisplay(value, unit);
+      if (draft !== visszaallitott) mutatRevertJelzest();
+      setDraft(visszaallitott);
       onDraftChange?.(value);
       return;
     }
@@ -117,7 +136,9 @@ export default function NumberField({
   // A natív <input type="number"> nyilai (és a Fel/Le billentyű) az EUR-mező
   // vessző-tizedes megjelenítése miatt bevezetett type="text"-tel nem
   // működnek -- ez pótolja őket, a natív mezőhöz hasonlóan AZONNAL
-  // commitálva, blur nélkül.
+  // commitálva, blur nélkül. NEM pénzmezőn (`penz` prop, lásd fent) -- egy
+  // ±1 Ft/cent lépés sosem hasznos szerződéses összegen, csak véletlen
+  // elmozdulás kockázata (doctor-review 2026-09-05, 6. megállapítás).
   function step(delta: number) {
     const base = parseDraft(draft, unit) ?? value ?? 0;
     const next = Math.round(base) + delta;
@@ -138,7 +159,7 @@ export default function NumberField({
         style={{
           ...inputStyle,
           textAlign,
-          paddingRight: 16,
+          paddingRight: penz ? 7 : 16,
           fontVariantNumeric: 'tabular-nums',
           ...style,
         }}
@@ -165,39 +186,63 @@ export default function NumberField({
           } else if (e.key === 'Escape') {
             setDraft(formatForDisplay(value, unit));
             onDraftChange?.(value);
-          } else if (e.key === 'ArrowUp') {
+          } else if (!penz && e.key === 'ArrowUp') {
             e.preventDefault();
             step(1);
-          } else if (e.key === 'ArrowDown') {
+          } else if (!penz && e.key === 'ArrowDown') {
             e.preventDefault();
             step(-1);
           }
         }}
       />
-      <div style={stepperWrap}>
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-label="Növelés"
-          style={stepperBtnTop}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => step(1)}
-        >
-          ▲
-        </button>
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-label="Csökkentés"
-          style={stepperBtnBottom}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => step(-1)}
-        >
-          ▼
-        </button>
+      {!penz && (
+        <div style={stepperWrap}>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label="Növelés"
+            style={stepperBtnTop}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => step(1)}
+          >
+            ▲
+          </button>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label="Csökkentés"
+            style={stepperBtnBottom}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => step(-1)}
+          >
+            ▼
+          </button>
+        </div>
+      )}
+      {/* Mindig a DOM-ban, csak a szövege vált -- egy dinamikusan beszúrt
+          aria-live régiót sok képernyőolvasó nem mond ki (lásd
+          PriceListAdminPage.tsx a mentés-jelzőnél). */}
+      <div aria-live="polite" style={revertHintStyle(revertJelzesLathato)}>
+        {revertJelzesLathato ? 'Érvénytelen érték — az előző maradt' : ''}
       </div>
     </div>
   );
+}
+
+function revertHintStyle(lathato: boolean): CSSProperties {
+  return {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    marginTop: lathato ? 2 : 0,
+    padding: lathato ? '1px 4px' : 0,
+    fontSize: 11,
+    whiteSpace: 'nowrap',
+    color: t.warn,
+    background: lathato ? t.warnBg : 'transparent',
+    borderRadius: t.radius,
+    pointerEvents: 'none',
+  };
 }
 
 const stepperWrap: CSSProperties = {

@@ -128,6 +128,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
                     // csak ÚJ node létrejöttekor tüzel.
                     key="szazalek"
                     value={szazalek}
+                    penz={false}
                     min={0}
                     autoFocus
                     aria-label="Előleg százaléka"
@@ -162,6 +163,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
                   <NumberField
                     key="osszeg"
                     value={elolegOsszeg}
+                    penz
                     unit={currency}
                     min={0}
                     autoFocus

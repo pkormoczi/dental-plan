@@ -314,7 +314,7 @@ export default function ItemEditor({
           <>
             <Box>
               <Field label="HUF ár — tól">
-                <NumberField value={hufAr.min} min={0} onCommit={(v) => setSavosPrice({ min: v })} />
+                <NumberField value={hufAr.min} penz min={0} onCommit={(v) => setSavosPrice({ min: v })} />
               </Field>
               <ArFigyelmeztetes
                 ertek={hufAr.min}
@@ -326,7 +326,7 @@ export default function ItemEditor({
             </Box>
             <Box>
               <Field label="HUF ár — ig">
-                <NumberField value={hufAr.max} min={0} onCommit={(v) => setSavosPrice({ max: v })} />
+                <NumberField value={hufAr.max} penz min={0} onCommit={(v) => setSavosPrice({ max: v })} />
               </Field>
               <ArFigyelmeztetes
                 ertek={hufAr.max}
@@ -347,6 +347,7 @@ export default function ItemEditor({
             <Field label="HUF ár">
               <NumberField
                 value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
+                penz
                 min={0}
                 onCommit={setFixPrice}
                 onBlur={pendingActivation ? handleFixPriceBlur : undefined}
@@ -383,6 +384,7 @@ export default function ItemEditor({
               <Field label="EUR ár — tól (€)">
                 <NumberField
                   value={eurAr.min}
+                  penz
                   unit="EUR"
                   min={0}
                   onCommit={(v) => setEurSavos({ min: v })}
@@ -400,6 +402,7 @@ export default function ItemEditor({
               <Field label="EUR ár — ig (€)">
                 <NumberField
                   value={eurAr.max}
+                  penz
                   unit="EUR"
                   min={0}
                   onCommit={(v) => setEurSavos({ max: v })}
@@ -430,6 +433,7 @@ export default function ItemEditor({
               <Field label="EUR ár (€)">
                 <NumberField
                   value={eurAr.tipus === 'FIX' ? eurAr.ertek : 0}
+                  penz
                   unit="EUR"
                   min={0}
                   onCommit={setEurFix}
