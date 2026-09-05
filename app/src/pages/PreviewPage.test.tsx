@@ -1120,6 +1120,50 @@ describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
   );
 });
 
+// 113. tétel: a "sablon nem érhető el a megfelelő nyelven" (HU-visszaesés)
+// jelzés csak akkor jár, ha a magyar tartalék ténylegesen a nyomtatványra
+// kerül -- a mai seeddel a Garancia mindkét nyelven placeholder
+// (storage/seed/templates.ts), tehát a szakasz a "kimaradó szakasz" tétellel
+// kimarad, a HU-visszaesés-jelzés viszont NEM adhat valótlant arról, hogy
+// helyette a magyar szöveg jelenne meg.
+describe('PreviewPage -- HU-visszaesés elmarad, ha a magyar tartalék is placeholder', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it(
+    'német terven, alap seeddel csak a "Kimaradó szakaszok: Garancia" tétel jelenik meg, a HU-visszaesés-jelzés nem',
+    async () => {
+      const user = userEvent.setup();
+      seedGermanPlanWithOneTranslatedItem();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const nameInput = await screen.findByPlaceholderText('Kovács János');
+      await user.type(nameInput, 'Teszt Garancia Placeholder');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'zahnextraktion');
+      await user.click(await screen.findByText('Zahnextraktion'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+
+      expect(await screen.findByText(/Kimaradó szakaszok: Garancia/)).toBeInTheDocument();
+      expect(
+        screen.queryByText(/A tervhez tartozó sablon nem érhető el a megfelelő nyelven/),
+      ).not.toBeInTheDocument();
+    },
+    20000,
+  );
+});
+
 /** Ugyanaz a minta, mint `PlanEditorPage.test.tsx` `seedWithCsomagItem`-je. */
 function seedWithCsomagItem() {
   const custom = {

@@ -2748,3 +2748,19 @@ karbantartási kör négy önálló javítása.
   duplikáció-megerősítőn át választott meglévő páciens egyike sem kérdez.
   Részletek: `docs/03-funkcionalis-spec.md` § 9. Páciensek és § „Új terv
   indítása", `docs/07-felulet-rendszer.md` § Komponensek.
+
+### 113. tétel: Véglegesítési checklist "sablon nem érhető el a megfelelő nyelven" üzenete hamis, ha a magyar tartalék is placeholder — KÉSZ
+
+- **Méret:** kicsi — egy meglévő predikátum (`sablonNyomtathato()`) újbóli
+  hívása egy már meglévő segédfüggvényben, plusz egy integrációs teszt.
+- **Megvalósítás:** a `PreviewPage.tsx` `loadOrFallback()`-ja mostantól a
+  HU-tartalékra eséskor nem feltétel nélkül `fellback: true`-t állít be,
+  hanem a betöltött tartalék szövegére futtatja a `sablonNyomtathato()`-t
+  (ugyanazt a predikátumot, ami a `TervDocument.tsx`-en a szekció
+  kihagyásáról is dönt) — mindhárom sablonra (nyilatkozat, fizetési
+  feltételek, garancia) egységesen. Egy mindkét nyelven placeholder
+  szakasznál (pl. a mai seed Garancia szövege) ezután a checklisten
+  kizárólag a helyes „a szakasz kimarad a nyomtatványból" tétel jelenik
+  meg, a valótlan „helyette a magyar szöveg jelenik meg" nem. Részletek:
+  `docs/03-funkcionalis-spec.md` § Véglegesítési checklist és § Sablon-
+  placeholder őr.

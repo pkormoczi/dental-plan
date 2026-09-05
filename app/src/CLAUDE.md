@@ -194,7 +194,12 @@ garancia") segédfüggvénye, szintén ne írd újra:
   (HU-visszaesés utáni) fizetési feltételek/garancia szövegre hívja, hogy
   eldöntse, a szakasz a címével együtt a nyomtatványra kerül-e; a
   `PreviewPage.tsx` ugyanezt hívja a véglegesítés-őr puha „kimaradó szakasz"
-  checklist-tételéhez, hogy a két hely ne térjen el egymástól
+  checklist-tételéhez, hogy a két hely ne térjen el egymástól. Ugyanez a
+  predikátum dönti el a `loadOrFallback()`-ban a „Sablon HU-visszaesés"
+  jelzést is: a magyar tartalékra esés csak akkor jelzendő, ha az a
+  tartalék ténylegesen nyomtatható, különben a HU-visszaesés és a
+  „kimaradó szakasz" tétel egymásnak ellentmondó üzenetet adna ugyanarra
+  a hiányra
 
 A terv-szintű „kerek végösszeg" kedvezmény tétel
 (`docs/02-domain-modell.md` § Terv-szintű kedvezmény, D25)

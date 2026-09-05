@@ -945,7 +945,14 @@ más szöveget kap emiatt) — a maradék a mai relatív sorrendjében:
   feltételek/garancia sablon nem érhető el a megfelelő nyelven (lásd
   lent „Sablon-placeholder őr") — helyette a magyar szöveg jelenik meg a
   nyomtatványon. A fenti tételnél kevésbé súlyos (a tartalom megvan,
-  csak rossz nyelven), ezért a puha csoportban közvetlenül utána áll.
+  csak rossz nyelven), ezért a puha csoportban közvetlenül utána áll. A
+  jelzés kizárólag akkor jár, ha a magyar tartalék ténylegesen a
+  nyomtatványra kerül (`sablonNyomtathato()`, ugyanaz a predikátum, mint a
+  fenti tétel szekció-kihagyásánál) — ha a tartalék maga is
+  placeholder-jelölésű vagy üres, a szakasz úgyis kimarad, és ezt már a
+  fenti tétel jelzi; enélkül a doki egyszerre látná a helyes „kimarad" és
+  a valótlan „helyette a magyar szöveg jelenik meg" üzenetet ugyanarra a
+  hiányra.
 - **Hiányzó egyéb páciensadat** (nem kötelező, de a nyomtatványon
   üresen marad).
 - **Nyelvi ellenőrzésre váró szövegek (D72):** a tervben van kézzel írt
@@ -1060,11 +1067,13 @@ fizetési feltételek/garancia szakasz ténylegesen a PDF-re kerülhet-e.
   sosem zár.** A fizetési feltételek szakasz „csak ajánlat" módban is
   mindig nyomtatódik, ezért ott a kényszerített ajánlat-mód nulla
   védelmet adna; helyette a hiányzó sablonnál is használt HU-visszaesés
-  fut le (a magyar szöveg jelenik meg), sárga figyelmeztetéssel. Ha a
+  fut le (a magyar szöveg jelenik meg), puha checklist-tétellel jelezve —
+  DE csak akkor, ha a magyar tartalék maga is nyomtatható; ha a
   HU-visszaesés UTÁN is placeholder (vagy üres) marad a ténylegesen
   felhasznált szöveg, a teljes szakasz — a címével együtt — kimarad a
   nyomtatványból (`pdf/TervDocument.tsx`), a véglegesítés-őr pedig egy
-  ÚJ, PUHA checklist-tételen jelzi a dokinak, mely szakaszok maradnak ki.
+  MÁSIK, PUHA checklist-tételen jelzi a dokinak, mely szakaszok maradnak
+  ki — a két tétel nem jelenik meg egyszerre ugyanarra a szakaszra.
 - **Garancia placeholder → ugyanaz, mint a fizetési feltételeknél.** A
   garancia szakasz „csak ajánlat" módban is mindig nyomtatódik, tehát
   nála sincs mit védeni egy kényszerített ajánlat-móddal. A magyar

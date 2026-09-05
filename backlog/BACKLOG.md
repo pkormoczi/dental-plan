@@ -15,18 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 113. tétel: Véglegesítési checklist "sablon nem érhető el a megfelelő nyelven" üzenete hamis, ha a magyar tartalék is placeholder
-
-  A `pages/PreviewPage.tsx` `loadOrFallback()` a HU-tartalékra eséskor
-  `fellback: true`-t állít be attól függetlenül, hogy a HU-tartalom maga
-  használható-e — emiatt egy mindkét nyelven placeholder szakasznál (ma:
-  Garancia) a checklist EGYSZERRE adja a helyes "kimarad a nyomtatványból"
-  ÉS a hamis "helyette a magyar szöveg jelenik meg" üzenetet, holott a
-  ténylegesen generált PDF-en semmilyen magyar szöveg nem jelenik meg ebből
-  a szakaszból. Forrás: `docs/reviews/2026-09-05-doctor-review-nemet-euro.md`
-  2. megállapítás.
-  **Terv:** `backlog/plans/backlog-113-sablon-fallback-jelzes-terv.md`
-
 ### 114. tétel: "Törzsadat létrehozása" lépés-elhagyási dialógus minden navigációnál újra felugrik
 
   A `pages/patientPage/TorzsadatSyncCard.tsx` `handleLepesElhagyas()` a

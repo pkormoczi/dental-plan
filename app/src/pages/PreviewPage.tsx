@@ -141,7 +141,13 @@ export default function PreviewPage() {
     // tervhez tartozó nyelven nincs sablon (pl. régi localStorage-ban a
     // német bevezetése előtt keletkezett), a magyar szövegre esünk vissza --
     // soha nem üres nyilatkozattal/hibával fut le a PDF. Ezt a
-    // `sablonFallback`-en keresztül jelezzük is (lásd a sárga sávot lent).
+    // `sablonFallback`-en keresztül jelezzük is (lásd a "Sablon HU-
+    // visszaesés" checklist-tételt, `VeglegesitesChecklist.tsx`) -- de
+    // CSAK ha a tartalék szövege ténylegesen a nyomtatványra kerül
+    // (`sablonNyomtathato()`, ugyanaz a predikátum, mint a `TervDocument.tsx`
+    // szekció-kihagyásánál): egy magyarul is placeholder tartalékra esve a
+    // szakasz úgyis kimarad, "helyette a magyar szöveg jelenik meg" ekkor
+    // valótlan lenne.
     async function loadOrFallback(
       load: () => Promise<{ name: string; body: string }>,
       fallback: () => Promise<{ name: string; body: string }>,
@@ -153,10 +159,14 @@ export default function PreviewPage() {
       // váltja ki (lásd nyilatkozatIsPlaceholder lent), nem egy HU-visszaesés.
       extraFallbackCondition?: (result: { name: string; body: string }) => boolean,
     ) {
+      async function toFallback() {
+        const result = await fallback();
+        return { ...result, fellback: sablonNyomtathato(result.body) };
+      }
       try {
         const result = await load();
         if (extraFallbackCondition?.(result)) {
-          return { ...(await fallback()), fellback: true };
+          return toFallback();
         }
         return { ...result, fellback: false };
       } catch (err) {
@@ -164,7 +174,7 @@ export default function PreviewPage() {
         // nyeljük el -- minden mást (pl. egy jövőbeli sérült bejegyzés)
         // továbbdobunk, hogy ne tűnjön el némán.
         if (err instanceof Error && err.message.startsWith('Nincs ')) {
-          return { ...(await fallback()), fellback: true };
+          return toFallback();
         }
         throw err;
       }
