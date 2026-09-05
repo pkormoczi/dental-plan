@@ -1,5 +1,5 @@
 // Az "Érintett fogak" lenyíló, read-only fogtérkép-panel a Terv részletei
-// nézeten -- lásd docs/03-funkcionalis-spec.md § 11. A `components/
+// nézeten. A `components/
 // ToothChartPanel.tsx` (szerkesztő) mintáját követi (alapból csukva,
 // feltételes render, hogy csukva a fogtérkép egyetlen Tab-megállója is
 // kiessen a Tab-sorrendből), de KÜLÖN komponens: nincs fázisválasztó és

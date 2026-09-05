@@ -1,4 +1,4 @@
-// docs/02-domain-modell.md § Tétel-leírás: tétel-leírás + csomag-jelölés az Árlista
+// Tétel-leírás + csomag-jelölés az Árlista
 // adminban. Külön fájlban a PriceListAdminPage.test.tsx mellett -- a fő
 // fájl 25+ tesztje egyetlen vitest-fájlon belül kumulatívan lassul (lásd
 // vite.config.ts testTimeout-kommentje a "kategória-átnevezés" tesztről),

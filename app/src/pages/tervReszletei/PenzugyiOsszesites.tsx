@@ -1,5 +1,5 @@
-// A "pénzügyi összesítés" slot tartalma a Terv részletei nézeten -- lásd
-// docs/03-funkcionalis-spec.md § 11. Minden MEGJELENÍTETT szám a mentett
+// A "pénzügyi összesítés" slot tartalma a Terv részletei nézeten.
+// Minden MEGJELENÍTETT szám a mentett
 // `plan.osszesitok`-ból jön, nem a `tervVegosszeg()` újraszámolásából: egy
 // lezárt dokumentumnak az aláírt papírral kell egyeznie, nem a mai kódból
 // újraszámolt értékkel. Az újraszámolásnak itt EGYETLEN szerepe van, az

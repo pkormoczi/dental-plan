@@ -16,14 +16,15 @@ export interface EgyediVegosszegBlokkProps {
 }
 
 /**
- * Egyedi végösszeg (D69, a D25 fix-összeg elvének bővítése). A `Summary` ÉS
+ * Egyedi végösszeg (a fix-összeg tárolás elvének bővítése: az eltérés tárolódik,
+ * nem a begépelt cél -- egy utólagos sormódosítás különben némán átírná). A `Summary` ÉS
  * az `ElolegBlokk` KÖZÖTT áll: az előleg a CSÖKKENTETT végösszegből számol,
  * a vizuális sorrend kövesse a számítási sorrendet.
  *
  * A doki a kívánt VÉGÖSSZEGET gépeli be, de a `Plan`-en előjeles fix
  * eltérés tárolódik (`kedvezmenyOsszeg` -- pozitív kedvezmény, negatív
- * felár, D25/D69). A `NumberField`-nek nincs `max` propja, és a felső
- * korlát D69 óta nincs is -- a cél a sorok összege fölé is állítható.
+ * felár). A `NumberField`-nek nincs `max` propja, és a felső
+ * korlát sincs -- a cél a sorok összege fölé is állítható.
  *
  * A kapcsoló bekapcsolása KÜLÖN lokális `be` állapotot tart: a
  * `kedvezmenyOsszeg` `null` marad, amíg a doki nem commitál (blur/Enter),
@@ -61,11 +62,11 @@ export default function EgyediVegosszegBlokk({
   const [pendingZero, setPendingZero] = useState<{ kedvezmeny: number } | null>(null);
 
   // Van-e ÉRVÉNYES, commitált érték a mezőben -- ezt nézi a kötelező-mező
-  // hiba (D521: csak blur után), NEM a `kedvezmenyOsszeg` propot és NEM
+  // hiba (csak blur után), NEM a `kedvezmenyOsszeg` propot és NEM
   // `hiba`-val azonos módon state-et: a NumberField saját `onBlur`-ja
   // ugyanabban a tickben fut le, mint ami a commitot kiváltja, egy
   // `setState` hatása csak a KÖVETKEZŐ renderben érne vissza (lásd
-  // ElolegBlokk D518-kommentje) -- ref kell, hogy a blur-kor friss legyen.
+  // ElolegBlokk blur-utáni-hiba kommentje) -- ref kell, hogy a blur-kor friss legyen.
   const helyesErtekRef = useRef(kedvezmenyOsszeg != null);
 
   function commitCel(v: number) {
@@ -119,7 +120,7 @@ export default function EgyediVegosszegBlokk({
                 // szabad elvinni a fókuszt.
                 autoFocus={kedvezmenyOsszeg == null}
                 onCommit={commitCel}
-                // D521: a kötelező-mező hiba csak blur/véglegesítési kísérlet
+                // A kötelező-mező hiba csak blur/véglegesítési kísérlet
                 // UTÁN jelenik meg, nem azonnal a kapcsoló bekapcsolásakor.
                 onBlur={() => setHiba(!helyesErtekRef.current)}
               />

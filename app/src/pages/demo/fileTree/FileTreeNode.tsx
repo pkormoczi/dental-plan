@@ -1,13 +1,13 @@
 // Egyetlen csomópont a Filerendszer fájában -- rekurzív, a ToothChartPanel
 // diszklózúra-mintáját követi (lokális useState, feltételes render, nincs
-// CSS-elrejtés, nincs animáció -- lásd docs/07-felulet-rendszer.md
-// "Billentyűzet": egy csukott mappa gyermekeinek teljesen ki kell esniük a
+// CSS-elrejtés, nincs animáció -- lásd app/src/CLAUDE.md
+// akadálymentesség: egy csukott mappa gyermekeinek teljesen ki kell esniük a
 // Tab-sorrendből). A gyökér és az első szint alapból nyitva van
 // (`depth === 0`), minden mélyebb szint csukva -- ez a mappák/tervek
 // számának növekedésével tartja áttekinthetőnek a fát.
 //
-// A mappa-/fájlnevek `t.mono`-val jelennek meg -- ez a docs/07 "technikai
-// azonosítókra" fenntartott monospace-kivétele, egy fájlfában a fájlnév
+// A mappa-/fájlnevek `t.mono`-val jelennek meg -- ez a "technikai
+// azonosítókra" fenntartott monospace-kivétel, egy fájlfában a fájlnév
 // pontosan ilyen azonosító. A kiválasztott sor háttere `t.accentWash`
 // (a tokens.ts szerint kifejezetten erre a szerepre szánt token, eddig
 // sehol nem volt bevetve) -- nincs új szín bevezetve.

@@ -1,4 +1,4 @@
-// "Terv címe" mező -- backlog-51 (D61). Két írási útvonal a lánc állapotától
+// "Terv címe" mező -- backlog-51. Két írási útvonal a lánc állapotától
 // függően:
 //
 // - MÁR MENTETT lánc (`plan.tervId !== ''`): a mező a `terv-cimke.json`

@@ -12,7 +12,7 @@ import { t } from '../../design/tokens';
 /**
  * Egy mező (DOB vagy telefon) megjelenítése. Ellentmondásnál KIZÁRÓLAG ez az
  * egy érték kap `⚠` prefixet és `t.warn` színt -- a jelölés soha nem csak
- * szín (docs/07-felulet-rendszer.md): a `⚠` a vizuális jel, az `aria-label`
+ * szín (akadálymentesség, lásd app/src/CLAUDE.md): a `⚠` a vizuális jel, az `aria-label`
  * a mező nevét is kimondja a képernyőolvasónak, a `⚠` karakter ismétlése
  * nélkül.
  */

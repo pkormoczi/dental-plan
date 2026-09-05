@@ -1,8 +1,8 @@
-// DEMO oldal -- backlog-29 (redesign DP-001/DP-088, C1 feloldás): a
+// DEMO oldal -- backlog-29 (C1 feloldás): a
 // fejlesztési/demonstrációs felület egy top-level menüpont alá gyűjtve,
 // elkülönítve az üzleti workflow-tól -- ide költözött a korábban önálló
 // Filerendszer nézet és a Kezdőlapról levett Funkciólista/Változásnapló
-// kártya. D54 óta a globális, több-pácienses terv-lista is itt él ("Összes
+// kártya. A globális, több-pácienses terv-lista is itt él ("Összes
 // terv" fül) -- ez az EGYETLEN fül, ami valódi terv-adatot mutat és élő
 // írási akciókat kínál (Új terv, Új verzió, Másolás, Letöltés), a többi
 // négy tisztán olvasó/demonstrációs.
@@ -39,7 +39,7 @@ export default function DemoPage() {
 
       {/* `replace`: a fülváltás ne szemetelje tele a history-t, ÉS az URL
           már a helyes fülön álljon MIELŐTT a doki egy sorra kattint --
-          enélkül a böngésző-"vissza" a `useListStateMemory` (D43/D51)
+          enélkül a böngésző-"vissza" a `useListStateMemory`
           POP-alapú megőrzését fülbe zárva, elérhetetlenül hagyná. */}
       <Tabs.Root value={aktivFul} onValueChange={(v) => navigate(`/demo/${v}`, { replace: true })}>
         <Tabs.List mb="4">

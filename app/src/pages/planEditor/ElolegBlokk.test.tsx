@@ -35,10 +35,10 @@ function renderBlokk(grand: number, initial?: number | null) {
   );
 }
 
-// backlog-9/D66: a doki eddig fejben osztotta ki az előleget és kézzel írta
+// backlog-9: a doki eddig fejben osztotta ki az előleget és kézzel írta
 // a papír aljára; az előleg mostantól abszolút összeg, nem százalék.
-describe('az előleg-kapcsoló (D66: abszolút összeg)', () => {
-  it('bekapcsoláskor üresen, fókuszáltan jelenik meg, előtöltés nélkül (D517)', async () => {
+describe('az előleg-kapcsoló (abszolút összeg)', () => {
+  it('bekapcsoláskor üresen, fókuszáltan jelenik meg, előtöltés nélkül', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
@@ -66,7 +66,7 @@ describe('az előleg-kapcsoló (D66: abszolút összeg)', () => {
     expect(screen.queryByText(/Add meg az előleg összegét/)).not.toBeInTheDocument();
   });
 
-  it('explicit 0 beírása után blur/Enterre a kapcsoló automatikusan kikapcsol (D519)', async () => {
+  it('explicit 0 beírása után blur/Enterre a kapcsoló automatikusan kikapcsol', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
@@ -81,7 +81,7 @@ describe('az előleg-kapcsoló (D66: abszolút összeg)', () => {
     expect(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ })).not.toBeChecked();
   });
 
-  it('kötelező-mező hiba csak blur után jelenik meg, bekapcsoláskor még nem (D518)', async () => {
+  it('kötelező-mező hiba csak blur után jelenik meg, bekapcsoláskor még nem', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
@@ -95,7 +95,7 @@ describe('az előleg-kapcsoló (D66: abszolút összeg)', () => {
     expect(await screen.findByText(/Add meg az előleg összegét/)).toBeInTheDocument();
   });
 
-  it('a fizetendőt meghaladó előleg inline hard errort ad, az érték nem vágódik le (D326)', async () => {
+  it('a fizetendőt meghaladó előleg inline hard errort ad, az érték nem vágódik le', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 

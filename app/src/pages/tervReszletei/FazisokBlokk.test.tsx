@@ -1,6 +1,5 @@
-// A Terv részletei nézet fázisok/kezelési sorok blokkjának tesztje -- lásd
-// docs/03-funkcionalis-spec.md § 11. "Terv részletei (véglegesített
-// verzió)". A komponens tisztán prezentációs (nincs storage-/router-
+// A Terv részletei nézet fázisok/kezelési sorok blokkjának tesztje.
+// A komponens tisztán prezentációs (nincs storage-/router-
 // függősége), ezért önállóan renderelhető `<Theme>` alatt, a
 // `TervReszleteiPage.test.tsx` `makePlan()` mintáján épített fixtúrákkal.
 

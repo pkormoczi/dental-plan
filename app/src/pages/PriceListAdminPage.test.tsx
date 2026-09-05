@@ -91,7 +91,7 @@ describe('PriceListAdminPage', () => {
     seedPriceListWithNoEurPrices();
   });
 
-  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e (docs/07)', async () => {
+  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e', async () => {
     renderAdmin();
     expect(
       await screen.findByRole('textbox', { name: 'Keresés a tételek között' }),
@@ -151,7 +151,7 @@ describe('PriceListAdminPage', () => {
     expect(cbct.ar.EUR).toEqual({ tipus: 'FIX', ertek: 8200 });
   });
 
-  it('inactivating a row asks for confirmation, then persists aktiv:false without touching its id (D17: never delete/reuse)', async () => {
+  it('inactivating a row asks for confirmation, then persists aktiv:false without touching its id (never delete/reuse)', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -290,7 +290,7 @@ describe('PriceListAdminPage', () => {
     expect(await screen.findByText(/118 \/ 118 tétel látszik/)).toBeInTheDocument();
   });
 
-  it('the "Fix → sávos" toggle converts BOTH the HUF and EUR price together (P0-2/D15)', async () => {
+  it('the "Fix → sávos" toggle converts BOTH the HUF and EUR price together (P0-2)', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -308,7 +308,7 @@ describe('PriceListAdminPage', () => {
     const cbct = findItem(readPriceList(), 'CBCT');
     // A HUF listaár (24000 Ft a seedben) ÉS a most beírt EUR ár (66 € =
     // 6600 cent) is min=max-ra vált -- korábban csak a HUF váltott, az EUR
-    // szerkezetileg csak FIX maradhatott (elveszítve a D15 `*`
+    // szerkezetileg csak FIX maradhatott (elveszítve a sávos `*`
     // lábjegyzet-védelmet egy német ajánlaton).
     expect(cbct.ar.HUF).toEqual({ tipus: 'SAVOS', min: 24000, max: 24000 });
     expect(cbct.ar.EUR).toEqual({ tipus: 'SAVOS', min: 6600, max: 6600 });
@@ -335,12 +335,12 @@ describe('PriceListAdminPage', () => {
     expect(cbct.ar.HUF).toEqual({ tipus: 'SAVOS', min: 65000, max: 24000 });
   });
 
-  // D31: a `patchItem` a friss `prev`-re merge-el (`PriceListAdminPage.tsx`
+  // Updater-szerződés (lásd app/src/storage/CLAUDE.md): a `patchItem` a friss `prev`-re merge-el (`PriceListAdminPage.tsx`
   // `commit`/`onPatch` union-szerződése) -- két KÜLÖNBÖZŐ sor gyors,
   // ugyanabban a tickben történő szerkesztése korábban a render-idejű
   // `priceList` closure-ből épített `{ ...priceList, tetelek: ... }` miatt
   // kiütötte volna egymást.
-  it('egy tickben két különböző sor csillaga/aktív jelölője is megmarad (D31 konkurencia)', async () => {
+  it('egy tickben két különböző sor csillaga/aktív jelölője is megmarad (updater-konkurencia)', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -364,12 +364,12 @@ describe('PriceListAdminPage', () => {
     });
   });
 
-  // Ugyanaz a D31-konkurencia, de az `ar` objektumot EGÉSZBEN cserélő írások
+  // Ugyanaz az updater-konkurencia, de az `ar` objektumot EGÉSZBEN cserélő írások
   // (toggleType/setFixPrice/setEurFix stb.) között: egy HUF-ár blur-commit
   // közben induló EUR-stepper kattintás korábban a stale `item.ar`-t
   // spread-elte volna vissza, elveszítve a másik pénznem közben committált
   // értékét.
-  it('HUF ár blur-commit után azonnali EUR-stepper kattintás mindkét árat megőrzi (D31 konkurencia)', async () => {
+  it('HUF ár blur-commit után azonnali EUR-stepper kattintás mindkét árat megőrzi (updater-konkurencia)', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -568,7 +568,7 @@ describe('PriceListAdminPage', () => {
       });
     });
 
-    it('Mégse eldob mindent, és a következő mentés még mindig a soron következő id-t kapja (D17)', async () => {
+    it('Mégse eldob mindent, és a következő mentés még mindig a soron következő id-t kapja', async () => {
       const user = userEvent.setup();
       renderAdmin();
       let dialog = await openUjTetelDialog(user);
@@ -796,12 +796,12 @@ describe('PriceListAdminPage', () => {
       expect(within(catPanel()).getByDisplayValue('Új kategória')).toBeInTheDocument();
     });
 
-    // D31: az id-/sorrend-számítás a `commit`-nek átadott recept BELSEJÉBEN,
+    // Az id-/sorrend-számítás a `commit`-nek átadott recept BELSEJÉBEN,
     // a friss `prev`-ből történik (`addCategory`, `PriceListAdminPage.tsx`) --
     // enélkül két gyors kattintás ugyanazt az id-t számolná ki egymástól
-    // függetlenül, D17-et sértve (tétel-id/kategória-id soha nem
+    // függetlenül, az id-újrahasznosítás tilalmát sértve (tétel-id/kategória-id soha nem
     // hasznosítható újra).
-    it('"+ Új kategória" gyors, egymást követő kétszeri megnyomása két KÜLÖNBÖZŐ id-t hoz létre (D31 konkurencia, D17)', async () => {
+    it('"+ Új kategória" gyors, egymást követő kétszeri megnyomása két KÜLÖNBÖZŐ id-t hoz létre (updater-konkurencia, id-újrahasznosítás nélkül)', async () => {
       const user = userEvent.setup();
       renderAdmin();
       await openCatPanel(user);

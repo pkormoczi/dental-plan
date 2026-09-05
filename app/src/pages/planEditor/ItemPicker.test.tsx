@@ -46,7 +46,7 @@ function renderPickerWithEgyedi(props: Partial<React.ComponentProps<typeof ItemP
 }
 
 describe('ItemPicker', () => {
-  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e (docs/07)', () => {
+  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e', () => {
     renderPicker();
     expect(screen.getByRole('textbox', { name: 'Tétel keresése' })).toBeInTheDocument();
   });

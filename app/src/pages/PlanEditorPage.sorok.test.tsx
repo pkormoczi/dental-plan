@@ -148,7 +148,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
   });
 });
 
-describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
+describe('PlanEditorPage -- nyelv és pénznem', () => {
   beforeEach(() => {
     localStorage.clear();
     // Az egyik teszt a teljes App-ot (HashRouter) rendereli -- a
@@ -233,14 +233,14 @@ describe('PlanEditorPage -- nyelv és pénznem (D21)', () => {
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
-    // 62. tétel (D71) óta egy beárazatlan tétel is találat -- ez a jelzés
+    // 62. tétel óta egy beárazatlan tétel is találat -- ez a jelzés
     // csak akkor jelenik meg, ha a NÉVegyezés is nulla találatot ad.
     await user.type(search, 'zzznincsilyentetel');
 
     expect(await screen.findByText(/egyetlen aktív tétel sincs beárazva/)).toBeInTheDocument();
   });
 
-  it('62. tétel (D71): egy a terv pénznemében beárazatlan tétel is megtalálható és felvehető, "—" listaárral, 0-ás ajánlati árral', async () => {
+  it('62. tétel: egy a terv pénznemében beárazatlan tétel is megtalálható és felvehető, "—" listaárral, 0-ás ajánlati árral', async () => {
     const user = userEvent.setup();
     seedWithNoEurPrices();
     render(<App />);
@@ -359,7 +359,7 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
     await user.type(nameInput, 'Gyökértömés (rövidítve)');
 
     // A név megváltozott, de az árlistai kötés (ár, becsült-ár chip) érintetlen
-    // -- a tetelId csak hivatkozásnak marad, a nevSnapshot önálló (D7).
+    // -- a tetelId csak hivatkozásnak marad, a nevSnapshot önálló.
     expect(screen.getByDisplayValue('Gyökértömés (rövidítve)')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Becsült ár', pressed: true })).toBeInTheDocument();
     expect(screen.getAllByDisplayValue('38000').length).toBeGreaterThan(0);
@@ -696,7 +696,7 @@ describe('PlanEditorPage -- 65. tétel: nyelvi review-jelvény', () => {
    * Magyar terv, aminek egy sora ÉS egy fázisa is kézzel írt szöveget
    * hordoz, ami korábban NÉMET nyelven íródott (a doki nyelvet váltott a
    * dokumentumon, de ezt a szöveget azóta nem nézte át) -- a `sorFallback`
-   * (D21) ezt hu terven sosem jelezné, a nyelvi review viszont igen.
+   * ezt hu terven sosem jelezné, a nyelvi review viszont igen.
    */
   function seedWithNyelviMismatch() {
     localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
@@ -740,11 +740,11 @@ describe('PlanEditorPage -- 65. tétel: nyelvi review-jelvény', () => {
     await user.click(gombok[0]);
     expect(screen.getAllByText('DE szöveg')).toHaveLength(3);
     expect(screen.getAllByRole('button', { name: 'Nyelv ellenőrizve' })).toHaveLength(3);
-    // Nincs "✓ ellenőrizve" sikerjelvény -- a figyelmeztetés egyszerűen eltűnik (D465).
+    // Nincs "✓ ellenőrizve" sikerjelvény -- a figyelmeztetés egyszerűen eltűnik.
     expect(screen.queryByText(/ellenőrizve/i)).not.toBeInTheDocument();
   });
 
-  it('puszta szóköz-javítás NEM hozza vissza a jelvényt; tényleges átírás igen, de a mismatch-elt mezőn a metaadat érintetlen marad (D480)', async () => {
+  it('puszta szóköz-javítás NEM hozza vissza a jelvényt; tényleges átírás igen, de a mismatch-elt mezőn a metaadat érintetlen marad', async () => {
     const user = userEvent.setup();
     seedWithNyelviMismatch();
     renderEditor();
@@ -755,7 +755,7 @@ describe('PlanEditorPage -- 65. tétel: nyelvi review-jelvény', () => {
     // Whitespace-only edit -- a mismatch-jelvény továbbra is ott van (nem tűnt el, nem is duplikálódott).
     expect(await screen.findAllByText('DE szöveg')).toHaveLength(4);
 
-    // Teljes átírás a JELENLEGI (hu) nyelven -- D480: önmagában nem old fel,
+    // Teljes átírás a JELENLEGI (hu) nyelven -- önmagában nem old fel,
     // a jelvény szám nem csökken (a sor jelvénye ugyanaz marad).
     await user.clear(nameInput);
     await user.type(nameInput, 'Fogeltávolítás (átírva)');

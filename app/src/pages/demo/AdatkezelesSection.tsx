@@ -1,4 +1,4 @@
-// Demó-only adatkezelés (a Kezdőlapról átköltöztetve, D39): a mockup
+// Demó-only adatkezelés (a Kezdőlapról átköltöztetve): a mockup
 // localStorage-alapú tárolójának visszaseedelése/kiürítése -- a végleges
 // FileSystemStorage-nak (2. fázis) nincs megfelelője egyiknek sem, ezért
 // ez a szekció maga is demó-only, mint a Filerendszer/Funkciók/Változásnapló

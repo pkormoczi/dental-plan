@@ -1,4 +1,4 @@
-// D79: a véglegesítés-őr (D76, `domain/veglegesitesOr.ts`) egységes
+// A véglegesítés-őr (`domain/veglegesitesOr.ts`) egységes
 // `VeglegesitesCsekklista`-jának read-only renderelése -- kiemelve a
 // `PreviewPage.tsx`-ből, hogy a két hasábos elrendezés (lásd ott) mindkét oldala
 // önálló, olvasható komponens maradjon. Nincs benne üzleti logika, tisztán
@@ -109,7 +109,7 @@ export function VeglegesitesChecklist({
                   {ROUTE_GOMB_FELIRAT[tetel.route]}
                 </Button>
               )}
-              {/* 65. tétel (D72): a guided review indítása -- a session-t a
+              {/* 65. tétel: a guided review indítása -- a session-t a
                   `NyelviReviewContext` tartja, a `NyelviReviewBar.tsx` viszi
                   a szerkesztőbe a dokit. */}
               {tetel.id === 'nyelvi-review' && nyelviReviewAction && (

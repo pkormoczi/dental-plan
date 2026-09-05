@@ -29,7 +29,7 @@ function renderSettingsOnTemplatesTab() {
   );
 }
 
-// D46: a NavBar-t IS rendereli, ugyanabban a router-fában -- a valós
+// A NavBar-t IS rendereli, ugyanabban a router-fában -- a valós
 // bekötés (`useNavGuard(dirty)` a SettingsPage-ben, a NavBar
 // kattintás-elfogása) csak így igazolható, nem a `renderSettings()` szűkebb
 // harness-ével.
@@ -53,7 +53,7 @@ function renderSettingsWithNavBar() {
   );
 }
 
-// docs/07-felulet-rendszer.md § Komponensek (Fülek): a `Tabs.Trigger`
+// Radix Tabs jsdom-gotcha: a `Tabs.Trigger`
 // jsdom alatt duplázott accessible name-et ad (a CSS-sel takart width-
 // tartalék span miatt) -- minden tab-lekérdezés regexet kap.
 async function goToTab(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
@@ -116,9 +116,9 @@ describe('SettingsPage', () => {
       vi.restoreAllMocks();
     });
 
-    // D49: a tabosítás óta a rendelő-mezők pufferelt draftba írnak, egy
+    // A tabosítás óta a rendelő-mezők pufferelt draftba írnak, egy
     // közös Mentés commitolja őket -- a race, amit ez a teszt EREDETILEG
-    // (D31) egy render-idejű `{ ...settings, ... }` closure ellen védett,
+    // egy render-idejű `{ ...settings, ... }` closure ellen védett,
     // egy `setDraft`-alapú pufferelt draft mellett szerkezetileg kizárt
     // (a functional setState mindig a legfrissebb draftra épít). A teszt
     // most azt ellenőrzi, hogy egy Mentés mindkét, egy tickben szerkesztett
@@ -155,7 +155,7 @@ describe('SettingsPage', () => {
     });
   });
 
-  // D63: az "Orvosok" szekció soronkénti listája (korábban egyetlen
+  // Az "Orvosok" szekció soronkénti listája (korábban egyetlen
   // textarea) -- a seed egyetlen orvosa 'Dr. Mándoki István'.
   describe('Orvosok', () => {
     it('a seed orvosa megjelenik a listában, aktívan', async () => {
@@ -201,10 +201,10 @@ describe('SettingsPage', () => {
       });
     });
 
-    // D540, "nincs másik aktív" ág: az egyetlen orvos deaktiválása a
+    // "Nincs másik aktív" ág: az egyetlen orvos deaktiválása a
     // dialógus megnyitása NÉLKÜL engedett, figyelmeztetéssel; a Mentés
     // lefut, az alapertelmezettOrvos kulcs nélkül.
-    it('D540: az egyetlen orvos deaktiválása figyelmeztet, de a Mentés lefut, alapertelmezettOrvos nélkül', async () => {
+    it('az egyetlen orvos deaktiválása figyelmeztet, de a Mentés lefut, alapertelmezettOrvos nélkül', async () => {
       const user = userEvent.setup();
       renderSettings();
       await screen.findByText('Beállítások');
@@ -228,9 +228,9 @@ describe('SettingsPage', () => {
       });
     });
 
-    // D540, "van másik aktív" ág: a jelenlegi default deaktiválása modális
+    // "Van másik aktív" ág: a jelenlegi default deaktiválása modális
     // választót nyit; Mégse visszavonja magát a deaktiválást is.
-    it('D540: a default deaktiválása másik aktív orvos mellett modális választót nyit, Mégse visszavonja', async () => {
+    it('a default deaktiválása másik aktív orvos mellett modális választót nyit, Mégse visszavonja', async () => {
       const user = userEvent.setup();
       renderSettings();
       await screen.findByText('Beállítások');
@@ -248,7 +248,7 @@ describe('SettingsPage', () => {
       expect(screen.getByRole('checkbox', { name: 'Dr. Mándoki István aktív' })).toBeChecked();
     });
 
-    it('D540: a modálisban választott orvos lesz az új alapértelmezett, mentéskor perzisztálva', async () => {
+    it('a modálisban választott orvos lesz az új alapértelmezett, mentéskor perzisztálva', async () => {
       const user = userEvent.setup();
       renderSettings();
       await screen.findByText('Beállítások');
@@ -323,7 +323,7 @@ describe('SettingsPage', () => {
     });
   });
 
-  describe('Tab-váltás nem mentett módosítással (D49)', () => {
+  describe('Tab-váltás nem mentett módosítással', () => {
     it('dirty Rendelő adatai piszkozattal tab-váltás megerősítést kér -- a dialógus Mégse-je a lapon tart, a piszkozat megmarad', async () => {
       const user = userEvent.setup();
       renderSettings();
@@ -480,8 +480,8 @@ describe('SettingsPage', () => {
       expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v2.md')).toBeNull();
     });
 
-    // Garancia szakasz a nyomtatványon (docs/04-nyomtatvany-spec.md § „2.
-    // blokk — fizetési feltételek és garancia" § „Garancia"): harmadik
+    // Garancia szakasz a nyomtatványon (placeholder-jelölt szövege címestől kimarad,
+    // lásd app/src/pdf/CLAUDE.md): harmadik
     // sablon-szlot, ugyanazon a mechanizmuson --
     // a mező alapból a placeholder szöveget mutatja (a nyilatkozattal/
     // fizetési feltételekkel ellentétben, azoknak már van valódi tartalma).
@@ -527,9 +527,9 @@ describe('SettingsPage', () => {
       vi.restoreAllMocks();
     });
 
-    // docs/03-funkcionalis-spec.md § 7. Beállítások: a sablonszerkesztő
+    // A sablonszerkesztő
     // piszkozata a `dp:sablon-piszkozat` localStorage-kulcson él, néma
-    // visszaállítással -- ugyanaz a hibaosztály, amit a § Autosave a
+    // visszaállítással -- ugyanaz a hibaosztály, amit a terv-autosave a
     // tervszerkesztőre már megoldott.
     it('a piszkozat túléli az elnavigálást (unmount + újrarender) mentés nélkül', async () => {
       const user = userEvent.setup();
@@ -551,7 +551,7 @@ describe('SettingsPage', () => {
       expect(screen.getByText('Nem mentett módosítás')).toBeInTheDocument();
     });
 
-    // docs/03-funkcionalis-spec.md § 7. Beállítások: ugyanaz a
+    // Ugyanaz a
     // `useRef`-alapú in-flight zár, mint a `PreviewPage.tsx` `savingRef`-je --
     // a `disabled` prop önmagában megkerülhető egy render előtti második
     // kattintással (`fireEvent.click` szinkron, `await` nélkül a kettő közt).
@@ -575,7 +575,7 @@ describe('SettingsPage', () => {
       expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v2.md')).toBeNull();
     });
 
-    // D38: a szekció eddig egyedüliként nem kapott Mégse gombot,
+    // A szekció eddig egyedüliként nem kapott Mégse gombot,
     // holott a Save/Cancel-mintát máshol (PatientEditorPanel) már követte.
     it('a "Mégse" gomb tiltott, amíg nincs piszkozat-eltérés', async () => {
       const user = userEvent.setup();
@@ -634,7 +634,7 @@ describe('SettingsPage', () => {
       expect(nyilatkozat.value).toContain('Elmentetlen piszkozat.');
     });
 
-    // D46: korábban (D38 eredeti hatóköre) csak a "Mégse" gomb volt védve --
+    // Korábban (a dirty-őr eredeti hatóköre) csak a "Mégse" gomb volt védve --
     // a NavBar-ról elnavigálva a sablon-piszkozat némán elveszett.
     it('mentetlen sablon-piszkozattal a NavBar-kattintás is megerősítést kér -- Mégse a lapon tart', async () => {
       const user = userEvent.setup();

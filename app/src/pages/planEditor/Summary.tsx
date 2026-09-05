@@ -37,7 +37,8 @@ export default function Summary({ grand, listTotal, currency, nyelv }: SummaryPr
           {formatMoney(grand, currency, nyelv)}
         </Text>
         {discount > 0 && (
-          // Csak a szerkesztőben látszik. A nyomtatványon NEM (D9).
+          // Csak a szerkesztőben látszik, a nyomtatványon NEM -- a kedvezmény sosem kerül a
+          // szerződéses dokumentumra (PRODUCT.md § A nyomtatvány szerződéses dokumentum).
           <Text as="div" size="2" style={{ color: t.ok }}>
             Kedvezmény: {formatMoney(discount, currency, nyelv)}
           </Text>

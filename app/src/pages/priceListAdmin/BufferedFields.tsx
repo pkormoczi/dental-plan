@@ -3,7 +3,7 @@
 // mintájára egy lokális `draft`-ból jelenít meg, nem közvetlenül a `value`
 // propból, amíg fókuszban van.
 //
-// D31 óta a `priceList` context-érték a mentés ELŐTT, szinkron frissül
+// Az updater-szerződés óta a `priceList` context-érték a mentés ELŐTT, szinkron frissül
 // (`AppState.tsx` `savePriceList` -- optimista `apply*`), tehát a korábbi
 // async kör-forduló, ami ezt a mezőt visszaugratta volna a régi értékre,
 // megszűnt. A `draft` mégis marad: bármely MÁSIK mező/tétel commitja új
@@ -45,7 +45,7 @@ export function BufferedTextField({
   );
 }
 
-/** `BufferedTextField` többsoros párja -- a tétel-leírás mezőkhöz (docs/02-domain-modell.md § Tétel-leírás). Ugyanaz a draft/focused minta, lásd fent. */
+/** `BufferedTextField` többsoros párja -- a tétel-leírás mezőkhöz. Ugyanaz a draft/focused minta, lásd fent. */
 export function BufferedTextArea({
   value,
   onChange,

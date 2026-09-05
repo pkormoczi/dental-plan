@@ -1,7 +1,6 @@
 // Terv részletei -- egy VÉGLEGESÍTETT verzió read-only nézete
-// (`/paciensek/:patientDir/tervek/:planDir/:versionDir`). Lásd
-// `docs/03-funkcionalis-spec.md` § 11. "Terv részletei (véglegesített
-// verzió)". A `PatientPlanChains.tsx` verziósorának "Megnézés" akciója
+// (`/paciensek/:patientDir/tervek/:planDir/:versionDir`).
+// A `PatientPlanChains.tsx` verziósorának "Megnézés" akciója
 // ide navigál a nyers PDF új lapon való megnyitása helyett -- az utóbbi a
 // lap saját "Megnyitás külön" akciójává vált.
 

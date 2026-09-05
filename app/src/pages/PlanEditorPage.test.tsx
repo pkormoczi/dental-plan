@@ -28,7 +28,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
 
-    // Ékezetfüggetlen keresés (D19): "gyoker" -> "Gyökértömés..."
+    // Ékezetfüggetlen keresés: "gyoker" -> "Gyökértömés..."
     await user.type(search, 'gyoker');
     await screen.findByText('Gyökértömés csatornaszámtól függően');
 
@@ -69,7 +69,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(screen.getByRole('button', { name: 'Becsült ár', pressed: true })).toBeInTheDocument();
   });
 
-  it('shows a discount indicator when the actual price is lowered below the list price (editor-only, D9)', async () => {
+  it('shows a discount indicator when the actual price is lowered below the list price (editor-only)', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -193,7 +193,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(quantityInput).toHaveValue('1');
   });
 
-  it('a Fog mezőbe írt szabadszöveges jegyzetet (pl. "jobb felső") nem jelöli hibásnak -- docs/02-domain-modell.md', async () => {
+  it('a Fog mezőbe írt szabadszöveges jegyzetet (pl. "jobb felső") nem jelöli hibásnak (a Fog mező jegyzetmező is lehet)', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -250,7 +250,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
   });
 });
 
-describe('PlanEditorPage -- D59 friss piszkozat autofókusza', () => {
+describe('PlanEditorPage -- friss piszkozat autofókusza', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -305,7 +305,7 @@ describe('PlanEditorPage -- D59 friss piszkozat autofókusza', () => {
   });
 });
 
-describe('PlanEditorPage -- backlog-59: új fázis kereső-autofókusza (D64)', () => {
+describe('PlanEditorPage -- backlog-59: új fázis kereső-autofókusza', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -314,7 +314,7 @@ describe('PlanEditorPage -- backlog-59: új fázis kereső-autofókusza (D64)', 
     const user = userEvent.setup();
     renderEditor();
 
-    // A vadonatúj piszkozat 1. fázisa induláskor fókuszt kap (D59) -- ez
+    // A vadonatúj piszkozat 1. fázisa induláskor fókuszt kap -- ez
     // itt nem a vizsgált eset, csak a kiinduló állapot dokumentálása.
     await screen.findByPlaceholderText(/Tétel keresése/);
 
@@ -397,7 +397,7 @@ describe('PlanEditorPage -- backlog-58: fázis összecsukás', () => {
 
     await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
 
-    // Mindkét fázis alapból nyitva (D73) -- két kereső látszik.
+    // Mindkét fázis alapból nyitva -- két kereső látszik.
     expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(2);
 
     const csukoGombok = screen.getAllByRole('button', { name: 'Fázis összecsukása' });

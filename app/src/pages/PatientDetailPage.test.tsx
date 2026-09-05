@@ -3,7 +3,7 @@
 // (PatientPlanChains) saját, teljes lefedettséggel rendelkezik a
 // OsszesTervSection.test.tsx-ben. A `Páciens adatai` tab tartalmának
 // (PatientEditorPanel) mezőkészlet/Save-Cancel viselkedése -- a 38. tétel
-// (D43) óta, mióta a Pácienslista tiszta navigációs lista, ennek az
+// óta, mióta a Pácienslista tiszta navigációs lista, ennek az
 // egyetlen hívási helye ez az oldal -- itt fedve (mentés → tényleges
 // paciens-adatok.json, átnevezés-duplikáció megerősítés). Ami ezen felül
 // marad, csak az ÚJ, oldal-szintű viselkedés: URL-ből feloldott páciens,
@@ -105,7 +105,7 @@ function renderDetail(patientDir: string, state?: Record<string, unknown>) {
   );
 }
 
-// D46: a NavBar-t IS rendereli, ugyanabban a router-fában -- a valós
+// A NavBar-t IS rendereli, ugyanabban a router-fában -- a valós
 // bekötés (`useNavGuard(dirtyAdatai)` a PatientDetailPage-ben, a NavBar
 // kattintás-elfogása) csak így igazolható, nem a `renderDetail()` szűkebb
 // harness-ével.
@@ -183,7 +183,7 @@ describe('PatientDetailPage', () => {
     expect(within(header).getByText('1990.11.02. · +36 20 555 1234')).toBeInTheDocument();
   });
 
-  // D44: a sticky fejléc már kimondja a páciens nevét, a tabsor pedig
+  // A sticky fejléc már kimondja a páciens nevét, a tabsor pedig
   // kínálja a "Páciens adatai" utat -- a "Kezelési tervek" tab beágyazott
   // PatientPlanChains-fejléce egyiket sem ismételheti meg.
   it('a Kezelési tervek tabon a páciens neve nincs duplikálva, és nincs második "Páciens adatai" út', async () => {
@@ -197,7 +197,7 @@ describe('PatientDetailPage', () => {
     expect(screen.queryByRole('button', { name: 'Páciens adatai' })).not.toBeInTheDocument();
   });
 
-  // D44: a tabsor már kínálja a "Kezelési tervek" váltást -- a
+  // A tabsor már kínálja a "Kezelési tervek" váltást -- a
   // PatientEditorPanel alján nincs tükör-link ugyanerre.
   it('a Páciens adatai tabon nincs "Korábbi tervek" gomb', async () => {
     renderDetail(nagyDir, { tab: 'adatai' });
@@ -259,7 +259,7 @@ describe('PatientDetailPage', () => {
   });
 
   // A korábbi, oldal-szintű "N terv" burkoló toggle (páciens-szinten) itt
-  // MA IS nincs (a 46. tétel előtt sem volt, D44) -- de a 46. tétel óta a
+  // MA IS nincs (a 46. tétel előtt sem volt) -- de a 46. tétel óta a
   // `PatientPlanChains` lánc-SZINTŰ toggle-je EZEN a tabon is érvényes,
   // ugyanazzal az alapértelmezéssel (csak a legfrissebb véglegesített
   // dátumú lánc nyitva), mint a `standalone` Korábbi tervek listán
@@ -288,7 +288,7 @@ describe('PatientDetailPage', () => {
     const fogkoDoboz = document.querySelector(`[data-plan="${fogkoPlanDir}"]`) as HTMLElement;
 
     // A "Fogkőeltávolítás" lánc (2026-08-01) a legfrissebb véglegesített
-    // dátumú (D186) -- ez nyitva, a "Tömések" lánc csukva.
+    // dátumú -- ez nyitva, a "Tömések" lánc csukva.
     expect(within(fogkoDoboz).getByRole('button', { expanded: true })).toBeInTheDocument();
     expect(within(tomesekDoboz).getByRole('button', { expanded: false })).toBeInTheDocument();
     expect(
@@ -327,7 +327,7 @@ describe('PatientDetailPage', () => {
     expect(within(tomesekDobozAfter).getByRole('button', { expanded: true })).toBeInTheDocument();
   });
 
-  // D38: a Radix `Tabs` unmountolja az inaktív tabot -- a "Páciens
+  // A Radix `Tabs` unmountolja az inaktív tabot -- a "Páciens
   // adatai" tabon félbehagyott szerkesztés máskülönben némán elveszne
   // egy tab-váltásnál.
   it('mentetlen módosítással tabot váltva megerősítést kér -- Mégse megtartja a piszkozatot', async () => {
@@ -401,7 +401,7 @@ describe('PatientDetailPage', () => {
     expect(adatok?.telefon).toBe('+36 70 000 1111');
   });
 
-  it('átnevezés egy másik meglévő páciens nevére megerősítést kér mentéskor (D42, redesign D208)', async () => {
+  it('átnevezés egy másik meglévő páciens nevére megerősítést kér mentéskor', async () => {
     const user = userEvent.setup();
     renderDetail(tothDir, { tab: 'adatai' });
 
@@ -429,7 +429,7 @@ describe('PatientDetailPage', () => {
     expect(adatok?.nev).toBe('Fekete Zoltán');
   });
 
-  // D45: a törzsadat-szerkesztő alapból olvasó nézetben nyílik, a
+  // A törzsadat-szerkesztő alapból olvasó nézetben nyílik, a
   // kitöltetlen mezők az app meglévő "—" hiányzó-érték konvencióját kapják
   // (nem egy új "Nincs megadva" szöveget).
   it('alapból olvasó nézetben nyílik, a kitöltetlen mezők "—"-t mutatnak', async () => {
@@ -517,8 +517,8 @@ describe('PatientDetailPage', () => {
     vi.restoreAllMocks();
   });
 
-  // D46: a Páciens adatai tabon mentetlen módosítással NavBar-kattintás is
-  // megerősítést kér -- korábban (D38 eredeti hatóköre) csak a lapon
+  // A Páciens adatai tabon mentetlen módosítással NavBar-kattintás is
+  // megerősítést kér -- korábban (a dirty-őr eredeti hatóköre) csak a lapon
   // belüli tab-váltás volt védve, a NavBar-ról a piszkozat némán elveszett.
   it('mentetlen módosítással a NavBar-kattintás is megerősítést kér -- Mégse a lapon tart', async () => {
     const user = userEvent.setup();
@@ -601,7 +601,7 @@ describe('PatientDetailPage', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
-  // D46 mintája (lásd fent a NavBar-teszteket): a "← Vissza" a "Páciens
+  // A NavBar-őr mintája (lásd fent a NavBar-teszteket): a "← Vissza" a "Páciens
   // adatai" tabon félbehagyott szerkesztést sem hagyhatja csendben elveszni.
   it('mentetlen módosítással a "← Vissza" is megerősítést kér -- Mégse a lapon tart', async () => {
     const user = userEvent.setup();

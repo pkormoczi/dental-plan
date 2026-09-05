@@ -1,5 +1,4 @@
-// A 71. tétel alaptesztje -- lásd docs/03-funkcionalis-spec.md § 11. "Terv
-// részletei (véglegesített verzió)". A `PatientDetailPage.test.tsx` saját
+// A 71. tétel (Terv részletei, véglegesített verzió) alaptesztje. A `PatientDetailPage.test.tsx` saját
 // provider-stack + `MemoryRouter initialEntries` + probe-route mintáját
 // követi, valódi `DemoStorage`-zal.
 

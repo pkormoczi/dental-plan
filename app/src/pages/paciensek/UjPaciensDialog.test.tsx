@@ -1,4 +1,4 @@
-// A duplikáció-detektálás (D42) közvetlen tesztje -- a két hívó
+// A duplikáció-detektálás közvetlen tesztje -- a két hívó
 // (`PaciensekPage.test.tsx`, `NewPlanPage.test.tsx`) a pontos-egyezés
 // regresszió-őrét fedi, ez a fájl a javaslat-listát és a két megerősítő
 // dialógust (`AlertDialog`) teszteli önmagában, `TestProviders`-szel (a
@@ -141,7 +141,7 @@ describe('UjPaciensDialog', () => {
     await waitFor(() => expect(screen.queryByText('Nagy Éva')).not.toBeInTheDocument());
   });
 
-  it('legfeljebb 3 javaslat látszik, a többi "+N további" mögött (D230)', async () => {
+  it('legfeljebb 3 javaslat látszik, a többi "+N további" mögött', async () => {
     renderHarness(syntheticPatients(4, 'Teszt Duplikátum'));
     const user = userEvent.setup();
 

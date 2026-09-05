@@ -1,4 +1,4 @@
-// A Kezdőlapról átköltöztetett demó-adatkezelés (D39) -- korábban a
+// A Kezdőlapról átköltöztetett demó-adatkezelés -- korábban a
 // Home.test.tsx sem fedte a reset/clearAll gombokat, ez nettó új
 // lefedettség. A "Demó adat visszaállítása" tesztje szándékosan a
 // localStorage-ot ellenőrzi közvetlenül a `reloadFromStorage()` hívás

@@ -1,5 +1,5 @@
-// A Terv részletei nézet pénzügyi összesítő blokkjának tesztje -- lásd
-// docs/03-funkcionalis-spec.md § 11. A komponens tisztán prezentációs
+// A Terv részletei nézet pénzügyi összesítő blokkjának tesztje.
+// A komponens tisztán prezentációs
 // (nincs storage-/router-függősége), a `FazisokBlokk.test.tsx` `makePlan()`
 // mintáján épített fixtúrákkal.
 

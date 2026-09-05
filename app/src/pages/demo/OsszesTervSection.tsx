@@ -1,11 +1,10 @@
-// Összes terv -- a DEMO oldal füle (D54), docs/03-funkcionalis-spec.md
-// "5. Terv-láncok és verziók". A teljes, több-pácienses áttekintő --
-// napi munkára a § 10 páciens-részletoldal `Kezelési tervek` tabja való,
+// Összes terv -- a DEMO oldal füle. A teljes, több-pácienses áttekintő --
+// napi munkára a páciens-részletoldal `Kezelési tervek` tabja való,
 // ez a fa csak a doki-validáció közbeni teljes-listás betekintésre.
 //
 // Ez a legerősebb indoka a fájlrendszer-hozzáférésnek: egy visszatérő
 // pácienshez ne kelljen újragépelni a tételeket. Háromszintű fa (páciens →
-// terv → verzió, D29) -- egy páciensnek több terv-lánca is lehet. A
+// terv → verzió) -- egy páciensnek több terv-lánca is lehet. A
 // páciensenkénti terv-lánc/verzió fa és a hozzá tartozó akciók
 // (backlog-30 óta) a `components/PatientPlanChains.tsx`-ben élnek -- ez a
 // szekció csak listáz, szűr és betölt, a renderelést/interakciót átadja neki.
@@ -61,11 +60,11 @@ export default function OsszesTervSection() {
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
 
-  // D240: a keresőszöveg ÉS a lánc-nyitottság is visszaáll böngésző-"vissza"
+  // A keresőszöveg ÉS a lánc-nyitottság is visszaáll böngésző-"vissza"
   // (POP) navigációnál -- a `ready` a lista betöltöttsége, a `PaciensekPage`
   // mintája.
   const { q, setQ, nyitottak, setNyitott } = useListStateMemory('korabbi-tervek', !loading);
-  // Az EGYETLEN globális aktív draft (D21) -- EGYSZER a lap tetején, nem
+  // Az EGYETLEN globális aktív draft -- EGYSZER a lap tetején, nem
   // páciensenként (különben a `feloldPatientDir()` `listPatients()`
   // tartaléka N-szer futna le egy nagy listán).
   const aktivDraft = useAktivDraft();
@@ -134,7 +133,7 @@ export default function OsszesTervSection() {
       />
 
       {/* A képernyő két, adatintegritásban gyökerező útja (új verzió a
-          meglévő láncban vs. önálló új tervlánc, D4/D26) a gombfeliratokból
+          meglévő láncban vs. önálló új tervlánc) a gombfeliratokból
           önmagában nem következik -- ez a sor mondja ki egyszer, a lista
           fölött. Nem Callout: nem hiba és nem figyelmeztetés. */}
       {!loading && !listError && patients.length > 0 && (
@@ -213,7 +212,7 @@ export default function OsszesTervSection() {
   );
 }
 
-/** docs/07-felulet-rendszer.md: skeleton a végleges elrendezés alakjában, ne pörgő spinner. */
+/** Skeleton a végleges elrendezés alakjában, ne pörgő spinner -- a layout ne ugorjon betöltés után. */
 function HistorySkeleton() {
   return (
     <>

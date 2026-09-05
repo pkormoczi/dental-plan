@@ -1,5 +1,5 @@
-// A "mentett PDF" slot tartalma a Terv részletei nézeten -- lásd
-// docs/03-funkcionalis-spec.md § 11. A `usePlanPdfObjectUrl` MÁR MEGLÉVŐ
+// A "mentett PDF" slot tartalma a Terv részletei nézeten.
+// A `usePlanPdfObjectUrl` MÁR MEGLÉVŐ
 // bájtjait ágyazza be, sosem generál újra (szemben a `PreviewPage.tsx`
 // `usePDF()`-jével, ami a DRAFT-ot élőben rendereli) -- ez a hívó adja a
 // blob-URL-t, a panel tisztán prezentációs, a PreviewPage iframe-stílusát

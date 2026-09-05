@@ -1,5 +1,5 @@
-// A "Fázisok és kezelési sorok" slot tartalma a Terv részletei nézeten --
-// lásd docs/03-funkcionalis-spec.md § 11. Ez a komponens a
+// A "Fázisok és kezelési sorok" slot tartalma a Terv részletei nézeten.
+// Ez a komponens a
 // lokális UI-állapot (nyitott/csukott fázisok, a soronkénti leírás-
 // nyitottság, a fázis-ugró scrollspy aktuális célja) gazdája, SZÁNDÉKOSAN a
 // fázisok feltételes renderje FÖLÖTT -- ha a leírás-nyitottság egy `SorReszlet`
@@ -49,8 +49,8 @@ export default function FazisokBlokk({ plan, priceList }: { plan: Plan; priceLis
 
   // A fázis-ugró sáv magassága CSS változóként -- az `.fazis-tabla` sticky
   // szabálya (index.css) ebből + a lap-fejléc `--tr-fejlec-magassag`
-  // változójából számolja a táblafejléc offsetjét (docs/07-felulet-
-  // rendszer.md kétsoros sticky elvárása), hogy egyik komponensnek se
+  // változójából számolja a táblafejléc offsetjét (kétsoros sticky
+  // fejléc), hogy egyik komponensnek se
   // kelljen ismernie a másik magasságát.
   useEffect(() => {
     const root = rootRef.current;

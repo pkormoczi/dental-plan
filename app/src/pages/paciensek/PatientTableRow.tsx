@@ -1,6 +1,5 @@
-// Pácienslista oszlopos sora (D47, docs/03-funkcionalis-spec.md § 9.
-// Páciensek) -- a Kezdőlap "Legutóbbi páciensek" kompakt sorától (D43,
-// `components/PatientListRow.tsx`) SZÁNDÉKOSAN külön komponens: eltérő az
+// Pácienslista oszlopos sora -- a Kezdőlap "Legutóbbi páciensek" kompakt sorától
+// (`components/PatientListRow.tsx`) SZÁNDÉKOSAN külön komponens: eltérő az
 // elrendezésük (Radix `Table` vs. futó szöveges `Flex`), az egyesítés
 // megkötné a Kezdőlap `children` (aktivitás-szöveg) rétegét.
 
@@ -35,7 +34,7 @@ export default function PatientTableRow({ item }: { item: BetoltottTorzsadat }) 
         style={{ maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
       >
         {/* Szándékosan location.state nélkül: a PatientDetailPage
-            alapértelmezett tabja 'tervek' (D35). */}
+            alapértelmezett tabja 'tervek'. */}
         <Link to={href} style={{ color: 'inherit', textDecoration: 'none' }}>
           <Text size="2" weight="medium">
             {torzsadat.nev}

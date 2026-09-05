@@ -1,11 +1,11 @@
-// Rendelő adatai tab -- a Beállítások tab-szerkezetének (D49) első tabja.
+// Rendelő adatai tab -- a Beállítások tab-szerkezetének első tabja.
 // Korábban a `SettingsPage.tsx` "Rendelő adatai" + "Orvosok" Card-ja volt,
-// leütésenkénti autosave-vel (D31); a tabosítás óta pufferelt draft +
+// leütésenkénti autosave-vel; a tabosítás óta pufferelt draft +
 // explicit Mentés/Mégse, a `PatientEditorPanel.tsx` mintáján (`useDirtyDraft`,
 // azonnali -- megerősítés nélküli -- Mégse, mert csak a LÁTHATÓ mezőket
-// veszíti el, nem egy másik nyelvet/fület, D49).
+// veszíti el, nem egy másik nyelvet/fület).
 //
-// D63: az orvos-lista (korábban egyetlen "egy név soronként" TextArea)
+// Az orvos-lista (korábban egyetlen "egy név soronként" TextArea)
 // soronkénti táblázatra váltott -- aktív/inaktív jelölés és alapértelmezett-
 // orvos fogalommal, a pages/priceListAdmin/KategoriaPanel.tsx sor-UI mintáján
 // (Table.Root size="1" + soronkénti IconButton ↑/↓/🗑).
@@ -60,7 +60,7 @@ function toDraft(settings: Settings): RendeloDraft {
   };
 }
 
-/** D540: melyik sor deaktiválása/törlése váltotta ki az azonnali
+/** Melyik sor deaktiválása/törlése váltotta ki az azonnali
  * újraválasztás-kérést, és mi a maradék aktív nevek listája. */
 interface ReassignState {
   action: 'deactivate' | 'remove';
@@ -90,7 +90,7 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
 
   const nevekTrim = draft.orvosok.map((o) => o.nev.trim()).filter(Boolean);
   // A Mentés gomb nem tiltott -- kattintásra mutatja meg a hibát
-  // (docs/07-felulet-rendszer.md, UjTetelDialog.tsx `kategoriaHiba` mintája).
+  // (UjTetelDialog.tsx `kategoriaHiba` mintája).
   const duplikatumHiba =
     megprobaltMenteni && new Set(nevekTrim).size !== nevekTrim.length
       ? 'Két orvos neve nem lehet azonos.'
@@ -110,7 +110,7 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
     });
   }
 
-  // D540: a default sor deaktiválása/törlése, ha van másik aktív, azonnali
+  // A default sor deaktiválása/törlése, ha van másik aktív, azonnali
   // újraválasztást kér modális dialógusban -- Mégse/Escape visszavonja magát
   // a deaktiválást/törlést is (a draft nem változik, amíg nincs választás).
   // Ha nincs másik aktív, a művelet a dialógus megnyitása NÉLKÜL, azonnal
@@ -290,8 +290,8 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
                     </Flex>
                   </Table.Cell>
                   <Table.Cell>
-                    {/* D544: az orvos feltétel nélkül törölhető -- explicit
-                        eltérés a D17 "csak deaktiválható" mintától, mert a
+                    {/* Az orvos feltétel nélkül törölhető -- explicit eltérés
+                        az árlista-tételek "csak deaktiválható" mintájától, mert a
                         `plan.orvos` NÉV-pillanatkép, nem `id`-hivatkozás. */}
                     <IconButton
                       aria-label={`${sorNeve} törlése`}
@@ -369,7 +369,7 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
         </Button>
       </Flex>
 
-      {/* D540: a jelenlegi default orvos deaktiválása/törlése -- ha van
+      {/* A jelenlegi default orvos deaktiválása/törlése -- ha van
           másik aktív orvos -- azonnali újraválasztást kér, kötelező
           választással. Mégse/Escape a Dialog.Root onOpenChange-én át
           nyomtalanul zár, a draft NEM változik (lásd attemptDeactivateOrRemove). */}

@@ -1,7 +1,7 @@
 // Tételkereső -- a tervszerkesztő UX-kritikus pontja (CLAUDE.md "A UX
 // kritikus pontja"): gépel -> nyíl -> Enter -> a kereső kiürül és
 // visszakapja a fókuszt -> gépel tovább, egérhasználat nélkül. Ez a ciklus
-// "nem törhet el" (docs/07-felulet-rendszer.md "Billentyűzet").
+// "nem törhet el" (app/src/CLAUDE.md § Amit soha).
 //
 // Két helyről használt (innen a saját fájl -- korábban a PlanEditorPage.tsx
 // belsejében élt):
@@ -13,7 +13,7 @@
 //    (`floating="portal"`), mert a Radix `Table.Root` saját `ScrollArea`-ja
 //    levágná az abszolút pozicionált listát egy táblázatcellában.
 //
-// Csak keresés, nincs kategória böngésző (D19). Ékezetfüggetlen.
+// Csak keresés, nincs kategória böngésző. Ékezetfüggetlen.
 //
 // `onPickEgyedi` (backlog-3, opcionális): ha a gépelt szövegre nincs
 // árlistai találat, a találati lista alján megjelenik egy pszeudo-opció
@@ -142,7 +142,7 @@ export default function ItemPicker({
   const egyediElerheto = Boolean(onPickEgyedi) && q.trim() !== '';
   const opcioSzam = valaszthato.length + (egyediElerheto ? 1 : 0);
 
-  // 62. tétel (D71): `available` már nem szűr `currency`-re (egy
+  // 62. tétel: `available` már nem szűr `currency`-re (egy
   // beárazatlan tétel is kereshető/felvehető) -- az üres-találat jegyzet
   // ezért itt, nem az `available.length`-ből dönti el, hogy a doki egy
   // olyan pénznemben keres, amiben SEMMI sincs beárazva.
@@ -169,8 +169,8 @@ export default function ItemPicker({
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     // Escape-nek akkor is ki kell ürítenie a keresőt, ha épp nincs találat
-    // (pl. a "Nincs találat" doboz látszik) -- docs/07-felulet-rendszer.md
-    // "Escape zár dialógust és keresőt".
+    // (pl. a "Nincs találat" doboz látszik) -- Escape zár dialógust és keresőt
+    // (app/src/CLAUDE.md, akadálymentesség).
     if (e.key === 'Escape') {
       setQ('');
       return;

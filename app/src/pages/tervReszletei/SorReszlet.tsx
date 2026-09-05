@@ -1,5 +1,5 @@
-// Egy kezelési sor read-only megjelenítése a Terv részletei nézeten -- lásd
-// docs/03-funkcionalis-spec.md § 11. A `pages/planEditor/LineRow.tsx`
+// Egy kezelési sor read-only megjelenítése a Terv részletei nézeten.
+// A `pages/planEditor/LineRow.tsx`
 // vizuális mintáját követi, de NEM importálja: ott minden mező szerkeszthető
 // (`onPatch`, `NumberField`), itt egy lezárt dokumentum pillanatképét
 // mutatjuk, mezőnkénti beviteli vezérlők nélkül.

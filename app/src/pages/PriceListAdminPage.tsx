@@ -6,7 +6,7 @@
 //
 // A sor kinyitása adja a teljes szerkesztést, benne a kategória
 // legördülővel -- ez a takarítás fő eszköze. A tétel-táblázat fölötti "Kategóriák"
-// panel (docs/03-funkcionalis-spec.md § Kategóriák panel) adja a másik
+// panel adja a másik
 // felet: kategória létrehozás/átnevezés/színezés/sorrendezés/törlés, egy
 // helyen a tétel-mozgatással, hogy a doki ne navigáljon oda-vissza a
 // takarításkor.
@@ -91,24 +91,23 @@ export default function PriceListAdminPage() {
   // P0-8-hoz hasonlóan (SettingsPage) -- a `savePriceList` korábban `void`-olva
   // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
   const [saveError, setSaveError] = useState<string | null>(null);
-  // A "Mentve ✓" sor-szintű jelzése (docs/03-funkcionalis-spec.md § 6.
-  // "Sor kinyitása" "Mentés-visszajelzés a soron") -- csak a `patchItem()`
+  // A "Mentve ✓" sor-szintű jelzése -- csak a `patchItem()`
   // váltja ki, a `mentettTetelId` biztosítja, hogy egyszerre legfeljebb egy
   // sor jelezzen.
   const mentesJelzo = useMentesJelzo();
   const [mentettTetelId, setMentettTetelId] = useState<string | null>(null);
   // A Tömeges árváltoztatás után nő -- jelez a nyitott `ItemEditor`-nak, hogy
   // az elgépelés-védelem baseline-ja a friss értékre újrarögzüljön, jelzés
-  // nélkül (docs/03-funkcionalis-spec.md § 6. "Sor kinyitása"): a tömeges
+  // nélkül: a tömeges
   // művelet szándékos, saját előnézettel, nem elgépelés.
   const [arBaselineToken, setArBaselineToken] = useState(0);
 
   /**
-   * D30: minden TÉNYLEGES tartalmi változás a mai napra bélyegzi a
+   * Minden TÉNYLEGES tartalmi változás a mai napra bélyegzi a
    * `modositva`/`arlistaVerzio`-t, feltétel nélkül -- a lábléc "melyik
    * árlistából készült" audit-ígérete addig hazudik, amíg az
    * `arlistaVerzio` a seed-értéken fagyva marad. A `recept` a MENTÉS
-   * PILLANATÁBAN, a friss `prev`-re fut (D31, `AppState.tsx` `savePriceList`
+   * PILLANATÁBAN, a friss `prev`-re fut (`AppState.tsx` `savePriceList`
    * updater-szerződése) -- ha mégis változatlanul adja vissza a bemenetet,
    * az nem "mentés": nincs mit bélyegezni. A visszaadott `boolean` a
    * `KategoriaPanelBody` Mentés gombjának kell -- csak sikeres írás után
@@ -167,11 +166,11 @@ export default function PriceListAdminPage() {
 
   /**
    * A `commit`-nek átadott recept a friss `prev`-re fut, tehát az id- és
-   * sorrend-számítás is ide kerül -- D17 (soha nem újrahasznosított id):
+   * sorrend-számítás is ide kerül -- soha nem újrahasznosított id:
    * két gyors egymás utáni kattintás enélkül ugyanazt az id-t számolná ki
    * egymástól függetlenül. A létrehozott kategória egy külső `let`-en át
    * jut vissza a hívóhoz -- a `commit` a receptet SZINKRON, még a
-   * visszatérése előtt lefuttatja (D31), tehát ez itt lent már biztosan ki
+   * visszatérése előtt lefuttatja, tehát ez itt lent már biztosan ki
    * van töltve. A hívó (`KategoriaPanelBody` `handleAdd`) a visszaadott
    * kategóriát a draft végére fűzi, hogy a folyamatban lévő szerkesztés ne
    * vesszen el.
@@ -208,7 +207,7 @@ export default function PriceListAdminPage() {
    * A Kategóriák panel pufferelt draftjának Mentés gombja hívja -- a `next`
    * MÁR 1..n-re újraszámozott sorrenddel érkezik (`KategoriaPanelBody`
    * `handleSave`), ez a tömbsorrend adja a fogszín-ütközés precedenciáját
-   * is (lásd `docs/07-felulet-rendszer.md` § Szín, forma, sűrűség és
+   * is (lásd
    * `domain/toothVisual.ts` `resolveToothVisual`). A `prev.
    * kategoriak` TAGSÁGA dönt, nem a `next` -- egy időközben törölt
    * kategória így nem támad fel, egy időközben létrejött pedig nem esik
@@ -227,7 +226,7 @@ export default function PriceListAdminPage() {
    * A felugró Új tétel dialógus Mentés gombja hívja -- addig semmi nem
    * kerül a törzsadatba. `sorrend` a kategóriákéhoz hasonlóan max-alapú, nem
    * `tetelek.length`-alapú (a régi számítás egy törölt/inaktivált tétel
-   * után visszacsúszhatott volna, ugyanaz a hiba, amit D17 miatt a
+   * után visszacsúszhatott volna, ugyanaz a hiba, amit az id-újrahasznosítás tilalma miatt a
    * `nextTetelId` már elkerül). Az id-számítás a friss `prev`-ből, a
    * `newId`-n át visszakapva -- lásd `addCategory` kommentjét.
    */
@@ -257,7 +256,7 @@ export default function PriceListAdminPage() {
     setFilter('all');
     setQ('');
     setUjTetelOpen(false);
-    // A sor kinyitása/autoFocus-a KÜLÖN mikrotaszkban -- D31 óta a `priceList`
+    // A sor kinyitása/autoFocus-a KÜLÖN mikrotaszkban -- az updater-szerződés óta a `priceList`
     // (a fenti `commit`) szinkron frissül, tehát ha `open`/`frissTetelId`
     // is EBBEN a renderben állna be, a friss sor `autoFocus` NumberField-je
     // ugyanabban a commitban mountolna, amiben a Dialog `open=false`-ra
@@ -296,7 +295,7 @@ export default function PriceListAdminPage() {
   // egész felugró ablak létrejött). A HUF ár mező fókuszát az ItemEditor
   // natív `autoFocus` attribútuma adja (lásd ott).
   //
-  // D31 óta a `commit()` a `priceList` context-értéket SZINKRON frissíti
+  // Az updater-szerződés (lásd app/src/storage/CLAUDE.md) óta a `commit()` a `priceList` context-értéket SZINKRON frissíti
   // (`AppState.tsx` `savePriceList` -- optimista `apply*`, a
   // `storage.savePriceList` await-je csak ez UTÁN fut), tehát a friss sor
   // már ugyanabban a renderben megjelenik a `grouped`-ben, mint amiben a
@@ -336,8 +335,7 @@ export default function PriceListAdminPage() {
   // A kategórianévre illeszkedő kategória-id-k -- egyszer, itt kiszámolva,
   // hogy a `grouped` ÉS a `szurtTetelek` (lent) ugyanazt a kört lássa: egy
   // kategórianévre keresve az egész csoport visszajön, a Tömeges
-  // árváltoztatás köre pedig szándékosan együtt tágul (docs/03-funkcionalis-
-  // spec.md § Keresés és szűrők).
+  // árváltoztatás köre pedig szándékosan együtt tágul.
   const egyezoKatIdk = useMemo(
     () => egyezoKategoriaIdk(priceList.kategoriak, norm(q)),
     [priceList.kategoriak, q],

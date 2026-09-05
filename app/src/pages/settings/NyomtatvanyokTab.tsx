@@ -1,8 +1,8 @@
-// Nyomtatványok tab -- a Beállítások tab-szerkezetének (D49) második tabja:
+// Nyomtatványok tab -- a Beállítások tab-szerkezetének második tabja:
 // a nyilatkozat/fizetési feltételek/garancia sablonszövegek szerkesztője.
 // Korábban a `SettingsPage.tsx` "Nyomtatvány szövegei" Card-ja volt -- ez
 // volt az EGYETLEN szekció, ami már a tabosítás előtt is explicit
-// Mentés/Mégse + dirty guarddal (D38) működött, a többi szekciótól
+// Mentés/Mégse + dirty guarddal működött, a többi szekciótól
 // eltérően. A tabosítás ezt a mintát terjeszti ki a másik két tabra, nem
 // fordítva.
 
@@ -34,7 +34,7 @@ function templateBase(key: TemplateSlotKey, nyelv: Nyelv): string {
 }
 
 // Ad hoc localStorage-cache a sablonszerkesztő piszkozatához --
-// docs/03-funkcionalis-spec.md § 7. Beállítások: NEM a `DraftStorage`
+// NEM a `DraftStorage`
 // bővítése (az kizárólag `Plan`-ra típusozott, egyetlen felelősséggel),
 // hanem egy önálló, base-kulcsolt JSON objektum. A
 // `dp:` prefix (`DemoStorage.ts` `PREFIX`-je) miatt a "Minden adat
@@ -78,7 +78,7 @@ function clearTemplateDraftCacheEntry(base: string): void {
 
 /**
  * A shell (`SettingsPage.tsx`) hívja, amikor a doki egy dirty Nyomtatványok
- * tabról vált el (tab-váltás vagy NavBar-navigáció, D46) -- a piszkozat ekkor
+ * tabról vált el (tab-váltás vagy NavBar-navigáció) -- a piszkozat ekkor
  * ténylegesen elvész (a Radix unmountolja a tab tartalmát), ezért a cache-nek
  * is el kell vesznie, különben egy F5 a tab-váltás UTÁN visszahozná a
  * "már elvetett" szöveget.
@@ -336,7 +336,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
 
       {/* A Mégse minden nyelv/szövegen elveti a piszkozatot (nem csak a
           jelenleg látszó nyelvet), ezért -- a Rendelő adatai/Egyéb tab
-          azonnali Mégse-jétől eltérően -- megerősítést kér (D38). */}
+          azonnali Mégse-jétől eltérően -- megerősítést kér. */}
       <DiscardChangesDialog
         open={cancelTemplatesGuard.pending}
         onOpenChange={(open) => !open && cancelTemplatesGuard.cancel()}

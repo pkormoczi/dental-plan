@@ -1,5 +1,4 @@
-// A Filerendszer fájában kiválasztott fájl tartalma (docs/03-funkcionalis-
-// spec.md § 8. Filerendszer). JSON/markdown esetén szinkron olvasás
+// A Filerendszer fájában kiválasztott fájl tartalma. JSON/markdown esetén szinkron olvasás
 // (readRawFile), PDF esetén a ténylegesen elmentett bájtokból
 // (`usePlanPdfObjectUrl`, a blob-URL életciklusát is ő kezeli) blob-URL és
 // "Megnyitás új lapon" link.

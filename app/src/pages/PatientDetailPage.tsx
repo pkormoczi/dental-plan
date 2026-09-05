@@ -1,4 +1,4 @@
-// Páciens részletei -- backlog-30 (Páciens detail shell), redesign DP-002.
+// Páciens részletei -- backlog-30 (Páciens detail shell).
 // URL-lel címezhető (`/paciensek/:patientDir`), két tabbal: `Páciens
 // adatai` (a törzsadat-szerkesztő, `components/PatientEditorPanel.tsx`) és
 // `Kezelési tervek` (a terv-lánc/verzió fa, `components/PatientPlanChains.tsx`).
@@ -43,7 +43,7 @@ import { useStorage } from '../storage/StorageContext';
 type DetailTab = 'adatai' | 'tervek';
 type EditorMod = 'nezet' | 'szerkesztes';
 
-// A DropdownMenu.Label szövege a törlés akadályára (backlog-41, D50) --
+// A DropdownMenu.Label szövege a törlés akadályára (backlog-41) --
 // prezentáció, ezért itt él, nem a domain `paciensTorlesAkadaly()` mellett.
 const AKADALY_SZOVEG: Record<TorlesAkadaly, string> = {
   'veglegesitett-terv': 'Véglegesített terve van',
@@ -76,7 +76,7 @@ export default function PatientDetailPage() {
   );
 
   // Quick-create után a hívó szerkesztés módban jelzi a "Páciens adatai" tab
-  // nyitását (D45) -- csak a kezdőértékhez olvassuk, ugyanúgy, mint a
+  // nyitását -- csak a kezdőértékhez olvassuk, ugyanúgy, mint a
   // `tab`-ot.
   const [editorMod, setEditorMod] = useState<EditorMod>(
     (location.state as { mod?: EditorMod } | null)?.mod === 'szerkesztes' ? 'szerkesztes' : 'nezet',
@@ -84,11 +84,11 @@ export default function PatientDetailPage() {
 
   // A Radix `Tabs` unmountolja a nem aktív tab tartalmát -- a "Páciens
   // adatai" tabon félbehagyott szerkesztés máskülönben némán elveszne
-  // egy tab-váltásnál, ugyanaz a közös primitív (D38), mint amit a
+  // egy tab-váltásnál, ugyanaz a közös primitív, mint amit a
   // SettingsPage.tsx "Nyomtatvány szövegei" szekciója Mégse gombjánál hív.
   const [dirtyAdatai, setDirtyAdatai] = useState(false);
   const guard = useDiscardGuard(dirtyAdatai);
-  // D46: ugyanez a dirty jelző a NavBar-navigációt is védi, a
+  // Ugyanez a dirty jelző a NavBar-navigációt is védi, a
   // NavGuardContext-en keresztül -- a NavBar a MEGLÉVŐ guard-primitívvel
   // fogja el a kattintást, ez a hook csak regisztrál.
   useNavGuard(dirtyAdatai);
@@ -142,8 +142,8 @@ export default function PatientDetailPage() {
   }, [storage, patientDir]);
 
   // Melyik páciensmappához tartozik a doki JELENLEGI, mentetlen piszkozata
-  // (backlog-41, D50 2. döntés) -- a MEGLÉVŐ `useAktivDraft()` (46. tétel,
-  // a D48 `feloldPatientDir()`-jét birtokolja) hívja, ugyanaz a forrás,
+  // (backlog-41, 2. döntés) -- a MEGLÉVŐ `useAktivDraft()` (46. tétel,
+  // a `feloldPatientDir()`-t birtokolja) hívja, ugyanaz a forrás,
   // amit a "Kezelési tervek" tab aktív-draft blokkja is használ.
   const aktivDraft = useAktivDraft();
   const sajatAktivDraft = sajatDraft(aktivDraft, patientDir);
@@ -154,8 +154,8 @@ export default function PatientDetailPage() {
 
   // Fire-and-forget, mint az AdatkezelesSection.tsx demó-törlő gombjai: a
   // dialógus a kattintásra azonnal zárul, a hiba a lapon, a header alatt
-  // jelenik meg -- nincs toast (docs/07). Szándékosan NEM megy át a D38/D46
-  // discard guardon (3. döntés): a "Páciens adatai" tabon félbehagyott
+  // jelenik meg -- nincs toast. Szándékosan NEM megy át a Mentés/Mégse
+  // dirty-őrön (3. döntés): a "Páciens adatai" tabon félbehagyott
   // szerkesztés tárgytalanná válik, ha magát a pácienst töröljük.
   async function performDelete() {
     setDeleteError(null);
@@ -177,8 +177,8 @@ export default function PatientDetailPage() {
       : null;
 
   // App-chrome, nem tartalom -- ezért mind a 4 return-ágban megjelenik
-  // (betöltés/hiba/nem található/normál), és a MEGLÉVŐ dirty-guardon (D46
-  // mintája, `requestTab` analógiájára) megy át: `navigate(-1)` csendben
+  // (betöltés/hiba/nem található/normál), és a MEGLÉVŐ dirty-guardon (a
+  // NavBar-őr mintája, `requestTab` analógiájára) megy át: `navigate(-1)` csendben
   // eldobná a "Páciens adatai" tabon félbehagyott szerkesztést, ha nem a
   // guardon keresztül navigálna. "Vissza" a felirat, nem "Páciensek" --
   // ide a Kezdőlapról, a Pácienslistáról, a "Korábbi tervek"
@@ -258,7 +258,7 @@ export default function PatientDetailPage() {
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
               {/* SZÁNDÉKOSAN "páciens műveletek", NEM "további műveletek" --
-                  az utóbbi (docs/07 sorbeli-akció konvenciója,
+                  az utóbbi (a sorbeli-akció konvenció neve,
                   PatientPlanChains.tsx) a `verzioMenupont()` teszt-helperben
                   `document.body`-szinten, /további műveletek$/-mintával
                   keres rá; ha ez a header-gomb is arra végződne, ütközne

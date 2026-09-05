@@ -1,5 +1,5 @@
-// Fázis-ugró navigáció a Terv részletei nézeten, 4+ fázisnál -- lásd
-// docs/03-funkcionalis-spec.md § 11. Radix `Select`, a
+// Fázis-ugró navigáció a Terv részletei nézeten, 4+ fázisnál.
+// Radix `Select`, a
 // `components/ToothChartPanel.tsx` fázis-választójának mintáján. Szándékosan
 // NEM `⋯` DropdownMenu: a TervReszleteiPage.test.tsx szerződéstesztje
 // tiltja a "további műveletek"-re végződő accessible name-et ezen a lapon,

@@ -1,4 +1,4 @@
-// A nyelv/pénznem kártya láthatósága és figyelmeztetései (D21). Lásd
+// A nyelv/pénznem kártya láthatósága és figyelmeztetései. Lásd
 // CLAUDE.md "A UX kritikus pontja" -- ez a szomszédos képernyő, ahol a
 // terv nyelve/pénzneme eldől, mielőtt a doki a szerkesztőbe lép.
 
@@ -91,19 +91,19 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // D39: a "Korábbi tervek" gomb lekerült a Kezdőlapról -- a `/tervek`
-    // route URL-ről marad elérhető, itt közvetlen hash-navigációval. D54
-    // óta a `/tervek` a DEMO "Összes terv" fülére (`/demo/tervek`)
+    // A "Korábbi tervek" gomb lekerült a Kezdőlapról -- a `/tervek`
+    // route URL-ről marad elérhető, itt közvetlen hash-navigációval. A
+    // `/tervek` a DEMO "Összes terv" fülére (`/demo/tervek`)
     // redirectel -- ezt igazolja a hash-ellenőrzés lent.
     window.location.hash = '#/tervek';
     const patientNameEl = await screen.findByText('Kovács János');
     expect(window.location.hash).toBe('#/demo/tervek');
     const card = patientNameEl.closest('[data-patient]') as HTMLElement;
-    // 50. tétel (D58) óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
+    // 50. tétel óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
     await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
     // Kovács János demó tervének két fázisa van, mindkettőnek saját
     // keresője -- findAllBy, nem findBy (ami az egyértelműséget várná el).
-    // A 22 páciensre bővített demó-készlet (D40) miatt a `/tervek` lista
+    // A 22 páciensre bővített demó-készlet miatt a `/tervek` lista
     // eagerly tölt be minden pácienst -- a navigáció ide-oda ezért az
     // alapértelmezett 1000ms-nél lassabb is lehet erősen terhelt CI-futásnál.
     await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
@@ -120,7 +120,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
   });
 });
 
-describe('PatientPage -- 62. tétel (D71): pénznemváltás nem törli a sorokat', () => {
+describe('PatientPage -- 62. tétel: pénznemváltás nem törli a sorokat', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -361,7 +361,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
   });
 });
 
-describe('PatientPage -- 65. tétel (D72): nyelvváltás önmagában nem módosítja a nyelvi review-metaadatot', () => {
+describe('PatientPage -- 65. tétel: nyelvváltás önmagában nem módosítja a nyelvi review-metaadatot', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -397,7 +397,7 @@ describe('PatientPage -- 65. tétel (D72): nyelvváltás önmagában nem módos�
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
     await user.click(await screen.findByRole('button', { name: 'Folytatás' }));
 
-    // A nyelváltás a metaadatot NEM módosította (D466) -- a sor
+    // A nyelváltás a metaadatot NEM módosította -- a sor
     // `authoredInLanguage`-e továbbra is 'hu', de a dokumentum most 'de',
     // ez a mismatch, amit a szerkesztő most már jelez.
     await user.click(screen.getByRole('link', { name: 'Kezelések' }));
@@ -492,9 +492,8 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
   });
 });
 
-// backlog-40: a "Páciens törzsadata" eltérés-jelzés -- docs/03-funkcionalis-spec.md
-// § 2. Terv adatai. A rész csak akkor renderelődik, ha a piszkozat
-// patientDir-je ismert (D37) -- ezért itt közvetlenül a `dp:piszkozat`
+// backlog-40: a "Páciens törzsadata" eltérés-jelzés. A rész csak akkor renderelődik, ha a piszkozat
+// patientDir-je ismert -- ezért itt közvetlenül a `dp:piszkozat`
 // kulcsba seedelünk, a TervWorkflowShell.test.tsx `seedActiveDraft`
 // mintáját követve, MIELŐTT a StorageProvider renderelne.
 describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
@@ -843,7 +842,7 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
   });
 });
 
-// backlog-51 (D68): a lap hat, vizuálisan elkülönített szekcióra tagolódik.
+// backlog-51: a lap hat, vizuálisan elkülönített szekcióra tagolódik.
 describe('PatientPage -- backlog-51: hat szekció', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -855,7 +854,7 @@ describe('PatientPage -- backlog-51: hat szekció', () => {
     expect(await screen.findByRole('heading', { name: 'Terv adatai' })).toBeInTheDocument();
   });
 
-  it('a hat szekció ebben a sorrendben jelenik meg (D68)', async () => {
+  it('a hat szekció ebben a sorrendben jelenik meg', async () => {
     renderPatient();
     await screen.findByRole('heading', { name: 'Terv adatai' });
 
@@ -869,10 +868,10 @@ describe('PatientPage -- backlog-51: hat szekció', () => {
   });
 });
 
-// D67: a Kezelőorvos szekció -- korábban csak olvasható placeholder volt,
+// A Kezelőorvos szekció -- korábban csak olvasható placeholder volt,
 // mostantól Radix `Select`, csak az aktív orvosok közül, a teljes
 // piszkozat-életciklus alatt szabadon szerkeszthető.
-describe('PatientPage -- Kezelőorvos szekció (D67)', () => {
+describe('PatientPage -- Kezelőorvos szekció', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -998,7 +997,7 @@ describe('PatientPage -- Kezelőorvos szekció (D67)', () => {
   });
 });
 
-// backlog-51 (D61): a "Terv címe" mező -- vadonatúj lánchoz a `DraftMeta`-ban
+// backlog-51: a "Terv címe" mező -- vadonatúj lánchoz a `DraftMeta`-ban
 // él és a véglegesítéskor íródik ki (lásd PreviewPage.test.tsx), mentett
 // lánchoz azonnal ír a `storage.savePlanLabel`-lel.
 describe('PatientPage -- backlog-51: terv címe mező', () => {
@@ -1111,7 +1110,7 @@ describe('PatientPage -- backlog-51: terv címe mező', () => {
   });
 });
 
-// backlog-51 (D62, D22): a "Dátumok" szekció -- a `keltezes` marad
+// backlog-51: a "Dátumok" szekció -- a `keltezes` marad
 // automatikus, az `ervenyesIg` szerkeszthető, alapértéke
 // `plan.keltezes + settings.ervenyessegNap`.
 describe('PatientPage -- backlog-51: dátumok szekció', () => {

@@ -18,7 +18,7 @@ import type { WorkflowRoute } from '../../storage/DraftStorage';
 // (`/paciensek/:patientDir`), a tab-ot `location.state.tab`-ban átadva --
 // ezt a probe-ot olvassuk vissza, a valódi PatientDetailPage.tsx-et nem
 // kell ehhez a teszthez felhúzni. A "Vissza" gomb a 46. tétel POP-memória
-// (D240) teszteléséhez kell -- a `useListStateMemory.test.tsx` `DetailProbe`
+// teszteléséhez kell -- a `useListStateMemory.test.tsx` `DetailProbe`
 // mintája.
 function PaciensekProbe() {
   const { patientDir } = useParams<{ patientDir: string }>();
@@ -47,7 +47,7 @@ function DraftProbe() {
       <div data-testid="draft-tervid">„{plan.tervId}”</div>
       <div data-testid="draft-sorcount">{sorCount}</div>
       <div data-testid="draft-keltezes">{plan.keltezes}</div>
-      {/* D57: a telefon (nem a névvel egyező mező) igazolja, hogy a paciens
+      {/* A telefon (nem a névvel egyező mező) igazolja, hogy a paciens
           blokk a MASTERBŐL jön, nem csak a paciens.json index nev-jéből. */}
       <div data-testid="draft-telefon">{plan.paciens.telefon}</div>
     </div>
@@ -127,7 +127,7 @@ function makeVeglegesPlan(overrides: Partial<Plan> = {}): Plan {
   };
 }
 
-// D29: Nagy Éva a seedben KÉT önálló terv-lánccal szerepel (fogpótlás: v1+v2,
+// Nagy Éva a seedben KÉT önálló terv-lánccal szerepel (fogpótlás: v1+v2,
 // fogkőeltávolítás: v1) -- ez a csoportosítás terv-lánc (planDir) szerint,
 // hogy a teszt ne a konkrét tervId/planDir string-literálra épüljön.
 const nagyEvaEntries = seedPlans.filter((e) => e.plan.paciens.nev === 'Nagy Éva');
@@ -214,7 +214,7 @@ describe('OsszesTervSection', () => {
     resetListStateMemoryForTests();
   });
 
-  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e (docs/07)', async () => {
+  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e', async () => {
     renderHistory();
     expect(await screen.findByRole('textbox', { name: 'Keresés páciensnévre' })).toBeInTheDocument();
   });
@@ -251,8 +251,8 @@ describe('OsszesTervSection', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    // A "Tömések" lánc NEM a legfrissebb véglegesített dátumú (46. tétel,
-    // D186) -- alapból csukva nyílik, explicit ki kell nyitni.
+    // A "Tömések" lánc NEM a legfrissebb véglegesített dátumú (46. tétel)
+    // -- alapból csukva nyílik, explicit ki kell nyitni.
     const doboz = lancDoboz(card, v1.planDir);
     await nyissLancot(user, doboz);
 
@@ -297,15 +297,15 @@ describe('OsszesTervSection', () => {
     const card = marker.closest('[data-patient]') as HTMLElement;
 
     // Korábban itt `alert()` jelent meg -- most a sérintett verzió-sora
-    // mellett, a szövegben (docs/07-felulet-rendszer.md: "Nem toast, ha a
-    // hiba egy mezőhöz tartozik"). 50. tétel (D58) óta a legfrissebb soron
+    // mellett, a szövegben (nem toast, ha a
+    // hiba egy mezőhöz tartozik). 50. tétel óta a legfrissebb soron
     // látható gomb, nem "⋯" menüpont.
     await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
 
     expect(await within(card).findByText(/A terv megnyitása nem sikerült/)).toBeInTheDocument();
   });
 
-  // docs/03-funkcionalis-spec.md § Autosave: ugyanaz a felülírás-kockázat,
+  // Ugyanaz a felülírás-kockázat,
   // mint a Home "+ Új kezelési terv" gombjánál -- az "Új verzió" szó nélkül
   // felülírná a folyamatban lévő, mentetlen piszkozatot.
   it('"Új verzió" megerősítést kér mentetlen piszkozatnál, és csak megerősítésre nyit meg', async () => {
@@ -316,7 +316,7 @@ describe('OsszesTervSection', () => {
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
     // A legfrissebb lánc ("Fogkőeltávolítás") alapból nyitva -- nincs mit
-    // kinyitni ehhez a teszthez. 50. tétel (D58) óta a legfrissebb soron
+    // kinyitni ehhez a teszthez. 50. tétel óta a legfrissebb soron
     // látható gomb, nem "⋯" menüpont.
 
     await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
@@ -359,7 +359,7 @@ describe('OsszesTervSection', () => {
   });
 
   // A doki explicit kérése volt ez a sorrend (Letöltés, Másolás új tervbe)
-  // -- ne csússzon el némán egy későbbi szerkesztésnél. 50. tétel (D58) óta
+  // -- ne csússzon el némán egy későbbi szerkesztésnél. 50. tétel óta
   // a Megnézés/Új verzió a legfrissebb soron látható gomb, nem menüpont --
   // ez a teszt csak a `⋯`-ben MARADT elemekre vonatkozik.
   it('a "⋯" menü elemei rögzített sorrendben állnak, a legfrissebb sor két látható gombot kap', async () => {
@@ -379,7 +379,7 @@ describe('OsszesTervSection', () => {
     expect(items.map((el) => el.textContent)).toEqual(['Letöltés', 'Másolás új tervbe']);
   });
 
-  // D53 (48. tétel): "Új verzió" kizárólag a lánc legfrissebb verziósorán
+  // 48. tétel: "Új verzió" kizárólag a lánc legfrissebb verziósorán
   // engedett -- egy historical sorról indítva a doki tévesen azt hihetné,
   // hogy a régi verziót folytatja, valójában egy új "fejet" hozna létre a
   // láncon.
@@ -394,7 +394,7 @@ describe('OsszesTervSection', () => {
     await nyissLancot(user, doboz);
 
     // A láncban EGYETLEN "Új verzió"/"Megnézés" látható gomb van -- a
-    // legfrissebb (v2) soré (D58); a historical (v1) soron nincs látható
+    // legfrissebb (v2) soré; a historical (v1) soron nincs látható
     // gomb egyáltalán.
     expect(within(doboz).getAllByRole('button', { name: 'Új verzió' })).toHaveLength(1);
     expect(within(doboz).getAllByRole('button', { name: 'Megnézés' })).toHaveLength(1);
@@ -414,7 +414,7 @@ describe('OsszesTervSection', () => {
     ]);
   });
 
-  // D58/D24: azonos oldalon belüli scroll+fókusz, nem route-navigáció -- a
+  // Azonos oldalon belüli scroll+fókusz, nem route-navigáció -- a
   // jsdom stub (test-setup.ts) a scrollIntoView-t no-op-ra cseréli, ezért a
   // hívást spy-jal igazoljuk, a célt a fókusszal.
   it('"Ugrás a legfrissebb verzióra" a lánc dobozára görget és a lánc-fejléc toggle gombjára fókuszál', async () => {
@@ -448,8 +448,8 @@ describe('OsszesTervSection', () => {
 
     await screen.findByText('Nagy Éva');
     const card = patientCard('Nagy Éva');
-    // A "Tömések" lánc NEM a legfrissebb véglegesített dátumú (46. tétel,
-    // D186) -- explicit ki kell nyitni. A verziói fordítva listázódnak
+    // A "Tömések" lánc NEM a legfrissebb véglegesített dátumú (46. tétel)
+    // -- explicit ki kell nyitni. A verziói fordítva listázódnak
     // (legfrissebb elöl) -- az első "⋯" menü a v2 sorához tartozik.
     const doboz = lancDoboz(card, v2.planDir);
     await nyissLancot(user, doboz);
@@ -459,12 +459,12 @@ describe('OsszesTervSection', () => {
     expect(screen.getByTestId('draft-nev')).toHaveTextContent('Nagy Éva');
     expect(screen.getByTestId('draft-tervid')).toHaveTextContent('„”'); // üres tervId -- új tervlánc
     expect(screen.getByTestId('draft-sorcount')).toHaveTextContent(String(forrasSorSzam));
-    // A dátumbélyeg frissül (D22-mintájú, planMasolatKent) -- nem a forrás
+    // A dátumbélyeg frissül (betöltéskori dátumbélyegzés mintája, planMasolatKent) -- nem a forrás
     // 2026-07-22-es keltezése marad.
     expect(screen.getByTestId('draft-keltezes')).not.toHaveTextContent(v2.plan.keltezes);
   });
 
-  // D58 (50. tétel, D260): a lánchoz azóta újabb verzió készült -- a doki
+  // 50. tétel: a lánchoz azóta újabb verzió készült -- a doki
   // figyelmeztetést kap, de a pontos (exact) másolás a megerősítés után is
   // lefut. NINCS mentetlen piszkozat itt -- ez önmagában, a piszkozat-őrtől
   // FÜGGETLENÜL nyitja a dialógust.
@@ -495,7 +495,7 @@ describe('OsszesTervSection', () => {
     expect(screen.getByTestId('draft-sorcount')).toHaveTextContent(String(forrasSorSzam));
   });
 
-  // D57: a "Másolás új tervbe" a paciens blokkot az ÉLŐ törzsadatból veszi,
+  // A "Másolás új tervbe" a paciens blokkot az ÉLŐ törzsadatból veszi,
   // nem a forrás verzió pillanatképéből -- a doki a másolás pillanatában a
   // páciens JELENLEGI adatát akarja az új ajánlatba, nem egy régebbi
   // telefonszámot.
@@ -522,7 +522,7 @@ describe('OsszesTervSection', () => {
     expect(screen.getByTestId('draft-telefon')).toHaveTextContent('+36 70 111 2222');
   });
 
-  // D33: a paciens-adatok.json valódi system of record -- egy sérült fájl
+  // A paciens-adatok.json valódi system of record (lásd app/src/storage/CLAUDE.md) -- egy sérült fájl
   // hibaként dobódik, a másolás nem eshet vissza némán a forrás régi
   // pillanatképére.
   it('"Másolás új tervbe" hibát jelez, ha a törzsadat sérült, és nem navigál el', async () => {
@@ -583,7 +583,7 @@ describe('OsszesTervSection', () => {
     expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
   });
 
-  // D58: piszkozat-felülírás ÉS historical-másolás egyszerre -- a cím a
+  // Piszkozat-felülírás ÉS historical-másolás egyszerre -- a cím a
   // súlyosabb (piszkozat-vesztés) következményt nevezi meg, de a leírás
   // MINDKÉT figyelmeztetést tartalmazza, és a piros gomb marad.
   it('historical verzió másolása mentetlen piszkozat mellett mindkét figyelmeztetést mutatja', async () => {
@@ -712,8 +712,8 @@ describe('OsszesTervSection', () => {
     });
   });
 
-  // D29: az új harmadik szint -- a Korábbi tervek fő új viselkedése.
-  describe('páciens → terv → verzió fa (D29)', () => {
+  // Az új harmadik szint -- a Korábbi tervek fő új viselkedése.
+  describe('páciens → terv → verzió fa', () => {
     it('1 terv-lánccal rendelkező páciens alapból kibontva jelenik meg, nincs "N terv" kapcsoló', async () => {
       renderHistory();
       await screen.findByText('Kovács János');
@@ -724,8 +724,8 @@ describe('OsszesTervSection', () => {
     });
 
     // 46. tétel: a page-szintű "N terv" kapcsoló megszűnt -- a lánc-szintű
-    // toggle vette át a szerepét (D237/D249/D250). Alapból a legfrissebb
-    // VÉGLEGESÍTETT dátumú lánc (D186) van nyitva, a többi csukva; a
+    // toggle vette át a szerepét. Alapból a legfrissebb
+    // VÉGLEGESÍTETT dátumú lánc van nyitva, a többi csukva; a
     // fejlécek (címke + legfrissebb verzió + csukott állapotban az összeg)
     // NYITOTTSÁGTÓL FÜGGETLENÜL mindig látszanak.
     it('2+ terv-lánccal rendelkező páciensnél alapból csak a legfrissebb (véglegesített dátumú) lánc nyitva', async () => {
@@ -821,10 +821,10 @@ describe('OsszesTervSection', () => {
     });
   });
 
-  // backlog-28 (D33): a Páciensek képernyőn terv nélkül felvihető páciens
+  // backlog-28: a Páciensek képernyőn terv nélkül felvihető páciens
   // (csak paciens-adatok.json-nal) itt NEM jelenik meg -- ez a képernyő a
   // kezelési előzményekről szól.
-  describe('paciens-adatok.json (D33) hatása', () => {
+  describe('paciens-adatok.json hatása', () => {
     it('egy terv nélküli, csak törzsadattal rendelkező páciens nem jelenik meg a listán', async () => {
       const seeder = new DemoStorage();
       await seeder.init();
@@ -944,12 +944,12 @@ describe('OsszesTervSection', () => {
       expect(within(v1Sor).queryByText('Legutóbbi')).not.toBeInTheDocument();
 
       // Az egyverziós "Fogkőeltávolítás" láncon (alapból nyitva) nincs
-      // "Legutóbbi" jelvény -- funkciótlan dísz lenne (docs/07).
+      // "Legutóbbi" jelvény -- funkciótlan dísz lenne.
       const fogkoDoboz = lancDoboz(card, nagyEvaSingleVersionChain[0].planDir);
       expect(within(fogkoDoboz).queryByText('Legutóbbi')).not.toBeInTheDocument();
     });
 
-    // D75: a "Csak ajánlat" jelvény a MÁR betöltött `plansByVersion`-ből
+    // A "Csak ajánlat" jelvény a MÁR betöltött `plansByVersion`-ből
     // olvas, a "Legutóbbi" jelvény mintáján.
     it('"Csak ajánlat" jelvény csak azon a verziósoron jelenik meg, aminek plan.csakAjanlat === true', async () => {
       const user = userEvent.setup();
@@ -1052,7 +1052,7 @@ describe('OsszesTervSection', () => {
       ).toBeTruthy();
     });
 
-    it('üres (sor nélküli) draftnál nincs összeg (D246), hiányzó lastRoute-nál nincs lépés-sor', async () => {
+    it('üres (sor nélküli) draftnál nincs összeg, hiányzó lastRoute-nál nincs lépés-sor', async () => {
       seedPersistedDraft(
         { tervId: '', paciens: { ...seedPlans[0].plan.paciens, nev: 'Nagy Éva' } },
         { patientDir: nagyEvaEntries[0].patientDir },
@@ -1098,7 +1098,7 @@ describe('OsszesTervSection', () => {
       expect(await screen.findByText('TERV-OLDAL')).toBeInTheDocument();
     });
 
-    // D240: a lánc-nyitottság ÉS a keresőszöveg is visszaáll böngésző-
+    // A lánc-nyitottság ÉS a keresőszöveg is visszaáll böngésző-
     // "vissza" (POP) navigációnál, a MEGLÉVŐ useListStateMemory bővítésével.
     it('böngésző-"vissza" navigációnál a lánc-nyitottság és a keresőszöveg is visszaáll', async () => {
       const user = userEvent.setup();

@@ -1,8 +1,8 @@
-// Egyéb tab -- a Beállítások tab-szerkezetének (D49) harmadik tabja: ajánlat
+// Egyéb tab -- a Beállítások tab-szerkezetének harmadik tabja: ajánlat
 // érvényessége + alapértelmezett nyelv/pénznem + "A német tartalom
 // készültsége" áttekintő (tételnév-/EUR ár-lefedettség és a nyilatkozat
 // placeholder-státusza). Korábban a `SettingsPage.tsx` "Ajánlat és nyelv" Card-ja volt,
-// leütésenkénti autosave-vel (D31); a tabosítás óta pufferelt draft +
+// leütésenkénti autosave-vel; a tabosítás óta pufferelt draft +
 // explicit Mentés/Mégse.
 //
 // A készültség-blokk feltétel nélkül látszik (52. tétel: a német nyelv

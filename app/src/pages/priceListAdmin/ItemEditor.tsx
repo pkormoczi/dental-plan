@@ -15,8 +15,7 @@ import type { Ar, Kategoria, Penznem, Tetel } from '../../domain/types';
 import { BufferedTextArea, BufferedTextField } from './BufferedFields';
 
 /**
- * Elgépelés-védelem egy ár-slot alatt (docs/03-funkcionalis-spec.md § 6.
- * "Sor kinyitása") -- a `savosHatarForditott`/`leirasTulHosszu` mintájában
+ * Elgépelés-védelem egy ár-slot alatt -- a `savosHatarForditott`/`leirasTulHosszu` mintájában
  * amber, nem blokkoló szöveg, itt egy "Visszaállítás" akcióval kiegészítve.
  * A gomb csak akkor jelenik meg, ha VAN érdemi baseline (nem hiányzik, és
  * nem 0) -- egy vadonatúj tétel abszolút jelzésénél a "Visszaállítás: 0 Ft"
@@ -90,8 +89,7 @@ export default function ItemEditor({
   const savos = hufAr?.tipus === 'SAVOS';
 
   // A relatív elgépelés-detektor viszonyítási alapja -- a sor KINYITÁSAKORI
-  // érték, ár-slotonként, nem a megelőző commit (docs/03-funkcionalis-spec.md
-  // § 6. "Sor kinyitása"): egy 45 000 → 450 000 → 450 500 javítás-sorozatnál
+  // érték, ár-slotonként, nem a megelőző commit: egy 45 000 → 450 000 → 450 500 javítás-sorozatnál
   // a "megelőző érték" alapú viszonyítás a második commit után elnémulna.
   // Nincs hozzá `Tetel`-séma mező -- a sor bezárása (ItemEditor unmount)
   // nyomtalanul elviszi, ugyanaz az elv, mint a `pendingActivationId`-nál.
@@ -124,14 +122,14 @@ export default function ItemEditor({
   const firstInteractionHandledRef = useRef(false);
 
   /**
-   * P0-2 (D15): eddig csak a HUF-ot váltotta -- az EUR ár szerkezetileg
+   * P0-2: eddig csak a HUF-ot váltotta -- az EUR ár szerkezetileg
    * mindig FIX maradt, tehát egy sávos tétel német (EUR) ajánlatán a doki
    * tudta nélkül eltűnt a `*` jelölés és a sávos lábjegyzet. Mostantól a
    * két pénznem együtt vált, hogy a szerkezetük soha ne csússzon szét. Ha a
    * tételnek nincs EUR ára (`eurAr == null`), az marad -- a váltás nem hoz
    * létre új EUR árat a semmiből.
    *
-   * D31: az `ar` objektumot a friss `prev`-ből építi, nem a renderelt
+   * Az `ar` objektumot a friss `prev`-ből építi, nem a renderelt
    * `item`-ből -- ez a valós versenyhelyzet: egy HUF-ár blur-commit után
    * azonnal jövő EUR-stepper kattintás (vagy fordítva) enélkül eldobná az
    * időben korábbi írást, mert mindkettő az `ar` objektumot cseréli

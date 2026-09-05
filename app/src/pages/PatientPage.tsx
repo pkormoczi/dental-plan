@@ -1,4 +1,4 @@
-// Terv adatai -- docs/03-funkcionalis-spec.md "2. Terv adatai" (D61: hat,
+// Terv adatai (hat,
 // vizuálisan elkülönített szekció -- Terv címe, Páciens adatai, Dokumentum
 // nyelve, Pénznem, Kezelőorvos, Dátumok).
 //
@@ -6,12 +6,12 @@
 // véglegesítéskor figyelmeztetést ad, de nem blokkol -- itt sincs
 // kényszerített kitöltés, csak a "Tovább" gomb jelzi, ha a név üres.
 //
-// D21: itt dől el a terv nyelve és pénzneme -- itt derül ki a német páciens
+// Itt dől el a terv nyelve és pénzneme -- itt derül ki a német páciens
 // ténye. A teljes piszkozat-életciklus alatt szabadon módosítható (52.
 // tétel): a technikai autosave/mentés nem fagyasztja ezeket az értékeket,
 // csak a véglegesítés hozza létre az immutable pillanatképet -- egy már
 // lezárt verzió eleve nem ezen a lapon jelenik meg (lásd "Terv részletei").
-// A Kezelőorvos szekció (D67) ugyanígy szabadon szerkeszthető, egy mentett
+// A Kezelőorvos szekció ugyanígy szabadon szerkeszthető, egy mentett
 // láncon is -- itt sosem volt zárolás, ami alól ki kellene venni.
 
 import { useState } from 'react';
@@ -119,7 +119,7 @@ export default function PatientPage() {
   const [pending, setPending] = useState<PendingChange | null>(null);
   const aktivOrvosNevek = aktivOrvosok(settings);
   // Egy időközben deaktivált/törölt orvosra hivatkozó, még mentetlen sor --
-  // a draft szabadon szerkeszthető marad ilyen állapotban is (D63/D537), a
+  // a draft szabadon szerkeszthető marad ilyen állapotban is, a
   // véglegesítés-őr blokkolja, ha a doki nem választ aktív orvost.
   const orvosArva = !!plan.orvos && !aktivOrvosNevek.includes(plan.orvos);
 
@@ -143,8 +143,8 @@ export default function PatientPage() {
       const next = structuredClone(prev);
       // A RÉGI nyelvvel hasonlítjuk össze -- csak azok a sorok frissülnek
       // az új nyelvre, amik még az árlistai automatikus nevet viselték; egy
-      // kézzel pontosított név nem íródik felül -- lásd D24
-      // (docs/01-attekintes-es-dontesek.md).
+      // kézzel pontosított név nem íródik felül -- a feltétel
+      // nélküli újraírás törölné a doki pontosítását (`domain/nev.ts` `nevAtirt`).
       const regiNyelv = prev.nyelv;
       next.nyelv = nyelv;
       for (const f of next.fazisok) {
@@ -153,7 +153,7 @@ export default function PatientPage() {
           if (tetel && nevKoveti(s, tetel, regiNyelv)) {
             s.nevSnapshot = resolveNev(tetel.nev, nyelv).szoveg;
           }
-          // A leírásnak nincs HU-visszaesése (D27, docs/01) -- a hiányzó
+          // A leírásnak nincs HU-visszaesése (szándékos, lásd app/src/domain/CLAUDE.md) -- a hiányzó
           // fordítás itt üres stringgé normalizálódik, lásd leirasKoveti().
           if (tetel && leirasKoveti(s, tetel, regiNyelv)) {
             s.leirasSnapshot = (nyelv === 'hu' ? tetel.leiras?.hu : tetel.leiras?.de) ?? '';
@@ -220,7 +220,7 @@ export default function PatientPage() {
 
   // Az alapérték a `plan.keltezes`-ből számol, NEM `todayIso()`-ból: a
   // visszaállítás a nyomtatványon megjelenő kiadás dátumához mért ablakot
-  // kell adja, ne a mai naphoz mérten (D22 a `keltezes`-t úgyis mai napra
+  // kell adja, ne a mai naphoz mérten (az új verzió nyitása a `keltezes`-t úgyis mai napra
   // bélyegzi betöltéskor -- a kettő csak emiatt esik egybe egy friss
   // piszkozaton, nem szabad ezt egy közös helperbe összemosni).
   const alapErvenyesIg = addDaysIso(plan.keltezes, settings.ervenyessegNap);

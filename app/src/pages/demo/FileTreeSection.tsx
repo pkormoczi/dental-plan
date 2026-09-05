@@ -1,12 +1,12 @@
-// Filerendszer szekció a DEMO oldalon -- docs/03-funkcionalis-spec.md § 8.
-// Filerendszer. Demó-only, read-only vizualizáció: megmutatja, mit írna a
+// Filerendszer szekció a DEMO oldalon.
+// Demó-only, read-only vizualizáció: megmutatja, mit írna a
 // végleges (FileSystemStorage, 2. fázis) alkalmazás a doki gépére, a mockup
 // `dp:` localStorage-kulcsaiból fává építve (storage/demoFileTree.ts).
 //
 // `useMemo`, NEM async-effekt-plusz-loading-skeleton (mint az
 // OsszesTervSection): a `listFileTree()` szinkron `localStorage`-bejárás, nem
-// egy `PlanStorage`-hívás, egy mesterséges betöltés-villanás docs/07 "Nincs
-// kitalált adat a felületen" szellemével ütközne. Az `AppStateProvider`
+// egy `PlanStorage`-hívás, egy mesterséges betöltés-villanás kitalált
+// adat lenne a felületen. Az `AppStateProvider`
 // már ma is megvárja a `ready` promise-t a gyerek-oldalak renderelése
 // előtt (state/AppState.tsx), ezért ez a szekció sem várja meg külön.
 

@@ -20,7 +20,7 @@ export interface ElolegBlokkProps {
 }
 
 /**
- * Előleg-kapcsoló (backlog-9, D66: abszolút összeg; a 91. tétel a
+ * Előleg-kapcsoló (backlog-9, abszolút összeg; a 91. tétel a
  * százalékos bevitellel bővítette). A `Summary` ALATT áll, mert az előleg a
  * végösszegből számol -- ez az a pillanat, amikor a doki amúgy is azt nézi.
  *
@@ -28,13 +28,13 @@ export interface ElolegBlokkProps {
  * `null` = nincs előleg-sor a nyomtatványon). A "bekapcsolva, de a doki még
  * nem írt be összeget" állapot viszont KIZÁRÓLAG komponens-lokális (`on`) --
  * bekapcsoláskor a mező üresen, azonnali fókusszal jelenik meg, előtöltés
- * nélkül (D517), és amíg a doki nem commitál egy összeget, a `Plan`-en
+ * nélkül, és amíg a doki nem commitál egy összeget, a `Plan`-en
  * marad `null`. Ez zárja ki, hogy egy "bekapcsolt, de értelmetlen" állapot
  * perzisztálódjon.
  *
  * A Ft/% módváltó (`mod`) és a %-mező piszkozata (`szazalek`) SZINTÉN
  * komponens-lokális -- a százalék csak beviteli segéd `elolegSzazalekbol()`-
- * hoz (docs/03-funkcionalis-spec.md § Előleg), a `Plan`-en mindig a belőle
+ * hoz, a `Plan`-en mindig a belőle
  * számolt abszolút összeg landol.
  */
 export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onChange }: ElolegBlokkProps) {
@@ -42,7 +42,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
   const [mod, setMod] = useState<ElolegMod>('osszeg');
   const [szazalek, setSzazalek] = useState<number | null>(null);
   // Van-e ÉRVÉNYES, commitált érték a mezőben -- ezt nézi a kötelező-mező
-  // hiba (D518: csak blur/véglegesítési kísérlet után), NEM a prop-ot: az
+  // hiba (csak blur/véglegesítési kísérlet után), NEM a prop-ot: az
   // `onChange` a szülő state-jét frissíti, ami csak a KÖVETKEZŐ renderben ér
   // vissza propként. Ugyanígy nem lehet React state sem: az `onCommit`-tal
   // egy tickben lefutó NumberField `onBlur` a JELENLEGI render zárványát
@@ -169,7 +169,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
                     textAlign="right"
                     onCommit={(v) => {
                       // Explicit 0 -- canonical disable: a kapcsoló
-                      // automatikusan kikapcsol, a mező eltűnik (D519, "0
+                      // automatikusan kikapcsol, a mező eltűnik ("0
                       // összegű előleg" nem értelmes állapot).
                       if (v === 0) {
                         setOn(false);

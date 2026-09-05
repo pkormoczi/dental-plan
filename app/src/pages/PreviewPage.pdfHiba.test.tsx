@@ -62,7 +62,7 @@ function seedValidDraft() {
           kiskoru: false,
           torvenyesKepviselo: null,
         },
-        // D103: egy 0 soros fázis önmagában is HARD blokk -- ez a teszt
+        // Egy 0 soros fázis önmagában is HARD blokk -- ez a teszt
         // nem az üres fázist vizsgálja, ezért egy sort kap.
         fazisok: [
           {
@@ -120,7 +120,7 @@ describe('PreviewPage -- 68. tétel: PDF-render hiba állapota', () => {
         ),
       ).toBeInTheDocument();
 
-      // Az auto-generálás useEffect-je (D603) a betöltés/sablonok
+      // Az auto-generálás useEffect-je a betöltés/sablonok
       // beérkezésekor is újrahívja updatePdf-et -- a retry-gomb hatását a
       // kattintás ELŐTTI hívásszámhoz képest, nem abszolút nullához mérjük.
       // `toBeGreaterThan` (nem pontos `+1`), mert a sablon-betöltés

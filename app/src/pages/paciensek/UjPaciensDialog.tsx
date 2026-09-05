@@ -1,14 +1,14 @@
-// Új páciens felvitele terv nélkül (backlog-28, 6. döntés; backlog-36,
-// D14/D15 -- mindkét belépési pontot ez a közös dialógus szolgálja:
+// Új páciens felvitele terv nélkül (backlog-28, 6. döntés; backlog-36
+// -- mindkét belépési pontot ez a közös dialógus szolgálja:
 // `PaciensekPage.tsx` "+ Új páciens" ÉS a `NewPlanPage.tsx` "+ Új páciens"/
 // no-match ága). `priceListAdmin/UjTetelDialog.tsx` mintája: csak
 // a kötelező névre kérdez kötelezően, a többi (elérhetőség, TAJ, kiskorú
 // stb.) a mentés UTÁN, a listában kinyíló sorban szerkeszthető -- a
-// szuletesiIdo/telefon (D15) kivétel, mert azok "látható, de opcionális"
+// szuletesiIdo/telefon kivétel, mert azok "látható, de opcionális"
 // mezőként a redesign explicit kéri már itt. Explicit Mentés/Mégse -- semmi
 // nem kerül a törzsadatba a Mentés gomb megnyomása előtt.
 //
-// A duplikáció-detektálás (D42, `usePaciensDuplikacio`) kétfázisú: a
+// A duplikáció-detektálás (`usePaciensDuplikacio`) kétfázisú: a
 // javaslat-lista (`DuplikacioJavaslatok`) inline, gépelés közben frissül; a
 // Mentés gomb EMELLETT mindig lefuttatja a friss adatokra a save-time
 // ellenőrzést (`ellenoriz`) is, mielőtt tényleg menteni. Egyetlen,
@@ -44,7 +44,7 @@ export interface UjPaciensDialogProps {
   initialNev?: string;
   onSave: (nev: string, kezdoAdatok: { szuletesiIdo: string; telefon: string }) => void;
   /**
-   * D203/D204: névegyezésnél a doki a talált páciensre folytathatja a
+   * Névegyezésnél a doki a talált páciensre folytathatja a
    * flow-t ahelyett, hogy újat venne fel -- a begépelt adatok ilyenkor
    * eldobódnak, a hívó dönti el, mi történik (pl. a listasor megnyitása
    * vagy a terv-flow folytatása a meglévő páciensen).

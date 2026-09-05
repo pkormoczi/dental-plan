@@ -1,5 +1,4 @@
-// Elgépelés-védelem az árlista árainál (docs/03-funkcionalis-spec.md § 6.
-// "Sor kinyitása") -- külön fájlban a PriceListAdminPage.test.tsx mellett,
+// Elgépelés-védelem az árlista árainál -- külön fájlban a PriceListAdminPage.test.tsx mellett,
 // a PriceListAdminPage.leiras.test.tsx fejléc-kommentjében leírt okból (a
 // fő teszt-fájl kumulatív lassulása).
 

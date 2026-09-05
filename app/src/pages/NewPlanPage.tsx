@@ -1,5 +1,4 @@
-// Köztes kereső/választó lépés a Home "+ Új kezelési terv" gombja után (D29,
-// docs/03-funkcionalis-spec.md § Új terv indítása). A Korábbi tervek oldal
+// Köztes kereső/választó lépés a Home "+ Új kezelési terv" gombja után. A Korábbi tervek oldal
 // saját "Új terv"/"Másolás új tervbe" gombjai NEM ide navigálnak -- azoknál
 // a célpáciens már adott a forrás tervből, nincs kétértelműség.
 
@@ -42,7 +41,7 @@ export default function NewPlanPage() {
   const akciok = usePlanVersionActions({ onUjPaciens: openQuickCreate });
 
   // A "Vadonatúj páciens"/no-match ág mostantól a quick-create dialóguson át
-  // hoz létre valódi Patient-rekordot MÉG A TERV ELŐTT (D14, backlog-36) --
+  // hoz létre valódi Patient-rekordot MÉG A TERV ELŐTT (backlog-36) --
   // korábban `resetPlanDraft()` egyenesen egy üres draftra navigált, rekord
   // nélkül. Az `ujNev` a no-match opció begépelt szövege, a dialógus ezzel
   // előtöltve nyílik.
@@ -76,9 +75,8 @@ export default function NewPlanPage() {
   const most = useMemo(() => new Date(), []);
   const trimmed = q.trim();
   // 0-1 karakternél a legutóbbi aktivitású páciensek (a Kezdőlappal közös
-  // helper, D39/D40), 2+ karaktertől relevancia szerinti keresés
-  // (`paciensKereses.ts`) -- lásd docs/03-funkcionalis-spec.md „Új terv
-  // indítása".
+  // helper), 2+ karaktertől relevancia szerinti keresés
+  // (`paciensKereses.ts`).
   const isSearching = trimmed.length >= KERESES_MIN_KARAKTER;
   const recents = useMemo(
     () => legutobbAktivPaciensek(patients, UJ_TERV_RECENT_LIMIT),
@@ -90,7 +88,7 @@ export default function NewPlanPage() {
   );
   const listaTetelek = isSearching ? talalatok : recents;
   // Nulla találatnál egy közvetlen "Új páciens" pszeudó-opció a begépelt
-  // névvel -- az ItemPicker "egyedi tétel felvétele" mintája (D40). A
+  // névvel -- az ItemPicker "egyedi tétel felvétele" mintája. A
   // mindig látható, kereső fölötti "+ Új páciens" gomb emellett is megmarad.
   const ujPaciensOpcio = isSearching && talalatok.length === 0;
   const opcioSzam = listaTetelek.length + (ujPaciensOpcio ? 1 : 0);
@@ -100,8 +98,7 @@ export default function NewPlanPage() {
     itemRefs.current[hi]?.scrollIntoView({ block: 'nearest' });
   }, [hi]);
 
-  // A `nev` a no-match ág begépelt szövege (docs/03-funkcionalis-spec.md
-  // „Új terv indítása") -- a mindig látható "+ Új páciens" gomb `nev`
+  // A `nev` a no-match ág begépelt szövege -- a mindig látható "+ Új páciens" gomb `nev`
   // nélkül hívja. Csak MEGNYITJA a quick-create dialógust -- a tényleges
   // rekordlétrehozás és navigáció a `createAndStart` sikerágában történik.
   function openQuickCreate(nev?: string) {
@@ -137,7 +134,7 @@ export default function NewPlanPage() {
   // body-ra esne (ugyanaz a Radix-mintájú bug, mint amit az
   // `UjPaciensDialog.tsx` `AlertDialog.Content` kommentje igazol),
   // megszakítva a gépel -> nyíl -> Enter ciklust -- ezért itt kézzel
-  // visszaadjuk a keresőmezőnek. A `q` state-hez NEM nyúlunk (D205): a
+  // visszaadjuk a keresőmezőnek. A `q` state-hez NEM nyúlunk: a
   // keresőszöveg megmarad.
   function handleUjOpenChange(open: boolean) {
     setUjOpen(open);
@@ -147,7 +144,7 @@ export default function NewPlanPage() {
   }
 
   // A tételkereső (ItemPicker.tsx:129-159) gépel -> nyíl -> Enter/Esc
-  // ciklusának adaptálása (D40) -- a listaTetelek + a no-match "Új
+  // ciklusának adaptálása -- a listaTetelek + a no-match "Új
   // páciens" pszeudó-opció közös indextartományán ([0, opcioSzam)) mozog.
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Escape') {

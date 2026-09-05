@@ -1,9 +1,9 @@
 // backlog-29: a DEMO oldal a korábban önálló Filerendszer nézetet és a
-// Kezdőlapról levett Funkciólista/Változásnapló kártyát fogja össze -- D39
-// óta, a Kezdőlapról ide költözött két demó-adatkezelő gombbal
-// (Adatkezelés fül) kiegészülve, D54 óta pedig a globális, több-pácienses
+// Kezdőlapról levett Funkciólista/Változásnapló kártyát fogja össze -- a Kezdőlap
+// letisztítása óta, onnan ide költözött két demó-adatkezelő gombbal
+// (Adatkezelés fül) kiegészülve, majd a globális, több-pácienses
 // terv-lánc/verzió fával ("Összes terv" fül). Ez a teszt a fül-váltást ÉS
-// az öt fül URL-címezhetőségét (`/demo/:tab`, D54) fedi -- az egyes
+// az öt fül URL-címezhetőségét (`/demo/:tab`) fedi -- az egyes
 // tartalmak saját tesztjei (FileTreeSection.test.tsx,
 // FeatureOverviewCard.test.tsx, OsszesTervSection.test.tsx) változatlanul
 // felelősek a bennük lévő viselkedésért.
@@ -18,7 +18,7 @@ import { NavGuardProvider } from '../components/NavGuardContext';
 import { AppStateProvider } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 
-// A `useParams()`-alapú fülvezérlés (D54) csak akkor kap valódi `:tab`
+// A `useParams()`-alapú fülvezérlés csak akkor kap valódi `:tab`
 // paramétert, ha a komponens ténylegesen egy paraméteres `<Route>` alatt
 // renderel -- a `TestProviders` bare `MemoryRouter`-je (`Route` nélkül)
 // ehhez nem elég, ezért itt saját, App.tsx-et tükröző route-táblát építünk.
@@ -51,8 +51,7 @@ function renderDemoPage(initialEntries: string[] = ['/demo']) {
 // Radix Tabs.Trigger renders a második, csak CSS-sel (`visibility: hidden`)
 // takart span-t a felirat mellé, hogy a kijelölt/nem kijelölt vastagság
 // ne tördelje újra a sávot -- a vitest-készlet nem tölti be a Radix
-// Themes CSS-t (docs/07-felulet-rendszer.md § Ellenőrzés valódi
-// böngészőben), ezért az accessible name jsdom alatt duplázva számít ki
+// Themes CSS-t (jsdom-vakfolt, lásd app/src/CLAUDE.md), ezért az accessible name jsdom alatt duplázva számít ki
 // (pl. "FunkciókFunkciók"). Ezért a fül-lekérdezések regexet használnak.
 
 describe('DemoPage', () => {
@@ -98,7 +97,7 @@ describe('DemoPage', () => {
     expect(screen.getByRole('button', { name: 'Minden adat törlése' })).toBeInTheDocument();
   });
 
-  // D54: a globális, több-pácienses terv-lánc/verzió fa -- ez az EGYETLEN
+  // A globális, több-pácienses terv-lánc/verzió fa -- ez az EGYETLEN
   // fül, ami valódi terv-adatot mutat, a tartalmát az OsszesTervSection.test.tsx
   // fedi részletesen.
   it('az Összes terv fülre kattintva a terv-lánc fa keresője jelenik meg', async () => {
@@ -110,7 +109,7 @@ describe('DemoPage', () => {
     expect(screen.getByRole('textbox', { name: 'Keresés páciensnévre' })).toBeInTheDocument();
   });
 
-  // D54: mind az öt fül közvetlenül, URL-ről is elérhető -- ez a `/tervek`
+  // Mind az öt fül közvetlenül, URL-ről is elérhető -- ez a `/tervek`
   // redirect (App.tsx) célja is.
   it('közvetlen `/demo/:tab` URL a megfelelő fület nyitja meg', async () => {
     renderDemoPage(['/demo/filerendszer']);
@@ -139,7 +138,7 @@ describe('DemoPage', () => {
   });
 
   // A fülváltás `replace` navigáció (DemoPage.tsx) -- enélkül a
-  // `useListStateMemory` (D43/D51) POP-alapú megőrzése az Összes terv
+  // `useListStateMemory` POP-alapú megőrzése az Összes terv
   // fülön fülbe zárva, elérhetetlenül maradna egy böngésző-"vissza" után.
   it('a fülváltás replace navigáció -- egy böngésző-"vissza" a DEMO ELŐTTI oldalra visz, nem fülről fülre', async () => {
     const user = userEvent.setup();

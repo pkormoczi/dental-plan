@@ -1,11 +1,11 @@
 // Páciensek -- backlog-28. tétel: a `terv.json` `paciens` blokkja
-// tervenkénti pillanatkép (D7), itt viszont a doki a páciens JELENLEG
+// tervenkénti pillanatkép, itt viszont a doki a páciens JELENLEG
 // érvényes, terv-mentéstől független adatait tartja (paciens-adatok.json,
-// D33). Funkcionálisan külön a terv-lánc/verzió fától (docs/03 § 5): az a
+// lásd app/src/storage/CLAUDE.md). Funkcionálisan külön a terv-lánc/verzió fától: az a
 // kezelési előzmény/verziók tartalma, ez a törzsadaté -- mindkettő
 // ugyanoda, a páciens-részletoldalra vezet.
 //
-// A 38. tétel (D43) óta ez tiszta NAVIGÁCIÓS lista: a sorok a páciens-
+// A 38. tétel óta ez tiszta NAVIGÁCIÓS lista: a sorok a páciens-
 // részletoldalra (`PatientDetailPage.tsx`) navigálnak, a törzsadat-
 // szerkesztő (`PatientEditorPanel`) itt nem jelenik meg -- az egyetlen
 // helye a részletoldal `Páciens adatai` tabja.
@@ -89,7 +89,7 @@ export default function PaciensekPage() {
       const folder = await storage.createPatient(nev, kezdoAdatok);
       setNewOpen(false);
       // Frissen létrehozott páciens -- szerkesztés módban nyílik, mert a
-      // doki valószínűleg tovább akarja tölteni a többi mezőt (D45). A
+      // doki valószínűleg tovább akarja tölteni a többi mezőt. A
       // meglévő páciens kiválasztásának ága (`onUseExisting` lent)
       // szándékosan nézet módban marad.
       navigate(`/paciensek/${encodeURIComponent(folder.dirName)}`, {
@@ -216,7 +216,7 @@ export default function PaciensekPage() {
   );
 }
 
-/** docs/07-felulet-rendszer.md: skeleton a végleges elrendezés alakjában, ne pörgő spinner. */
+/** Skeleton a végleges elrendezés alakjában, ne pörgő spinner -- a layout ne ugorjon betöltés után. */
 function PatientsSkeleton() {
   return (
     <Table.Root size="2">

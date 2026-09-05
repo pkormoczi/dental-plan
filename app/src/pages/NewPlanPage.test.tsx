@@ -1,13 +1,12 @@
-// D29: a Home "+ Új kezelési terv" gombja utáni köztes kereső/választó lépés
-// (docs/03-funkcionalis-spec.md § Új terv indítása). Lásd
+// A Home "+ Új kezelési terv" gombja utáni köztes kereső/választó lépés. Lásd
 // OsszesTervSection.test.tsx a `DraftProbe`/`seedPersistedDraft` mintáért --
 // ugyanaz a piszkozat-felülírás-őr fut itt is.
 //
-// A találati/recents sorok (D40) a név mellett egy halvány
+// A találati/recents sorok a név mellett egy halvány
 // aktivitás-segédszöveget is renderelnek (`aktivitasSzoveg()`) -- ezért a
 // recents állapotban lévő gombok accessible name-je NEM pontosan a
 // páciensnév, hanem "<név><aktivitás-szöveg>" konkatenáció (a Tabs
-// teszt-gotcha mintájára, docs/07-felulet-rendszer.md "Komponensek"):
+// teszt-gotcha mintájára):
 // ilyenkor `{ name: /Kovács János/ }` regexet kell adni, nem pontos stringet.
 // A 2+ karakteres KERESÉSI találatok sora egysoros (nincs aktivitás-szöveg),
 // ott a pontos név is működik.
@@ -270,7 +269,7 @@ describe('NewPlanPage', () => {
     expect(screen.getByRole('button', { name: /Kovács János/ })).toBeInTheDocument();
   });
 
-  // D14/backlog-36: a no-match "Új páciens" opció mostantól a quick-create
+  // backlog-36: a no-match "Új páciens" opció mostantól a quick-create
   // dialógust nyitja meg (a begépelt névvel előtöltve), nem navigál
   // egyenesen -- a Mentés hozza létre a valódi Patient-rekordot.
   it('nulla találatnál egy "Új páciens" opció jelenik meg a begépelt névvel, a dialógust előtöltve nyitja', async () => {
@@ -347,7 +346,7 @@ describe('NewPlanPage', () => {
     expect(screen.getByRole('button', { name: '+ Új páciens' })).toBeInTheDocument();
   });
 
-  // D14: a "+ Új páciens" ág mostantól a quick-create dialóguson át hoz
+  // A "+ Új páciens" ág mostantól a quick-create dialóguson át hoz
   // létre valódi Patient-rekordot MÉG A TERV ELŐTT -- csak sikeres mentés
   // után navigál a Terv adatai lapra.
   it('"+ Új páciens" a quick-create dialógust nyitja azonnal, megerősítés nélkül -- csak sikeres mentés után navigál', async () => {
@@ -366,7 +365,7 @@ describe('NewPlanPage', () => {
     expect(screen.getByTestId('draft-nev')).toHaveTextContent('Teszt Vadonatúj');
   });
 
-  it('"+ Új páciens" Mégse/Escape a selectoron marad, a keresőszöveg megmarad (D205)', async () => {
+  it('"+ Új páciens" Mégse/Escape a selectoron marad, a keresőszöveg megmarad', async () => {
     const user = userEvent.setup();
     renderNewPlan();
 
@@ -398,7 +397,7 @@ describe('NewPlanPage', () => {
     expect(screen.getByTestId('draft-telefon')).toHaveTextContent('+36 20 111 2222');
   });
 
-  it('"+ Új páciens" -- névegyezésnél az "Ezt a pácienst választom" a meglévő páciensre folytat (D203/D204)', async () => {
+  it('"+ Új páciens" -- névegyezésnél az "Ezt a pácienst választom" a meglévő páciensre folytat', async () => {
     const user = userEvent.setup();
     renderNewPlan();
 
@@ -483,9 +482,9 @@ describe('NewPlanPage', () => {
     expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Kovács János');
   });
 
-  // backlog-28 (D33): a törzsadat előnyben részesül a legutóbbi terv
+  // backlog-28: a törzsadat előnyben részesül a legutóbbi terv
   // pillanatképéhez képest, ha van lezárt paciens-adatok.json.
-  describe('paciens-adatok.json (D33) hatása', () => {
+  describe('paciens-adatok.json hatása', () => {
     it('lezárt törzsadat esetén onnan tölt elő, nem a legutóbbi terv paciens pillanatképéből', async () => {
       const seeder = new DemoStorage();
       await seeder.init();

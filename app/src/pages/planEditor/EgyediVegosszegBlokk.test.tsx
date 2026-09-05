@@ -34,11 +34,11 @@ function renderBlokk(sorszintuOsszeg: number) {
   );
 }
 
-// D69 (redesign DP-046): az alku lezárásakor a doki eddig fejben osztotta
+// Az alku lezárásakor a doki eddig fejben osztotta
 // vissza a sorokat, hogy a papíron kerek végösszeg jöjjön ki -- a mező
 // mostantól felár-irányban is állítható, üresen/autofókuszálva indul, és a
 // teljes elengedést (0) explicit megerősítéshez köti.
-describe('az egyedi végösszeg kapcsoló (D69)', () => {
+describe('az egyedi végösszeg kapcsoló', () => {
   it('bekapcsoláskor a mező üres és azonnal fókuszban van, nem a jelenlegi végösszeg', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);
@@ -65,7 +65,7 @@ describe('az egyedi végösszeg kapcsoló (D69)', () => {
     expect(screen.queryByText(/Add meg az egyedi végösszeget/)).not.toBeInTheDocument();
   });
 
-  it('a sorok összege fölé írt cél felárat ad, nincs felső korlát (D69, 2. döntés)', async () => {
+  it('a sorok összege fölé írt cél felárat ad, nincs felső korlát (2. döntés)', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
@@ -119,7 +119,7 @@ describe('az egyedi végösszeg kapcsoló (D69)', () => {
     expect(await screen.findByText(/teljes elengedését/)).toBeInTheDocument();
   });
 
-  it('üres, kötelező mező hibája csak blur után jelenik meg, nem a bekapcsolás pillanatában (D521)', async () => {
+  it('üres, kötelező mező hibája csak blur után jelenik meg, nem a bekapcsolás pillanatában', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 

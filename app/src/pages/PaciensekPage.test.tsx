@@ -1,4 +1,4 @@
-// 38. tétel (D43): a lista tiszta NAVIGÁCIÓS lista -- a sorok a
+// 38. tétel: a lista tiszta NAVIGÁCIÓS lista -- a sorok a
 // páciens-részletoldalra (`/paciensek/:patientDir`) navigálnak, a
 // törzsadat-szerkesztő (`PatientEditorPanel`) mezőkészlet/Save-Cancel
 // viselkedése a `PatientDetailPage.test.tsx`-ben fedett (az egyetlen
@@ -37,7 +37,7 @@ function PaciensProbe() {
     <div>
       <div data-testid="paciens-reszletei" data-patientdir={patientDir} data-tab={tab} data-mod={mod} />
       {/* `navigate(-1)` -- valódi böngésző-"vissza" (POP), a `Link to="/"`-tól
-          eltérően, ami PUSH-ot adna, tehát a `useListStateMemory` (D43) nem
+          eltérően, ami PUSH-ot adna, tehát a `useListStateMemory` nem
           állítana vissza semmit -- lásd useListStateMemory.test.tsx. */}
       <button onClick={() => navigate(-1)}>Vissza a listára</button>
     </div>
@@ -67,7 +67,7 @@ describe('PaciensekPage', () => {
     await seeder.init();
   });
 
-  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e (docs/07)', async () => {
+  it('a keresőmezőnek van elérhető neve, nem csak placeholder-e', async () => {
     renderPage();
     expect(
       await screen.findByRole('textbox', { name: 'Keresés névre, születési dátumra vagy telefonra' }),
@@ -154,7 +154,7 @@ describe('PaciensekPage', () => {
     const probe = await screen.findByTestId('paciens-reszletei');
     expect(probe.dataset.patientdir).toBeTruthy();
     expect(probe.dataset.tab).toBe('adatai');
-    // Frissen létrehozott páciens -- szerkesztés módban nyílik (D45), hogy
+    // Frissen létrehozott páciens -- szerkesztés módban nyílik, hogy
     // a doki tovább tölthesse a mezőket.
     expect(probe.dataset.mod).toBe('szerkesztes');
 
@@ -164,7 +164,7 @@ describe('PaciensekPage', () => {
     expect(patients.some((p) => p.nev === 'Vadonatúj Elemér')).toBe(true);
   });
 
-  it('"+ Új páciens" névegyezésnél az "Ezt a pácienst választom" a meglévő páciens részletoldalára navigál (D203/D204)', async () => {
+  it('"+ Új páciens" névegyezésnél az "Ezt a pácienst választom" a meglévő páciens részletoldalára navigál', async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -179,11 +179,11 @@ describe('PaciensekPage', () => {
     const probe = await screen.findByTestId('paciens-reszletei');
     expect(probe.dataset.tab).toBe('adatai');
     // Egy MEGLÉVŐ páciens kiválasztása -- nem létrehozás -- nézet módban
-    // nyit, nem szerkesztésben (D45).
+    // nyit, nem szerkesztésben.
     expect(probe.dataset.mod).toBe('');
   });
 
-  it('elnavigálás után böngésző-"vissza" navigálva a keresőszöveg megmarad (D43)', async () => {
+  it('elnavigálás után böngésző-"vissza" navigálva a keresőszöveg megmarad', async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -201,7 +201,7 @@ describe('PaciensekPage', () => {
     ).toHaveValue('nagy');
   });
 
-  it('a keresőmezőnek látható "Keresés" címkéje is van, az input fölött (docs/07)', async () => {
+  it('a keresőmezőnek látható "Keresés" címkéje is van, az input fölött', async () => {
     renderPage();
     await screen.findByText('Nagy Éva');
 

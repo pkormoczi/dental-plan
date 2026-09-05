@@ -37,7 +37,7 @@ export interface PhaseSectionProps {
   frequent: Tetel[];
   tetelekById: Map<string, Tetel>;
   fogterkep: FogterkepAllapot;
-  /** 65. tétel (D72): a guided review kényszerített-nyitás jelzése -- lásd `LineRow`/`FazisMegjegyzes`. */
+  /** 65. tétel: a guided review kényszerített-nyitás jelzése -- lásd `LineRow`/`FazisMegjegyzes`. */
   fokuszCel: FokuszCel;
   total: number;
   canDelete: boolean;
@@ -100,15 +100,15 @@ export default function PhaseSection({
   // fázistörlésnél a fazisResetToken (lásd fent).
   const [sorResetToken, setSorResetToken] = useState(0);
   // Tisztán UI-réteg felirat, nem pénzösszeg-formázás -- nem indokol közös
-  // domain segédfüggvényt, lásd docs/03-funkcionalis-spec.md § Sor mezői.
+  // domain segédfüggvényt.
   const penznemJel = currency === 'EUR' ? '€' : 'Ft';
 
-  // backlog-65 (docs/01-attekintes-es-dontesek.md D72) -- lásd `LineRow`
+  // backlog-65 -- lásd `LineRow`
   // hasonló konstansait.
   const megnevezesNyelvMismatch = nyelviMismatch(phase.megnevezesNyelv, nyelv);
   const megjegyzesNyelvMismatch = nyelviMismatch(phase.megjegyzesNyelv, nyelv);
 
-  // Sortörlés Undo-sávja (D79): a törölt sor + eredeti indexe rövid ideig
+  // Sortörlés Undo-sávja: a törölt sor + eredeti indexe rövid ideig
   // helyi state-ben, NEM egy általános undo-stack -- a `LineRow` DOM-eleme
   // eltűnik a törléssel, ezért ennek itt, a szülőjében kell élnie, hogy a
   // sáv túlélje. Egy újabb sortörlés lecseréli (nem halmozza) a korábbit.
@@ -132,7 +132,7 @@ export default function PhaseSection({
     onRemoveLine(li);
     setSorResetToken((n) => n + 1);
     setPendingUndo({ index: li, sor });
-    // Nincs docs/07-előírás a pontos időtartamra -- ennyi idő elég a sáv
+    // Nincs előírás a pontos időtartamra -- ennyi idő elég a sáv
     // észrevételéhez/elolvasásához, anélkül, hogy tartósan helyet foglalna.
     undoTimerRef.current = setTimeout(() => setPendingUndo(null), 8000);
   }
@@ -185,7 +185,7 @@ export default function PhaseSection({
               </IconButton>
             </>
           )}
-          {/* Csukott fejléc-összegzés (D72): név/darabszám/összeg -- nyitva
+          {/* Csukott fejléc-összegzés: név/darabszám/összeg -- nyitva
               a törzs ugyanezt (táblázat + lábléc) részletesen mutatja. */}
           {!open && (
             <Text size="2" color="gray" style={{ whiteSpace: 'nowrap' }}>
@@ -193,8 +193,8 @@ export default function PhaseSection({
             </Text>
           )}
         </Flex>
-        {/* ↑ ↓ 🗑 közvetlenül a fejlécen, három látható gomb -- lásd
-            docs/07-felulet-rendszer.md névesített kivétele (a fázisfejléc
+        {/* ↑ ↓ 🗑 közvetlenül a fejlécen, három látható gomb -- a "legfeljebb
+            két látható gomb egy adatsoron" szabály kivétele (a fázisfejléc
             szekciófejléc, nem lista-jellegű adatsor; az Árlista admin
             kategória-sora, PriceListAdminPage.tsx, ugyanezt teszi). */}
         <Flex gap="1" align="center">
@@ -276,7 +276,7 @@ export default function PhaseSection({
                       fallback={sorFallback(l, nyelv, tetelekById)}
                       tetel={tetelekById.get(l.tetelId)}
                       arFrissitesJavaslat={arFrissites(l, currency, tetelekById)}
-                      // 65. tétel (D72): a guided review a leírás-sávot
+                      // 65. tétel: a guided review a leírás-sávot
                       // kényszerítve nyitja, ha ez a sor a jelenlegi cél.
                       forceLeirasOpen={
                         fokuszCel?.mit === 'leiras' && fokuszCel.pi === pi && fokuszCel.li === li
@@ -349,7 +349,7 @@ export default function PhaseSection({
   );
 }
 
-/** A sortörlés inline Undo-sávja (D79) -- lásd `PhaseSection` `removeWithUndo`/`undoRemove`. */
+/** A sortörlés inline Undo-sávja -- lásd `PhaseSection` `removeWithUndo`/`undoRemove`. */
 function UndoRow({
   nev,
   buttonRef,

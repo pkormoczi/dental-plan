@@ -1,15 +1,13 @@
-// Beállítások -- docs/03-funkcionalis-spec.md "7. Beállítások" (D49). Három
+// Beállítások. Három
 // tab (Rendelő adatai / Nyomtatványok / Egyéb), mindegyik saját explicit
-// Mentés/Mégse + dirty guarddal -- a korábbi leütésenkénti autosave (D31)
+// Mentés/Mégse + dirty guarddal -- a korábbi leütésenkénti autosave
 // ezen a lapon megszűnt (az Árlista admin Kategóriák paneljének
 // attribútum-szerkesztése azóta ugyanezt a mintát követi, a tétel-
-// szerkesztés és a kategória létrehozás/törlés viszont autosave marad,
-// lásd docs/03-funkcionalis-spec.md § Kategóriák panel).
+// szerkesztés és a kategória létrehozás/törlés viszont autosave marad).
 //
 // A Radix `Tabs.Content` unmountolja az inaktív tabot, ezért egyszerre csak
 // egy tab draftja él -- a `dirty` egyetlen state a lap szintjén (a
-// `NavGuardContext` egy-boolean invariánsa, docs/07-felulet-rendszer.md
-// § Komponensek, ide is érvényes), a mindenkori aktív tab tölti fel az
+// `NavGuardContext` egy-boolean invariánsa, ide is érvényes), a mindenkori aktív tab tölti fel az
 // `onDirtyChange` callbacken át.
 
 import { useState } from 'react';
@@ -40,7 +38,7 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<SettingsTab>(() => toSettingsTab(searchParams.get('tab') ?? ''));
   const [dirty, setDirty] = useState(false);
   const guard = useDiscardGuard(dirty);
-  // D46: ugyanez a dirty jelző a NavBar-navigációt is védi.
+  // Ugyanez a dirty jelző a NavBar-navigációt is védi.
   useNavGuard(dirty);
 
   function requestTab(next: SettingsTab) {

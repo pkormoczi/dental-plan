@@ -1,4 +1,4 @@
-// docs/03-funkcionalis-spec.md § Autosave: a Home "Piszkozat folytatása"
+// A Home "Piszkozat folytatása"
 // kártyája az EGYETLEN belépési pont egy visszaállított/mentetlen
 // piszkozathoz -- ezeket a teszteket egy előre, közvetlenül a `dp:piszkozat`
 // localStorage-kulcsba írt DraftRecord-dal szimuláljuk (AppState a betöltő
@@ -110,7 +110,7 @@ function findSeedKey(dirReszlet: string, fajlnev: string): string {
 }
 
 /** A demó-készlet MINDEN pácienséről leveszi az `utolsoAktivitas` mezőt -- a 22 páciensre bővített
- * seed (D40) miatt a "teljesen üres recents" állapot teszteléséhez már nem elég 1-3 nevesített pácienst kezelni. */
+ * seed miatt a "teljesen üres recents" állapot teszteléséhez már nem elég 1-3 nevesített pácienst kezelni. */
 function stripAllUtolsoAktivitas() {
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)!;
@@ -131,8 +131,8 @@ const AKTIVITAS_CIMKE: Record<AktivitasTipus, string> = {
 };
 
 // A `TestProviders` bare MemoryRouter-je nem vált route-ot (lásd fenti
-// D29-komment) -- ahol a "Megnyitás" TÉNYLEGES célja számít (D37
-// lastRoute), valódi Routes/probe-oldalak kellenek, a
+// /uj-terv komment) -- ahol a "Megnyitás" TÉNYLEGES célja számít (a
+// perzisztált lastRoute), valódi Routes/probe-oldalak kellenek, a
 // TervWorkflowShell.test.tsx mintáján.
 function renderHomeWithRoutes() {
   return render(
@@ -169,7 +169,7 @@ describe('Home -- piszkozat-perzisztencia', () => {
     expect(screen.queryByRole('button', { name: 'Piszkozat elvetése' })).not.toBeInTheDocument();
   });
 
-  // D39: a demó-only "Demó adat visszaállítása"/"Minden adat törlése" a
+  // A demó-only "Demó adat visszaállítása"/"Minden adat törlése" a
   // DEMO oldal Adatkezelés fülére költözött, a "Korábbi tervek" gomb pedig
   // lekerült (a `/tervek` route URL-ről marad elérhető) -- lásd
   // DemoPage.test.tsx / AdatkezelesSection.test.tsx.
@@ -199,7 +199,7 @@ describe('Home -- piszkozat-perzisztencia', () => {
     expect(screen.getByText('Névtelen piszkozat')).toBeInTheDocument();
   });
 
-  // D29: a piszkozat-felülírás-őr innentől az /uj-terv köztes
+  // A piszkozat-felülírás-őr innentől az /uj-terv köztes
   // páciens-választón fut le (lásd NewPlanPage.test.tsx) -- a Home gombja
   // feltétel nélkül odanavigál, itt csak ennyi ellenőrizhető izoláltan
   // (a `TestProviders` bare `MemoryRouter`-je nem vált route-ot).
@@ -233,7 +233,7 @@ describe('Home -- piszkozat-perzisztencia', () => {
     ).not.toBeInTheDocument();
   });
 
-  // D37: a "Megnyitás" a perzisztált lastRoute-ra navigál, nem a
+  // A "Megnyitás" a perzisztált lastRoute-ra navigál, nem a
   // névkitöltés-heurisztikára.
   it('"Megnyitás" a piszkozat lastRoute-jára navigál, ha az ismert', async () => {
     seedPersistedDraft(makeDirtyPlan(), undefined, { lastRoute: '/elonezet' });
@@ -254,7 +254,7 @@ describe('Home -- piszkozat-perzisztencia', () => {
     expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
   });
 
-  // D37/7. döntés: a Home EGÉSZSÉGES kártyáján az eldobás megerősítést kér
+  // 7. döntés: a Home EGÉSZSÉGES kártyáján az eldobás megerősítést kér
   // (ellentétben a fenti, sérült-kártya megerősítés NÉLKÜLI gombjával).
   it('az egészséges kártya "Piszkozat elvetése" gombja megerősítést kér, elfogadás után a kártya eltűnik', async () => {
     seedPersistedDraft(makeDirtyPlan());
@@ -271,7 +271,7 @@ describe('Home -- piszkozat-perzisztencia', () => {
   });
 });
 
-describe('Home -- legutóbbi páciensek (D39)', () => {
+describe('Home -- legutóbbi páciensek', () => {
   beforeEach(async () => {
     localStorage.clear();
     const seeder = new DemoStorage();
@@ -281,7 +281,7 @@ describe('Home -- legutóbbi páciensek (D39)', () => {
   // Adatvezérelt: a várt sorrendet/tartalmat magából a seedből
   // (`legutobbAktivPaciensek`) számolja ki, nem konkrét neveket hardkódol --
   // így a demó-készlet bővítése (backlog-35 utáni, 22 páciensre bővített
-  // seed, D40) nem töri meg.
+  // seed) nem töri meg.
   it('a friss seeden a limitnek megfelelő recent sort mutat, a legutóbbi aktivitás szerint, aktivitás-címkével', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
@@ -306,7 +306,7 @@ describe('Home -- legutóbbi páciensek (D39)', () => {
     const link = await screen.findByRole('link', { name: /Kovács János/ });
     await user.click(link);
 
-    // D192: nincs location.state -- a PatientDetailPage alapértelmezett
+    // Nincs location.state -- a PatientDetailPage alapértelmezett
     // tabja ('tervek') a `null` state mellett is a Kezelési tervek tabot
     // mutatja.
     expect(await screen.findByTestId('state')).toHaveTextContent('null');

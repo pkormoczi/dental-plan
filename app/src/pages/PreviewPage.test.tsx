@@ -29,7 +29,7 @@ vi.mock('@react-pdf/renderer', async (importOriginal) => {
   };
 });
 
-/** A puha megerősítő lánc (docs/03 § 4.) ismételt "Folytatás" kattintással, amíg a siker-képernyő meg nem jelenik. */
+/** A puha megerősítő lánc ismételt "Folytatás" kattintással, amíg a siker-képernyő meg nem jelenik. */
 async function finalizeThroughConfirms(user: ReturnType<typeof userEvent.setup>) {
   for (let i = 0; i < 5; i++) {
     if (screen.queryByText('A terv elmentve ✓')) return;
@@ -84,7 +84,7 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
         { timeout: 10000 },
       );
 
-      // D73: KEMÉNY blokk -- a csekklista-tétel MINDIG látható, a
+      // KEMÉNY blokk -- a csekklista-tétel MINDIG látható, a
       // gombnyomás előtt is; a gomb letiltott, amíg a hard tétel fennáll.
       expect(
         await screen.findByText(/A terv 1 kitöltetlen sort tartalmaz/),
@@ -122,10 +122,10 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
   );
 });
 
-// D68: hiányzó vagy már nem aktív kezelőorvos -- KEMÉNY blokk, a
+// Hiányzó vagy már nem aktív kezelőorvos -- KEMÉNY blokk, a
 // kitöltetlen-sor blokk mintáján, a `nameMissing` UTÁN, az `uresSorok`
-// ELŐTT (docs/03-funkcionalis-spec.md § 4. Előnézet és véglegesítés).
-describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', () => {
+// ELŐTT.
+describe('PreviewPage -- hiányzó/nem aktív kezelőorvos kemény blokk', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -158,7 +158,7 @@ describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', 
             kiskoru: false,
             torvenyesKepviselo: null,
           },
-          // D103: egy 0 soros fázis önmagában is HARD blokk -- ez a teszt
+          // Egy 0 soros fázis önmagában is HARD blokk -- ez a teszt
           // nem az üres fázist vizsgálja, ezért egy sort kap (a 0 Ft csak
           // PUHA "nulla-osszegu-sor" tételt ad, nem blokkol).
           fazisok: [
@@ -201,7 +201,7 @@ describe('PreviewPage -- D68: hiányzó/nem aktív kezelőorvos kemény blokk', 
         { timeout: 10000 },
       );
 
-      // D73: KEMÉNY blokk -- a csekklista-tétel a gombnyomás ELŐTT is
+      // KEMÉNY blokk -- a csekklista-tétel a gombnyomás ELŐTT is
       // látszik, a gomb letiltott.
       expect(await screen.findByText(/A tervhez nincs kezelőorvos rendelve/)).toBeInTheDocument();
       expect(finalizeBtn).toBeDisabled();
@@ -379,9 +379,9 @@ describe('PreviewPage -- 94. tétel: névütközés kemény blokkja', () => {
   );
 });
 
-// 62. tétel (D71): egy a terv pénznemében beárazatlan, kézi árat sem kapott
+// 62. tétel: egy a terv pénznemében beárazatlan, kézi árat sem kapott
 // sor KEMÉNY blokk -- lásd domain/kitoltetlen.ts `araztalanSorok()`.
-describe('PreviewPage -- 62. tétel (D71): beárazatlan sor kemény véglegesítés-blokkja', () => {
+describe('PreviewPage -- 62. tétel: beárazatlan sor kemény véglegesítés-blokkja', () => {
   function seedWithNoEurPriceItem() {
     const custom = {
       ...seedPriceList,
@@ -438,7 +438,7 @@ describe('PreviewPage -- 62. tétel (D71): beárazatlan sor kemény véglegesít
         { timeout: 10000 },
       );
 
-      // D73: KEMÉNY blokk -- a tétel a gombnyomás ELŐTT is látszik, a gomb
+      // KEMÉNY blokk -- a tétel a gombnyomás ELŐTT is látszik, a gomb
       // letiltott. A sor egyúttal a puha "nulla-osszegu-sor" tételt is
       // kiváltja (0/0 áru sor) -- ugyanaz a név emiatt KÉT tételben is
       // szerepel, innen a `getAllByText`.
@@ -459,7 +459,7 @@ describe('PreviewPage -- 62. tétel (D71): beárazatlan sor kemény véglegesít
       await user.tab();
 
       // Most már folytatható a véglegesítés -- a hiányos páciensadat és a
-      // kézzel beírt ár okozta árlista-eltérés (D70) is csak PUHA tétel,
+      // kézzel beírt ár okozta árlista-eltérés is csak PUHA tétel,
       // egyik sem blokkol, a gomb közvetlenül ment.
       await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       const finalizeBtn2 = await screen.findByRole(
@@ -477,8 +477,7 @@ describe('PreviewPage -- 62. tétel (D71): beárazatlan sor kemény véglegesít
   );
 });
 
-// docs/03-funkcionalis-spec.md véglegesítés-lánc 4. lépése ("A piszkozat
-// törlése") -- ha ez elmaradna, a most fájlba mentett terv azonnal
+// A véglegesítés-lánc "piszkozat törlése" lépése -- ha ez elmaradna, a most fájlba mentett terv azonnal
 // vissza"íródna" piszkozatként (lásd AppState.tsx markPlanSaved).
 describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => {
   beforeEach(() => {
@@ -526,7 +525,7 @@ describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => 
   );
 });
 
-// backlog-69 (D74): a tartós mentés (savePlan+loadPlan) és a piszkozat
+// backlog-69: a tartós mentés (savePlan+loadPlan) és a piszkozat
 // best-effort takarítása (markPlanSaved -> drafts.clear()) két külön
 // hibazóna -- egy sikeres mentés utáni takarítás-hiba a doki szemszögéből
 // SOHA nem "A mentés nem sikerült", legfeljebb egy halk amber jelzés a
@@ -618,7 +617,7 @@ describe('PreviewPage -- backlog-69: piszkozat-törlés hibája nem hiúsítja m
   );
 });
 
-// backlog-51 (D61): a "Terv adatai" lap cím mezőjének (`TervCimField`) két
+// backlog-51: a "Terv adatai" lap cím mezőjének (`TervCimField`) két
 // írási útvonala -- vadonatúj lánchoz a `doFinalize()` írja ki a
 // `DraftMeta.tervCim`-et, mentett lánchoz ez a második `savePlanLabel` hívás
 // SOSEM fut (a cím már korábban, a lapon íródott).
@@ -767,11 +766,11 @@ function seedGermanPlanWithOneTranslatedItem() {
 
 /**
  * Egy vadonatúj, német nyelvű piszkozat közvetlen localStorage-seedelése,
- * a `sorok` paraméterrel megadott sorokkal -- ugyanaz a minta, mint a D68
- * `seedDraftWithOrvos()`. Direkt seedelés kell, mert a D74/D133 hard
+ * a `sorok` paraméterrel megadott sorokkal -- ugyanaz a minta, mint az orvos-blokk
+ * `seedDraftWithOrvos()`-ja. Direkt seedelés kell, mert a német tételnév hard
  * blokk predikátuma (`nemetNeveIgazolt()`, `domain/nemetNev.ts`) a
- * `Sor.nevNyelv` (D72) metaadattól függ -- ezt a szerkesztő UI-n át
- * begépelt szöveg MINDIG a jelenlegi dokumentumnyelvre stampeli (D72),
+ * `Sor.nevNyelv` metaadattól függ -- ezt a szerkesztő UI-n át
+ * begépelt szöveg MINDIG a jelenlegi dokumentumnyelvre stampeli,
  * ezért a "kézzel eltérített, DE terven review nélkül maradt név" esetet
  * csak úgy lehet reprodukálni, ha a `nevNyelv` egy KORÁBBI (nem `de`)
  * nyelvre igazolt állapotban kerül a piszkozatba.
@@ -841,10 +840,10 @@ function seedGermanNameDraft(sorok: Record<string, unknown>[]) {
   );
 }
 
-// D74/D133 (user-döntés, lásd a tervdokumentumot): a hiányzó/eltérő német
+// User-döntés: a hiányzó/eltérő német
 // tételnév PUHÁRÓL KEMÉNY blokkra emelve -- a predikátum két javítási út
 // szerint bont (`domain/nemetNev.ts` `igazolatlanNemetNevek()`).
-describe('PreviewPage -- D74/D133: német tételnév kemény blokk', () => {
+describe('PreviewPage -- német tételnév kemény blokk', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -956,7 +955,7 @@ describe('PreviewPage -- D74/D133: német tételnév kemény blokk', () => {
   );
 });
 
-// docs/03-funkcionalis-spec.md § Sablon-placeholder őr (D23): a betöltött
+// Placeholder-zár (PRODUCT.md § A nyomtatvány szerződéses dokumentum): a betöltött
 // nyilatkozat placeholder (jogilag még nincs lezárva) esetén a "Csak
 // ajánlat" mód kényszerítve/letiltva -- a nyilatkozat és aláírás blokk
 // garantáltan kimarad a PDF-ből.
@@ -1053,7 +1052,7 @@ describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
   );
 });
 
-// docs/03-funkcionalis-spec.md § Sablon-placeholder őr: a fizetési feltételek
+// Placeholder-zár (PRODUCT.md § A nyomtatvány szerződéses dokumentum): a fizetési feltételek
 // placeholderje a meglévő HU-visszaesésbe esik, NEM a nyilatkozat kemény
 // zárába -- a "Csak ajánlat" ilyenkor NEM kényszerített.
 describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
@@ -1176,7 +1175,7 @@ function seedWithCsomagItem() {
   localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
 }
 
-// docs/02-domain-modell.md § Tétel-leírás: PUHA megerősítő lépés, nem kemény
+// Hiányzó tétel-leírás: PUHA megerősítő lépés, nem kemény
 // blokk -- a doki tudatosan átugorhatja és véglegesíthet leírás nélkül is.
 describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lépés', () => {
   beforeEach(() => {
@@ -1211,7 +1210,7 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
         { timeout: 10000 },
       );
 
-      // D73: PUHA tétel -- a gombnyomás ELŐTT is látszik, de NEM blokkol.
+      // PUHA tétel -- a gombnyomás ELŐTT is látszik, de NEM blokkol.
       expect(await screen.findByText(/csomagtételre hivatkozó soron nincs leírás/)).toBeInTheDocument();
       expect(screen.getByText(/Fogeltávolítás/)).toBeInTheDocument();
       expect(finalizeBtn).not.toBeDisabled();
@@ -1262,7 +1261,7 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
 });
 
 // backlog-19: névvel ellátott, de 0 Ft-os sor -- PUHA csekklista-tétel
-// (D73), a gomb megnyomása előtt is látszik, de nem blokkol (a 0 ár lehet
+//, a gomb megnyomása előtt is látszik, de nem blokkol (a 0 ár lehet
 // szándékos, pl. ingyenes kontroll). A gépel->0 találat->Enter úton felvett egyedi sor
 // ("Érzéstelenítés", ugyanaz a minta, mint PlanEditorPage.test.tsx backlog-3
 // tesztje) 0 Ft kezdőértékkel jön létre -- ez a fantomsor-eset, amit a tétel
@@ -1360,7 +1359,7 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
   );
 });
 
-// backlog-40 (6. döntés, D162/D163): a páciens törzsadata és a terv
+// backlog-40 (6. döntés): a páciens törzsadata és a terv
 // `paciens` pillanatképe közötti eltérés INFO-szintű, nem blokkoló sorként
 // jelenik meg -- a véglegesítés önmagában nem kényszerít szinkronizálást.
 describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
@@ -1641,7 +1640,7 @@ describe('PreviewPage -- letöltési fájlnév', () => {
   );
 });
 
-// D75: a "Csak ajánlat" a `Plan.csakAjanlat` mezője, nem helyi React
+// A "Csak ajánlat" a `Plan.csakAjanlat` mezője, nem helyi React
 // state -- navigáció oda-vissza megőrzi, és a mentett terv.json is
 // tükrözi a ténylegesen kiadott PDF-et.
 describe('PreviewPage -- backlog-70: "Csak ajánlat" mező perzisztencia és véglegesített érték', () => {
@@ -1778,7 +1777,7 @@ describe('PreviewPage -- backlog-70: "Csak ajánlat" mező perzisztencia és vé
         versionDir: version.dirName,
       });
       // A mezőbe a doki soha nem pipálta be kézzel a "Csak ajánlat"-ot --
-      // a kényszer (D23) mégis igazként mentődik, mert a ténylegesen
+      // a kényszer mégis igazként mentődik, mert a ténylegesen
       // kiadott PDF-ből a nyilatkozat és aláírás blokk ugyanúgy kimaradt.
       expect(saved.csakAjanlat).toBe(true);
     },
@@ -1786,7 +1785,7 @@ describe('PreviewPage -- backlog-70: "Csak ajánlat" mező perzisztencia és vé
   );
 });
 
-// backlog-61 (D70): a puha "price-drift" lépés a lánc ötödik, utolsó tagja --
+// backlog-61: a puha "price-drift" lépés a lánc ötödik, utolsó tagja --
 // itt egyedül fut le, mert a páciensadat teljes, a terv magyar (nincs
 // de-fallback-names), a sor nem 0 összegű és nem csomagtétel.
 describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés', () => {
@@ -1844,13 +1843,13 @@ describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés
   );
 });
 
-// 65. tétel (D72) + D74/D133: a "nyelvi-review" PUHA tétel és a "nemet-nev"
+// 65. tétel + német tételnév: a "nyelvi-review" PUHA tétel és a "nemet-nev"
 // KEMÉNY tétel egyszerre fut le (a sornév kézzel átírva, ami MIND az
 // árlistai-fordítás-hiányt, MIND a nyelvi review-t alkalmazhatóvá teszi) --
 // és a "Nyelv ellenőrizve" akció mindkettőt egyszerre oldja fel, mert a
-// D74 hard blokk predikátuma (`nemetNeveIgazolt()`) is a `nevNyelv`
+// német-név hard blokk predikátuma (`nemetNeveIgazolt()`) is a `nevNyelv`
 // review-metaadaton áll.
-describe('PreviewPage -- 65. tétel (D72) + D74/D133: nyelvi review és a német tételnév kemény blokk', () => {
+describe('PreviewPage -- 65. tétel: nyelvi review és a német tételnév kemény blokk', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1901,7 +1900,7 @@ describe('PreviewPage -- 65. tétel (D72) + D74/D133: nyelvi review és a német
         { timeout: 10000 },
       );
 
-      // D74/D133: KEMÉNY blokk -- a sor kézzel eltér az árlistai német
+      // KEMÉNY blokk -- a sor kézzel eltér az árlistai német
       // névtől, és a review-metaadat nem a jelenlegi (de) nyelvre igazolt.
       expect(
         await screen.findByText(
@@ -1913,7 +1912,7 @@ describe('PreviewPage -- 65. tétel (D72) + D74/D133: nyelvi review és a német
       ).toBeInTheDocument();
       expect(finalizeBtn).toBeDisabled();
 
-      // 65. tétel (D72): a SAJÁT, ettől független PUHA tétel -- ugyanarra a
+      // 65. tétel: a SAJÁT, ettől független PUHA tétel -- ugyanarra a
       // sorra, más okból.
       expect(
         screen.getByText(/1 kézzel írt szöveg nem biztos, hogy a dokumentum nyelvén helyes/),
@@ -1923,13 +1922,13 @@ describe('PreviewPage -- 65. tétel (D72) + D74/D133: nyelvi review és a német
       await user.click(screen.getByRole('button', { name: 'Irányított ellenőrzés' }));
 
       // A guided review a szerkesztőbe navigál, a nem-modális sávval, és a
-      // sornévhez fókuszál -- nem nyit külön modalt (D469).
+      // sornévhez fókuszál -- nem nyit külön modalt.
       await screen.findByText(/Nyelvi ellenőrzés — még 1 ellenőrizendő/);
       expect(await screen.findByDisplayValue('Kihúzás megbeszélt módon')).toBeInTheDocument();
       expect(screen.getByDisplayValue('Kihúzás megbeszélt módon')).toHaveFocus();
 
       // "Nyelv ellenőrizve" -- a sáv automatikusan befejeződik, mert nincs
-      // több ellenőrizendő szöveg (D468).
+      // több ellenőrizendő szöveg.
       await user.click(screen.getByRole('button', { name: 'Nyelv ellenőrizve' }));
       await waitFor(() =>
         expect(screen.queryByText(/Nyelvi ellenőrzés/)).not.toBeInTheDocument(),

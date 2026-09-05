@@ -1,12 +1,12 @@
-// "Páciens törzsadata" eltérés-jelzés -- backlog-40 (redesign DP-016), a
+// "Páciens törzsadata" eltérés-jelzés -- backlog-40, a
 // Terv adatai lap "Páciens adatai" szekciójába ágyazva, a személyes adatok
-// mezői ALATT (docs/03-funkcionalis-spec.md § 2. Terv adatai; backlog-51
-// óta kártyakeret nélkül, lásd lent). A D33 invariánsa (nincs automatikus
-// szinkron) változatlan: ez a rész KÉT külön, explicit irányú műveletet ad
+// mezői ALATT (backlog-51
+// óta kártyakeret nélkül, lásd lent). A törzsadat invariánsa (nincs automatikus
+// szinkron, lásd app/src/storage/CLAUDE.md) változatlan: ez a rész KÉT külön, explicit irányú műveletet ad
 // -- "Frissítés a törzsadatból" (master -> draft) és "Törzsadat frissítése
 // a tervből" (draft -> master), soha nem egy közös "Szinkronizálás" gomb
-// (D160) -- plusz a lépés-elhagyáskor (a "Tovább" gomb, `PatientPage.tsx`)
-// egyszer felkínált ajánlatot (D161, `components/LepesGuardContext.tsx`).
+// -- plusz a lépés-elhagyáskor (a "Tovább" gomb, `PatientPage.tsx`)
+// egyszer felkínált ajánlatot (`components/LepesGuardContext.tsx`).
 //
 // Ha a `patientDir` nem oldható fel (`domain/torzsadatBetoltes.ts`
 // `feloldPatientDir`), ez a rész EGYÁLTALÁN NEM renderelődik -- nincs mihez
@@ -176,7 +176,7 @@ export default function TorzsadatSyncCard() {
     }
   }
 
-  // backlog-40 (3. döntés, D161): a "Terv adatai" lépés ELŐRE elhagyásakor
+  // backlog-40 (3. döntés): a "Terv adatai" lépés ELŐRE elhagyásakor
   // (csak amíg ez a kártya mountolva van, lásd LepesGuardContext.tsx fejlécét)
   // vagy a fallback-létrehozás ajánlatát, vagy a diff-promptot nyitja meg --
   // sosem mindkettőt egyszerre, a törzsadat léte dönti el, melyiket.

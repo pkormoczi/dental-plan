@@ -37,9 +37,9 @@ export interface LineRowProps {
   /** A sor mögötti árlistai tétel, ha `tetelId`-hez kötött (a `csomag`/leírás/
       név-eltérés/`nincsListaar` forrása); egyedi sornál `undefined`. */
   tetel: Tetel | undefined;
-  /** `null`, ha a sor követi a mai árlistát -- lásd `domain/arKoveti.ts` (backlog-61, D70). */
+  /** `null`, ha a sor követi a mai árlistát -- lásd `domain/arKoveti.ts` (backlog-61). */
   arFrissitesJavaslat: ArFrissites | null;
-  /** 65. tétel (D72): a guided review kényszerítve nyitja a leírás-sávot -- lásd lent. */
+  /** 65. tétel: a guided review kényszerítve nyitja a leírás-sávot -- lásd lent. */
   forceLeirasOpen: boolean;
   onPatch: (patch: Partial<Sor>) => void;
   onRequestArFrissites: () => void;
@@ -78,7 +78,7 @@ export default function LineRow({
   const egyedi = line.tetelId.trim() === '';
   const teeth = parseTeeth(line.fogak);
   // Nem blokkoló, és a szabadszöveges jegyzet (pl. „jobb felső") nem hiba --
-  // docs/02-domain-modell.md "Fogszám kezelés" szerint ez érvényes tartalom.
+  // a Fog mező jegyzetmezővé válása elfogadott (PRODUCT.md § Nem cél).
   // Csak azt a tokent jelezzük, ami SZÁMNAK néz ki, de nem érvényes FDI kód
   // (pl. elgépelt "99") -- lásd domain/teeth.ts `invalidFdiTokens`.
   const rosszTokenek = invalidFdiTokens(line.fogak);
@@ -99,7 +99,7 @@ export default function LineRow({
   const visszakapcsolhato = line.mennyisegKezi !== false && teeth.valid;
   const arEltero = !egyedi && line.tenylegesEgysegar !== line.listaEgysegar;
   // true, ha a sor tétele nincs beárazva a terv pénznemében -- lásd
-  // `domain/penznemValtas.ts` `nincsListaar()` (62. tétel, D71).
+  // `domain/penznemValtas.ts` `nincsListaar()` (62. tétel).
   const araHianyzik = nincsListaar(line, tetel, currency);
   // Egyedi sornál és beárazatlan tételnél a 0 listaár HIÁNY, nem "ingyenes
   // lista" -- ha ezt nem jeleznénk a classifiernek, egy kézzel beírt
@@ -109,7 +109,7 @@ export default function LineRow({
   // backlog-60, 1. döntés: a `sorFallback`-tól FÜGGETLEN, nyelvfüggetlen
   // "kézzel átírt" komparátor -- lásd `domain/nev.ts` `nevAtirt()`.
   const nevEltero = tetel != null && nevAtirt(line, tetel, nyelv);
-  // backlog-65 (D72): a `sorFallback`-tól SZÁNDÉKOSAN KÜLÖN kérdés -- nem
+  // backlog-65: a `sorFallback`-tól SZÁNDÉKOSAN KÜLÖN kérdés -- nem
   // azt nézi, hogy a szöveg követi-e az árlistát, hanem hogy a doki
   // kézzel írt szövege a JELENLEGI dokumentumnyelven van-e. Magyar terven
   // is működik (szemben a `sorFallback`-kal), és egyedi sornál is ad
@@ -117,13 +117,13 @@ export default function LineRow({
   const nevNyelvMismatch = nyelviMismatch(line.nevNyelv, nyelv);
   const leirasNyelvMismatch = nyelviMismatch(line.leirasNyelv, nyelv);
 
-  // "+ leírás" összecsukható trigger (docs/02-domain-modell.md § Tétel-leírás)
+  // "+ leírás" összecsukható trigger
   // -- ha már van tartalom, nyitva induljon; nincs "csak
   // kikapcsolni szabad" korlátozás, mert itt (a keresőmódtól eltérően)
   // nincs auto-collapse kockázat.
   const leirasTartalom = (line.leirasSnapshot ?? '').trim();
   const [leirasNyitva, setLeirasNyitva] = useState(Boolean(leirasTartalom));
-  // 65. tétel (D72): a guided review kényszerítve nyitja a sávot -- CSAK
+  // 65. tétel: a guided review kényszerítve nyitja a sávot -- CSAK
   // nyitni szabad innen (a `keresoMod`/`azonositatlan` fenti mintája), a
   // doki utólagos, kézi becsukását ez nem írja felül.
   useEffect(() => {
@@ -134,7 +134,7 @@ export default function LineRow({
   const csomag = tetel?.csomag ?? false;
   const hianyzoCsomagLeiras = csomag && !leirasTartalom;
   // backlog-60, 4. döntés: reset/marker csak akkor értelmes, ha VAN
-  // árlistai leírás -- D27 mintája, hiányzó fordításnál nincs mire
+  // árlistai leírás -- a leírás nem esik magyarra (app/src/domain/CLAUDE.md), hiányzó fordításnál nincs mire
   // visszaállítani.
   const arlistaLeirasSzoveg = tetel ? arlistaiLeiras(tetel, nyelv) : '';
   const leirasEltero = tetel != null && arlistaLeirasSzoveg !== '' && !leirasKoveti(line, tetel, nyelv);
@@ -199,7 +199,7 @@ export default function LineRow({
                   aria-label="Név visszaállítása az árlistaira"
                   title="Név visszaállítása az árlistaira"
                   onClick={() =>
-                    // backlog-65, 7. döntés (D481): a reset a nyelvi
+                    // backlog-65, 7. döntés: a reset a nyelvi
                     // review-metaadatot is törli -- egy default-following
                     // szövegnek nincs értelme review-státuszt hordoznia.
                     onPatch({ nevSnapshot: resolveNev(tetel.nev, nyelv).szoveg, nevNyelv: null })
@@ -381,7 +381,7 @@ export default function LineRow({
                 }
                 onDraftChange={(v) => setArDraft(v ?? line.tenylegesEgysegar)}
                 textAlign="right"
-                // 62. tétel (D71): beárazatlan tétel, még kézi ár nélkül -- a
+                // 62. tétel: beárazatlan tétel, még kézi ár nélkül -- a
                 // kedvezmény-/felár-kiemeléssel azonos slot, csak
                 // figyelmeztető színben, hogy ide dönteni kell.
                 style={
@@ -414,8 +414,8 @@ export default function LineRow({
             </IconButton>
           </Flex>
           {/* backlog-60, 3. döntés: a widget MARAD ghost `IconButton` +
-              `≈` szövegglyph (docs/07-felulet-rendszer.md nevesített
-              kivétele) -- csak a pozíciója költözött az ár mező alá (D82). */}
+              `≈` szövegglyph (app/src/CLAUDE.md nevesített
+              kivétele) -- csak a pozíciója költözött az ár mező alá. */}
           <IconButton
             type="button"
             variant="ghost"
@@ -488,7 +488,7 @@ export default function LineRow({
                   aria-label="Leírás visszaállítása az árlistaira"
                   title="Leírás visszaállítása az árlistaira"
                   onClick={() =>
-                    // backlog-65, 7. döntés (D481): lásd a névmező reset
+                    // backlog-65, 7. döntés: lásd a névmező reset
                     // kommentjét fentebb.
                     onPatch({ leirasSnapshot: arlistaLeirasSzoveg, leirasNyelv: null })
                   }

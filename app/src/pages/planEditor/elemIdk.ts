@@ -6,7 +6,7 @@
 
 /**
  * A `fokuszCel` állapot alakja -- kiemelve, hogy a `PhaseSection`/`LineRow`/
- * `FazisMegjegyzes` is hivatkozhassa (65. tétel, D72 guided review
+ * `FazisMegjegyzes` is hivatkozhassa (65. tétel, guided review
  * kényszerített-nyitás propjai). Lásd a `PlanEditorPage.tsx` `fokuszCel`
  * state kommentjét.
  */

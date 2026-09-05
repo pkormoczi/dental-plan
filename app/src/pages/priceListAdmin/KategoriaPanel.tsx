@@ -21,7 +21,7 @@ import { BufferedTextField } from './BufferedFields';
 
 /**
  * Kategória-karbantartó -- alapból csukott, összecsukható panel a
- * tétel-táblázat FÖLÖTT (docs/03-funkcionalis-spec.md § Kategóriák panel),
+ * tétel-táblázat FÖLÖTT,
  * a `ToothChartPanel.tsx` mintáját követve (feltételes render,
  * `aria-expanded`/`aria-controls`, nincs nyitás/csukás-animáció). Csak
  * ennek a külső rétegnek van a becsukásig élő `dirty`-je (a
@@ -50,7 +50,7 @@ export default function KategoriaPanel({
 }) {
   const [dirty, setDirty] = useState(false);
   const guard = useDiscardGuard(dirty);
-  // A docs/07-felulet-rendszer.md § Komponensek mintája: ugyanez a dirty
+  // A többi Mentés/Mégse-őrzött felület mintája: ugyanez a dirty
   // jelző a NavBar-navigációt is védi.
   useNavGuard(dirty);
 
@@ -166,7 +166,6 @@ function KategoriaPanelBody({
 
   async function handleSave() {
     // A tömbsorrend a megjelenítési/fogszín-ütközési sorrend (lásd
-    // docs/07-felulet-rendszer.md § Szín, forma, sűrűség és
     // domain/toothVisual.ts `resolveToothVisual`) -- a `sorrend` mező csak
     // ennek a lemezre írt tükre, ezért itt, mentéskor számozódik újra.
     const next = draft.map((k, i) => ({ ...k, sorrend: i + 1 }));

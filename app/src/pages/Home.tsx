@@ -226,7 +226,7 @@ function RecentRow({ item, most }: { item: BetoltottTorzsadat; most: Date }) {
   );
 }
 
-/** docs/07-felulet-rendszer.md: skeleton a végleges elrendezés alakjában, ne pörgő spinner. */
+/** Skeleton a végleges elrendezés alakjában, ne pörgő spinner -- a layout ne ugorjon betöltés után. */
 function RecentsSkeleton() {
   return (
     <>

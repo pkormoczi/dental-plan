@@ -1,8 +1,8 @@
-// A duplikáció-gyanús találatok listája a quick-create dialógusban (D42) --
+// A duplikáció-gyanús találatok listája a quick-create dialógusban --
 // csak a `UjPaciensDialog.tsx` hívja, lapmappa-szintű komponens (nem
 // `components/`, a "második hívóra emel" projektszabály szerint --
 // `PatientEditorPanel`/`PatientPlanChains` is csak a 2. hívóra lett
-// közössé). A `PatientEditorPanel` save-time ellenőrzése (D208) NEM ezt
+// közössé). A `PatientEditorPanel` save-time ellenőrzése NEM ezt
 // használja -- ott nincs "válassz helyette" akció, csak egy egyszerű
 // megerősítő felsorolás.
 

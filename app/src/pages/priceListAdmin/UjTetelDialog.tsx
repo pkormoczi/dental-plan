@@ -13,8 +13,7 @@
 // NumberField / FIX↔SÁVOS logika.
 //
 // Ez az app első `Dialog`-használata -- a meglévő 4 modális hely mind
-// `AlertDialog` (megerősítés, nincs benne mező), lásd
-// docs/07-felulet-rendszer.md "Komponensek".
+// `AlertDialog` (megerősítés, nincs benne mező).
 
 import { useEffect, useState } from 'react';
 import { Box, Button, Dialog, Flex, Select, Text, TextField } from '@radix-ui/themes';
@@ -64,7 +63,7 @@ export default function UjTetelDialog({
 
   // Ékezetfüggetlen, PONTOS egyezés -- nem blokkol, csak jelez. Aktív ÉS
   // inaktív tételt is számít: egy inaktív tétel bármikor visszakapcsolható
-  // (D17), ezért hasznosabb üzenet, hogy talán azt kellene visszakapcsolni,
+  //, ezért hasznosabb üzenet, hogy talán azt kellene visszakapcsolni,
   // nem újra felvinni ugyanazt a nevet.
   const nevTrim = huNev.trim();
   const duplikatum = nevTrim ? tetelek.find((x) => norm(x.nev.hu) === norm(nevTrim)) : undefined;
@@ -78,7 +77,7 @@ export default function UjTetelDialog({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {/* onCloseAutoFocus: Mentéskor a szülő (PriceListAdminPage `mentUjTetel`)
-          a `priceList`-et D31 óta SZINKRON, ugyanabban a renderben frissíti,
+          a `priceList`-et az updater-szerződés óta SZINKRON, ugyanabban a renderben frissíti,
           amiben a dialógust is zárja -- a friss sor `autoFocus` HUF ár mezője
           tehát ugyanabban a commitban mountol, amiben a Dialog bezárna. Radix
           alapból ilyenkor visszaadná a fókuszt a triggerre (ugyanaz a

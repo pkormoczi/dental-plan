@@ -61,14 +61,14 @@ export default function PlanEditorPage() {
   // AlertDialog) -- egy üres fázis újralétrehozása két kattintás, egy
   // 8 sorosé nem.
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
-  // Ár-frissítés megerősítő előnézete (backlog-61, D70) -- a "Hatás a
+  // Ár-frissítés megerősítő előnézete (backlog-61) -- a "Hatás a
   // tervre" számításhoz a teljes `plan`-re van szükség, ezért a state itt,
   // a szülőben él, nem a LineRow-ban (a fázistörlés `pendingDeleteIndex`
   // mintája).
   const [pendingArFrissites, setPendingArFrissites] = useState<{ pi: number; li: number } | null>(
     null,
   );
-  // Melyik fázisok vannak összecsukva (D72/73) -- a halmaz a CSUKOTT
+  // Melyik fázisok vannak összecsukva -- a halmaz a CSUKOTT
   // indexeket tartja, alapból üres (minden fázis nyitva). A szülőben él,
   // NEM PhaseSection lokális state-je, hogy túlélje a `fazisResetToken`
   // bump-ot törléskor/mozgatáskor -- lásd deletePhase/movePhase, ahol a
@@ -83,9 +83,9 @@ export default function PlanEditorPage() {
   // Hova kell fókuszálni/görgetni renderelés UTÁN -- a `useFokuszEffekt`
   // hook dolgozza fel (lásd `pages/planEditor/useFokuszEffekt.ts`), mert a
   // célelem DOM-ja (most felvett sor, most hozzáadott fázis) csak a
-  // következő renderben létezik. A `fazisKereso` ág (backlog-59, D64) a
+  // következő renderben létezik. A `fazisKereso` ág (backlog-59) a
   // fázis alatti keresőnek szól, ezért nincs `li`-je. A `nev`/`fazisNev`
-  // (65. tétel, D72 guided review) mindig a DOM-ban van, amíg a sornak/
+  // (65. tétel, guided review) mindig a DOM-ban van, amíg a sornak/
   // fázisnak van neve -- szinkron fókuszálható, a `leiras`/`fazisMegjegyzes`
   // viszont összecsukható sávban él, lásd `useFokuszEffekt`.
   const [fokuszCel, setFokuszCel] = useState<FokuszCel>(null);
@@ -98,10 +98,10 @@ export default function PlanEditorPage() {
 
   const nyelviReview = useNyelviReview();
 
-  // 65. tétel (D72), 5. döntés: a guided review célja (`ReviewCel`) a
+  // 65. tétel, 5. döntés: a guided review célja (`ReviewCel`) a
   // VALÓDI szerkesztőmezőkhöz navigál -- a fázis kinyitása + a
   // `fokuszCel` beállítása a MEGLÉVŐ mechanizmust hajtja meg, nem egy
-  // duplikált útvonalat (D469).
+  // duplikált útvonalat.
   useEffect(() => {
     const cel = nyelviReview.cel;
     if (!cel) return;
@@ -117,7 +117,7 @@ export default function PlanEditorPage() {
     else setFokuszCel({ mit: 'leiras', pi: cel.fazisIndex, li: cel.sorIndex ?? 0 });
   }, [nyelviReview.cel]);
 
-  // 62. tétel (D71) C5: egy `currency`-ben nem beárazott tétel is
+  // 62. tétel C5: egy `currency`-ben nem beárazott tétel is
   // kereshető/felvehető marad -- a kereső ma nem szűr pénznemre, csak
   // aktivitásra (lásd `sorMezokTetelbol()`). A gyorsgombok (`frequent`)
   // SZÁNDÉKOSAN a beárazott részhalmazra szorítkoznak: egy kattintásra
@@ -144,7 +144,7 @@ export default function PlanEditorPage() {
     });
   }
 
-  // Az új fázis keresője fókuszt kap és a lap odagördül (backlog-59, D64)
+  // Az új fázis keresője fókuszt kap és a lap odagördül (backlog-59)
   // -- a `plan.fazisok.length` a hívás pillanatában (a push ELŐTT) az új
   // fázis leendő indexe. `fazisResetToken` szándékosan NEM bumpol: az
   // minden fázist remountolna, elveszítve a többi kereső begépelt szövegét.
@@ -170,7 +170,7 @@ export default function PlanEditorPage() {
   }
 
   /**
-   * Fázis-sorrendezés (D75), a PriceListAdminPage.tsx `moveCategory()`
+   * Fázis-sorrendezés, a PriceListAdminPage.tsx `moveCategory()`
    * mintáján, index-alapúra igazítva (a `Fazis`-nak nincs `Kategoria`-
    * szerű `id`-je). A `fazisCsukva` (összecsukott indexek) tagsága a két
    * érintett indexen felcserélődik, hogy az összecsukott/nyitott állapot
@@ -188,7 +188,7 @@ export default function PlanEditorPage() {
 
   // A teljes piszkozat eldobása (6. döntés) -- a `patientDir`-t a
   // `resetPlanDraft()` HÍVÁS ELŐTT kell kiolvasni, mert az nullázza a
-  // piszkozat-metaadatot (D37).
+  // piszkozat-metaadatot.
   function handleDiscardDraft() {
     const dir = piszkozatPatientDir;
     resetPlanDraft();
@@ -230,7 +230,7 @@ export default function PlanEditorPage() {
   }
 
   // A sorok nyers összege -- az Egyedi végösszeg blokknak erre van szüksége
-  // a mező kiindulási alapjához, NEM a tervVegosszeg() eredményére (D69).
+  // a mező kiindulási alapjához, NEM a tervVegosszeg() eredményére.
   const sorszintuOsszeg = sorokOsszeg(plan.fazisok);
   const grand = tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg);
   const listTotal = sorokListaOsszeg(plan.fazisok);
@@ -260,7 +260,7 @@ export default function PlanEditorPage() {
       : plan.fazisok;
   const kedvezmenyAktiv = plan.kedvezmenyOsszeg != null;
 
-  // D59: egy VADONATÚJ (még soha nem mentett -- `tervId === ''`)
+  // Egy VADONATÚJ (még soha nem mentett -- `tervId === ''`)
   // ÉS sor nélküli piszkozaton az első fázis keresője A LAP BETÖLTÉSEKOR
   // fókuszt kap. Szándékosan NEM `piszkozatTartalmas()`: az a páciensnévre
   // is igazat ad, tehát a normál Terv adatai -> Kezelések úton sosem sülne
@@ -269,7 +269,7 @@ export default function PlanEditorPage() {
   // `frissitettDatum`/`loadedOsszesitokDiff` Callout-okról egy már
   // tartalmas (bár még mentetlen) tervnél. Egy UTÓLAG hozzáadott fázis
   // keresője külön úton, az `addPhase()` `fokuszCel`-jén át kap fókuszt
-  // (backlog-59, D64) -- a két eset nem ütközik, mert ez a kifejezés csak
+  // (backlog-59) -- a két eset nem ütközik, mert ez a kifejezés csak
   // az 1. fázisra érvényesül (lásd lent, `pi === 0`).
   const ujUresPiszkozat = plan.tervId === '' && plan.fazisok.every((f) => f.sorok.length === 0);
 
@@ -323,8 +323,8 @@ export default function PlanEditorPage() {
         onDiscard={() => setConfirmDiscard(true)}
       />
 
-      {/* docs/03-funkcionalis-spec.md § Korábbi terv új verzióra nyitása:
-          semleges szín -- ez várt, nem hiba-jellegű viselkedés, az amber az alatta lévő valódi
+      {/* Korábbi terv új verzióra nyitása (dátum betöltéskor bélyegezve, lásd
+          app/src/domain/CLAUDE.md): semleges szín -- ez várt, nem hiba-jellegű viselkedés, az amber az alatta lévő valódi
           anomáliának (loadedOsszesitokDiff) van fenntartva. A dátum-Callout
           `formatLongDate` hívása fixen 'hu': ez UI-próza, a kezelőfelület
           a CLAUDE.md szerint végig magyar marad -- a lentebbi
@@ -345,7 +345,7 @@ export default function PlanEditorPage() {
         </Callout.Root>
       )}
 
-      {/* D63: a betöltött verzió orvosa időközben inaktívvá vált -- a
+      {/* A betöltött verzió orvosa időközben inaktívvá vált -- a
           globális default orvosra esett vissza. Ugyanaz a semleges szín,
           mint a fenti dátum-sávnál, ugyanazon indoklással -- nem hiba, a
           Terv adatai lapon egy kattintással javítható. */}
@@ -377,8 +377,7 @@ export default function PlanEditorPage() {
       )}
 
       {/* Itt dolgozik a doki -- ha az automatikus piszkozat-mentés elhasal
-          (pl. kvótahiba), azt itt kell látnia, nem csak a Kezdőlapon (lásd
-          docs/03-funkcionalis-spec.md § Autosave). */}
+          (pl. kvótahiba), azt itt kell látnia, nem csak a Kezdőlapon. */}
       {piszkozatHiba && (
         <Callout.Root color="red" mb="4">
           <Callout.Text>A piszkozat automatikus mentése nem sikerült: {piszkozatHiba}</Callout.Text>

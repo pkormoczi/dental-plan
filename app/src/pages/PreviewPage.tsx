@@ -1,6 +1,7 @@
 // Előnézet és véglegesítés -- portolva ui/PrintPreview.jsx-ből, valódi
-// @react-pdf/renderer kimenetre kötve (nem HTML előnézet). Lásd
-// docs/03-funkcionalis-spec.md "4. Előnézet és véglegesítés".
+// @react-pdf/renderer kimenetre kötve (nem HTML előnézet). A véglegesítés
+// feltételei a domain véglegesítés-őrében élnek (lásd app/src/domain/CLAUDE.md), a
+// nyomtatvány jogi szabályai a PRODUCT.md § A nyomtatvány szerződéses dokumentum alatt.
 
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -37,8 +38,8 @@ export default function PreviewPage() {
   const { storage, loadLatestTemplateByBase } = useStorage();
   const navigate = useNavigate();
 
-  // A doki nyers kézi választása -- a `Plan` mezője (docs/02-domain-modell.md
-  // § Csak ajánlat mód, D75), nem helyi state, hogy navigáció oda-vissza és
+  // A doki nyers kézi választása -- a `Plan` mezője, nem helyi
+  // state, hogy navigáció oda-vissza és
   // az autosave is megőrizze.
   const offerOnly = plan.csakAjanlat === true;
   const [nyilatkozatMd, setNyilatkozatMd] = useState('');
@@ -49,12 +50,12 @@ export default function PreviewPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedRef, setSavedRef] = useState<PlanRef | null>(null);
-  // backlog-51 (D61): a vadonatúj lánc "Terv adatai" lapon beírt címének
+  // backlog-51: a vadonatúj lánc "Terv adatai" lapon beírt címének
   // véglegesítéskori írási hibája -- KÜLÖN a `saveError`-tól, mert ekkor a
   // terv MÁR a lemezen van (lásd doFinalize). Csak a siker-képernyőn
   // jelenik meg, amber színnel, nem piros hibaként.
   const [cimkeHiba, setCimkeHiba] = useState<string | null>(null);
-  // backlog-69 (D74): a piszkozat best-effort törlésének (markPlanSaved)
+  // backlog-69: a piszkozat best-effort törlésének (markPlanSaved)
   // hibája -- KÜLÖN a `saveError`-tól, ugyanazon okból, mint a `cimkeHiba`:
   // a terv MÁR a lemezen van, ez legfeljebb egy elmaradt takarítás, nem
   // mentési hiba. Csak a siker-képernyőn jelenik meg, amber színnel.
@@ -75,10 +76,10 @@ export default function PreviewPage() {
   // (render) ELŐTT is megtörténhet.
   const savingRef = useRef(false);
 
-  // backlog-40 (6. döntés, D162/D163): a páciens törzsadata (D33) INFO-
+  // backlog-40 (6. döntés): a páciens törzsadata INFO-
   // szintű, nem blokkoló jelzésként jelenik meg, ha eltér a terv `paciens`
   // pillanatképétől -- a `patientDirForMaster` a `doFinalize()` mastert
-  // ÚJRAOLVasó lépéséhez is kell (D163), nem csak a mount-időbeli
+  // ÚJRAOLVasó lépéséhez is kell, nem csak a mount-időbeli
   // betöltéshez.
   const [masterPaciens, setMasterPaciens] = useState<Paciens | null>(null);
   const [patientDirForMaster, setPatientDirForMaster] = useState<string | null>(null);
@@ -97,7 +98,7 @@ export default function PreviewPage() {
         const data = await storage.loadPatientData(dir);
         if (!cancelled) setMasterPaciens(data ? paciensTorzsadatbol(data) : null);
       } catch {
-        // Best-effort, D162: egy sikertelen betöltés csak az info-sort
+        // Best-effort: egy sikertelen betöltés csak az info-sort
         // némítja el, a véglegesítést nem akadályozza.
         if (!cancelled) setMasterPaciens(null);
       }
@@ -154,7 +155,7 @@ export default function PreviewPage() {
       // A fizetési feltételek ÉS a garancia hívja ezzel (a nyilatkozat nem)
       // -- egy sikeresen betöltött, de még placeholder törzsű sablon
       // ugyanabba a fallback-ágba esik, mint a ténylegesen hiányzó fájl
-      // (lásd docs/03-funkcionalis-spec.md § Sablon-placeholder őr). A
+      // (placeholder-zár, PRODUCT.md § A nyomtatvány szerződéses dokumentum). A
       // nyilatkozat placeholder-esetét EZ nem kezeli -- azt a kemény zár
       // váltja ki (lásd nyilatkozatIsPlaceholder lent), nem egy HU-visszaesés.
       extraFallbackCondition?: (result: { name: string; body: string }) => boolean,
@@ -198,8 +199,8 @@ export default function PreviewPage() {
             () => loadLatestTemplateByBase(`garancia-${plan.nyelv}`),
             () => loadLatestTemplateByBase('garancia-hu'),
             // Ugyanaz a minta, mint a fizetési feltételeknél -- a garancia
-            // sosem kap kemény zárat (docs/03-funkcionalis-spec.md §
-            // Sablon-placeholder őr), csak HU-visszaesést.
+            // sosem kap kemény zárat, csak HU-visszaesést (a zár egyedül a
+            // nyilatkozaté, PRODUCT.md § A nyomtatvány szerződéses dokumentum).
             plan.nyelv !== 'hu' ? (result) => isPlaceholderTemplate(result.body) : undefined,
           ),
         ]);
@@ -241,8 +242,8 @@ export default function PreviewPage() {
 
   // Ha a MEGJELENÍTETT nyilatkozat placeholder (jogilag még nincs lezárva),
   // a nyilatkozat és aláírás blokk garantáltan kimarad -- a doki nem
-  // kapcsolhatja vissza, amíg a szöveg placeholder marad (D23, lásd
-  // docs/03-funkcionalis-spec.md § Sablon-placeholder őr). A nyers
+  // kapcsolhatja vissza, amíg a szöveg placeholder marad (jogi zár, lásd
+  // PRODUCT.md § A nyomtatvány szerződéses dokumentum). A nyers
   // `offerOnly` state-et mindenhol ez az effektív érték váltja fel.
   const nyilatkozatIsPlaceholder = isPlaceholderTemplate(nyilatkozatMd);
   const effectiveOfferOnly = offerOnly || nyilatkozatIsPlaceholder;
@@ -295,8 +296,8 @@ export default function PreviewPage() {
   const paciensKotes = usePaciensKotes();
 
   // A csekklista a `nyilatkozatIsPlaceholder`-t (fent) csak TÉNYKÉNT kapja
-  // meg (D73) -- a kényszerített offer-only mód (`effectiveOfferOnly`,
-  // szintén fent) és a D23 jogi zár ettől függetlenül, a hívó szintjén él.
+  // meg -- a kényszerített offer-only mód (`effectiveOfferOnly`,
+  // szintén fent) és a placeholder jogi zár ettől függetlenül, a hívó szintjén él.
   const csekklista = veglegesitesDiagnozis(
     plan,
     priceList,
@@ -329,9 +330,9 @@ export default function PreviewPage() {
     setCimkeHiba(null);
     setPiszkozatTorlesHiba(null);
     try {
-      // D163: a mastert véglegesítéskor újraolvassuk -- csak az info-sáv
-      // frissítéséhez (D162, a `finalPlan.paciens` ettől függetlenül a
-      // draft pillanatképe marad, D7). Best-effort, nem blokkolhatja a
+      // A mastert véglegesítéskor újraolvassuk -- csak az info-sáv
+      // frissítéséhez (a `finalPlan.paciens` ettől függetlenül a
+      // draft pillanatképe marad). Best-effort, nem blokkolhatja a
       // mentést.
       if (patientDirForMaster) {
         try {
@@ -347,18 +348,18 @@ export default function PreviewPage() {
         // Az EFFEKTÍV érték mentődik, nem a nyers `plan.csakAjanlat` --
         // placeholder-nyilatkozat miatt kényszerített esetben is a
         // ténylegesen kiadott PDF-et kell tükröznie (a nyilatkozat blokk
-        // ekkor is kimarad), különben a verziósor D558 jelvénye hazudna.
+        // ekkor is kimarad), különben a verziósor "Csak ajánlat" jelvénye hazudna.
         csakAjanlat: effectiveOfferOnly,
         osszesitok: computeOsszesitok(plan.fazisok, plan.kedvezmenyOsszeg),
       };
       const bytes = new Uint8Array(await pdfInstance.blob.arrayBuffer());
       const ref = await storage.savePlan(finalPlan, bytes);
-      const persisted = await storage.loadPlan(ref); // tervId/verzio a storage tölti ki (D4)
+      const persisted = await storage.loadPlan(ref); // tervId/verzio a storage tölti ki
       if (ujLancCim) {
         // KÜLÖN try/catch, NEM a közös hibazónában: a terv ekkor MÁR a
         // lemezen van, egy itteni hiba nem jelentheti a dokinak, hogy "a
         // mentés nem sikerült" -- az újrapróbálás fölösleges v2
-        // verziómappát hozna létre (D4). A cím a Korábbi tervek ceruza-
+        // verziómappát hozna létre. A cím a Korábbi tervek ceruza-
         // ikonjával pótolható, lásd a siker-képernyő amber Callout-ját.
         try {
           await storage.savePlanLabel(ref.patientDir, ref.planDir, ujLancCim);
@@ -370,11 +371,10 @@ export default function PreviewPage() {
           );
         }
       }
-      // docs/03-funkcionalis-spec.md véglegesítés-lánc 4. lépése: a
-      // piszkozat törlése -- enélkül a lenti setPlan azonnal visszaírná
+      // A véglegesítés-lánc "piszkozat törlése" lépése -- enélkül a lenti setPlan azonnal visszaírná
       // piszkozatként a most fájlba mentett tervet (markPlanSaved a
       // "mentett" referenciát is frissíti, lásd AppState.tsx). KÜLÖN
-      // try/catch, NEM a közös hibazónában (D74, a `savePlanLabel` fenti
+      // try/catch, NEM a közös hibazónában (a `savePlanLabel` fenti
       // blokkjának mintáján): a terv ekkor MÁR tartósan a lemezen van, a
       // takarítás hibája nem jelentheti a dokinak, hogy "a mentés nem
       // sikerült" -- markPlanSaved minden szinkron state-frissítést a
@@ -394,7 +394,7 @@ export default function PreviewPage() {
     } catch (err) {
       // P0-1: korábban nem volt catch itt -- egy kvótahiba vagy a
       // localStorage szinkron dobása némán elveszett, a doki egy inaktív
-      // gombot látott, a terv pedig nem mentődött (D4-et sértő, csonka
+      // gombot látott, a terv pedig nem mentődött (az append-only elvet sértő, csonka
       // állapot nélkül, de a doki tudta nélkül).
       setSaveError(
         err instanceof Error
@@ -408,7 +408,7 @@ export default function PreviewPage() {
   }
 
   function attemptFinalize() {
-    // D73: a szekvenciális megerősítő-lánc megszűnt -- a hard blokkok a
+    // A szekvenciális megerősítő-lánc megszűnt -- a hard blokkok a
     // csekklisten (fent, MINDIG láthatóan) jelennek meg, és a gomb
     // `disabled`-je (lent) már eleve letiltja a kattintást, amíg van ilyen.
     // A puha tételek nem kérnek "Folytatás"-t, a doki már látta őket a
@@ -419,7 +419,7 @@ export default function PreviewPage() {
 
   function startNewPlan() {
     // A piszkozat itt már úgyis üres/mentett (a véglegesítés törölte, lásd
-    // doFinalize) -- az /uj-terv köztes lépés (D29) mégis a szokásos utat
+    // doFinalize) -- az /uj-terv köztes lépés mégis a szokásos utat
     // futtatja, hogy a Home gombjával egységes maradjon.
     navigate('/uj-terv');
   }
@@ -460,10 +460,10 @@ export default function PreviewPage() {
         )}
         <Flex gap="3" justify="center">
           <Button onClick={startNewPlan}>Új terv indítása</Button>
-          {/* backlog-31, D36: a MOST mentett páciens részletoldalára visz
+          {/* backlog-31: a MOST mentett páciens részletoldalára visz
               (Kezelési tervek tab), nem a globális listára -- a globális,
               több-pácienses áttekintő a DEMO oldal "Összes terv" fülén él
-              (D54), másodlagos a napi munkához képest. */}
+             , másodlagos a napi munkához képest. */}
           <Button
             variant="soft"
             color="gray"
@@ -527,7 +527,7 @@ export default function PreviewPage() {
         </Callout.Root>
       )}
 
-      {/* D79: egyoszlopos, minden breakpointon -- a checklist MINDIG a PDF
+      {/* Egyoszlopos, minden breakpointon -- a checklist MINDIG a PDF
           FÖLÉ kerül ("ezt olvasd el előbb" sorrend, a validációs állapotot
           előbb kell látni, mint magát a dokumentumot). A "Csak ajánlat"
           kapcsoló és a Letöltés/Véglegesítés gombsor a checklist ALATT, de
@@ -610,8 +610,8 @@ export default function PreviewPage() {
               }}
             />
           ) : (
-            // docs/07-felulet-rendszer.md: skeleton a végleges elrendezés
-            // alakjában, ne pörgő spinner -- a végleges elem az iframe fenti
+            // Skeleton a végleges elrendezés alakjában, ne pörgő spinner (a
+            // layout ne ugorjon) -- a végleges elem az iframe fenti
             // stílusával megegyező méretű, keretes doboz.
             <Skeleton>
               <Box
