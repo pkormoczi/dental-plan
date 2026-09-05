@@ -123,6 +123,17 @@ anything you're removing or rewording, not just what's new. Present the full new
 wait for explicit approval. This file gets rewritten wholesale, not appended to, so a bad run
 can silently delete something true; the confirmation step is the safety net.
 
+## Step 7 — Commit
+
+After the approved content is written to `docs/FEATURES.md`, stage and commit **only that
+file** (`git add docs/FEATURES.md`) — never sweep in unrelated untracked or modified files
+sitting in the working tree. Commit message, first line: `docs: FEATURES.md frissítése (<a
+mai nap magyar dátuma>.)` (e.g. `docs: FEATURES.md frissítése (szeptember 5.)`); body: 1
+short Hungarian sentence naming what changed in this pass; the repo's usual footer.
+
+Stop there — **no `git push`**. This mirrors `/finish` and `/update-changelog`: the commit
+lands on the local branch and push is a separate, explicit step.
+
 ## Notes
 
 - Shares `parseSections()` (`app/src/domain/markdownSections.ts`) with `ChangelogCard` — do

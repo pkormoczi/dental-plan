@@ -118,6 +118,17 @@ text you intend to add and wait for explicit approval. If a filtered-out change 
 mention it was left out and why, so the decision is visible — but don't add a "kihagyva" note
 into the actual changelog file itself.
 
+## Step 6 — Commit
+
+After the approved text is written to `docs/CHANGELOG.md`, stage and commit **only that file**
+(`git add docs/CHANGELOG.md`) — never sweep in unrelated untracked or modified files sitting in
+the working tree. Commit message, first line: `changelog: <a nap vagy napok magyar dátuma>`
+(e.g. `changelog: 2026. szeptember 5.`, or `changelog: 2026. szeptember 4–5.` for a multi-day
+run); body: 1 short Hungarian sentence naming what the entry covers; the repo's usual footer.
+
+Stop there — **no `git push`**. This mirrors `/finish`: the commit lands on the local branch and
+push is a separate, explicit step.
+
 ## Notes
 
 - This skill only produces content for `docs/CHANGELOG.md` in the repo. It does not solve how the
