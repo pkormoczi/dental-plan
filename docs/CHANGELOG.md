@@ -2,6 +2,65 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. szeptember 5.
+
+- A kezelési sorok „Összeg” oszlopa már gépelés közben frissül — nem kell kilépni a mezőből
+  ahhoz, hogy lássuk az új összeget. A fázis- és végösszegek továbbra is csak a mező
+  elhagyásakor számolódnak újra.
+- Az „Új páciens” gyorsfelvételnél a Mégse, az Esc és a dialóguson kívülre kattintás mostantól
+  rákérdez, ha már beírtunk vagy módosítottunk valamit — a félkész adat nem vész el véletlenül.
+- Hasonló nevű pácienseknél a felajánlott találatok mellett mostantól a születési dátum és a
+  telefonszám is látszik, így apa és fia (vagy két gyakori vezetéknevű páciens) egy pillantással
+  megkülönböztethető.
+- A „Törzsadat létrehozása” kérdés mostantól piszkozatonként csak egyszer ugrik fel: ha egyszer
+  azt válaszoltuk, hogy kihagyjuk, a Kezelések és a Terv adatai közti ide-oda lépkedés nem kérdez
+  rá újra.
+- Javítottuk a véglegesítés előtti ellenőrzőlistát: ha egy szakasz (például a Garancia) szövege
+  sem magyarul, sem németül nincs még lezárva, a lista már nem ad két, egymásnak ellentmondó
+  üzenetet.
+- Ha az „Érvényes eddig” dátum üres vagy érvénytelen, a program mostantól nem engedi véglegesíteni
+  a tervet.
+- A nyelv és a pénznem váltásakor felugró kérdés „Folytatás” gombja mindkét esetben ugyanolyan
+  színű. Eddig a nyelvváltásnál piros volt, ami komolyabb következményt sugallt a valóságosnál —
+  egyik váltás sem töröl adatot.
+- A fizetési feltételek sablonjából megszűnt a régi, százalékos megfogalmazású változat:
+  mostantól egyetlen szöveg él, amely a ténylegesen megadott előlegösszeget írja ki.
+
+## 2026. szeptember 4.
+
+- Ha egy terv már egy meglévő pácienshez tartozik, és a Terv adatai lapon egy másik, létező
+  páciens nevét írjuk be, a program ezt észreveszi, jelzi, és nem engedi véglegesíteni — így a
+  terv nem kerülhet idegen névvel a rossz páciens mappájába.
+- Mostantól minden „új terv” indítási pont ugyanúgy figyelmeztet, ha ezzel egy másik, még el nem
+  mentett piszkozatot dobnánk el — korábban a páciens adatlapjáról induló „+ Új terv” gomb szó
+  nélkül felülírta.
+- Az Árlista adminban a program mostantól jelzi, ha egy beírt ár feltűnően elüt: a sor
+  megnyitásakori értékhez képest ötszörös vagy ötödrésznyi ugrásnál, illetve ha az ár a
+  legdrágább aktív kezelés háromszorosa. Mindkét jelzés egy kattintással visszaállítható.
+- A kezelés-kereső — a terv szerkesztőjében és az Árlista adminban is — mostantól a kategória
+  nevére is talál, nem csak a kezelés nevére.
+- A számmezőkbe lépve a program kijelöli a bennük lévő értéket, így a gépelés felülírja azt.
+  Eddig a 24000 mezőbe 28000-et gépelve 2400028000 lett belőle.
+- A Kezdőlap „Piszkozat folytatása” kártyája mostantól csak akkor jelenik meg, ha tényleg
+  elkezdtünk szerkeszteni valamit — egy meglévő páciens puszta kiválasztása már nem villantja fel.
+- A véglegesítés előtti ellenőrzőlistán a nyomtatvány tartalmát érintő figyelmeztetések kerültek
+  előre, és minden tétel mellett szám mutatja, hány dolog tartozik hozzá.
+- Az ellenőrzőlista sablonokra figyelmeztető tételei mostantól egyenesen a Beállítások
+  Nyomtatványok fülére visznek, egy fölösleges kattintás nélkül.
+- A fogtérképen a billentyűzettel mozgatott kurzor mostantól jól láthatóan elkülönül a kijelölt
+  fogaktól — eddig egy egyszerre aktív és kijelölt fogon a kijelölés elnyomta a kurzort.
+- Ha egy mentett verzióhoz nem tartozik PDF, a program mostantól megkülönbözteti a beépített
+  bemutató-adatok elvárt korlátját (semleges tájékoztatás) egy saját mentésű terv valóban
+  hiányzó PDF-jétől (figyelmeztetés).
+- A véglegesítés utáni „A terv elmentve ✓” képernyő mostantól felsorolja, milyen figyelmeztetések
+  álltak fenn a gombnyomás pillanatában (kézzel átírt ár, kimaradó szakasz, 0 forintos sor és
+  társaik).
+- A Kezelések és árak táblában minden sor „Mentve ✓” visszajelzést kap a sikeres mentés után —
+  eddig csak a hiba látszott, a siker némán történt.
+- Apró szövegezési csiszolások: az ár-frissítő gomb elnevezése a művelet nevére rövidült, a Fog
+  mező példaszövege „pl.” előtagot kapott, és a felhasználónak látszó szövegekben a kettős
+  kötőjel helyett valódi gondolatjel szerepel.
+
 ## 2026. augusztus 25.
 
 - Az Árlista adminban új „Tömeges árváltoztatás" funkció érhető el: kiválasztható, hogy a
