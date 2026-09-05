@@ -12,7 +12,7 @@ import { addDaysIso, formatLongDate, todayIso } from '../domain/date';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 import { DemoStorage } from '../storage/DemoStorage';
-import type { Paciens, Plan } from '../domain/types';
+import type { Fazis, Paciens, Plan, Sor } from '../domain/types';
 
 function renderPatient() {
   return render(
@@ -1147,5 +1147,91 @@ describe('PatientPage -- backlog-51: dátumok szekció', () => {
     fireEvent.blur(ervenyesIgInput);
     await waitFor(() => expect(ervenyesIgInput).toHaveValue(alapErtek));
     expect(screen.queryByRole('button', { name: /Vissza az alapértelmezettre/ })).toBeNull();
+  });
+});
+
+// backlog "nyelv-penznem-gombszin": egyik váltás sem töröl adatot, ezért a
+// megerősítő "Folytatás" gombja mindkét dialógusban ugyanazt a semleges
+// színt kapja -- lásd PlanVersionActionDialog.tsx kommentje: piros csak
+// piszkozat-vesztés kockázatánál.
+describe('PatientPage -- a nyelv- és pénznemváltás megerősítő gombja', () => {
+  function makeSor(overrides: Partial<Sor> = {}): Sor {
+    return {
+      tetelId: 't041',
+      nevSnapshot: 'Fogeltávolítás',
+      savos: false,
+      fogak: '11',
+      mennyiseg: 1,
+      listaEgysegar: 25000,
+      tenylegesEgysegar: 25000,
+      ...overrides,
+    };
+  }
+
+  function seedDraft(fazisok: Fazis[]) {
+    // A `seedDraft` a 89. tétel blokk mintáját követi: árlista/beállítások
+    // előzetes seedelése nélkül a `DemoStorage.init()` "első futás" ága
+    // elsöpörné a piszkozatot, mielőtt a betöltés elérné.
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+    const plan: Plan = {
+      schemaVersion: 1,
+      tervId: '',
+      verzio: 0,
+      statusz: 'PISZKOZAT',
+      nyelv: 'hu',
+      penznem: 'HUF',
+      keltezes: '2026-08-05',
+      ervenyesIg: '2026-11-03',
+      arlistaVerzio: '2026-07-01',
+      orvos: 'Dr. Mándoki István',
+      paciens: {
+        nev: 'Teszt Elek',
+        szuletesiIdo: '',
+        lakcim: '',
+        telefon: '',
+        email: '',
+        taj: '',
+        kiskoru: false,
+        torvenyesKepviselo: null,
+      },
+      fazisok,
+      osszesitok: { kezelesekOsszesen: 25000, kedvezmeny: 0, fizetendo: 25000 },
+    };
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({ schemaVersion: 1, mentve: '2026-08-09T10:15:00.000Z', plan, patientDir: null }),
+    );
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('a nyelv- és a pénznemváltás dialógusának "Folytatás" gombja ugyanazt a színt kapja, egyik sem piros', async () => {
+    const user = userEvent.setup();
+    seedDraft([{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [makeSor()] }]);
+    renderPatient();
+
+    await screen.findByText('Dokumentum nyelve');
+    await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
+
+    const nyelvDialog = await screen.findByRole('alertdialog');
+    expect(within(nyelvDialog).getByText(/A tervben már 1 tétel szerepel/)).toBeInTheDocument();
+    // `data-accent-color` a Radix Themes Button jsdom-ban egyetlen
+    // megfigyelhető szín-nyoma (base-button.js a `color` propból írja) --
+    // a tényleges kontraszt a /manual-checks dolga.
+    const nyelvGomb = within(nyelvDialog).getByRole('button', { name: 'Folytatás' });
+    const nyelvSzin = nyelvGomb.getAttribute('data-accent-color');
+    expect(nyelvSzin).not.toBe('red');
+    await user.click(within(nyelvDialog).getByRole('button', { name: 'Mégse' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
+
+    const penznemDialog = await screen.findByRole('alertdialog');
+    const penznemGomb = within(penznemDialog).getByRole('button', { name: 'Folytatás' });
+    expect(penznemGomb.getAttribute('data-accent-color')).toBe(nyelvSzin);
   });
 });

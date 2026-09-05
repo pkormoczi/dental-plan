@@ -518,9 +518,7 @@ export default function PatientPage() {
               </Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action>
-              <Button color={pending?.kind === 'nyelv' ? 'red' : undefined} onClick={confirmPending}>
-                Folytatás
-              </Button>
+              <Button onClick={confirmPending}>Folytatás</Button>
             </AlertDialog.Action>
           </Flex>
         </AlertDialog.Content>
