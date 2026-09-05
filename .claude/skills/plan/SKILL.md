@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Take one backlog item from idea to implementation-ready. Interviews the user branch by branch until every decision is resolved, then git-mv's backlog/idea/<slug>.md to backlog/<slug>.md and rewrites it (Goal / Current state / Approach / Decisions / Verification, Target + Baseline). Input is an existing backlog/idea/<slug>.md or a freeform prompt (then the file is created first, with the /idea dedup). --quick skips the interview for an unambiguous bug. Never writes application code, never accepts Type: doki, never commits. Invoke explicitly with /plan <slug> [--quick].
+description: Take one backlog item from idea to implementation-ready. Interviews the user branch by branch until every decision is resolved, then git-mv's backlog/idea/<slug>.md to backlog/<slug>.md, rewrites it (Goal / Current state / Approach / Decisions / Verification, Target + Baseline from scripts/workflow/sync.mjs) and commits + pushes it at once (scripts/workflow/commit-push.mjs) so the plan is shared state before implementation starts. Input is an existing backlog/idea/<slug>.md or a freeform prompt (then the file is created first, with the /idea dedup). --quick skips the interview for an unambiguous bug. Never writes application code, never accepts Type: doki, never sets Prio on its own. Invoke explicitly with /plan <slug> [--quick].
 argument-hint: <slug> [--quick]
 disable-model-invocation: true
 ---
@@ -21,7 +21,9 @@ A `<slug>` kötelező, kebab-case: a fájlnév és a későbbi `/implement <slug
 azonosítója. A fájlalak és a fejléc-értékkészlet: `backlog/CLAUDE.md`.
 
 **Ez a skill soha nem ír és nem módosít alkalmazáskódot** (`app/`, `data/`, `assets/` alatt
-semmit), nem nyúl más backlog-fájlhoz, nem rangsorol, és nem commitol. `Type: doki` tételt
+semmit), nem nyúl más backlog-fájlhoz, és `Prio:`-t magától nem ír. A tervfájlt írás után
+**azonnal commitolja és pusholja** — a terv megosztott állapot, mielőtt implementáció indul.
+`Type: doki` tételt
 nem fogad el — az emberi teendő, nem tervezhető; a gyökérben már meglévő `backlog/<slug>.md`-t sem — az már
 tervezett, újratervezésre előbb mondd ki, mi bukott meg benne.
 
@@ -75,15 +77,16 @@ zárultak le.
 ## Kimenet — a tételfájl
 
 `backlog/<slug>.md` a gyökérben (`git mv` az `idea/`-ból), **legfeljebb 6000 karakter**, magyarul (a séma-mezőneveket nem
-fordítjuk, lásd root `CLAUDE.md` Domain szókincs). A meglévő `Type:` és `Source:` sor
+fordítjuk, lásd root `CLAUDE.md` Domain szókincs). A meglévő `Type:`, `Source:` és `Prio:` sor
 megmarad; a `Kerdes:` sor törlődik, ha a tervezés megválaszolta.
 
 ```md
 # <slug>
 Type: feature|bug|chore
 Source: <honnan>
+Prio: <ha volt>
 Target: master
-Baseline: <git rev-parse HEAD írás előtt>
+Baseline: <a sync.mjs által kiírt HEAD>
 
 ## Goal
 Egy mondat: mit lát másképp a doki.
@@ -119,13 +122,24 @@ hagyta az összefoglalót. Mutasd meg a teljes tervezett tartalmat, és csak kif
 jóváhagyás után írj. Két megerősítési pont: 1) jelölt-választás (csak többötletes forrásnál,
 új fájl esetén), 2) a végleges fájltartalom.
 
-**Közvetlenül írás előtt**, a jóváhagyás után: `git fetch origin`; ha a helyi master lemaradt
-az `origin/master`-től, `git pull --ff-only origin master` (divergencia esetén állj meg és
-jelentsd); `git ls-tree origin/master backlog/` — ha a gyökérben már van azonos slug (párhuzamos
-session tervezte), állj meg. A `Baseline` = `git rev-parse HEAD` ekkor. Ha a helyi master előrébb jár
-az originnál (push-olatlan commitok), a záró jelentés mondja ki.
+**Közvetlenül írás előtt**, a jóváhagyás után: `node scripts/workflow/sync.mjs` (fetch, ff-merge,
+megbukott push felvitele; ha megáll, állj meg és jelentsd). A sync után, ha a gyökérben már van
+`backlog/<slug>.md` (párhuzamos session tervezte), állj meg. A `Baseline` = a sync által kiírt
+HEAD SHA.
+
+**Írás után, commit + push:**
+
+```
+node scripts/workflow/commit-push.mjs -m "backlog: plan <slug>" \
+  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" \
+  -- backlog/idea/<slug>.md backlog/<slug>.md
+```
+
+(mindkét path kell, hogy a `git mv` átnevezésként kerüljön a commitba; szabad felvetésből
+induló, új fájlnál csak a gyökérbeli). A script docs-checket futtat, commitol, pushol; ha megáll,
+jelentsd a kimenetét, ne kerüld meg kézi `git`-tel.
 
 ## Záró jelentés
 
-A megírt fájl, a `Baseline`, a lezárt `Kerdes:` (ha volt), és a következő lépés:
-`/implement <slug>`.
+A megírt fájl, a `Baseline`, a lezárt `Kerdes:` (ha volt), a commit rövid SHA-ja (fent az
+`origin/master`-en), és a következő lépés: `/implement <slug>`.

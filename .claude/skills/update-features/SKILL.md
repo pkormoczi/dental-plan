@@ -125,14 +125,19 @@ can silently delete something true; the confirmation step is the safety net.
 
 ## Step 7 — Commit
 
-After the approved content is written to `docs/FEATURES.md`, stage and commit **only that
-file** (`git add docs/FEATURES.md`) — never sweep in unrelated untracked or modified files
-sitting in the working tree. Commit message, first line: `docs: FEATURES.md frissítése (<a
-mai nap magyar dátuma>.)` (e.g. `docs: FEATURES.md frissítése (szeptember 5.)`); body: 1
-short Hungarian sentence naming what changed in this pass; the repo's usual footer.
+After the approved content is written to `docs/FEATURES.md`, commit **only that file** and
+push it at once — every shared-state change in this repo is committed and pushed by the skill
+that made it:
 
-Stop there — **no `git push`**. This mirrors `/finish` and `/update-changelog`: the commit
-lands on the local branch and push is a separate, explicit step.
+```
+node scripts/workflow/commit-push.mjs -m "docs: FEATURES.md frissítése (<a mai nap magyar dátuma>.)" \
+  --body "<1 short Hungarian sentence naming what changed in this pass>" \
+  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/FEATURES.md
+```
+
+Subject example: `docs: FEATURES.md frissítése (szeptember 5.)`. The script stages only the
+given path (never sweeps in unrelated files), runs docs-check, commits, pushes; if it stops,
+report its output instead of working around it with manual `git`.
 
 ## Notes
 

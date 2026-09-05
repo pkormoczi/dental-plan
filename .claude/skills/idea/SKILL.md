@@ -1,6 +1,6 @@
 ---
 name: idea
-description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/idea/<slug>.md files (header Type, optional Source and Kerdes, one paragraph, ≤1500 chars). Dedups against existing backlog slugs and docs/PRODUCT.md § Nem cél, splits a multi-idea note (feedback list, review report) into separate files the user picks from. Never writes application code, never plans, never commits. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl].
+description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/idea/<slug>.md files (header Type, optional Source, Kerdes and Prio, one paragraph, ≤1500 chars), then commit and push them at once (scripts/workflow/commit-push.mjs) so the item is shared state from the start. Dedups against existing backlog slugs and docs/PRODUCT.md § Nem cél, splits a multi-idea note (feedback list, review report) into separate files the user picks from. Never writes application code, never plans, never sets Prio on its own. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl].
 argument-hint: <slug> [szöveg | forrás-fájl]
 disable-model-invocation: true
 ---
@@ -14,10 +14,11 @@ megállapítása, egy menet közben talált bug, egy kód-housekeeping teendő �
 backlog egy tételévé tenni: `backlog/idea/<slug>.md` — a státusz a mappa. Nincs inbox, nincs
 várólista: ami nem fájl, az nincs. A fájlalak és az értékkészlet: `backlog/CLAUDE.md`.
 
-A tétel innen két irányba mehet: `/plan <slug>` (kidolgozás) vagy `git rm` (elvetés — ha az
-elvetés termékszintű, egy sor a `docs/PRODUCT.md` Nem cél szakaszába, „nem X, amíg Y” alakban).
+A tétel innen két irányba mehet: `/plan <slug>` (kidolgozás) vagy `git rm` + commit-push (elvetés —
+ha az elvetés termékszintű, egy sor a `docs/PRODUCT.md` Nem cél szakaszába, „nem X, amíg Y” alakban).
 
-**Ez a skill soha nem ír app-kódot, nem tervez, nem rangsorol és nem commitol.**
+**Ez a skill soha nem ír app-kódot, nem tervez, és `Prio:`-t magától nem ír.** A fájlt írás
+után **azonnal commitolja és pusholja** — a backlog minden állapotváltozása megosztott állapot.
 
 ## Bemenet
 
@@ -30,10 +31,10 @@ elvetés termékszintű, egy sor a `docs/PRODUCT.md` Nem cél szakaszába, „ne
 ## Lépések
 
 1. **Olvasd el a forrást**, és a `docs/PRODUCT.md` Nem cél szakaszát.
-2. **Dedup.** `ls backlog backlog/idea` — slugok mindkét mappában és a fájlok `Source:` sorai. Ha egy létező tétel már fedi a
-   felvetést, ne nyiss újat: mondd meg, melyik, és állj meg. Ha a felvetés a `docs/PRODUCT.md` Nem
-   cél szerint elvetett irány vagy hard invariánst sért, mondd ki — a tétel ettől még
-   felvehető (a doki dönt), de a bekezdés első mondata jelezze az ütközést.
+2. **Dedup.** `ls backlog backlog/idea` — slugok mindkét mappában és a fájlok `Source:` sorai. Ha egy
+   létező tétel már fedi a felvetést, ne nyiss újat: mondd meg, melyik, és állj meg. Ha a felvetés a
+   `docs/PRODUCT.md` Nem cél szerint elvetett irány vagy hard invariánst sért, mondd ki — a tétel
+   ettől még felvehető (a doki dönt), de a bekezdés első mondata jelezze az ütközést.
 3. **Többötletes forrásnál** sorold fel a különálló jelölteket: javasolt slug, `Type`, egy
    mondat, és a dedup-/ütközés-jelzés. A felhasználó választ — egyet vagy többet. Egy futás
    több fájlt is írhat, de csak kiválasztottat.
@@ -45,7 +46,14 @@ elvetés termékszintű, egy sor a `docs/PRODUCT.md` Nem cél szakaszába, „ne
 6. **`Source:`** honnan jött: review-jelentés + megállapítás sorszáma, „Réka feedback
    <hónap>”, „doki felvetés”, „<slug> implementálása közben talált”. Legacy-dokumentumra és
    D-számra nem hivatkozhat (docs-check).
-7. **Mutasd meg a teljes fájltartalmat**, és csak kifejezett jóváhagyás után írj.
+7. **`Prio:`** (`now` | `next` | `later`) csak akkor, ha a doki a hívásban vagy a beszélgetésben
+   kimondta. Ne kérdezz rá, ne javasolj — hiánya azt jelenti, még nincs döntés.
+8. **Mutasd meg a teljes fájltartalmat**, és csak kifejezett jóváhagyás után írj.
+9. **Commit + push:** `node scripts/workflow/commit-push.mjs -m "backlog: +<slug>" --trailer
+   "Co-Authored-By: …" --trailer "Claude-Session: …" -- backlog/idea/<slug>.md` (több fájl egy
+   futásban: egy commit, `backlog: +a, +b`, minden path a `--` után). A script docs-checket futtat,
+   commitol, pushol; ha megáll (piros docs-check, megbukott push), jelentsd a kimenetét — ne
+   kerüld meg kézi `git`-tel.
 
 ## A fájl — `backlog/idea/<slug>.md`
 
@@ -54,6 +62,7 @@ elvetés termékszintű, egy sor a `docs/PRODUCT.md` Nem cél szakaszába, „ne
 Type: feature|bug|chore|doki
 Source: <honnan>
 Kerdes: <csak ha van>
+Prio: <csak ha a doki kimondta: now|next|later>
 
 Egy bekezdés: mi a fájdalom / mi hiányzik, mit látna másképp a doki; bugnál repro + elvárt
 viselkedés; ha van explicit kizárt scope, egy mondatban. Legfeljebb 1500 karakter — a
@@ -62,6 +71,6 @@ részlet a /plan-é vagy a git historyé.
 
 ## Záró jelentés
 
-A létrehozott fájl(ok), a dedup-találatok (mit NEM vettél fel és miért), és hogy a fájl
-commitolatlan — a következő commitba a doki teszi be (vagy a `/finish` viszi a tételével).
-Következő lépés: `/plan <slug>` vagy `/plan <slug> --quick` (egyértelmű bug).
+A létrehozott fájl(ok), a dedup-találatok (mit NEM vettél fel és miért), a commit rövid SHA-ja
+és hogy fent van az `origin/master`-en. Következő lépés: `/plan <slug>` vagy
+`/plan <slug> --quick` (egyértelmű bug).

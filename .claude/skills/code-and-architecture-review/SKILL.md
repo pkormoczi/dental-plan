@@ -743,16 +743,24 @@ Never overwrite an existing same-day report.
 
 Use `-2`, `-3`, etc. for additional same-day runs.
 
-## Backlog items after the report
+## After the report
 
-For every `Critical` and `Major` finding with `Status: NEW` write one
-`backlog/idea/<slug>.md` (file shape: `backlog/CLAUDE.md`):
-`Type: bug` when behaviour is wrong, `chore` when it is structural;
-`Source: docs/reviews/<this report> <finding id>`; one paragraph from
-Evidence + Why it matters, ≤ 1500 chars. Check `ls backlog backlog/idea` first — an
-existing slug or an identical `Source:` means no new file. `Minor` and
-`Observation` stay in the report only. Still no application code changes,
-no commit.
+Commit and push the report — `docs/reviews/` is append-only and the next run's
+comparison source:
+
+```
+node scripts/workflow/commit-push.mjs -m "review: arch-react <YYYY-MM-DD>" \
+  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/reviews/<this report>
+```
+
+**No backlog files.** The review reports; the only writer into the backlog is
+`/idea`, with the doki's approval. In the closing message give one ready-made
+command per `Critical` and `Major` finding with `Status: NEW`:
+`/idea <suggested-slug> docs/reviews/<this report>` — with the suggested `Type`
+(`bug` when behaviour is wrong, `chore` when structural) and a dedup note
+(check `ls backlog backlog/idea` first: an existing slug or identical `Source:`
+means "already tracked", no command). `Minor` and `Observation` stay in the
+report only. Still no application code changes.
 
 ---
 

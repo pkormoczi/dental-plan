@@ -180,7 +180,8 @@ egy hívónak vagy egy reviewernek tudnia kell.
   első sorából), történt-e rebase, emlékeztető a két kézi docs-skillre, ha még nem futottak.
 - **Következő:** nincs; a tétel útja itt ér véget.
 
-→ file:.claude/commands/push-backlog-item.md
+(A parancs 2026-09-05-én megszűnt: a `/finish` azonnal pushol. Ez a fájl a következő
+commitban íródik át az új modellre.)
 
 ### `/backlog`
 

@@ -120,14 +120,20 @@ into the actual changelog file itself.
 
 ## Step 6 — Commit
 
-After the approved text is written to `docs/CHANGELOG.md`, stage and commit **only that file**
-(`git add docs/CHANGELOG.md`) — never sweep in unrelated untracked or modified files sitting in
-the working tree. Commit message, first line: `changelog: <a nap vagy napok magyar dátuma>`
-(e.g. `changelog: 2026. szeptember 5.`, or `changelog: 2026. szeptember 4–5.` for a multi-day
-run); body: 1 short Hungarian sentence naming what the entry covers; the repo's usual footer.
+After the approved text is written to `docs/CHANGELOG.md`, commit **only that file** and push
+it at once — every shared-state change in this repo is committed and pushed by the skill that
+made it:
 
-Stop there — **no `git push`**. This mirrors `/finish`: the commit lands on the local branch and
-push is a separate, explicit step.
+```
+node scripts/workflow/commit-push.mjs -m "changelog: <a nap vagy napok magyar dátuma>" \
+  --body "<1 short Hungarian sentence naming what the entry covers>" \
+  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/CHANGELOG.md
+```
+
+Subject examples: `changelog: 2026. szeptember 5.`, or `changelog: 2026. szeptember 4–5.` for a
+multi-day run. The script stages only the given path (never sweeps in unrelated files), runs
+docs-check, commits, pushes; if it stops, report its output instead of working around it with
+manual `git`.
 
 ## Notes
 

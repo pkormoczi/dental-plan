@@ -30,9 +30,10 @@ CI-ban, nem helyettesíti a vitest-készletet. A meglévő tesztekhez NEM nyúl:
 CI-t kapuzó, determinisztikus védelmek a szerződéses szabályokra (append-only verzió,
 placeholder-zár, kitöltetlen sor) — a böngészős ellenőrzés kiegészíti, nem váltja ki.
 
-**Csak jelentést készít.** A kódot NEM módosítja a skill része — a javítás külön,
-szándékos lépés, amit a felhasználó indít (ugyanaz az elv, mint a
-`code-and-architecture-review` skillnél). Kivétel lent, a „Kimenet” alatt.
+**Csak jelentést készít.** A kódot NEM módosítja — a javítás külön, szándékos lépés
+(ugyanaz az elv, mint a `code-and-architecture-review` és a `doctor-review` skillnél):
+önálló futásnál `/idea` → `/plan --quick`; a `/finish` 3. lépéséből hívva a `/finish`
+javítja a tételhez tartozó találatot. Nincs kivétel.
 
 Feature-specifikus, egyszeri ellenőrzés NEM ide való: az az aktív plan `Verification`
 szakaszában él, és a plannel együtt tűnik el. Ide csak stabil, ismétlődő vakfolt kerül.
@@ -184,15 +185,20 @@ a végső ítélethez a PDF-bájt- vagy képernyőkép-bizonyíték számít.
 
 `docs/reviews/YYYY-MM-DD-manual-checks-<szelet>.md` (az `all` egy fájlba, szeletenként
 szakaszolva), a `code-and-architecture-review` konvenciója szerint
-(`Kritikus`/`Közepes`/`Apró`). A végén: futásidő percben. Átmeneti munkatermék: a
-valódi találatok `backlog/idea/<slug>.md` fájlba vándorolnak (`/idea`), utána a
-jelentés törölhető.
+(`Kritikus`/`Közepes`/`Apró`). A végén: futásidő percben. A jelentés **megmarad** —
+`docs/reviews/` append-only. Önálló futásnál a végén commit + push:
 
-Ha egy találat **egyértelmű, kicsi, célzott** felület-szabály-sértés (pl. egy
-loading-állapot szöveg helyett skeletont igényel egy-két call site-on) — javítható a
-menet részeként, `npm test` + `tsc -b` + `oxlint` zöld eredménnyel igazolva. Ha
-**rendszerszintű** (sok fájlt/az egész appot érintő vizuális döntés, vagy egy upstream
-könyvtár hibája) — NE javítsd autonóm módon; jelentsd, és kérdezd meg a felhasználót.
+```
+node scripts/workflow/commit-push.mjs -m "review: manual-checks <szelet> <YYYY-MM-DD>" \
+  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/reviews/<ez a jelentés>
+```
+
+A `/finish` 3. lépéséből hívva nincs külön commit: a lezáró commit viszi a jelentést.
+
+A záró üzenetben minden `Kritikus` találathoz egy kész parancssor: `/idea <javasolt-slug>
+docs/reviews/<ez a jelentés>` (dedup: `ls backlog backlog/idea`, meglévő slug vagy azonos
+`Source:` → „már felvéve”, parancs nélkül). Kódot ez a skill nem javít — rendszerszintű
+találatnál (sok fájlt érintő vizuális döntés, upstream könyvtár hibája) is csak jelent.
 
 ---
 

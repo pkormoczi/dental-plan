@@ -245,7 +245,7 @@ Utána a hat kötelező szekció:
    `Tapasztalt probléma`, `Napi hatás`, `Jelenlegi kerülőút`, `Javasolt
    javítási irány`, `Siker mércéje`. **Minden `Blokkoló` és `Súlyos`
    tétel végén** a javasolt backlog-slug (`Backlog: <slug>` — a Lezárás
-   ebből ír tételfájlt; `MÁR TERVEZETT` találatnál a meglévő slug).
+   ebből ad kész `/idea` parancssort; `MÁR TERVEZETT` találatnál a meglévő slug).
 3. **Nehezen felfedezhető vagy kihasználatlan funkciók** — ami létezik, de
    István nem találta meg vagy nem ismerte fel; külön jelölve, hogy
    megtalálta-e végül, és hány próbálkozásból.
@@ -296,17 +296,19 @@ bizonyosságú a jelentésben.
 
 ## Lezárás
 
-Állítsd le a dev szervert. A jelentés a `docs/reviews/`-ban marad.
+Állítsd le a dev szervert. A jelentés a `docs/reviews/`-ban marad — ez a következő futások
+dedup-forrása —, és **commitolva**:
 
-**Tételfájlok.** Minden `ÚJ` vagy `ISMÉT` dedup-címkéjű `Blokkoló` és `Súlyos`
-megállapításból írj egy `backlog/idea/<slug>.md`-t (a fájlalak:
-`backlog/CLAUDE.md`): `Type: bug` (reprodukált hiba) vagy `feature` (hiányzó
-viselkedés), `Source: docs/reviews/<ez a jelentés> N. megállapítás`, egy bekezdés a
-`Tapasztalt probléma` + `Orvosi elvárás` sorokból, ≤ 1500 karakter. Előtte `ls backlog backlog/idea`
-— azonos slug vagy azonos `Source:` esetén ne írj újat. `MÁR TERVEZETT` találatnál
-semmit. A `Közepes`/`Kis` megállapítások a jelentésben maradnak, a doki `/idea`-val
-veszi fel, amit akar. A skill app-kódot továbbra sem módosít, és nem commitol.
+```
+node scripts/workflow/commit-push.mjs -m "review: doctor-review <scenario-slug> <YYYY-MM-DD>" \
+  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/reviews/<ez a jelentés>
+```
 
-A képernyőkép-mappa törölhető. A záró üzenetben sorold fel a `Blokkoló` és `Súlyos`
-tételeket egy sorban egyenként a létrehozott slugjukkal, és a `User-teszt készültség`
-ítéletet.
+**Nincs tételfájl.** A review megállapít, a backlogba egy írói út van: az `/idea`, a doki
+jóváhagyásával. A záró üzenetben minden `ÚJ` vagy `ISMÉT` dedup-címkéjű `Blokkoló` és `Súlyos`
+megállapításhoz egy kész parancssor: `/idea <javasolt-slug> docs/reviews/<ez a jelentés>` —
+mellette a javasolt `Type` (`bug` reprodukált hibánál, `feature` hiányzó viselkedésnél) és a
+dedup-jelzés (`MÁR TERVEZETT` találatnál a meglévő slug, parancs nélkül). A `Közepes`/`Kis`
+megállapítások a jelentésben maradnak. A skill app-kódot nem módosít.
+
+A képernyőkép-mappa törölhető. A záró üzenet végén a `User-teszt készültség` ítélet.
