@@ -2729,3 +2729,22 @@ karbantartási kör négy önálló javítása.
   mutatja. A fázis-összesen, a sticky „Mindösszesen”, az Előleg és az
   Egyedi végösszeg szándékosan változatlanul, csak commit után frissül.
   Részletek: `docs/03-funkcionalis-spec.md` § „Sor mezői".
+
+### 109. tétel: Új páciens gyorsfelvétel — elvetés-megerősítés — KÉSZ
+
+- **Méret:** kicsi — egy meglévő megosztott primitív (`useDiscardGuard`/
+  `DiscardChangesDialog`) bekötése egy dialógusba, plusz egy opcionális
+  paraméter a közös komponensen.
+- **Megvalósítás:** a quick-create „Új páciens" dialógus Mégse gombja, Esc
+  billentyűje és a kívülre kattintása mostantól egyetlen ponton, a
+  kontrollált `Dialog.Root onOpenChange`-én megy át — dirty állapotban
+  (a begépelt/módosított mező eltér az induló, esetleg előtöltött
+  értéktől) megerősítést kér, mielőtt a begépelt név/születési dátum/
+  telefon elveszne. A `DiscardChangesDialog` egy opcionális
+  `visszaFokuszRef` paramétert kapott: egy MÁR nyitott, fókusz-csapdázott
+  felület alá ágyazott `AlertDialog`-nál a Radix beépített
+  visszafókuszálása a `<body>`-ra esne, ez a paraméter ezt kerüli el —
+  az öt meglévő hívó változatlan maradt. Sikeres mentés és a
+  duplikáció-megerősítőn át választott meglévő páciens egyike sem kérdez.
+  Részletek: `docs/03-funkcionalis-spec.md` § 9. Páciensek és § „Új terv
+  indítása", `docs/07-felulet-rendszer.md` § Komponensek.

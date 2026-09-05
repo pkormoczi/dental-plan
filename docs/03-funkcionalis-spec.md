@@ -1508,9 +1508,10 @@ hogy új vagy visszatérő páciensről van szó, csak utána a konkrét személ
   a `PaciensekPage.tsx` „+ Új páciens" gombjával, lásd § 9), a
   `PaciensekPage.tsx`-szel közös quick-create dialógust nyitja meg
   (`app/src/pages/paciensek/UjPaciensDialog.tsx`): kötelező név +
-  opcionális születési dátum/telefon. A dialógus Mégse/Escape-je a
-  köztes választón hagyja a dokit, a keresőszöveg megmarad (D205), a
-  fókusz visszakerül a keresőmezőre. A duplikáció-detektálás (D42)
+  opcionális születési dátum/telefon. A dialógus Mégse/Escape-je (a
+  begépelt vagy módosított adat elvetése előtti megerősítéssel, lásd
+  lentebb) a köztes választón hagyja a dokit, a keresőszöveg megmarad
+  (D205), a fókusz visszakerül a keresőmezőre. A duplikáció-detektálás (D42)
   kétfázisú: gépelés közben a begépelt névre pontos vagy hasonló
   (token-alapú) egyezésű páciensek jelennek meg javaslatként (max 3,
   „+N további" kibontással), a szűk jelölt-körre betöltött születési
@@ -2071,7 +2072,13 @@ adatai` tabja — a szerkesztő mezői/mentés-szabályai ott vannak leírva
   nélkül, majd a mentés a páciens-részletoldalra, SZERKESZTÉS módban
   előválasztott `Páciens adatai` tabra navigál (D45). Az így felvitt
   páciens a DEMO „Összes terv" fülén NEM jelenik meg (§ 5) — csak akkor
-  kerül oda, ha legalább egy terve is lesz.
+  kerül oda, ha legalább egy terve is lesz. A dialógus Mégse gombja, Esc
+  billentyűje és a kívülre kattintás egyaránt megerősítést kér, ha a doki
+  a megnyitás óta bármit beírt vagy módosított a Név/Született/Telefon
+  mezőkben — egy pusztán előtöltött, azóta érintetlenül hagyott érték nem
+  számít módosításnak. Sikeres mentés és a duplikáció-megerősítőn át
+  választott meglévő páciens egyike sem kérdez, mert a doki ott már
+  explicit döntött.
 - A nyomtatvány (PDF) nem változik: ez a képernyő SOHA nem forrása a
   PDF-nek (D7, D33).
 - **Törlés** (D50): a lista élőben (`storage.listPatients()`) tölt be,

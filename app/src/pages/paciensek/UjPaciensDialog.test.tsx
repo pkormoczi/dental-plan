@@ -15,10 +15,12 @@ import type { PatientFolder } from '../../domain/types';
 
 function Harness({
   patients,
+  initialNev,
   onSave,
   onUseExisting,
 }: {
   patients: PatientFolder[];
+  initialNev?: string;
   onSave: (nev: string, kezdoAdatok: { szuletesiIdo: string; telefon: string }) => void;
   onUseExisting?: (patient: PatientFolder) => void;
 }) {
@@ -28,6 +30,7 @@ function Harness({
       open={open}
       onOpenChange={setOpen}
       patients={patients}
+      initialNev={initialNev}
       onSave={(nev, kezdoAdatok) => {
         onSave(nev, kezdoAdatok);
         setOpen(false);
@@ -40,12 +43,15 @@ function Harness({
   );
 }
 
-function renderHarness(patients: PatientFolder[], overrides?: { onUseExisting?: (p: PatientFolder) => void }) {
+function renderHarness(
+  patients: PatientFolder[],
+  overrides?: { onUseExisting?: (p: PatientFolder) => void; initialNev?: string },
+) {
   const onSave = vi.fn();
   const onUseExisting = vi.fn(overrides?.onUseExisting);
   render(
     <TestProviders>
-      <Harness patients={patients} onSave={onSave} onUseExisting={onUseExisting} />
+      <Harness patients={patients} initialNev={overrides?.initialNev} onSave={onSave} onUseExisting={onUseExisting} />
     </TestProviders>,
   );
   return { onSave, onUseExisting };
@@ -230,5 +236,92 @@ describe('UjPaciensDialog', () => {
     await user.click(within(alert).getByRole('button', { name: 'Mégis ezt a pácienst választom' }));
     await waitFor(() => expect(onUseExisting).toHaveBeenCalled());
     expect(onUseExisting.mock.calls[0][0].nev).toBe('Kovács János');
+  });
+
+  it('üres, érintetlen dialógusnál a Mégse azonnal zár, megerősítés nélkül', async () => {
+    renderHarness([]);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Mégse' }));
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('üres, érintetlen dialógusnál az Esc azonnal zár, megerősítés nélkül', async () => {
+    renderHarness([]);
+    const user = userEvent.setup();
+
+    await screen.findByRole('textbox', { name: 'Név *' });
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('előtöltött, azóta érintetlenül hagyott névnél a Mégse azonnal zár', async () => {
+    renderHarness([], { initialNev: 'Kovács János' });
+    const user = userEvent.setup();
+
+    await screen.findByRole('textbox', { name: 'Név *' });
+    await user.click(screen.getByRole('button', { name: 'Mégse' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('begépelt név után a Mégse megerősítést kér, a "Mégse" nyitva hagyja a dialógust és megőrzi a begépelt adatot', async () => {
+    renderHarness([]);
+    const user = userEvent.setup();
+
+    const nevMezo = await screen.findByRole('textbox', { name: 'Név *' });
+    await user.type(nevMezo, 'Teljesen Ismeretlen Név');
+    await user.click(screen.getByRole('button', { name: 'Mégse' }));
+
+    const alert = await screen.findByRole('alertdialog');
+    expect(within(alert).getByText('Nem mentett adat')).toBeInTheDocument();
+
+    await user.click(within(alert).getByRole('button', { name: 'Mégse' }));
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Név *' })).toHaveValue('Teljesen Ismeretlen Név');
+  });
+
+  it('csak a Telefon kitöltése után az Esc is megerősítést kér, elfogadás után bezár', async () => {
+    renderHarness([]);
+    const user = userEvent.setup();
+
+    await screen.findByRole('textbox', { name: 'Név *' });
+    await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
+    await user.keyboard('{Escape}');
+
+    const alert = await screen.findByRole('alertdialog');
+    await user.click(within(alert).getByRole('button', { name: 'Bezárás, a begépelt adat elvetésével' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('sikeres mentés nem kér elvetés-megerősítést', async () => {
+    const { onSave } = renderHarness([]);
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Teljesen Ismeretlen Név');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalled());
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('a duplikáció-megerősítőn át választott meglévő páciens nem kér elvetés-megerősítést', async () => {
+    const { onUseExisting } = renderHarness(seededPatients);
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByRole('textbox', { name: 'Név *' }), 'Kovács János');
+    await user.click(screen.getByRole('button', { name: 'Ezt a pácienst választom: Kovács János' }));
+
+    await waitFor(() => expect(onUseExisting).toHaveBeenCalled());
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

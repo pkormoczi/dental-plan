@@ -15,16 +15,6 @@ mérete × gyakorisága, holtversenynél a kisebb munka előre.
 ---
 ## KIDOLGOZOTT
 
-### 109. tétel: Új páciens gyorsfelvétel — elvetés-megerősítés
-
-  A `pages/paciensek/UjPaciensDialog.tsx` tisztán helyi állapotot tart,
-  navigációra a begépelt adat szótlanul elvész. A piszkozat-visszaírás
-  tudatosan nem éri meg egy ilyen rövid űrlapnál — a kérés csak egy
-  elvetés-megerősítés a meglévő `components/DiscardChangesDialog.tsx`
-  `useDiscardGuard` primitívjével. A testvér
-  `pages/priceListAdmin/UjTetelDialog.tsx` szándékosan nem tartozik bele.
-  **Terv:** `backlog/plans/backlog-109-uj-paciens-elvetes-megerosites-terv.md`
-
 ### 113. tétel: Véglegesítési checklist "sablon nem érhető el a megfelelő nyelven" üzenete hamis, ha a magyar tartalék is placeholder
 
   A `pages/PreviewPage.tsx` `loadOrFallback()` a HU-tartalékra eséskor

@@ -8,7 +8,7 @@
 // -- más domaint védenek (D37), ez a komponens csak stílusmintaként áll
 // rendelkezésre nekik.
 
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import { AlertDialog, Button, Flex } from '@radix-ui/themes';
 
 /**
@@ -46,6 +46,7 @@ export default function DiscardChangesDialog({
   title,
   description,
   confirmLabel,
+  visszaFokuszRef,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -53,10 +54,28 @@ export default function DiscardChangesDialog({
   title: string;
   description: string;
   confirmLabel: string;
+  /**
+   * Csak egy MÁR NYITOTT, fókusz-csapdázott felület (pl. `Dialog`) alá
+   * ágyazott hívónak kell: Radix-forráskódban igazolt bug, hogy egy
+   * kontrollált (trigger nélküli) `AlertDialog` bezárásakor a beépített
+   * visszafókuszálás `triggerRef.current` null-ra fut, és a fókusz a
+   * `<body>`-ra esne a mögötte lévő felület alól.
+   */
+  visszaFokuszRef?: RefObject<HTMLElement | null>;
 }) {
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
-      <AlertDialog.Content maxWidth="440px">
+      <AlertDialog.Content
+        maxWidth="440px"
+        onCloseAutoFocus={
+          visszaFokuszRef
+            ? (e) => {
+                e.preventDefault();
+                requestAnimationFrame(() => visszaFokuszRef.current?.focus());
+              }
+            : undefined
+        }
+      >
         <AlertDialog.Title>{title}</AlertDialog.Title>
         <AlertDialog.Description size="2">{description}</AlertDialog.Description>
         <Flex gap="3" mt="4" justify="end">

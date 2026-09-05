@@ -221,7 +221,21 @@ palettát. Ha egy szín hiányzik valamihez, kérdezz.
   a panel becsukása a tab-váltáshoz hasonlóan ténylegesen eldobja a
   draftot, ezért kér megerősítést. A tétel-szerkesztés és a kategória
   létrehozása/törlése ugyanazon a lapon VÁLTOZATLANUL autosave marad —
-  ezek nem illenek egy Mégse-vel visszavonható draft-modellbe.
+  ezek nem illenek egy Mégse-vel visszavonható draft-modellbe. Az „Új
+  páciens" gyorsfelvétel dialógusa (`pages/paciensek/UjPaciensDialog.tsx`)
+  a Mégse gomb, az Esc és a kívülre kattintás mindhárom útját egyetlen
+  ponton, a teljesen kontrollált `Dialog.Root onOpenChange`-en fogja el —
+  nincs `Dialog.Trigger`, tehát mindhárom út ugyanoda fut be, nem kell
+  `onEscapeKeyDown`/`onPointerDownOutside` felülírás. A dirty-számítás az
+  induló (esetleg előtöltött) mezőértékekhez, nem az üres űrlaphoz méri a
+  jelenlegi bevitelt, hogy egy pusztán előtöltött, azóta érintetlen név ne
+  kérdezzen feleslegesen. A `DiscardChangesDialog` egy opcionális
+  `visszaFokuszRef` paramétert kapott ehhez a hívási helyhez: egy MÁR
+  nyitott, fókusz-csapdázott felület (itt a szülő `Dialog`) alá ágyazott
+  `AlertDialog`-nál a Radix beépített visszafókuszálása a `<body>`-ra esne
+  (a `triggerRef.current` null egy trigger nélküli, kontrollált
+  `AlertDialog`-nál) — a paraméter hiányában az öt korábbi hívó
+  viselkedése változatlan marad.
 - Mezőnkénti összevető/szinkron-dialógus (D48, `components/TorzsadatDiffDialog.tsx`)
   — a fenti „Mezős felugró ablak” mintájának checkbox-listás változata:
   Radix Themes `Dialog`, mert tényleges mezőválasztás történik benne, nem

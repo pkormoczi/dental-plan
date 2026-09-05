@@ -22,10 +22,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AlertDialog, Box, Button, Dialog, Flex, Grid, Text, TextField } from '@radix-ui/themes';
+import DiscardChangesDialog, { useDiscardGuard } from '../../components/DiscardChangesDialog';
 import DuplikacioJavaslatok from './DuplikacioJavaslatok';
 import JeloltSor from './JeloltSor';
 import { Field } from '../../components/Field';
 import { usePaciensDuplikacio } from '../../components/usePaciensDuplikacio';
+import { draftDirty } from '../../components/useDirtyDraft';
 import { t } from '../../design/tokens';
 import { todayIso } from '../../domain/date';
 import type { DuplikaciosJelolt } from '../../domain/paciensDuplikacio';
@@ -105,8 +107,9 @@ export default function UjPaciensDialog({
 
   // Minden megnyitáskor tiszta lappal indul -- ugyanaz a döntés, mint az
   // UjTetelDialog-nál: egy pár mezős űrlapnál a piszkozat-visszaírás nem
-  // éri meg a plusz kattintást. Az `initialNev` (no-match ág) ettől
-  // eltérően előtöltve indul.
+  // éri meg a plusz kattintást, csak egy zárás előtti megerősítés (lásd
+  // `zarasDirty` lent). Az `initialNev` (no-match ág) ettől eltérően
+  // előtöltve indul.
   useEffect(() => {
     if (open) {
       setNev(initialNev ?? '');
@@ -129,9 +132,33 @@ export default function UjPaciensDialog({
     telefon,
   });
 
+  // Az induló állapothoz mérve dirty, nem az üres űrlaphoz -- a
+  // `NewPlanPage` no-match ágán előtöltött, azóta érintetlenül hagyott
+  // `initialNev` mellett a Mégse/Esc/kívülre kattintás nem kérdez semmit
+  // (a név úgyis megmarad a keresőmezőben).
+  const zarasDirty = draftDirty(
+    { nev: nevTrim, szuletesiIdo, telefon },
+    { nev: (initialNev ?? '').trim(), szuletesiIdo: '', telefon: '' },
+  );
+  const zarasGuard = useDiscardGuard(zarasDirty);
+
   function nyitMegerosites(next: Megerosites) {
     visszaFokuszRef.current = document.activeElement as HTMLElement | null;
     setMegerosites(next);
+  }
+
+  // A Mégse gomb, az Esc és a kívülre kattintás mind ide fut be (a
+  // `Dialog.Root` teljesen kontrollált, nincs `Dialog.Trigger`) -- egyetlen
+  // elfogási pont elég, nem kell `onEscapeKeyDown`/`onPointerDownOutside`
+  // felülírás. A szülő általi zárás (sikeres mentés, `onUseExisting`) NEM
+  // ezen megy át -- azok a hívó saját `open` state-jét állítják közvetlenül.
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      onOpenChange(next);
+      return;
+    }
+    visszaFokuszRef.current = document.activeElement as HTMLElement | null;
+    zarasGuard.request(() => onOpenChange(false));
   }
 
   async function handleSubmit() {
@@ -170,7 +197,7 @@ export default function UjPaciensDialog({
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Content maxWidth="440px" onCloseAutoFocus={(e) => e.preventDefault()}>
         <Dialog.Title>Új páciens</Dialog.Title>
         <Dialog.Description size="2" color="gray">
@@ -296,6 +323,16 @@ export default function UjPaciensDialog({
             </Flex>
           </AlertDialog.Content>
         </AlertDialog.Root>
+
+        <DiscardChangesDialog
+          open={zarasGuard.pending}
+          onOpenChange={(o) => !o && zarasGuard.cancel()}
+          onConfirm={zarasGuard.confirm}
+          title="Nem mentett adat"
+          description="A begépelt név, születési dátum és telefon nem került mentésre — bezárással ez elvész. Biztosan bezárod?"
+          confirmLabel="Bezárás, a begépelt adat elvetésével"
+          visszaFokuszRef={visszaFokuszRef}
+        />
       </Dialog.Content>
     </Dialog.Root>
   );

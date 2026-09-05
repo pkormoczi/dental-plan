@@ -596,7 +596,14 @@ A közös Save/Cancel + dirty-navigation guard tétel
   egyébként azonnal lefuttatja `apply`-t. Hívói: `PatientEditorPanel`
   retrofitja (a 38. tétel/D43 óta az EGYETLEN hívási helyén,
   `PatientDetailPage.tsx`-ben), `PatientDetailPage.tsx` tab-váltása,
-  `SettingsPage.tsx` „Nyomtatvány szövegei" Mégse gombja. A
+  `SettingsPage.tsx` „Nyomtatvány szövegei" Mégse gombja,
+  `pages/paciensek/UjPaciensDialog.tsx` (a Mégse/Esc/kívülre kattintás
+  egyetlen elfogási ponton, a kontrollált `Dialog.Root onOpenChange`-én).
+  Az opcionális `visszaFokuszRef` paraméter (`RefObject<HTMLElement | null>`)
+  a dialóguson BELÜL mountolt hívóknak való: a Radix beépített
+  visszafókuszálása egy kontrollált, trigger nélküli `AlertDialog`
+  bezárásakor a `<body>`-ra esne egy még nyitott, fókusz-csapdázott
+  felület alól — a paraméter hiányában a többi hívó változatlan. A
   „piszkozat felülírása" (aktív terv-draft) guardok (`Home.tsx`,
   `NewPlanPage.tsx`, `PatientPlanChains.tsx`) MÁS domaint védenek (D37) —
   ezekre SZÁNDÉKOSAN nincsenek ráállítva
