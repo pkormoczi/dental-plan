@@ -51,16 +51,15 @@ describe('FileTreeSection', () => {
     await seeder.init();
   });
 
-  it('a gyökér és az első szint alapból nyitva van -- a 8 sablon-fájl kattintás nélkül látszik', async () => {
+  it('a gyökér és az első szint alapból nyitva van -- a 6 sablon-fájl kattintás nélkül látszik', async () => {
     renderFileTree();
     await screen.findByText(/Ez a nézet azt mutatja meg/);
 
     expect(screen.getByRole('button', { name: 'sablonok' })).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('button', { name: 'paciensek' })).toHaveAttribute('aria-expanded', 'true');
 
-    // 6 alap sablon + a D66 fizetési feltételek HU/DE v2-je.
     const sablonokBox = document.querySelector('[data-path="sablonok"]') as HTMLElement;
-    expect(within(sablonokBox).getAllByRole('button', { name: /^sablonok\/.*\.md$/ })).toHaveLength(8);
+    expect(within(sablonokBox).getAllByRole('button', { name: /^sablonok\/.*\.md$/ })).toHaveLength(6);
   });
 
   it('egy páciensmappa alapból csukva van -- kibontásig nincs paciens.json a DOM-ban', async () => {

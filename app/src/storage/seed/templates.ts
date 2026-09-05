@@ -7,12 +7,9 @@
 // generáláskor a terv kezelőorvosának neve váltja fel (lásd
 // pdf/markdownLite.ts `fillPlaceholders`).
 //
-// A fizetési feltételek `{{eloleg}}` helyőrzője (D66, korábban
-// `{{elolegSzazalek}}` -- lásd `FIZETESI_FELTETELEK_HU_V1`/`_DE_V1`, a v1
-// sablon már aláírt tervek mentett PDF-jében szó szerint benne marad) a
-// terv `elolegOsszeg` mezőjéből képzett, formázott kifejezésre old fel
-// (`pdf/labels.ts` `elolegKifejezes`), kikapcsolt kapcsolónál a
-// "megállapított"/"vereinbarte"
+// A fizetési feltételek `{{eloleg}}` helyőrzője a terv `elolegOsszeg`
+// mezőjéből képzett, formázott kifejezésre old fel (`pdf/labels.ts`
+// `elolegKifejezes`), kikapcsolt kapcsolónál a "megállapított"/"vereinbarte"
 // megfogalmazásra. Ezért NEM feltételes blokk, csak szöveghelyettesítés.
 //
 // A doki jogásza a Beállítások képernyőn szerkesztheti/pontosíthatja ezt a
@@ -54,20 +51,6 @@ export const FIZETESI_FELTETELEK_HU_V1 = `# Fizetési feltételek
 Megrendelő a kezelési tervben szereplő kezelés sorozat elvégzésével, az ehhez kapcsolódó fogtechnikai anyagok beépítésével egyetért, ehhez beleegyezését adja. Számlázási, fizetési feltételek tekintetében Megrendelő elfogadja az alábbiakat:
 
 - Amennyiben a kezelés nem tartalmaz fogtechnikai munkát, akkor az alkalmanként elvégzett munka ellenértéke azonnal fizetendő.
-- Fogtechnikai munkát tartalmazó kezelés esetén a kezelési összeg {{elolegSzazalek}}%-a fizetendő a munka megkezdésekor; ez a feltétele a technikus felé való továbbításnak. A fennmaradó rész a munka átadásakor fizetendő.
-- A munka átadásának feltétele a kiegyenlített számla.
-- Fizetési mód: készpénz, egészségpénztári kártya, vagy bankkártyás utalás.
-`;
-
-// D66: az előleg százalékról abszolút összegre váltott -- ez a v2 az
-// egyetlen érintett felsorolás-pont mondatát igazítja hozzá, a v1 (fenti)
-// örökre változatlan marad -- a korábban véglegesített tervek mentett
-// PDF-je a v1 szövegét tartalmazza, azt utólag nem írjuk át.
-export const FIZETESI_FELTETELEK_HU_V2 = `# Fizetési feltételek
-
-Megrendelő a kezelési tervben szereplő kezelés sorozat elvégzésével, az ehhez kapcsolódó fogtechnikai anyagok beépítésével egyetért, ehhez beleegyezését adja. Számlázási, fizetési feltételek tekintetében Megrendelő elfogadja az alábbiakat:
-
-- Amennyiben a kezelés nem tartalmaz fogtechnikai munkát, akkor az alkalmanként elvégzett munka ellenértéke azonnal fizetendő.
 - Fogtechnikai munkát tartalmazó kezelés esetén {{eloleg}} fizetendő a munka megkezdésekor; ez a feltétele a technikus felé való továbbításnak. A fennmaradó rész a munka átadásakor fizetendő.
 - A munka átadásának feltétele a kiegyenlített számla.
 - Fizetési mód: készpénz, egészségpénztári kártya, vagy bankkártyás utalás.
@@ -85,9 +68,9 @@ Megrendelő a kezelési tervben szereplő kezelés sorozat elvégzésével, az e
 // hogy ehelyett AI-fordítás kerüljön be, jelölés (és a hozzá kötött
 // biztonsági zár, lásd `isPlaceholderTemplate`/PreviewPage) NÉLKÜL -- tehát
 // ez a két szöveg NEM esett át jogi lektoráláson. Ha ez változna (pl. a
-// jogász mégis átnézi), a Beállításokban szerkesztve/mentve új
-// verziófájl (nyilatkozat-de-v2.md / fizetesi-feltetelek-de-v2.md)
-// keletkezik, a jelenlegi (v1, AI-fordítás) megmarad.
+// jogász mégis átnézi), a Beállításokban szerkesztve/mentve a jelenlegi
+// (v1, AI-fordítás) szöveg felülíródik a lektorált szöveggel -- a fájlnév
+// nem változik.
 
 export const NYILATKOZAT_DE_V1 = `# Erklärung
 
@@ -105,17 +88,6 @@ Mit dem Vorstehenden bin ich einverstanden, meine Fragen wurden beantwortet. Der
 `;
 
 export const FIZETESI_FELTETELEK_DE_V1 = `# Zahlungsbedingungen
-
-Der Auftraggeber stimmt der Durchführung der im Behandlungsplan aufgeführten Behandlungsreihe sowie dem Einbau der damit verbundenen zahntechnischen Materialien zu und erteilt hierzu seine Einwilligung. Hinsichtlich der Rechnungsstellung und der Zahlungsbedingungen akzeptiert der Auftraggeber Folgendes:
-
-- Enthält die Behandlung keine zahntechnische Arbeit, ist der Gegenwert der jeweils erbrachten Leistung sofort fällig.
-- Bei einer Behandlung mit zahntechnischer Arbeit sind {{elolegSzazalek}} % des Behandlungsbetrags bei Beginn der Arbeit fällig; dies ist Voraussetzung für die Weiterleitung an den Zahntechniker. Der Restbetrag ist bei Übergabe der Arbeit fällig.
-- Voraussetzung für die Übergabe der Arbeit ist die beglichene Rechnung.
-- Zahlungsart: Bargeld, Gesundheitskassenkarte oder Kartenüberweisung.
-`;
-
-// D66, a HU v2 párja (lásd ott).
-export const FIZETESI_FELTETELEK_DE_V2 = `# Zahlungsbedingungen
 
 Der Auftraggeber stimmt der Durchführung der im Behandlungsplan aufgeführten Behandlungsreihe sowie dem Einbau der damit verbundenen zahntechnischen Materialien zu und erteilt hierzu seine Einwilligung. Hinsichtlich der Rechnungsstellung und der Zahlungsbedingungen akzeptiert der Auftraggeber Folgendes:
 

@@ -170,18 +170,23 @@ describe('DemoStorage', () => {
   });
 
   it('saveTemplate overwrites the highest existing version, leaving lower ones untouched', async () => {
-    // A fizetesi-feltetelek-hu base legfrissebbje a seedben eleve -v2 (D66).
-    const first = await storage.loadLatestTemplateByBase('fizetesi-feltetelek-hu');
-    expect(first.name).toBe('fizetesi-feltetelek-hu-v2.md');
+    // A seedben ma minden base -v1 -- egy magasabb verziót itt kézzel
+    // szimulálunk, hogy a `latestTemplateFile` kiválasztása külön a seed
+    // tartalmától tesztelhető legyen.
+    localStorage.setItem('dp:sablonok/teszt-alap-v1.md', 'v1 szöveg');
+    localStorage.setItem('dp:sablonok/teszt-alap-v2.md', 'v2 szöveg');
 
-    const savedName = await storage.saveTemplate('fizetesi-feltetelek-hu', 'új v2 szöveg');
-    expect(savedName).toBe('fizetesi-feltetelek-hu-v2.md');
+    const first = await storage.loadLatestTemplateByBase('teszt-alap');
+    expect(first.name).toBe('teszt-alap-v2.md');
 
-    const second = await storage.loadLatestTemplateByBase('fizetesi-feltetelek-hu');
-    expect(second.name).toBe('fizetesi-feltetelek-hu-v2.md');
+    const savedName = await storage.saveTemplate('teszt-alap', 'új v2 szöveg');
+    expect(savedName).toBe('teszt-alap-v2.md');
+
+    const second = await storage.loadLatestTemplateByBase('teszt-alap');
+    expect(second.name).toBe('teszt-alap-v2.md');
     expect(second.body).toBe('új v2 szöveg');
 
-    const v1 = await storage.loadTemplate('fizetesi-feltetelek-hu-v1.md');
+    const v1 = await storage.loadTemplate('teszt-alap-v1.md');
     expect(v1).not.toBe('új v2 szöveg');
   });
 
@@ -568,8 +573,7 @@ describe('DemoStorage', () => {
       const sablonok = tree.find((n) => n.name === 'sablonok');
       expect(sablonok?.type).toBe('dir');
       if (sablonok?.type !== 'dir') throw new Error('unreachable');
-      // 6 alap sablon + a D66 fizetési feltételek HU/DE v2-je.
-      expect(sablonok.children).toHaveLength(8);
+      expect(sablonok.children).toHaveLength(6);
 
       const paciensek = tree.find((n) => n.name === 'paciensek');
       if (paciensek?.type !== 'dir') throw new Error('unreachable');

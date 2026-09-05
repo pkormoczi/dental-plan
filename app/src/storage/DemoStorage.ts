@@ -51,9 +51,7 @@ import { seedSettings } from './seed/settings';
 import { seedPatientData, seedPatients, seedPlans, seedVerzio } from './seed/plans';
 import {
   FIZETESI_FELTETELEK_DE_V1,
-  FIZETESI_FELTETELEK_DE_V2,
   FIZETESI_FELTETELEK_HU_V1,
-  FIZETESI_FELTETELEK_HU_V2,
   GARANCIA_DE_V1,
   GARANCIA_HU_V1,
   NYILATKOZAT_DE_V1,
@@ -61,20 +59,14 @@ import {
 } from './seed/templates';
 
 /**
- * Alapértelmezett sablonfájlok -- lásd `ensureSeedTemplates`. A fizetési
- * feltételek v2-je (D66: {{elolegSzazalek}} -> {{eloleg}}) egy ÚJ kulcs --
- * egy meglévő demó-tárolóban is hiányzik, tehát az `ensureSeedTemplates`
- * `existing == null` ága automatikusan beírja, a v1 (korábban véglegesített
- * tervek mentett PDF-je ennek szövegét őrzi) érintetlen marad.
+ * Alapértelmezett sablonfájlok -- lásd `ensureSeedTemplates`.
  */
 const DEFAULT_TEMPLATES: Array<[string, string]> = [
   ['nyilatkozat-hu-v1.md', NYILATKOZAT_HU_V1],
   ['fizetesi-feltetelek-hu-v1.md', FIZETESI_FELTETELEK_HU_V1],
-  ['fizetesi-feltetelek-hu-v2.md', FIZETESI_FELTETELEK_HU_V2],
   ['garancia-hu-v1.md', GARANCIA_HU_V1],
   ['nyilatkozat-de-v1.md', NYILATKOZAT_DE_V1],
   ['fizetesi-feltetelek-de-v1.md', FIZETESI_FELTETELEK_DE_V1],
-  ['fizetesi-feltetelek-de-v2.md', FIZETESI_FELTETELEK_DE_V2],
   ['garancia-de-v1.md', GARANCIA_DE_V1],
 ];
 

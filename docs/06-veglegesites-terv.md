@@ -553,7 +553,7 @@ fájlt generál és letölt (`kezelesi-terv-export-<ISO dátum>.json`):
   "beallitasok": { /* pontosan a beallitasok.json tartalma */ },
   "sablonok": {
     "nyilatkozat-hu-v1.md": "…",
-    "fizetesi-feltetelek-hu-v2.md": "…"
+    "fizetesi-feltetelek-hu-v1.md": "…"
     /* … minden sablon, a doki által esetlegesen már elkezdett lektorálással */
   }
 }

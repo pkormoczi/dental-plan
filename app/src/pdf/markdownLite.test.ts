@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fillPlaceholders, parseBlocks, parseInline, stripMarkdownHeading } from './markdownLite';
 import {
   FIZETESI_FELTETELEK_DE_V1,
-  FIZETESI_FELTETELEK_DE_V2,
   FIZETESI_FELTETELEK_HU_V1,
-  FIZETESI_FELTETELEK_HU_V2,
   GARANCIA_DE_V1,
   GARANCIA_HU_V1,
   NYILATKOZAT_DE_V1,
@@ -95,9 +93,7 @@ describe('parseBlocks', () => {
       NYILATKOZAT_HU_V1,
       NYILATKOZAT_DE_V1,
       FIZETESI_FELTETELEK_HU_V1,
-      FIZETESI_FELTETELEK_HU_V2,
       FIZETESI_FELTETELEK_DE_V1,
-      FIZETESI_FELTETELEK_DE_V2,
       GARANCIA_HU_V1,
       GARANCIA_DE_V1,
     ];
