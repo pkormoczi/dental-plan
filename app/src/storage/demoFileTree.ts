@@ -130,7 +130,7 @@ function insert(root: MutableDirNode, classified: Classified, storageKey: string
   cursor.children.set(name, file);
 }
 
-/** Fájlok a mappák előtt (docs/02 ábrasorrendje), utána ékezet- és számtudatos névsorrend. */
+/** Fájlok a mappák előtt, utána ékezet- és számtudatos névsorrend. */
 function compareNodes(a: DemoNode, b: DemoNode): number {
   if (a.type !== b.type) return a.type === 'file' ? -1 : 1;
   return a.name.localeCompare(b.name, 'hu', { numeric: true });

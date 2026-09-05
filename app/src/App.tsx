@@ -41,9 +41,9 @@ export default function App() {
         <StorageProvider>
           <AppStateProvider>
             {/* NavBar-t ÉS a route-olt lapokat is le kell fednie -- a
-                D38-védett felületek (PatientDetailPage, SettingsPage) a
-                NavBar-ral megosztott "van piszkozat" jelzőt ezen keresztül
-                érik el (D46). */}
+                Mentés/Mégse-őrrel védett felületek (PatientDetailPage,
+                SettingsPage) a NavBar-ral megosztott "van piszkozat" jelzőt
+                ezen keresztül érik el. */}
             <NavGuardProvider>
               <HashRouter>
                 <div style={{ minHeight: '100vh', background: t.page }}>
@@ -56,7 +56,7 @@ export default function App() {
                       <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/uj-terv" element={<NewPlanPage />} />
-                        {/* Terv-workflow héj (backlog-31, D36) -- az app első
+                        {/* Terv-workflow héj (backlog-31) -- az app első
                             layout-route-ja: a breadcrumb+stepper a három lépés
                             köré épül, az Outlet rendereli a tényleges oldalt. */}
                         <Route element={<TervWorkflowShell />}>
@@ -71,7 +71,7 @@ export default function App() {
                             }
                           />
                         </Route>
-                        {/* D54: a globális, több-pácienses terv-lista a DEMO oldal
+                        {/* A globális, több-pácienses terv-lista a DEMO oldal
                             "Összes terv" fülére költözött -- a régi, könyvjelzett
                             `/tervek` URL ne haljon meg némán. */}
                         <Route path="/tervek" element={<Navigate to="/demo/tervek" replace />} />
@@ -102,8 +102,8 @@ export default function App() {
   );
 }
 
-// docs/07-felulet-rendszer.md: skeleton a végleges elrendezés alakjában, ne
-// pörgő spinner -- a PreviewPage saját (checkbox+gombsor, majd egy nagy
+// Skeleton a végleges elrendezés alakjában, ne pörgő spinner -- a
+// PreviewPage saját (checkbox+gombsor, majd egy nagy
 // keretes doboz) elrendezését közelíti, hogy ne ugorjon a réteg, amikor a
 // lazy chunk (@react-pdf/renderer, ~1.5 MB) betöltése után a valódi tartalom
 // átveszi a helyét.

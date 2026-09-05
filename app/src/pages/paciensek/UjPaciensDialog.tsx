@@ -5,7 +5,7 @@
 // a kötelező névre kérdez kötelezően, a többi (elérhetőség, TAJ, kiskorú
 // stb.) a mentés UTÁN, a listában kinyíló sorban szerkeszthető -- a
 // szuletesiIdo/telefon kivétel, mert azok "látható, de opcionális"
-// mezőként a redesign explicit kéri már itt. Explicit Mentés/Mégse -- semmi
+// mezőként a doki már itt kéri. Explicit Mentés/Mégse -- semmi
 // nem kerül a törzsadatba a Mentés gomb megnyomása előtt.
 //
 // A duplikáció-detektálás (`usePaciensDuplikacio`) kétfázisú: a

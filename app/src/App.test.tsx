@@ -1,7 +1,7 @@
 // Végponttól végpontig teszt: Kezdőlap -> Páciens -> Terv szerkesztő ->
 // Előnézet -> véglegesítés -> Korábbi tervek -> újranyitás -> újabb
 // véglegesítés. Ez a mockup teljes létjogosultságát teszteli egyben,
-// beleértve a D4 append-only viselkedést (a v1 nem tűnik el, amikor a v2
+// beleértve az append-only verzió-viselkedést (a v1 nem tűnik el, amikor a v2
 // elkészül).
 //
 // A @react-pdf/renderer usePDF()-jét mockoljuk: a valódi PDF-renderelés a
@@ -42,7 +42,7 @@ describe('Végpontok közötti folyamat', () => {
     window.location.hash = '';
   });
 
-  it('új terv létrehozása, véglegesítése, majd újranyitva egy második verzió mentése -- a v1 megmarad (D4)', async () => {
+  it('új terv létrehozása, véglegesítése, majd újranyitva egy második verzió mentése -- a v1 megmarad', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -82,13 +82,13 @@ describe('Végpontok közötti folyamat', () => {
     // egyetlen páciens látszik, nem kell kártyára szűkíteni.
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
     // A név csak a sticky fejlécben jelenik meg -- a PatientPlanChains
-    // beágyazott (embedded) fejléce ezen az oldalon nem ismétli meg (D44).
+    // beágyazott (embedded) fejléce ezen az oldalon nem ismétli meg.
     await screen.findByText('Teszt Aladár');
     expect(screen.getByText(/^v1 ·/)).toBeInTheDocument();
 
     // Új verzió -> a korábban felvitt tétel már ott van -- ezért nem kell
     // újragépelni (ez a "Korábbi tervek" fő létjogosultsága). 50. tétel
-    // (D58) óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
+    // óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
     await user.click(screen.getByRole('button', { name: 'Új verzió' }));
     await screen.findByPlaceholderText(/Tétel keresése/);
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
@@ -106,10 +106,11 @@ describe('Végpontok közötti folyamat', () => {
     await user.click(screen.getByRole('button', { name: 'Korábbi tervek' }));
     await screen.findByText('Teszt Aladár');
     expect(screen.getByText(/^v2 ·/)).toBeInTheDocument();
-    expect(screen.getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- D4
+    expect(screen.getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- append-only
 
     // DEMO -> Filerendszer fül -- ugyanennek a mentésnek látszania kell a
-    // fa-nézetben is: az első verzió mappája (v1) D4 miatt érintetlen maradt.
+    // fa-nézetben is: az első verzió mappája (v1) az append-only szabály miatt
+    // érintetlen maradt.
     await user.click(screen.getByRole('link', { name: 'DEMO' }));
     // A Radix Tabs.Trigger két span-ban duplázza a feliratot (CSS-alapú
     // szélesség-tartalék, lásd DemoPage.test.tsx fejlécét) -- jsdom alatt,
@@ -129,7 +130,7 @@ describe('Végpontok közötti folyamat', () => {
     ).toBeInTheDocument();
   }, 20000);
 
-  it('a nyelv és a pénznem egymástól függetlenül választható és marad meg mentés után (D21: német nyelv, HUF pénznem)', async () => {
+  it('a nyelv és a pénznem egymástól függetlenül választható és marad meg mentés után (német nyelv, HUF pénznem)', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -140,7 +141,7 @@ describe('Végpontok közötti folyamat', () => {
     await user.click(screen.getByRole('button', { name: 'Mentés' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
-    // Nyelv: Deutsch. A pénznem NEM követi automatikusan -- D21 lényege,
+    // Nyelv: Deutsch. A pénznem NEM követi automatikusan -- a lényeg,
     // hogy egy német nyelvű ajánlat is maradhat forintos.
     await screen.findByText('Dokumentum nyelve');
     await user.click(screen.getByRole('radio', { name: 'Deutsch' }));
@@ -175,8 +176,8 @@ describe('Végpontok közötti folyamat', () => {
     expect(saved.penznem).toBe('HUF');
   }, 20000);
 
-  // docs/03-funkcionalis-spec.md § Autosave -- ez a teszt annak valódi
-  // próbája, hogy a piszkozat frissítést/összeomlást éljen túl. `unmount()`
+  // Ez a teszt annak valódi próbája, hogy a piszkozat frissítést/összeomlást
+  // éljen túl. `unmount()`
   // + újbóli `render(<App/>)` egy friss AppStateProvider-t (és benne friss,
   // memóriabeli `plan` state-et) hoz létre, ugyanazon a `localStorage`-on
   // -- ez modellezi az F5-öt.
@@ -210,7 +211,7 @@ describe('Végpontok közötti folyamat', () => {
 
     // Csendes, memóriabeli restore (4. döntés) -- a Kezdőlapon a "Piszkozat
     // folytatása" kártya a belépési pont, a páciensnévvel. A quick-create
-    // (backlog-36, D14) miatt a páciens EKKORRA már valódi rekord is --
+    // (backlog-36) miatt a páciens EKKORRA már valódi rekord is --
     // "Piszkozat Ilona" ezért a "Legutóbbi páciensek" listában is szerepel,
     // a kártyára kell szűkíteni.
     expect(await screen.findByText('Piszkozat folytatása')).toBeInTheDocument();
@@ -222,16 +223,16 @@ describe('Végpontok közötti folyamat', () => {
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
   }, 20000);
 
-  // D22 -- a demó seed szerinti v2 2026-07-22-i keltezésű, egy visszatérő
+  // A demó seed szerinti v2 2026-07-22-i keltezésű, egy visszatérő
   // páciens új verziója ma mégsem indulhat ezzel a (a mai naphoz képest
   // lejárt) dátummal.
   it('egy korábbi terv megnyitása friss dátummal indítja az új verziót, az árakat érintetlenül hagyva', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // D39: a "Korábbi tervek" gomb lekerült a Kezdőlapról -- a `/tervek`
-    // route URL-ről marad elérhető, itt közvetlen hash-navigációval. D54
-    // óta a `/tervek` a DEMO "Összes terv" fülére (`/demo/tervek`)
+    // A "Korábbi tervek" gomb lekerült a Kezdőlapról -- a `/tervek`
+    // route URL-ről marad elérhető, itt közvetlen hash-navigációval. A
+    // `/tervek` ma a DEMO "Összes terv" fülére (`/demo/tervek`)
     // redirectel -- ezt igazolja a hash-ellenőrzés lent.
     window.location.hash = '#/tervek';
     const nagyEva = await screen.findByText('Nagy Éva');
@@ -239,21 +240,21 @@ describe('Végpontok közötti folyamat', () => {
     const card = nagyEva.closest('[data-patient]') as HTMLElement;
     // A "Tömések" lánc (v1 2026-06-10, v2 2026-07-22) NEM a legfrissebb
     // véglegesített dátumú lánc a "Fogkőeltávolítás" (2026-08-01) mellett
-    // (46. tétel, D186) -- alapból csukva nyílik, ki kell bontani a
+    // (46. tétel) -- alapból csukva nyílik, ki kell bontani a
     // verziósorok eléréséhez.
     const tomesekCim = within(card).getByText(/^Tömések ·/);
     const doboz = tomesekCim.closest('[data-plan]') as HTMLElement;
     await user.click(doboz.querySelector('[aria-expanded="false"]') as HTMLElement);
     // A legfrissebb verzió (v2, 2026-07-22) a lánc verziósorai közül az
     // ELSŐ (fordítva rendezve, legfrissebb elöl) -- lásd PatientPlanChains.tsx
-    // `.slice().reverse()`. 50. tétel (D58) óta a legfrissebb soron látható
+    // `.slice().reverse()`. 50. tétel óta a legfrissebb soron látható
     // gomb, nem "⋯" menüpont.
     await user.click(within(doboz).getByRole('button', { name: 'Új verzió' }));
 
     // A visszatérő páciensnek két fázisa is van (1. kezelés + 2. kezelés —
     // korona), tehát két ItemPicker-keresőmező is renderel -- itt csak azt
     // ellenőrizzük, hogy a szerkesztő betöltött. A 22 páciensre bővített
-    // demó-készlet (D40) miatt a `/tervek` lista eagerly tölt be minden
+    // demó-készlet miatt a `/tervek` lista eagerly tölt be minden
     // pácienst, a 46. tétel lánc-nyitása pedig egy plusz kattintás/render
     // kört told be előtte -- ezért az alapértelmezett 1000ms-nél lassabb is
     // lehet erősen terhelt teljes-készlet futásnál (PatientPage.test.tsx
@@ -264,9 +265,9 @@ describe('Végpontok közötti folyamat', () => {
     expect(await screen.findByText(/Az új verzió mai dátummal indul/)).toBeInTheDocument();
     expect(screen.getByText(/a korábbi tételek ára változatlan/)).toBeInTheDocument();
     expect(screen.queryByText(/2026\. július 22\./)).not.toBeInTheDocument();
-    // A korábbi (pillanatkép) sorok érintetlenek -- D7.
+    // A korábbi (pillanatkép) sorok érintetlenek.
     expect(screen.getByDisplayValue('Fémkerámia')).toBeInTheDocument();
-    // D53: a forrás verzió VEGLEGES volt, a betöltött piszkozat fejléce
+    // A forrás verzió VEGLEGES volt, a betöltött piszkozat fejléce
     // mégis "piszkozat"-ot mutat -- a statusz a betöltéskor visszaáll.
     expect(screen.getByText('Nagy Éva · piszkozat')).toBeInTheDocument();
   }, 20000);

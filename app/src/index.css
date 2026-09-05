@@ -28,7 +28,7 @@ button {
 }
 
 /*
- * docs/07-felulet-rendszer.md controlBorder: minden interaktív kontroll
+ * `controlBorder` (lásd `app/src/CLAUDE.md`): minden interaktív kontroll
  * kerete, a `solid` Button kivételével -- annak saját kitöltése már 3:1
  * fölött van a lap hátterével szemben, a keret nélkül is látszik a
  * határa. Radix a keretet box-shadow-val rajzolja, nem border-rel (lásd
@@ -40,11 +40,11 @@ button {
  * A keret `inset`, tehát a `soft` gomb saját kitöltése (`accent-a3`/`a4`/
  * `a5`) felől is 3:1-nek kell maradnia, nem csak a lap háttere felől --
  * ez volt a K4 tényleges mérőszáma (`tokens.ts` `controlBorder` sora).
- * Kivétel 2: `IconButton` (docs/07 "Kivétel 2") -- egy glyph méretű, tipikusan
+ * Kivétel 2: `IconButton` -- egy glyph méretű, tipikusan
  * size="1" gombon a kötelező keret vizuálisan dominál (feketésnek ható
  * dobozkeret), és `controlBorder` már a legvilágosabb WCAG-megfelelő szín --
  * nincs lejjebb vinni. Tudatos WCAG 1.4.11 kivétel, nem feledékenység.
- * Kivétel 3 (docs/07 "Kivétel 3"): a `ghost` variáns. Nincs saját kitöltése --
+ * Kivétel 3: a `ghost` variáns. Nincs saját kitöltése --
  * kizárólag szövegszintű kapcsolóként használjuk sűrű sorokban (pl.
  * `PlanHistoryPage.tsx` "N terv", `PlanEditorPage.tsx` "Leírás"), ahol a
  * kötelező hajszálvonal ugyanúgy feketés dobozkeretnek hat, mint a
@@ -84,7 +84,7 @@ button {
 }
 
 /*
- * docs/07-felulet-rendszer.md `ink`: ez az elsődleges gomb háttere -- a Radix
+ * `ink` (`tokens.ts`): ez az elsődleges gomb háttere -- a Radix
  * `brown` accentjének step-9-e (#ad7f58) viszont fehér felirattal csak 3,53:1
  * (K2). Nem hívási helyenként javítjuk, hanem Radix saját accent-aliasát: így
  * a `solid` Button MELLETT a `Select.Content` kiemelt sora is javul (ugyanaz a
@@ -125,8 +125,8 @@ button {
  * cellánként rajzolja (`--table-row-background-color`), egy <tr>-re tett
  * `background` a cellák saját háttere mögé kerülne, ezért ezen a
  * változón át kell felülírni. `--accent-wash` (`main.tsx`-ben `tokens.ts`
- * `accentWash`-ából írva) az app meglévő "kijelölt sor" tokenje
- * (docs/07-felulet-rendszer.md), nem új szín.
+ * `accentWash`-ából írva) az app meglévő "kijelölt sor" tokenje, nem új
+ * szín.
  * `:focus-within`, mert a navigáció a névcella <a>-ján ül, nem a <tr>-en.
  */
 .paciens-lista tbody tr:hover,

@@ -51,7 +51,7 @@ export function masterSnapshotDiff(master: Paciens, snapshot: Paciens): MezoElte
   ).map(({ kulcs, cimke }) => ({ kulcs, cimke }));
 }
 
-/** Egy mező emberi olvasható értéke a diff-táblához -- üres a docs/07 "—" konvenciója szerint. */
+/** Egy mező emberi olvasható értéke a diff-táblához -- üres string, ha nincs érték (a tábla "—"-ként mutatja). */
 export function mezoErtekSzoveg(p: Paciens, kulcs: keyof Paciens): string {
   if (kulcs === 'kiskoru') return p.kiskoru ? 'Igen' : 'Nem';
   if (kulcs === 'szuletesiIdo') return p.szuletesiIdo ? formatShortDate(p.szuletesiIdo, 'hu') : '';

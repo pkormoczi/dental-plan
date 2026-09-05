@@ -51,11 +51,11 @@ export function TestProviders({
       <MemoryRouter initialEntries={initialEntries}>
         <StorageProvider>
           <AppStateProvider>
-            {/* D46: a D38-védett lapok (pl. SettingsPage sablon-szekciója)
-                useNavGuard()-ot hívnak -- Provider nélkül dob. */}
+            {/* A Mentés/Mégse-őrrel védett lapok (pl. SettingsPage
+                sablon-szekciója) useNavGuard()-ot hívnak -- Provider nélkül dob. */}
             <NavGuardProvider>
               <TestLepesGuardProvider>
-                {/* 65. tétel (D72): a `PlanEditorPage`/`PreviewPage`
+                {/* 65. tétel: a `PlanEditorPage`/`PreviewPage`
                     `useNyelviReview()`-t hív -- Provider nélkül dob, a
                     `TervWorkflowShell` mintáján. */}
                 <NyelviReviewProvider>

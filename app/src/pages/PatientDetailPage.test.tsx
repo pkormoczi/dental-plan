@@ -179,7 +179,7 @@ describe('PatientDetailPage', () => {
     const header = await screen.findByTestId('patient-detail-header');
     expect(within(header).getByText('Nagy Éva')).toBeInTheDocument();
     // A születési dátum és a telefon egyetlen "· "-tal fűzött szövegcsomó
-    // (redesign) -- nem két külön szöveg-node, mint korábban.
+    // -- nem két külön szöveg-node, mint korábban.
     expect(within(header).getByText('1990.11.02. · +36 20 555 1234')).toBeInTheDocument();
   });
 

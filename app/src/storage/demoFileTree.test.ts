@@ -52,7 +52,7 @@ describe('buildDemoFileTree', () => {
 
     const v1 = plan.children.find((n) => n.name === '2026-08-05_v1');
     if (v1?.type !== 'dir') throw new Error('unreachable');
-    // Mindkettő fájl -- a rendezés ábécésorrendbe esik ('k' < 't'), nem a docs/02 diagram sorrendjébe.
+    // Mindkettő fájl -- a rendezés ábécésorrendbe esik ('k' < 't').
     expect(v1.children.map((n) => n.name)).toEqual([PDF_DISPLAY_NAME, 'terv.json']);
   });
 

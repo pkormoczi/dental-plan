@@ -17,7 +17,7 @@ export function patientCard(nev: string): HTMLElement {
  * (`patientCard`), `vi = 0` a legfrissebb verzió sora (a lista fordítva
  * rendez).
  *
- * 50. tétel (D58) óta ez NEM minden verzió-szintű művelet útja: a legfrissebb
+ * 50. tétel óta ez NEM minden verzió-szintű művelet útja: a legfrissebb
  * soron az "Új verzió"/"Megnézés" látható gomb, nem menüpont -- azokhoz
  * `within(card).getByRole('button', { name: '…' })` kell, ez a helper csak
  * a `⋯`-ben maradt elemekhez (Letöltés, Másolás új tervbe, historical soron

@@ -6,8 +6,7 @@
 // viselkedést a `PlanEditorPage.sorok.test.tsx` fedi (kiemelve innen); az
 // ElolegBlokk/EgyediVegosszegBlokk saját, izolált komponensteszteket kapott
 // (`pages/planEditor/ElolegBlokk.test.tsx`,
-// `pages/planEditor/EgyediVegosszegBlokk.test.tsx`) -- lásd
-// backlog/plans/backlog-93-nagy-komponensfajlok-terv.md.
+// `pages/planEditor/EgyediVegosszegBlokk.test.tsx`).
 
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

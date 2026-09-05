@@ -2,7 +2,7 @@
 
 `@react-pdf/renderer` beépített Helvetica-ja nem tartalmazza az `ő`/`ű`
 karaktereket, és variable fontot nem tud regisztrálni -- lásd
-`docs/05-technologia.md` "Fontok" és CLAUDE.md. Ezért egy statikus,
+`app/src/pdf/CLAUDE.md`. Ezért egy statikus,
 Unicode-kompatibilis fontra van szükség.
 
 ## Forrás és licenc
@@ -33,7 +33,7 @@ python3 -m fontTools.subset NotoSans-SemiBold.ttf \
 
 Ellenőrizve (`fontTools.ttLib` cmap-on keresztül), hogy mindkét fájl
 tartalmazza: `ő ű Ő Ű` (magyar kettős ékezet), `ö ü ß` (a jövőbeli német
-nyelvhez, D10), `€`, en/em dash.
+nyelvhez), `€`, en/em dash.
 
 Eredmény: ~60 KB fájlonként a 2 MB-os variable forrás helyett.
 
