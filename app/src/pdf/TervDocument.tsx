@@ -1,5 +1,6 @@
 // A generált PDF -- portolva ui/PrintPreview.jsx-ből react-pdf primitívekre.
-// Lásd docs/04-nyomtatvany-spec.md a teljes specifikációért.
+// A szerződéses szabályokhoz lásd PRODUCT.md § A nyomtatvány szerződéses
+// dokumentum, a pipeline-hoz app/src/pdf/CLAUDE.md.
 //
 // Három folyó blokk, mindegyik szabadon túlcsordulhat több fizikai oldalra:
 // A blokk (terv és ár), B blokk (fizetési feltételek + garancia, egy
@@ -7,7 +8,7 @@
 // ajánlat" módban, hogy a hazavitt példány ne legyen aláírandó szerződés.
 // A garancia a B blokk része, "csak ajánlat" módban is mindig megjelenik.
 //
-// D21: a fix feliratok forrása a `pdf/labels.ts` (`plan.nyelv` szerint); a
+// A fix feliratok forrása a `pdf/labels.ts` (`plan.nyelv` szerint); a
 // pénzösszegek ezres/tizedes elválasztója is `plan.nyelv`-től függ
 // (`domain/money.ts`, 52. tétel) -- a kezelőfelület prózája (NavBar,
 // szerkesztő szövegei) ettől függetlenül végig magyar marad.
@@ -93,7 +94,7 @@ export function TervDocument({
   const showToothChart = toothChartPng != null && (fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0);
   // A sablonszövegben álló {{orvos}}/{{paciens}} helyőrzőket a tényleges
   // terv-adatok váltják fel, mielőtt bekezdésekre/felsorolásra bontanánk.
-  // Előleg (D66): a `Plan`-en abszolút összeg él (korábban élőben számolt
+  // Előleg: a `Plan`-en abszolút összeg él (korábban élőben számolt
   // százalék volt); `null` = a doki nem kapcsolta be, nincs új sor.
   const elolegOsszeg = plan.elolegOsszeg ?? null;
   const eloleg = elolegOsszeg == null ? null : elolegOsszegek(grand, elolegOsszeg);
@@ -102,7 +103,8 @@ export function TervDocument({
     paciens: plan.paciens.nev,
     eloleg: L.elolegKifejezes(eloleg ? formatMoney(eloleg.eloleg, plan.penznem, plan.nyelv) : null),
     // Legacy: egy régebbi demó-állapotban a fizetési feltételek törzse még a
-    // {{elolegSzazalek}} helyőrzőt tartalmazhatja (v1 sablon, D66 előtt) --
+    // {{elolegSzazalek}} helyőrzőt tartalmazhatja (v1 sablon, az abszolút
+    // előleg-összeg bevezetése előtt) --
     // a `fillPlaceholders` egy ismeretlen helyőrzőt SZÓ SZERINT kiírna, ami
     // egy aláírandó PDF-en nyers `{{elolegSzazalek}}` szöveget hagyna. A
     // kikapcsolt-előleg alapértéke (50) a régi, korábban is használt
@@ -190,7 +192,7 @@ export function TervDocument({
               azonos lenne, és ugyanaz az összeg állna kétszer egymás alatt
               (backlog-12). Az eltérés IRÁNYA nem számít: a felár ugyanúgy
               megnyitja, mint a kedvezmény. Maga a kedvezmény összege
-              továbbra sem jelenik meg a nyomtatványon (D9). */}
+              továbbra sem jelenik meg a nyomtatványon. */}
           {grand !== listTotal && (
             <>
               <View style={s.summaryLine}>
@@ -209,7 +211,7 @@ export function TervDocument({
             // tétel: mindkettő ugyanabból a becsült Végösszegből számol,
             // csak az egyiket jelölni félrevezető lenne (backlog-9).
             // `fennmarado === null`: az előleg meghaladja a Végösszeget
-            // (D66) -- a véglegesítés-őr ezt kemény blokkal megfogja, de a
+            // -- a véglegesítés-őr ezt kemény blokkal megfogja, de a
             // Csak-ajánlat előnézet a blokk előtt is renderel, ezért itt
             // sem törhet el.
             <>

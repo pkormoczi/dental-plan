@@ -1,7 +1,7 @@
 // A csillag-kapcsoló egyetlen olyan tesztje, ami a hatást a
-// nyomtatványig bizonyítja, nem csak a szerkesztő UI-ját (docs/01
-// D15 és docs/03-funkcionalis-spec.md § Sor mezői ezt kifejezetten
-// megköveteli). A sor itt SZÁNDÉKOSAN egyedi (tetelId: '',
+// nyomtatványig bizonyítja, nem csak a szerkesztő UI-ját (ez szerződéses
+// követelmény: a csillag a nyomtatványig hasson, ne csak a szerkesztőben).
+// A sor itt SZÁNDÉKOSAN egyedi (tetelId: '',
 // nem árlistai SAVOS eredetű) -- ez igazolja, hogy a csillag a `Sor.savos`
 // mezőt olvassa, nem az árlistai ártípust.
 //
@@ -234,7 +234,7 @@ describe('TervDocument -- 52. tétel: nyelvfüggő pénzformátum', () => {
   });
 });
 
-describe('TervDocument -- backlog-9/D66: előleg-sor', () => {
+describe('TervDocument -- backlog-9: előleg-sor', () => {
   function renderEloleg(elolegOsszeg: number | null, savos = false, nyelv: Nyelv = 'hu') {
     const plan = buildPlan(savos, nyelv, { lista: 45000, tenyleges: 45000 });
     plan.elolegOsszeg = elolegOsszeg;
@@ -481,8 +481,8 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
     expect(screen.getByText('Garantie: 3 Jahre auf Zahnersatz.')).toBeInTheDocument();
   });
 
-  // A Sablon-placeholder őr (docs/03-funkcionalis-spec.md § Sablon-
-  // placeholder őr, D23) ezt kifejezetten megköveteli: a Garancia -- a
+  // A sablon-placeholder őr (lásd app/src/pdf/CLAUDE.md) ezt kifejezetten
+  // megköveteli: a Garancia -- a
   // nyilatkozattal ellentétben -- NEM esik a "csak ajánlat" kapcsoló alá.
   it('"csak ajánlat" (offerOnly) módban a Garancia oldal MARAD, a nyilatkozat és aláírás oldal eltűnik', () => {
     renderWithGarancia({ offerOnly: true, nyilatkozatMd: 'Nyilatkozat szövege.' });

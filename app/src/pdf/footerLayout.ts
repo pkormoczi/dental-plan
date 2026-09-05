@@ -1,7 +1,7 @@
 // A lábléc jobb blokkjának (páciensnév + tervId, alatta árlista-dátum +
 // oldalszám) magassága a névhossztól függ, de a dokumentum MINDEN oldalán
 // azonosnak kell lennie -- innen a "dokumentum-szinten egyszer számolt"
-// elv, lásd docs/04-nyomtatvany-spec.md "Lábléc -- minden oldalon".
+// elv.
 //
 // A @react-pdf/renderer nem ad szövegmérést (nincs "mekkora ez a string
 // ebben a fontban" API), ezért karakterszám-heurisztika: átlagos glifa-

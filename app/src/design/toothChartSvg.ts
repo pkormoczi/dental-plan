@@ -68,7 +68,7 @@ const TOOTH_GROUP_OPEN_RE = /<g id="tooth-(\d\d)" data-tooth="\d\d" class="tooth
 // `<style>` a teljes dokumentum stíluslapjai közé kerül, a szelektorai a
 // beszúrási pont FÖLÖTTI (wrapper) DOM-ra is hatnak, nem csak az SVG-n
 // belülre. `#f77409` itt szabályos: tokens.ts "CSAK díszítés" + a
-// fogtérkép kiemelése néven nevezett kivétel (docs/07-felulet-rendszer.md),
+// fogtérkép kiemelése néven nevezett kivétel (lásd app/src/CLAUDE.md),
 // szövegszínként viszont soha nem használható.
 const INTERACTIVE_STYLE =
   '.tooth{cursor:pointer}' +

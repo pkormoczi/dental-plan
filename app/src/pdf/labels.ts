@@ -1,4 +1,4 @@
-// A generált PDF fix feliratai, nyelvenként. D21: a `plan.nyelv` a
+// A generált PDF fix feliratai, nyelvenként. A `plan.nyelv` a
 // nyomtatvány szövegét vezérli (a kezelőfelületét nem -- a doki magyar, a
 // NavBar/Home/Beállítások/Árlista admin/szerkesztő végig magyar marad).
 //
@@ -41,16 +41,16 @@ export interface PdfLabels {
   /** Az Összesítés blokk saját címe (nem a nyomtatvány dokumentumcíme). */
   osszesitesCim: string;
   // A két kulcs neve az `osszesitok` JSON-séma mezőneveit tükrözi
-  // (docs/02-domain-modell.md) -- ez NEM a PDF-en megjelenő szó, azt lásd az
+  // -- ez NEM a PDF-en megjelenő szó, azt lásd az
   // értékben.
   kezelesekOsszesen: string;
   fizetendo: string;
-  /** Az előleg összegző sor felirata -- D66 óta sima "Előleg"/"Anzahlung", az összeg az érték-oszlopban áll, zárójeles ismétlés nélkül. */
+  /** Az előleg összegző sor felirata -- sima "Előleg"/"Anzahlung", az összeg az érték-oszlopban áll, zárójeles ismétlés nélkül. */
   elolegSor: string;
   fennmaradoResz: string;
   /**
    * A fizetési feltételek sablonszövegének `{{eloleg}}` helyőrzőjét feloldó
-   * kifejezés (D66) -- `osszeg` a formázott, bekapcsolt előleg (pl.
+   * kifejezés -- `osszeg` a formázott, bekapcsolt előleg (pl.
    * "390 000 Ft"), `null` kikapcsolt előlegnél, ilyenkor a mondat a
    * konkrét összeg helyett a "megállapított"/"vereinbarte" előlegre utal,
    * hogy a szöveg ne mondjon nyers helyőrzőt vagy hamis nullát.
@@ -58,7 +58,7 @@ export interface PdfLabels {
   elolegKifejezes: (osszeg: string | null) => string;
   /** JOGI SZÖVEG — lektorálandó, mielőtt éles németnyelvű PDF-re kerül. */
   anyagkoltseg: string;
-  /** JOGI SZÖVEG — a D15 (sávos ár) jogi védelme, lektorálandó. */
+  /** JOGI SZÖVEG — a sávos ár jogi védelme (lásd PRODUCT.md § A nyomtatvány szerződéses dokumentum), lektorálandó. */
   savosFootnote: string;
   fizetesiFeltetelekCim: string;
   nyilatkozatCim: string;

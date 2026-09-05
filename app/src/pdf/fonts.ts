@@ -1,6 +1,6 @@
 // Unicode font regisztrálása a react-pdf-hez. A beépített Helvetica nem
 // tartalmazza az 'ő'/'ű' karaktereket -- ez csak a végleges PDF-en látszik,
-// a HTML előnézeten nem (lásd docs/05-technologia.md "Fontok").
+// a HTML előnézeten nem.
 //
 // Statikus (nem variable) TTF kell -- lásd src/assets/fonts/README.md a
 // forrásról és a szűkítés lépéseiről.

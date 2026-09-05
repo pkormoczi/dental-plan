@@ -1,17 +1,16 @@
 // Design tokenek -- a marka a klinika nyilvanos honlapjarol (drmandoki.hu)
 // szarmazik (2026-08-08-i ellenorzes: #976445 18x, #f77409 14x az elo oldal
 // nyers HTML-jeben -- ez a ket ertek stimmel). A logo PNG-t is ehhez a
-// palettahoz szineztuk at (lasd docs/04-nyomtatvany-spec.md "Logo").
+// palettahoz szineztuk at.
 //
-// KETFELE FELULET, KETFELE SZABALY (docs/07-felulet-rendszer.md "A ket
-// felulet kulon szabalyrendszer"):
+// KETFELE FELULET, KETFELE SZABALY (lasd app/src/CLAUDE.md):
 //  - A PDF/nyomtatvany (pdf/*.tsx) a márkát koveti -- meleg, a
 //    drmandoki.hu-val egyezo paletta. Ezt a fajlt a PDF importalja, ide
 //    NE kerüljön semmi hideg/slate ertek a `brand`/`accent`/`ink`/`text`/
 //    `line`/`lineStrong`/`textMuted`/`textFaint`/`toothInactive` alol --
 //    ezeket a pdf/ hasznalja valtozatlanul, a nyomtatvanyhoz nem nyulunk.
-//  - Az APP felulete (components/, pages/) viszont semleges, hideg slate
-//    (docs/07-felulet-rendszer.md "App felulet"): ehhez valo a lenti `ui*`/`controlBorder`
+//  - Az APP felulete (components/, pages/) viszont semleges, hideg slate:
+//    ehhez valo a lenti `ui*`/`controlBorder`
 //    keszlet, ami KULON all a nyomtatvany fenti tokenjeitol, es csak az
 //    app kepernyoin hasznalando.
 //
@@ -79,7 +78,7 @@ export const t = {
   okBg: '#EAF6F0',
   shadowLg: '0 8px 24px rgba(45,45,45,0.14)',
 
-  // Meretek -- EGY radius rendszer (docs/07-felulet-rendszer.md), csak app
+  // Meretek -- EGY radius rendszer, csak app
   radius: 6,
   radiusLg: 6,
   control: 32,

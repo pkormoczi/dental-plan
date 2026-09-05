@@ -1,5 +1,5 @@
-// docs/07-felulet-rendszer.md "Akadálymentesség" -- "prefers-reduced-motion
-// tiszteletben tartva" NEM opcionális szabály (D58). Eredetileg
+// A "prefers-reduced-motion tiszteletben tartva" NEM opcionális szabály
+// (lásd app/src/CLAUDE.md § Akadálymentesség). Eredetileg
 // PlanEditorPage.tsx privát függvénye volt (egyetlen hívóval); a 2. hívóhely
 // (PatientPlanChains.tsx "Ugrás a legfrissebb verzióra") miatt költözött ide.
 

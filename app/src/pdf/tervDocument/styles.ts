@@ -125,7 +125,7 @@ export const s = {
   phaseTotalValue: { fontSize: 9.5, fontWeight: 600 },
   phaseNote: { fontSize: 8.5, color: t.textMuted, marginTop: 3 },
 
-  // Tétel-leírás sorai (docs/02-domain-modell.md § Tétel-leírás) -- a
+  // Tétel-leírás sorai -- a
   // `savosFootnote`/`phaseNote` mintáján, behúzva, hogy alrészletnek
   // olvasódjon, ne új tételsornak.
   leirasBlock: { marginBottom: 2 },
@@ -137,8 +137,8 @@ export const s = {
   // kéthasábos (fogtérkép + összegzés egymás mellett) elrendezés megszűnt.
   toothChartBlock: { marginBottom: 16 },
   toothChartLabel: { fontSize: 8, color: t.textMuted, marginBottom: 5 },
-  // Az összesítés a fázisok UTÁN, mindig teljes szélességben áll (lásd
-  // docs/04-nyomtatvany-spec.md § "Összegzés") -- a felső elválasztó a
+  // Az összesítés a fázisok UTÁN, mindig teljes szélességben áll -- a felső
+  // elválasztó a
   // korábbi bottomRow-ról örökölt.
   summaryBlock: {
     width: '100%',

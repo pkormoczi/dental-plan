@@ -11,7 +11,7 @@
 // alatt futó teszt) vagy a rajzolás bármi miatt meghiúsul (pl. canvas-
 // tainting) -- ilyenkor a nyomtatványon a fogtérkép kimarad, az összegzés
 // teljes szélességet kap, ugyanúgy, ahogy ma is, ha nincs egyetlen fogszám
-// sem a tervben (docs/04-nyomtatvany-spec.md).
+// sem a tervben.
 
 function utf8ToBase64(str: string): string {
   const bytes = new TextEncoder().encode(str);

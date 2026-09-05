@@ -23,7 +23,7 @@ export function PhaseTable({
   pos: number;
   currency: Plan['penznem'];
   nyelv: Plan['nyelv'];
-  /** docs/02-domain-modell.md § Tétel-leírás -- `plan.leirasokMutatasa`. */
+  /** `plan.leirasokMutatasa` -- nyomtatásra kerüljenek-e a sorok leírásai. */
   leirasokMutatasa: boolean;
   L: PdfLabels;
 }) {
