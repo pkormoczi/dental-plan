@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
+import '../pdf/bufferShim';
 import { Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
 import { useNyelviReview } from '../components/NyelviReviewContext';
 import { usePaciensKotes } from '../components/PaciensKotesContext';
