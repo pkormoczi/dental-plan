@@ -1,6 +1,6 @@
 ---
 name: implement-batch
-description: Több MÁR TERVEZETT (backlog[/later]/<slug>.md) backlog-tétel egymás utáni implementálása és lezárása egyetlen pushsal — tudatosan A DOKI KÉZI KAPUJA NÉLKÜL. Nem tervez és nem fogad el idea/ státuszú tételt (azokat a /plan-batch vagy a /plan tervezi meg előbb). Tételenként drift.mjs, implementáció a plan scope-jában, csökkentett kapu (build+lint+test), close.mjs --batch (commit, push nélkül). A ciklus után egy /manual-checks all a jsdom-vakfoltra, majd sync.mjs: teljes kapu (a docs-check is itt fut, egyszer) + EGY push az egész batchre. Elakadt tétel kimarad, a többi megy tovább. Nem batch-tétel: hard invariánst / docs/PRODUCT.md Nem célt érintő döntés, vagy a tervben maradt nyitott Kerdes: — az a /plan interjús útra tartozik. Invoke explicitly with /implement-batch <slug> <slug>...
+description: Több MÁR TERVEZETT (backlog[/later]/<slug>.md) backlog-tétel egymás utáni implementálása és lezárása egyetlen pushsal — tudatosan A DOKI KÉZI KAPUJA NÉLKÜL. Nem tervez és nem fogad el idea/ státuszú tételt (azokat a /plan-batch vagy a /plan tervezi meg előbb). Preflight sync.mjs --require-clean. Tételenként drift.mjs, implementáció a plan scope-jában, csökkentett kapu (build+lint+test), close.mjs --batch (commit, push nélkül). A ciklus után a batch diffje + a planek alapján számolt /manual-checks szelet(ek), ha a jsdom-vakfoltot valóban érintette a batch (üres halmaznál kimarad, nincs jelentésfájl), majd sync.mjs: teljes kapu (a docs-check is itt fut, egyszer) + EGY push az egész batchre. Elakadt tétel kimarad, a többi megy tovább. Nem batch-tétel: hard invariánst / docs/PRODUCT.md Nem célt érintő döntés, vagy a tervben maradt nyitott Kerdes: — az a /plan interjús útra tartozik. Invoke explicitly with /implement-batch <slug> <slug>...
 argument-hint: <slug> <slug>...
 disable-model-invocation: true
 ---
@@ -11,8 +11,8 @@ disable-model-invocation: true
 
 Ez a skill a doki kézi ellenőrzését **tudatosan kihagyja** — a tétel emberi szem nélkül zár és
 kerül fel az `origin/master`-re (Pages-élesítés). Csak arra való, amit egy zöld gépi kapu és a
-`/manual-checks` valóban bizonyít: domain-logika, szöveg/copy, attribútum, storage. **Ne vedd fel
-a listába**, ha a tétel:
+`/manual-checks` valóban bizonyít, ha a batch böngészőben ellenőrizhető réteget érint:
+domain-logika, szöveg/copy, attribútum, storage. **Ne vedd fel a listába**, ha a tétel:
 
 - még `idea/` alatt él — ez a skill **nem tervez**; tervezd meg előbb `/plan-batch`-csel (ha
   egyértelmű, kis kockázatú) vagy `/plan <slug>`-dal (ha interjú kell), és csak a már tervezett
@@ -27,8 +27,9 @@ az egytételes utat ez a skill nem helyettesíti, csak kiegészíti.
 
 A fő könyvtárban, `master`-en, tiszta munkafával:
 
-1. `node scripts/workflow/sync.mjs` — friss `origin/master`, és felviszi az esetleg ott
-   kallódó push-olatlan commitot. Ha megáll, **állj meg és jelentsd**.
+1. `node scripts/workflow/sync.mjs --require-clean` — friss `origin/master`, felviszi az
+   esetleg ott kallódó push-olatlan commitot, és megáll, ha a munkafa nem tiszta (egy
+   ittfelejtett fájl így nem csúszhat be egy tétel-commitba). Ha megáll, **állj meg és jelentsd**.
 2. Minden megadott slugra: `findItem` (a `backlogPath.mjs` modulja, amit a `drift.mjs`/`close.mjs`
    is használ) — **állj meg**, ha egy slug nem létezik, két helyen él, vagy **nem `planned`
    státuszú** (`idea/` alatt van — előbb `/plan-batch` vagy `/plan`).
@@ -97,17 +98,33 @@ pushol**. Ha a script megáll:
 Megszakadt batch újraindításánál a script felismeri a már lezárt tételt (push-olatlan
 `<slug>: …` commit) és kapu/commit nélkül továbblép.
 
-## 2. Böngészős bizonyíték
+## 2. Böngészős bizonyíték — csak ha kell
 
-A ciklus után, **még push előtt**: `/manual-checks all` (~35 perc gépidő, ügynök-vezérelt izolált
-Chrome). `Kritikus` találat egy batch-tételhez → javítás, csökkentett kapu, külön commit
-(`<slug>: … — javítás`; ne amend-eld a láncban álló commitokat). Nem kritikus, vagy nem a batché →
-a jelentésben marad, `/idea` javaslattal.
+**a. Szelet-választás.** Számold ki a szükséges szeletek halmazát:
 
-```
-node scripts/workflow/commit-push.mjs --no-push -m "review: manual-checks all <YYYY-MM-DD>" \
-  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/reviews/<a jelentés fájlja>
-```
+- a batch tényleges diffje (`git diff --name-only <a preflight `sync.mjs` HEAD-je>..HEAD`) a
+  `.claude/skills/manual-checks/SKILL.md` „Melyik változás melyik szeletet kéri” táblája ellen;
+- **unióban** a lezárt tételek planjeinek `Verification` szakaszában bejelölt szeletekkel — a
+  tervező szándéka olyan vizuális következményről is tudhat, amit a fájlnév nem árul el.
+
+Írd ki a halmazt, mielőtt elindulsz. **Üres halmaz → ez a lépés kimarad**, a záró jelentés
+mondja ki, hogy egyetlen lezárt tétel sem érintett böngészővel ellenőrizhető réteget.
+
+**b. Végrehajtás.** A kiválasztott szeletekre a `/manual-checks` eljárása — de **nem a Skill
+toolon át**: a skill `disable-model-invocation: true`-val fut, szándékosan, magától sosem
+indulhat. Itt a doki explicit `/implement-batch` hívásán belül vagy, ezért olvasd be és hajtsd
+végre közvetlenül: `.claude/skills/manual-checks/SKILL.md` (protokoll, seed-visszaállítás, a
+„Nem tárgyalható korlát” szakasz szó szerint érvényes) + a kiválasztott szelet-fájl(ok)
+(`pdf.md` ~15 perc, `visual-css.md` ~10 perc, `keyboard-a11y.md` ~10 perc).
+
+**c. Feldolgozás helyben — nincs jelentésfájl, nincs review-commit.**
+
+- `Kritikus`, és a batch valamelyik lezárt tételéhez tartozik → javítsd, csökkentett kapu
+  (`build`+`lint`+`test`), külön commit (`<slug>: … — javítás`; ne amend-eld a láncban álló
+  commitokat).
+- minden más (nem kritikus, vagy nem a batché) → a záró jelentésbe, találatonként egy kész
+  `/idea <javasolt-slug>` parancssorral (dedup: `ls backlog backlog/later backlog/idea
+  backlog/idea/later`, meglévő slug vagy azonos `Source:` → „már felvéve”, parancs nélkül).
 
 ## 3. Záró publikálás
 
@@ -126,5 +143,7 @@ először a batchben) és egyetlen pushot ad az egész láncra. Piros itt → ja
   kapu/drift-elakadástól (retry-elhető);
 - a felvitt commit-tartomány (`git log --oneline <régi HEAD>..HEAD`) és hogy fent van az
   `origin/master`-en, Pages deploy fut;
-- a `/manual-checks all` találatai (Kritikus → javítva vagy `/idea` javaslat);
+- mely szeletek futottak és miért (vagy: kimaradt, mert egyetlen lezárt tétel sem érintett
+  böngészővel ellenőrizhető réteget); a `Kritikus` találatok javítva-e, a maradék `/idea`
+  parancssorai;
 - emlékeztető: `/update-changelog`, `/update-features` külön, kézi hívásra fut.

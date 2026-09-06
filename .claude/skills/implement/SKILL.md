@@ -29,15 +29,16 @@ tervezett és implementálható) — a státusz a mappa. Olvasd ki a fejlécét.
 - `Type: doki` — emberi teendő, nem implementálható,
 - a `git status` a feladathoz nem tartozó, commitolatlan módosítást mutat — kérdezd
   meg a dokit, mi legyen vele; ne építs rá és ne írd felül. A `/finish` a követett
-  módosításokat és az `app/`, `docs/`, `data/`, `assets/` alatti új fájlokat commitolja; más
-  helyen álló új fájl (pl. jegyzet a gyökérben) a lezárást megállítja.
+  módosításokat és az `app/` alatti új fájlokat commitolja magától; más helyen álló új fájl
+  (pl. a manual-check jelentés `docs/`-ban, vagy jegyzet a gyökérben) csak név szerint,
+  `close.mjs --add`-del kerülhet be — máskülönben a lezárást megállítja.
 
 ## 2. Sync
 
-`node scripts/workflow/sync.mjs` — fetch, ff-merge az `origin/master`-re; ha megbukott
-vagy félbeszakadt futásból push-olatlan commit maradt, a teljes kapu után felviszi. Ha a
-script megáll (nem master, félbehagyott rebase, piros kapu), **állj meg és jelentsd** a
-kimenetét.
+`node scripts/workflow/sync.mjs --require-clean` — fetch, ff-merge az `origin/master`-re; ha
+megbukott vagy félbeszakadt futásból push-olatlan commit maradt, a teljes kapu után felviszi;
+megáll, ha a munkafa nem tiszta. Ha a script megáll (nem master, félbehagyott rebase, piros
+kapu, nem tiszta munkafa), **állj meg és jelentsd** a kimenetét.
 
 ## 3. Preflight — baseline-drift
 
@@ -83,10 +84,14 @@ legacy-hivatkozás, elrontott anchor, budget-túllépés → javítás, nem allo
 ## 5b. Manual-check szelet
 
 Nézd meg a plan `Verification` szakaszát. Ha manual-check szelet van bejelölve (`pdf`,
-`visual-css`, `keyboard-a11y`), futtasd most: `/manual-checks <szelet>` — izolált Chrome,
-seed adat, a jelentés a `docs/reviews/`-ba (untracked marad, a `/finish` lezáró commitja
-viszi). Ha a szelet a tételhez tartozó találatot ad, javítsd és ismételd az 5. lépést; ami
-nem a tételé, az a jelentésben marad a doki döntésére (`/idea`-val vehető fel).
+`visual-css`, `keyboard-a11y`), futtasd most — de **nem a Skill toolon át**: a
+`manual-checks` skill `disable-model-invocation: true`-val fut, szándékosan, magától sosem
+indulhat. Itt a doki explicit `/implement <slug>` hívásán belül vagy, ezért olvasd be és
+hajtsd végre közvetlenül: `.claude/skills/manual-checks/SKILL.md` és a `<szelet>.md`
+szelet-fájl — izolált Chrome, seed adat, a jelentés a `docs/reviews/`-ba (untracked marad,
+a `/finish` lezáró commitja viszi). Ha a szelet a tételhez tartozó találatot ad, javítsd és
+ismételd az 5. lépést; ami nem a tételé, az a jelentésben marad a doki döntésére (`/idea`-val
+vehető fel).
 
 ## 5c. Diff-önellenőrzés
 

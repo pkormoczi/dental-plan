@@ -210,6 +210,23 @@ test('sync piros kapunál nem pushol', (t) => {
   assert.equal(r.originHead(), originBefore);
 });
 
+test('sync --require-clean megáll untracked fájlnál, fetch és kapu nélkül', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.write('docs/reviews/notes.md', 'jegyzet\n');
+  const res = r.run('sync', ['--require-clean']);
+  assert.equal(res.status, 1, res.err);
+  assert.match(res.err, /docs\/reviews\/notes\.md/);
+  assert.deepEqual(r.gateSteps(), []);
+});
+
+test('sync --require-clean átmegy tiszta fán', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  const res = r.run('sync', ['--require-clean']);
+  assert.equal(res.status, 0, res.err);
+});
+
 test('close boldog út masteren: tervfájl törölve, egy commit, fent az originen', (t) => {
   const r = repo();
   t.after(r.cleanup);
@@ -239,6 +256,54 @@ test('close megáll, ha untracked fájl van a megengedett körön kívül', (t) 
   assert.match(res.err, /notes\.txt/);
   assert.equal(r.count(), before);
   assert.deepEqual(r.gateSteps(), []);
+});
+
+test('close nem söpri be az ittfelejtett docs/ untracked fájlt magától', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x');
+  r.write('docs/reviews/2026-09-05-review.md', 'jelentés\n');
+  const before = r.count();
+  const res = r.run('close', ['x', '--title', 'cím']);
+  assert.equal(res.status, 1, res.err);
+  assert.match(res.err, /docs\/reviews\/2026-09-05-review\.md/);
+  assert.equal(r.count(), before);
+  assert.deepEqual(r.gateSteps(), []);
+});
+
+test('close --add a megnevezett untracked fájlt beviszi, egy másikat nem', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x');
+  r.write('docs/reviews/named.md', 'jelentés\n');
+  r.write('docs/reviews/other.md', 'másik\n');
+  const res = r.run('close', ['x', '--title', 'cím', '--add', 'docs/reviews/named.md']);
+  assert.equal(res.status, 1, res.err);
+  assert.match(res.err, /docs\/reviews\/other\.md/);
+  assert.doesNotMatch(res.err, /named\.md/);
+});
+
+test('close --add boldog út: a megnevezett fájl a commitba kerül', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x');
+  r.write('docs/reviews/named.md', 'jelentés\n');
+  const res = r.run('close', ['x', '--title', 'cím', '--add', 'docs/reviews/named.md']);
+  assert.equal(res.status, 0, res.err);
+  assert.equal(g(r.work, 'ls-files', 'docs/reviews/named.md'), 'docs/reviews/named.md');
+  assert.equal(r.originHead(), g(r.work, 'rev-parse', 'HEAD'));
+});
+
+test('close --add nem létező vagy már követett path-ra hibázik', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x');
+  let res = r.run('close', ['x', '--title', 'cím', '--add', 'docs/reviews/hiányzik.md']);
+  assert.equal(res.status, 1);
+  assert.match(res.err, /nem létező path/);
+  res = r.run('close', ['x', '--title', 'cím', '--add', 'backlog/x.md']);
+  assert.equal(res.status, 1);
+  assert.match(res.err, /már követett/);
 });
 
 test('close folytatás-mód: létező lezáró commitnál nem commitol újra, kapuzik és pushol', (t) => {

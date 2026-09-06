@@ -149,11 +149,13 @@ export function commit({ subject, body, trailers }) {
   return head();
 }
 
-// Minimális argumentum-értelmező: kapcsolók, értékes kapcsolók, ismételhető `--trailer`,
-// pozicionális szavak, és a `--` utáni path-lista.
-export function parseArgs(argv, { valued = [], flags = [] } = {}) {
+// Minimális argumentum-értelmező: kapcsolók, értékes kapcsolók, ismételhető `--trailer` és
+// tetszőleges `repeated` kapcsolók (ugyanaz a gyűjtő minta), pozicionális szavak, és a `--`
+// utáni path-lista.
+export function parseArgs(argv, { valued = [], flags = [], repeated = [] } = {}) {
   const res = { _: [], paths: [], trailer: [] };
   for (const f of flags) res[f] = false;
+  for (const r of repeated) res[r] = [];
   let i = 0;
   while (i < argv.length) {
     const a = argv[i];
@@ -165,6 +167,8 @@ export function parseArgs(argv, { valued = [], flags = [] } = {}) {
       res.trailer.push(argv[++i]);
     } else if (a === '-m') {
       res.m = argv[++i];
+    } else if (a.startsWith('--') && repeated.includes(a.slice(2))) {
+      res[a.slice(2)].push(argv[++i]);
     } else if (a.startsWith('--') && valued.includes(a.slice(2))) {
       res[a.slice(2)] = argv[++i];
     } else if (a.startsWith('--') && flags.includes(a.slice(2))) {

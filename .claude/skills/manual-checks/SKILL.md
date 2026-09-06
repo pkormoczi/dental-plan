@@ -32,8 +32,9 @@ placeholder-zár, kitöltetlen sor) — a böngészős ellenőrzés kiegészíti
 
 **Csak jelentést készít.** A kódot NEM módosítja — a javítás külön, szándékos lépés
 (ugyanaz az elv, mint a `code-and-architecture-review` és a `doctor-review` skillnél):
-önálló futásnál `/idea` → `/plan --quick`; a `/finish` 3. lépéséből hívva a `/finish`
-javítja a tételhez tartozó találatot. Nincs kivétel.
+önálló futásnál `/idea` → `/plan --quick`; az `/implement` 5b-ből hívva az `/implement`,
+az `/implement-batch` 2. lépéséből hívva az `/implement-batch` javítja a tételhez tartozó
+találatot. Nincs kivétel.
 
 Feature-specifikus, egyszeri ellenőrzés NEM ide való: az az aktív plan `Verification`
 szakaszában él, és a plannel együtt tűnik el. Ide csak stabil, ismétlődő vakfolt kerül.
@@ -76,10 +77,13 @@ tényleges időt, és ha egy szelet tartósan 15 perc fölé nő, bontsd tovább
 | `app/src/pdf/**`, `design/toothChartSvg.ts`, `assets/fonts/**` | `pdf` |
 | `design/tokens.ts`, `index.css`, bármi stílus, új Radix komponens/variáns | `visual-css` |
 | `pages/planEditor/ItemPicker.tsx`, `ToothPickerPopover.tsx`, `DentalChart.tsx`, fókusz-/Tab-kezelés, `motion.ts` | `keyboard-a11y` |
-| Mielőtt megmutatod a dokinak | `all` |
+| Mielőtt megmutatod a dokinak (önálló futás) | `all` |
 
-Soha nem commitonként, soha nem automatikusan. A `/finish` a plan `Verification`
-bejelölt szelete szerint hívja.
+Soha nem commitonként, soha nem magától indul — csak doki-indított láncon belül, a hívó a
+skill fájljait beolvasva, nem a Skill toolon át (a `disable-model-invocation: true` ezt
+kényszeríti ki). Két hívó: az `/implement` 5b a plan `Verification` bejelölt szelete
+szerint; az `/implement-batch` 2. lépése a batch diffjéből és a lezárt tételek planjeiből
+számolt szelet-halmaz szerint (üres halmaznál nem fut).
 
 ---
 
@@ -193,7 +197,10 @@ node scripts/workflow/commit-push.mjs -m "review: manual-checks <szelet> <YYYY-M
   --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/reviews/<ez a jelentés>
 ```
 
-A `/finish` 3. lépéséből hívva nincs külön commit: a lezáró commit viszi a jelentést.
+Az `/implement` 5b-ből hívva nincs külön commit: a `/finish` lezáró commitja viszi a
+jelentést. Az `/implement-batch` 2. lépéséből hívva **nincs jelentésfájl és nincs commit** —
+a hívó helyben dolgozza fel a találatokat: a `Kritikus`-at azonnal javítja, külön committal;
+a többi a batch záró jelentésébe kerül, kész `/idea` parancssorral.
 
 A záró üzenetben minden `Kritikus` találathoz egy kész parancssor: `/idea <javasolt-slug>
 docs/reviews/<ez a jelentés>` (dedup: `ls backlog backlog/later backlog/idea backlog/idea/later`, meglévő slug vagy azonos

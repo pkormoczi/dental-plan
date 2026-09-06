@@ -26,8 +26,9 @@ Ezekre `/plan <slug>` (interjúval) — az egytételes utat ez a skill nem helye
 
 ## 0. Preflight
 
-A fő könyvtárban, `master`-en, tiszta munkafával: `node scripts/workflow/sync.mjs` — friss
-`origin/master`, jegyezd meg a kiírt HEAD-et. **Ez a HEAD a batch minden tételének `Baseline`-ja**
+A fő könyvtárban, `master`-en: `node scripts/workflow/sync.mjs --require-clean` — friss
+`origin/master`, megáll, ha a munkafa nem tiszta; jegyezd meg a kiírt HEAD-et. **Ez a HEAD a
+batch minden tételének `Baseline`-ja**
 — a terv csak `backlog/*.md`-t ír, ami a `drift.mjs` `CODE_PATHS`-jét (`app`, `data`, `assets`)
 nem érinti, tehát a batchen belüli backlog-commitok nem okoznak driftet a következő tételnek; nem
 kell tételenként újra-sync-elni.

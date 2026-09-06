@@ -13,7 +13,7 @@ const HELP = `node scripts/workflow/commit-push.mjs -m "<tárgy>" [--body "<szö
   Megáll, ha a megadott path-okon kívül stage-elt változás van. Csak a megadott path-okat stage-eli
   (átnevezésnél a régi és az új path is kell), docs-check, commit, git push origin master
   (nem-ff: rebase, docs-check újra, push).
-  --no-push: docs-check + commit, push nélkül -- /implement-batch-nak, a záró sync.mjs viszi fel.`;
+  --no-push: docs-check + commit, push nélkül -- /plan-batch-nak, a záró sync.mjs viszi fel.`;
 
 run(() => {
   const a = parseArgs(process.argv.slice(2), { valued: ['body'], flags: ['no-push'] });

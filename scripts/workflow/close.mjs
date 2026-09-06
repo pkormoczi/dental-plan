@@ -2,8 +2,10 @@
 // push (masteren) vagy rebase + force-with-lease + PR (worktree-branchen). A kézi
 // ellenőrzés ELŐTTE történik, a munkafán -- a master-push a Pages-re élesít.
 //
-// Két őr és egy folytatás-mód: (1) untracked fájl csak app/ docs/ data/ assets/ alól kerül a
-// commitba, más untracked megállít; (2) a sima `git rm` a módosított tervfájlt megtagadja --
+// Két őr és egy folytatás-mód: (1) untracked fájl csak app/ alól kerül a commitba magától
+// (az egyetlen szerkesztett könyvtár); a körön kívüli untracked csak `--add <path>`-del
+// nevezve megy be (pl. a /finish így viszi a manual-check jelentést), más untracked megállít;
+// (2) a sima `git rm` a módosított tervfájlt megtagadja --
 // a tervfájl változása külön commitot érdemel, nem csendes törlést; (3) ha a tervfájl már
 // hiányzik, de van push-olatlan "<slug>: …" commit, nem új commit készül: kapu, majd a hiányzó
 // publikálási lépés.
@@ -16,18 +18,24 @@ import {
 } from './lib.mjs';
 import { findItem } from './backlogPath.mjs';
 
-const HELP = `node scripts/workflow/close.mjs <slug> --title "<cím>" [--body "<1-2 mondat>"] [--trailer "<K: v>"]... [--batch]
-  masteren: fetch + ff; untracked csak app/ docs/ data/ assets/ alatt (más: megáll); build+lint+test+docs-check;
+const HELP = `node scripts/workflow/close.mjs <slug> --title "<cím>" [--body "<1-2 mondat>"] [--trailer "<K: v>"]... [--add <path>]... [--batch]
+  masteren: fetch + ff; untracked csak app/ alatt megy be magától; körön kívüli untracked csak
+            --add <path>-del névre szólóan (más marad: megáll); build+lint+test+docs-check;
             git rm backlog[/later]/<slug>.md (módosított tervfájlnál megáll); követett módosítások + engedett untracked;
             commit "<slug>: <cím>"; push (nem-ff: rebase, kapu újra, push).
   branchen: ugyanaz, majd rebase origin/master-re (base-változásnál kapu újra), push --force-with-lease,
             gh pr create ha nincs PR (a gh hiánya/hibája nem hiba, a PR ilyenkor kézi).
   folytatás: ha a tervfájl már hiányzik, de van push-olatlan "<slug>: …" commit: kapu, majd csak a publikálás.
+  --add:    ismételhető; egy app/-en kívüli untracked path név szerinti engedélyezése a commitba
+            (pl. a /finish manual-check jelentése). Nem létező vagy már követett path-ra hibázik.
   --batch:  /implement-batch-nak. Csak masteren; nincs fetch/ff (a divergenciát a záró sync.mjs rebase-e oldja);
             csökkentett kapu (build+lint+test, a docs-check a záró kapuba tolódik); commit, NINCS push; már ebben
             a batchben lezárt tételnél (push-olatlan "<slug>: …" commit) kapu és commit nélkül továbblép.`;
 
-const ALLOWED_UNTRACKED = ['app', 'docs', 'data', 'assets'];
+// Csak innen kerül untracked fájl a commitba magától -- az egyetlen szerkesztett könyvtár
+// (CLAUDE.md § Repo). Minden más útnak `--add`-del név szerint kell engedélyt kapnia, nehogy
+// egy ittfelejtett docs/ jegyzet csendben a tétel-commitba szálljon.
+const SWEEP_UNTRACKED = ['app'];
 
 const gh = (args) => spawnSync('gh', args, { cwd: ROOT, encoding: 'utf-8', shell: process.platform === 'win32' });
 
@@ -68,11 +76,17 @@ function publishBranch({ slug, branch, subject, body, needGate }) {
 }
 
 run(() => {
-  const a = parseArgs(process.argv.slice(2), { valued: ['title', 'body'], flags: ['batch'] });
+  const a = parseArgs(process.argv.slice(2), { valued: ['title', 'body'], flags: ['batch'], repeated: ['add'] });
   if (a.help) return console.log(HELP);
   const slug = a._[0];
   if (!slug) throw new WorkflowError('hiányzik a <slug>');
   if (!a.title) throw new WorkflowError('hiányzik a --title "<cím>" (a Goal rövid alakja)');
+  for (const p of a.add) {
+    if (!existsSync(path.join(ROOT, p))) throw new WorkflowError(`--add ${p}: nem létező path`);
+    if (git(['ls-files', '--error-unmatch', '--', p], { allowFail: true }).status === 0) {
+      throw new WorkflowError(`--add ${p}: már követett fájl, nem kell megnevezni`);
+    }
+  }
   requireNoRebase();
   const branch = currentBranch();
   const onMaster = branch === 'master';
@@ -113,11 +127,11 @@ run(() => {
     if (git(['ls-files', '--error-unmatch', '--', item], { allowFail: true }).status !== 0) {
       throw new WorkflowError(`${item} nem követett -- a /plan commitolja; előbb commit-push.mjs`);
     }
-    const foreign = untrackedFiles().filter((f) => !underPaths(f, ALLOWED_UNTRACKED));
+    const foreign = untrackedFiles().filter((f) => !underPaths(f, SWEEP_UNTRACKED) && !a.add.includes(f));
     if (foreign.length) {
       throw new WorkflowError(
-        `követetlen fájl a megengedett körön kívül (${ALLOWED_UNTRACKED.join('/ ')}/):\n  ${foreign.join('\n  ')}\n` +
-          'Töröld, ignore-old, vagy commitold külön (commit-push.mjs), aztán újra.',
+        `követetlen fájl a megengedett körön kívül (${SWEEP_UNTRACKED.join('/ ')}/, vagy --add-del névre szólóan):\n  ${foreign.join('\n  ')}\n` +
+          'Töröld, ignore-old, --add-del nevezd meg, vagy commitold külön (commit-push.mjs), aztán újra.',
       );
     }
     // Batchben a docs-check a záró sync.mjs-be tolódik -- redundáns lenne tételenként futni.
@@ -131,7 +145,7 @@ run(() => {
       );
     }
     git(['add', '-u']);
-    const rest = untrackedFiles();
+    const rest = untrackedFiles().filter((f) => underPaths(f, SWEEP_UNTRACKED) || a.add.includes(f));
     if (rest.length) git(['add', '--', ...rest]);
     console.log(`\nstage-elve:\n${git(['diff', '--cached', '--name-status']).out}`);
     sha = commit({ subject, body: a.body, trailers: a.trailer });

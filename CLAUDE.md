@@ -42,7 +42,7 @@ csatlakozni vagy remote debuggingot bekapcsolni bármilyen böngészőben. Ha eg
 igényelne (bejelentkezés, mappa-engedély), ne kerüld meg: jelezd, és javasolj `PlanStorage`
 teszt-implementációt. Kikényszerítés: a követett, verzió-pinnelt `.mcp.json` (`--isolated`). A
 jsdom nem ellenőrizhető rétegét (kontraszt, valódi PDF, canvas→PNG, popover-geometria) a
-`/manual-checks` fedi — kézzel, sose automatikusan.
+`/manual-checks` fedi, sosem magától, doki-indítva.
 
 # Kommentek
 Csak WHY, invariáns vagy gotcha. Nincs „mit csinál”. Nincs `D<szám>`/`DP-<szám>` döntési azonosító,

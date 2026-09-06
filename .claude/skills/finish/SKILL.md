@@ -47,24 +47,28 @@ A tervfájl tartalma nem kerül át sehova — a git history elég.
 
 ## 4. Lezárás — `close.mjs`
 
+Ha az `/implement` 5b lépése hagyott manual-check jelentést (`docs/reviews/<dátum>-manual-checks-<szelet>.md`, untracked), nevezd meg `--add`-del — enélkül a script megáll rá:
+
 ```
 node scripts/workflow/close.mjs <slug> --title "<cím>" --body "<1–2 mondat magyarul>" \
-  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …"
+  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" \
+  [--add docs/reviews/<a jelentés fájlja>]
 ```
 
 A cím a tételfájl `## Goal` mondatának rövid alakja; a commit első sora `<slug>: <cím>`. A
-script sorban: fetch + ff; **hatókör-őr** (untracked fájl csak `app/ docs/ data/ assets/` alatt
-mehet a commitba); a **teljes kapu** (`build`, `lint`, `test`, `docs-check`);
-`git rm backlog[/later]/<slug>.md` (a tételt a `Prio` szerinti mappában találja meg); a
-követett módosítások és az engedett új fájlok stage-elése;
-commit; `git push origin master`. Ha az origin közben előrelépett: rebase, **a kapu újra**,
-push.
+script sorban: fetch + ff; **hatókör-őr** (untracked fájl csak `app/` alatt megy be magától,
+minden más — így a manual-check jelentés is — csak `--add`-del névre szólóan); a **teljes
+kapu** (`build`, `lint`, `test`, `docs-check`); `git rm backlog[/later]/<slug>.md` (a tételt a
+`Prio` szerinti mappában találja meg); a követett módosítások és az engedett új fájlok
+stage-elése; commit; `git push origin master`. Ha az origin közben előrelépett: rebase, **a
+kapu újra**, push.
 
 Ha a script megáll, jelentsd a kimenetét és **ne kerüld meg kézi `git commit`/`push`-sal**.
 A három tipikus megállás és a teendő:
 
-- **untracked fájl a körön kívül** — a doki dönt: törli, ignore-olja vagy külön commitolja
-  (`commit-push.mjs`), aztán újra `/finish`;
+- **untracked fájl a körön kívül** — ha a tételhez tartozik (pl. elfelejtett `--add`), told be
+  vele; ha nem, a doki dönt: törli, ignore-olja vagy külön commitolja (`commit-push.mjs`),
+  aztán újra `/finish`;
 - **a tervfájl módosított, a `git rm` megtagadta** — ha a módosítás kell:
   `commit-push.mjs -m "backlog: plan <slug> frissítve" -- <a tételfájl útvonala, a close.mjs
   kiírja>`; ha nem: `git checkout -- <útvonal>`; aztán újra;
