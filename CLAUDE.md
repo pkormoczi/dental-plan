@@ -59,7 +59,7 @@ redundanciát keress.
 Nincs `.skip`/`.only`. A tesztnév konkrét, megfigyelhető viselkedést ír le, D-szám nélkül.
 
 # Workflow
-`/idea <slug>` → `/plan <slug> [--quick]` → `/implement <slug>` → kézi ellenőrzés a munkafán →
-`/finish <slug>`; `/backlog` listáz; `/implement-batch <slug>...` több tételt egy pushsal, kézi
-kapu nélkül. Skillek commitolnak, pusholnak (`scripts/workflow/`); master-push → Pages.
-`/update-changelog`, `/update-features`: külön, kézi hívás.
+`/idea <slug>` → `/plan <slug> [--quick]` → `/implement <slug>` → kézi ellenőrzés → `/finish
+<slug>`; `/backlog` listáz; `/plan-batch`/`/implement-batch <slug>...` több tételt egy
+pushsal, kapu nélkül tervez/zár. Skillek commitolnak, pusholnak (`scripts/workflow/`); master-push
+→ Pages. `/update-changelog`, `/update-features`: külön, kézi hívás.

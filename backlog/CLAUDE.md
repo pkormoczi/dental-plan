@@ -8,9 +8,10 @@ Fejléc az üres sorig: `# <slug>` · `Type: feature|bug|chore|doki` · opcioná
 `Target: master`, `Baseline: <40 hex>` és a `## Goal / Current state / Approach / Decisions /
 Verification` szakaszok. Budget: idea ≤ 1500, terv ≤ 6000 kar.
 
-`doki` = emberi teendő, mindig `idea/` alatt; `chore` = kód-housekeeping. Elvetett irány nem
-marad itt: egy sor a PRODUCT.md Nem cél alá. Dedup: a négy mappa slugjai + ez.
+`doki` = emberi teendő, `idea/` alatt; `chore` = kód-housekeeping. Elvetett irány nem marad itt:
+egy sor a PRODUCT.md Nem cél alá. Dedup: a négy mappa slugjai + ez.
 → product:#nem-cel
 
-Flow: `/idea` → `/plan [--quick]` → `/implement` → kézi teszt → `/finish`; `/implement-batch`
-kézi kapu nélkül zár. `/backlog` listáz/átsorol. Minden lépés commit + push; flow: `README.md`.
+Flow: `/idea` → `/plan [--quick]` → `/implement` → kézi teszt → `/finish`; `/plan-batch` +
+`/implement-batch` kapu nélkül tervez/zár. `/backlog` listáz/átsorol. Minden lépés commit + push;
+flow: `README.md`.
