@@ -99,6 +99,7 @@ export default function UjTetelDialog({
           <Box mt="4" mb="3">
             <Field label="Megnevezés (magyar) *">
               <TextField.Root
+                id="uj-tetel-nev-hu"
                 autoFocus
                 value={huNev}
                 onChange={(e) => setHuNev(e.target.value)}
@@ -123,6 +124,7 @@ export default function UjTetelDialog({
           <Box mb="3">
             <Field label="Bezeichnung (német)">
               <TextField.Root
+                id="uj-tetel-nev-de"
                 value={deNev}
                 placeholder="még nincs megadva"
                 onChange={(e) => setDeNev(e.target.value)}

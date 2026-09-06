@@ -19,10 +19,12 @@ export function BufferedTextField({
   value,
   onChange,
   placeholder,
+  id,
 }: {
   value: string;
   onChange: (next: string) => void;
   placeholder?: string;
+  id?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -33,6 +35,7 @@ export function BufferedTextField({
 
   return (
     <TextField.Root
+      id={id}
       value={draft}
       placeholder={placeholder}
       onFocus={() => setFocused(true)}
@@ -50,10 +53,12 @@ export function BufferedTextArea({
   value,
   onChange,
   placeholder,
+  id,
 }: {
   value: string;
   onChange: (next: string) => void;
   placeholder?: string;
+  id?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -64,6 +69,7 @@ export function BufferedTextArea({
 
   return (
     <TextArea
+      id={id}
       value={draft}
       placeholder={placeholder}
       rows={3}

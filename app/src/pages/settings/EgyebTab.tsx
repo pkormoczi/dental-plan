@@ -103,6 +103,7 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
       <Section title="Ajánlat, nyelv és pénznem">
         <Field label="Ajánlat érvényessége (nap)">
           <TextField.Root
+            id="ajanlat-ervenyesseg-nap"
             type="number"
             min={1}
             value={draft.ervenyessegNap}

@@ -110,6 +110,7 @@ export default function EgyediVegosszegBlokk({
             </Text>
             <Box style={{ width: 120 }}>
               <NumberField
+                id="egyedi-vegosszeg"
                 value={celVegosszeg}
                 penz
                 min={0}

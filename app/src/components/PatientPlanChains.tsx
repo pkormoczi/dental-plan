@@ -386,6 +386,7 @@ export default function PatientPlanChains({
                 {isEditing ? (
                   <>
                     <TextField.Root
+                      id={`terv-cimke-${plan.dirName}`}
                       size="1"
                       autoFocus
                       value={labelDraft}

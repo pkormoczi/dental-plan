@@ -218,12 +218,14 @@ export default function ItemEditor({
       <Grid columns="2" gap="3" mb="3">
         <Field label="Megnevezés (magyar)">
           <BufferedTextField
+            id={`nev-hu-${item.id}`}
             value={item.nev.hu}
             onChange={(v) => onPatch((prev) => ({ nev: { ...prev.nev, hu: v } }))}
           />
         </Field>
         <Field label="Bezeichnung (német)">
           <BufferedTextField
+            id={`nev-de-${item.id}`}
             value={item.nev.de || ''}
             placeholder="még nincs megadva"
             onChange={(v) => onPatch((prev) => ({ nev: { ...prev.nev, de: v || null } }))}
@@ -234,6 +236,7 @@ export default function ItemEditor({
       <Grid columns="2" gap="3" mb="3">
         <Field label="Leírás (mi van benne?)">
           <BufferedTextArea
+            id={`leiras-hu-${item.id}`}
             value={item.leiras?.hu ?? ''}
             placeholder="pl. Implantátum, felépítmény, korona"
             onChange={(v) => onPatch((prev) => ({ leiras: { hu: v, de: prev.leiras?.de ?? null } }))}
@@ -246,6 +249,7 @@ export default function ItemEditor({
         </Field>
         <Field label="Beschreibung (mi van benne, németül)">
           <BufferedTextArea
+            id={`leiras-de-${item.id}`}
             value={item.leiras?.de ?? ''}
             placeholder="még nincs megadva"
             onChange={(v) => onPatch((prev) => ({ leiras: { hu: prev.leiras?.hu ?? '', de: v || null } }))}
@@ -314,7 +318,13 @@ export default function ItemEditor({
           <>
             <Box>
               <Field label="HUF ár — tól">
-                <NumberField value={hufAr.min} penz min={0} onCommit={(v) => setSavosPrice({ min: v })} />
+                <NumberField
+                  id={`huf-ar-tol-${item.id}`}
+                  value={hufAr.min}
+                  penz
+                  min={0}
+                  onCommit={(v) => setSavosPrice({ min: v })}
+                />
               </Field>
               <ArFigyelmeztetes
                 ertek={hufAr.min}
@@ -326,7 +336,13 @@ export default function ItemEditor({
             </Box>
             <Box>
               <Field label="HUF ár — ig">
-                <NumberField value={hufAr.max} penz min={0} onCommit={(v) => setSavosPrice({ max: v })} />
+                <NumberField
+                  id={`huf-ar-ig-${item.id}`}
+                  value={hufAr.max}
+                  penz
+                  min={0}
+                  onCommit={(v) => setSavosPrice({ max: v })}
+                />
               </Field>
               <ArFigyelmeztetes
                 ertek={hufAr.max}
@@ -346,6 +362,7 @@ export default function ItemEditor({
           <Box>
             <Field label="HUF ár">
               <NumberField
+                id={`huf-ar-${item.id}`}
                 value={hufAr?.tipus === 'FIX' ? hufAr.ertek : 0}
                 penz
                 min={0}
@@ -383,6 +400,7 @@ export default function ItemEditor({
             <Box>
               <Field label="EUR ár — tól (€)">
                 <NumberField
+                  id={`eur-ar-tol-${item.id}`}
                   value={eurAr.min}
                   penz
                   unit="EUR"
@@ -401,6 +419,7 @@ export default function ItemEditor({
             <Box>
               <Field label="EUR ár — ig (€)">
                 <NumberField
+                  id={`eur-ar-ig-${item.id}`}
                   value={eurAr.max}
                   penz
                   unit="EUR"
@@ -432,6 +451,7 @@ export default function ItemEditor({
             <Box style={{ flex: 1 }}>
               <Field label="EUR ár (€)">
                 <NumberField
+                  id={`eur-ar-${item.id}`}
                   value={eurAr.tipus === 'FIX' ? eurAr.ertek : 0}
                   penz
                   unit="EUR"

@@ -21,7 +21,7 @@ import { invalidFdiTokens, parseTeeth } from '../../domain/teeth';
 import type { FogterkepAllapot } from '../../domain/toothVisual';
 import { sorOsszeg } from '../../domain/totals';
 import type { Kategoria, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
-import { fogId, keresoId, leirasId, nevId } from './elemIdk';
+import { arId, fogId, keresoId, leirasId, mennyisegId, nevId } from './elemIdk';
 import ItemPicker from './ItemPicker';
 
 export interface LineRowProps {
@@ -301,6 +301,7 @@ export default function LineRow({
         <Flex align="center" gap="1">
           <Box flexGrow="1">
             <NumberField
+              id={mennyisegId(pi, li)}
               value={line.mennyiseg}
               penz={false}
               min={1}
@@ -370,6 +371,7 @@ export default function LineRow({
           <Flex align="center" gap="1" justify="end" width="100%">
             <Box flexGrow="1">
               <NumberField
+                id={arId(pi, li)}
                 value={line.tenylegesEgysegar}
                 penz
                 unit={currency}

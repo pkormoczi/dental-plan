@@ -295,4 +295,24 @@ describe('NumberField', () => {
     expect(input.selectionStart).toBe(0);
     expect(input.selectionEnd).toBe(0);
   });
+
+  // urlap-mezo-id-name: a `...rest` már ma is az inputra tolja ezeket, csak
+  // a típus tiltotta -- ez a teszt a bővített prop-felületet fedi.
+  it('forwards id/name/autoComplete to the underlying input', () => {
+    render(
+      <NumberField
+        value={100}
+        penz={false}
+        onCommit={vi.fn()}
+        id="mennyiseg-0-0"
+        name="mennyiseg"
+        autoComplete="off"
+      />,
+    );
+
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveAttribute('id', 'mennyiseg-0-0');
+    expect(input).toHaveAttribute('name', 'mennyiseg');
+    expect(input).toHaveAttribute('autocomplete', 'off');
+  });
 });

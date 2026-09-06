@@ -201,6 +201,7 @@ export default function NewPlanPage() {
           Meglévő páciens keresése…
         </Text>
         <TextField.Root
+          id="meglevo-paciens-kereso"
           ref={searchInputRef}
           value={q}
           onChange={(e) => setQ(e.target.value)}

@@ -287,6 +287,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
             <Box key={slot.key} mb="3">
               <Field label={slot.label}>
                 <TextArea
+                  id={`sablon-${slot.key}`}
                   value={value}
                   onChange={(e) => updateTemplateDraft(slot.key, e.target.value)}
                   rows={slot.rows}

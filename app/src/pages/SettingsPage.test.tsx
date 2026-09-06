@@ -9,6 +9,7 @@ import { NavGuardProvider } from '../components/NavGuardContext';
 import { AppStateProvider } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 import { TestProviders } from '../testUtils';
+import { duplikaltIdk, mezokIdVagyNameNelkul } from '../testQueries';
 
 function renderSettings() {
   return render(
@@ -359,6 +360,16 @@ describe('SettingsPage', () => {
 
       expect(screen.queryByRole('textbox', { name: '2. orvos neve' })).not.toBeInTheDocument();
       expect(screen.getByRole('textbox', { name: '1. orvos neve' })).toHaveValue('Dr. Mándoki István');
+    });
+
+    it('urlap-mezo-id-name: a rendelő-mezőknek és az orvos-soroknak van id-jük, nincs köztük duplikált', async () => {
+      const user = userEvent.setup();
+      renderSettings();
+      await screen.findByText('Beállítások');
+      await user.click(screen.getByRole('button', { name: '+ Orvos hozzáadása' }));
+
+      expect(mezokIdVagyNameNelkul()).toEqual([]);
+      expect(duplikaltIdk()).toEqual([]);
     });
   });
 

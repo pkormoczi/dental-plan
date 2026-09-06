@@ -265,6 +265,7 @@ export default function TomegesArDialog({
             <Box style={{ width: 100 }}>
               <Field label="Százalék">
                 <NumberField
+                  id="tomeges-ar-szazalek"
                   value={szazalek}
                   penz={false}
                   min={0}

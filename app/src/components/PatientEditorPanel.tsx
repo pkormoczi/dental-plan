@@ -245,7 +245,12 @@ export default function PatientEditorPanel({
       )}
 
       <Field label="Név *">
-        <TextField.Root value={draft.nev} onChange={(e) => patch({ nev: e.target.value })} />
+        <TextField.Root
+          id="patient-editor-nev"
+          autoComplete="off"
+          value={draft.nev}
+          onChange={(e) => patch({ nev: e.target.value })}
+        />
       </Field>
       {!draft.nev.trim() && (
         <Text as="div" size="1" mt="1" mb="1" style={{ color: t.warn }}>
@@ -256,6 +261,8 @@ export default function PatientEditorPanel({
       <Grid columns="2" gap="3" mt="3">
         <Field label="Született">
           <TextField.Root
+            id="patient-editor-szuletesiido"
+            autoComplete="off"
             type="date"
             value={draft.szuletesiIdo}
             onChange={(e) => patch({ szuletesiIdo: e.target.value })}
@@ -265,6 +272,8 @@ export default function PatientEditorPanel({
         </Field>
         <Field label="TAJ">
           <TextField.Root
+            id="patient-editor-taj"
+            autoComplete="off"
             value={draft.taj}
             onChange={(e) => patch({ taj: e.target.value })}
             placeholder="123 456 789"
@@ -280,6 +289,8 @@ export default function PatientEditorPanel({
       <Box mt="3">
         <Field label="Lakcím">
           <TextField.Root
+            id="patient-editor-lakcim"
+            autoComplete="off"
             value={draft.lakcim}
             onChange={(e) => patch({ lakcim: e.target.value })}
             placeholder="1113 Budapest, Bartók Béla út 42. 2/5"
@@ -290,6 +301,8 @@ export default function PatientEditorPanel({
       <Grid columns="2" gap="3" mt="3">
         <Field label="Telefon">
           <TextField.Root
+            id="patient-editor-telefon"
+            autoComplete="off"
             value={draft.telefon}
             onChange={(e) => patch({ telefon: e.target.value })}
             placeholder="+36 30 123 4567"
@@ -297,6 +310,8 @@ export default function PatientEditorPanel({
         </Field>
         <Field label="E-mail">
           <TextField.Root
+            id="patient-editor-email"
+            autoComplete="off"
             type="email"
             value={draft.email}
             onChange={(e) => patch({ email: e.target.value })}
@@ -324,6 +339,8 @@ export default function PatientEditorPanel({
         <Box mt="3">
           <Field label="Törvényes képviselő (név, elérhetőség)">
             <TextField.Root
+              id="patient-editor-torvenyes-kepviselo"
+              autoComplete="off"
               value={draft.torvenyesKepviselo ?? ''}
               onChange={(e) => patch({ torvenyesKepviselo: e.target.value || null })}
               placeholder="Kovács Ildikó (édesanya) — +36 30 111 2222"

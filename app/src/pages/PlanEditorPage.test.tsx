@@ -15,6 +15,7 @@ import { createBlankPlan } from '../domain/blankPlan';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 import { renderEditor } from './planEditor/testFixtures';
+import { duplikaltIdk, mezokIdVagyNameNelkul } from '../testQueries';
 
 describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
   beforeEach(() => {
@@ -51,6 +52,25 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await user.keyboard('{Enter}');
     await waitFor(() => expect(search).toHaveValue(''));
     expect(screen.getByDisplayValue('Esztétikus tömés 3 felszín')).toBeInTheDocument();
+  });
+
+  it('urlap-mezo-id-name: két felvett sor mezőinek nincs azonos id-je, mindegyiknek van id-je vagy name-je', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'gyoker');
+    await screen.findByText('Gyökértömés csatornaszámtól függően');
+    await user.keyboard('{ArrowDown}{Enter}');
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.type(search, 'tomes 3');
+    await screen.findByText('Esztétikus tömés 3 felszín');
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(mezokIdVagyNameNelkul()).toEqual([]);
+    expect(duplikaltIdk()).toEqual([]);
   });
 
   it('shows a SAVOS (sávos) price range and lets the actual price be edited from the min', async () => {

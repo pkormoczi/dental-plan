@@ -127,6 +127,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
                     // node-ot) frissítené módváltáskor, az `autoFocus` pedig
                     // csak ÚJ node létrejöttekor tüzel.
                     key="szazalek"
+                    id="eloleg-szazalek"
                     value={szazalek}
                     penz={false}
                     min={0}
@@ -162,6 +163,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
                 ) : (
                   <NumberField
                     key="osszeg"
+                    id="eloleg-osszeg"
                     value={elolegOsszeg}
                     penz
                     unit={currency}

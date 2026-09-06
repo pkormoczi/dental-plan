@@ -9,6 +9,7 @@ import { NavGuardProvider } from '../components/NavGuardContext';
 import { AppStateProvider } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 import { TestProviders } from '../testUtils';
+import { mezokIdVagyNameNelkul } from '../testQueries';
 import { todayIso } from '../domain/date';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
@@ -1098,5 +1099,16 @@ describe('PriceListAdminPage', () => {
 
       expect(await screen.findByRole('option', { name: /Új kategória/ })).toBeInTheDocument();
     });
+  });
+
+  it('urlap-mezo-id-name: a kereső és egy kinyitott tétel mezőinek van id-je vagy name-je', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    await user.click(nameCell);
+    await screen.findByDisplayValue('CBCT');
+
+    expect(mezokIdVagyNameNelkul()).toEqual([]);
   });
 });

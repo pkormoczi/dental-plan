@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import PatientPage from './PatientPage';
 import { TestProviders } from '../testUtils';
+import { mezokIdVagyNameNelkul } from '../testQueries';
 import { addDaysIso, formatLongDate, todayIso } from '../domain/date';
 import type { OroklottNyelvPenznem } from '../domain/blankPlan';
 import { seedPriceList } from '../storage/seed/priceList';
@@ -1455,5 +1456,38 @@ describe('PatientPage -- örökölt nyelv/pénznem jelzése a valódi "+ Új ter
     // `describe` blokk `nyelvJelzes`/`penznemJelzes` kommentjét.
     expect(screen.getByText(/A nyelv \(/)).toBeInTheDocument();
     expect(screen.getByText(/A pénznem \(/)).toBeInTheDocument();
+  });
+});
+
+describe('PatientPage -- urlap-mezo-id-name', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('minden textbox/spinbutton mezőnek van id-je vagy name-je', async () => {
+    renderPatient();
+    await screen.findByText('Páciens adatai');
+    expect(mezokIdVagyNameNelkul()).toEqual([]);
+  });
+
+  it('a páciens-PII mezők autoComplete="off"-ot kapnak', async () => {
+    const user = userEvent.setup();
+    const { container } = renderPatient();
+    await screen.findByText('Páciens adatai');
+    await user.click(screen.getByRole('checkbox', { name: 'Kiskorú' }));
+
+    for (const id of [
+      'paciens-nev',
+      'paciens-szuletesiido',
+      'paciens-taj',
+      'paciens-lakcim',
+      'paciens-telefon',
+      'paciens-email',
+      'paciens-torvenyes-kepviselo',
+    ]) {
+      const mezo = container.querySelector(`#${id}`);
+      expect(mezo, id).not.toBeNull();
+      expect(mezo?.getAttribute('autocomplete'), id).toBe('off');
+    }
   });
 });

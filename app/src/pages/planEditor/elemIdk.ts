@@ -51,3 +51,11 @@ export function fogId(pi: number, li: number): string {
 export function leirasId(pi: number, li: number): string {
   return `leiras-${pi}-${li}`;
 }
+
+export function mennyisegId(pi: number, li: number): string {
+  return `mennyiseg-${pi}-${li}`;
+}
+
+export function arId(pi: number, li: number): string {
+  return `ar-${pi}-${li}`;
+}

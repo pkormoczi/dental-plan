@@ -10,6 +10,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import UjPaciensDialog from './UjPaciensDialog';
 import { TestProviders } from '../../testUtils';
+import { mezokIdVagyNameNelkul } from '../../testQueries';
 import { DemoStorage } from '../../storage/DemoStorage';
 import type { PatientFolder } from '../../domain/types';
 
@@ -323,5 +324,16 @@ describe('UjPaciensDialog', () => {
     await waitFor(() => expect(onUseExisting).toHaveBeenCalled());
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  // urlap-mezo-id-name
+  it('minden mezőnek van id-je, a PII mezők autoComplete="off"-ot kapnak', async () => {
+    renderHarness(seededPatients);
+    await screen.findByRole('textbox', { name: 'Név *' });
+
+    expect(mezokIdVagyNameNelkul()).toEqual([]);
+    for (const id of ['uj-paciens-nev', 'uj-paciens-szuletesiido', 'uj-paciens-telefon']) {
+      expect(document.body.querySelector(`#${id}`)?.getAttribute('autocomplete'), id).toBe('off');
+    }
   });
 });

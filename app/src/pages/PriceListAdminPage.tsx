@@ -431,6 +431,7 @@ export default function PriceListAdminPage() {
       />
 
       <TextField.Root
+        id="arlista-admin-kereso"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Keresés a tételek között…"

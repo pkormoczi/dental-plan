@@ -68,6 +68,9 @@ export interface NumberFieldProps {
   style?: CSSProperties;
   'aria-label'?: string;
   autoFocus?: boolean;
+  id?: string;
+  name?: string;
+  autoComplete?: string;
 }
 
 function formatForDisplay(value: number | null, unit: 'HUF' | 'EUR'): string {

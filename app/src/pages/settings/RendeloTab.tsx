@@ -201,25 +201,36 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
       <Section title="Rendelő adatai">
         <Grid columns={{ initial: '1', sm: '2' }} gap="3" style={{ maxWidth: 560 }}>
           <Field label="Név">
-            <TextField.Root value={draft.rendelo.nev} onChange={(e) => patchRendelo({ nev: e.target.value })} />
+            <TextField.Root
+              id="rendelo-nev"
+              value={draft.rendelo.nev}
+              onChange={(e) => patchRendelo({ nev: e.target.value })}
+            />
           </Field>
           <Field label="Cím">
-            <TextField.Root value={draft.rendelo.cim} onChange={(e) => patchRendelo({ cim: e.target.value })} />
+            <TextField.Root
+              id="rendelo-cim"
+              value={draft.rendelo.cim}
+              onChange={(e) => patchRendelo({ cim: e.target.value })}
+            />
           </Field>
           <Field label="Telefon">
             <TextField.Root
+              id="rendelo-telefon"
               value={draft.rendelo.telefon}
               onChange={(e) => patchRendelo({ telefon: e.target.value })}
             />
           </Field>
           <Field label="E-mail">
             <TextField.Root
+              id="rendelo-email"
               value={draft.rendelo.email}
               onChange={(e) => patchRendelo({ email: e.target.value })}
             />
           </Field>
           <Field label="Adószám">
             <TextField.Root
+              id="rendelo-adoszam"
               value={draft.rendelo.adoszam}
               onChange={(e) => patchRendelo({ adoszam: e.target.value })}
               placeholder="kitöltendő"
@@ -227,6 +238,7 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
           </Field>
           <Field label="Cégjegyzékszám">
             <TextField.Root
+              id="rendelo-cegjegyzekszam"
               value={draft.rendelo.cegjegyzekszam}
               onChange={(e) => patchRendelo({ cegjegyzekszam: e.target.value })}
               placeholder="kitöltendő"
@@ -252,6 +264,7 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
                 <Table.Row key={i}>
                   <Table.Cell>
                     <TextField.Root
+                      id={`orvos-nev-${i}`}
                       value={sor.nev}
                       placeholder="Dr. …"
                       aria-label={`${i + 1}. orvos neve`}

@@ -214,6 +214,8 @@ export default function UjPaciensDialog({
           <Box mt="4" mb="3">
             <Field label="Név *">
               <TextField.Root
+                id="uj-paciens-nev"
+                autoComplete="off"
                 autoFocus
                 value={nev}
                 onChange={(e) => setNev(e.target.value)}
@@ -233,6 +235,8 @@ export default function UjPaciensDialog({
           <Grid columns="2" gap="3" mb="1">
             <Field label="Született">
               <TextField.Root
+                id="uj-paciens-szuletesiido"
+                autoComplete="off"
                 type="date"
                 value={szuletesiIdo}
                 onChange={(e) => setSzuletesiIdo(e.target.value)}
@@ -242,6 +246,8 @@ export default function UjPaciensDialog({
             </Field>
             <Field label="Telefon">
               <TextField.Root
+                id="uj-paciens-telefon"
+                autoComplete="off"
                 value={telefon}
                 onChange={(e) => setTelefon(e.target.value)}
                 placeholder="+36 30 123 4567"

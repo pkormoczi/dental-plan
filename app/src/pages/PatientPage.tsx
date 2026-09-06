@@ -248,6 +248,8 @@ export default function PatientPage() {
         <Box mb="3">
           <Field label="Név *">
             <TextField.Root
+              id="paciens-nev"
+              autoComplete="off"
               autoFocus
               value={paciens.nev}
               onChange={(e) => patch({ nev: e.target.value })}
@@ -291,6 +293,8 @@ export default function PatientPage() {
         <Grid columns="2" gap="3">
           <Field label="Született">
             <TextField.Root
+              id="paciens-szuletesiido"
+              autoComplete="off"
               type="date"
               value={paciens.szuletesiIdo}
               onChange={(e) => patch({ szuletesiIdo: e.target.value })}
@@ -298,6 +302,8 @@ export default function PatientPage() {
           </Field>
           <Field label="TAJ">
             <TextField.Root
+              id="paciens-taj"
+              autoComplete="off"
               value={paciens.taj}
               onChange={(e) => patch({ taj: e.target.value })}
               placeholder="123 456 789"
@@ -308,6 +314,8 @@ export default function PatientPage() {
         <Box mt="3">
           <Field label="Lakcím">
             <TextField.Root
+              id="paciens-lakcim"
+              autoComplete="off"
               value={paciens.lakcim}
               onChange={(e) => patch({ lakcim: e.target.value })}
               placeholder="1113 Budapest, Bartók Béla út 42. 2/5"
@@ -318,6 +326,8 @@ export default function PatientPage() {
         <Grid columns="2" gap="3" mt="3">
           <Field label="Telefon">
             <TextField.Root
+              id="paciens-telefon"
+              autoComplete="off"
               value={paciens.telefon}
               onChange={(e) => patch({ telefon: e.target.value })}
               placeholder="+36 30 123 4567"
@@ -325,6 +335,8 @@ export default function PatientPage() {
           </Field>
           <Field label="E-mail">
             <TextField.Root
+              id="paciens-email"
+              autoComplete="off"
               type="email"
               value={paciens.email}
               onChange={(e) => patch({ email: e.target.value })}
@@ -345,6 +357,8 @@ export default function PatientPage() {
           <Box mt="3">
             <Field label="Törvényes képviselő (név, elérhetőség)">
               <TextField.Root
+                id="paciens-torvenyes-kepviselo"
+                autoComplete="off"
                 value={paciens.torvenyesKepviselo ?? ''}
                 onChange={(e) => patch({ torvenyesKepviselo: e.target.value || null })}
                 placeholder="Kovács Ildikó (édesanya) — +36 30 111 2222"
@@ -490,6 +504,7 @@ export default function PatientPage() {
         <Box mt="3">
           <Field label="Érvényes eddig">
             <TextField.Root
+              id="terv-ervenyes-eddig"
               type="date"
               value={plan.ervenyesIg}
               onChange={(e) => patchErvenyesIg(e.target.value)}

@@ -125,6 +125,7 @@ export default function OsszesTervSection() {
       </Heading>
 
       <TextField.Root
+        id="osszes-terv-kereso"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Keresés páciensnévre…"

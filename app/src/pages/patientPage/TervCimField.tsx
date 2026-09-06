@@ -105,6 +105,7 @@ export default function TervCimField() {
     <Box>
       <Flex gap="2" align="start" wrap="wrap">
         <TextField.Root
+          id="terv-cime"
           aria-label="Terv címe"
           value={value}
           onChange={(e) => jelezTervCim(e.target.value)}
