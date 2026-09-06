@@ -646,7 +646,9 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
   },
   // Implantátum + korona, 3 verzió -- a felépítmény sora KÉZZEL becsültre
   // billentve (savosOverride), holott árlistailag FIX árú tétel. A
-  // legfrissebb aktivitás "az imént" sávban.
+  // legfrissebb aktivitás "napja" sávban -- nem "az imént" (2 nappal
+  // korábbi), hogy egy friss demóban a Kezdőlap aktivitás-listája elsőre
+  // megalapozottnak tűnjön.
   {
     paciensId: 'kissma',
     nev: 'Kiss Márta',
@@ -656,7 +658,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
     email: 'kiss.marta@example.hu',
     taj: '456 789 123',
     patientData: true,
-    aktivitas: { tipus: 'terv-veglegesitve', msEzelott: 30 * 1000 },
+    aktivitas: { tipus: 'terv-veglegesitve', msEzelott: 2 * NAP_MS },
     lancok: [
       {
         tervId: 'kiss1a',

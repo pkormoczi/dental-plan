@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { formatRelativIdo } from '../../domain/date';
 import { basePrice } from '../../domain/money';
 import { ervenyesAktivitas, legutobbAktivPaciensek } from '../../domain/paciensAktivitas';
 import type { PatientFolder } from '../../domain/types';
@@ -185,6 +186,18 @@ describe('seedPatients utolsoAktivitas', () => {
     // Determinisztikus: ugyanaz a bemenet mindig ugyanazt a nevsorrendet adja.
     const ujra = legutobbAktivPaciensek(patientFolders, LIMIT).map((p) => p.nev);
     expect(ujra).toEqual(top.map((p) => p.nev));
+  });
+
+  // seed-terv-datum-az-iment: betöltéskor egyetlen VALÓS seed-aktivitás se
+  // essen az "az imént" (<60 mp) sávba -- egy friss demó ne tűnjön
+  // gyanúsan frissnek.
+  it('egyetlen valós utolsoAktivitas se essen betöltéskor az "az imént" sávba', () => {
+    const most = new Date();
+    for (const { patientDir, record } of seedPatients) {
+      const aktivitas = ervenyesAktivitas(record.utolsoAktivitas);
+      if (!aktivitas) continue;
+      expect(formatRelativIdo(aktivitas.idopont, most), patientDir).not.toBe('az imént');
+    }
   });
 });
 
