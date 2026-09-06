@@ -8,7 +8,7 @@
 // schemaVersion-t ismeri), és a terv.json PDF-be ágyazása (pdf-lib) is a
 // 2. fázisra marad (lásd PRODUCT.md § Szándékos hiányok és nyitott kérdések).
 
-import { javasoltTervCim } from '../domain/tervCim';
+import { javasoltTervCim, megjelenitettTervCim } from '../domain/tervCim';
 import { paciensIndexNev, uresTorzsadat } from '../domain/paciensAdatok';
 import { ervenyesAktivitas, ujAktivitas } from '../domain/paciensAktivitas';
 import { assertKnownSchemaVersion } from '../domain/schema';
@@ -489,11 +489,11 @@ export class DemoStorage implements PlanStorage {
    * csonkán), és két gyors egymás utáni hívás nem számolhatja ki ugyanazt a
    * verziószámot.
    */
-  async savePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef> {
-    return this.enqueue(() => this.doSavePlan(plan, pdf));
+  async savePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<PlanRef> {
+    return this.enqueue(() => this.doSavePlan(plan, pdf, ujLancCim));
   }
 
-  private async doSavePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef> {
+  private async doSavePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<PlanRef> {
     const patients = await this.listPatients();
     let paciensId = plan.paciensId;
     let patientDir = paciensId ? patients.find((p) => p.paciensId === paciensId)?.dirName : undefined;
@@ -510,7 +510,10 @@ export class DemoStorage implements PlanStorage {
     if (!tervId || !planDir) {
       tervId = tervId || generateId();
       const priceList = this.currentPriceListOrSeed();
-      planDir = buildPlanDirName(javasoltTervCim(plan, priceList), tervId);
+      planDir = buildPlanDirName(
+        megjelenitettTervCim(ujLancCim?.trim() || null, plan, priceList),
+        tervId,
+      );
     }
 
     const existingVersions = await this.listVersions(patientDir, planDir);

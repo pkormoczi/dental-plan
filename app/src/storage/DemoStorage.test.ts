@@ -128,6 +128,57 @@ describe('DemoStorage', () => {
     expect(plans).toHaveLength(2);
   });
 
+  it('savePlan for a NEW chain with an egyéni tervCim uses it for the planDir, not the domináns kategória', async () => {
+    const priceList = await storage.loadPriceList();
+    const tetel = priceList.tetelek.find((t) => t.aktiv)!;
+    const kategoria = priceList.kategoriak.find((k) => k.id === tetel.kategoriaId)!;
+    const planWithKategoria = makeBlankPlan({
+      fazisok: [
+        {
+          sorszam: 1,
+          megnevezes: '1. kezelés',
+          megjegyzes: '',
+          sorok: [
+            {
+              tetelId: tetel.id,
+              nevSnapshot: tetel.nev.hu,
+              savos: false,
+              fogak: '',
+              mennyiseg: 1,
+              listaEgysegar: 10000,
+              tenylegesEgysegar: 10000,
+            },
+          ],
+        },
+      ],
+    });
+
+    const autoJavaslat = await storage.savePlan(planWithKategoria, new Uint8Array([1]));
+    expect(autoJavaslat.planDir.startsWith(kategoria.nev.hu)).toBe(true);
+
+    const egyeniCimmel = await storage.savePlan(
+      planWithKategoria,
+      new Uint8Array([2]),
+      'Fogpótlás konzultáció',
+    );
+    expect(egyeniCimmel.planDir.startsWith('Fogpótlás konzultáció')).toBe(true);
+    expect(egyeniCimmel.planDir).not.toContain(kategoria.nev.hu);
+  });
+
+  it('savePlan egy MÁR LÉTEZŐ lánc újabb verziójánál a planDir-t nem érinti az ujLancCim', async () => {
+    const plan = makeBlankPlan();
+    const ref1 = await storage.savePlan(plan, new Uint8Array([1]));
+    const v1 = await storage.loadPlan(ref1);
+
+    const ref2 = await storage.savePlan(
+      { ...v1, keltezes: '2026-08-19' },
+      new Uint8Array([2]),
+      'Ez a cím nem hathat egy meglévő láncra',
+    );
+
+    expect(ref2.planDir).toBe(ref1.planDir);
+  });
+
   it('savePlan creates a plan folder with no manual címke (tervCim: null -- élő auto-javaslat)', async () => {
     const plan = makeBlankPlan();
     const ref = await storage.savePlan(plan, new Uint8Array([1]));

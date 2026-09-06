@@ -354,7 +354,7 @@ export default function PreviewPage() {
         osszesitok: computeOsszesitok(plan.fazisok, plan.kedvezmenyOsszeg),
       };
       const bytes = new Uint8Array(await pdfInstance.blob.arrayBuffer());
-      const ref = await storage.savePlan(finalPlan, bytes);
+      const ref = await storage.savePlan(finalPlan, bytes, ujLancCim || undefined);
       const persisted = await storage.loadPlan(ref); // tervId/verzio a storage tölti ki
       if (ujLancCim) {
         // KÜLÖN try/catch, NEM a közös hibazónában: a terv ekkor MÁR a

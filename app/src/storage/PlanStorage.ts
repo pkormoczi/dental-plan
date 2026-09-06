@@ -22,8 +22,15 @@ export interface PlanStorage {
   listPlans(patientDir: string): Promise<PlanFolder[]>;
   listVersions(patientDir: string, planDir: string): Promise<PlanVersion[]>;
   loadPlan(ref: PlanRef): Promise<Plan>;
-  /** Mindig új verziómappát hoz létre -- soha nem ír felül meglévőt. */
-  savePlan(plan: Plan, pdf: Uint8Array): Promise<PlanRef>;
+  /**
+   * Mindig új verziómappát hoz létre -- soha nem ír felül meglévőt.
+   * `ujLancCim` a doki által a véglegesítés előtt megadott egyéni terv-cím --
+   * KIZÁRÓLAG vadonatúj lánc (üres `plan.tervId`) mappanév-javaslatánál
+   * hasznosul, a `megjelenitettTervCim()`-mel megegyező precedenciával (kézi
+   * cím > automatikus javaslat); egy már létező lánc újabb verziójánál
+   * hatástalan, a `planDir` a lánc létrehozásakor örökre fix marad.
+   */
+  savePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<PlanRef>;
   /**
    * A terv-cimke.json-t írja/törli -- a verziómappákon KÍVÜL él, az append-only
    * szabály rá nem vonatkozik. Üres/whitespace `tervCim` törli a fájlt (vissza az élő

@@ -665,6 +665,10 @@ describe('PreviewPage -- backlog-51: terv címe véglegesítéskor', () => {
       const patient = (await storage.listPatients()).find((p) => p.nev === 'Cím Teszt Elek')!;
       const [chain] = await storage.listPlans(patient.dirName);
       expect(chain.tervCim).toBe('Fogpótlás felső ívben');
+      // tervmappa-nev-nem-koveti-egyeni-cimet: a mappanév-javaslat is a
+      // beírt címet tükrözi, nem a "Fogeltávolítás" tétel domináns
+      // kategóriáját.
+      expect(chain.dirName.startsWith('Fogpótlás felső ívben')).toBe(true);
     },
     20000,
   );
