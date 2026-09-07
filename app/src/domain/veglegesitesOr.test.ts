@@ -35,7 +35,9 @@ function sor(partial: Partial<Sor> = {}): Sor {
     tetelId: 't1',
     nevSnapshot: 'Fogeltávolítás',
     savos: false,
-    fogak: '',
+    // Egy "teljesen kitöltött" alapsoron van fogszám -- enélkül minden teszt
+    // megkapná a `hianyzo-fogszam` puha tételt is.
+    fogak: '16',
     mennyiseg: 1,
     listaEgysegar: 10000,
     tenylegesEgysegar: 10000,
@@ -100,6 +102,16 @@ const priceList: PriceList = {
       gyakori: false,
       nev: { hu: 'Kivont tétel', de: null },
       ar: { HUF: { tipus: 'FIX', ertek: 5000 }, EUR: null },
+    },
+    {
+      id: 't-fogszam-nelkul',
+      kategoriaId: 'k1',
+      sorrend: 4,
+      aktiv: true,
+      gyakori: false,
+      nev: { hu: 'Konzultáció', de: 'Beratung' },
+      ar: { HUF: { tipus: 'FIX', ertek: 10000 }, EUR: null },
+      fogszamNemKell: true,
     },
   ],
 };
@@ -259,6 +271,62 @@ describe('veglegesitesDiagnozis', () => {
       const plan = makePlan([[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', fogak: '16' })]]);
       const diag = veglegesitesDiagnozis(plan, priceListKategoriaval, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
       expect(tetel(diag, 'nemet-kategoria-nev')).toBeUndefined();
+    });
+  });
+
+  describe('hiányzó fogszám', () => {
+    it('jelöletlen tételre hivatkozó, fogszám nélküli sor "hianyzo-fogszam" soft tételt ad', () => {
+      const plan = makePlan([[sor({ nevSnapshot: 'Korona', fogak: '' })]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+      const t = tetel(diag, 'hianyzo-fogszam');
+      expect(t?.sulyossag).toBe('soft');
+      expect(t?.szamlalo).toBe(1);
+      expect(t?.reszletek).toEqual([{ cim: 'Érintett sorok', nevek: ['Korona'] }]);
+      expect(t?.route).toBe('/terv');
+      expect(vanKemenyBlokk(diag)).toBe(false);
+    });
+
+    it('a számláló és a felsorolás több soron át gyűlik, terv sorrendben', () => {
+      const plan = makePlan([
+        [sor({ nevSnapshot: 'Korona', fogak: '' }), sor({ nevSnapshot: 'Tömés', fogak: '  ' })],
+        [sor({ nevSnapshot: 'Híd', fogak: '' })],
+      ]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+      const t = tetel(diag, 'hianyzo-fogszam');
+      expect(t?.szamlalo).toBe(3);
+      expect(t?.reszletek).toEqual([{ cim: 'Érintett sorok', nevek: ['Korona', 'Tömés', 'Híd'] }]);
+    });
+
+    it('a "fogszám nélkül is rendben" jelölt tételre hivatkozó sor NEM ad tételt', () => {
+      const plan = makePlan([[sor({ tetelId: 't-fogszam-nelkul', nevSnapshot: 'Konzultáció', fogak: '' })]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      expect(tetel(diag, 'hianyzo-fogszam')).toBeUndefined();
+    });
+
+    it('egyedi (tetelId nélküli) sor fogszám nélkül szintén ad tételt', () => {
+      const plan = makePlan([[sor({ tetelId: '', nevSnapshot: 'Saját tétel', fogak: '' })]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      expect(tetel(diag, 'hianyzo-fogszam')?.reszletek).toEqual([
+        { cim: 'Érintett sorok', nevek: ['Saját tétel'] },
+      ]);
+    });
+
+    it('szabadszöveges fogak-jegyzet NEM hiány -- a mező jegyzetmező, nem fogszám-parser', () => {
+      const plan = makePlan([[sor({ nevSnapshot: 'Korona', fogak: 'felső front' })]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      expect(tetel(diag, 'hianyzo-fogszam')).toBeUndefined();
+    });
+
+    it('a soron hiányzó tartalom egy blokkban áll: a fogszám a 0 összegű sor ELŐTT', () => {
+      const plan = makePlan([
+        [sor({ nevSnapshot: 'Korona', fogak: '', listaEgysegar: 0, tenylegesEgysegar: 0 })],
+      ]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+      const ids = diag.tetelek.map((x) => x.id);
+      expect(ids.indexOf('hianyzo-fogszam')).toBeLessThan(ids.indexOf('nulla-osszegu-sor'));
     });
   });
 

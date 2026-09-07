@@ -8,6 +8,7 @@ import {
   uresFazisok,
 } from './kitoltetlen';
 import type { Plan, PriceList, Sor } from './types';
+import { seedPriceList } from '../storage/seed/priceList';
 
 function sor(partial: Partial<Sor>): Sor {
   return {
@@ -53,6 +54,20 @@ function makePlan(fazisok: Sor[][]): Plan {
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
   };
 }
+
+describe('a seed árlista fogszám-kivételei', () => {
+  const jelolt = (id: string) => seedPriceList.tetelek.find((x) => x.id === id)?.fogszamNemKell;
+
+  it('a fogszám nélkül is értelmes tételek jelöltek', () => {
+    for (const id of ['t001', 't002', 't003', 't017', 't018', 't019']) {
+      expect(jelolt(id), id).toBe(true);
+    }
+  });
+
+  it('a "Fogfehérítés, 1 db fog" NEM jelölt -- ott a fogszám releváns', () => {
+    expect(jelolt('t020')).toBeUndefined();
+  });
+});
 
 describe('uresFazisok', () => {
   it('üres terven üres listát ad', () => {

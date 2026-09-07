@@ -142,7 +142,8 @@
           "ertek": 2800
         }
       },
-      "forrasSor": 2
+      "forrasSor": 2,
+      "fogszamNemKell": true
     },
     {
       "id": "t002",
@@ -164,7 +165,8 @@
           "ertek": 2500
         }
       },
-      "forrasSor": 3
+      "forrasSor": 3,
+      "fogszamNemKell": true
     },
     {
       "id": "t003",
@@ -186,7 +188,8 @@
           "ertek": 6600
         }
       },
-      "forrasSor": 4
+      "forrasSor": 4,
+      "fogszamNemKell": true
     },
     {
       "id": "t004",
@@ -498,7 +501,8 @@
           "ertek": 6600
         }
       },
-      "forrasSor": 24
+      "forrasSor": 24,
+      "fogszamNemKell": true
     },
     {
       "id": "t018",
@@ -520,7 +524,8 @@
           "ertek": 6600
         }
       },
-      "forrasSor": 25
+      "forrasSor": 25,
+      "fogszamNemKell": true
     },
     {
       "id": "t019",
@@ -542,7 +547,8 @@
           "ertek": 22000
         }
       },
-      "forrasSor": 28
+      "forrasSor": 28,
+      "fogszamNemKell": true
     },
     {
       "id": "t020",

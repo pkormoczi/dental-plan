@@ -62,6 +62,29 @@ export function nullaOsszeguSorok(plan: Plan): string[] {
 }
 
 /**
+ * PUHA figyelmeztetés: névvel ellátott sorok, amiken nincs fogszám, és a
+ * hivatkozott tétel nincs `fogszamNemKell`-lel kivéve. Egyedi
+ * (`tetelId` nélküli) és ismeretlen tételre hivatkozó sor is bekerül -- épp
+ * a szabadon gépelt sorból marad ki a fogszám, a jelzés pedig puha.
+ *
+ * "Van fogszám" = a `fogak` trim után nem üres, NEM `parseTeeth`-érvényesség:
+ * a mező elfogadottan jegyzetmező (PRODUCT.md § Nem cél), egy "felső front"
+ * jegyzet nem hiány.
+ */
+export function fogszamNelkuliSorok(plan: Plan, priceList: PriceList): string[] {
+  const tetelById = new Map(priceList.tetelek.map((x) => [x.id, x]));
+  const eredmeny: string[] = [];
+  plan.fazisok.forEach((fazis) => {
+    fazis.sorok.forEach((sor) => {
+      if (!sor.nevSnapshot.trim() || sor.fogak.trim()) return;
+      if (tetelById.get(sor.tetelId)?.fogszamNemKell) return;
+      eredmeny.push(sor.nevSnapshot);
+    });
+  });
+  return eredmeny;
+}
+
+/**
  * KEMÉNY blokk (62. tétel): névvel ellátott sorok, amiknek a tétele
  * nincs beárazva a terv pénznemében (`nincsListaar()`, domain/penznemValtas.ts),
  * ÉS a doki még nem adott meg kézi ajánlati árat (`tenylegesEgysegar === 0`).

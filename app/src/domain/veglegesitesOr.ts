@@ -18,6 +18,7 @@
 
 import {
   araztalanSorok,
+  fogszamNelkuliSorok,
   hianyzoCsomagLeirasok,
   inaktivTetelreHivatkozoSorok,
   kitoltetlenSorok,
@@ -322,6 +323,19 @@ export function veglegesitesDiagnozis(
       cim: `${nyelviMismatchekLista.length} kézzel írt szöveg nem biztos, hogy a dokumentum nyelvén helyes.`,
       szamlalo: nyelviMismatchekLista.length,
       reszletek: nyelviReviewReszletek(nyelviMismatchekLista),
+      route: '/terv',
+    });
+  }
+
+  // A soron hiányzó tartalom egy blokkban: fogszám -> 0 összeg -> leírás.
+  const fogszamNelkul = fogszamNelkuliSorok(plan, priceList);
+  if (fogszamNelkul.length > 0) {
+    tetelek.push({
+      id: 'hianyzo-fogszam',
+      sulyossag: 'soft',
+      cim: `${fogszamNelkul.length} soron nincs fogszám.`,
+      szamlalo: fogszamNelkul.length,
+      reszletek: [{ cim: 'Érintett sorok', nevek: fogszamNelkul }],
       route: '/terv',
     });
   }

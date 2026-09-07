@@ -70,6 +70,15 @@ export interface Tetel {
    * hiányzó mező = nem csomag jellegű.
    */
   csomag?: boolean;
+  /**
+   * true esetén a véglegesítés-őr NEM figyelmeztet, ha az erre hivatkozó
+   * soron nincs fogszám (konzultáció, röntgen, fogkő, komplett fogsor).
+   * Additív mező, nincs `schemaVersion`-emelés -- hiányzó mező = kell
+   * fogszám, tehát jelez. Szándékosan így, nem opt-in: a doki már
+   * szerkesztett árlistájáról a mező mindenhonnan hiányzik, opt-in mellett
+   * a bejelentett hiba tovább élne; a némítás egy pipa.
+   */
+  fogszamNemKell?: boolean;
 }
 
 export interface PriceList {

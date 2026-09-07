@@ -173,7 +173,7 @@ describe('PreviewPage -- hiányzó/nem aktív kezelőorvos kemény blokk', () =>
                   tetelId: '',
                   nevSnapshot: 'Kontroll',
                   savos: false,
-                  fogak: '',
+                  fogak: '16',
                   mennyiseg: 1,
                   listaEgysegar: 0,
                   tenylegesEgysegar: 0,
@@ -316,7 +316,7 @@ describe('PreviewPage -- 94. tétel: névütközés kemény blokkja', () => {
                   tetelId: '',
                   nevSnapshot: 'Kontroll',
                   savos: false,
-                  fogak: '',
+                  fogak: '16',
                   mennyiseg: 1,
                   listaEgysegar: 0,
                   tenylegesEgysegar: 0,
@@ -863,7 +863,7 @@ describe('PreviewPage -- német tételnév kemény blokk', () => {
           tetelId: 't1',
           nevSnapshot: 'Fogeltávolítás',
           savos: false,
-          fogak: '',
+          fogak: '16',
           mennyiseg: 1,
           listaEgysegar: 10000,
           tenylegesEgysegar: 10000,
@@ -872,7 +872,7 @@ describe('PreviewPage -- német tételnév kemény blokk', () => {
           tetelId: 't2',
           nevSnapshot: 'Kézzel átírt szöveg',
           savos: false,
-          fogak: '',
+          fogak: '16',
           mennyiseg: 1,
           listaEgysegar: 5000,
           tenylegesEgysegar: 5000,
@@ -913,7 +913,7 @@ describe('PreviewPage -- német tételnév kemény blokk', () => {
           tetelId: 't1',
           nevSnapshot: 'Fogeltávolítás',
           savos: false,
-          fogak: '',
+          fogak: '16',
           mennyiseg: 1,
           listaEgysegar: 10000,
           tenylegesEgysegar: 10000,
@@ -937,7 +937,7 @@ describe('PreviewPage -- német tételnév kemény blokk', () => {
           tetelId: '',
           nevSnapshot: 'Egyedi anyagköltség',
           savos: false,
-          fogak: '',
+          fogak: '16',
           mennyiseg: 1,
           listaEgysegar: 0,
           tenylegesEgysegar: 0,
@@ -1218,7 +1218,7 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
 
       // PUHA tétel -- a gombnyomás ELŐTT is látszik, de NEM blokkol.
       expect(await screen.findByText(/csomagtételre hivatkozó soron nincs leírás/)).toBeInTheDocument();
-      expect(screen.getByText(/Fogeltávolítás/)).toBeInTheDocument();
+      expect(screen.getByText(/Nincs leírás: Fogeltávolítás/)).toBeInTheDocument();
       await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
 
       await user.click(finalizeBtn);
@@ -1316,8 +1316,10 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
         { timeout: 10000 },
       );
 
-      expect(await screen.findByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
-      expect(screen.getByText(/Érintett sorok: Érzéstelenítés/)).toBeInTheDocument();
+      // A `hianyzo-fogszam` puha tétel ugyanezt a sort listázza, ezért a
+      // névlistát a 0 Ft-os tétel saját callout-ján belül keressük.
+      const nullaTetel = await screen.findByText(/A terv 1 0 Ft-os tételt tartalmaz/);
+      expect(within(nullaTetel).getByText(/Érintett sorok: Érzéstelenítés/)).toBeInTheDocument();
       await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
 
       await user.click(finalizeBtn);
@@ -1508,8 +1510,8 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
       expect(
         screen.getByText('Ezek a figyelmeztetések álltak fenn a véglegesítéskor:'),
       ).toBeInTheDocument();
-      expect(screen.getByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
-      expect(screen.getByText(/Érintett sorok: Érzéstelenítés/)).toBeInTheDocument();
+      const nullaTetelSiker = screen.getByText(/A terv 1 0 Ft-os tételt tartalmaz/);
+      expect(within(nullaTetelSiker).getByText(/Érintett sorok: Érzéstelenítés/)).toBeInTheDocument();
       expect(
         screen.getByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/),
       ).toBeInTheDocument();
@@ -1581,6 +1583,9 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
       await user.type(search, 'Fogeltávolítás');
       await user.click(await screen.findByText('Fogeltávolítás'));
       await waitFor(() => expect(search).toHaveValue(''));
+      // Fogszám nélkül a "hianyzo-fogszam" puha tétel is fennállna -- ez a
+      // teszt egy MINDEN szempontból tiszta tervről szól.
+      await user.type(screen.getByPlaceholderText('pl. 16, 17, 26'), '16');
 
       await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       const finalizeBtn = await screen.findByRole(

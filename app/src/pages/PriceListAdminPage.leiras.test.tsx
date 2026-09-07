@@ -88,4 +88,29 @@ describe('PriceListAdminPage -- backlog-10: leírás és csomag-jelölés', () =
     expect(csomag).toBeChecked();
     expect(findItem(readPriceList(), 'CBCT').csomag).toBe(true);
   });
+
+  it('a "fogszám nélkül is rendben" pipa átbillentése menti a jelölőt', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    // A "Fogfehérítés, 1 db fog" a seedben szándékosan JELÖLETLEN -- ott a
+    // fogszám releváns.
+    const nameCell = await screen.findByText('Fogfehérítés, 1 db fog (belső és külső)');
+    await user.click(nameCell);
+
+    const pipa = screen.getByRole('checkbox', { name: /Fogszám nélkül is rendben/ });
+    expect(pipa).not.toBeChecked();
+
+    await user.click(pipa);
+    expect(pipa).toBeChecked();
+    expect(findItem(readPriceList(), 'Fogfehérítés, 1 db fog (belső és külső)').fogszamNemKell).toBe(true);
+  });
+
+  it('a seedben kivett tételen a pipa alapból be van kapcsolva', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await user.click(await screen.findByText('CBCT'));
+    expect(screen.getByRole('checkbox', { name: /Fogszám nélkül is rendben/ })).toBeChecked();
+  });
 });

@@ -272,6 +272,16 @@ export default function ItemEditor({
         </Text>
       </Flex>
 
+      <Flex mb="3">
+        <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Checkbox
+            checked={item.fogszamNemKell ?? false}
+            onCheckedChange={(checked) => onPatch({ fogszamNemKell: checked === true })}
+          />
+          Fogszám nélkül is rendben — a véglegesítés nem figyelmeztet a hiányzó fogszámra
+        </Text>
+      </Flex>
+
       <Grid columns="2" gap="3">
         <Field label="Kategória">
           <Select.Root
