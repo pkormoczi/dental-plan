@@ -23,6 +23,7 @@
 
 import { addDaysIso } from '../../domain/date';
 import { basePrice } from '../../domain/money';
+import { savHatarArbol } from '../../domain/savHatar';
 import { javasoltTervCim } from '../../domain/tervCim';
 import { computeOsszesitok } from '../../domain/totals';
 import { ujAktivitas } from '../../domain/paciensAktivitas';
@@ -97,6 +98,9 @@ const kovacsFazisok: Fazis[] = [
         mennyiseg: 4,
         listaEgysegar: 38000,
         tenylegesEgysegar: 55000,
+        // A t016 HUF sávja 38 000--65 000: az 55 000 sávon BELÜL van, tehát a
+        // demó ezen a soron mutatja, hogy nincs eltérés-jelvény.
+        savHatar: { min: 38000, max: 65000 },
       },
       {
         tetelId: 't041',
@@ -430,6 +434,9 @@ function buildSor(terv: SorTerv, penznem: Penznem, nyelv: Nyelv): Sor {
     mennyiseg,
     listaEgysegar: lista,
     tenylegesEgysegar: tenyleges,
+    // A sávhatár az ÁRLISTÁBÓL jön, függetlenül a `savosOverride`-tól: a `≈`
+    // kapcsoló a nyomtatvány `*`-áról dönt, nem az árazásról.
+    ...(savHatarArbol(arDef) ? { savHatar: savHatarArbol(arDef) } : {}),
     ...(terv.leirasSnapshot ? { leirasSnapshot: terv.leirasSnapshot } : {}),
     ...(terv.nevNyelvOverride
       ? { nevNyelv: { authoredInLanguage: terv.nevNyelvOverride } }

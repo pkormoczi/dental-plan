@@ -2,7 +2,6 @@
 
 ## Mental model
 - Mentett sor = pillanatkép (`nevSnapshot`, `listaEgysegar`), sosem az élő árlista.
-  → test:app/src/domain/totals.test.ts#does NOT mutate or overwrite the passed-in mentett value
 - `osszesitok` a fájlból igaz; eltérésnél jelzés. → symbol:app/src/domain/totals.ts#osszesitokElter
 - Pénz egész, minor unit; formázás csak itt. → symbol:app/src/domain/money.ts#formatMoney
 - Nyelv és pénznem függetlenek; a kereső mindkét nyelven talál, a pénznem nem szűr.
@@ -13,7 +12,8 @@
 - Egy véglegesítés-őr (hard/soft/info); új feltétel ide, nem a PreviewPage-be.
   → symbol:app/src/domain/veglegesitesOr.ts#veglegesitesDiagnozis;
   test:app/src/domain/veglegesitesOr.test.ts#üres ervenyesIg az "ervenyes-ig-hianyzik" hard tételt adja
-- A sor `savos` mezője dönt a nyomtatvány `*`-áról, nem az árlista ártípusa.
+- A sor `savos` mezője dönt a nyomtatvány `*`-áról, nem az árlista ártípusa; a sávhatár
+  független. → symbol:app/src/domain/savHatar.ts#sorReferenciaAr
 - Új verzió dátuma BETÖLTÉSKOR bélyegződik. → symbol:app/src/domain/ujVerzioDatum.ts#frissDatummal
 
 ## Intentional gaps
@@ -27,7 +27,8 @@
 - totals: `tervVegosszeg`, `elolegOsszegek`, `elolegTullepi`, `computeOsszesitok`, `osszesitokElter`
 - kitoltetlen: `kitoltetlenSorok`, `araztalanSorok`, `nullaOsszeguSorok`, `uresFazisok`
 - arKoveti: `arKoveti`, `arFrissites`, `arElteroSorok`, `frissArlistaval` (kézi ár ≠ `arKoveti`)
-- sorElteres: `sorElteres` (kedvezmény/felár, a szín a hívóé) · orokoltJelzesek: `orokoltJelzesekkel`
+- sorElteres: `sorElteres` (kedvezmény/felár, a szín a hívóé) · savHatar: `sorReferenciaAr`
+- orokoltJelzesek: `orokoltJelzesekkel`
 - priceListIds: `nextTetelId` · penznemValtas: `penznemvaltasHatasa`
 - templates: `isPlaceholderTemplate`, `sablonNyomtathato` · piszkozat: `piszkozatTartalmas`
 - blankPlan: `createBlankPlan` · planCopy: `planMasolatKent` · orvosok: `orvosProblema`

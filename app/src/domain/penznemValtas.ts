@@ -6,6 +6,7 @@
 // stash-mezője (domain/types.ts) ezt oldja fel.
 
 import { basePrice } from './money';
+import { savHatarArbol } from './savHatar';
 import type { Penznem, Plan, PriceList, Sor, Tetel } from './types';
 
 /**
@@ -26,19 +27,43 @@ import type { Penznem, Plan, PriceList, Sor, Tetel } from './types';
  * doki-kapcsoló, nem pénznemből derivált érték.
  */
 export function sorPenznemValtassal(sor: Sor, ujPenznem: Penznem, tetel: Tetel | undefined): Sor {
-  const kilepoAr = { listaEgysegar: sor.listaEgysegar, tenylegesEgysegar: sor.tenylegesEgysegar };
+  const kilepoAr = {
+    listaEgysegar: sor.listaEgysegar,
+    tenylegesEgysegar: sor.tenylegesEgysegar,
+    savHatar: sor.savHatar ?? null,
+  };
 
+  // A `savHatar` mindhárom ágon EXPLICIT íródik: egy sávhatár nélküli (a mező
+  // bevezetése előtti) stash spreadje meghagyná a kilépő pénznem sávját az új
+  // pénznem árain -- a sáv pénznemenként más.
   if (sor.masikPenznemAr) {
-    return { ...sor, ...sor.masikPenznemAr, masikPenznemAr: kilepoAr };
+    return {
+      ...sor,
+      ...sor.masikPenznemAr,
+      savHatar: sor.masikPenznemAr.savHatar ?? null,
+      masikPenznemAr: kilepoAr,
+    };
   }
 
   const ujAr = tetel?.ar[ujPenznem];
   if (ujAr) {
     const base = basePrice(ujAr);
-    return { ...sor, listaEgysegar: base, tenylegesEgysegar: base, masikPenznemAr: kilepoAr };
+    return {
+      ...sor,
+      listaEgysegar: base,
+      tenylegesEgysegar: base,
+      savHatar: savHatarArbol(ujAr),
+      masikPenznemAr: kilepoAr,
+    };
   }
 
-  return { ...sor, listaEgysegar: 0, tenylegesEgysegar: 0, masikPenznemAr: kilepoAr };
+  return {
+    ...sor,
+    listaEgysegar: 0,
+    tenylegesEgysegar: 0,
+    savHatar: null,
+    masikPenznemAr: kilepoAr,
+  };
 }
 
 export interface PenznemvaltasHatas {

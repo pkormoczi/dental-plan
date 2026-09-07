@@ -29,12 +29,18 @@ describe('sorMezokTetelbol', () => {
     expect(mezok.leirasNyelv).toBeNull();
   });
 
-  it('SAVOS árnál a basePrice() a min-t adja, savos: true', () => {
+  it('SAVOS árnál a basePrice() a min-t adja, savos: true, és a teljes sáv a sorra kerül', () => {
     const item = tetel({ ar: { HUF: { tipus: 'SAVOS', min: 20000, max: 40000 }, EUR: null } });
     const mezok = sorMezokTetelbol(item, 'HUF', 'hu');
     expect(mezok.savos).toBe(true);
     expect(mezok.listaEgysegar).toBe(20000);
     expect(mezok.tenylegesEgysegar).toBe(20000);
+    // A `max` enélkül elveszne, és nem lenne eldönthető a "sávon belül".
+    expect(mezok.savHatar).toEqual({ min: 20000, max: 40000 });
+  });
+
+  it('FIX árnál nincs sávhatár', () => {
+    expect(sorMezokTetelbol(tetel(), 'HUF', 'hu').savHatar).toBeNull();
   });
 
   it('a terv pénznemében nem beárazott tételnél 0-t ad, savos: false', () => {
@@ -67,6 +73,10 @@ describe('sorMezokEgyedibol', () => {
     expect(mezok.listaEgysegar).toBe(0);
     expect(mezok.tenylegesEgysegar).toBe(0);
     expect(mezok.leirasSnapshot).toBe('');
+  });
+
+  it('a sávhatárt kifejezetten törli -- egy korábbi tételről ittmaradt sáv elnyomná a kézi ár jelzését', () => {
+    expect(sorMezokEgyedibol('Saját kezelés', 'hu').savHatar).toBeNull();
   });
 
   it('a nevNyelv-et a hívó nyelvére állítja, a leirasNyelv marad null', () => {

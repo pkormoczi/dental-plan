@@ -90,4 +90,45 @@ describe('sorElteres', () => {
     const b = sorElteres(sor({ listaEgysegar: 25000, tenylegesEgysegar: 20000, mennyiseg: 5 }));
     expect(a).toEqual(b);
   });
+
+  describe('sávos tétel sávhatárral', () => {
+    /** 38 000--65 000 sáv, a listaEgysegar a sáv alja (a `basePrice` a min). */
+    const savos = (tenylegesEgysegar: number, partial: Partial<Sor> = {}) =>
+      sor({
+        savos: true,
+        listaEgysegar: 38000,
+        tenylegesEgysegar,
+        savHatar: { min: 38000, max: 65000 },
+        ...partial,
+      });
+
+    it('a sáv tetején lévő ajánlati ár NEM kap eltérés-jelvényt', () => {
+      expect(sorElteres(savos(65000))).toBeNull();
+    });
+
+    it('a sávon belüli köztes ár sem kap jelvényt', () => {
+      expect(sorElteres(savos(55000))).toBeNull();
+    });
+
+    it('a sáv fölötti ár felár-jelvényt kap, a sáv aljához mérve -- nem a max-hoz', () => {
+      const eredmeny = sorElteres(savos(70000));
+      expect(eredmeny?.tipus).toBe('felar');
+      // 38 000 -> 70 000 = +84%; a max-hoz (65 000) mérve +8% lenne.
+      expect(eredmeny?.szazalek).toBeCloseTo(84.21);
+    });
+
+    it('a sáv alatti ár kedvezmény-jelvényt kap', () => {
+      const eredmeny = sorElteres(savos(30000));
+      expect(eredmeny?.tipus).toBe('kedvezmeny');
+      expect(eredmeny?.szazalek).toBeCloseTo(21.05);
+    });
+
+    it('sávhatár nélküli (régi) soron a mai viselkedés marad -- felár a sáv aljához mérve', () => {
+      expect(sorElteres(savos(55000, { savHatar: null }))?.tipus).toBe('felar');
+    });
+
+    it('a `savos` kapcsoló kikapcsolása nem hozza vissza a jelvényt -- a sávhatár dönt', () => {
+      expect(sorElteres(savos(55000, { savos: false }))).toBeNull();
+    });
+  });
 });

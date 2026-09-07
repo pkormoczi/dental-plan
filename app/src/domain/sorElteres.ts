@@ -6,6 +6,7 @@
 // SZÍN a hívóé -- a szerkesztőben zöld/amber (ott a doki még változtathat
 // az áron), a lezárt dokumentumban semleges (ott ténymegállapítás).
 
+import { sorReferenciaAr } from './savHatar';
 import type { Sor } from './types';
 
 export type SorElteresTipus = 'kedvezmeny' | 'felar';
@@ -57,7 +58,9 @@ function szazalekCimke(szazalek: number, tiltott: readonly number[]): string | n
 export function sorElteres(sor: Sor, nincsReferenciaAr = false): SorElteres | null {
   if (nincsReferenciaAr) return null;
 
-  const lista = sor.listaEgysegar;
+  // A REFERENCIA-ár, nem a nyers `listaEgysegar`: egy sávon belüli ajánlati
+  // ár önmagához mérve nem eltérés (`savHatar.ts`).
+  const lista = sorReferenciaAr(sor);
   const ajanlat = sor.tenylegesEgysegar;
   // Véges, nemnegatív számok nélkül a hányados `Infinity`/`NaN` lenne -- a
   // séma ezt ma nem engedi, de egy sérült fájlból sem kerülhet ki

@@ -8,6 +8,7 @@ import type { CSSProperties } from 'react';
 import { Badge, Box, Button, Flex, Table, Text } from '@radix-ui/themes';
 import { t } from '../../design/tokens';
 import { formatMoney } from '../../domain/money';
+import { sorReferenciaAr } from '../../domain/savHatar';
 import { sorElteres } from '../../domain/sorElteres';
 import { sorOsszeg } from '../../domain/totals';
 import type { Nyelv, Penznem, Sor } from '../../domain/types';
@@ -47,7 +48,9 @@ export default function SorReszlet({
   kiemelve: boolean;
 }) {
   const leirasTartalom = (sor.leirasSnapshot ?? '').trim();
-  const arElter = sor.listaEgysegar !== sor.tenylegesEgysegar;
+  // A REFERENCIA-árhoz mérve, a jelvénnyel EGYÜTT: egy sávon belüli áru soron
+  // a halvány listaár-sor sem jelenik meg (`domain/savHatar.ts`).
+  const arElter = sorReferenciaAr(sor) !== sor.tenylegesEgysegar;
   // Nincs második paraméter: egy mentett terven a mai árlista nem dönthet
   // arról, mi látszik a soron -- a soron lévő listaár a pillanatkép, az az
   // igazság (lásd `domain/sorElteres.ts`).

@@ -9,6 +9,7 @@
 
 import { basePrice } from './money';
 import { leirasKoveti, nevKoveti } from './nev';
+import { savHatarArbol, sorReferenciaAr } from './savHatar';
 import type { Fazis, Penznem, Plan, PriceList, Sor, Tetel } from './types';
 
 /**
@@ -25,6 +26,8 @@ export interface ArFrissites {
   regi: number;
   uj: number;
   savos: boolean;
+  /** A MAI árlistai sáv -- a frissített sor nem maradhat a régi sávval. */
+  savHatar: { min: number; max: number } | null;
 }
 
 /**
@@ -46,7 +49,12 @@ export function arFrissites(
   const ar = tetel.ar[penznem];
   if (ar == null) return null;
   if (arKoveti(sor, tetel, penznem)) return null;
-  return { regi: sor.listaEgysegar, uj: basePrice(ar), savos: ar.tipus === 'SAVOS' };
+  return {
+    regi: sor.listaEgysegar,
+    uj: basePrice(ar),
+    savos: ar.tipus === 'SAVOS',
+    savHatar: savHatarArbol(ar),
+  };
 }
 
 /**
@@ -58,7 +66,12 @@ export function arFrissites(
  * tartoznak.
  */
 export function arFrissitesPatch(frissites: ArFrissites): Partial<Sor> {
-  return { listaEgysegar: frissites.uj, tenylegesEgysegar: frissites.uj, savos: frissites.savos };
+  return {
+    listaEgysegar: frissites.uj,
+    tenylegesEgysegar: frissites.uj,
+    savos: frissites.savos,
+    savHatar: frissites.savHatar,
+  };
 }
 
 export interface ArElteroSorok {
@@ -79,7 +92,9 @@ export function arElteroSorok(plan: Plan, priceList: PriceList): ArElteroSorok {
   for (const fazis of plan.fazisok) {
     for (const sor of fazis.sorok) {
       if (arFrissites(sor, plan.penznem, tetelById) !== null) eredmeny.elavult.push(sor.nevSnapshot);
-      if (sor.tenylegesEgysegar !== sor.listaEgysegar) eredmeny.keziAr.push(sor.nevSnapshot);
+      // A REFERENCIA-árhoz mérve -- sávon belüli ajánlati ár nem "kézzel
+      // felülírt" (`savHatar.ts`).
+      if (sor.tenylegesEgysegar !== sorReferenciaAr(sor)) eredmeny.keziAr.push(sor.nevSnapshot);
     }
   }
   return eredmeny;
@@ -126,6 +141,7 @@ export function frissArlistaval(plan: Plan, priceList: PriceList): Plan {
         listaEgysegar: ujAr,
         tenylegesEgysegar: ujAr,
         savos: ar.tipus === 'SAVOS',
+        savHatar: savHatarArbol(ar),
         // A sor default-following állapotba kerül (visszaáll az
         // árlistai szövegre) -- nincs mit nyelvileg ellenőrizni rajta.
         nevNyelv: null,

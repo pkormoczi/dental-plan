@@ -172,6 +172,26 @@ describe('orokoltKeziAru / orokoltMegjegyzesu -- megosztott predikátumok', () =
     expect(orokoltKeziAru(sor({ listaEgysegar: 10000, tenylegesEgysegar: 8000 }))).toBe(false);
   });
 
+  it('hamis sávon belüli árnál, akkor is, ha a marker be van állítva -- az nem kézi felülírás', () => {
+    const savonBelul = sor({
+      orokoltKeziAr: true,
+      listaEgysegar: 10000,
+      tenylegesEgysegar: 14000,
+      savHatar: { min: 10000, max: 15000 },
+    });
+    expect(orokoltKeziAru(savonBelul)).toBe(false);
+  });
+
+  it('sávon KÍVÜLI árnál viszont igaz marad', () => {
+    const savonKivul = sor({
+      orokoltKeziAr: true,
+      listaEgysegar: 10000,
+      tenylegesEgysegar: 20000,
+      savHatar: { min: 10000, max: 15000 },
+    });
+    expect(orokoltKeziAru(savonKivul)).toBe(true);
+  });
+
   it('fázis-megjegyzés: igaz, ha a marker be van állítva ÉS a szöveg nem üres', () => {
     expect(orokoltMegjegyzesu({ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: 'Régi', sorok: [], orokoltMegjegyzes: true })).toBe(
       true,

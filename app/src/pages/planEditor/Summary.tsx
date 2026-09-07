@@ -41,8 +41,10 @@ export default function Summary({ grand, kedvezmeny, felar, currency, nyelv }: S
           </Text>
         )}
         {felar > 0 && (
+          // „Eltérés a listaártól", nem „Felár" -- a felár szó félreérthető,
+          // a semleges megfogalmazás pontosabb.
           <Text as="div" size="2" style={{ color: t.ok }}>
-            Felár: {formatMoney(felar, currency, nyelv)}
+            Eltérés a listaártól: +{formatMoney(felar, currency, nyelv)}
           </Text>
         )}
       </Box>

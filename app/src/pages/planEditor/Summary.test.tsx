@@ -33,7 +33,7 @@ describe('Summary', () => {
     expect(screen.queryByText(/Felár:/)).not.toBeInTheDocument();
   });
 
-  it('csak felár esetén egyetlen "Felár" sort mutat', () => {
+  it('csak felár esetén egyetlen "Eltérés a listaártól" sort mutat', () => {
     render(
       <Theme>
         <Summary grand={30000} kedvezmeny={0} felar={5000} currency="HUF" nyelv="hu" />
@@ -41,8 +41,10 @@ describe('Summary', () => {
     );
 
     expect(screen.getByText('30 000 Ft')).toBeInTheDocument();
-    expect(screen.getByText(/Felár: 5000 Ft/)).toBeInTheDocument();
+    expect(screen.getByText(/Eltérés a listaártól: \+5000 Ft/)).toBeInTheDocument();
     expect(screen.queryByText(/Kedvezmény:/)).not.toBeInTheDocument();
+    // A „felár" szó félreérthető -- a semleges megfogalmazás váltotta ki.
+    expect(screen.queryByText(/Felár:/)).not.toBeInTheDocument();
   });
 
   it('mindkét irányú eltérés esetén a kedvezmény és a felár KÜLÖN sorban áll, nem nettózva', () => {
@@ -53,8 +55,8 @@ describe('Summary', () => {
     );
 
     expect(screen.getByText(/Kedvezmény: 23 000 Ft/)).toBeInTheDocument();
-    expect(screen.getByText(/Felár: 27 000 Ft/)).toBeInTheDocument();
-    expect(screen.queryByText(/Felár: 4000 Ft/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Eltérés a listaártól: \+27 000 Ft/)).toBeInTheDocument();
+    expect(screen.queryByText(/4000 Ft/)).not.toBeInTheDocument();
   });
 
   it('a pénzösszegek a terv nyelvét/pénznemét követik (52. tétel)', () => {

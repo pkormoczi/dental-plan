@@ -122,24 +122,42 @@ describe('arFrissites', () => {
       regi: 9000,
       uj: 10000,
       savos: false,
+      savHatar: null,
     });
   });
 
-  it('a `savos` jelölést is a mai árlistából adja', () => {
+  it('a `savos` jelölést és a mai sávhatárt is az árlistából adja', () => {
     expect(arFrissites(sor({ tetelId: 't-savos', listaEgysegar: 20000 }), 'HUF', tetelById)).toEqual({
       regi: 20000,
       uj: 15000,
       savos: true,
+      savHatar: { min: 15000, max: 25000 },
     });
+  });
+
+  it('FIX tételnél a sávhatár null -- nem hagyhat ittfelejtett sávot a soron', () => {
+    expect(arFrissites(sor({ listaEgysegar: 9000 }), 'HUF', tetelById)?.savHatar).toBeNull();
   });
 });
 
 describe('arFrissitesPatch', () => {
   it('a listaEgysegar-t és a tenylegesEgysegar-t is az új értékre állítja -- a kézi felülírás törlődik', () => {
-    expect(arFrissitesPatch({ regi: 9000, uj: 10000, savos: false })).toEqual({
+    expect(arFrissitesPatch({ regi: 9000, uj: 10000, savos: false, savHatar: null })).toEqual({
       listaEgysegar: 10000,
       tenylegesEgysegar: 10000,
       savos: false,
+      savHatar: null,
+    });
+  });
+
+  it('a frissített sor a MAI sávhatárt kapja, nem a régit', () => {
+    expect(
+      arFrissitesPatch({ regi: 20000, uj: 15000, savos: true, savHatar: { min: 15000, max: 25000 } }),
+    ).toEqual({
+      listaEgysegar: 15000,
+      tenylegesEgysegar: 15000,
+      savos: true,
+      savHatar: { min: 15000, max: 25000 },
     });
   });
 });
@@ -159,6 +177,36 @@ describe('arElteroSorok', () => {
   it('egyedi sor sosem kerül a keziAr listába (listaEgysegar === tenylegesEgysegar mindig)', () => {
     const plan = makePlan([[sor({ tetelId: '', nevSnapshot: 'Egyedi', listaEgysegar: 5000, tenylegesEgysegar: 5000 })]]);
     expect(arElteroSorok(plan, priceList)).toEqual({ elavult: [], keziAr: [] });
+  });
+
+  it('sávon belüli ajánlati ár NEM „kézzel felülírt" -- nem kerül a keziAr listába', () => {
+    const plan = makePlan([
+      [
+        sor({
+          tetelId: 't-savos',
+          nevSnapshot: 'Sávon belül',
+          listaEgysegar: 15000,
+          tenylegesEgysegar: 22000,
+          savHatar: { min: 15000, max: 25000 },
+        }),
+      ],
+    ]);
+    expect(arElteroSorok(plan, priceList).keziAr).toEqual([]);
+  });
+
+  it('a sávon KÍVÜLI ár továbbra is a keziAr listába kerül', () => {
+    const plan = makePlan([
+      [
+        sor({
+          tetelId: 't-savos',
+          nevSnapshot: 'Sávon kívül',
+          listaEgysegar: 15000,
+          tenylegesEgysegar: 30000,
+          savHatar: { min: 15000, max: 25000 },
+        }),
+      ],
+    ]);
+    expect(arElteroSorok(plan, priceList).keziAr).toEqual(['Sávon kívül']);
   });
 });
 

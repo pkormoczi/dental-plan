@@ -134,7 +134,22 @@ export interface Sor {
    * emelkedik, a `mennyisegKezi`/`elolegSzazalek`/`kedvezmenyOsszeg`/
    * `paciensId` additív mintáját követi.
    */
-  masikPenznemAr?: { listaEgysegar: number; tenylegesEgysegar: number } | null;
+  masikPenznemAr?: {
+    listaEgysegar: number;
+    tenylegesEgysegar: number;
+    savHatar?: { min: number; max: number } | null;
+  } | null;
+  /**
+   * A SAVOS árlistai tétel `min`/`max` sávja a felvétel pillanatában --
+   * `domain/savHatar.ts`. Ez teszi eldönthetővé, hogy egy kézzel megadott
+   * ajánlati ár a sávon BELÜL van-e (akkor nem eltérés a listaártól).
+   * Pénznemenként más sáv tartozik a sorhoz, ezért a `masikPenznemAr`
+   * stash-sel együtt mozog. `null`/hiányzó mező = nem sávos tétel, vagy a
+   * mező bevezetése előtt mentett sor -- utóbbi a mai (javítás előtti)
+   * viselkedést kapja, nem javul visszamenőleg. `schemaVersion` nem
+   * emelkedik, a `masikPenznemAr` additív mintáját követi.
+   */
+  savHatar?: { min: number; max: number } | null;
   /**
    * A `nevSnapshot` nyelvi review-metaadata -- `domain/nyelviReview.ts`.
    * `null`/hiányzó = a szöveg árlistát követ, vagy a mező bevezetése előtti

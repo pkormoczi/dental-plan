@@ -1,5 +1,6 @@
 import { basePrice } from './money';
 import { arlistaiLeiras, resolveNev } from './nev';
+import { savHatarArbol } from './savHatar';
 import type { Nyelv, Penznem, Sor, Tetel } from './types';
 
 /**
@@ -27,6 +28,7 @@ export function sorMezokTetelbol(
   | 'savos'
   | 'listaEgysegar'
   | 'tenylegesEgysegar'
+  | 'savHatar'
   | 'leirasSnapshot'
   | 'nevNyelv'
   | 'leirasNyelv'
@@ -39,6 +41,9 @@ export function sorMezokTetelbol(
     savos: ar?.tipus === 'SAVOS',
     listaEgysegar: base,
     tenylegesEgysegar: base,
+    // A `max` eddig itt veszett el -- enélkül nem eldönthető, hogy egy kézi
+    // ajánlati ár a sávon belül van-e (`savHatar.ts`).
+    savHatar: savHatarArbol(ar),
     // Nincs HU-visszaesés a leírásra, hiányzó fordítás = üres.
     leirasSnapshot: arlistaiLeiras(item, nyelv),
     // Árlistát követő szöveg -- nincs mit nyelvileg ellenőrizni.
@@ -68,6 +73,7 @@ export function sorMezokEgyedibol(
   | 'savos'
   | 'listaEgysegar'
   | 'tenylegesEgysegar'
+  | 'savHatar'
   | 'leirasSnapshot'
   | 'nevNyelv'
   | 'leirasNyelv'
@@ -78,6 +84,9 @@ export function sorMezokEgyedibol(
     savos: false,
     listaEgysegar: 0,
     tenylegesEgysegar: 0,
+    // Egyedi sornak nincs árlistai sávja -- egy korábbi tételről ittmaradt
+    // sávhatár némán elnyomná a kézi ár eltérés-jelzését.
+    savHatar: null,
     leirasSnapshot: '',
     // A begépelt egyedi név a doki saját szövege -- ez tölti be a
     // `sorFallback` 'egyedi' ágának deklarált vakfoltját ("nem

@@ -615,6 +615,56 @@ describe('PlanEditorPage -- backlog-60: sor-szintű eltérés-jelzés és reset'
     expect(await screen.findByText('−20%')).toBeInTheDocument();
   });
 
+  describe('sávos tétel sávon belüli ára', () => {
+    /** A seed t016 sávja HUF-ban 38 000--65 000, a felvett listaár a sáv alja. */
+    async function vegyFelSavosSort(user: ReturnType<typeof userEvent.setup>) {
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'csatornaszam');
+      await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+      await waitFor(() => expect(search).toHaveValue(''));
+    }
+
+    it('a Listaár cella a teljes sávot írja ki, nem csak a sáv alját', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await vegyFelSavosSort(user);
+
+      expect(await screen.findByText('38 000 Ft–65 000 Ft')).toBeInTheDocument();
+    });
+
+    it('a sávon belülre írt ajánlati ár nem kap jelvényt, de a ↺ visszaállítás megmarad', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await vegyFelSavosSort(user);
+
+      const priceInput = screen.getByLabelText('Ajánlati egységár');
+      await user.clear(priceInput);
+      await user.type(priceInput, '55000');
+      await user.tab();
+
+      await waitFor(() => expect(priceInput).toHaveValue('55000'));
+      expect(screen.queryByText(/^[−+]\d+%$/)).not.toBeInTheDocument();
+      // A sávon belüli ár is szándékos kézi érték: a visszaállítás elérhető marad.
+      expect(
+        screen.getByRole('button', { name: 'Ajánlati ár visszaállítása a listaárra' }),
+      ).toBeInTheDocument();
+    });
+
+    it('a sávon kívülre írt ajánlati ár a sáv aljához mérve kap jelvényt', async () => {
+      const user = userEvent.setup();
+      renderEditor();
+      await vegyFelSavosSort(user);
+
+      const priceInput = screen.getByLabelText('Ajánlati egységár');
+      await user.clear(priceInput);
+      await user.type(priceInput, '76000');
+      await user.tab();
+
+      // 38 000 -> 76 000 = +100% (a max-hoz mérve +17% lenne).
+      expect(await screen.findByText('+100%')).toBeInTheDocument();
+    });
+  });
+
   it('német terven egy érintetlen, fordítás nélküli sor csak "HU"-t kap -- "átírt"-at nem (a nevKoveti()-alapú komparátor vakfoltja); kézzel átírva mindkettő megjelenik, a reset a magyar névre áll', async () => {
     const user = userEvent.setup();
     seedGermanPlanWithOneTranslatedItem();

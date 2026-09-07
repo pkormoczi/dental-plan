@@ -13,10 +13,13 @@
 // tárgytalanná vált jelzés) -- ezért minden marker a MÁSOLATI állapotból
 // újraszámolva íródik, sosem a forrásból átvéve.
 
+import { sorReferenciaAr } from './savHatar';
 import type { Fazis, Plan, PriceList, Sor, Tetel } from './types';
 
 function keziAru(sor: Sor): boolean {
-  return sor.tetelId.trim() !== '' && sor.tenylegesEgysegar !== sor.listaEgysegar;
+  // A REFERENCIA-árhoz mérve: egy sávon belüli ajánlati ár nem "kézi
+  // felülírás", amit a másolaton át kellene nézni (`savHatar.ts`).
+  return sor.tetelId.trim() !== '' && sor.tenylegesEgysegar !== sorReferenciaAr(sor);
 }
 
 function inaktivTetelre(sor: Sor, tetelById: ReadonlyMap<string, Tetel>): boolean {

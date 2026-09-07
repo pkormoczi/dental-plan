@@ -10,7 +10,7 @@ import ToothPickerPopover from '../../components/ToothPickerPopover';
 import { t } from '../../design/tokens';
 import type { ArFrissites } from '../../domain/arKoveti';
 import { leirasTulHosszu } from '../../domain/leirasHossz';
-import { formatMoney } from '../../domain/money';
+import { formatMoney, formatPrice } from '../../domain/money';
 import { arlistaiLeiras, leirasKoveti, nevAtirt, resolveNev, type SorFallbackOk } from '../../domain/nev';
 import { nyelviMismatch, reviewElfogadva } from '../../domain/nyelviReview';
 import { orokoltKeziAru } from '../../domain/orokoltJelzesek';
@@ -343,8 +343,14 @@ export default function LineRow({
           >
             {/* Egyedi sornál, illetve a terv pénznemében beárazatlan tételnél
                 nincs értelmezhető árlistai referenciaár -- lásd
-                sorMezokEgyedibol / domain/penznemValtas.ts `nincsListaar()`. */}
-            {egyedi || araHianyzik ? '—' : formatMoney(line.listaEgysegar, currency, nyelv)}
+                sorMezokEgyedibol / domain/penznemValtas.ts `nincsListaar()`.
+                Sávos soron a TELJES sáv látszik: a doki így látja, meddig
+                mozoghat az ajánlati árral eltérés-jelzés nélkül. */}
+            {egyedi || araHianyzik
+              ? '—'
+              : line.savHatar
+                ? formatPrice({ tipus: 'SAVOS', ...line.savHatar }, currency, nyelv)
+                : formatMoney(line.listaEgysegar, currency, nyelv)}
           </Text>
           <IconButton
             type="button"

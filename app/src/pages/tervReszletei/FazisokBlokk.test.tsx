@@ -289,6 +289,41 @@ describe('FazisokBlokk -- sor-szintű ár-eltérés jelvény (74. tétel)', () =
     expect(screen.queryByText(/^[−+]\d/)).not.toBeInTheDocument();
     expect(screen.queryByText('Felár')).not.toBeInTheDocument();
   });
+
+  it('sávon belüli áru soron sem jelvény, sem halvány listaár-sor nem jelenik meg', () => {
+    renderFazisok([
+      makeFazis({
+        sorok: [
+          makeSor({
+            listaEgysegar: 10000,
+            tenylegesEgysegar: 14000,
+            savHatar: { min: 10000, max: 15000 },
+          }),
+        ],
+      }),
+    ]);
+    expect(screen.queryByText(/^[−+]\d/)).not.toBeInTheDocument();
+    // Az ajánlati ár az egységár- és az összeg-cellában is szerepel.
+    expect(screen.getAllByText('14 000 Ft').length).toBeGreaterThan(0);
+    // A halvány listaár-sor a jelvénnyel EGYÜTT tűnik el.
+    expect(screen.queryByText('10 000 Ft')).not.toBeInTheDocument();
+  });
+
+  it('sávon KÍVÜLI áru soron a jelvény és a halvány listaár-sor is megjelenik', () => {
+    renderFazisok([
+      makeFazis({
+        sorok: [
+          makeSor({
+            listaEgysegar: 10000,
+            tenylegesEgysegar: 20000,
+            savHatar: { min: 10000, max: 15000 },
+          }),
+        ],
+      }),
+    ]);
+    expect(screen.getByText('+100%')).toBeInTheDocument();
+    expect(screen.getByText('10 000 Ft')).toBeInTheDocument();
+  });
 });
 
 // A doki explicit kikötése az implementáció indításakor: ez a panel

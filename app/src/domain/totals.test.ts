@@ -100,6 +100,57 @@ describe('elteresBontas', () => {
   });
 });
 
+describe('sávon belüli ár az összegzésben', () => {
+  /** Egy fázis, egy sávos sor: 38 000--65 000 sáv, a listaEgysegar a sáv alja. */
+  function savosFazisok(tenylegesEgysegar: number, savHatar: Sor['savHatar'] = { min: 38000, max: 65000 }): Fazis[] {
+    return [
+      {
+        sorszam: 1,
+        megnevezes: '1. kezelés',
+        megjegyzes: '',
+        sorok: [
+          {
+            tetelId: 't016',
+            nevSnapshot: 'Gyökértömés',
+            savos: true,
+            fogak: '',
+            mennyiseg: 2,
+            listaEgysegar: 38000,
+            tenylegesEgysegar,
+            savHatar,
+          },
+        ],
+      },
+    ];
+  }
+
+  it('sávon belüli árnál egyik oldal sem nő -- nincs „Eltérés a listaártól" sor', () => {
+    expect(elteresBontas(savosFazisok(55000))).toEqual({ kedvezmeny: 0, felar: 0 });
+  });
+
+  it('sávon kívüli (sáv fölötti) árnál a felár-oldal a sáv aljához mérve nő', () => {
+    // (70 000 - 38 000) * 2 db
+    expect(elteresBontas(savosFazisok(70000))).toEqual({ kedvezmeny: 0, felar: 64000 });
+  });
+
+  it('sávhatár nélküli (régi) soron a mai viselkedés marad', () => {
+    expect(elteresBontas(savosFazisok(55000, null))).toEqual({ kedvezmeny: 0, felar: 34000 });
+  });
+
+  it('a mentett „Kezelések összege" sávon belül a tényleges árat tükrözi, nem a sáv alját', () => {
+    expect(computeOsszesitok(savosFazisok(55000)).kezelesekOsszesen).toBe(110000);
+    expect(computeOsszesitok(savosFazisok(55000)).kedvezmeny).toBe(0);
+  });
+
+  it('egy sávhatár nélkül véglegesített terven nem jelez hamis eltérést a drift-ellenőrzés', () => {
+    // A mező bevezetése ELŐTT mentett terv: az akkori képlet a nyers
+    // listaEgysegar-ral számolt, és ugyanezt kell ma is kiadnia -- különben
+    // minden régi, sávos tervre hamis „nem egyezik" figyelmeztetés futna.
+    const mentett = { kezelesekOsszesen: 76000, kedvezmeny: -34000, fizetendo: 110000 };
+    expect(osszesitokElter(mentett, savosFazisok(55000, null))).toBeNull();
+  });
+});
+
 describe('osszesitokElter', () => {
   it('returns null when the saved osszesitok matches the recomputed value', () => {
     const mentett = computeOsszesitok(fazisok);

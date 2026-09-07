@@ -97,7 +97,11 @@ describe('sorPenznemValtassal', () => {
     const next = sorPenznemValtassal(s, 'EUR', tetel1);
     expect(next.listaEgysegar).toBe(15000);
     expect(next.tenylegesEgysegar).toBe(15000);
-    expect(next.masikPenznemAr).toEqual({ listaEgysegar: 45000, tenylegesEgysegar: 45000 });
+    expect(next.masikPenznemAr).toEqual({
+      listaEgysegar: 45000,
+      tenylegesEgysegar: 45000,
+      savHatar: null,
+    });
   });
 
   it('stash hiányában SAVOS tételnél a min kerül a sorra', () => {
@@ -107,10 +111,65 @@ describe('sorPenznemValtassal', () => {
     expect(next.tenylegesEgysegar).toBe(10000);
   });
 
+  describe('sávhatár pénznemenként', () => {
+    it('stash hiányában a BELÉPŐ pénznem sávja kerül a sorra, a kilépőé a stashbe', () => {
+      const s = sor({
+        tetelId: 't3',
+        listaEgysegar: 30000,
+        tenylegesEgysegar: 45000,
+        savHatar: { min: 30000, max: 50000 },
+      });
+      const next = sorPenznemValtassal(s, 'EUR', tetel3);
+      expect(next.savHatar).toEqual({ min: 10000, max: 16000 });
+      expect(next.masikPenznemAr?.savHatar).toEqual({ min: 30000, max: 50000 });
+    });
+
+    it('HUF->EUR->HUF után a sáv újra az aktuális pénznemé', () => {
+      const s = sor({
+        tetelId: 't3',
+        listaEgysegar: 30000,
+        tenylegesEgysegar: 45000,
+        savHatar: { min: 30000, max: 50000 },
+      });
+      const oda = sorPenznemValtassal(s, 'EUR', tetel3);
+      const vissza = sorPenznemValtassal(oda, 'HUF', tetel3);
+      expect(vissza.savHatar).toEqual({ min: 30000, max: 50000 });
+      expect(vissza.tenylegesEgysegar).toBe(45000);
+    });
+
+    it('egy sávhatár nélküli (régi) stash NEM szivárogtatja át a kilépő pénznem sávját', () => {
+      // A mező bevezetése előtt stashelt EUR árpár, mellette élő HUF sávhatár.
+      const s = sor({
+        tetelId: 't3',
+        listaEgysegar: 30000,
+        tenylegesEgysegar: 45000,
+        savHatar: { min: 30000, max: 50000 },
+        masikPenznemAr: { listaEgysegar: 10000, tenylegesEgysegar: 12000 },
+      });
+      const next = sorPenznemValtassal(s, 'EUR', tetel3);
+      expect(next.tenylegesEgysegar).toBe(12000);
+      expect(next.savHatar).toBeNull();
+    });
+
+    it('beárazatlan tételnél a sávhatár is törlődik, nem marad ott a régi pénznemé', () => {
+      const s = sor({
+        tetelId: 't2',
+        listaEgysegar: 20000,
+        tenylegesEgysegar: 20000,
+        savHatar: { min: 20000, max: 30000 },
+      });
+      expect(sorPenznemValtassal(s, 'EUR', tetel2).savHatar).toBeNull();
+    });
+  });
+
   it('a kilépő pénznem árpárja mindig stashelődik, akkor is, ha kézzel átírt', () => {
     const s = sor({ tetelId: 't1', listaEgysegar: 45000, tenylegesEgysegar: 38000 });
     const next = sorPenznemValtassal(s, 'EUR', tetel1);
-    expect(next.masikPenznemAr).toEqual({ listaEgysegar: 45000, tenylegesEgysegar: 38000 });
+    expect(next.masikPenznemAr).toEqual({
+      listaEgysegar: 45000,
+      tenylegesEgysegar: 38000,
+      savHatar: null,
+    });
   });
 
   it('a stash elsőbbséget élvez az árlistával szemben -- kézzel írt érték nem vész el egy oda-vissza váltásban', () => {
@@ -124,7 +183,11 @@ describe('sorPenznemValtassal', () => {
     expect(next.listaEgysegar).toBe(45000);
     expect(next.tenylegesEgysegar).toBe(39000);
     // A kilépő (EUR) állapot most a masikPenznemAr-be kerül.
-    expect(next.masikPenznemAr).toEqual({ listaEgysegar: 15000, tenylegesEgysegar: 15000 });
+    expect(next.masikPenznemAr).toEqual({
+      listaEgysegar: 15000,
+      tenylegesEgysegar: 15000,
+      savHatar: null,
+    });
   });
 
   it('beárazatlan tétel (nincs ar[ujPenznem]) esetén 0/0 -- "hiányzó ár" állapot, a sor megmarad', () => {

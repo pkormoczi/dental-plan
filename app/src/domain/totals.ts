@@ -3,14 +3,20 @@
 // ez a modul allitja elo veglegesiteskor es szamolja ujra betolteskor
 // az osszehasonlitashoz.
 
+import { sorReferenciaAr } from './savHatar';
 import type { Fazis, Osszesitok, Sor } from './types';
 
 export function sorOsszeg(sor: Sor): number {
   return sor.tenylegesEgysegar * sor.mennyiseg;
 }
 
+/**
+ * A sor listaáras összege a REFERENCIA-áron (`savHatar.ts`
+ * `sorReferenciaAr`): sávon belüli ajánlati árnál ez maga az ajánlati ár,
+ * tehát a sor nem termel kedvezményt/felárat.
+ */
 export function sorListaOsszeg(sor: Sor): number {
-  return sor.listaEgysegar * sor.mennyiseg;
+  return sorReferenciaAr(sor) * sor.mennyiseg;
 }
 
 export function fazisOsszeg(fazis: Fazis): number {

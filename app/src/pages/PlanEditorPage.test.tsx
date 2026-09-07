@@ -136,7 +136,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await user.type(actualPriceInput, '30000');
     await user.tab();
 
-    expect(await screen.findByText(/Felár: 5000 Ft/)).toBeInTheDocument();
+    expect(await screen.findByText(/Eltérés a listaártól: \+5000 Ft/)).toBeInTheDocument();
     expect(screen.queryByText(/Kedvezmény:/)).not.toBeInTheDocument();
   });
 

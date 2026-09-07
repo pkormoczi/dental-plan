@@ -370,6 +370,24 @@ describe('veglegesitesDiagnozis', () => {
     expect(t?.reszletek).toEqual([{ cim: 'Kézzel felülírt ajánlati ár', nevek: ['Fogeltávolítás'] }]);
   });
 
+  it('sávon belüli ajánlati ár NEM kerül a "Kézzel felülírt ajánlati ár" felsorolásba', () => {
+    const plan = makePlan([
+      [sor({ tenylegesEgysegar: 14000, savHatar: { min: 10000, max: 15000 } })],
+    ]);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    expect(tetel(diag, 'ar-elteres')).toBeUndefined();
+  });
+
+  it('sávon KÍVÜLI ajánlati ár viszont továbbra is bekerül', () => {
+    const plan = makePlan([
+      [sor({ tenylegesEgysegar: 20000, savHatar: { min: 10000, max: 15000 } })],
+    ]);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    expect(tetel(diag, 'ar-elteres')?.reszletek).toEqual([
+      { cim: 'Kézzel felülírt ajánlati ár', nevek: ['Fogeltávolítás'] },
+    ]);
+  });
+
   it('inaktivált tételre hivatkozó sor az "inaktiv-tetel-hivatkozas" soft tételt adja, nem blokkol', () => {
     const plan = makePlan([[sor({ tetelId: 't-inaktiv', nevSnapshot: 'Kivont tétel' })]]);
     const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
