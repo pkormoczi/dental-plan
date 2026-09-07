@@ -55,6 +55,12 @@ export interface PhaseSectionProps {
   onRemoveLine: (li: number) => void;
   onRestoreLine: (li: number, sor: Sor) => void;
   onRename: (v: string) => void;
+  /**
+   * A fázisnév mezőből Tabbal/Enterrel továbblépés -- a hívó a meglévő
+   * `fokuszCel` útvonalon viszi a fókuszt a fázis keresőjébe (a fókusz és a
+   * hozzá tartozó görgetés így egy helyen marad).
+   */
+  onNevKesz: () => void;
   onNote: (v: string) => void;
   onReviewMegnevezes: () => void;
   onReviewMegjegyzes: () => void;
@@ -88,6 +94,7 @@ export default function PhaseSection({
   onRemoveLine,
   onRestoreLine,
   onRename,
+  onNevKesz,
   onNote,
   onReviewMegnevezes,
   onReviewMegjegyzes,
@@ -165,6 +172,20 @@ export default function PhaseSection({
             id={fazisNevId(pi)}
             value={phase.megnevezes}
             onChange={(e) => onRename(e.target.value)}
+            // "Kész a név, jöhet a tétel": a Tab és az Enter is a fázis
+            // keresőjébe visz, nem a tábla első sorának Beavatkozás-mezőjébe
+            // -- a sietve gépelt karakterek ne írjanak át egy meglévő
+            // tételnevet. A fel/le/törlés gombokat az előre-Tab így átugorja;
+            // Shift+Tabbal (a keresőből visszafelé) és egérrel elérhetők
+            // maradnak. Csukott fázisnál marad a natív Tab: a kereső nincs a
+            // DOM-ban, az elnyelt Tab fókuszcsapda lenne.
+            onKeyDown={(e) => {
+              if (!open) return;
+              if (e.key !== 'Tab' && e.key !== 'Enter') return;
+              if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+              e.preventDefault();
+              onNevKesz();
+            }}
             style={{ maxWidth: 360, fontWeight: 600, color: t.brand }}
           />
           {megnevezesNyelvMismatch && (

@@ -346,6 +346,76 @@ describe('PlanEditorPage -- backlog-59: új fázis kereső-autofókusza', () => 
   });
 });
 
+describe('PlanEditorPage -- fázisnév után a tételkeresőbe visz a Tab és az Enter', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  /** Egy fázisba felvett tétel, hogy legyen mire "ráesnie" a natív Tabnak. */
+  async function sorFelvetel(user: ReturnType<typeof userEvent.setup>, szo: string, talalat: string) {
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, szo);
+    await user.click(await screen.findByText(talalat));
+    await waitFor(() => expect(search).toHaveValue(''));
+  }
+
+  it('nyitott fázisban a Tab a fázis keresőjébe visz, nem az első sor Beavatkozás-mezőjébe', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
+
+    const nevMezo = screen.getByDisplayValue('1. kezelés');
+    await user.click(nevMezo);
+    await user.tab();
+
+    await waitFor(() => expect(document.getElementById('kereso-fazis-0')).toHaveFocus());
+    expect(document.getElementById('nev-0-0')).not.toHaveFocus();
+    expect(nevMezo).toHaveValue('1. kezelés');
+  });
+
+  it('nyitott fázisban az Enter ugyanoda visz, és nem írja át a fázisnevet', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
+
+    const nevMezo = screen.getByDisplayValue('1. kezelés');
+    await user.click(nevMezo);
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(document.getElementById('kereso-fazis-0')).toHaveFocus());
+    expect(nevMezo).toHaveValue('1. kezelés');
+  });
+
+  it('több soros fázisnál is a keresőbe visz, nem a legutolsó sorra', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
+    await sorFelvetel(user, 'csatornaszam', 'Gyökértömés csatornaszámtól függően');
+
+    const nevMezo = screen.getByDisplayValue('1. kezelés');
+    await user.click(nevMezo);
+    await user.tab();
+
+    await waitFor(() => expect(document.getElementById('kereso-fazis-0')).toHaveFocus());
+    expect(document.getElementById('nev-0-0')).not.toHaveFocus();
+    expect(document.getElementById('nev-0-1')).not.toHaveFocus();
+  });
+
+  it('összecsukott fázisnál marad a natív Tab -- a kereső nincs a DOM-ban', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
+    await user.click(screen.getByRole('button', { name: 'Fázis összecsukása' }));
+
+    const nevMezo = screen.getByDisplayValue('1. kezelés');
+    await user.click(nevMezo);
+    await user.tab();
+
+    expect(document.getElementById('kereso-fazis-0')).toBeNull();
+    expect(nevMezo).not.toHaveFocus();
+  });
+});
+
 describe('PlanEditorPage -- backlog-18: fázis törlése megerősítéssel', () => {
   beforeEach(() => {
     localStorage.clear();

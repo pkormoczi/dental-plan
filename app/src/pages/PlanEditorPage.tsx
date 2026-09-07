@@ -452,6 +452,7 @@ export default function PlanEditorPage() {
                 f.megnevezes = v;
               })
             }
+            onNevKesz={() => setFokuszCel({ mit: 'fazisKereso', pi })}
             onNote={(v) =>
               updatePlan((draft) => {
                 const f = draft.fazisok[pi];
