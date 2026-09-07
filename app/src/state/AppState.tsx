@@ -26,7 +26,8 @@ import { frissDatummal, type UjVerzioDatum } from '../domain/ujVerzioDatum';
 import { todayIso } from '../domain/date';
 import type { Osszesitok, Plan, PriceList, Settings } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
-import type { DraftMeta, WorkflowRoute } from '../storage/DraftStorage';
+import { DraftConflictError } from '../storage/DraftStorage';
+import type { DraftMeta, DraftRecord, WorkflowRoute } from '../storage/DraftStorage';
 import { t } from '../design/tokens';
 
 interface AppStateValue {
@@ -90,6 +91,17 @@ interface AppStateValue {
   piszkozatMentve: string | null;
   /** A piszkozat visszaállításának vagy írásának hibaüzenete, vagy `null`. */
   piszkozatHiba: string | null;
+  /**
+   * Feloldatlan írási ütközés: egy MÁSIK ablak a tárolóba írt azóta, hogy ez
+   * a példány utoljára oda írt, és a tárolt terv tartalma is eltér. Amíg áll,
+   * a piszkozat MENTETLEN (a fejléc ezt kiírja), és a következő tartalmi
+   * változás újra felhozza -- se néma elnyelés, se bezárhatatlan csapda.
+   */
+  piszkozatKonfliktus: { tarolt: DraftRecord; sajat: Plan } | null;
+  /** A doki a SAJÁT változatát tartja meg: felülírja a tárolt rekordot. */
+  megtartomSajatPiszkozatot: () => void;
+  /** A doki a MÁSIK ablak változatát tölti be; ez a példány nem ír vissza. */
+  betoltomMasikPiszkozatot: () => void;
   /**
    * A piszkozathoz best-effort ismert páciens-mappa, vagy `null`, ha nem
    * ismert (pl. a "+ Új páciens" ág). A `TervWorkflowShell` breadcrumb-
@@ -214,6 +226,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [mentettPlan, setMentettPlan] = useState<Plan | null>(null);
   const [piszkozatMentve, setPiszkozatMentve] = useState<string | null>(null);
   const [piszkozatHiba, setPiszkozatHiba] = useState<string | null>(null);
+  const [piszkozatKonfliktus, setPiszkozatKonfliktus] = useState<{
+    tarolt: DraftRecord;
+    sajat: Plan;
+  } | null>(null);
   // UI-workflow metaadat (patientDir/lastRoute) -- nem a Plan tartalma,
   // lásd storage/DraftStorage.ts DraftMeta.
   const [piszkozatMeta, setPiszkozatMeta] = useState<DraftMeta>({});
@@ -227,7 +243,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   // Amit legutóbb a DraftStorage-ból olvastunk vagy oda írtunk -- csak a
   // fölösleges újraírás kiszűrésére (lásd az író useEffect-et lent), nem
   // felhasználói állapot.
-  const irtPiszkozatRef = useRef<{ plan: Plan; meta: DraftMeta } | null>(null);
+  const irtPiszkozatRef = useRef<{ plan: Plan; meta: DraftMeta; mentve: string | null } | null>(null);
   // Igaz, amíg ténylegesen létezik perzisztált piszkozat -- egy csak
   // `lastRoute`-ot változtató lépés (workflow-stepper) enélkül a
   // véglegesítés/eldobás UTÁN, a memóriában maradt planre feltámasztana egy
@@ -284,7 +300,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
               lastRoute: rec.lastRoute,
               tervCim: rec.tervCim,
             };
-            irtPiszkozatRef.current = { plan: rec.plan, meta };
+            irtPiszkozatRef.current = { plan: rec.plan, meta, mentve: rec.mentve };
             piszkozatKiirvaRef.current = true;
             setPiszkozatMeta(meta);
             setPiszkozatMentve(rec.mentve);
@@ -334,21 +350,43 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // stepper-navigáció feltámasztana egy már törölt piszkozatot.
     if (!tartalomValtozott && !piszkozatKiirvaRef.current) return;
     let cancelled = false;
-    drafts.save(plan, piszkozatMeta).then(
-      (rec) => {
-        if (cancelled) return;
-        irtPiszkozatRef.current = { plan, meta: piszkozatMeta };
-        piszkozatKiirvaRef.current = true;
-        setPiszkozatMentve(rec.mentve);
-        setPiszkozatHiba(null);
-      },
-      (err) => {
-        if (cancelled) return;
-        setPiszkozatHiba(
-          err instanceof Error ? err.message : 'A piszkozat mentése váratlanul meghiúsult.',
-        );
-      },
-    );
+
+    const sikeres = (rec: DraftRecord) => {
+      irtPiszkozatRef.current = { plan, meta: piszkozatMeta, mentve: rec.mentve };
+      piszkozatKiirvaRef.current = true;
+      setPiszkozatMentve(rec.mentve);
+      setPiszkozatHiba(null);
+      setPiszkozatKonfliktus(null);
+    };
+
+    const hiba = (err: unknown) => {
+      setPiszkozatHiba(
+        err instanceof Error ? err.message : 'A piszkozat mentése váratlanul meghiúsult.',
+      );
+    };
+
+    // Amire ez a példány számít a tárolóban: amit legutóbb ő maga írt oda
+    // (vagy onnan olvasott). A `piszkozatKiirvaRef` false-ja azt jelenti,
+    // hogy semmilyen tárolt rekordot nem várunk (véglegesítés/eldobás után).
+    const elvartMentve = piszkozatKiirvaRef.current ? (utolso?.mentve ?? null) : null;
+    drafts.save(plan, piszkozatMeta, elvartMentve).then(sikeres, (err) => {
+      if (cancelled) return;
+      if (!(err instanceof DraftConflictError)) {
+        hiba(err);
+        return;
+      }
+      // Azonos TARTALMÚ idegen írás (pl. a másik fül puszta metaadat-
+      // frissítése) nem kérdez: átvesszük az idegen időbélyeget és írunk.
+      // A két terv ugyanabból a `Plan` alakból épül, ezért a kulcssorrend --
+      // és így a JSON-alak -- összehasonlítható.
+      if (utolso && JSON.stringify(err.tarolt.plan) === JSON.stringify(utolso.plan)) {
+        drafts.save(plan, piszkozatMeta, err.tarolt.mentve).then((rec) => {
+          if (!cancelled) sikeres(rec);
+        }, hiba);
+        return;
+      }
+      setPiszkozatKonfliktus({ tarolt: err.tarolt, sajat: plan });
+    });
     return () => {
       cancelled = true;
     };
@@ -369,6 +407,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setMentettPlan(null);
     setPiszkozatMentve(null);
     setPiszkozatHiba(null);
+    setPiszkozatKonfliktus(null);
     setPiszkozatMeta({});
     irtPiszkozatRef.current = null;
     piszkozatKiirvaRef.current = false;
@@ -395,6 +434,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setMentettPlan(null);
         setPiszkozatMentve(null);
         setPiszkozatHiba(null);
+        setPiszkozatKonfliktus(null);
         setPiszkozatMeta({});
         irtPiszkozatRef.current = null;
         piszkozatKiirvaRef.current = false;
@@ -459,6 +499,45 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       vanMentetlenPiszkozat: piszkozatTartalmas(plan) && plan !== mentettPlan,
       piszkozatMentve,
       piszkozatHiba,
+      piszkozatKonfliktus,
+      megtartomSajatPiszkozatot: () => {
+        if (!piszkozatKonfliktus) return;
+        const { sajat } = piszkozatKonfliktus;
+        // A tárolt rekord időbélyegét várjuk el: a felülírás így is
+        // ellenőrzött marad, csak most tudatosan a MI változatunk nyer.
+        drafts.save(sajat, piszkozatMeta, piszkozatKonfliktus.tarolt.mentve).then(
+          (rec) => {
+            irtPiszkozatRef.current = { plan: sajat, meta: piszkozatMeta, mentve: rec.mentve };
+            piszkozatKiirvaRef.current = true;
+            setPiszkozatMentve(rec.mentve);
+            setPiszkozatHiba(null);
+            setPiszkozatKonfliktus(null);
+          },
+          (err) => {
+            setPiszkozatHiba(
+              err instanceof Error ? err.message : 'A piszkozat mentése váratlanul meghiúsult.',
+            );
+          },
+        );
+      },
+      betoltomMasikPiszkozatot: () => {
+        if (!piszkozatKonfliktus) return;
+        const { tarolt } = piszkozatKonfliktus;
+        const meta: DraftMeta = {
+          patientDir: tarolt.patientDir,
+          lastRoute: tarolt.lastRoute,
+          tervCim: tarolt.tervCim,
+        };
+        // A refet a state-ek ELŐTT állítjuk: az író effektus így a
+        // frissen betöltött tervet a sajátjaként ismeri fel, és nem ír vissza.
+        irtPiszkozatRef.current = { plan: tarolt.plan, meta, mentve: tarolt.mentve };
+        piszkozatKiirvaRef.current = true;
+        setPlanState(tarolt.plan);
+        setPiszkozatMeta(meta);
+        setPiszkozatMentve(tarolt.mentve);
+        setPiszkozatHiba(null);
+        setPiszkozatKonfliktus(null);
+      },
       piszkozatPatientDir: piszkozatMeta.patientDir ?? null,
       piszkozatLastRoute: piszkozatMeta.lastRoute ?? null,
       jelezWorkflowLepes: (route) => {
@@ -472,16 +551,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         await drafts.clear();
         setPiszkozatHiba(null);
         setPiszkozatMentve(null);
+        setPiszkozatKonfliktus(null);
         setPiszkozatMeta({});
         piszkozatKiirvaRef.current = false;
       },
       markPlanSaved: async (persisted) => {
-        irtPiszkozatRef.current = { plan: persisted, meta: {} };
+        irtPiszkozatRef.current = { plan: persisted, meta: {}, mentve: null };
         piszkozatKiirvaRef.current = false;
         setPlanState(persisted);
         setMentettPlan(persisted);
         setPiszkozatMentve(null);
         setPiszkozatHiba(null);
+        setPiszkozatKonfliktus(null);
         setFrissitettDatum(null);
         setOrvosFallback(null);
         setOrokoltNyelv(false);
@@ -525,6 +606,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     mentettPlan,
     piszkozatMentve,
     piszkozatHiba,
+    piszkozatKonfliktus,
     piszkozatMeta,
     loadedOsszesitokDiff,
     frissitettDatum,

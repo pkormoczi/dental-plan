@@ -12,6 +12,8 @@ export interface PlanEditorHeaderProps {
   onPreview: () => void;
   piszkozatMentve: string | null;
   piszkozatHiba: string | null;
+  /** Feloldatlan írási ütközés: a piszkozat NEM mentett, akármit mond a `piszkozatMentve`. */
+  piszkozatKonfliktus: boolean;
   onDiscard: () => void;
 }
 
@@ -21,6 +23,7 @@ export default function PlanEditorHeader({
   onPreview,
   piszkozatMentve,
   piszkozatHiba,
+  piszkozatKonfliktus,
   onDiscard,
 }: PlanEditorHeaderProps) {
   return (
@@ -35,10 +38,19 @@ export default function PlanEditorHeader({
         {/* A meglévő piros Callout (hiba esetén) alatta marad, kikapcsolhatatlanul --
             ez csak a SIKERES mentés pozitív visszajelzése, hiba mellett nem
             látszik, hogy ne mondjon ellent egymásnak a két jelzés. */}
-        {piszkozatMentve && !piszkozatHiba && (
-          <Text as="div" size="1" color="gray" mt="1">
-            Piszkozat mentve {formatPiszkozatIdo(piszkozatMentve)}
+        {piszkozatKonfliktus ? (
+          // Feloldatlan ütközésnél a mentés NEM történt meg -- a "Piszkozat
+          // mentve" felirat itt hazudna, a doki döntésére vár a dialógus.
+          <Text as="div" size="1" color="amber" mt="1">
+            Piszkozat nincs mentve — egy másik ablak változtatása feloldásra vár
           </Text>
+        ) : (
+          piszkozatMentve &&
+          !piszkozatHiba && (
+            <Text as="div" size="1" color="gray" mt="1">
+              Piszkozat mentve {formatPiszkozatIdo(piszkozatMentve)}
+            </Text>
+          )
         )}
       </Box>
       <Flex gap="3" align="center">

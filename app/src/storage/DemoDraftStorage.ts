@@ -13,6 +13,7 @@
 import { assertKnownSchemaVersion } from '../domain/schema';
 import { assertPlanShape } from '../domain/validate';
 import type { Plan } from '../domain/types';
+import { DraftConflictError } from './DraftStorage';
 import type { DraftMeta, DraftRecord, DraftStorage, WorkflowRoute } from './DraftStorage';
 import { PREFIX } from './DemoStorage';
 import { parseJson } from './json';
@@ -46,10 +47,17 @@ export class DemoDraftStorage implements DraftStorage {
     return rec;
   }
 
-  async save(plan: Plan, meta?: DraftMeta): Promise<DraftRecord> {
+  async save(plan: Plan, meta?: DraftMeta, elvartMentve?: string | null): Promise<DraftRecord> {
+    const tarolt = this.taroltRekord();
+    if (elvartMentve !== undefined && (tarolt?.mentve ?? null) !== elvartMentve) {
+      // Olvashatatlan tárolt rekordnál (`taroltRekord()` null-t ad) nincs MIT
+      // felkínálni a dokinak -- ilyenkor a konfliktus-dobás elmarad, és a
+      // sérült rekord felülíródik (lásd `taroltRekord()`).
+      if (tarolt) throw new DraftConflictError(tarolt);
+    }
     const rec: DraftRecord = {
       schemaVersion: 1,
-      mentve: new Date().toISOString(),
+      mentve: this.ujIdobelyeg(tarolt),
       plan,
       ...(meta?.patientDir != null ? { patientDir: meta.patientDir } : {}),
       ...(meta?.lastRoute != null ? { lastRoute: meta.lastRoute } : {}),
@@ -70,6 +78,39 @@ export class DemoDraftStorage implements DraftStorage {
       );
     }
     return rec;
+  }
+
+  /**
+   * A `mentve` az ütközés-ellenőrzés azonosítója is (lásd DraftStorage.ts),
+   * ezért SZIGORÚAN NÖVEKVŐ: két, ugyanabba az ezredmásodpercbe eső írás
+   * (két fül egyszerre) különben azonos bélyeget kapna, és a következő
+   * ellenőrzés nem venné észre az idegen írást. A pár ezredmásodperces
+   * előresietés a "Piszkozat mentve HH:MM" kijelzésen láthatatlan.
+   */
+  private ujIdobelyeg(tarolt: DraftRecord | null): string {
+    const most = Date.now();
+    const elozo = tarolt ? Date.parse(tarolt.mentve) : Number.NaN;
+    return new Date(Number.isFinite(elozo) && elozo >= most ? elozo + 1 : most).toISOString();
+  }
+
+  /**
+   * A tárolt rekord az ütközés-ellenőrzéshez -- `null`, ha nincs, vagy ha
+   * olvashatatlan/idegen alakú. Egy sérült rekordot NEM védünk a
+   * felülírástól: nincs belőle visszaállítható változat, amit a doki
+   * választhatna (a sérülés jelzése a betöltési út dolga, lásd `load()`).
+   */
+  private taroltRekord(): DraftRecord | null {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (raw == null) return null;
+    try {
+      const rec = parseJson<DraftRecord>(raw, 'piszkozat');
+      assertKnownSchemaVersion(rec, 'piszkozat');
+      assertKnownSchemaVersion(rec.plan, 'piszkozat');
+      assertPlanShape(rec.plan, 'piszkozat');
+      return typeof rec.mentve === 'string' ? rec : null;
+    } catch {
+      return null;
+    }
   }
 
   async clear(): Promise<void> {

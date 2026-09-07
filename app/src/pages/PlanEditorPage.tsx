@@ -41,6 +41,7 @@ export default function PlanEditorPage() {
     orvosFallback,
     piszkozatHiba,
     piszkozatMentve,
+    piszkozatKonfliktus,
     piszkozatPatientDir,
     resetPlanDraft,
   } = useAppState();
@@ -320,6 +321,7 @@ export default function PlanEditorPage() {
         onPreview={() => navigate('/elonezet')}
         piszkozatMentve={piszkozatMentve}
         piszkozatHiba={piszkozatHiba}
+        piszkozatKonfliktus={piszkozatKonfliktus != null}
         onDiscard={() => setConfirmDiscard(true)}
       />
 

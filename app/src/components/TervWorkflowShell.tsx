@@ -15,6 +15,7 @@ import { LepesGuardProvider, type LepesHandler } from './LepesGuardContext';
 import NyelviReviewBar from './NyelviReviewBar';
 import { NyelviReviewProvider } from './NyelviReviewContext';
 import PaciensBreadcrumb from './PaciensBreadcrumb';
+import PiszkozatKonfliktusDialog from './PiszkozatKonfliktusDialog';
 import { PaciensKotesProvider } from './PaciensKotesContext';
 import { t } from '../design/tokens';
 import { piszkozatTartalmas } from '../domain/piszkozat';
@@ -23,7 +24,13 @@ import { useAppState } from '../state/AppState';
 import type { WorkflowRoute } from '../storage/DraftStorage';
 
 export default function TervWorkflowShell() {
-  const { plan, jelezWorkflowLepes } = useAppState();
+  const {
+    plan,
+    jelezWorkflowLepes,
+    piszkozatKonfliktus,
+    megtartomSajatPiszkozatot,
+    betoltomMasikPiszkozatot,
+  } = useAppState();
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -57,6 +64,10 @@ export default function TervWorkflowShell() {
   lepesHandlerRef.current = lepesHandler;
   const [elutasitottDiffId, setElutasitottDiffId] = useState<string | null>(null);
   const [letrehozasPromptEldontve, setLetrehozasPromptEldontve] = useState(false);
+  // Escape-pel elzárt konfliktus -- OBJEKTUM-azonosság szerint: a következő
+  // tartalmi változás új konfliktus-objektumot ad, tehát a dialógus újra
+  // felugrik, egy elzárás nem némítja el véglegesen.
+  const [elzartKonfliktus, setElzartKonfliktus] = useState<object | null>(null);
 
   const kerLepesValtas = useCallback((proceed: () => void) => {
     if (lepesHandlerRef.current?.(proceed)) return;
@@ -159,6 +170,23 @@ export default function TervWorkflowShell() {
         </nav>
 
         <Separator size="4" mb="4" />
+
+        {/* A héjban él, hogy mindhárom workflow-lépésen felugorjon. Escape-pel
+            zárható (app/src/CLAUDE.md): a piszkozat ilyenkor mentetlen marad, a
+            szerkesztő fejléce ezt kiírja, és a következő tartalmi változás újra
+            felhozza -- se néma elnyelés, se bezárhatatlan csapda. */}
+        {piszkozatKonfliktus && (
+          <PiszkozatKonfliktusDialog
+            open={piszkozatKonfliktus !== elzartKonfliktus}
+            sajat={piszkozatKonfliktus.sajat}
+            masik={piszkozatKonfliktus.tarolt.plan}
+            onMegtartomSajat={megtartomSajatPiszkozatot}
+            onBetoltomMasikat={betoltomMasikPiszkozatot}
+            onOpenChange={(nyitva) => {
+              if (!nyitva) setElzartKonfliktus(piszkozatKonfliktus);
+            }}
+          />
+        )}
 
         <LepesGuardProvider value={lepesGuardValue}>
           <NyelviReviewProvider>

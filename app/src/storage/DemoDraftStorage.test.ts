@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DemoDraftStorage } from './DemoDraftStorage';
+import { DraftConflictError } from './DraftStorage';
 import { DemoStorage } from './DemoStorage';
 import type { Plan } from '../domain/types';
 
@@ -97,6 +98,59 @@ describe('DemoDraftStorage', () => {
     raw.plan.fazisok = [{ sorszam: 1, megnevezes: 'x', megjegyzes: '', sorok: [{ mennyiseg: 'sok' }] }];
     localStorage.setItem('dp:piszkozat', JSON.stringify(raw));
     await expect(drafts.load()).rejects.toThrow(/szerkezete nem érvényes/);
+  });
+
+  // Két fül ugyanazon a tárolón: az `elvartMentve` az ütközés-ellenőrzés.
+  it('save() elvartMentve-vel nem ír felül egy idegen írást, hanem DraftConflictError-t dob a tárolt rekorddal', async () => {
+    const elsoFul = new DemoDraftStorage();
+    const masikFul = new DemoDraftStorage();
+
+    const sajat = await elsoFul.save(makeBlankPlan({ paciens: { ...makeBlankPlan().paciens, nev: 'Első Fül' } }));
+    const idegen = await masikFul.save(
+      makeBlankPlan({ paciens: { ...makeBlankPlan().paciens, nev: 'Másik Fül' } }),
+    );
+
+    const hiba = await elsoFul
+      .save(makeBlankPlan({ paciens: { ...makeBlankPlan().paciens, nev: 'Első Fül Tovább' } }), undefined, sajat.mentve)
+      .catch((e: unknown) => e);
+
+    expect(hiba).toBeInstanceOf(DraftConflictError);
+    expect((hiba as DraftConflictError).tarolt.mentve).toBe(idegen.mentve);
+    expect((hiba as DraftConflictError).tarolt.plan.paciens.nev).toBe('Másik Fül');
+    // Semmi nem íródott ki: a tárolóban a másik fül rekordja maradt.
+    expect((await elsoFul.load())!.plan.paciens.nev).toBe('Másik Fül');
+  });
+
+  it('save() az EGYEZŐ elvartMentve mellett ír', async () => {
+    const drafts = new DemoDraftStorage();
+    const elso = await drafts.save(makeBlankPlan());
+
+    const masodik = await drafts.save(
+      makeBlankPlan({ paciens: { ...makeBlankPlan().paciens, nev: 'Frissítve' } }),
+      undefined,
+      elso.mentve,
+    );
+
+    expect(masodik.mentve).not.toBe(elso.mentve);
+    expect((await drafts.load())!.plan.paciens.nev).toBe('Frissítve');
+  });
+
+  it('save() elvartMentve: null mellett dob, ha időközben mégis keletkezett tárolt rekord', async () => {
+    const drafts = new DemoDraftStorage();
+    await drafts.save(makeBlankPlan());
+
+    await expect(drafts.save(makeBlankPlan(), undefined, null)).rejects.toBeInstanceOf(
+      DraftConflictError,
+    );
+  });
+
+  it('save() elvartMentve nélkül a korábbi utolsó-író-nyer viselkedést tartja', async () => {
+    const drafts = new DemoDraftStorage();
+    await drafts.save(makeBlankPlan());
+
+    await drafts.save(makeBlankPlan({ paciens: { ...makeBlankPlan().paciens, nev: 'Felülírva' } }));
+
+    expect((await drafts.load())!.plan.paciens.nev).toBe('Felülírva');
   });
 
   it('surfaces a Hungarian, non-crashing error when the write quota is exceeded', async () => {

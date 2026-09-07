@@ -41,10 +41,37 @@ export interface DraftRecord extends DraftMeta {
   plan: Plan;
 }
 
+/**
+ * Egy MÁSIK író (jellemzően a doki másik böngészőfüle) írt a tárolóba azóta,
+ * hogy ez a hívó utoljára ide írt -- a mentés ilyenkor nem ír, hanem ezt
+ * dobja, a tárolóban ténylegesen álló rekorddal együtt, hogy a hívó fel
+ * tudja kínálni a két változatot. Enélkül az utolsó író némán nyerne.
+ */
+export class DraftConflictError extends Error {
+  readonly tarolt: DraftRecord;
+
+  constructor(tarolt: DraftRecord) {
+    super('A piszkozatot időközben egy másik ablak felülírta.');
+    this.name = 'DraftConflictError';
+    this.tarolt = tarolt;
+  }
+}
+
 export interface DraftStorage {
   /** `null`, ha nincs perzisztált piszkozat -- ez a normál kiinduló állapot, nem hiba. */
   load(): Promise<DraftRecord | null>;
-  /** Az időbélyeget az implementáció teszi rá; a mentett rekordot adja vissza. */
-  save(plan: Plan, meta?: DraftMeta): Promise<DraftRecord>;
+  /**
+   * Az időbélyeget az implementáció teszi rá; a mentett rekordot adja vissza.
+   *
+   * `elvartMentve`: milyen tárolt állapotra számít a hívó -- a legutóbb ÁLTALA
+   * írt (vagy onnan olvasott) rekord `mentve` mezője, `null`, ha semmilyen
+   * tárolt rekordot nem vár. Eltérésnél a mentés NEM ír, hanem
+   * `DraftConflictError`-t dob. `undefined` = a hívó nem kér ütközés-
+   * ellenőrzést (utolsó-író-nyer, a korábbi viselkedés).
+   *
+   * Az azonosító szándékosan a MEGLÉVŐ `mentve` időbélyeg, nem új mező: így
+   * nem kell `schemaVersion`-t emelni egy perzisztált rekord-alakért.
+   */
+  save(plan: Plan, meta?: DraftMeta, elvartMentve?: string | null): Promise<DraftRecord>;
   clear(): Promise<void>;
 }

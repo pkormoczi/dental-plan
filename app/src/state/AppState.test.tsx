@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppState } from './AppState';
 import { planMasolatKent } from '../domain/planCopy';
 import { TestProviders } from '../testUtils';
+import { DemoDraftStorage } from '../storage/DemoDraftStorage';
 import { useStorage } from '../storage/StorageContext';
 import type { Plan } from '../domain/types';
 
@@ -629,5 +630,167 @@ describe('savePriceList / saveSettings -- updater szerződés', () => {
     await waitFor(() => expect(screen.getByTestId('cat-count')).toHaveTextContent('14'));
 
     vi.restoreAllMocks();
+  });
+});
+
+// Két fül ugyanazon a tárolón: a másik fül írása után az első fül következő
+// tartalmi változása nem írhat felül némán -- a doki dönt.
+function KonfliktusProbe() {
+  const { plan, setPlan, piszkozatKonfliktus, megtartomSajatPiszkozatot, betoltomMasikPiszkozatot } =
+    useAppState();
+  return (
+    <div>
+      <div data-testid="nev">{plan.paciens.nev || 'ures'}</div>
+      <div data-testid="sorok">
+        {plan.fazisok.reduce((n, f) => n + f.sorok.length, 0)}
+      </div>
+      <div data-testid="konfliktus">{piszkozatKonfliktus ? 'van' : 'nincs'}</div>
+      <button
+        onClick={() => setPlan((p) => ({ ...p, paciens: { ...p.paciens, nev: 'Első Fül' } }))}
+      >
+        elso-iras
+      </button>
+      <button
+        onClick={() => setPlan((p) => ({ ...p, paciens: { ...p.paciens, nev: 'Első Fül Tovább' } }))}
+      >
+        tovabbi-iras
+      </button>
+      <button onClick={megtartomSajatPiszkozatot}>sajat</button>
+      <button onClick={betoltomMasikPiszkozatot}>masik</button>
+    </div>
+  );
+}
+
+describe('piszkozat-ütközés két fül között', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  /** A "másik fül" írása -- KÖZVETLENÜL a tárolón át, saját DemoDraftStorage-dzsel. */
+  async function masikFulIr(nev: string, sorokkal = false) {
+    const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+    const plan: Plan = {
+      ...rec.plan,
+      paciens: { ...rec.plan.paciens, nev },
+      ...(sorokkal
+        ? {
+            fazisok: [
+              {
+                ...rec.plan.fazisok[0],
+                sorok: [
+                  {
+                    tetelId: '',
+                    nevSnapshot: 'Fogkő-eltávolítás',
+                    savos: false,
+                    fogak: '',
+                    mennyiseg: 1,
+                    listaEgysegar: 10000,
+                    tenylegesEgysegar: 10000,
+                  },
+                ],
+              },
+            ],
+          }
+        : {}),
+    };
+    await new DemoDraftStorage().save(plan);
+  }
+
+  it('a másik fül írása után az első fül következő tartalmi változása NEM ír felül, hanem konfliktust jelez', async () => {
+    const user = userEvent.setup();
+    render(
+      <TestProviders>
+        <KonfliktusProbe />
+      </TestProviders>,
+    );
+    await screen.findByTestId('nev');
+
+    await user.click(screen.getByRole('button', { name: 'elso-iras' }));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+
+    await masikFulIr('Másik Fül', true);
+    await user.click(screen.getByRole('button', { name: 'tovabbi-iras' }));
+
+    await waitFor(() => expect(screen.getByTestId('konfliktus')).toHaveTextContent('van'));
+    // A tárolóban a MÁSIK fül változata maradt -- nem íródott felül.
+    const tarolt = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+    expect(tarolt.plan.paciens.nev).toBe('Másik Fül');
+  });
+
+  it('"a saját verziómat mentem" után a tárolt piszkozat az első fülé, és a következő változás már kérdés nélkül ment', async () => {
+    const user = userEvent.setup();
+    render(
+      <TestProviders>
+        <KonfliktusProbe />
+      </TestProviders>,
+    );
+    await screen.findByTestId('nev');
+    await user.click(screen.getByRole('button', { name: 'elso-iras' }));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+    await masikFulIr('Másik Fül', true);
+    await user.click(screen.getByRole('button', { name: 'tovabbi-iras' }));
+    await waitFor(() => expect(screen.getByTestId('konfliktus')).toHaveTextContent('van'));
+
+    await user.click(screen.getByRole('button', { name: 'sajat' }));
+
+    await waitFor(() => expect(screen.getByTestId('konfliktus')).toHaveTextContent('nincs'));
+    await waitFor(() => {
+      const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+      expect(rec.plan.paciens.nev).toBe('Első Fül Tovább');
+    });
+
+    await user.click(screen.getByRole('button', { name: 'elso-iras' }));
+    await waitFor(() => {
+      const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+      expect(rec.plan.paciens.nev).toBe('Első Fül');
+    });
+    expect(screen.getByTestId('konfliktus')).toHaveTextContent('nincs');
+  });
+
+  it('"a másik fül változatát betöltöm" után a szerkesztő a másik tervét mutatja, és nem ír vissza', async () => {
+    const user = userEvent.setup();
+    render(
+      <TestProviders>
+        <KonfliktusProbe />
+      </TestProviders>,
+    );
+    await screen.findByTestId('nev');
+    await user.click(screen.getByRole('button', { name: 'elso-iras' }));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+    await masikFulIr('Másik Fül', true);
+    const taroltElotte = localStorage.getItem('dp:piszkozat');
+    await user.click(screen.getByRole('button', { name: 'tovabbi-iras' }));
+    await waitFor(() => expect(screen.getByTestId('konfliktus')).toHaveTextContent('van'));
+
+    await user.click(screen.getByRole('button', { name: 'masik' }));
+
+    await waitFor(() => expect(screen.getByTestId('nev')).toHaveTextContent('Másik Fül'));
+    expect(screen.getByTestId('sorok')).toHaveTextContent('1'); // a fogkő sor
+    expect(screen.getByTestId('konfliktus')).toHaveTextContent('nincs');
+    // Nem írt vissza: a tárolt rekord bájtra ugyanaz maradt.
+    expect(localStorage.getItem('dp:piszkozat')).toBe(taroltElotte);
+  });
+
+  it('azonos tartalmú idegen írás nem hoz fel konfliktust', async () => {
+    const user = userEvent.setup();
+    render(
+      <TestProviders>
+        <KonfliktusProbe />
+      </TestProviders>,
+    );
+    await screen.findByTestId('nev');
+    await user.click(screen.getByRole('button', { name: 'elso-iras' }));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+
+    // Ugyanaz a terv-tartalom, csak új időbélyeggel (pl. a másik fül puszta
+    // metaadat-frissítése).
+    await masikFulIr('Első Fül');
+    await user.click(screen.getByRole('button', { name: 'tovabbi-iras' }));
+
+    await waitFor(() => {
+      const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+      expect(rec.plan.paciens.nev).toBe('Első Fül Tovább');
+    });
+    expect(screen.getByTestId('konfliktus')).toHaveTextContent('nincs');
   });
 });

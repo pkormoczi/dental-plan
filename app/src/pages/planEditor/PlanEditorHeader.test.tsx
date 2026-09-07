@@ -21,7 +21,8 @@ describe('PlanEditorHeader', () => {
           onPreview={() => {}}
           piszkozatMentve={null}
           piszkozatHiba={null}
-          onDiscard={() => {}}
+          piszkozatKonfliktus={false}
+        onDiscard={() => {}}
         />
       </Theme>,
     );
@@ -39,7 +40,8 @@ describe('PlanEditorHeader', () => {
           onPreview={() => {}}
           piszkozatMentve={null}
           piszkozatHiba={null}
-          onDiscard={() => {}}
+          piszkozatKonfliktus={false}
+        onDiscard={() => {}}
         />
       </Theme>,
     );
@@ -57,7 +59,8 @@ describe('PlanEditorHeader', () => {
           onPreview={() => {}}
           piszkozatMentve="2026-08-25T10:00:00.000Z"
           piszkozatHiba={null}
-          onDiscard={() => {}}
+          piszkozatKonfliktus={false}
+        onDiscard={() => {}}
         />
       </Theme>,
     );
@@ -71,7 +74,8 @@ describe('PlanEditorHeader', () => {
           onPreview={() => {}}
           piszkozatMentve="2026-08-25T10:00:00.000Z"
           piszkozatHiba="hálózati hiba"
-          onDiscard={() => {}}
+          piszkozatKonfliktus={false}
+        onDiscard={() => {}}
         />
       </Theme>,
     );
@@ -90,7 +94,8 @@ describe('PlanEditorHeader', () => {
           onPreview={onPreview}
           piszkozatMentve={null}
           piszkozatHiba={null}
-          onDiscard={onDiscard}
+          piszkozatKonfliktus={false}
+        onDiscard={onDiscard}
         />
       </Theme>,
     );
@@ -100,5 +105,24 @@ describe('PlanEditorHeader', () => {
 
     await user.click(screen.getByRole('button', { name: 'Piszkozat eldobása' }));
     expect(onDiscard).toHaveBeenCalledTimes(1);
+  });
+
+  it('feloldatlan ütközésnél a "Piszkozat mentve" helyett a nem-mentett állapot látszik', () => {
+    render(
+      <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
+        <PlanEditorHeader
+          patientName="Teszt Elek"
+          statusz="PISZKOZAT"
+          onPreview={() => {}}
+          piszkozatMentve="2026-08-09T10:15:00.000Z"
+          piszkozatHiba={null}
+          piszkozatKonfliktus
+          onDiscard={() => {}}
+        />
+      </Theme>,
+    );
+
+    expect(screen.getByText(/Piszkozat nincs mentve/)).toBeInTheDocument();
+    expect(screen.queryByText(/Piszkozat mentve/)).not.toBeInTheDocument();
   });
 });
