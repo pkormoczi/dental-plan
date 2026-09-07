@@ -599,7 +599,14 @@ export default function PreviewPage() {
 
         <Box>
           {pdfInstance.url ? (
+            // A `key` a blob-URL-en: URL-változáskor ÚJ iframe jön létre a
+            // meglévő `src`-jének cseréje helyett. Egy élő iframe src-cseréje a
+            // SZÜLŐ böngésző-előzményébe kerül, így a Vissza a beágyazott
+            // PDF-nézegető visszavont blob-URL-jére lépne (angol hibaoldal); egy
+            // frissen beszúrt iframe első betöltése a saját about:blank
+            // bejegyzését váltja fel, előzmény-bejegyzés nélkül.
             <iframe
+              key={pdfInstance.url}
               title="Kezelési terv előnézet"
               src={pdfInstance.url}
               style={{
