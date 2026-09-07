@@ -692,11 +692,20 @@ describe('TervDocument -- 77. tétel: cím + páciensadatok + fogtérkép', () =
     taj?: string;
     fogak?: string;
     toothChartPng?: string | null;
+    nyelv?: Nyelv;
+    szuletesiIdo?: string;
   } = {}) {
-    const { tervCim = '', taj = '1234567890', fogak = '', toothChartPng = null } = opts;
-    const plan = buildPlan(false, 'hu', AZONOS_AR);
+    const {
+      tervCim = '',
+      taj = '1234567890',
+      fogak = '',
+      toothChartPng = null,
+      nyelv = 'hu',
+      szuletesiIdo = '1990-01-01',
+    } = opts;
+    const plan = buildPlan(false, nyelv, AZONOS_AR);
     plan.paciens.nev = 'Teszt Páciens';
-    plan.paciens.szuletesiIdo = '1990-01-01';
+    plan.paciens.szuletesiIdo = szuletesiIdo;
     plan.paciens.lakcim = '1114 Budapest, Móricz Zsigmond körtér 1.';
     plan.paciens.telefon = '+36 30 123 4567';
     plan.paciens.email = 'teszt@pelda.hu';
@@ -729,6 +738,25 @@ describe('TervDocument -- 77. tétel: cím + páciensadatok + fogtérkép', () =
     expect(within(aBlokk).getByText('Név')).toBeInTheDocument();
     expect(within(aBlokk).getByText('Született')).toBeInTheDocument();
     expect(within(aBlokk).getByText('Lakcím')).toBeInTheDocument();
+  });
+
+  it('a születési dátum magyar terven rövid magyar alakban áll, nem ISO-ként', () => {
+    const aBlokk = renderElsoBlokk({ szuletesiIdo: '1992-12-01' });
+    expect(within(aBlokk).getByText('1992.12.01.')).toBeInTheDocument();
+    expect(aBlokk.textContent).not.toContain('1992-12-01');
+  });
+
+  it('a születési dátum német terven a német rövid alakot követi', () => {
+    const aBlokk = renderElsoBlokk({ nyelv: 'de', szuletesiIdo: '1992-12-01' });
+    expect(within(aBlokk).getByText('01.12.1992')).toBeInTheDocument();
+    expect(aBlokk.textContent).not.toContain('1992-12-01');
+  });
+
+  it('üres születési dátum esetén a Született sor teljesen kimarad', () => {
+    const aBlokk = renderElsoBlokk({ szuletesiIdo: '' });
+    expect(within(aBlokk).queryByText('Született')).not.toBeInTheDocument();
+    expect(within(aBlokk).getByText('Név')).toBeInTheDocument();
+    expect(within(aBlokk).getByText('TAJ')).toBeInTheDocument();
   });
 
   it('a páciensmezők a bal, majd a jobb oszlop sorrendjében jelennek meg', () => {

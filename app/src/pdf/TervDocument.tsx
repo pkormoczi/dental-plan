@@ -14,7 +14,7 @@
 // szerkesztő szövegei) ettől függetlenül végig magyar marad.
 
 import { Document, Page, Text, View } from '@react-pdf/renderer';
-import { formatLongDate } from '../domain/date';
+import { formatLongDate, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
 import { buildToothVisualStates } from '../domain/toothVisual';
 import { elolegOsszegek, sorokListaOsszeg, tervVegosszeg } from '../domain/totals';
@@ -91,6 +91,11 @@ export function TervDocument({
   const hasRange = plan.fazisok.some((p) => p.sorok.some((l) => l.savos));
   const leirasokMutatasa = plan.leirasokMutatasa ?? true;
   const fogterkep = buildToothVisualStates(plan, priceList);
+  // Üres születési dátumon a `formatShortDate` ".."-ot adna; az üres string
+  // ejti ki a `Kv` sorát.
+  const szuletettFormazva = plan.paciens.szuletesiIdo
+    ? formatShortDate(plan.paciens.szuletesiIdo, plan.nyelv)
+    : '';
   const showToothChart = toothChartPng != null && (fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0);
   // A sablonszövegben álló {{orvos}}/{{paciens}} helyőrzőket a tényleges
   // terv-adatok váltják fel, mielőtt bekezdésekre/felsorolásra bontanánk.
@@ -151,7 +156,7 @@ export function TervDocument({
           <View style={s.patientCols}>
             <View style={s.patientColLeft}>
               <Kv k={L.kvNev} v={plan.paciens.nev} />
-              <Kv k={L.kvSzuletett} v={plan.paciens.szuletesiIdo} />
+              <Kv k={L.kvSzuletett} v={szuletettFormazva} />
               <Kv k={L.kvTaj} v={plan.paciens.taj} />
               <Kv k={L.kvLakcim} v={plan.paciens.lakcim} />
             </View>
