@@ -349,3 +349,86 @@ describe('Home -- legutóbbi páciensek', () => {
     });
   });
 });
+
+// A sikerképernyő visszaesési útja: aki a véglegesítés közben frissített,
+// itt jut a most mentett PDF-hez. A kártya célverzióját a `paciens.json`
+// `utolsoAktivitas` mezője és a `latestVersionAcrossPlans` együtt jelöli ki.
+describe('Home -- "Az imént véglegesített terv" kártya', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  /** Egy mentett verzió + a hozzá tartozó aktivitás-időbélyeg beállítása. */
+  async function seedVeglegesitettPacienst(perccelEzelott: number) {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    stripAllUtolsoAktivitas();
+    const ref = await seeder.savePlan(
+      makeDirtyPlan({
+        statusz: 'VEGLEGES',
+        paciens: { ...makeDirtyPlan().paciens, nev: 'Friss Frigyes' },
+        fazisok: [
+          {
+            sorszam: 1,
+            megnevezes: '1. kezelés',
+            megjegyzes: '',
+            sorok: [
+              {
+                tetelId: '',
+                nevSnapshot: 'Kontroll',
+                savos: false,
+                fogak: '',
+                mennyiseg: 1,
+                listaEgysegar: 0,
+                tenylegesEgysegar: 0,
+              },
+            ],
+          },
+        ],
+      }),
+      new Uint8Array([1, 2, 3]),
+    );
+    const key = `dp:paciensek/${ref.patientDir}/paciens.json`;
+    const rekord = JSON.parse(localStorage.getItem(key)!);
+    rekord.utolsoAktivitas = {
+      tipus: 'terv-veglegesitve',
+      idopont: new Date(Date.now() - perccelEzelott * 60_000).toISOString(),
+    };
+    localStorage.setItem(key, JSON.stringify(rekord));
+    return ref;
+  }
+
+  it('30 percen belüli véglegesítés után megjelenik, a két PDF-művelettel', async () => {
+    await seedVeglegesitettPacienst(2);
+
+    renderHome();
+
+    expect(await screen.findByText('Az imént véglegesített terv')).toBeInTheDocument();
+    // A név a kártyán ÉS a "Legutóbbi páciensek" sorában is szerepel.
+    expect(screen.getAllByText('Friss Frigyes').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole('button', { name: 'Megnyitás külön' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Letöltés' })).toBeInTheDocument();
+  });
+
+  it('30 percnél régebbi véglegesítésnél nem jelenik meg', async () => {
+    await seedVeglegesitettPacienst(45);
+
+    renderHome();
+
+    await screen.findAllByRole('link');
+    expect(screen.queryByText('Az imént véglegesített terv')).not.toBeInTheDocument();
+  });
+
+  it('más típusú friss aktivitásnál nem jelenik meg', async () => {
+    const ref = await seedVeglegesitettPacienst(2);
+    const key = `dp:paciensek/${ref.patientDir}/paciens.json`;
+    const rekord = JSON.parse(localStorage.getItem(key)!);
+    rekord.utolsoAktivitas = { tipus: 'torzsadat-mentve', idopont: new Date().toISOString() };
+    localStorage.setItem(key, JSON.stringify(rekord));
+
+    renderHome();
+
+    await screen.findAllByRole('link');
+    expect(screen.queryByText('Az imént véglegesített terv')).not.toBeInTheDocument();
+  });
+});

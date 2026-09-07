@@ -4,7 +4,7 @@
 // nyomtatvány jogi szabályai a PRODUCT.md § A nyomtatvány szerződéses dokumentum alatt.
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
 import '../pdf/bufferShim';
 import { Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
@@ -35,14 +35,18 @@ import { TervDocument } from '../pdf/TervDocument';
 import { renderToothChartPng } from '../pdf/toothChartImage';
 import { VeglegesitesChecklist } from './previewPage/VeglegesitesChecklist';
 import { useAppState } from '../state/AppState';
+import { nincsMentettPdfHiba } from '../components/PlanVersionActionDialog';
+import { openPlanPdfInNewTab } from '../storage/openPlanPdfInNewTab';
 import { buildDownloadFileName } from '../storage/paths';
+import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
 import { useStorage } from '../storage/StorageContext';
 
 export default function PreviewPage() {
   const { plan, setPlan, settings, priceList, markPlanSaved, piszkozatPatientDir, piszkozatTervCim } =
     useAppState();
-  const { storage, loadLatestTemplateByBase } = useStorage();
+  const { storage, loadLatestTemplateByBase, loadPlanPdf, isSeedVersion } = useStorage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // A doki nyers kézi választása -- a `Plan` mezője, nem helyi
   // state, hogy navigáció oda-vissza és
@@ -55,7 +59,14 @@ export default function PreviewPage() {
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [savedRef, setSavedRef] = useState<PlanRef | null>(null);
+  // A sikerállapotot a `?mentve=1` URL-jelző adja, nem komponens-state -- csak
+  // így hagy a véglegesítés VALÓDI history-bejegyzést, amire a böngésző Vissza
+  // (az előnézetre) és az Előre (ide) rálép. A mentett verzió referenciája
+  // `useRef`-ben él: nem befolyásolja a renderelést, és nem is `location.state`,
+  // mert az F5-nél elveszne (a visszaesési út a Kezdőlap kártyája).
+  const savedRefRef = useRef<PlanRef | null>(null);
+  const savedRef = searchParams.get('mentve') === '1' ? savedRefRef.current : null;
+  const [mentettPdfHiba, setMentettPdfHiba] = useState<string | null>(null);
   // backlog-51: a vadonatúj lánc "Terv adatai" lapon beírt címének
   // véglegesítéskori írási hibája -- KÜLÖN a `saveError`-tól, mert ekkor a
   // terv MÁR a lemezen van (lásd doFinalize). Csak a siker-képernyőn
@@ -168,6 +179,20 @@ export default function PreviewPage() {
       cancelled = true;
     };
   }, [storage, piszkozatPatientDir, plan.paciensId, plan.tervId]);
+
+  // A most mentett verzió archivált PDF-je a sikerképernyő "Letöltés"-éhez --
+  // ugyanaz a hook, mint a Terv részletei lapon. `null` ref = nem tölt.
+  const mentettPdf = usePlanPdfObjectUrl(savedRef);
+
+  async function megnyitasKulon(ref: PlanRef) {
+    setMentettPdfHiba(null);
+    const eredmeny = await openPlanPdfInNewTab(ref, loadPlanPdf);
+    if (eredmeny.fajta === 'nincs-pdf') {
+      setMentettPdfHiba(nincsMentettPdfHiba(ref, isSeedVersion(ref)).message);
+      return;
+    }
+    if (eredmeny.fajta === 'hiba') setMentettPdfHiba(eredmeny.message);
+  }
 
   const nyersTervCim = (piszkozatTervCim ?? mentettTervCim ?? '').trim();
   const tervCim = megjelenitettTervCim(nyersTervCim || null, plan, priceList);
@@ -445,7 +470,9 @@ export default function PreviewPage() {
         );
       }
       setMentesiCsekklista(mentesreVaroCsekklista);
-      setSavedRef(ref);
+      savedRefRef.current = ref;
+      setMentettPdfHiba(null);
+      navigate('/elonezet?mentve=1');
     } catch (err) {
       // P0-1: korábban nem volt catch itt -- egy kvótahiba vagy a
       // localStorage szinkron dobása némán elveszett, a doki egy inaktív
@@ -513,7 +540,40 @@ export default function PreviewPage() {
             <VeglegesitesChecklist csekklista={mentesiCsekklista} />
           </Box>
         )}
-        <Flex gap="3" justify="center">
+        {mentettPdfHiba && (
+          <Callout.Root color="red" mb="5" style={{ textAlign: 'left' }}>
+            <Callout.Text>{mentettPdfHiba}</Callout.Text>
+          </Callout.Root>
+        )}
+        <Flex gap="3" justify="center" wrap="wrap" mb="3">
+          <Button
+            variant="soft"
+            color="gray"
+            disabled={mentettPdf.hianyzik}
+            onClick={() => void megnyitasKulon(savedRef)}
+          >
+            Megnyitás külön
+          </Button>
+          {mentettPdf.url ? (
+            <Button asChild variant="soft" color="gray">
+              <a
+                href={mentettPdf.url}
+                download={buildDownloadFileName(plan.paciens.nev, {
+                  tervId: plan.tervId,
+                  isDraft: false,
+                  suffix: savedRef.versionDir,
+                })}
+              >
+                Letöltés
+              </a>
+            </Button>
+          ) : (
+            <Button variant="soft" color="gray" disabled>
+              Letöltés
+            </Button>
+          )}
+        </Flex>
+        <Flex gap="3" justify="center" wrap="wrap">
           <Button onClick={startNewPlan}>Új terv indítása</Button>
           {/* backlog-31: a MOST mentett páciens részletoldalára visz
               (Kezelési tervek tab), nem a globális listára -- a globális,
@@ -549,6 +609,10 @@ export default function PreviewPage() {
         ? (pdfError as unknown as Error).message
         : String(pdfError);
   const busy = saving || pdfStale || foglalas === undefined;
+  // A piszkozatban a VEGLEGES státusz KIZÁRÓLAG a `markPlanSaved` után álló,
+  // frissen mentett tartalom lehet (minden más betöltési út PISZKOZAT-ra
+  // állítja vissza) -- újra-mentése duplikált verziómappát hozna létre.
+  const marVeglegesitve = plan.statusz === 'VEGLEGES';
   // A "Nyelvi ellenőrzésre váró szövegek" checklist-tétel guided-review
   // gombjának célja -- a lista tartalma megegyezik a `csekklista`
   // `nyelvi-review` tételének forrásával (domain/veglegesitesOr.ts), külön
@@ -661,7 +725,9 @@ export default function PreviewPage() {
                 ))}
               <Button
                 onClick={attemptFinalize}
-                disabled={busy || !!pdfError || !foglalas || vanKemenyBlokk(csekklista)}
+                disabled={
+                  busy || !!pdfError || !foglalas || marVeglegesitve || vanKemenyBlokk(csekklista)
+                }
                 aria-describedby={visszavonhatatlansagId}
               >
                 {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
@@ -678,7 +744,9 @@ export default function PreviewPage() {
               color="gray"
               style={{ textAlign: 'right' }}
             >
-              Véglegesítés után a terv nem módosítható, csak új változat készíthető.
+              {marVeglegesitve
+                ? 'Ez a verzió már véglegesítve van — módosításhoz készíts új változatot.'
+                : 'Véglegesítés után a terv nem módosítható, csak új változat készíthető.'}
             </Text>
           </Flex>
         </Flex>

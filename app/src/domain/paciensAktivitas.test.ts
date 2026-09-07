@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  IMENT_VEGLEGESITVE_PERC,
   RECENT_PACIENS_LIMIT,
   aktivitasSzoveg,
   ervenyesAktivitas,
+  imentVeglegesitve,
   legutobbAktivPaciensek,
   ujAktivitas,
 } from './paciensAktivitas';
@@ -116,5 +118,48 @@ describe('aktivitasSzoveg', () => {
   ] as const)('%s -> "%s · <relatív idő>"', (tipus, cimke) => {
     const aktivitas: PatientActivity = { tipus, idopont: '2026-08-09T10:00:00.000Z' };
     expect(aktivitasSzoveg(aktivitas, most)).toBe(`${cimke} · 2 órája`);
+  });
+});
+
+describe('imentVeglegesitve', () => {
+  const most = new Date('2026-08-09T12:00:00.000Z');
+  const percekkelKorabban = (perc: number) =>
+    new Date(most.getTime() - perc * 60_000).toISOString();
+
+  it('igaz egy percekkel ezelőtti terv-veglegesitve aktivitásra', () => {
+    expect(
+      imentVeglegesitve({ tipus: 'terv-veglegesitve', idopont: percekkelKorabban(2) }, most),
+    ).toBe(true);
+  });
+
+  it('igaz pontosan az ablak határán, hamis egy perccel utána', () => {
+    expect(
+      imentVeglegesitve(
+        { tipus: 'terv-veglegesitve', idopont: percekkelKorabban(IMENT_VEGLEGESITVE_PERC) },
+        most,
+      ),
+    ).toBe(true);
+    expect(
+      imentVeglegesitve(
+        { tipus: 'terv-veglegesitve', idopont: percekkelKorabban(IMENT_VEGLEGESITVE_PERC + 1) },
+        most,
+      ),
+    ).toBe(false);
+  });
+
+  it('hamis más aktivitás-típusra, akkor is, ha friss', () => {
+    expect(
+      imentVeglegesitve({ tipus: 'torzsadat-mentve', idopont: percekkelKorabban(1) }, most),
+    ).toBe(false);
+    expect(imentVeglegesitve({ tipus: 'letrehozva', idopont: percekkelKorabban(1) }, most)).toBe(
+      false,
+    );
+  });
+
+  it('hamis hiányzó aktivitásra és jövőbeli időbélyegre', () => {
+    expect(imentVeglegesitve(undefined, most)).toBe(false);
+    expect(
+      imentVeglegesitve({ tipus: 'terv-veglegesitve', idopont: percekkelKorabban(-5) }, most),
+    ).toBe(false);
   });
 });

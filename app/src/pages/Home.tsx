@@ -16,14 +16,25 @@ import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import PatientListRow from '../components/PatientListRow';
 import { t } from '../design/tokens';
 import { formatPiszkozatIdo } from '../domain/date';
-import { RECENT_PACIENS_LIMIT, aktivitasSzoveg, legutobbAktivPaciensek } from '../domain/paciensAktivitas';
+import {
+  RECENT_PACIENS_LIMIT,
+  aktivitasSzoveg,
+  imentVeglegesitve,
+  legutobbAktivPaciensek,
+} from '../domain/paciensAktivitas';
+import { latestVersionAcrossPlans } from '../domain/planFolders';
 import { piszkozatCelRoute } from '../domain/piszkozat';
 import { loadMegjelenitettTorzsadat, type BetoltottTorzsadat } from '../domain/torzsadatBetoltes';
+import type { PatientFolder, PlanRef, PlanVersion } from '../domain/types';
+import { nincsMentettPdfHiba } from '../components/PlanVersionActionDialog';
 import { useAppState } from '../state/AppState';
+import { openPlanPdfInNewTab } from '../storage/openPlanPdfInNewTab';
+import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
+import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
 
 export default function Home() {
-  const { storage } = useStorage();
+  const { storage, loadPlanPdf, isSeedVersion } = useStorage();
   const {
     plan,
     vanMentetlenPiszkozat,
@@ -58,6 +69,64 @@ export default function Home() {
             err instanceof Error ? err.message : 'A legutóbbi páciensek betöltése váratlanul meghiúsult.',
           );
         }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [storage]);
+
+  // Az "imént véglegesített terv" kártya célverziója. A recency-ablakon belüli,
+  // `terv-veglegesitve` aktivitású LEGFRISSEBB páciens legfrissebb verziója --
+  // ez a visszaesési út annak, aki a véglegesítés közbeni frissítéssel elvesztette
+  // a sikerképernyőt. Több egyidejű lánc esetén elfogadottan pontatlan (a doki
+  // döntése), ezért nem tárolt mutató, hanem `latestVersionAcrossPlans`.
+  const [imentiRef, setImentiRef] = useState<{
+    patient: PatientFolder;
+    ref: PlanRef;
+    tervId: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await storage.listPatients();
+        if (cancelled) return;
+        const jelolt = legutobbAktivPaciensek(list, RECENT_PACIENS_LIMIT).find((p) =>
+          imentVeglegesitve(p.utolsoAktivitas, new Date()),
+        );
+        if (!jelolt) {
+          setImentiRef(null);
+          return;
+        }
+        const plans = await storage.listPlans(jelolt.dirName);
+        const versionsByPlanDir: Record<string, PlanVersion[]> = {};
+        await Promise.all(
+          plans.map(async (lanc) => {
+            versionsByPlanDir[lanc.dirName] = await storage.listVersions(jelolt.dirName, lanc.dirName);
+          }),
+        );
+        if (cancelled) return;
+        const latest = latestVersionAcrossPlans(plans, (planDir) => versionsByPlanDir[planDir] ?? []);
+        const lanc = latest ? plans.find((p) => p.dirName === latest.planDir) : undefined;
+        setImentiRef(
+          latest && lanc
+            ? {
+                patient: jelolt,
+                ref: {
+                  patientDir: jelolt.dirName,
+                  planDir: latest.planDir,
+                  versionDir: latest.version.dirName,
+                },
+                tervId: lanc.tervId,
+              }
+            : null,
+        );
+      } catch {
+        // Best-effort visszaesési út: egy sikertelen listázás csak a kártyát
+        // némítja el, a Kezdőlap többi része a saját hibaútján jelez.
+        if (!cancelled) setImentiRef(null);
       }
     })();
     return () => {
@@ -144,6 +213,16 @@ export default function Home() {
         </Card>
       )}
 
+      {imentiRef && (
+        <ImentVeglegesitveKartya
+          patient={imentiRef.patient}
+          planRef={imentiRef.ref}
+          tervId={imentiRef.tervId}
+          loadPlanPdf={loadPlanPdf}
+          demoEredetu={isSeedVersion(imentiRef.ref)}
+        />
+      )}
+
       <Box mb="5">
         {/* A piszkozat-felülírás-őr innentől az /uj-terv köztes
             páciens-választón fut le (csak ott dől el ténylegesen, hogy a
@@ -211,6 +290,82 @@ export default function Home() {
         </AlertDialog.Content>
       </AlertDialog.Root>
     </Box>
+  );
+}
+
+/**
+ * "Az imént véglegesített terv" -- a sikerképernyő két PDF-műveletének
+ * visszaesési útja a Kezdőlapon (a véglegesítés közbeni frissítés esete).
+ * A "Piszkozat folytatása" kártya mintáján.
+ */
+function ImentVeglegesitveKartya({
+  patient,
+  planRef,
+  tervId,
+  loadPlanPdf,
+  demoEredetu,
+}: {
+  patient: PatientFolder;
+  planRef: PlanRef;
+  tervId: string;
+  loadPlanPdf: (ref: PlanRef) => Promise<Uint8Array | null>;
+  demoEredetu: boolean;
+}) {
+  const pdf = usePlanPdfObjectUrl(planRef);
+  const [hiba, setHiba] = useState<string | null>(null);
+
+  async function megnyitasKulon() {
+    setHiba(null);
+    const eredmeny = await openPlanPdfInNewTab(planRef, loadPlanPdf);
+    if (eredmeny.fajta === 'nincs-pdf') {
+      setHiba(nincsMentettPdfHiba(planRef, demoEredetu).message);
+      return;
+    }
+    if (eredmeny.fajta === 'hiba') setHiba(eredmeny.message);
+  }
+
+  return (
+    <Card size="2" mb="4">
+      <Text as="p" size="2" weight="bold" mb="1" style={{ color: t.brand }}>
+        Az imént véglegesített terv
+      </Text>
+      <Text as="p" size="2" mt="0" mb="3">
+        {patient.nev}
+      </Text>
+      {hiba && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>{hiba}</Callout.Text>
+        </Callout.Root>
+      )}
+      <Flex gap="3" wrap="wrap">
+        <Button
+          variant="soft"
+          color="gray"
+          disabled={pdf.hianyzik}
+          onClick={() => void megnyitasKulon()}
+        >
+          Megnyitás külön
+        </Button>
+        {pdf.url ? (
+          <Button asChild variant="soft" color="gray">
+            <a
+              href={pdf.url}
+              download={buildDownloadFileName(patient.nev, {
+                tervId,
+                isDraft: false,
+                suffix: planRef.versionDir,
+              })}
+            >
+              Letöltés
+            </a>
+          </Button>
+        ) : (
+          <Button variant="soft" color="gray" disabled>
+            Letöltés
+          </Button>
+        )}
+      </Flex>
+    </Card>
   );
 }
 

@@ -43,6 +43,7 @@ import type {
 import { useAppState } from '../state/AppState';
 import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
+import { openPlanPdfInNewTab } from '../storage/openPlanPdfInNewTab';
 import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
 
 const NYELV_LABEL: Record<Nyelv, string> = { hu: 'Magyar', de: 'Deutsch' };
@@ -221,36 +222,15 @@ export default function TervReszleteiPage() {
 
   async function megnyitasKulon() {
     akciok.jelezHiba(null);
-    const win = window.open('', '_blank');
-    if (!win) {
-      akciok.jelezHiba({
-        planDir,
-        versionDir,
-        message:
-          'A böngésző letiltotta az új lap megnyitását — engedélyezd a felugró ablakokat ehhez ' +
-          'az oldalhoz, vagy használd a Letöltést.',
-      });
+    const eredmeny = await openPlanPdfInNewTab({ patientDir, planDir, versionDir }, loadPlanPdf);
+    if (eredmeny.fajta === 'nincs-pdf') {
+      akciok.jelezHiba(
+        nincsMentettPdfHiba({ planDir, versionDir }, isSeedVersion({ patientDir, planDir, versionDir })),
+      );
       return;
     }
-    try {
-      const bytes = await loadPlanPdf({ patientDir, planDir, versionDir });
-      if (!bytes) {
-        win.close();
-        akciok.jelezHiba(
-          nincsMentettPdfHiba({ planDir, versionDir }, isSeedVersion({ patientDir, planDir, versionDir })),
-        );
-        return;
-      }
-      const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
-      win.location.href = URL.createObjectURL(blob);
-    } catch (err) {
-      win.close();
-      akciok.jelezHiba({
-        planDir,
-        versionDir,
-        message:
-          err instanceof Error ? `A megnyitás nem sikerült: ${err.message}` : 'A megnyitás váratlanul meghiúsult.',
-      });
+    if (eredmeny.fajta === 'hiba') {
+      akciok.jelezHiba({ planDir, versionDir, message: eredmeny.message });
     }
   }
 

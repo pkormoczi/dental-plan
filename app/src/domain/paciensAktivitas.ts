@@ -73,3 +73,20 @@ const AKTIVITAS_CIMKE: Record<AktivitasTipus, string> = {
 export function aktivitasSzoveg(aktivitas: PatientActivity, most: Date): string {
   return `${AKTIVITAS_CIMKE[aktivitas.tipus]} · ${formatRelativIdo(aktivitas.idopont, most)}`;
 }
+
+/**
+ * A Kezdőlap "imént véglegesített terv" kártyájának megjelenítési ablaka: a
+ * frissítés miatt elveszett sikerképernyő visszaesési útja, nem egy tartós
+ * "legutóbbi terv" kártya -- ezért rövid, és csak `terv-veglegesitve`
+ * aktivitásra áll. Jövőbeli időbélyeg (óraállítás) nem számít frissnek.
+ */
+export const IMENT_VEGLEGESITVE_PERC = 30;
+
+export function imentVeglegesitve(
+  aktivitas: PatientActivity | undefined,
+  most: Date,
+): boolean {
+  if (!aktivitas || aktivitas.tipus !== 'terv-veglegesitve') return false;
+  const eltelt = most.getTime() - Date.parse(aktivitas.idopont);
+  return eltelt >= 0 && eltelt <= IMENT_VEGLEGESITVE_PERC * 60_000;
+}
