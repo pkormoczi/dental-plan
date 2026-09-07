@@ -3,7 +3,7 @@
 // feltételei a domain véglegesítés-őrében élnek (lásd app/src/domain/CLAUDE.md), a
 // nyomtatvány jogi szabályai a PRODUCT.md § A nyomtatvány szerződéses dokumentum alatt.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
 import '../pdf/bufferShim';
@@ -76,6 +76,9 @@ export default function PreviewPage() {
   // önmagában nem elég, mert egy második kattintás a state frissülése
   // (render) ELŐTT is megtörténhet.
   const savingRef = useRef(false);
+  // A véglegesítés-gomb accessible description-je -- a magyarázó sor `<label>`-je
+  // elrabolná a gomb accessible name-jét (lásd components/Field.tsx FieldGroup).
+  const visszavonhatatlansagId = useId();
 
   // backlog-40 (6. döntés): a páciens törzsadata INFO-
   // szintű, nem blokkoló jelzésként jelenik meg, ha eltér a terv `paciens`
@@ -560,40 +563,56 @@ export default function PreviewPage() {
             />
             Csak ajánlat — a nyilatkozat és aláírás oldal nélkül
           </Text>
-          <Flex gap="3" wrap="wrap">
-            {pdfInstance.url &&
-              (pdfError ? (
-                // A könyvtár hibán át megőrzi az utolsó sikeres `url`-t
-                // (lásd a `pdfError` Callout fölötti kommentet) --
-                // letöltés nélküle egy a képernyőn látott tervvel már
-                // nem egyező PDF-et adna.
-                <Button variant="soft" color="gray" disabled>
-                  Elavult PDF
-                </Button>
-              ) : pdfStale ? (
-                <Button variant="soft" color="gray" disabled>
-                  PDF frissítése…
-                </Button>
-              ) : (
-                <Button asChild variant="soft" color="gray">
-                  <a
-                    href={pdfInstance.url}
-                    download={buildDownloadFileName(plan.paciens.nev, {
-                      tervId: plan.tervId || 'uj',
-                      isDraft: plan.statusz !== 'VEGLEGES',
-                      suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
-                    })}
-                  >
-                    Letöltés
-                  </a>
-                </Button>
-              ))}
-            <Button
-              onClick={attemptFinalize}
-              disabled={busy || !!pdfError || vanKemenyBlokk(csekklista)}
+          <Flex direction="column" align="end" gap="1">
+            <Flex gap="3" wrap="wrap">
+              {pdfInstance.url &&
+                (pdfError ? (
+                  // A könyvtár hibán át megőrzi az utolsó sikeres `url`-t
+                  // (lásd a `pdfError` Callout fölötti kommentet) --
+                  // letöltés nélküle egy a képernyőn látott tervvel már
+                  // nem egyező PDF-et adna.
+                  <Button variant="soft" color="gray" disabled>
+                    Elavult PDF
+                  </Button>
+                ) : pdfStale ? (
+                  <Button variant="soft" color="gray" disabled>
+                    PDF frissítése…
+                  </Button>
+                ) : (
+                  <Button asChild variant="soft" color="gray">
+                    <a
+                      href={pdfInstance.url}
+                      download={buildDownloadFileName(plan.paciens.nev, {
+                        tervId: plan.tervId || 'uj',
+                        isDraft: plan.statusz !== 'VEGLEGES',
+                        suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
+                      })}
+                    >
+                      Letöltés
+                    </a>
+                  </Button>
+                ))}
+              <Button
+                onClick={attemptFinalize}
+                disabled={busy || !!pdfError || vanKemenyBlokk(csekklista)}
+                aria-describedby={visszavonhatatlansagId}
+              >
+                {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
+              </Button>
+            </Flex>
+            {/* Állandó, mindig látható sor, nem megerősítő dialógus -- a
+                szekvenciális modal-lánc szándékosan megszűnt, és ez a mondat a
+                GOMB tulajdonságáról szól, nem a terv adathiányairól, ezért nem
+                a véglegesítés-őr checklist-tétele. */}
+            <Text
+              as="p"
+              id={visszavonhatatlansagId}
+              size="1"
+              color="gray"
+              style={{ textAlign: 'right' }}
             >
-              {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
-            </Button>
+              Véglegesítés után a terv nem módosítható, csak új változat készíthető.
+            </Text>
           </Flex>
         </Flex>
 
