@@ -29,7 +29,12 @@ import HuChip from '../../components/HuChip';
 import { t } from '../../design/tokens';
 import { formatPrice } from '../../domain/money';
 import { resolveNev } from '../../domain/nev';
-import { egyezoKategoriaIdk, nevEgyezik, norm } from '../../domain/search';
+import {
+  egyezoKategoriaIdk,
+  nevEgyezik,
+  norm,
+  rangsoroltTetelTalalatok,
+} from '../../domain/search';
 import type { Kategoria, Nyelv, Penznem, Tetel } from '../../domain/types';
 
 const LATHATO_TALALAT = 12;
@@ -93,9 +98,10 @@ export default function ItemPicker({
   // akkor is, ha német ajánlatot állít össze. Csak a megjelenített és
   // snapshotolt név nyelvfüggő (lásd domain/nev.ts).
   //
-  // Két szint: a névtalálatok (a mai szabály), utána a CSAK a kategórianéven
-  // át egyező tételek (`Kategória: …` fejléc alatt, kategória `sorrend`
-  // szerint) -- egy tétel sosem szerepel mindkét szinten. A közös
+  // Két szint: a névtalálatok (szöveg-relevancia szerint rangsorolva, lásd
+  // `domain/search.ts` `rangsoroltTetelTalalatok`), utána a CSAK a
+  // kategórianéven át egyező tételek (`Kategória: …` fejléc alatt, kategória
+  // `sorrend` szerint) -- egy tétel sosem szerepel mindkét szinten. A közös
   // LATHATO_TALALAT limit az 1. szintet tölti először, hogy egy
   // kategória-egyezés sosem szorítson ki egy névtalálatot. A levágott
   // találatok száma is kell: eddig a csonkítás NÉMA volt, a doki nem
@@ -103,7 +109,10 @@ export default function ItemPicker({
   const { results, katResults, tobbiTalalat } = useMemo(() => {
     if (!q.trim()) return { results: [] as Tetel[], katResults: [] as Tetel[], tobbiTalalat: 0 };
     const nq = norm(q);
-    const nevTalalat = available.filter((x) => nevEgyezik(x.nev, nq));
+    const nevTalalat = rangsoroltTetelTalalatok(
+      available.filter((x) => nevEgyezik(x.nev, nq)),
+      nq,
+    );
     const nevTalaltIdk = new Set(nevTalalat.map((x) => x.id));
 
     const katIdk = egyezoKategoriaIdk(kategoriak, nq);

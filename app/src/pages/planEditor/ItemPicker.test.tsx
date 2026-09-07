@@ -196,6 +196,41 @@ describe('ItemPicker', () => {
     });
   });
 
+  describe('találat-rangsor', () => {
+    it('a 12-es limit a RANGSOROLT sorrendből vág: a releváns találat bejut, a belső egyezés esik ki', async () => {
+      const user = userEvent.setup();
+      // 12 belső egyezés ("gyokertomes N" -- egyetlen szó sem kezdődik a
+      // keresőszóval), utolsóként EGY szó eleji egyezés.
+      const belso: Tetel[] = Array.from({ length: 12 }, (_, i) =>
+        tetel(`b${i}`, `Gyökértömés ${i + 1}`),
+      );
+      renderPicker({ available: [...belso, tetel('rel', 'Tömés speciális')] });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'tomes');
+
+      expect(await screen.findByText('Tömés speciális')).toBeInTheDocument();
+      // A rangsor nélkül ez a 12. találat lett volna a listában, a releváns
+      // pedig a limit alatt marad.
+      expect(screen.queryByText('Gyökértömés 12')).not.toBeInTheDocument();
+      expect(screen.getByText(/\+1 további találat/)).toBeInTheDocument();
+    });
+
+    it('beírás után az Enter a legrelevánsabb találatot veszi fel, nem az árlistában elsőt', async () => {
+      const user = userEvent.setup();
+      const { onPick } = renderPicker({
+        available: [tetel('t1', 'Gyökértömés'), tetel('t2', 'Tömés két felszínen')],
+      });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'tomes');
+      await screen.findByText('Tömés két felszínen');
+      await user.keyboard('{Enter}');
+
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }));
+    });
+  });
+
   // A névtalálatok mellett a kategórianévre illeszkedő tételek is
   // találatok, külön "Kategória: …" fejléc alatt.
   describe('kategórianév-egyezés', () => {
@@ -276,6 +311,20 @@ describe('ItemPicker', () => {
 
       await screen.findByText('Tömés 1 felszín');
       expect(screen.queryByText(/^Kategória:/)).not.toBeInTheDocument();
+    });
+
+    it('a kategória-blokk sorrendje VÁLTOZATLAN: kategória `sorrend`, nem névrelevancia', async () => {
+      const user = userEvent.setup();
+      renderPicker({ available: katAvailable, kategoriak: katKategoriak });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'fogko');
+      await screen.findByText('Kategória: Fogkőeltávolítás');
+
+      const szoveg = document.body.textContent ?? '';
+      expect(szoveg.indexOf('Komplett kezelés: ultrahang, sófúvás')).toBeLessThan(
+        szoveg.indexOf('Ismételt kezelés 3-6 havonta'),
+      );
     });
 
     it('a `↑ ↓` ciklus bejárja a kategória-blokk sorait is, a fejléc nem választható', async () => {
