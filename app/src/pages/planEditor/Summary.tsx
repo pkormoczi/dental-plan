@@ -8,20 +8,17 @@ import type { Nyelv, Penznem } from '../../domain/types';
 
 export interface SummaryProps {
   grand: number;
-  listTotal: number;
+  /** `domain/totals.ts` `elteresBontas` -- bruttó, nem nettózott. */
+  kedvezmeny: number;
+  felar: number;
   currency: Penznem;
   nyelv: Nyelv;
 }
 
-export default function Summary({ grand, listTotal, currency, nyelv }: SummaryProps) {
-  // A két ág kizárja egymást (`listTotal` és `grand` közül csak az egyik
-  // lehet nagyobb). A felár azonos vizuális súlyt kap, mint a kedvezmény:
-  // semleges ténymegállapítás, nem hibajelzés -- a doki dolgozhat felárral
-  // (backlog-12, 4. döntés). A nyomtatvány mindkét irányú eltérésre
-  // megmutatja a "Kezelések összege" referenciasort, ezért indokolatlan
-  // lenne, ha a szerkesztő csak az egyik irányról adna visszajelzést.
-  const discount = listTotal - grand;
-  const surcharge = grand - listTotal;
+export default function Summary({ grand, kedvezmeny, felar, currency, nyelv }: SummaryProps) {
+  // A két ág EGYSZERRE is állhat: a doki külön látja, mennyit engedett el és
+  // mennyi felárat kért. A felár azonos vizuális súlyt kap, mint a kedvezmény:
+  // semleges ténymegállapítás, nem hibajelzés -- a doki dolgozhat felárral.
   return (
     <Flex justify="between" align="baseline" gap="4">
       <Text size="3" color="gray">
@@ -36,16 +33,16 @@ export default function Summary({ grand, listTotal, currency, nyelv }: SummaryPr
         >
           {formatMoney(grand, currency, nyelv)}
         </Text>
-        {discount > 0 && (
+        {kedvezmeny > 0 && (
           // Csak a szerkesztőben látszik, a nyomtatványon NEM -- a kedvezmény sosem kerül a
           // szerződéses dokumentumra (PRODUCT.md § A nyomtatvány szerződéses dokumentum).
           <Text as="div" size="2" style={{ color: t.ok }}>
-            Kedvezmény: {formatMoney(discount, currency, nyelv)}
+            Kedvezmény: {formatMoney(kedvezmeny, currency, nyelv)}
           </Text>
         )}
-        {surcharge > 0 && (
+        {felar > 0 && (
           <Text as="div" size="2" style={{ color: t.ok }}>
-            Felár: {formatMoney(surcharge, currency, nyelv)}
+            Felár: {formatMoney(felar, currency, nyelv)}
           </Text>
         )}
       </Box>

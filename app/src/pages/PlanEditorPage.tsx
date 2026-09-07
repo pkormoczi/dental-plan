@@ -20,7 +20,7 @@ import { reviewElfogadva, reviewIrasUtan, sorPatchNyelvvel } from '../domain/nye
 import { sorPatchOroklessel } from '../domain/orokoltJelzesek';
 import { sorMezokEgyedibol, sorMezokTetelbol } from '../domain/sorMezok';
 import { buildToothVisualStates } from '../domain/toothVisual';
-import { fazisOsszeg, sorokListaOsszeg, sorokOsszeg, tervVegosszeg } from '../domain/totals';
+import { elteresBontas, fazisOsszeg, sorokOsszeg, tervVegosszeg } from '../domain/totals';
 import type { Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import type { FokuszCel } from './planEditor/elemIdk';
@@ -234,7 +234,7 @@ export default function PlanEditorPage() {
   // a mező kiindulási alapjához, NEM a tervVegosszeg() eredményére.
   const sorszintuOsszeg = sorokOsszeg(plan.fazisok);
   const grand = tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg);
-  const listTotal = sorokListaOsszeg(plan.fazisok);
+  const bontas = elteresBontas(plan.fazisok, plan.kedvezmenyOsszeg);
   const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
 
   // Az ár-frissítés megerősítő dialógusának "Hatás a tervre" előnézete --
@@ -488,7 +488,13 @@ export default function PlanEditorPage() {
         <Separator size="4" />
         <Flex mt="4" justify="end">
           <Box style={{ flex: '0 1 320px' }}>
-            <Summary grand={grand} listTotal={listTotal} currency={currency} nyelv={nyelv} />
+            <Summary
+              grand={grand}
+              kedvezmeny={bontas.kedvezmeny}
+              felar={bontas.felar}
+              currency={currency}
+              nyelv={nyelv}
+            />
             <EgyediVegosszegBlokk
               sorszintuOsszeg={sorszintuOsszeg}
               currency={currency}

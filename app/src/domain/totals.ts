@@ -44,6 +44,40 @@ export function tervVegosszeg(fazisok: Fazis[], kedvezmenyOsszeg?: number | null
   return Math.max(0, sorokOsszeg(fazisok) - (kedvezmenyOsszeg ?? 0));
 }
 
+export interface ElteresBontas {
+  /** Bruttó elengedett összeg (sorszintű + terv-szintű, összeadva). */
+  kedvezmeny: number;
+  /** Bruttó felár (sorszintű + terv-szintű, összeadva). */
+  felar: number;
+}
+
+/**
+ * A listaártól való eltérés BRUTTÓ bontása a két irányra. Nettózva a doki
+ * nem látja, mennyi kedvezményt adott és mennyi felárat kért: egy 27 000-es
+ * felár és egy 23 000-es kedvezmény "4000 felár"-rá olvadt. Ez az EGYETLEN
+ * hely, ahol a bontás eldől.
+ *
+ * Invariáns: `sorokListaOsszeg + felar - kedvezmeny === tervVegosszeg`. A
+ * `tervVegosszeg` 0-padlója esetén a kedvezmény-oldal ehhez igazodik, nem a
+ * begépelt értéket mutatja -- többet nem lehet elengedni, mint amennyi a
+ * tervben van.
+ */
+export function elteresBontas(fazisok: Fazis[], kedvezmenyOsszeg?: number | null): ElteresBontas {
+  let kedvezmeny = 0;
+  let felar = 0;
+  for (const fazis of fazisok) {
+    for (const sor of fazis.sorok) {
+      const elteres = sorListaOsszeg(sor) - sorOsszeg(sor);
+      if (elteres > 0) kedvezmeny += elteres;
+      else felar -= elteres;
+    }
+  }
+  const tervSzintu = kedvezmenyOsszeg ?? 0;
+  if (tervSzintu > 0) kedvezmeny += tervSzintu;
+  else felar -= tervSzintu;
+  return { kedvezmeny: Math.min(kedvezmeny, sorokListaOsszeg(fazisok) + felar), felar };
+}
+
 export interface ElolegOsszegek {
   eloleg: number;
   /**

@@ -17,7 +17,7 @@ import { Document, Page, Text, View } from '@react-pdf/renderer';
 import { formatLongDate, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
 import { buildToothVisualStates } from '../domain/toothVisual';
-import { elolegOsszegek, sorokListaOsszeg, tervVegosszeg } from '../domain/totals';
+import { elolegOsszegek, sorokOsszeg, tervVegosszeg } from '../domain/totals';
 import type { Plan, PriceList, Settings } from '../domain/types';
 import { registerPdfFonts } from './fonts';
 import { footerExtraMagassag } from './footerLayout';
@@ -87,7 +87,10 @@ export function TervDocument({
 }: TervDocumentProps) {
   const L = pdfLabels(plan.nyelv);
   const grand = tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg);
-  const listTotal = sorokListaOsszeg(plan.fazisok);
+  // A referenciasor a KINYOMTATOTT sorok összege: a fázistáblák
+  // `tenylegesEgysegar`-ral számolnak, tehát csak így adják össze a sorok
+  // pontosan azt a számot, ami fölöttük áll.
+  const kezelesekReferencia = sorokOsszeg(plan.fazisok);
   const hasRange = plan.fazisok.some((p) => p.sorok.some((l) => l.savos));
   const leirasokMutatasa = plan.leirasokMutatasa ?? true;
   const fogterkep = buildToothVisualStates(plan, priceList);
@@ -192,17 +195,21 @@ export function TervDocument({
 
         <View style={s.summaryBlock}>
           <Text style={s.summaryTitle}>{L.osszesitesCim}</Text>
-          {/* A "Kezelések összege" referenciasor csak akkor jelenik meg, ha
-              ténylegesen eltér a fizetendőtől -- eltérés nélkül a két szám
-              azonos lenne, és ugyanaz az összeg állna kétszer egymás alatt
-              (backlog-12). Az eltérés IRÁNYA nem számít: a felár ugyanúgy
-              megnyitja, mint a kedvezmény. Maga a kedvezmény összege
-              továbbra sem jelenik meg a nyomtatványon. */}
-          {grand !== listTotal && (
+          {/* A referenciasor csak LEFELÉ nyílik: a szerződéses papíron a
+              Kezelések összege nem lehet kevesebb a fizetendőnél. Eltérés
+              nélkül a két szám azonos lenne, és ugyanaz az összeg állna
+              kétszer egymás alatt. Következmény: sor-szintű ár-eltérés
+              önmagában nem nyitja meg -- a nyomtatványon csak a terv-szintű
+              Egyedi végösszeg látszik eltérésként. Maga a kedvezmény összege
+              továbbra sem jelenik meg (PRODUCT.md § A nyomtatvány szerződéses
+              dokumentum). */}
+          {kezelesekReferencia > grand && (
             <>
               <View style={s.summaryLine}>
                 <Text style={s.summaryLabelMuted}>{L.kezelesekOsszesen}</Text>
-                <Text style={s.summaryLabelMuted}>{formatMoney(listTotal, plan.penznem, plan.nyelv)}</Text>
+                <Text style={s.summaryLabelMuted}>
+                  {formatMoney(kezelesekReferencia, plan.penznem, plan.nyelv)}
+                </Text>
               </View>
               <View style={s.summaryDivider} />
             </>

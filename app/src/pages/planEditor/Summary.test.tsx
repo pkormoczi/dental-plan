@@ -12,7 +12,7 @@ describe('Summary', () => {
   it('kedvezmény/felár nélkül csak a végösszeget mutatja', () => {
     render(
       <Theme>
-        <Summary grand={25000} listTotal={25000} currency="HUF" nyelv="hu" />
+        <Summary grand={25000} kedvezmeny={0} felar={0} currency="HUF" nyelv="hu" />
       </Theme>,
     );
 
@@ -21,10 +21,10 @@ describe('Summary', () => {
     expect(screen.queryByText(/Felár:/)).not.toBeInTheDocument();
   });
 
-  it('a listaár fölötti sorösszeg (listTotal > grand) esetén "Kedvezmény" sort mutat -- csak a szerkesztőben, a nyomtatványon nem', () => {
+  it('csak kedvezmény esetén egyetlen "Kedvezmény" sort mutat -- csak a szerkesztőben, a nyomtatványon nem', () => {
     render(
       <Theme>
-        <Summary grand={20000} listTotal={25000} currency="HUF" nyelv="hu" />
+        <Summary grand={20000} kedvezmeny={5000} felar={0} currency="HUF" nyelv="hu" />
       </Theme>,
     );
 
@@ -33,10 +33,10 @@ describe('Summary', () => {
     expect(screen.queryByText(/Felár:/)).not.toBeInTheDocument();
   });
 
-  it('a listaár alatti sorösszeg (listTotal < grand) esetén "Felár" sort mutat', () => {
+  it('csak felár esetén egyetlen "Felár" sort mutat', () => {
     render(
       <Theme>
-        <Summary grand={30000} listTotal={25000} currency="HUF" nyelv="hu" />
+        <Summary grand={30000} kedvezmeny={0} felar={5000} currency="HUF" nyelv="hu" />
       </Theme>,
     );
 
@@ -45,10 +45,22 @@ describe('Summary', () => {
     expect(screen.queryByText(/Kedvezmény:/)).not.toBeInTheDocument();
   });
 
+  it('mindkét irányú eltérés esetén a kedvezmény és a felár KÜLÖN sorban áll, nem nettózva', () => {
+    render(
+      <Theme>
+        <Summary grand={272000} kedvezmeny={23000} felar={27000} currency="HUF" nyelv="hu" />
+      </Theme>,
+    );
+
+    expect(screen.getByText(/Kedvezmény: 23 000 Ft/)).toBeInTheDocument();
+    expect(screen.getByText(/Felár: 27 000 Ft/)).toBeInTheDocument();
+    expect(screen.queryByText(/Felár: 4000 Ft/)).not.toBeInTheDocument();
+  });
+
   it('a pénzösszegek a terv nyelvét/pénznemét követik (52. tétel)', () => {
     render(
       <Theme>
-        <Summary grand={2500} listTotal={2500} currency="EUR" nyelv="de" />
+        <Summary grand={2500} kedvezmeny={0} felar={0} currency="EUR" nyelv="de" />
       </Theme>,
     );
 

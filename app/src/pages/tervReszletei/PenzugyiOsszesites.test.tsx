@@ -3,7 +3,7 @@
 // (nincs storage-/router-függősége), a `FazisokBlokk.test.tsx` `makePlan()`
 // mintáján épített fixtúrákkal.
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { Theme } from '@radix-ui/themes';
 import { describe, expect, it } from 'vitest';
 import PenzugyiOsszesites from './PenzugyiOsszesites';
@@ -103,20 +103,34 @@ describe('PenzugyiOsszesites', () => {
     expect(screen.queryByText(/nem egyezik/)).not.toBeInTheDocument();
   });
 
-  it('a "Kezelések összege" sor csak akkor jelenik meg, ha osszesitok.kedvezmeny ≠ 0 (kedvezmény)', () => {
-    const plan = makePlan({ osszesitok: { kezelesekOsszesen: 100000, kedvezmeny: 20000, fizetendo: 80000 } });
+  it('a referenciasor a mentett SOROK összegét mutatja, nem a listaárakét', () => {
+    const plan = makePlan({
+      fazisok: [makeFazis({ sorok: [makeSor({ listaEgysegar: 120000, tenylegesEgysegar: 100000 })] })],
+      kedvezmenyOsszeg: 20000,
+      osszesitok: { kezelesekOsszesen: 120000, kedvezmeny: 40000, fizetendo: 80000 },
+    });
     renderOsszesites(plan);
-    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
+    const referencia = screen.getByText('Kezelések összege');
+    expect(within(referencia.parentElement!).getByText('100 000 Ft')).toBeInTheDocument();
+    expect(screen.queryByText('120 000 Ft')).not.toBeInTheDocument();
   });
 
-  it('a "Kezelések összege" sor negatív kedvezmény (felár) esetén is megjelenik', () => {
-    const plan = makePlan({ osszesitok: { kezelesekOsszesen: 100000, kedvezmeny: -20000, fizetendo: 120000 } });
+  it('felár-irányban nincs referenciasor: a Kezelések összege sosem kevesebb a Végösszegnél', () => {
+    const plan = makePlan({
+      fazisok: [makeFazis({ sorok: [makeSor({ listaEgysegar: 100000, tenylegesEgysegar: 120000 })] })],
+      kedvezmenyOsszeg: 0,
+      osszesitok: { kezelesekOsszesen: 100000, kedvezmeny: -20000, fizetendo: 120000 },
+    });
     renderOsszesites(plan);
-    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
+    expect(screen.queryByText('Kezelések összege')).not.toBeInTheDocument();
   });
 
-  it('nulla kedvezmény esetén nincs "Kezelések összege" referenciasor', () => {
-    const plan = makePlan({ osszesitok: { kezelesekOsszesen: 100000, kedvezmeny: 0, fizetendo: 100000 } });
+  it('eltérés nélkül nincs "Kezelések összege" referenciasor', () => {
+    const plan = makePlan({
+      fazisok: [makeFazis({ sorok: [makeSor({ listaEgysegar: 100000, tenylegesEgysegar: 100000 })] })],
+      kedvezmenyOsszeg: 0,
+      osszesitok: { kezelesekOsszesen: 100000, kedvezmeny: 0, fizetendo: 100000 },
+    });
     renderOsszesites(plan);
     expect(screen.queryByText('Kezelések összege')).not.toBeInTheDocument();
   });

@@ -179,23 +179,19 @@ describe('TervDocument -- backlog-12: feltételes összegsor', () => {
     // fölött ne álljon ugyanaz a szám még egyszer.
   });
 
-  // A tényleges ár a fázistáblázatban is szerepel (egységár + sorösszeg),
-  // ezért arra getAllByText kell; a listaár viszont KIZÁRÓLAG az összegzés
-  // referenciasorában jelenik meg -- ott a getByText egyetlen találata
-  // önmagában bizonyítja, hogy a sor kirendereltetett.
-  it('kedvezmény: mindkét sor megjelenik, a referenciaár a magasabb listaárral', () => {
-    renderDoc(false, 'hu', { lista: 45000, tenyleges: 40000 });
-    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
+  it('sor-szintű kedvezmény önmagában nem nyit referenciasort: a listaár nem kerül a papírra', () => {
+    const { container } = renderDoc(false, 'hu', { lista: 45000, tenyleges: 40000 });
+    expect(screen.queryByText('Kezelések összege')).not.toBeInTheDocument();
     expect(screen.getByText('Végösszeg')).toBeInTheDocument();
-    expect(screen.getByText('45 000 Ft')).toBeInTheDocument();
+    expect(container.textContent).not.toContain('45 000 Ft');
     expect(screen.getAllByText('40 000 Ft').length).toBeGreaterThan(0);
   });
 
-  it('felár: ugyanúgy mindkét sor megjelenik (az eltérés iránya nem számít)', () => {
-    renderDoc(false, 'hu', { lista: 45000, tenyleges: 50000 });
-    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
+  it('sor-szintű felár önmagában sem nyit referenciasort', () => {
+    const { container } = renderDoc(false, 'hu', { lista: 45000, tenyleges: 50000 });
+    expect(screen.queryByText('Kezelések összege')).not.toBeInTheDocument();
     expect(screen.getByText('Végösszeg')).toBeInTheDocument();
-    expect(screen.getByText('45 000 Ft')).toBeInTheDocument();
+    expect(container.textContent).not.toContain('45 000 Ft');
     expect(screen.getAllByText('50 000 Ft').length).toBeGreaterThan(0);
   });
 
@@ -203,6 +199,65 @@ describe('TervDocument -- backlog-12: feltételes összegsor', () => {
     renderDoc(false, 'de', { lista: 45000, tenyleges: 45000 });
     expect(screen.getByText('Gesamtbetrag')).toBeInTheDocument();
     expect(screen.queryByText('Behandlungen gesamt')).not.toBeInTheDocument();
+  });
+});
+
+describe('TervDocument -- a nyomtatvány minden száma levezethető a kinyomtatott sorokból', () => {
+  // A bejelentés repró-terve: egy felfelé és két lefelé eltérített sor.
+  const REPRO: Arak[] = [
+    { lista: 38000, tenyleges: 65000 },
+    { lista: 95000, tenyleges: 85500 },
+    { lista: 135000, tenyleges: 121500 },
+  ];
+  const SOROK_OSSZEGE = 272000;
+
+  function renderRepro(kedvezmenyOsszeg: number | null = null) {
+    const plan = buildPlan(false, 'hu', REPRO[0]);
+    for (const arak of REPRO.slice(1)) {
+      plan.fazisok[0].sorok.push({
+        tetelId: '',
+        nevSnapshot: 'További tétel',
+        savos: false,
+        fogak: '',
+        mennyiseg: 1,
+        listaEgysegar: arak.lista,
+        tenylegesEgysegar: arak.tenyleges,
+      });
+    }
+    plan.kedvezmenyOsszeg = kedvezmenyOsszeg;
+    return render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly
+        nyilatkozatMd=""
+        fizetesiFeltetelekMd=""
+        garanciaMd=""
+        tervCim=""
+        toothChartPng={null}
+      />,
+    );
+  }
+
+  it('egymást részben kioltó sorszintű felár és kedvezmény: csak a Végösszeg áll ott, a kinyomtatott sorok összegével', () => {
+    renderRepro();
+    expect(screen.queryByText('Kezelések összege')).not.toBeInTheDocument();
+    const vegosszeg = screen.getByText('Végösszeg');
+    expect(within(vegosszeg.parentElement!).getByText('272 000 Ft')).toBeInTheDocument();
+    // A fázistáblák sorösszegei pontosan ezt adják ki.
+    const sorosszegek = REPRO.reduce((sum, a) => sum + a.tenyleges, 0);
+    expect(sorosszegek).toBe(SOROK_OSSZEGE);
+  });
+
+  it('terv-szintű Egyedi végösszeg megnyitja a referenciasort, a KINYOMTATOTT sorok összegével', () => {
+    renderRepro(12000);
+    const referencia = screen.getByText('Kezelések összege');
+    expect(within(referencia.parentElement!).getByText('272 000 Ft')).toBeInTheDocument();
+    const vegosszeg = screen.getByText('Végösszeg');
+    expect(within(vegosszeg.parentElement!).getByText('260 000 Ft')).toBeInTheDocument();
+    // A listaárak összege (268 000 Ft) sehol nem jelenik meg a papíron.
+    expect(screen.queryByText('268 000 Ft')).not.toBeInTheDocument();
   });
 });
 
@@ -368,7 +423,7 @@ describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmé
     expect(szoveg).not.toMatch(/kedvezm/i);
     expect(szoveg).not.toMatch(/[−-]\s?\d+\s?%/);
     expect(szoveg).not.toContain('5 000 Ft');
-    expect(screen.getByText('Kezelések összege')).toBeInTheDocument();
+    expect(screen.queryByText('Kezelések összege')).not.toBeInTheDocument();
   });
 
   it('az előleg a CSÖKKENTETT végösszeghez képest dől el, hogy túllépi-e a határt', () => {

@@ -4,10 +4,12 @@ import {
   elolegOsszegek,
   elolegSzazalekbol,
   elolegTullepi,
+  elteresBontas,
   osszesitokElter,
+  sorokListaOsszeg,
   tervVegosszeg,
 } from './totals';
-import type { Fazis } from './types';
+import type { Fazis, Sor } from './types';
 
 const fazisok: Fazis[] = [
   {
@@ -27,6 +29,76 @@ const fazisok: Fazis[] = [
     ],
   },
 ];
+
+describe('elteresBontas', () => {
+  function reproFazisok(): Fazis[] {
+    const sor = (lista: number, tenyleges: number): Sor => ({
+      tetelId: '',
+      nevSnapshot: 'Tétel',
+      savos: false,
+      fogak: '',
+      mennyiseg: 1,
+      listaEgysegar: lista,
+      tenylegesEgysegar: tenyleges,
+    });
+    return [
+      {
+        sorszam: 1,
+        megnevezes: '1. kezelés',
+        megjegyzes: '',
+        // A bejelentés repró-terve: +27 000 felár, −23 000 kedvezmény.
+        sorok: [sor(38000, 65000), sor(95000, 85500), sor(135000, 121500)],
+      },
+    ];
+  }
+
+  it('a két irányt külön adja vissza, nem nettózva', () => {
+    expect(elteresBontas(reproFazisok())).toEqual({ kedvezmeny: 23000, felar: 27000 });
+  });
+
+  it('a terv-szintű kedvezmény a saját előjele szerinti oldalra kerül', () => {
+    expect(elteresBontas(reproFazisok(), 12000)).toEqual({ kedvezmeny: 35000, felar: 27000 });
+    expect(elteresBontas(reproFazisok(), -12000)).toEqual({ kedvezmeny: 23000, felar: 39000 });
+  });
+
+  it('eltérés nélkül mindkét oldal nulla', () => {
+    const egyezo: Fazis[] = [
+      {
+        sorszam: 1,
+        megnevezes: '1. kezelés',
+        megjegyzes: '',
+        sorok: [
+          {
+            tetelId: '',
+            nevSnapshot: 'Tétel',
+            savos: false,
+            fogak: '',
+            mennyiseg: 2,
+            listaEgysegar: 10000,
+            tenylegesEgysegar: 10000,
+          },
+        ],
+      },
+    ];
+    expect(elteresBontas(egyezo)).toEqual({ kedvezmeny: 0, felar: 0 });
+  });
+
+  it('a két oldal a listaárak összegével együtt pontosan a tervVegosszeg-et adja', () => {
+    for (const tervSzintu of [null, 12000, -12000]) {
+      const bontas = elteresBontas(reproFazisok(), tervSzintu);
+      expect(sorokListaOsszeg(reproFazisok()) + bontas.felar - bontas.kedvezmeny).toBe(
+        tervVegosszeg(reproFazisok(), tervSzintu),
+      );
+    }
+  });
+
+  it('a tervVegosszeg 0-padlójánál a kedvezmény-oldal ehhez igazodik, nem a begépelt értéket mutatja', () => {
+    // 272 000 a sorok összege; 500 000 elengedése 0 fizetendőt ad.
+    const bontas = elteresBontas(reproFazisok(), 500000);
+    expect(sorokListaOsszeg(reproFazisok()) + bontas.felar - bontas.kedvezmeny).toBe(0);
+    expect(bontas.kedvezmeny).toBeLessThan(23000 + 500000);
+  });
+});
 
 describe('osszesitokElter', () => {
   it('returns null when the saved osszesitok matches the recomputed value', () => {

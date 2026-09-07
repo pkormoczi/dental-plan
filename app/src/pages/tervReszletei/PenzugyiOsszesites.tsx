@@ -1,9 +1,10 @@
 // A "pénzügyi összesítés" slot tartalma a Terv részletei nézeten.
-// Minden MEGJELENÍTETT szám a mentett
+// A Végösszeg és az előleg a mentett
 // `plan.osszesitok`-ból jön, nem a `tervVegosszeg()` újraszámolásából: egy
 // lezárt dokumentumnak az aláírt papírral kell egyeznie, nem a mai kódból
-// újraszámolt értékkel. Az újraszámolásnak itt EGYETLEN szerepe van, az
-// ELTÉRÉS kimutatása (`osszesitokElter`) -- sosem a kiírt érték forrása.
+// újraszámolt értékkel. A referenciasor a mentett SOROKBÓL számol -- azok is
+// a pillanatkép részei, és a nyomtatvánnyal kell egyeznie; a kettő eltérését
+// az `osszesitokElter` callout mutatja ki.
 // A feliratok a nyomtatvány szókincsét követik (`pdf/labels.ts`), nem a
 // szerkesztőét -- ez a lap egy lezárt dokumentum nézete.
 
@@ -12,7 +13,7 @@ import { InfoCircledIcon } from '@radix-ui/react-icons';
 import Section from '../../components/Section';
 import { t } from '../../design/tokens';
 import { formatMoney } from '../../domain/money';
-import { elolegOsszegek, osszesitokElter } from '../../domain/totals';
+import { elolegOsszegek, osszesitokElter, sorokOsszeg } from '../../domain/totals';
 import type { Plan } from '../../domain/types';
 
 export default function PenzugyiOsszesites({ plan }: { plan: Plan }) {
@@ -28,24 +29,23 @@ export default function PenzugyiOsszesites({ plan }: { plan: Plan }) {
   // A STORED `fizetendo` a bemenet, sosem az újraszámolt `tervVegosszeg()`.
   const fizetes = elolegOsszeg == null ? null : elolegOsszegek(osszesitok.fizetendo, elolegOsszeg);
 
+  const kezelesekReferencia = sorokOsszeg(plan.fazisok);
+
   const becsultDb = plan.fazisok.reduce((n, f) => n + f.sorok.filter((s) => s.savos).length, 0);
 
   return (
     <Section title="Pénzügyi összesítés">
-      {/* A referenciasor akkor nyílik meg, ha a mentett összesítő szerint VAN
-          eltérés a listaártól -- nem egy sorok fölötti egyenlőség-vizsgálatból:
-          egymást nettóban kiegyenlítő sorszintű kedvezmény és felár mellett is
-          igaz, hogy a "Kezelések összege" más kérdésre válaszol, mint a
-          Végösszeg. A nyomtatvány sorrendjét követi (referencia felül, alatta
-          a domináns összeg), hogy a nézet úgy olvasódjon, mint a dokumentum. */}
-      {osszesitok.kedvezmeny !== 0 && (
+      {/* Ugyanaz a szabály, mint a nyomtatványon: a referencia a mentett sorok
+          összege, és csak LEFELÉ nyílik (felár-irányban nem) -- a nézet úgy
+          olvasódjon, mint a dokumentum, referencia felül, alatta a Végösszeg. */}
+      {kezelesekReferencia > osszesitok.fizetendo && (
         <>
           <Flex justify="between" align="baseline" gap="4">
             <Text size="2" style={{ color: t.uiTextMuted }}>
               Kezelések összege
             </Text>
             <Text size="2" style={{ color: t.uiTextMuted, fontVariantNumeric: 'tabular-nums' }}>
-              {penz(osszesitok.kezelesekOsszesen)}
+              {penz(kezelesekReferencia)}
             </Text>
           </Flex>
           <Box my="2" style={{ borderTop: `1px solid ${t.uiLine}` }} />
