@@ -3,7 +3,8 @@
 Dátum: 2026-09-05  
 Vizsgált HEAD: `f090b198e125dd9b5bf942d41d329bb97d084de2`  
 Hatókör: az alkalmazás teljes tesztleltára, teszt-infrastruktúrája, CI-ja, workflow-tesztjei és a tesztírást irányító dokumentumok.  
-Jelleg: értékelés és javaslat; nem elfogadott tesztelési szabályzat, nem implementációs terv. A súlyosságok a review megállapításai, nem backlog-`Prio` értékek.
+Jelleg: értékelés és javaslat; nem elfogadott tesztelési szabályzat, nem implementációs terv. A súlyosságok a review megállapításai, nem backlog-`Prio` értékek.  
+Kiegészítés: a 9. szakasz egy független második vélemény (2026-09-06), amely az F01–F12 állításait a kódon újraellenőrzi, és ahol eltér, azt kimondja.
 
 ## 1. Vezetői értékelés
 
@@ -333,6 +334,113 @@ Ha a doki külön tételként szeretné továbbvinni a tesztminőség javítás�
 
 Dedup: F01 termékhibája már felvett tétel; az új ötlet a tesztek bizonyítóerejére és a tárolási hibamátrixra korlátozódjon. F02-nél a pénztípus és sémamigráció meglévő ötleteivel kell egyeztetni a hatókört. A módszertani szabályzat a 6. szakasz alapján ettől külön döntésként is bevezethető.
 
+## 9. Második vélemény — kritikai átnézés (2026-09-06)
+
+Szerző: Claude Fable 5.1, a doki kérésére, a fenti review független ellenőrzéseként.  
+Vizsgált HEAD: `2fa4b8a` (31 commit a review HEAD-je után).  
+Módszer: az F01–F12 minden hivatkozott tesztjét és forráshelyét újraolvastam; a teljes készletet újra lefuttattam JSON-riporterrel; a skilleket, a `docs-check`-et, a workflow-kaput, a nested `CLAUDE.md`-ket és a lint-konfigot a review állításai ellen ellenőriztem. Coverage-t, mutációt, böngészős futást én sem mértem.
+
+Saját futtatás (Windows, Node v26.4.0):
+
+| Mérés | Érték |
+|---|---:|
+| Tesztfájl / futó eset | 102 / 1882 (a review óta egy új fájl: `pdf/bufferShim.test.ts`) |
+| Falidő az első fájl indulásától az utolsó befejezéséig | 95,4 s |
+| Fájlon belüli futásidők összege (párhuzamos, nem várakozási idő) | 525 s |
+| A 45 `domain/` fájl összege | 0,64 s |
+| Leglassabb fájl: `PriceListAdminPage.test.tsx` | 95,1 s, 53 eset |
+| A három `PriceListAdminPage*` fájl együtt | 146 s CPU, 68 eset |
+
+A számok a review mérését visszaigazolják. A lényeges következtetést viszont másképp vonom le: a leglassabb egyetlen fájl 95 s, ami gyakorlatilag egyenlő a teljes falidővel — a készlet futásideje ma **ennek az egy fájlnak a kritikus útja**, nem az 1882 eset összege. Ez a fájlfelosztás vagy worker-szám helyett a fixture-csökkentést jelöli ki egyetlen hatásos karnak, és pontosan ennél a családnál.
+
+### 9.1 Megerősített állítások
+
+| Megállapítás | Ellenőrzés | Eredmény |
+|---|---|---|
+| F01 — a `usePDF` mock nem renderel | `App.test.tsx`, `PreviewPage.test.tsx`, `PreviewPage.pdfHiba.test.tsx` mockja; `PreviewPage.tsx` `doFinalize` | Igaz. A véglegesítés a már kész blob bájtjait menti, a `tervId`/`verzio` a `savePlan` után, `loadPlan`-nal jön vissza. A termékhiba tétele közben terv lett (`backlog/pdf-verzioszam-mentett-verzio.md`); a `Verification` szakasza pont a PDF-fejléc és a mentett `terv.json` egyezését kéri — az F01 szerződésteszt ennek természetes elfogadási bizonyítéka. |
+| F02 — tört pénzérték átmegy a guardon | `validate.ts` `isFiniteNumber` | Igaz. A „pénz egész" invariáns a betöltési határon nincs kikényszerítve. Lásd 9.3/2 a további hézagokról. |
+| F02 — a `mennyiseg: 'sok'` eset nem izolált | `DemoStorage.test.ts` „rejects a structurally invalid (but syntactically valid) terv.json", `DemoDraftStorage.test.ts` ugyanez | Igaz: a hibás sorból mindkét ármező is hiányzik, három guard bármelyike elbuktatja. |
+| F03 — „appends v2 without touching v1" | `DemoStorage.test.ts` | Igaz: `verzio === 1` és a verziólista; a V1 tartalma és PDF-bájtjai nincsenek összevetve. |
+| F03 — `planCopy` „nem mutálja a forrás tervet" | `planCopy.test.ts` | Igaz: csak a `paciens` objektum referenciáját nézi. |
+| F03 — `ItemPicker` név-/kategóriatalálat | `ItemPicker.test.tsx` „egyetlen tétel sem szerepel mindkét szinten…" | Igaz. A teszt saját kommentje mondja ki, hogy a kategória nem illeszkedik, tehát kategória-blokk nem is keletkezik. A név ígéretét a teszt nem bizonyítja. |
+| F03 — „teljes szélességben" | `TervDocument.test.tsx` | Igaz, csak szövegsorrend. |
+| F03 — unmount-takarítás `console.error`-ral | `useMentesJelzo.test.tsx` | Igaz; React 19 alatt sincs ilyen figyelmeztetés, az assertion vákuumban zöld. |
+| F04 — részleges írás | `DemoStorage.ts` `doSavePlan` `try/catch` | Pontosítva: a rollback ág **létezik** (terv- és PDF-kulcs törlése, `paciens.json` szándékosan marad, a komment a harmadik írás esetét külön indokolja). Teszt viszont csak a második írás hibájára, új pácienssel van. A kód kommentje ma az egyetlen „bizonyíték" a harmadik írás esetére. |
+| F06 — `money.test.ts` duplikáció | „formats HUF as thousands-separated…" és „HU + HUF: szóköz elválasztó…" | Igaz, azonos hívás és elvárás. |
+| F07 — `StorageProvider` maga példányosít | `StorageContext.tsx` | Igaz, és ennél fontosabb, mint a review súlyozza — lásd 9.3/1. |
+| F07 — a lépésőr a wrapperben néma stub | `testUtils.tsx` `TestLepesGuardProvider` | Igaz, dokumentált. |
+| F09 — történeti tesztnevek | grep a tesztnevekre | 95 `backlog-NN` / `NN. tétel` alakú `it`/`describe` név. A gyökér szabály és a `docs-check` `D_PATTERN`-je ezt az alakot nem fogja. |
+| F11 — a helyi kapu és a CI eltér | `scripts/workflow/lib.mjs` `gate()`, `.github/workflows/deploy.yml` | Igaz: a `test:workflow` csak a CI-ban fut. A `SKIP_ONLY_PATTERN` a `.skip.each`/`.only.each`, `.skipIf`, `.todo` alakot és a `scripts/*.test.mjs` fájlokat nem fedi. |
+| F11 — Node-verzió | CI `lts/*`, helyi v26 | Igaz. |
+
+### 9.2 Ahol nem értek egyet, vagy pontosítok
+
+1. **`seed/plans.test.ts` — „minden demó sor hivatkozik…" (F03 táblázat).** A review szerint a teszt csak `length > 0`-t ellenőriz és „valóban minden releváns sort ellenőrizni" kellene. A közvetlenül utána álló két `it.each` viszont **minden** sorra lefut és a tétel létezését, illetve az ár egyezését állítja. A kifogásolt teszt a paraméterezett lista üresség-őre: üres tömbbel az `it.each` nulla esetet ad és csendben zöld marad. A lefedettség megvan, a **név** rossz. Teendő: átnevezés (pl. „a seed sorlistája nem üres — az alábbi it.each nem fut vákuumban"), nem erősítés. Tanulság, amit szabályba tennék: minden `it.each` mellé kötelező vákuum-őr.
+
+2. **Sorszám-hivatkozások.** A review sorra hivatkozik; 31 commit alatt ezek elcsúsztak (a `'sok'` eset ma a 374. sornál van, nem a 323.-nál). Review-ban és tervben a tesztre a nevével hivatkozzunk — ez a `docs-check` `test:` anchorjának alakja is —, sorra soha.
+
+3. **„Valódi PDF" nem jelent böngészőt.** A `@react-pdf/renderer` Node-buildje exportálja a `renderToBuffer`-t. Egy `// @vitest-environment node` pragmás tesztfájlban a `TervDocument` ténylegesen renderelhető, a NotoSans abszolút fájlútvonalról regisztrálva. Az F01 szerződésteszt (mentett `terv.json` ↔ PDF-fejléc `tervId`, `verzio`, páciensnév, pénznem, fizetendő) így a meglévő vitest-készletben, CI-ban futhat, Playwright és izolált Chrome nélkül. Ára: egy PDF-szövegkinyerő dev-függőség (`pdfjs-dist` vagy `pdf-parse`), mert a subset-beágyazott NotoSans miatt a nyers bájtokban a szöveg nem grep-elhető — a 2026-09-06-i manual-checks jelentés is csak a fontneveket találta meg regex-szel, a tartalmat nem. Ami Node-ban továbbra sem megy, és marad a `/manual-checks` pdf szeletén: a fogtérkép canvas→PNG útja, a CSP/asset-betöltés, a blob-URL-es iframe-előnézet.
+
+4. **A Playwright-javaslat a „Böngésző-automatizálás — nem tárgyalható" szabály szövegébe ütközik.** A szabály szó szerint tiltja, hogy „remote debuggingot bekapcsolni bármilyen böngészőben"; a Playwright saját, izolált Chromiumot indít, CDP-n vezérelve. A szabály **szellemével** (valós profil, bejelentkezett munkamenet védelme) nem ütközik, a betűjével igen. Sorrend: előbb a doki dönt a szabály bővítéséről (izolált, saját indítású, szintetikus adatú böngésző kifejezett engedélye CI-ban), csak utána jöhet szerszám. Addig a 3. pont szerinti Node-render adja a valódi PDF-bizonyítékot; a böngészős smoke külön döntés, nem a módszertan része.
+
+5. **A `/plan` `Verification`-be tett szintválasztás a sablon ellen megy.** A review azt javasolja, hogy a `Verification` nevezze meg a tesztelési szintet és a tesztcsaládot. A sablon viszont kifejezetten ezt mondja: „milyen megfigyelhető viselkedést kell látni (nem hogyan tesztelni)". A szint és a tesztcsalád „hogyan". Javaslat: a `Verification` marad tisztán viselkedés (a doki-interjú ne terhelődjön teszttechnikával); a szintválasztás és a meglévő teszt keresése az `/implement` 4. lépésébe kerül egy sorral, és a 5c diff-önellenőrzés negyedik kérdése lesz: „melyik meglévő teszt bizonyítja, melyik szinten, és mely esetet váltotta ki". A `/plan` `Current state` már ma is kéri a meglévő teszt megnevezését — ez elég a tervezési oldalon.
+
+6. **Az 548 s-os „költség" félrevezető viszonyítási alap.** A review jelzi, hogy nem várakozási idő, a költségtáblát mégis erre építi. Döntéshez a falidő (95 s) és a fejlesztői iteráció (egy fájl újrafuttatása) számít. A `PriceListAdminPage.test.tsx` 95 s-a egyben a készlet kritikus útja: a párhuzamos ütemezés ez alá nem megy, bármennyi worker. A fájlok szétvágása csak akkor gyorsít, ha vele a fixture is csökken — ebben egyetértünk, de a mérőszámot a falidőre cserélném.
+
+7. **A sorrend első lépése ne szabályzat legyen.** A review 7. szakasza a döntési rend leírásával indít. Az agentek megfigyelhetően a meglévő kódmintát másolják, nem a prózát: a 29 tesztfájl, ami seed-páciensnevekre épül, és a 18, ami a seedet importálja, így szaporodott el a `TestProviders` mintájából. Előbb a **helyes mintának kell léteznie kódban** (fake tároló, kis builder, egy mintateszt), utána mutathat rá a szabály. A szabályzat önmagában a mai mintát nem töri meg.
+
+### 9.3 Amit a review nem lát, vagy alulsúlyoz
+
+1. **Nincs injektálási varrat a `StorageProvider`-en.** A `new DemoStorage()` és `new DemoDraftStorage()` a provider `useMemo`-jában áll, se prop, se factory. Ez az F04, F05 és F07 közös gyökere: (a) minden lapteszt `dp:`-kulcsokat seedel `localStorage`-ba, mert máshogy nem tud adatot adni; (b) a `PlanStorage`-szerződés nem futtatható második implementáción; (c) az Electron `FileSystemStorage`-váltás ezt a providert amúgy is felnyitja. A legkisebb változás: opcionális `storage`/`drafts` prop (vagy `createStorage` factory) a `StorageProvider`-en, plusz egy `InMemoryPlanStorage` a `storage/` alatt tesztcélra. A lint tiltása a tesztfájlokra már ma is ki van kapcsolva, tehát a tesztek beadhatják. Ez az egy varrat teszi lehetővé a review 4. és 5. szakaszának nagy részét.
+
+2. **`validate.ts` további hézagai.** A tört pénzérték mellett átmegy: negatív ár és összesítő, `0`/negatív/tört `mennyiseg`, duplikált tétel-`id`, nem létező `kategoriaId`-hivatkozás, `NaN`-mentes de értelmetlen `ervenyessegNap` (negatív), az `alapertelmezettNyelv`/pénznem enum-értéke. Ezek egy része termékdöntés (tört mennyiség? negatív kedvezmény mint felár?), ezért a mátrix megírása előtt egy rövid doki-kérdés kell — különben a teszt a mai elfogadó viselkedést betonozza, és a „szándékosan megengedett" eseteket nem lehet megkülönböztetni a „még nem védett" esetektől. A pozitív kontrollok első listája már adott: az `assertSettingsShape` kommentje két engedményt mond ki (`inaktivOrvosok` opcionális, hibás `alapertelmezettOrvos` némán visszaesik).
+
+3. **Meglévő jó mechanizmus, amire építeni lehet.** A `test-setup.ts` a DOM-beágyazási `console.error`-t teszthibává emeli. Ez a „figyelmeztetés nem lehet zöld" elv gépi alakja, és ugyanezzel a mintával bővíthető (React `key`-figyelmeztetés, `act()`-figyelmeztetés). Előbb mérni, hány mai tesztet buktatna.
+
+4. **Semmi nem védi az assertion gyengítését.** A `docs-check` `test:` anchorja az anchorolt tesztek **nevét** védi az átnevezéstől, a tartalmát nem. Mutációs mérés nélkül ez csak eljárással védhető: az `/implement`-ben a „javítás visszavonásával a teszt piros" lépés, amit a review a 6. szakaszban javasol. Én ezt **csak** az invariáns-anchoros teszteknél tenném kötelezővé és jelentendővé, nem általánosan — így nem lassítja a rutinmunkát, de a hét hard invariánst őrző tesztnél nem maradhat el.
+
+5. **Ratchet-őr a történeti tesztnevekre.** A 95 `backlog-NN` / `NN. tétel` név takarítása nem indokol projektet, de új ilyen név ne kerülhessen be. A `docs-check` számolja a találatokat, és a rögzített felső korlát csak csökkenhet. Olcsó, nem indít refaktort, és a review F09 javaslatát („érintett tesztcsalád refaktorakor rendezhető") kényszerpályára teszi.
+
+6. **A globális `testTimeout: 15000` elrejti a lassulást.** A Vitest `slowTestThreshold` beállítása és a JSON-riport lassúlistája a CI-ban (jelentés, nem kapu) az F10 „tartós mérés" olcsó első lépése — a fenti táblázat egyetlen `node -e` sorral készült a riportból.
+
+7. **Reprodukálható Node.** `.nvmrc` + `package.json` `engines` + a CI-ban `node-version-file`. Egyoldalas, F11-hez tartozik, a review csak a célt mondja ki.
+
+8. **jsdom minden fájlra.** A 45 `domain/` fájl DOM nélkül fut, mégis jsdom-környezetet kap. Vitest `projects` (node: `domain`, `storage`, tiszta `pdf`; jsdom: a többi) — a nyereség a környezetindítás, nem a tesztidő; előbb mérni, valószínűleg 5–15 s CPU. Nem prioritás, de a review 5. szakaszának „Node/jsdom szétválasztás" sora ezzel válik konkréttá.
+
+9. **A `paths re-export sanity` teszt (F06) egy másik hiányra mutat.** A teszt a `VersionConflictError` nevét ellenőrzi; a valódi állítás az lenne, hogy `savePlan` ütközéskor ezt az osztályt dobja. Törlés helyett ezt az egy esetet írnám meg helyette — az ütközési út ma sincs közvetlenül tesztelve.
+
+### 9.4 Javasolt szabálykészlet — a `docs/TESTING.md` magja
+
+Rövid, részben gépileg őrizhető lista. Nem specifikáció; egy állítás egy sor.
+
+1. **Szint:** a legkisebb határ, ahol az üzleti jelentés megmarad (a review 5. szakaszának táblázata). Új kódhoz nem jár automatikusan új tesztfájl.
+2. **Egy szabály, egy mátrix:** az értékkombinációk `it.each`-ben, egy helyen, vákuum-őrrel; magasabb szinten egy összekötő eset.
+3. **Független elvárás:** az elvárt értéket nem a bizonyítandó függvény számolja.
+4. **Negatív teszt:** érvényes builderből indul, pontosan egy mező hibás; a hibaüzenetre is állítás.
+5. **A név minden állításához assertion:** „nem mutál" → mély egyenlőség fagyasztott bemenettel; „nem ment" → tárolóállapot; „megmarad" → visszaolvasott tartalom; „PDF" → Node-render vagy kimondottan DOM-tartalomteszt.
+6. **Laptesztben fake tároló és kis fixture;** a seed csak seed-integritásra és induló smoke-ra. Seed-páciensnév új tesztbe nem kerül.
+7. **Mock csak technikai határon** (`usePDF`, timer, `window.open`, `scrollTo`); saját domain-függvény azon a szinten sosem, amelynek a bekötését bizonyítja.
+8. **Takarítás `afterEach`-ben** vagy a Vitest `restoreMocks: true` kapcsolójával; kézi `vi.restoreAllMocks()` assertion előtt nem állhat.
+9. **Tesztnév:** előfeltétel–akció–eredmény, jelen idő, tétel-/backlog-hivatkozás nélkül (ratchet-őr).
+10. **Invariáns-anchoros tesztnél** az `/implement` jelentése kimondja, milyen hibás implementáció mellett bukna.
+
+Elhelyezés: `docs/TESTING.md` — a `docs-check` a `docs/` mappát nem-rekurzívan szkenneli, tehát az anchorok feloldódnak és a szabályzat nem hivatkozhat elavult tesztnévre. A gyökér `CLAUDE.md` Tesztek szakasza egy sorral mutat rá; a budget 4000 karakter, és a fájl ma pontosan 4000 karakter — a pointer csak akkor fér be, ha a Tesztek szakasz két mondata a TESTING.md-be költözik, és a helyén egyetlen pointer-sor marad. Az `/implement` 4. lépése hivatkozik rá. Sem a nested `CLAUDE.md`-kbe, sem más skillbe nem másolódik.
+
+### 9.5 Javasolt sorrend — eltérés a 7. szakasztól
+
+| Lépés | Konkrét eredmény | Miért ebben a sorrendben |
+|---|---|---|
+| 1. Varrat + minta | `StorageProvider` opcionális `storage`/`drafts` prop; `InMemoryPlanStorage`; egy `PriceListAdminPage`-eset átírva 3 tételes fake-re; egy `Plan`/`Sor` builder | Kódminta, amit az agentek másolni fognak; az Electron-váltásnak amúgy is kell; falidőt csak ez hoz |
+| 2. Éles hézagok | `validate.test.ts` mátrix a doki válaszai után; F03 hat assertion-javítása; a harmadik-írás-hiba és az ütközési út tesztje | Kicsi, konkrét, a hard invariánsokat érinti |
+| 3. PDF–JSON szerződésteszt Node-renderrel | A `pdf-verzioszam-mentett-verzio` tétel elfogadási bizonyítéka; `pdfjs-dist` dev-függőség döntéssel | A tétel már tervezett; a teszt a javítás része, nem külön projekt |
+| 4. Szabályzat és őrök | `docs/TESTING.md`; `/implement` egy sora; ratchet a tesztnevekre; `SKIP_ONLY_PATTERN` bővítése és a `scripts/*.test.mjs` bevonása; `gate()` = CI-lista; `.nvmrc` | Most már van mire mutatni |
+| 5. Pilot mérés | A három `PriceListAdminPage*` fájl a fake tárolóra; falidő előtte/utána | A kritikus út rövidül, nem a CPU-összeg |
+| 6. Tartós mérés | `slowTestThreshold` + lassúlista a CI-ban; diagnosztikai coverage explicit `include`-dal | Csak jelentés, nem kapu |
+
+A Playwright/böngészős smoke nem szerepel: a doki külön döntése a böngésző-automatizálási szabály bővítéséről, a módszertantól függetlenül.
+
+**Összegzés:** a review megállapításai a tényeken állnak, egy kivétellel (9.2/1), és a javasolt koncepció megtartható. Két helyen mást javaslok: a „valódi PDF" bizonyíték Node-renderrel a meglévő készletbe kerüljön, ne böngészős keretrendszerbe; és a rendezés kóddal (tároló-varrat, fake, builder) induljon, ne szabályzattal, mert az agentek a mintát követik.
+
 ## 8. Függelék — a vizsgált tesztkészlet teljes leltára
 
 A futó esetek száma paraméterezés utáni érték; minden felsorolt fájl zöld volt. A leltár a felülvizsgálat hatókörét rögzíti, nem fájlonkénti automatikus „jó minőség” minősítés. Az egyes családok értékelését és a változtatások indokát a fenti megállapítások és felelősségi mátrix tartalmazza.
@@ -442,3 +550,89 @@ A futó esetek száma paraméterezés utáni érték; minden felsorolt fájl zö
 | [app/src/storage/seed/templates.test.ts](../../app/src/storage/seed/templates.test.ts) | 10 |
 | **Alkalmazás összesen** | **1870** |
 | [scripts/workflow/workflow.test.mjs](../../scripts/workflow/workflow.test.mjs) | 10 |
+
+## 10. Playwright E2E — érv a bevezetés mellett és javasolt bekötés
+
+Dátum: 2026-09-07. A dokival folytatott megbeszélés kiegészítése. **Javaslat, nem elfogadott implementációs terv vagy a böngésző-automatizálási szabály módosítása.** A dokumentumba emelés önmagában nem engedélyezi a Playwright telepítését vagy futtatását.
+
+### 10.1 Miért lenne hasznos ennél az alkalmazásnál?
+
+Egy kis, célzott Playwright-készletet érdemes bevezetni, helyben és CI-ban is. A fő értéke a böngészős fő folyamatok rendszeres ellenőrzése: billentyűzetes tervkészítés, valódi PDF, mentés és újranyitás. A `/manual-checks` ismétlődő részét jelentősen csökkentheti, teljesen azonban nem váltja ki.
+
+- **Már volt böngészőspecifikus hiba.** A [2026-09-06-i manual-check jelentés](2026-09-06-manual-checks-all.md) a `Buffer is not defined` javítását valódi böngészőben igazolta. Egy production builden PDF-et készítő teszt ennek visszatérését automatikusan észlelhetné.
+- **A billentyűzetes ciklus termékérték.** A gépelés → nyilak → Enter → keresőürítés → visszakapott fókusz dönti el, gyorsabb-e az app az Excelnél. Ezt valódi böngészőben is érdemes őrizni.
+- **Az ismételt böngészős ellenőrzés költsége már ma is létezik.** A reset, navigáció, instrumentálás, mérés és eredményértelmezés stabil része egyszer megírható, utána agent nélkül futtatható.
+- **Erősebb letöltési bizonyíték.** A jelenlegi skill anchor/blob hívásokat figyel; a Playwright a tényleges letöltött fájl nevét és tartalmát is elérhetővé teszi. [Playwright: Downloads](https://playwright.dev/docs/downloads).
+
+A korábbi kizárás értelmezésénél két külön használatot kell megkülönböztetni: a régi technológiai dokumentum a szerveroldali PDF-generálást zárta ki az adatvédelmi korlát miatt; a szintetikus adatokkal végzett helyi vagy CI-teszt más felhasználás. Az aktuális gyökér `CLAUDE.md` böngészőszabályának szövegét ugyanakkor előbb pontosítani kellene saját indítású, izolált tesztböngészőre, a valós profilok és valódi páciensadatok védelmét megtartva. Az [Electron-terv](../desktop-app-migration-plan.md) már tartalmaz Playwright-indulástesztet, így a dokumentált irányokat is össze kell hangolni. A Playwright Electron-támogatása jelenleg kísérleti; a webes teszt nem bizonyítja önmagában a csomagolt Electron-app indulását vagy fájlrendszer-kezelését. [Playwright: Electron](https://playwright.dev/docs/api/class-electron).
+
+### 10.2 Node PDF-render és böngészős véglegesítés: két bizonyítási felelősség
+
+A 9.2/3 javaslata helyes: valódi PDF Node-ban, `renderToBuffer`-rel is előállítható. Ez jó hely a dokumentum tartalmi és renderelési szerződésének célzott vizsgálatára. [React-pdf: Node API](https://react-pdf.org/docs/v4/node).
+
+**A dokumentum helyes renderelése és a véglegesítéskor ténylegesen elmentett dokumentum helyessége azonban két külön állítás.** Ha a teszt maga készít helyes verziószámú tervet, abból PDF-et renderel és összehasonlítja őket, a felület közben még menthet egy korábbi, elavult blobot. A Node-teszt akkor védi ezt is, ha a valódi véglegesítési folyamatot hajtja meg; önmagában a renderer meghívása nem elég.
+
+A Playwright a felhasználó kattintásától ellenőrizhetné a teljes böngészős utat. A véglegesítés után **ugyanannak az archivált verziónak a ténylegesen eltárolt PDF-jét és JSON-ját** kell összevetni: tervazonosító, verzió, páciensnév, pénznem, fizetendő. Az elvárt üzleti értékekhez független assertion is kell, mert két egyformán hibás kimenet egyezése nem elég. V2 létrehozásakor V1 teljes JSON-tartalma és PDF-bájtjai maradjanak változatlanok.
+
+A PDF feldolgozásához külön szövegkinyerő szükséges; ezt a Playwright önmagában nem adja. A böngészőben előállított és letöltött fájlt kell feldolgozni, nem a tesztben újrarenderelt helyettesítő dokumentumot. A canvas→PNG fogtérkép, a production asset-betöltés és a CSP további böngészős bizonyítékot igényel. A PDF-szöveg helyessége nem bizonyítja a glyphek vizuális helyességét vagy a tördelés minőségét.
+
+### 10.3 Javasolt technikai bekötés
+
+1. **Külön készlet:** `app/e2e/*.spec.ts`, `app/playwright.config.ts`, `@playwright/test` fejlesztői függőség, `test:e2e` npm-parancs. A Vitest ne gyűjtse be az E2E-fájlokat; a lint, a TypeScript-ellenőrzés és a tesztszabályokat ellenőrző őr hatóköre viszont terjedjen ki rájuk. A függőségeket lockfile, a Node-verziót egységes helyi/CI-beállítás rögzítse.
+2. **Kezdetben csak Chromium:** a jelenlegi és tervezett használathoz ez indokolt. Több böngésző és platform teljes mátrixa most aránytalan karbantartás lenne.
+3. **Production build helyi kiszolgálása:** build után `vite preview`, rögzített porttal, `strictPort`-tal és kizárólag helyi eléréssel. Példa: `http://127.0.0.1:4173/dental-plan/#/`. Így a base path, a csomagolt kód, a fontok és a production CSP is a vizsgálat része. A Playwright `webServer` indítsa és állítsa le a preview-szervert; a kapu ne használjon újra véletlenül másik vagy elavult szervert. [Playwright: Web server](https://playwright.dev/docs/test-webserver).
+4. **Tesztenként friss környezet:** kizárólag szintetikus adatok, kontrollált idő és kezdeti állapot, saját indítású böngésző. A Playwright tesztenként külön böngészőkörnyezetet ad saját localStorage-dzsal, így a tesztek közötti kézi reset-koreográfia kiváltható. A piszkozat-visszaállítás tesztjén belül természetesen ugyanaz a tároló marad az újratöltéshez. [Playwright: Isolation](https://playwright.dev/docs/browser-contexts).
+5. **Valódi fő folyamat:** a mentési E2E a production `DemoStorage`-ot és PDF-renderelést használja. A kis fixture és injektálható fake tároló továbbra is jó a laptesztekhez; az E2E mentési útjából ne helyettesítsük ki azt, amit bizonyítani akarunk. Az adat-előkészítés és visszaolvasás a tárolóhatárokat tiszteletben tartó tesztsegéden át történjen; ne kerüljön tesztcélú kerülőút a production felhasználói folyamatba.
+6. **Megfigyelhető eredmények:** felirat, fókusz, visszatöltött adat, letöltött fájl és releváns alkalmazás-/CSP-hibák. Rögzített várakozások helyett konkrét állapotokra várjunk. Hibánál maradjon trace és screenshot; a tesztadat és minden feltöltött diagnosztikai artefaktum szintetikus legyen. A véletlenszerű hibákat ismételt futással mérjük, ne korlátlan újrapróbálással fedjük el.
+
+### 10.4 CI és helyi kapu
+
+**A kis, stabil készlet a deploy előtt kötelező CI-lépés legyen.** A jelenlegi `.github/workflows/deploy.yml` build-jobjában, a build után és a Pages-artifact feltöltése előtt:
+
+```text
+npm ci
+meglévő ellenőrzések és build
+npx playwright install --with-deps chromium
+npm run test:e2e
+Pages-artifact feltöltése
+deploy
+```
+
+Így PR-en és master-pushon is ellenőriz, hibánál nem élesül az új build. Ugyanazt a tesztelt `dist` tartalmat kell feltölteni, közben új build nélkül. Ha később külön E2E-job készül, a deploy annak sikerétől is függjön. A Playwright támogatja a GitHub Actions-futtatást és a hibakeresési riportok megőrzését. [Playwright: CI](https://playwright.dev/docs/ci-intro).
+
+A helyi teljes kapuba is ugyanaz a kis készlet kerüljön, hogy a hiba a doki munkafán végzett ellenőrzése és a push előtt kiderüljön. Az `npm test` maradhat a Vitest parancsa; a workflow-kapu külön hívja a `test:e2e`-t a friss build után. A böngésző telepítése helyben egyszeri környezet-előkészítés, nem minden futás része. A `gate()` és az érintett workflow-hívók kapulistáját együtt kell módosítani, hogy a helyi és CI-bizonyíték ne térjen el.
+
+### 10.5 Mit lehet migrálni?
+
+| Jelenlegi ellenőrzés | Javasolt hely |
+|---|---|
+| `App.test.tsx`: létrehozás → véglegesítés → V2 | Playwright valódi PDF-fel; az azonos felelősségű jsdom-flow az egyenértékű vagy erősebb bizonyíték után kiváltható |
+| „F5” unmount–remount szimuláció | Playwright valódi oldalfrissítéssel |
+| Manual-check: tételfelvitel ×3, Escape, Tab, fókusz | Playwright |
+| Manual-check: popover levágása két felbontáson | Playwright geometriai ellenőrzéssel |
+| Manual-check: fájlnév, letöltés, fontbetöltés, CSP-hiba | Playwright |
+| PDF-szövegfeltételek részletes mátrixa | Gyors tartalomtesztek és célzott Node PDF-render |
+| Pénz, validáció, verziózás, tárolási hibainjektálás | Domain-/storage-tesztekben marad |
+| Használhatóság, szakmai helyesség, nyomtatvány összhatása | Emberi/agent által végzett felülvizsgálat |
+
+A migráció után az átfedő tesztet valóban ki kell venni vagy szűkíteni; az E2E ne pusztán újabb ismétlése legyen ugyanannak a mátrixnak. Minden átvitt esetnél nevezzük meg, milyen bizonyítási felelősséget vesz át és melyik korábbi ellenőrzést váltja ki.
+
+Az árlista-admin több tucat esetét nem indokolt böngészőbe költöztetni. A lassú fixture-problémát a jelenlegi szinten kell megoldani, kis adatokkal és megfelelő tárolóinjektálással. A Playwright önmagában nem ígér gyorsulást; a teljes futásidőt és a megspórolt kézi munkát külön kell mérni.
+
+### 10.6 Mi marad a manual-checks feladata?
+
+A `/manual-checks` megmarad a feltáró vizsgálatra, az új interakciók áttekintésére és az értelmezést igénylő vizuális ellenőrzésre. A doki kézi elfogadása külön termékdöntés: az automatikus teszt nem dönti el, hogy egy új flow használhatóbb lett-e vagy a nyomtatvány szakmailag megfelelő-e.
+
+A screenshot-összehasonlítás változást jelez, de nem bizonyítja, hogy a referencia jó volt vagy az új kép jobb lett. A referenciaképekhez azonos renderelési környezet kell; Windows és Linux között ne legyen közös pixelpontos elvárás. Csak kevés, stabil és előzetesen ellenőrzött nézet kapjon ilyen tesztet; a baseline-frissítés ne váljon automatikus hibafeloldássá. [Playwright: Visual comparisons](https://playwright.dev/docs/test-snapshots).
+
+A skill checklistjéből az automatizált, egyenértékűen bizonyított pontok kikerülhetnek, helyükön a tesztre utalással. A megmaradó pontok kadenciáját a változás jellege határozza meg. A jelenlegi skill futtatási korlátai nem módosulnak e javaslat dokumentálásától.
+
+### 10.7 Első pilot és értékelés
+
+Első körben három forgatókönyv:
+
+1. **Billentyűzetes tételfelvitel:** három egymást követő felvétel egér nélkül; a megfelelő sorok létrejönnek, a kereső ürül és visszakapja a fókuszt.
+2. **Piszkozat-visszaállítás:** a bevitt adatok valódi oldalfrissítés után megmaradnak.
+3. **Véglegesítés és V2:** a ténylegesen archivált PDF és JSON releváns mezői egyeznek a független elvárással; az új verzió létrejön, V1 teljes tartalma változatlan.
+
+Ezeken kell mérni a helyi és CI-futásidőt, az ismételt futások bizonytalan hibáit, a hibadiagnózis használhatóságát és a kiváltható kézi munkát. A pilot eredménye alapján érdemes a további manual-check pontokat átemelni. Ez már érdemi böngészős védelmet adhat kezelhető karbantartási költséggel, a meglévő domain-/storage-/komponenstesztek célzott javítása mellett.
