@@ -548,7 +548,12 @@ describe('TervReszleteiPage', () => {
     await seeder.init();
     const refV1 = await seeder.savePlan(makePlan(), new Uint8Array([1]));
     const v1 = await seeder.loadPlan(refV1);
-    const refV2 = await seeder.savePlan({ ...v1, keltezes: '2026-08-19' }, new Uint8Array([2]));
+    // `verzio: 0` = a hívó nem foglalt előre azonosítót, a verziószámot a
+    // storage osztja ki (a foglalás az előnézeté, lásd DemoStorage.doSavePlan).
+    const refV2 = await seeder.savePlan(
+      { ...v1, verzio: 0, keltezes: '2026-08-19' },
+      new Uint8Array([2]),
+    );
 
     let counter = 0;
     URL.createObjectURL = vi.fn(() => `blob:teszt-${++counter}`) as unknown as typeof URL.createObjectURL;

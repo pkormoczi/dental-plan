@@ -1633,12 +1633,18 @@ describe('PreviewPage -- letöltési fájlnév', () => {
       await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
 
-      // A terv még nincs véglegesítve -- PISZKOZAT- előtag, "uj" tervId.
+      // A terv még nincs véglegesítve -- PISZKOZAT- előtag; a tervId az
+      // előnézet LEFOGLALT azonosítója, ugyanaz, ami a papír fejlécére kerül.
       const link = await screen.findByRole('link', { name: 'Letöltés' });
-      expect(link).toHaveAttribute('download', 'PISZKOZAT-kezelesi-terv-Teszt-Ilona-uj.pdf');
+      const nev = link.getAttribute('download') ?? '';
+      const m = /^PISZKOZAT-kezelesi-terv-Teszt-Ilona-([a-z0-9]{6})\.pdf$/.exec(nev);
+      expect(m, `váratlan fájlnév: ${nev}`).not.toBeNull();
 
       await user.click(screen.getByRole('checkbox'));
-      expect(link).toHaveAttribute('download', 'PISZKOZAT-kezelesi-terv-Teszt-Ilona-uj-ajanlat.pdf');
+      expect(link).toHaveAttribute(
+        'download',
+        `PISZKOZAT-kezelesi-terv-Teszt-Ilona-${m![1]}-ajanlat.pdf`,
+      );
     },
     10000,
   );

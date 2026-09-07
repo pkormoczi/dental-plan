@@ -12,6 +12,7 @@ import { megjelenitettTorzsadat } from './paciensAdatok';
 import { latestVersionAcrossPlans } from './planFolders';
 import type { PatientFolder, PatientMasterData, Plan, PlanVersion } from './types';
 import type { PlanStorage } from '../storage/PlanStorage';
+import { generateId, nextVersionNumber } from '../storage/paths';
 
 /**
  * Egy páciens legfrissebb terv-verziója (listPlans -> listVersions ->
@@ -147,6 +148,48 @@ export async function feloldTervCimke(
     const plan = plans.find((p) => p.tervId === tervId);
     if (!plan) return null;
     return { patientDir, planDir: plan.dirName, tervCim: plan.tervCim };
+  } catch {
+    return null;
+  }
+}
+
+export interface FoglaltAzonosito {
+  /** Vadonatúj lánchoz frissen generált, egyébként a lánc meglévő azonosítója. */
+  tervId: string;
+  /** A lánc következő szabad verziószáma -- vadonatúj lánchoz 1. */
+  verzio: number;
+}
+
+/**
+ * A most kiadandó nyomtatvány azonosítójának ELŐZETES feloldása, a
+ * `feloldTervCimke()` mintáján, sosem dobva. Azért kell, mert a PDF bájtjai
+ * az előnézetben, a `savePlan()` ELŐTT készülnek el: enélkül a papír fejléce
+ * a piszkozat 0-s verzióját és üres `tervId`-jét mutatná, a mentett
+ * `terv.json` viszont a storage által kiosztott valódit.
+ *
+ * A verziószám a lánc VERZIÓMAPPÁIBÓL jön (`nextVersionNumber`), nem a
+ * forrásverzió +1-e -- egy régebbi verzióból nyitott új verzió is a lánc
+ * következő szabad számát kapja, ahogy a `doSavePlan()` is számol.
+ *
+ * `null` = a foglalás nem oldható fel (feloldhatatlan páciensmappa, ismeretlen
+ * lánc vagy dobó listázás); a hívó ilyenkor nem ad ki papírt.
+ */
+export async function feloldKovetkezoAzonosito(
+  storage: PlanStorage,
+  piszkozatPatientDir: string | null,
+  paciensId: string | undefined,
+  tervId: string,
+): Promise<FoglaltAzonosito | null> {
+  // Vadonatúj lánc: nincs mit listázni, a storage is friss id-t osztana ki.
+  if (!tervId) return { tervId: generateId(), verzio: 1 };
+  const patientDir = await feloldPatientDir(storage, piszkozatPatientDir, paciensId);
+  if (!patientDir) return null;
+  try {
+    const plans = await storage.listPlans(patientDir);
+    const plan = plans.find((p) => p.tervId === tervId);
+    if (!plan) return null;
+    const versions = await storage.listVersions(patientDir, plan.dirName);
+    return { tervId, verzio: nextVersionNumber(versions.map((v) => v.dirName)) };
   } catch {
     return null;
   }

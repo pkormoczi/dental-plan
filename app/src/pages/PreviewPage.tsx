@@ -18,7 +18,12 @@ import { isPlaceholderTemplate, sablonNyomtathato } from '../domain/templates';
 import { megjelenitettTervCim } from '../domain/tervCim';
 import { computeOsszesitok } from '../domain/totals';
 import { buildToothVisualStates } from '../domain/toothVisual';
-import { feloldPatientDir, feloldTervCimke } from '../domain/torzsadatBetoltes';
+import {
+  feloldKovetkezoAzonosito,
+  feloldPatientDir,
+  feloldTervCimke,
+  type FoglaltAzonosito,
+} from '../domain/torzsadatBetoltes';
 import type { Paciens, PlanRef } from '../domain/types';
 import { nyelviMismatchek } from '../domain/nyelviReview';
 import {
@@ -127,6 +132,37 @@ export default function PreviewPage() {
     (async () => {
       const cimke = await feloldTervCimke(storage, piszkozatPatientDir, plan.paciensId, plan.tervId);
       if (!cancelled) setMentettTervCim(cimke?.tervCim ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [storage, piszkozatPatientDir, plan.paciensId, plan.tervId]);
+
+  // A most kiadandó nyomtatvány azonosítója, a PDF renderelése ELŐTT
+  // lefoglalva -- enélkül a papír fejlécén a piszkozat 0-s verziója és üres
+  // tervId-je állna, a mentett terv.json-ban meg a storage kiosztotta valódi.
+  // `undefined` = még tart, `null` = nem oldható fel (ekkor nem adunk ki papírt).
+  const [foglalas, setFoglalas] = useState<FoglaltAzonosito | null | undefined>(undefined);
+  // Vadonatúj lánc frissen generált tervId-je az előnézeten belül STABIL --
+  // egy újrafutó feloldás nem cserélheti ki a papíron már látott azonosítót.
+  const ujLancTervIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const f = await feloldKovetkezoAzonosito(
+        storage,
+        piszkozatPatientDir,
+        plan.paciensId,
+        plan.tervId,
+      );
+      if (cancelled) return;
+      if (f && !plan.tervId) {
+        ujLancTervIdRef.current ??= f.tervId;
+        setFoglalas({ tervId: ujLancTervIdRef.current, verzio: f.verzio });
+        return;
+      }
+      setFoglalas(f);
     })();
     return () => {
       cancelled = true;
@@ -259,9 +295,17 @@ export default function PreviewPage() {
     !sablonNyomtathato(garanciaMd) && 'Garancia',
   ].filter((nev): nev is string => nev !== false);
 
+  // A nyomtatvány a LEFOGLALT azonosítót kapja; a piszkozat `tervId`/`verzio`
+  // mezői változatlanok maradnak -- az üres `tervId` több helyen a "vadonatúj
+  // lánc" diszkriminátora (TervCimField, PlanEditorPage, PatientPlanChains,
+  // domain/piszkozat.ts), a bélyegzés azok jelentését írná át.
+  const nyomtatvanyPlan = foglalas
+    ? { ...plan, tervId: foglalas.tervId, verzio: foglalas.verzio }
+    : plan;
+
   const tervDocument = (
     <TervDocument
-      plan={plan}
+      plan={nyomtatvanyPlan}
       settings={settings}
       priceList={priceList}
       offerOnly={effectiveOfferOnly}
@@ -286,6 +330,7 @@ export default function PreviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     plan,
+    foglalas,
     settings,
     effectiveOfferOnly,
     nyilatkozatMd,
@@ -313,7 +358,9 @@ export default function PreviewPage() {
   );
 
   async function doFinalize() {
-    if (!pdfInstance.blob) return;
+    // A foglalás nélkül a PDF fejlécén nem a mentendő azonosító áll -- a gomb
+    // ilyenkor amúgy is letiltott, ez a technikai zár a closure oldalán.
+    if (!pdfInstance.blob || !foglalas) return;
 
     // A GOMBNYOMÁSKORI csekklista -- a `csekklista` a closure-ön át a MOST
     // renderelt értéket adja, a lenti `masterPaciens`-újraolvasás előtti
@@ -348,6 +395,10 @@ export default function PreviewPage() {
       }
       const finalPlan = {
         ...plan,
+        // A nyomtatványra RENDERELT azonosító mentődik -- a `savePlan` a nem
+        // nulla `verzio`-t ellenőrzi, és eltérésnél dob (semmi nem íródik ki).
+        tervId: foglalas.tervId,
+        verzio: foglalas.verzio,
         statusz: 'VEGLEGES' as const,
         // Az EFFEKTÍV érték mentődik, nem a nyers `plan.csakAjanlat` --
         // placeholder-nyilatkozat miatt kényszerített esetben is a
@@ -497,7 +548,7 @@ export default function PreviewPage() {
       : (pdfError as unknown) instanceof Error
         ? (pdfError as unknown as Error).message
         : String(pdfError);
-  const busy = saving || pdfStale;
+  const busy = saving || pdfStale || foglalas === undefined;
   // A "Nyelvi ellenőrzésre váró szövegek" checklist-tétel guided-review
   // gombjának célja -- a lista tartalma megegyezik a `csekklista`
   // `nyelvi-review` tételének forrásával (domain/veglegesitesOr.ts), külön
@@ -510,6 +561,15 @@ export default function PreviewPage() {
       {templateError && (
         <Callout.Root color="red" mb="3">
           <Callout.Text>A sablonok betöltése meghiúsult: {templateError}</Callout.Text>
+        </Callout.Root>
+      )}
+      {foglalas === null && (
+        <Callout.Root color="red" mb="3">
+          <Callout.Text>
+            A terv azonosítója nem oldható fel, ezért a nyomtatvány nem adható ki — a fejlécére
+            nem a mentendő verziószám kerülne. Lépj vissza a Kezelések lapra és nyisd meg újra az
+            Előnézetet; a foglalás ilyenkor újraindul.
+          </Callout.Text>
         </Callout.Root>
       )}
       {pdfError && (
@@ -566,7 +626,14 @@ export default function PreviewPage() {
           <Flex direction="column" align="end" gap="1">
             <Flex gap="3" wrap="wrap">
               {pdfInstance.url &&
-                (pdfError ? (
+                (!foglalas ? (
+                  // Technikai zár, nem a véglegesítés-őr tétele: amíg az
+                  // azonosító nincs lefoglalva, a letölthető PDF fejléce nem a
+                  // mentendő verziót mutatná.
+                  <Button variant="soft" color="gray" disabled>
+                    {foglalas === undefined ? 'Azonosító foglalása…' : 'Azonosító hiányzik'}
+                  </Button>
+                ) : pdfError ? (
                   // A könyvtár hibán át megőrzi az utolsó sikeres `url`-t
                   // (lásd a `pdfError` Callout fölötti kommentet) --
                   // letöltés nélküle egy a képernyőn látott tervvel már
@@ -583,7 +650,7 @@ export default function PreviewPage() {
                     <a
                       href={pdfInstance.url}
                       download={buildDownloadFileName(plan.paciens.nev, {
-                        tervId: plan.tervId || 'uj',
+                        tervId: foglalas.tervId,
                         isDraft: plan.statusz !== 'VEGLEGES',
                         suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
                       })}
@@ -594,7 +661,7 @@ export default function PreviewPage() {
                 ))}
               <Button
                 onClick={attemptFinalize}
-                disabled={busy || !!pdfError || vanKemenyBlokk(csekklista)}
+                disabled={busy || !!pdfError || !foglalas || vanKemenyBlokk(csekklista)}
                 aria-describedby={visszavonhatatlansagId}
               >
                 {saving ? 'Mentés…' : 'Véglegesítés és mentés'}

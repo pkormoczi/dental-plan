@@ -90,8 +90,11 @@ describe('DemoStorage', () => {
     const ref1 = await storage.savePlan(plan, new Uint8Array([1]));
     const v1 = await storage.loadPlan(ref1);
 
+    // `verzio: 0` = a hívó nem foglalt előre azonosítót, a kiosztás a
+    // storage-é; egy nem nulla, a lánc következő számától eltérő érték
+    // szándékosan dob (lásd a foglalás-ellenőrzés tesztjét lent).
     const ref2 = await storage.savePlan(
-      { ...v1, keltezes: '2026-08-19' },
+      { ...v1, verzio: 0, keltezes: '2026-08-19' },
       new Uint8Array([2]),
     );
 
@@ -171,7 +174,7 @@ describe('DemoStorage', () => {
     const v1 = await storage.loadPlan(ref1);
 
     const ref2 = await storage.savePlan(
-      { ...v1, keltezes: '2026-08-19' },
+      { ...v1, verzio: 0, keltezes: '2026-08-19' },
       new Uint8Array([2]),
       'Ez a cím nem hathat egy meglévő láncra',
     );
@@ -321,8 +324,8 @@ describe('DemoStorage', () => {
     // patientDir-hez tartozik, tehát a `nextVersionNumber()` versenyhelyzete
     // pont itt ütne be `await` nélkül a kettő között.
     const [refA, refB] = await Promise.all([
-      storage.savePlan(saved, new Uint8Array([2])),
-      storage.savePlan(saved, new Uint8Array([3])),
+      storage.savePlan({ ...saved, verzio: 0 }, new Uint8Array([2])),
+      storage.savePlan({ ...saved, verzio: 0 }, new Uint8Array([3])),
     ]);
 
     expect(refA.patientDir).toBe(ref1.patientDir);
@@ -331,6 +334,36 @@ describe('DemoStorage', () => {
 
     const versions = await storage.listVersions(ref1.patientDir, ref1.planDir);
     expect(versions.map((v) => v.verzio).sort()).toEqual([1, 2, 3]);
+  });
+
+  it('savePlan a lánc következő számától eltérő, nem nulla verzio-ra dob, és semmit nem ír ki', async () => {
+    const plan = makeBlankPlan();
+    const ref1 = await storage.savePlan(plan, new Uint8Array([1]));
+    const v1 = await storage.loadPlan(ref1);
+
+    // A hívó (az előnézet) v1-et foglalt, de a lánc következő szabad száma
+    // már v2 -- ez az a szétcsúszás, amikor a papíron más verzió áll, mint
+    // ami mentődne. Néma felülírás helyett dob.
+    await expect(
+      storage.savePlan({ ...v1, verzio: 1, keltezes: '2026-08-19' }, new Uint8Array([2])),
+    ).rejects.toThrow(/v1.*v2/);
+
+    const versions = await storage.listVersions(ref1.patientDir, ref1.planDir);
+    expect(versions.map((v) => v.verzio)).toEqual([1]);
+  });
+
+  it('savePlan az előre lefoglalt, EGYEZŐ verzio-t elfogadja', async () => {
+    const plan = makeBlankPlan();
+    const ref1 = await storage.savePlan(plan, new Uint8Array([1]));
+    const v1 = await storage.loadPlan(ref1);
+
+    const ref2 = await storage.savePlan(
+      { ...v1, verzio: 2, keltezes: '2026-08-19' },
+      new Uint8Array([2]),
+    );
+
+    expect(ref2.versionDir).toBe('2026-08-19_v2');
+    expect((await storage.loadPlan(ref2)).verzio).toBe(2);
   });
 
   // A `savePriceList`/`saveSettings` a `savePlan`-nal KÖZÖS

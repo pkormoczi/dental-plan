@@ -519,6 +519,17 @@ export class DemoStorage implements PlanStorage {
     const existingVersions = await this.listVersions(patientDir, planDir);
     const existingDirNames = existingVersions.map((v) => v.dirName);
     const verzio = nextVersionNumber(existingDirNames);
+    // A kiosztás autoritása itt marad, de egy nem nulla `plan.verzio` a hívó
+    // ELŐZETES foglalása (az előnézet a PDF-be már beleírta ezt a számot).
+    // Eltérésnél DOBUNK, nem írunk felül némán: a néma felülírás pont azt a
+    // szétcsúszást állítaná vissza, hogy a papíron más verzió áll, mint a
+    // mentett terv.json-ban. A 0 a piszkozat "nincs foglalás" értéke.
+    if (plan.verzio !== 0 && plan.verzio !== verzio) {
+      throw new Error(
+        `A nyomtatványra v${plan.verzio} került, de a lánc következő szabad verziója v${verzio} — ` +
+          'a terv nem mentődött. Lépj vissza az Előnézetre, hogy friss verziószámmal készüljön el a PDF.',
+      );
+    }
     const versionDir = buildVersionDirName(plan.keltezes, verzio);
     assertVersionDirAvailable(existingDirNames, versionDir);
 
