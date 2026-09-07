@@ -52,6 +52,15 @@ describe('az előleg-kapcsoló (abszolút összeg)', () => {
     expect(osszeg).toHaveFocus();
   });
 
+  it('betöltött előleggel mountolva a mező NEM kap fókuszt -- a kurzor ott marad, ahol volt', async () => {
+    renderBlokk(25000, 10000);
+
+    const osszeg = await screen.findByLabelText('Előleg összege');
+    expect(osszeg).toHaveValue('10000');
+    expect(osszeg).not.toHaveFocus();
+    expect(document.body).toHaveFocus();
+  });
+
   it('összeg beírása után a fennmaradó rész a fizetendőből számol', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);

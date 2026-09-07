@@ -39,6 +39,11 @@ export interface ElolegBlokkProps {
  */
 export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onChange }: ElolegBlokkProps) {
   const [on, setOn] = useState(() => elolegOsszeg != null);
+  // Az `autoFocus` a doki MOZDULATÁHOZ kötődik (pipa bekapcsolása, Ft/%
+  // módváltás), nem a mező puszta megjelenéséhez: egy betöltött előlegű
+  // piszkozat megnyitásakor (F5, "Vissza a szerkesztőbe") a mező már az első
+  // renderben ott van, és a kurzornak ott kell maradnia, ahol a doki hagyta.
+  const [fokuszKerve, setFokuszKerve] = useState(false);
   const [mod, setMod] = useState<ElolegMod>('osszeg');
   const [szazalek, setSzazalek] = useState<number | null>(null);
   // Van-e ÉRVÉNYES, commitált érték a mezőben -- ezt nézi a kötelező-mező
@@ -64,6 +69,8 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
     if (elolegOsszeg !== utoljaraKuldottRef.current) {
       setMod('osszeg');
       setSzazalek(null);
+      // Külső prop-változásból eredő megjelenés nem a doki mozdulata.
+      setFokuszKerve(false);
     }
   }, [elolegOsszeg]);
 
@@ -83,6 +90,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
           onCheckedChange={(checked) => {
             if (checked === true) {
               setOn(true);
+              setFokuszKerve(true);
               helyesErtekRef.current = false;
               setHibaLatszik(false);
               return;
@@ -110,6 +118,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
                   value={mod}
                   onChange={(v) => {
                     setMod(v);
+                    setFokuszKerve(true);
                     if (v === 'szazalek') setSzazalek(null);
                   }}
                   options={[
@@ -131,7 +140,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
                     value={szazalek}
                     penz={false}
                     min={0}
-                    autoFocus
+                    autoFocus={fokuszKerve}
                     aria-label="Előleg százaléka"
                     textAlign="right"
                     onCommit={(v) => {
@@ -168,7 +177,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
                     penz
                     unit={currency}
                     min={0}
-                    autoFocus
+                    autoFocus={fokuszKerve}
                     aria-label="Előleg összege"
                     textAlign="right"
                     onCommit={(v) => {
