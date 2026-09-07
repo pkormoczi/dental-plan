@@ -2,6 +2,51 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. szeptember 7.
+
+- A véglegesítés előtti előnézetben látható nyomtatvány már azt az azonosítót és verziószámot
+  viseli, amivel a terv el fog mentődni — így a most letöltött és a később elmentett példány
+  fejléce megegyezik. Amíg ez az azonosító nem áll rendelkezésre, a program kiírja, és addig sem
+  letöltés, sem véglegesítés nem indítható.
+- A „Véglegesítés és mentés” gomb mellett mostantól mindig ott áll, hogy a véglegesítés után a
+  terv nem módosítható, csak új változat készíthető — egy már véglegesített verziónál pedig ezt
+  is kiírja.
+- A véglegesítés utáni „A terv elmentve ✓” képernyőről mostantól külön lapon megnyitható és le is
+  tölthető az imént mentett nyomtatvány. Ha ez a képernyő elveszne (például frissítés miatt),
+  ugyanez a két gomb megtalálható a Kezdőlapon, „Az imént véglegesített terv” kártyán.
+- Ha a véglegesítés közben frissítjük az oldalt, az Előnézet már nem üres tervvel és hibalistával
+  fogad, mintha a mentés nem sikerült volna: a program a Kezdőlapra visz. Üres tervnél az Előnézet
+  lépés nem is kattintható.
+- Ha ugyanazt a piszkozatot két ablakban is szerkesztjük, a program nem némán fogadja el az utolsó
+  mentést: megmutatja mindkét változatot (hány sor, mekkora végösszeg), és mi választjuk ki, melyik
+  maradjon. Amíg nem választottunk, a szerkesztő fejléce kiírja, hogy a piszkozat nincs mentve.
+- A nyomtatványon minden összeg levezethető a rajta szereplő sorokból: a „Kezelések összege”
+  referenciasor a kilistázott sorok összegét mutatja, és csak akkor jelenik meg, ha a fizetendő
+  ennél kevesebb. A kedvezmény összege továbbra sem kerül a nyomtatványra.
+- A nyomtatványon a páciens születési dátuma mostantól a terv nyelvének megfelelő formátumban
+  jelenik meg.
+- A véglegesítés előtti ellenőrzőlista mostantól figyelmeztet a fogszám nélkül maradt sorokra. Az
+  Árlistában tételenként megadható, hogy az adott kezelésnél a fogszám nem szükséges — ilyenkor a
+  lista nem kéri számon.
+- A kezelés-kereső találatai relevancia szerint állnak sorba: elöl, aminek a neve a beírt szóval
+  kezdődik, azután a szó belsejében egyezők.
+- A fázis nevének beírása után a Tab és az Enter is egyenesen a fázis kereső mezőjébe visz, így a
+  következő kezelés azonnal gépelhető.
+- Sávos (tól–ig) árú kezelésnél a soron mostantól a teljes ár-sáv látszik, és a sávon belül maradó
+  ajánlati ár nem számít a listaártól való eltérésnek — sem a soron, sem a végösszegben, sem a
+  véglegesítés előtti listán.
+- Egy előleget tartalmazó piszkozat megnyitásakor az előleg mezője már nem rántja el magához a
+  kurzort.
+- Az előnézetben mutatott nyomtatványból a böngésző Vissza gombja mostantól a szerkesztőbe visz,
+  nem egy angol nyelvű hibaoldalra.
+
+## 2026. szeptember 6.
+
+- Ha a Terv adatai lapon saját címet adunk a tervnek, a véglegesítéskor létrejövő tervmappa
+  mostantól ezt a címet kapja, nem a program által javasoltat.
+- A páciensadatokat tartalmazó mezőkben (név, születési dátum, TAJ, lakcím, telefon, e-mail) a
+  böngésző már nem ajánlgat korábban máshol beírt értékeket.
+
 ## 2026. szeptember 5.
 
 - A kezelési sorok „Összeg” oszlopa már gépelés közben frissül — nem kell kilépni a mezőből
@@ -25,6 +70,15 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   egyik váltás sem töröl adatot.
 - A fizetési feltételek sablonjából megszűnt a régi, százalékos megfogalmazású változat:
   mostantól egyetlen szöveg él, amely a ténylegesen megadott előlegösszeget írja ki.
+- A pénzösszeget tartalmazó mezők megbízhatóbbak lettek: az 1000 fölötti euró árak már ezres
+  elválasztó nélkül jelennek meg (eddig a mező olyan alakban mutatta az összeget, amit kilépéskor
+  némán visszaállított), érvénytelen érték beírásakor a program megtartja az előzőt és ezt egy rövid
+  jelzéssel ki is írja, és a pénzösszegek már nem léptethetők a fel-le nyilakkal — egy véletlen
+  billentyű nem mozdítja el az árat.
+- A véglegesítés előtti ellenőrzőlistáról a „Nyomtatvány szövegei” gomb mostantól rögtön a terv
+  nyelvén nyitja meg a szerkesztőt.
+- A Terv adatai lapon a program mostantól kiírja, ha a nyelvet vagy a pénznemet a páciens legutóbbi
+  véglegesített tervéből örökölte, és így eltér a rendelő alapértelmezésétől.
 
 ## 2026. szeptember 4.
 
