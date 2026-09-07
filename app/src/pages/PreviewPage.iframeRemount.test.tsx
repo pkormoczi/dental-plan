@@ -127,7 +127,7 @@ describe('PreviewPage -- az előnézet-iframe URL-változáskor', () => {
       window.location.hash = '#/elonezet';
 
       await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
-      expect(screen.getByRole('link', { name: 'Letöltés' })).toBeInTheDocument();
+      expect(await screen.findByRole('link', { name: 'Letöltés' })).toBeInTheDocument();
       await waitFor(() =>
         expect(screen.getByRole('button', { name: /Véglegesítés és mentés/ })).not.toBeDisabled(),
       );

@@ -148,7 +148,9 @@ describe('PreviewPage -- 68. tétel: PDF-render hiba állapota', () => {
       await screen.findByRole('button', { name: /Véglegesítés és mentés/ });
       expect(screen.queryByRole('button', { name: 'Újrapróbálás' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Elavult PDF' })).not.toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Letöltés' })).toBeInTheDocument();
+      // A Letöltés-link csak az azonosító-foglalás beérkezése UTÁN jelenik meg
+      // (addig egy letiltott gomb áll a helyén) -- lásd PreviewPage.tsx.
+      expect(await screen.findByRole('link', { name: 'Letöltés' })).toBeInTheDocument();
       await waitFor(() =>
         expect(screen.getByRole('button', { name: /Véglegesítés és mentés/ })).not.toBeDisabled(),
       );

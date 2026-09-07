@@ -2,7 +2,9 @@
 // létrehozott, de be nem azonosított sor KEMÉNY blokk -- nem folytatható,
 // amíg a doki nem választ hozzá beavatkozást vagy nem törli a sort. A
 // @react-pdf/renderer usePDF()-jét ugyanúgy mockoljuk, mint App.test.tsx-ben
-// (lásd ott a header-kommentet az indoklásért).
+// (lásd ott a header-kommentet az indoklásért). A véglegesítés-gomb
+// engedélyezettségét mindenhol `waitFor` várja ki: az előnézet a PDF előtt
+// ASZINKRON lefoglalja a kiadandó azonosítót, és a gomb addig letiltott.
 
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -112,7 +114,7 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      expect(finalizeBtn2).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn2).not.toBeDisabled());
       await user.click(finalizeBtn2);
       await waitFor(() =>
         expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument(),
@@ -259,7 +261,7 @@ describe('PreviewPage -- hiányzó/nem aktív kezelőorvos kemény blokk', () =>
       );
       // A páciens egyéb adatai hiányosak (a `seedDraftWithOrvos` csak a
       // nevet tölti ki), de ez csak PUHA tétel -- nem blokkol.
-      expect(finalizeBtn2).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn2).not.toBeDisabled());
       await user.click(finalizeBtn2);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
@@ -373,7 +375,7 @@ describe('PreviewPage -- 94. tétel: névütközés kemény blokkja', () => {
         { timeout: 10000 },
       );
       expect(screen.queryByText(/egy másik, létező páciensre illik pontosan/)).toBeNull();
-      expect(finalizeBtn2).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn2).not.toBeDisabled());
     },
     20000,
   );
@@ -467,7 +469,7 @@ describe('PreviewPage -- 62. tétel: beárazatlan sor kemény véglegesítés-bl
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      expect(finalizeBtn2).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn2).not.toBeDisabled());
       await user.click(finalizeBtn2);
       await waitFor(() =>
         expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument(),
@@ -953,7 +955,7 @@ describe('PreviewPage -- német tételnév kemény blokk', () => {
       expect(
         screen.queryByText(/nem igazoltan németül kerül a nyomtatványra/),
       ).not.toBeInTheDocument();
-      expect(finalizeBtn).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
     },
     20000,
   );
@@ -1115,7 +1117,7 @@ describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
       // A hiányos páciensadat csak PUHA tétel, és ez az egyetlen ITT
       // teljesen lefordított sor (Zahnextraktion) -- nincs "nemet-nev"
       // hard tétel, a gomb közvetlenül ment.
-      expect(finalizeBtn).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
       await user.click(finalizeBtn);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
@@ -1217,7 +1219,7 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
       // PUHA tétel -- a gombnyomás ELŐTT is látszik, de NEM blokkol.
       expect(await screen.findByText(/csomagtételre hivatkozó soron nincs leírás/)).toBeInTheDocument();
       expect(screen.getByText(/Fogeltávolítás/)).toBeInTheDocument();
-      expect(finalizeBtn).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
 
       await user.click(finalizeBtn);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
@@ -1316,7 +1318,7 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
 
       expect(await screen.findByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
       expect(screen.getByText(/Érintett sorok: Érzéstelenítés/)).toBeInTheDocument();
-      expect(finalizeBtn).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
 
       await user.click(finalizeBtn);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
@@ -1354,7 +1356,7 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
         await screen.findByText(/Néhány páciensadat hiányzik/),
       ).toBeInTheDocument();
       expect(screen.getByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
-      expect(finalizeBtn).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
 
       await user.click(finalizeBtn);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
@@ -1497,7 +1499,7 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
       expect(
         await screen.findByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/),
       ).toBeInTheDocument();
-      expect(finalizeBtn).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
 
       await user.click(finalizeBtn);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
@@ -1586,7 +1588,7 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
         { name: /Véglegesítés és mentés/ },
         { timeout: 10000 },
       );
-      expect(finalizeBtn).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
 
       await user.click(finalizeBtn);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
@@ -1844,7 +1846,7 @@ describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés
       );
       expect(await screen.findByText(/Néhány sor ára eltér a mai árlistától/)).toBeInTheDocument();
       expect(screen.getByText(/Kézzel felülírt ajánlati ár: Fogeltávolítás/)).toBeInTheDocument();
-      expect(finalizeBtn).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
 
       await user.click(finalizeBtn);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
@@ -1956,7 +1958,7 @@ describe('PreviewPage -- 65. tétel: nyelvi review és a német tételnév kemé
       expect(
         screen.queryByText(/nem igazoltan németül kerül a nyomtatványra/),
       ).not.toBeInTheDocument();
-      expect(finalizeBtn2).not.toBeDisabled();
+      await waitFor(() => expect(finalizeBtn2).not.toBeDisabled());
       await user.click(finalizeBtn2);
       await waitFor(() => expect(screen.getByText('A terv elmentve ✓')).toBeInTheDocument());
     },
