@@ -87,6 +87,7 @@ function renderShell(initialPath: string) {
         <StorageProvider>
           <AppStateProvider>
             <Routes>
+              <Route path="/" element={<Probe label="Kezdőlap" />} />
               <Route path="/paciensek" element={<Probe label="Pácienslista" />} />
               <Route element={<TervWorkflowShell />}>
                 <Route path="/paciens" element={<PatientPage />} />
@@ -107,6 +108,9 @@ describe('TervWorkflowShell', () => {
   });
 
   it('mindhárom lépést megjeleníti, a jelenlegi route lépése aria-current="step"', async () => {
+    // Tartalmas piszkozat: az Előnézet lépés csak így link (üres piszkozaton
+    // szándékosan nem az, lásd a lenti üres-előnézet teszteket).
+    await seedActiveDraft();
     renderShell('/terv');
     const stepper = await screen.findByRole('navigation', { name: 'Terv munkafolyamat' });
 
@@ -123,9 +127,62 @@ describe('TervWorkflowShell', () => {
     renderShell('/paciens');
     await screen.findByPlaceholderText('Kovács János'); // a /paciens oldal betöltött, a draft üres
 
-    await user.click(screen.getByRole('link', { name: /Előnézet és véglegesítés/ }));
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+
+    expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
+  });
+
+  // A véglegesítés a piszkozatot a MENTÉS UTÁN törli: aki közben frissít, üres
+  // piszkozattal érkezne az Előnézetre, és a véglegesítés-őr piros hard tételeit
+  // látná egy MÁR elmentett terv után.
+  it('üres piszkozattal az /elonezet a Kezdőlapra irányít, nem a checklistet rendereli', async () => {
+    renderShell('/elonezet');
+
+    expect(await screen.findByText('Kezdőlap')).toBeInTheDocument();
+    expect(screen.queryByText('Előnézet-oldal')).not.toBeInTheDocument();
+  });
+
+  it('az átirányítás nem hagy vissza-léphető bejegyzést az üres előnézetre', async () => {
+    renderShell('/elonezet');
+    await screen.findByText('Kezdőlap');
+
+    window.history.back();
+
+    // A `replace` miatt nincs hova visszalépni: a Kezdőlap marad.
+    await waitFor(() => expect(screen.getByText('Kezdőlap')).toBeInTheDocument());
+  });
+
+  it('tartalmas piszkozattal az Előnézet változatlanul megjelenik', async () => {
+    await seedActiveDraft();
+    renderShell('/elonezet');
 
     expect(await screen.findByText('Előnézet-oldal')).toBeInTheDocument();
+  });
+
+  it('üres piszkozaton a stepper 3. lépése nem navigál, tartalmason igen', async () => {
+    const user = userEvent.setup();
+    renderShell('/paciens');
+    await screen.findByPlaceholderText('Kovács János');
+
+    const stepper = screen.getByRole('navigation', { name: 'Terv munkafolyamat' });
+    expect(within(stepper).queryByRole('link', { name: /Előnézet és véglegesítés/ })).toBeNull();
+    expect(within(stepper).getByLabelText('Előnézet és véglegesítés')).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+
+    // A név beírása tartalmassá teszi a piszkozatot -- a lépés újra link.
+    await user.type(screen.getByPlaceholderText('Kovács János'), 'Teszt Elek');
+    const lepes = await within(stepper).findByRole('link', {
+      name: /Előnézet és véglegesítés/,
+    });
+    await user.click(lepes);
+    expect(await screen.findByText('Előnézet-oldal')).toBeInTheDocument();
+  });
+
+  it('a /paciens és a /terv üres piszkozattal is elérhető marad', async () => {
+    renderShell('/paciens');
+    expect(await screen.findByPlaceholderText('Kovács János')).toBeInTheDocument();
   });
 
   it('a Páciensek breadcrumb-szegmens /paciensek-re mutat, a páciens neve NEM link, üres névnél "Új páciens"', async () => {

@@ -9,7 +9,7 @@
 // útvonalat vált ki.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Badge, Box, Separator, Text } from '@radix-ui/themes';
 import { LepesGuardProvider, type LepesHandler } from './LepesGuardContext';
 import NyelviReviewBar from './NyelviReviewBar';
@@ -17,23 +17,33 @@ import { NyelviReviewProvider } from './NyelviReviewContext';
 import PaciensBreadcrumb from './PaciensBreadcrumb';
 import { PaciensKotesProvider } from './PaciensKotesContext';
 import { t } from '../design/tokens';
+import { piszkozatTartalmas } from '../domain/piszkozat';
 import { WORKFLOW_LEPESEK } from '../domain/workflowLepesek';
 import { useAppState } from '../state/AppState';
 import type { WorkflowRoute } from '../storage/DraftStorage';
 
 export default function TervWorkflowShell() {
-  const { jelezWorkflowLepes } = useAppState();
+  const { plan, jelezWorkflowLepes } = useAppState();
   const { pathname } = useLocation();
   const navigate = useNavigate();
+
+  // Az Előnézet üres piszkozattal értelmezhetetlen: a `doFinalize` a
+  // piszkozatot a MENTÉS UTÁN törli, tehát az üres piszkozat itt mindig azt
+  // jelenti, hogy a verzió már a lemezen van -- egy ilyenkor renderelt
+  // előnézet a véglegesítés-őr piros hard tételeit mutatná ("A páciens neve
+  // kötelező"), mintha a mentés nem sikerült volna. A `/paciens` és a `/terv`
+  // érintetlen: azok a vadonatúj terv szabályos kiindulópontjai.
+  const uresElonezet = pathname === '/elonezet' && !piszkozatTartalmas(plan);
 
   // A piszkozat "utolsó workflow-lépése" -- a héj tudja MA IS, melyik
   // route-on áll a doki (route-alapú stepper), ezért ez az egyetlen hely,
   // ahol ez a metaadat íródik, nem mindhárom oldalon külön.
   useEffect(() => {
+    if (uresElonezet) return;
     if (WORKFLOW_LEPESEK.some((lepes) => lepes.to === pathname)) {
       jelezWorkflowLepes(pathname as WorkflowRoute);
     }
-  }, [pathname, jelezWorkflowLepes]);
+  }, [pathname, jelezWorkflowLepes, uresElonezet]);
 
   // backlog-40 (3. döntés): a "Terv adatai" lépés ELŐRE (Kezelések/
   // Előnézet felé) elhagyásának ajánlat-jellegű elfogása
@@ -75,6 +85,11 @@ export default function TervWorkflowShell() {
     kerLepesValtas(() => navigate(to));
   }
 
+  // `replace`: egy új history-bejegyzést a Vissza gomb ugyanerre az üres
+  // előnézetre dobna vissza, hurokba. A Kezdőlapon a páciens "Terv
+  // véglegesítve · az imént" sora mondja meg, hogy a mentés sikerült.
+  if (uresElonezet) return <Navigate to="/" replace />;
+
   return (
     <PaciensKotesProvider>
       <Box style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -86,6 +101,30 @@ export default function TervWorkflowShell() {
         >
           {WORKFLOW_LEPESEK.map((lepes, i) => {
             const aktiv = pathname === lepes.to;
+            // Üres piszkozaton az Előnézet lépés nem link, hanem fókuszálhatatlan
+            // felirat: az őr (fent) egy szabályos kattintást is magyarázat nélkül
+            // dobna ki a workflow-ból, egy `aria-disabled` link pedig Tabbal
+            // elérhető, mégis hatástalan megállót adna.
+            const tiltott = lepes.to === '/elonezet' && !piszkozatTartalmas(plan);
+            const belso = (
+              <>
+                <Badge radius="full" size="1" variant="soft" color={aktiv ? 'brown' : 'gray'} aria-hidden="true">
+                  {i + 1}
+                </Badge>
+                <Text size="2" weight={aktiv ? 'bold' : 'regular'} style={{ color: aktiv ? t.brand : t.uiTextMuted }}>
+                  {lepes.label}
+                </Text>
+              </>
+            );
+            const kozosStilus = {
+              display: 'inline-flex' as const,
+              alignItems: 'center' as const,
+              gap: 6,
+              padding: '4px 10px',
+              borderRadius: t.radius,
+              textDecoration: 'none' as const,
+              background: aktiv ? t.accentWash : 'transparent',
+            };
             return (
               <span key={lepes.to} style={{ display: 'flex', alignItems: 'center' }}>
                 {i > 0 && (
@@ -94,6 +133,11 @@ export default function TervWorkflowShell() {
                     style={{ width: 20, height: 1, background: t.uiLineStrong, margin: '0 8px' }}
                   />
                 )}
+                {tiltott ? (
+                  <span aria-label={lepes.label} aria-disabled="true" style={{ ...kozosStilus, opacity: 0.5 }}>
+                    {belso}
+                  </span>
+                ) : (
                 <Link
                   to={lepes.to}
                   onClick={(e) => handleLepesClick(e, lepes.to)}
@@ -104,23 +148,11 @@ export default function TervWorkflowShell() {
                   // és árak" linkjével is (mindkettő tartalmazná a
                   // "Kezelések" szót).
                   aria-label={lepes.label}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '4px 10px',
-                    borderRadius: t.radius,
-                    textDecoration: 'none',
-                    background: aktiv ? t.accentWash : 'transparent',
-                  }}
+                  style={kozosStilus}
                 >
-                  <Badge radius="full" size="1" variant="soft" color={aktiv ? 'brown' : 'gray'} aria-hidden="true">
-                    {i + 1}
-                  </Badge>
-                  <Text size="2" weight={aktiv ? 'bold' : 'regular'} style={{ color: aktiv ? t.brand : t.uiTextMuted }}>
-                    {lepes.label}
-                  </Text>
+                  {belso}
                 </Link>
+                )}
               </span>
             );
           })}
