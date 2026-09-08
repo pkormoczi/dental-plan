@@ -1,6 +1,6 @@
 // Egy fázis fejléce + sortáblája a terv szerkesztőn -- kiemelve a
 // PlanEditorPage.tsx-ből. Az `UndoRow` szándékosan ebben a fájlban marad
-// (nem önálló fájlban): egy `<Table.Row colSpan={7}>`, ami kizárólag ennek
+// (nem önálló fájlban): egy `<Table.Row colSpan={8}>`, ami kizárólag ennek
 // a komponensnek a táblatörzsében érvényes, önállóan használva félrevezető
 // lenne.
 
@@ -321,17 +321,26 @@ export default function PhaseSection({
               <Table.Header>
                 <Table.Row>
                   <Table.ColumnHeaderCell>Beavatkozás</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell width="132px">Fog</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell width="132px" justify="center">
+                    Fog
+                  </Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell width="88px" justify="center">
                     Db
                   </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell width="104px" justify="end">
+                  <Table.ColumnHeaderCell width="104px" justify="center">
                     Listaár ({penznemJel})
                   </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell width="148px" justify="end">
+                  <Table.ColumnHeaderCell width="148px" justify="center">
                     Ajánlati ár ({penznemJel})
                   </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell width="112px" justify="end">
+                  {/* A LineRow eltérés-jelvényének (+20%/−60%) fenntartott,
+                      keskeny hely -- lásd `LineRow` az Ajánlati ár és az
+                      Összeg cella közötti, azonos szerepű cellájánál. */}
+                  <Table.ColumnHeaderCell width="40px" />
+                  {/* Szűkebb, mint a többi árcella -- itt sosem jelenik meg
+                      sáv (Összeg mindig egyetlen szám), és a doki elmondása
+                      szerint milliós tételnél sem lesz ennél hosszabb sor. */}
+                  <Table.ColumnHeaderCell width="92px" justify="end">
                     Összeg ({penznemJel})
                   </Table.ColumnHeaderCell>
                   {/* Két gomb fér el: a `⋯` sor-menü és a kuka. */}
@@ -448,7 +457,7 @@ function UndoRow({
 }) {
   return (
     <Table.Row style={{ backgroundColor: t.accentWash }}>
-      <Table.Cell colSpan={7}>
+      <Table.Cell colSpan={8}>
         <Flex align="center" justify="between" gap="3">
           <Text size="2" color="gray">
             Sor törölve{nev.trim() ? `: ${nev}` : ''}

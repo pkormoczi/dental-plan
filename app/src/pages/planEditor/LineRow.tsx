@@ -207,7 +207,6 @@ export default function LineRow({
     fallback === 'nincsForditas' ||
     (nevEltero && tetel != null) ||
     nevNyelvMismatch ||
-    elteres != null ||
     orokoltKeziAru(line);
 
   return (
@@ -339,15 +338,6 @@ export default function LineRow({
                       <CheckIcon />
                     </IkonGomb>
                   </>
-                )}
-                {elteres && (
-                  <Badge
-                    color={elteres.tipus === 'kedvezmeny' ? 'green' : 'amber'}
-                    variant="soft"
-                    size="1"
-                  >
-                    {elteres.cimke}
-                  </Badge>
                 )}
                 {orokoltKeziAru(line) && (
                   <Badge color="gray" variant="soft" size="1">
@@ -487,78 +477,113 @@ export default function LineRow({
       </Table.Cell>
 
       <Table.Cell justify="end">
-        <Flex direction="column" align="end" gap="1">
-          <Flex align="center" gap="1" justify="end" width="100%">
-            <Box flexGrow="1">
-              <NumberField
-                id={arId(pi, li)}
-                value={line.tenylegesEgysegar}
-                penz
-                unit={currency}
-                min={0}
-                onCommit={(v) =>
-                  // Egyedi sornál nincs "listaár" mező -- a `listaEgysegar` a
-                  // `tenylegesEgysegar`-ral együtt íródik, hogy sosem legyen
-                  // kedvezmény-/felár-jelvény egy nem létező referenciaárhoz
-                  // képest.
-                  onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
-                }
-                parseAlternativ={szazalekosAr}
-                onDraftChange={(v) => {
-                  const a = v ?? line.tenylegesEgysegar;
-                  setArDraft(a);
-                  onDraftOsszeg({ tenylegesEgysegar: a, mennyiseg: mennyisegDraft });
-                }}
-                onBlur={() => onDraftOsszeg(null)}
-                textAlign="right"
-                // 62. tétel: beárazatlan tétel, még kézi ár nélkül -- a
-                // kedvezmény-/felár-kiemeléssel azonos slot, csak
-                // figyelmeztető színben, hogy ide dönteni kell.
-                style={
-                  elteres
-                    ? { borderColor: t.brand }
-                    : araHianyzik && line.tenylegesEgysegar === 0
-                      ? { borderColor: t.warn }
-                      : undefined
-                }
-                aria-label="Ajánlati egységár"
-              />
-            </Box>
-            {/* A Db cella ⟳ gombjának mintája (fentebb): MINDIG a DOM-ban,
-                csak `visibility: hidden`-nel tűnik el -- egy feltételes
-                render soronként ugráltatná a flexGrow-os NumberField
-                szélességét. */}
-            <IkonGomb
-              type="button"
-              variant="ghost"
-              color="gray"
-              size="1"
-              cimke="Ajánlati ár visszaállítása a listaárra"
-              onClick={() => onPatch({ tenylegesEgysegar: line.listaEgysegar })}
-              tabIndex={arEltero ? 0 : -1}
-              aria-hidden={arEltero ? undefined : true}
-              style={{ visibility: arEltero ? 'visible' : 'hidden' }}
-            >
-              <ResetIcon />
-            </IkonGomb>
-          </Flex>
-          {/* backlog-60, 3. döntés: a widget MARAD ghost ikon-gomb +
-              `≈` szövegglyph (app/src/CLAUDE.md nevesített
-              kivétele) -- csak a pozíciója költözött az ár mező alá. */}
+        <Flex align="center" gap="1" justify="end" width="100%">
+          <Box flexGrow="1">
+            <NumberField
+              id={arId(pi, li)}
+              value={line.tenylegesEgysegar}
+              penz
+              unit={currency}
+              min={0}
+              onCommit={(v) =>
+                // Egyedi sornál nincs "listaár" mező -- a `listaEgysegar` a
+                // `tenylegesEgysegar`-ral együtt íródik, hogy sosem legyen
+                // kedvezmény-/felár-jelvény egy nem létező referenciaárhoz
+                // képest.
+                onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
+              }
+              parseAlternativ={szazalekosAr}
+              onDraftChange={(v) => {
+                const a = v ?? line.tenylegesEgysegar;
+                setArDraft(a);
+                onDraftOsszeg({ tenylegesEgysegar: a, mennyiseg: mennyisegDraft });
+              }}
+              onBlur={() => onDraftOsszeg(null)}
+              textAlign="right"
+              // 62. tétel: beárazatlan tétel, még kézi ár nélkül -- a
+              // kedvezmény-/felár-kiemeléssel azonos slot, csak
+              // figyelmeztető színben, hogy ide dönteni kell.
+              style={
+                elteres
+                  ? { borderColor: t.brand }
+                  : araHianyzik && line.tenylegesEgysegar === 0
+                    ? { borderColor: t.warn }
+                    : undefined
+              }
+              aria-label="Ajánlati egységár"
+            />
+          </Box>
+          {/* A gomb magán (`IkonGomb`) NEM kap háttér/méret felülírást --
+              így az egérrel fölé húzva ugyanaz a szürkés-kékes Radix
+              hover-háttér jelenik meg, mint a sor többi ikon-gombján.
+              A bekapcsolt állapot TELI, borostyán jelzését egy BELSŐ
+              `span` hordozza, saját, a gomb Radix-méretezésétől független
+              mérettel -- a korábbi halvány `warnBg` alig különbözött a
+              fehér cellaháttértől, ráadásul a gombra írt inline háttér
+              némította volna a hover-effektust is. */}
           <IkonGomb
             type="button"
             variant="ghost"
             color="gray"
             size="1"
             aria-pressed={line.savos}
-            cimke="Becsült ár – a végleges összeg a kezelés során változhat."
+            cimke={
+              line.savos
+                ? 'Becsült jelölés levétele — a nyomtatványról eltűnik a *'
+                : 'Megjelölés becsült árként — a nyomtatványon * és lábjegyzet jelzi'
+            }
             ariaLabel="Becsült ár"
             onClick={() => onPatch({ savos: !line.savos })}
-            style={{ color: line.savos ? t.warn : t.uiTextFaint }}
           >
-            ≈
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 15,
+                height: 15,
+                marginLeft: 2,
+                borderRadius: t.radius,
+                color: line.savos ? '#FFFFFF' : t.uiTextFaint,
+                background: line.savos ? t.warn : 'transparent',
+              }}
+            >
+              ≈
+            </span>
+          </IkonGomb>
+          {/* A Db cella ⟳ gombjának mintája (fentebb): MINDIG a DOM-ban,
+              csak `visibility: hidden`-nel tűnik el -- egy feltételes
+              render soronként ugráltatná a flexGrow-os NumberField
+              szélességét. */}
+          <IkonGomb
+            type="button"
+            variant="ghost"
+            color="gray"
+            size="1"
+            cimke="Ajánlati ár visszaállítása a listaárra"
+            onClick={() => onPatch({ tenylegesEgysegar: line.listaEgysegar })}
+            tabIndex={arEltero ? 0 : -1}
+            aria-hidden={arEltero ? undefined : true}
+            style={{ visibility: arEltero ? 'visible' : 'hidden' }}
+          >
+            <ResetIcon />
           </IkonGomb>
         </Flex>
+      </Table.Cell>
+
+      {/* Önálló, keskeny cella a listaár<->ajánlati ár eltérés-jelvénynek --
+          korábban a Beavatkozás-mező alatti jelvénysávban lakott, ott viszont
+          egy megjelenő "+20%" új sorba tördelte a nevet, és soronként
+          máshova tolta a táblát. Itt mindig ugyanaz a hely foglalt, jelvény
+          nélkül is -- a Beavatkozás-oszlop (szélesség nélküli, a maradékot
+          kapja) adja át érte a helyet. `justify="start"`: a jelvény az
+          Ajánlati ár mezőhöz tapadjon, ne a cella közepén lebegjen. */}
+      <Table.Cell justify="start">
+        {elteres && (
+          <Badge color={elteres.tipus === 'kedvezmeny' ? 'green' : 'amber'} variant="soft" size="1">
+            {elteres.cimke}
+          </Badge>
+        )}
       </Table.Cell>
 
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -617,7 +642,7 @@ export default function LineRow({
     </Table.Row>
     {leirasNyitva && (
       <Table.Row>
-        <Table.Cell colSpan={7}>
+        <Table.Cell colSpan={8}>
           <TextArea
             id={leirasId(pi, li)}
             value={line.leirasSnapshot ?? ''}
