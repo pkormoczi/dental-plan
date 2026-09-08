@@ -1,6 +1,7 @@
 # pdf-nezegeto-google-drive-gomb
 Type: chore
 Source: doctor-review nagy-terv (2026-09-05), 14. megállapítás
+Prio: later
 
 A böngésző beépített PDF-nézegetőjének saját eszköztárában egy „Save to Google Drive” gomb áll a
 kezelési terv fölött — ezt nem az app teszi oda (a mockup-fázis Chrome-PDF-viewerének natív
