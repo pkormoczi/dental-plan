@@ -66,6 +66,16 @@ import PlanVersionActionDialog, {
 import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
 
+/**
+ * A képernyő két, adatintegritásban gyökerező útja (új verzió a meglévő
+ * láncban vs. önálló új tervlánc) a gombfeliratokból önmagában nem
+ * következik. Egy szövegforrás a két képernyőnek (`OsszesTervSection` és a
+ * páciens terv-lapja) -- két, idővel elcsúszó literál pont azt a
+ * bizonytalanságot hozná vissza, amit a mondat megszüntet.
+ */
+export const UJ_VERZIO_VAGY_UJ_TERV =
+  'Az „Új verzió” ugyanahhoz a tervhez készül; az „Új terv” és a „Másolás új tervbe” önálló, új tervet indít.';
+
 export interface PatientPlanChainsProps {
   patient: PatientFolder;
   plans: PlanFolder[];
@@ -338,6 +348,15 @@ export default function PatientPlanChains({
             </Button>
           )}
         </Flex>
+      )}
+      {/* Csak `embedded`-ben: `standalone`-ban az `OsszesTervSection` már
+          kiírja egyszer a teljes lista fölött, páciensenként megismételve zaj
+          lenne. Terv-lánc nélküli páciensnél egyedül a „+ Új terv” létezik --
+          nincs mit összetéveszteni. Nem Callout: nem hiba, nem figyelmeztetés. */}
+      {!standalone && plans.length > 0 && (
+        <Text as="p" size="1" color="gray" mt="0" mb="3">
+          {UJ_VERZIO_VAGY_UJ_TERV}
+        </Text>
       )}
       {akciok.hiba && akciok.hiba.planDir === null && akciok.hiba.versionDir === null && (
         <VerzioAkcioUzenet hiba={akciok.hiba} />

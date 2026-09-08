@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OsszesTervSection from './OsszesTervSection';
+import { UJ_VERZIO_VAGY_UJ_TERV } from '../../components/PatientPlanChains';
 import { resetListStateMemoryForTests } from '../../components/useListStateMemory';
 import { TestProviders } from '../../testUtils';
 import { patientCard, verzioMenupont } from '../../testQueries';
@@ -218,6 +219,15 @@ describe('OsszesTervSection', () => {
   it('a keresőmezőnek van elérhető neve, nem csak placeholder-e', async () => {
     renderHistory();
     expect(await screen.findByRole('textbox', { name: 'Keresés páciensnévre' })).toBeInTheDocument();
+  });
+
+  it('az "Új verzió" vs. "Új terv" magyarázó mondat pontosan egyszer szerepel, több páciens listázásakor is', async () => {
+    renderHistory();
+
+    await screen.findByText('Kovács János');
+    // A seed több pácienst listáz -- a mondat mégis egyszer, a lista fölött áll.
+    expect(screen.getAllByText('Kovács János').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(UJ_VERZIO_VAGY_UJ_TERV)).toHaveLength(1);
   });
 
   it('lists every patient even when one plan is corrupted -- one bad file cannot take down the rest (P1-2)', async () => {

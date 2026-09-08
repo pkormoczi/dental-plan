@@ -17,6 +17,7 @@ import { Theme } from '@radix-ui/themes';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NavBar from '../components/NavBar';
 import { NavGuardProvider } from '../components/NavGuardContext';
+import { UJ_VERZIO_VAGY_UJ_TERV } from '../components/PatientPlanChains';
 import PatientDetailPage from './PatientDetailPage';
 import { resetListStateMemoryForTests } from '../components/useListStateMemory';
 import { AppStateProvider, useAppState } from '../state/AppState';
@@ -270,6 +271,23 @@ describe('PatientDetailPage', () => {
       screen.queryByText('Ennek a páciensnek még nincs kezelési terve.'),
     ).not.toBeInTheDocument();
     expect(await screen.findByRole('button', { name: '+ Új terv' })).toBeInTheDocument();
+  });
+
+  it('terv-láncos páciensnél a lap kimondja, mi a különbség az "Új verzió" és az "Új terv" között', async () => {
+    renderDetail(kovacsDir);
+
+    expect(await screen.findByText(UJ_VERZIO_VAGY_UJ_TERV)).toBeInTheDocument();
+  });
+
+  it('terv nélküli páciensnél a magyarázó mondat nem jelenik meg -- nincs mit összetéveszteni', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const folder = await seeder.createPatient('Teszt Terv Nelkul');
+
+    renderDetail(folder.dirName);
+
+    await screen.findByText('Ennek a páciensnek még nincs kezelési terve.');
+    expect(screen.queryByText(UJ_VERZIO_VAGY_UJ_TERV)).toBeNull();
   });
 
   // A korábbi, oldal-szintű "N terv" burkoló toggle (páciens-szinten) itt

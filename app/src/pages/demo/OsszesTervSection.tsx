@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Callout, Flex, Heading, Separator, Skeleton, Text, TextField } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
-import PatientPlanChains from '../../components/PatientPlanChains';
+import PatientPlanChains, { UJ_VERZIO_VAGY_UJ_TERV } from '../../components/PatientPlanChains';
 import { sajatDraft, useAktivDraft } from '../../components/useAktivDraft';
 import { useListStateMemory } from '../../components/useListStateMemory';
 import { t } from '../../design/tokens';
@@ -133,14 +133,11 @@ export default function OsszesTervSection() {
         mb="4"
       />
 
-      {/* A képernyő két, adatintegritásban gyökerező útja (új verzió a
-          meglévő láncban vs. önálló új tervlánc) a gombfeliratokból
-          önmagában nem következik -- ez a sor mondja ki egyszer, a lista
-          fölött. Nem Callout: nem hiba és nem figyelmeztetés. */}
+      {/* Egyszer, a teljes lista fölött -- a beágyazott `PatientPlanChains`
+          ezért `standalone`-ban nem ismétli meg páciensenként. */}
       {!loading && !listError && patients.length > 0 && (
         <Text as="p" size="1" color="gray" mt="0" mb="4">
-          Az „Új verzió” ugyanahhoz a tervhez készül; az „Új terv” és a „Másolás új tervbe”
-          önálló, új tervet indít.
+          {UJ_VERZIO_VAGY_UJ_TERV}
         </Text>
       )}
 
