@@ -121,9 +121,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     // A pontos jel egy speciális mínuszkarakter (U+2212), ezért a
     // mennyiséget és a %-ot nézzük, nem a karaktert magát.
     expect(await screen.findByText(/20%$/)).toBeInTheDocument();
-    // hu-HU Intl-formázás: 4-jegyű összegeknél (itt 5000) nincs ezres
-    // elválasztó, csak 5+ jegynél -- lásd domain/money.test.ts.
-    expect(await screen.findByText(/Kedvezmény: 5000 Ft/)).toBeInTheDocument();
+    expect(await screen.findByText(/Kedvezmény: 5 000 Ft/)).toBeInTheDocument();
   });
 
   it('shows a surcharge indicator when the actual price is raised above the list price', async () => {
@@ -145,7 +143,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     await user.type(actualPriceInput, '30000');
     await user.tab();
 
-    expect(await screen.findByText(/Eltérés a listaártól: \+5000 Ft/)).toBeInTheDocument();
+    expect(await screen.findByText(/Eltérés a listaártól: \+5 000 Ft/)).toBeInTheDocument();
     expect(screen.queryByText(/Kedvezmény:/)).not.toBeInTheDocument();
   });
 

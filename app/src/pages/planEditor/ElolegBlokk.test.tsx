@@ -161,8 +161,7 @@ describe('az előleg-kapcsoló Ft/% módváltója', () => {
     await user.type(szazalek, '30');
     await user.tab();
 
-    // hu-HU Intl-formázás: 4-jegyű összegnél (8000) nincs ezres elválasztó.
-    expect(await screen.findByText('8000 Ft')).toBeInTheDocument();
+    expect(await screen.findByText('8 000 Ft')).toBeInTheDocument();
     expect(screen.getByText('17 000 Ft')).toBeInTheDocument();
   });
 

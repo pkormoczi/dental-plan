@@ -61,7 +61,7 @@ describe('az egyedi végösszeg kapcsoló', () => {
     await user.type(cel, '20000');
     await user.tab();
 
-    expect(await screen.findByText(/→ 5000 Ft kedvezmény/)).toBeInTheDocument();
+    expect(await screen.findByText(/→ 5 000 Ft kedvezmény/)).toBeInTheDocument();
     expect(screen.queryByText(/Add meg az egyedi végösszeget/)).not.toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe('az egyedi végösszeg kapcsoló', () => {
     await user.tab();
 
     expect(cel).toHaveValue('30000');
-    expect(await screen.findByText(/→ 5000 Ft felár/)).toBeInTheDocument();
+    expect(await screen.findByText(/→ 5 000 Ft felár/)).toBeInTheDocument();
   });
 
   it('0 cél végösszeg megerősítést kér, Mégse esetén nem alkalmazódik', async () => {

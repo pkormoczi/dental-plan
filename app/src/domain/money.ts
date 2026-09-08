@@ -19,6 +19,13 @@ const PENZ_LOCALE: Record<Nyelv, string> = { hu: 'hu-HU', de: 'de-DE' };
 // A HUF-nál a toLocaleString('hu-HU') mar U+00A0-t (nem torheto szokoz)
 // hasznal ezres elvalasztokent, a ' Ft' es ' €' elotti szokoz is szandekosan
 // U+00A0 -- CLAUDE.md: a penzosszeg soha nem tordelheto sortoresnel.
+//
+// A `useGrouping: 'always'` TUDATOS elteres a hu-HU alapertelmezestol: az
+// negyjegyu szamot csoportositas nelkul adna ("9000"), a de-DE viszont
+// tagolna -- ugyanaz az osszeg maskepp nezne ki nyelvet valtva, es a doki
+// papiron kifogasolta a tagolatlan alakot. Mindket penznem-ag kapja, hogy egy
+// kepernyon belul se legyen ketfele szabaly. PRODUCT.md § A nyomtatvany
+// szerzodeses dokumentum
 export function formatMoney(
   value: number | null | undefined,
   currency: Penznem,
@@ -31,10 +38,11 @@ export function formatMoney(
       (value / 100).toLocaleString(locale, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
+        useGrouping: 'always',
       }) + ' €'
     );
   }
-  return Math.round(value).toLocaleString(locale) + ' Ft';
+  return Math.round(value).toLocaleString(locale, { useGrouping: 'always' }) + ' Ft';
 }
 
 export function formatPrice(

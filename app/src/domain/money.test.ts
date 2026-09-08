@@ -30,22 +30,20 @@ describe('formatMoney', () => {
     expect(formatMoney(45000.4, 'HUF', 'hu')).toBe('45 000 Ft');
   });
 
-  it('omits the thousands separator for 4-digit HUF amounts (hu-HU Intl convention, not a bug)', () => {
-    // A hu-HU Intl.NumberFormat csak 5+ jegynél tesz ezres elválasztót --
-    // ez a magyar tipográfiai konvenció, nem hiba. Lásd
-    // PlanEditorPage.test.tsx "shows a discount indicator..." tesztjét,
-    // ahol ez elsőre meglepetésként bukkant fel.
-    expect(formatMoney(5000, 'HUF', 'hu')).toBe('5000 Ft');
-    expect(formatMoney(9999, 'HUF', 'hu')).toBe('9999 Ft');
+  it('négyjegyű HUF összeget is ezres-tagolva ad, nem törhető szóközzel', () => {
+    expect(formatMoney(5000, 'HUF', 'hu')).toBe('5 000 Ft');
+    expect(formatMoney(9999, 'HUF', 'hu')).toBe('9 999 Ft');
     expect(formatMoney(10000, 'HUF', 'hu')).toBe('10 000 Ft');
+  });
+
+  it('három vagy kevesebb jegyű összeget nem tagol', () => {
+    expect(formatMoney(900, 'HUF', 'hu')).toBe('900 Ft');
+    expect(formatMoney(0, 'HUF', 'hu')).toBe('0 Ft');
   });
 
   // 52. tétel / C4: az ezres elválasztó a NYELVTŐL függ (hu-HU szóköz,
   // de-DE pont), a tizedesjegyek száma és a pénznemjel a PÉNZNEMTŐL -- ez a
-  // négy kötelező kombináció. Az EUR-eseteknél 5-jegyű forintösszeget
-  // (12 345,67) használunk, hogy elkerüljük a hu-HU Intl 4-jegyű
-  // elválasztó-mentességét (lásd fent) -- az itt vizsgált tengely az
-  // ELVÁLASZTÓ, nem a 4-jegyű kivétel.
+  // négy kötelező kombináció.
   describe('nyelv szerinti elválasztó (C4)', () => {
     it('HU + HUF: szóköz elválasztó, nincs tizedesjegy', () => {
       expect(formatMoney(1234567, 'HUF', 'hu')).toBe('1 234 567 Ft');
@@ -63,7 +61,11 @@ describe('formatMoney', () => {
       expect(formatMoney(1234567, 'EUR', 'de')).toBe('12.345,67 €');
     });
 
-    it('DE + HUF 4-jegyű összegnél is tagol -- a hu-HU 4-jegyű kivétele locale-specifikus, nem C4-szabály', () => {
+    it('HU + EUR 4-jegyű egész euró: tagolva, két tizedesjeggyel', () => {
+      expect(formatMoney(123456, 'EUR', 'hu')).toBe('1 234,56 €');
+    });
+
+    it('DE + HUF 4-jegyű összeget a de-DE pontjával tagol', () => {
       expect(formatMoney(5000, 'HUF', 'de')).toBe('5.000 Ft');
     });
   });

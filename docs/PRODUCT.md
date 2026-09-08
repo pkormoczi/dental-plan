@@ -61,7 +61,7 @@ Az aláírt PDF-ből következő szabályok — jogi, nem stíluskérdések:
   eltérésnél figyelmeztetés. Verziómappa sosem íródik felül, csak `_v<n+1>` keletkezik.
 - **Pénz egész szám** a pénznem alapegységében (HUF forint, EUR cent). Szám sosem `toLocaleString()`:
   elválasztó a nyelvtől, tizedes és jel a pénznemtől (`1 234 567 Ft`, `1 234,56 €`, `1.234.567 Ft`,
-  `1.234,56 €`). Rövid dátum kézzel formázva (a `de-DE` Intl vezető nulla nélkül adna, a lábléc jogi
+  `1.234,56 €`), a tagolás már négyjegyűtől kötelező (`9 000 Ft`). Rövid dátum kézzel formázva (a `de-DE` Intl vezető nulla nélkül adna, a lábléc jogi
   metaadat).
 - **Német terven** lefordítatlan tételnév vagy a fogtérképen megjelenő kategória blokkolja a véglegesítést.
   A tétel-leírás hiányzó német fordítása némán elmarad, nem esik magyarra (vegyes nyelvű leírás rosszabb

@@ -29,7 +29,7 @@ describe('Summary', () => {
     );
 
     expect(screen.getByText('20 000 Ft')).toBeInTheDocument();
-    expect(screen.getByText(/Kedvezmény: 5000 Ft/)).toBeInTheDocument();
+    expect(screen.getByText(/Kedvezmény: 5 000 Ft/)).toBeInTheDocument();
     expect(screen.queryByText(/Felár:/)).not.toBeInTheDocument();
   });
 
@@ -41,7 +41,7 @@ describe('Summary', () => {
     );
 
     expect(screen.getByText('30 000 Ft')).toBeInTheDocument();
-    expect(screen.getByText(/Eltérés a listaártól: \+5000 Ft/)).toBeInTheDocument();
+    expect(screen.getByText(/Eltérés a listaártól: \+5 000 Ft/)).toBeInTheDocument();
     expect(screen.queryByText(/Kedvezmény:/)).not.toBeInTheDocument();
     // A „felár" szó félreérthető -- a semleges megfogalmazás váltotta ki.
     expect(screen.queryByText(/Felár:/)).not.toBeInTheDocument();
@@ -56,7 +56,7 @@ describe('Summary', () => {
 
     expect(screen.getByText(/Kedvezmény: 23 000 Ft/)).toBeInTheDocument();
     expect(screen.getByText(/Eltérés a listaártól: \+27 000 Ft/)).toBeInTheDocument();
-    expect(screen.queryByText(/4000 Ft/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/4 000 Ft/)).not.toBeInTheDocument();
   });
 
   it('fázis-részösszegeket a Mindösszesen FÖLÖTT sorolja fel, névvel és összeggel', () => {
