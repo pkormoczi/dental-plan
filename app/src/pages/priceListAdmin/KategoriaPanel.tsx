@@ -7,9 +7,10 @@
 // fejléc-komment mindkét felét egy helyen magyarázza.
 
 import { Fragment, useEffect, useState } from 'react';
-import { Box, Button, Flex, Grid, IconButton, RadioCards, Table, Text } from '@radix-ui/themes';
+import { Box, Button, Flex, Grid, RadioCards, Table, Text } from '@radix-ui/themes';
 import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, ChevronRightIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Field, FieldGroup } from '../../components/Field';
+import IkonGomb from '../../components/IkonGomb';
 import DiscardChangesDialog, { useDiscardGuard } from '../../components/DiscardChangesDialog';
 import { useNavGuard } from '../../components/NavGuardContext';
 import { useDirtyDraft } from '../../components/useDirtyDraft';
@@ -248,8 +249,11 @@ function KategoriaPanelBody({
                   </Table.Cell>
                   <Table.Cell>
                     <Flex gap="1">
-                      <IconButton
-                        aria-label="Kategória feljebb"
+                      <IkonGomb
+                        cimke={
+                          i === 0 ? 'Kategória feljebb — ez már az első' : 'Kategória feljebb'
+                        }
+                        ariaLabel="Kategória feljebb"
                         variant="ghost"
                         color="gray"
                         size="1"
@@ -260,9 +264,14 @@ function KategoriaPanelBody({
                         }}
                       >
                         <ArrowUpIcon />
-                      </IconButton>
-                      <IconButton
-                        aria-label="Kategória lejjebb"
+                      </IkonGomb>
+                      <IkonGomb
+                        cimke={
+                          i === draft.length - 1
+                            ? 'Kategória lejjebb — ez már az utolsó'
+                            : 'Kategória lejjebb'
+                        }
+                        ariaLabel="Kategória lejjebb"
                         variant="ghost"
                         color="gray"
                         size="1"
@@ -273,17 +282,17 @@ function KategoriaPanelBody({
                         }}
                       >
                         <ArrowDownIcon />
-                      </IconButton>
+                      </IkonGomb>
                     </Flex>
                   </Table.Cell>
                   <Table.Cell>
-                    <IconButton
-                      aria-label="Kategória törlése"
-                      title={
+                    <IkonGomb
+                      cimke={
                         ures
-                          ? undefined
+                          ? 'Kategória törlése'
                           : 'Előbb mozgasd át a hozzá tartozó tételeket másik kategóriába'
                       }
+                      ariaLabel="Kategória törlése"
                       variant="ghost"
                       color="gray"
                       size="1"
@@ -294,7 +303,7 @@ function KategoriaPanelBody({
                       }}
                     >
                       <TrashIcon />
-                    </IconButton>
+                    </IkonGomb>
                   </Table.Cell>
                 </Table.Row>
 

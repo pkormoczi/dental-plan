@@ -19,7 +19,6 @@ import {
   Callout,
   Flex,
   Heading,
-  IconButton,
   SegmentedControl,
   Separator,
   Table,
@@ -28,6 +27,7 @@ import {
   VisuallyHidden,
 } from '@radix-ui/themes';
 import { EyeClosedIcon, EyeOpenIcon, InfoCircledIcon, StarFilledIcon, StarIcon } from '@radix-ui/react-icons';
+import IkonGomb from '../components/IkonGomb';
 import { t } from '../design/tokens';
 import { csokkentettMozgas } from '../design/motion';
 import { ALAP_KATEGORIA_SZIN } from '../design/treatmentVisuals';
@@ -513,8 +513,13 @@ export default function PriceListAdminPage() {
                       onClick={() => setOpen(open === it.id ? null : it.id)}
                     >
                       <Table.Cell>
-                        <IconButton
-                          aria-label={
+                        <IkonGomb
+                          cimke={
+                            it.gyakori
+                              ? 'Gyakori jelölés törlése — kikerül a szerkesztő gyorsgombjai közül'
+                              : 'Megjelölés gyakorinak — gyorsgomb lesz belőle a szerkesztőben'
+                          }
+                          ariaLabel={
                             it.gyakori
                               ? `${sorNeve} gyakori jelölés törlése`
                               : `${sorNeve} megjelölése gyakorinak`
@@ -529,7 +534,7 @@ export default function PriceListAdminPage() {
                           style={{ color: it.gyakori ? t.warn : t.uiTextFaint }}
                         >
                           {it.gyakori ? <StarFilledIcon /> : <StarIcon />}
-                        </IconButton>
+                        </IkonGomb>
                       </Table.Cell>
 
                       {/* Billentyűzettel is elérhető megnyitó -- a sor
@@ -587,8 +592,13 @@ export default function PriceListAdminPage() {
                       </Table.Cell>
 
                       <Table.Cell>
-                        <IconButton
-                          aria-label={it.aktiv ? `${sorNeve} inaktiválása` : `${sorNeve} aktiválása`}
+                        <IkonGomb
+                          cimke={
+                            it.aktiv
+                              ? 'Inaktiválás — új tervben nem lesz választható'
+                              : 'Aktiválás — újra választható lesz a tervezőben'
+                          }
+                          ariaLabel={it.aktiv ? `${sorNeve} inaktiválása` : `${sorNeve} aktiválása`}
                           variant="ghost"
                           color="gray"
                           size="1"
@@ -605,7 +615,7 @@ export default function PriceListAdminPage() {
                           }}
                         >
                           {it.aktiv ? <EyeOpenIcon /> : <EyeClosedIcon />}
-                        </IconButton>
+                        </IkonGomb>
                       </Table.Cell>
 
                       {/* Fix szélesség (a fejlécen, width="76px") -- a jelzés

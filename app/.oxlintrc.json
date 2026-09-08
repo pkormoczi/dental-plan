@@ -34,6 +34,13 @@
     "no-restricted-imports": [
       "error",
       {
+        "paths": [
+          {
+            "name": "@radix-ui/themes",
+            "importNames": ["IconButton"],
+            "message": "Felirat nélküli ikon-gomb tooltip nélkül nem létezhet -- components/IkonGomb.tsx (kötelező `cimke` prop)."
+          }
+        ],
         "patterns": [
           {
             "group": ["**/storage/DemoStorage", "**/storage/DemoDraftStorage"],
@@ -48,6 +55,12 @@
       "files": ["src/storage/**", "src/**/*.test.*", "src/**/testFixtures.tsx", "src/test-setup.ts"],
       "rules": {
         "no-restricted-globals": "off",
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": ["src/components/IkonGomb.tsx"],
+      "rules": {
         "no-restricted-imports": "off"
       }
     }

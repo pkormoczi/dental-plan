@@ -8,7 +8,7 @@
 // Az orvos-lista (korábban egyetlen "egy név soronként" TextArea)
 // soronkénti táblázatra váltott -- aktív/inaktív jelölés és alapértelmezett-
 // orvos fogalommal, a pages/priceListAdmin/KategoriaPanel.tsx sor-UI mintáján
-// (Table.Root size="1" + soronkénti IconButton ↑/↓/🗑).
+// (Table.Root size="1" + soronkénti ikon-gomb ↑/↓/🗑).
 
 import { useEffect, useState } from 'react';
 import {
@@ -19,7 +19,6 @@ import {
   Dialog,
   Flex,
   Grid,
-  IconButton,
   Select,
   Table,
   Text,
@@ -27,6 +26,7 @@ import {
 } from '@radix-ui/themes';
 import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Field } from '../../components/Field';
+import IkonGomb from '../../components/IkonGomb';
 import Section from '../../components/Section';
 import { useDirtyDraft } from '../../components/useDirtyDraft';
 import { useMentesJelzo } from '../../components/useMentesJelzo';
@@ -280,8 +280,9 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
                   </Table.Cell>
                   <Table.Cell>
                     <Flex gap="1">
-                      <IconButton
-                        aria-label={`${sorNeve} feljebb`}
+                      <IkonGomb
+                        cimke={i === 0 ? 'Feljebb — ez már az első' : 'Feljebb a listában'}
+                        ariaLabel={`${sorNeve} feljebb`}
                         variant="ghost"
                         color="gray"
                         size="1"
@@ -289,9 +290,14 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
                         onClick={() => handleMove(i, -1)}
                       >
                         <ArrowUpIcon />
-                      </IconButton>
-                      <IconButton
-                        aria-label={`${sorNeve} lejjebb`}
+                      </IkonGomb>
+                      <IkonGomb
+                        cimke={
+                          i === draft.orvosok.length - 1
+                            ? 'Lejjebb — ez már az utolsó'
+                            : 'Lejjebb a listában'
+                        }
+                        ariaLabel={`${sorNeve} lejjebb`}
                         variant="ghost"
                         color="gray"
                         size="1"
@@ -299,22 +305,23 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
                         onClick={() => handleMove(i, 1)}
                       >
                         <ArrowDownIcon />
-                      </IconButton>
+                      </IkonGomb>
                     </Flex>
                   </Table.Cell>
                   <Table.Cell>
                     {/* Az orvos feltétel nélkül törölhető -- explicit eltérés
                         az árlista-tételek "csak deaktiválható" mintájától, mert a
                         `plan.orvos` NÉV-pillanatkép, nem `id`-hivatkozás. */}
-                    <IconButton
-                      aria-label={`${sorNeve} törlése`}
+                    <IkonGomb
+                      cimke="Orvos törlése a listából"
+                      ariaLabel={`${sorNeve} törlése`}
                       variant="ghost"
                       color="gray"
                       size="1"
                       onClick={() => attemptDeactivateOrRemove(i, 'remove')}
                     >
                       <TrashIcon />
-                    </IconButton>
+                    </IkonGomb>
                   </Table.Cell>
                 </Table.Row>
               );

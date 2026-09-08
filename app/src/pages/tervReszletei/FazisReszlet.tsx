@@ -4,8 +4,9 @@
 // + lábléc-összeg), de szerkeszthető mezők (fázisnév input, sorrendező
 // nyilak, törlés) nélkül.
 
-import { Badge, Box, Flex, IconButton, Table, Text } from '@radix-ui/themes';
+import { Badge, Box, Flex, Table, Text } from '@radix-ui/themes';
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
+import IkonGomb from '../../components/IkonGomb';
 import { t } from '../../design/tokens';
 import { formatMoney } from '../../domain/money';
 import { fazisOsszeg } from '../../domain/totals';
@@ -45,7 +46,7 @@ export default function FazisReszlet({
   return (
     <Box mb="5">
       <Flex align="center" gap="2" mb="2" wrap="wrap">
-        <IconButton
+        <IkonGomb
           id={`fazis-reszlet-toggle-${fazisIndex}`}
           type="button"
           variant="ghost"
@@ -53,11 +54,11 @@ export default function FazisReszlet({
           size="1"
           aria-expanded={nyitva}
           aria-controls={panelId}
-          aria-label={nyitva ? 'Fázis összecsukása' : 'Fázis kinyitása'}
+          cimke={nyitva ? 'Fázis összecsukása' : 'Fázis kinyitása'}
           onClick={onToggle}
         >
           {nyitva ? <ChevronDownIcon /> : <ChevronRightIcon />}
-        </IconButton>
+        </IkonGomb>
         <Text weight="bold" style={{ color: t.brand }}>
           {fazis.megnevezes}
         </Text>

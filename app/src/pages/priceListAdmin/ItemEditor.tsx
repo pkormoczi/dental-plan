@@ -2,9 +2,10 @@
 // minden mező, köztük a kategória-mozgatás.
 
 import { useMemo, useRef, useState } from 'react';
-import { Box, Button, Checkbox, Flex, Grid, IconButton, Select, Text } from '@radix-ui/themes';
+import { Box, Button, Checkbox, Flex, Grid, Select, Text } from '@radix-ui/themes';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Field, FieldGroup } from '../../components/Field';
+import IkonGomb from '../../components/IkonGomb';
 import NumberField from '../../components/NumberField';
 import { t } from '../../design/tokens';
 import { ALAP_KATEGORIA_SZIN } from '../../design/treatmentVisuals';
@@ -477,15 +478,16 @@ export default function ItemEditor({
                 onReset={setEurFix}
               />
             </Box>
-            <IconButton
+            <IkonGomb
               type="button"
-              aria-label="EUR ár törlése"
+              cimke="EUR ár törlése — a tételnél nem lesz euró ár"
+              ariaLabel="EUR ár törlése"
               variant="ghost"
               color="gray"
               onClick={clearEur}
             >
               <Cross2Icon />
-            </IconButton>
+            </IkonGomb>
           </Flex>
         )}
       </Grid>

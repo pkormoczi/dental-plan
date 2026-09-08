@@ -1,7 +1,14 @@
-import { render, screen } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
+import { render as rtlRender, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Theme } from '@radix-ui/themes';
 import { describe, expect, it, vi } from 'vitest';
 import NumberField from './NumberField';
+
+// A ▲▼ léptetők Radix `Tooltip`-et hordoznak, az pedig `TooltipProvider`
+// nélkül dob -- a providert a `Theme` adja (az appban az App.tsx gyökere).
+const render = (ui: ReactElement) =>
+  rtlRender(ui, { wrapper: ({ children }: { children: ReactNode }) => <Theme>{children}</Theme> });
 
 describe('NumberField', () => {
   it('does not commit while typing -- only on blur', async () => {

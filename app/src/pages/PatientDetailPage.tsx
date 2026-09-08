@@ -19,12 +19,12 @@ import {
   Callout,
   DropdownMenu,
   Flex,
-  IconButton,
   Skeleton,
   Tabs,
   Text,
 } from '@radix-ui/themes';
 import { ArrowLeftIcon, CrossCircledIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
+import IkonGomb from '../components/IkonGomb';
 import { sajatDraft, useAktivDraft } from '../components/useAktivDraft';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import { useListStateMemory } from '../components/useListStateMemory';
@@ -273,14 +273,15 @@ export default function PatientDetailPage() {
                   vele (két találat egy oldalon, App.test.tsx). Ez itt nem is
                   sorbeli akció -- egyetlen példány van az oldalon
                   (a lapon megjelenő EGY páciensre), nem listasorra. */}
-              <IconButton
+              <IkonGomb
                 size="1"
                 variant="soft"
                 color="gray"
-                aria-label={`${displayedAdatok.nev} — páciens műveletek`}
+                cimke="Páciens műveletek"
+                ariaLabel={`${displayedAdatok.nev} — páciens műveletek`}
               >
                 <DotsHorizontalIcon />
-              </IconButton>
+              </IkonGomb>
             </DropdownMenu.Trigger>
             {/* onCloseAutoFocus: a menü záráskor visszavenné a fókuszt a
                 triggerre, és ezzel elhalászná azt a megerősítő AlertDialog

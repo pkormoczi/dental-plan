@@ -11,9 +11,10 @@
 // design/toothChartSvg.ts fejléckommentje: `is-active`/`is-picked`).
 
 import { useState } from 'react';
-import { Button, Callout, IconButton, Popover, Text } from '@radix-ui/themes';
+import { Button, Callout, Popover, Text } from '@radix-ui/themes';
 import { Crosshair2Icon } from '@radix-ui/react-icons';
 import DentalChart from './DentalChart';
+import IkonGomb from './IkonGomb';
 import { parseTeeth, toggleFog } from '../domain/teeth';
 import type { FogterkepAllapot } from '../domain/toothVisual';
 
@@ -36,15 +37,15 @@ export default function ToothPickerPopover({ fogak, allapot, onChange }: ToothPi
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger>
-        <IconButton
+        <IkonGomb
           type="button"
-          aria-label="Fogak kijelölése a fogtérképen"
+          cimke="Fogak kijelölése a fogtérképen"
           variant="ghost"
           color="gray"
           size="1"
         >
           <Crosshair2Icon />
-        </IconButton>
+        </IkonGomb>
       </Popover.Trigger>
       <Popover.Content style={{ maxWidth: 340 }}>
         {szabadSzoveg ? (

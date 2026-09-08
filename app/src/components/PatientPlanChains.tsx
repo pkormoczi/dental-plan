@@ -26,7 +26,6 @@ import {
   Card,
   DropdownMenu,
   Flex,
-  IconButton,
   Separator,
   Text,
   TextField,
@@ -40,6 +39,7 @@ import {
   DotsHorizontalIcon,
   Pencil1Icon,
 } from '@radix-ui/react-icons';
+import IkonGomb from './IkonGomb';
 import { csokkentettMozgas } from '../design/motion';
 import { t } from '../design/tokens';
 import { formatPiszkozatIdo, formatShortDate } from '../domain/date';
@@ -434,23 +434,23 @@ export default function PatientPlanChains({
                       aria-label="Terv címe"
                       style={{ maxWidth: 260 }}
                     />
-                    <IconButton
+                    <IkonGomb
                       size="1"
                       variant="soft"
-                      aria-label="Címke mentése"
+                      cimke="Címke mentése"
                       onClick={() => void saveLabel(plan.dirName, labelDraft)}
                     >
                       <CheckIcon />
-                    </IconButton>
-                    <IconButton
+                    </IkonGomb>
+                    <IkonGomb
                       size="1"
                       variant="soft"
                       color="gray"
-                      aria-label="Címke szerkesztésének elvetése"
+                      cimke="Címke szerkesztésének elvetése"
                       onClick={cancelEditLabel}
                     >
                       <Cross2Icon />
-                    </IconButton>
+                    </IkonGomb>
                   </>
                 ) : (
                   <>
@@ -482,15 +482,15 @@ export default function PatientPlanChains({
                         </Badge>
                       )}
                     </Button>
-                    <IconButton
+                    <IkonGomb
                       size="1"
                       variant="ghost"
                       color="gray"
-                      aria-label="Terv címének szerkesztése"
+                      cimke="Terv címének szerkesztése"
                       onClick={() => startEditLabel(plan.dirName, label)}
                     >
                       <Pencil1Icon />
-                    </IconButton>
+                    </IkonGomb>
                   </>
                 )}
               </Flex>
@@ -616,14 +616,15 @@ export default function PatientPlanChains({
                                     különböző terv-lánc esetén (mindkettő saját v1-gyel
                                     indul) ütközne -- a képernyőolvasó (és a teszt)
                                     nem tudná megkülönböztetni őket. */}
-                                <IconButton
+                                <IkonGomb
                                   size="1"
                                   variant="soft"
                                   color="gray"
-                                  aria-label={`${label} — v${v.verzio} — további műveletek`}
+                                  cimke="További műveletek ezzel a verzióval"
+                                  ariaLabel={`${label} — v${v.verzio} — további műveletek`}
                                 >
                                   <DotsHorizontalIcon />
-                                </IconButton>
+                                </IkonGomb>
                               </DropdownMenu.Trigger>
                               {/* onCloseAutoFocus: a menü záráskor visszavenné a
                                   fókuszt a triggerre, és ezzel elhalászná azt a

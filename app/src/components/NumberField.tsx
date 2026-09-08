@@ -11,6 +11,7 @@
 //    mert a lista minden leütésre újraszámolt
 
 import { useEffect, useState, type CSSProperties } from 'react';
+import { Tooltip } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 import { formatCentForInput, parseEuroInput } from '../domain/money';
 import { useMentesJelzo } from './useMentesJelzo';
@@ -214,27 +215,34 @@ export default function NumberField({
         }}
       />
       {!penz && (
+        // A léptetők natív gombok (nem `IkonGomb`): `tabIndex={-1}`-esek és a
+        // mező keretén belül ülnek, egy Radix `IconButton` szétverné a
+        // geometriát. A tooltipet ezért közvetlenül kapják.
         <div style={stepperWrap}>
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-label="Növelés"
-            style={stepperBtnTop}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => step(1)}
-          >
-            ▲
-          </button>
-          <button
-            type="button"
-            tabIndex={-1}
-            aria-label="Csökkentés"
-            style={stepperBtnBottom}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => step(-1)}
-          >
-            ▼
-          </button>
+          <Tooltip content="Növelés eggyel">
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label="Növelés"
+              style={stepperBtnTop}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => step(1)}
+            >
+              ▲
+            </button>
+          </Tooltip>
+          <Tooltip content="Csökkentés eggyel">
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label="Csökkentés"
+              style={stepperBtnBottom}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => step(-1)}
+            >
+              ▼
+            </button>
+          </Tooltip>
         </div>
       )}
       {/* Mindig a DOM-ban, csak a szövege vált -- egy dinamikusan beszúrt

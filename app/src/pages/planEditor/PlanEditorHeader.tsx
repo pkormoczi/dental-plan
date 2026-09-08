@@ -1,7 +1,8 @@
 // A terv szerkesztő fejléce -- kiemelve a PlanEditorPage.tsx-ből.
 
-import { Box, Button, Flex, Heading, IconButton, Text } from '@radix-ui/themes';
+import { Box, Button, Flex, Heading, Text } from '@radix-ui/themes';
 import { TrashIcon } from '@radix-ui/react-icons';
+import IkonGomb from '../../components/IkonGomb';
 import { t } from '../../design/tokens';
 import { formatPiszkozatIdo } from '../../domain/date';
 import type { Plan } from '../../domain/types';
@@ -54,16 +55,17 @@ export default function PlanEditorHeader({
         )}
       </Box>
       <Flex gap="3" align="center">
-        <IconButton
+        <IkonGomb
           type="button"
-          aria-label="Piszkozat eldobása"
+          cimke="Piszkozat eldobása — a szerkesztés alatti terv elvetése"
+          ariaLabel="Piszkozat eldobása"
           variant="ghost"
           color="gray"
           size="2"
           onClick={onDiscard}
         >
           <TrashIcon />
-        </IconButton>
+        </IkonGomb>
         <Button onClick={onPreview}>Előnézet</Button>
       </Flex>
     </Flex>

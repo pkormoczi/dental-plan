@@ -18,14 +18,13 @@ import {
   Callout,
   Flex,
   Heading,
-  IconButton,
   Skeleton,
   Table,
   Text,
   TextField,
-  Tooltip,
 } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
+import IkonGomb from '../components/IkonGomb';
 import PatientTableRow from './paciensek/PatientTableRow';
 import { useListStateMemory } from '../components/useListStateMemory';
 import { t } from '../design/tokens';
@@ -109,16 +108,15 @@ export default function PaciensekPage() {
           <Heading size="5" style={{ color: t.brand }}>
             Páciensek
           </Heading>
-          <Tooltip content="A terv-mentéstől független, élő adatok — a kezelési előzményekért lásd a páciens Kezelési tervek tabját.">
-            <IconButton
-              aria-label="A Páciensek lista magyarázata"
-              variant="ghost"
-              color="gray"
-              size="1"
-            >
-              <InfoCircledIcon />
-            </IconButton>
-          </Tooltip>
+          <IkonGomb
+            cimke="A terv-mentéstől független, élő adatok — a kezelési előzményekért lásd a páciens Kezelési tervek tabját."
+            ariaLabel="A Páciensek lista magyarázata"
+            variant="ghost"
+            color="gray"
+            size="1"
+          >
+            <InfoCircledIcon />
+          </IkonGomb>
         </Flex>
         <Button
           onClick={() => {

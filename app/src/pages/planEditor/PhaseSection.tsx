@@ -5,7 +5,8 @@
 // lenne.
 
 import { Fragment, useEffect, useRef, useState, type RefObject } from 'react';
-import { Badge, Box, Button, Flex, IconButton, Table, Text, TextField } from '@radix-ui/themes';
+import { Badge, Box, Button, Flex, Table, Text, TextField } from '@radix-ui/themes';
+import IkonGomb from '../../components/IkonGomb';
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -247,17 +248,17 @@ export default function PhaseSection({
               <Badge color="amber" variant="soft" size="1">
                 {phase.megnevezesNyelv?.authoredInLanguage === 'de' ? 'DE szöveg' : 'HU szöveg'}
               </Badge>
-              <IconButton
+              <IkonGomb
                 type="button"
                 variant="ghost"
                 color="gray"
                 size="1"
-                aria-label="Nyelv ellenőrizve"
-                title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                cimke="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                ariaLabel="Nyelv ellenőrizve"
                 onClick={onReviewMegnevezes}
               >
                 <CheckIcon />
-              </IconButton>
+              </IkonGomb>
             </>
           )}
           {/* Csukott fejléc-összegzés: név/darabszám/összeg -- nyitva
@@ -273,9 +274,10 @@ export default function PhaseSection({
             szekciófejléc, nem lista-jellegű adatsor; az Árlista admin
             kategória-sora, PriceListAdminPage.tsx, ugyanezt teszi). */}
         <Flex gap="1" align="center">
-          <IconButton
+          <IkonGomb
             type="button"
-            aria-label="Fázis feljebb"
+            cimke={canMoveUp ? 'Fázis feljebb' : 'Fázis feljebb — ez már a legelső fázis'}
+            ariaLabel="Fázis feljebb"
             variant="ghost"
             color="gray"
             size="1"
@@ -283,10 +285,11 @@ export default function PhaseSection({
             onClick={onMoveUp}
           >
             <ArrowUpIcon />
-          </IconButton>
-          <IconButton
+          </IkonGomb>
+          <IkonGomb
             type="button"
-            aria-label="Fázis lejjebb"
+            cimke={canMoveDown ? 'Fázis lejjebb' : 'Fázis lejjebb — ez már az utolsó fázis'}
+            ariaLabel="Fázis lejjebb"
             variant="ghost"
             color="gray"
             size="1"
@@ -294,18 +297,19 @@ export default function PhaseSection({
             onClick={onMoveDown}
           >
             <ArrowDownIcon />
-          </IconButton>
+          </IkonGomb>
           {canDelete && (
-            <IconButton
+            <IkonGomb
               type="button"
-              aria-label="Fázis törlése"
+              cimke="Fázis törlése a soraival együtt"
+              ariaLabel="Fázis törlése"
               variant="ghost"
               color="gray"
               size="1"
               onClick={onDelete}
             >
               <TrashIcon />
-            </IconButton>
+            </IkonGomb>
           )}
         </Flex>
       </Flex>

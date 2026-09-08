@@ -281,6 +281,19 @@ describe('PriceListAdminPage', () => {
     expect(screen.queryByLabelText('Megnevezés (magyar)')).not.toBeInTheDocument();
   });
 
+  // A csillag/szem `aria-label`-je sornév-előtagos (a képernyőolvasó több
+  // sor között választ), a tooltip viszont a KÖVETKEZŐ hatást mondja -- a
+  // kettő külön szöveg, itt a hívóhely huzalozása az őr.
+  it('a gyakori-csillag tooltipje a következő hatást mondja, nem a sornevet', async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const row = (await screen.findByText('CBCT')).closest('tr')!;
+    await user.hover(gyakoriGomb(row));
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Megjelölés gyakorinak');
+  });
+
   // A sor-hover és a fókuszgyűrű `index.css`-ben él (`.arlista-tabla`), jsdom
   // alatt nincs Radix CSS -- a varrat, amit itt őrizni lehet, az osztálynév.
   it('a tétel-tábla viseli a sor-kiemelés osztálynevét', async () => {

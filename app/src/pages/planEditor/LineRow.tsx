@@ -8,7 +8,6 @@ import {
   Button,
   DropdownMenu,
   Flex,
-  IconButton,
   Table,
   Text,
   TextArea,
@@ -22,6 +21,7 @@ import {
   UpdateIcon,
 } from '@radix-ui/react-icons';
 import HuChip from '../../components/HuChip';
+import IkonGomb from '../../components/IkonGomb';
 import NumberField from '../../components/NumberField';
 import ToothPickerPopover from '../../components/ToothPickerPopover';
 import { t } from '../../design/tokens';
@@ -305,13 +305,12 @@ export default function LineRow({
                     <Badge color="amber" variant="soft" size="1">
                       átírt
                     </Badge>
-                    <IconButton
+                    <IkonGomb
                       type="button"
                       variant="ghost"
                       color="gray"
                       size="1"
-                      aria-label="Név visszaállítása az árlistaira"
-                      title="Név visszaállítása az árlistaira"
+                      cimke="Név visszaállítása az árlistaira"
                       onClick={() =>
                         // backlog-65, 7. döntés: a reset a nyelvi
                         // review-metaadatot is törli -- egy default-following
@@ -320,7 +319,7 @@ export default function LineRow({
                       }
                     >
                       <ResetIcon />
-                    </IconButton>
+                    </IkonGomb>
                   </>
                 )}
                 {nevNyelvMismatch && (
@@ -328,17 +327,17 @@ export default function LineRow({
                     <Badge color="amber" variant="soft" size="1">
                       {line.nevNyelv?.authoredInLanguage === 'de' ? 'DE szöveg' : 'HU szöveg'}
                     </Badge>
-                    <IconButton
+                    <IkonGomb
                       type="button"
                       variant="ghost"
                       color="gray"
                       size="1"
-                      aria-label="Nyelv ellenőrizve"
-                      title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                      cimke="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                      ariaLabel="Nyelv ellenőrizve"
                       onClick={() => onPatch({ nevNyelv: reviewElfogadva(line.nevNyelv, nyelv) })}
                     >
                       <CheckIcon />
-                    </IconButton>
+                    </IkonGomb>
                   </>
                 )}
                 {elteres && (
@@ -427,13 +426,13 @@ export default function LineRow({
               aria-label="Darabszám"
             />
           </Box>
-          <IconButton
+          <IkonGomb
             type="button"
             variant="ghost"
             color="gray"
             size="1"
-            aria-label="Darabszám igazítása a fogakhoz"
-            title="Darabszám igazítása a fogakhoz – innentől a fogak számát követi"
+            cimke="Darabszám igazítása a fogakhoz – innentől a fogak számát követi"
+            ariaLabel="Darabszám igazítása a fogakhoz"
             // A tényleges szinkronizálást a `sorPatchKovetessel` 1. szabálya
             // végzi (domain/mennyiseg.ts) -- a hívó csak a szándékot jelzi.
             onClick={() => onPatch({ mennyisegKezi: false })}
@@ -448,7 +447,7 @@ export default function LineRow({
             style={{ visibility: visszakapcsolhato ? 'visible' : 'hidden' }}
           >
             <UpdateIcon />
-          </IconButton>
+          </IkonGomb>
         </Flex>
       </Table.Cell>
 
@@ -468,13 +467,12 @@ export default function LineRow({
                 ? formatPrice({ tipus: 'SAVOS', ...line.savHatar }, currency, nyelv)
                 : formatMoney(line.listaEgysegar, currency, nyelv)}
           </Text>
-          <IconButton
+          <IkonGomb
             type="button"
             variant="ghost"
             color="gray"
             size="1"
-            aria-label="Ár frissítése az árlistából"
-            title="Ár frissítése az árlistából"
+            cimke="Ár frissítése az árlistából"
             onClick={onRequestArFrissites}
             // A ⟳ mennyiség-visszakapcsoló (fent, Db cella) mintája: mindig a
             // DOM-ban marad, csak `visibility: hidden`-nel tűnik el, hogy a
@@ -484,7 +482,7 @@ export default function LineRow({
             style={{ visibility: arFrissitesJavaslat ? 'visible' : 'hidden', color: t.warn }}
           >
             <UpdateIcon />
-          </IconButton>
+          </IkonGomb>
         </Flex>
       </Table.Cell>
 
@@ -530,37 +528,36 @@ export default function LineRow({
                 csak `visibility: hidden`-nel tűnik el -- egy feltételes
                 render soronként ugráltatná a flexGrow-os NumberField
                 szélességét. */}
-            <IconButton
+            <IkonGomb
               type="button"
               variant="ghost"
               color="gray"
               size="1"
-              aria-label="Ajánlati ár visszaállítása a listaárra"
-              title="Ajánlati ár visszaállítása a listaárra"
+              cimke="Ajánlati ár visszaállítása a listaárra"
               onClick={() => onPatch({ tenylegesEgysegar: line.listaEgysegar })}
               tabIndex={arEltero ? 0 : -1}
               aria-hidden={arEltero ? undefined : true}
               style={{ visibility: arEltero ? 'visible' : 'hidden' }}
             >
               <ResetIcon />
-            </IconButton>
+            </IkonGomb>
           </Flex>
-          {/* backlog-60, 3. döntés: a widget MARAD ghost `IconButton` +
+          {/* backlog-60, 3. döntés: a widget MARAD ghost ikon-gomb +
               `≈` szövegglyph (app/src/CLAUDE.md nevesített
               kivétele) -- csak a pozíciója költözött az ár mező alá. */}
-          <IconButton
+          <IkonGomb
             type="button"
             variant="ghost"
             color="gray"
             size="1"
             aria-pressed={line.savos}
-            aria-label="Becsült ár"
-            title="Becsült ár – a végleges összeg a kezelés során változhat."
+            cimke="Becsült ár – a végleges összeg a kezelés során változhat."
+            ariaLabel="Becsült ár"
             onClick={() => onPatch({ savos: !line.savos })}
             style={{ color: line.savos ? t.warn : t.uiTextFaint }}
           >
             ≈
-          </IconButton>
+          </IkonGomb>
         </Flex>
       </Table.Cell>
 
@@ -581,16 +578,17 @@ export default function LineRow({
             <DropdownMenu.Trigger>
               {/* A sor pozíciója az azonosító, nem a neve: két azonos tétel
                   egy fázisban ugyanazt a nevet viselné. */}
-              <IconButton
+              <IkonGomb
                 id={sorMenuId(pi, li)}
                 type="button"
                 variant="ghost"
                 color="gray"
                 size="1"
-                aria-label={`${li + 1}. sor — további műveletek`}
+                cimke="További műveletek — sor mozgatása"
+                ariaLabel={`${li + 1}. sor — további műveletek`}
               >
                 <DotsHorizontalIcon />
-              </IconButton>
+              </IkonGomb>
             </DropdownMenu.Trigger>
             {/* onCloseAutoFocus: mozgatás után a `fokuszCel` viszi a fókuszt a
                 mozgatott sor `⋯` gombjára -- a menü záráskori
@@ -604,16 +602,16 @@ export default function LineRow({
               </DropdownMenu.Item>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-          <IconButton
+          <IkonGomb
             type="button"
-            aria-label="Sor törlése"
+            cimke="Sor törlése"
             variant="ghost"
             color="gray"
             size="1"
             onClick={onRemove}
           >
             <TrashIcon />
-          </IconButton>
+          </IkonGomb>
         </Flex>
       </Table.Cell>
     </Table.Row>
@@ -641,13 +639,12 @@ export default function LineRow({
                 <Badge color="amber" variant="soft" size="1">
                   átírt leírás
                 </Badge>
-                <IconButton
+                <IkonGomb
                   type="button"
                   variant="ghost"
                   color="gray"
                   size="1"
-                  aria-label="Leírás visszaállítása az árlistaira"
-                  title="Leírás visszaállítása az árlistaira"
+                  cimke="Leírás visszaállítása az árlistaira"
                   onClick={() =>
                     // backlog-65, 7. döntés: lásd a névmező reset
                     // kommentjét fentebb.
@@ -655,7 +652,7 @@ export default function LineRow({
                   }
                 >
                   <ResetIcon />
-                </IconButton>
+                </IkonGomb>
               </Flex>
             )}
             {leirasNyelvMismatch && (
@@ -663,17 +660,17 @@ export default function LineRow({
                 <Badge color="amber" variant="soft" size="1">
                   {line.leirasNyelv?.authoredInLanguage === 'de' ? 'DE szöveg' : 'HU szöveg'}
                 </Badge>
-                <IconButton
+                <IkonGomb
                   type="button"
                   variant="ghost"
                   color="gray"
                   size="1"
-                  aria-label="Nyelv ellenőrizve"
-                  title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                  cimke="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                  ariaLabel="Nyelv ellenőrizve"
                   onClick={() => onPatch({ leirasNyelv: reviewElfogadva(line.leirasNyelv, nyelv) })}
                 >
                   <CheckIcon />
-                </IconButton>
+                </IkonGomb>
               </Flex>
             )}
           </Flex>

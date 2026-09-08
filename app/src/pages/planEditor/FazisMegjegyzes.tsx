@@ -1,8 +1,9 @@
 // Fázismegjegyzés progresszív elrejtése -- kiemelve a PlanEditorPage.tsx-ből.
 
 import { useEffect, useState } from 'react';
-import { Badge, Box, Button, Flex, IconButton, TextField } from '@radix-ui/themes';
+import { Badge, Box, Button, Flex, TextField } from '@radix-ui/themes';
 import { CheckIcon } from '@radix-ui/react-icons';
+import IkonGomb from '../../components/IkonGomb';
 import type { Nyelv } from '../../domain/types';
 import { fazisMegjegyzesId } from './elemIdk';
 
@@ -73,17 +74,17 @@ export default function FazisMegjegyzes({
               <Badge color="amber" variant="soft" size="1">
                 {authoredNyelv === 'de' ? 'DE szöveg' : 'HU szöveg'}
               </Badge>
-              <IconButton
+              <IkonGomb
                 type="button"
                 variant="ghost"
                 color="gray"
                 size="1"
-                aria-label="Nyelv ellenőrizve"
-                title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                cimke="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                ariaLabel="Nyelv ellenőrizve"
                 onClick={onReview}
               >
                 <CheckIcon />
-              </IconButton>
+              </IkonGomb>
             </>
           )}
         </Flex>
