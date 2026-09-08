@@ -25,7 +25,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     localStorage.clear();
   });
 
-  it('accent-independent search + arrow + enter adds a line, clears and refocuses the box', async () => {
+  it('ékezetfüggetlen keresés + nyíl + Enter felvesz egy sort, a kereső kiürül, a fókusz a Fog mezőbe megy, onnan Enter visszavisz', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -37,9 +37,15 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
 
     await user.keyboard('{ArrowDown}{Enter}');
 
-    // A kereső kiürül és visszakapja a fókuszt -- ez a ciklus lényege.
+    // A kereső kiürül, a fókusz viszont a most felvett sor Fog mezőjébe megy
+    // -- a fogszám a doki következő lépése.
     await waitFor(() => expect(search).toHaveValue(''));
-    expect(search).toHaveFocus();
+    await waitFor(() => expect(document.getElementById('fog-0-0')).toHaveFocus());
+
+    // Fogszám begépelése, majd Enter: vissza a keresőbe -- ez zárja a ciklust.
+    await user.keyboard('36{Enter}');
+    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('36');
+    await waitFor(() => expect(search).toHaveFocus());
 
     // A tétel bekerült a fázis soraiba (a dropdown már bezárult, egyetlen
     // találat) -- a sornév backlog-3 óta szerkeszthető mező, tehát az

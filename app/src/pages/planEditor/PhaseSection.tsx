@@ -51,6 +51,12 @@ export interface PhaseSectionProps {
   /** A `fogak` a keresőszövegből leválasztott fogszám -- lásd `ItemPicker`. */
   onAdd: (item: Tetel, fogak: string) => void;
   onAddEgyedi: (nev: string, fogak: string) => void;
+  /**
+   * Igazra a felvétel után a hívó viszi a fókuszt (a felvett sor Fog
+   * mezőjébe), tehát a kereső NEM veszi vissza -- lásd `ItemPicker`
+   * `fokuszAtadva`.
+   */
+  fokuszAtadva: (item: Tetel | null) => boolean;
   onPatchLine: (li: number, patch: Partial<Sor>) => void;
   onRequestArFrissites: (li: number) => void;
   onMoveLine: (li: number, irany: -1 | 1) => void;
@@ -63,6 +69,12 @@ export interface PhaseSectionProps {
    * hozzá tartozó görgetés így egy helyen marad).
    */
   onNevKesz: () => void;
+  /**
+   * A sor Fog mezőjéből Enterrel továbblépés -- a hívó a `fokuszCel` úton
+   * viszi a fókuszt vissza a fázis keresőjébe, ezzel zárva a billentyűzetes
+   * ciklust.
+   */
+  onFogKesz: () => void;
   onNote: (v: string) => void;
   onReviewMegnevezes: () => void;
   onReviewMegjegyzes: () => void;
@@ -91,6 +103,7 @@ export default function PhaseSection({
   onMoveDown,
   onAdd,
   onAddEgyedi,
+  fokuszAtadva,
   onPatchLine,
   onRequestArFrissites,
   onMoveLine,
@@ -98,6 +111,7 @@ export default function PhaseSection({
   onRestoreLine,
   onRename,
   onNevKesz,
+  onFogKesz,
   onNote,
   onReviewMegnevezes,
   onReviewMegjegyzes,
@@ -344,6 +358,7 @@ export default function PhaseSection({
                       canMoveDown={li < phase.sorok.length - 1}
                       onPatch={(p) => onPatchLine(li, p)}
                       onRequestArFrissites={() => onRequestArFrissites(li)}
+                      onFogKesz={onFogKesz}
                       onMoveUp={() => moveLine(li, -1)}
                       onMoveDown={() => moveLine(li, 1)}
                       onRemove={() => removeWithUndo(li, l)}
@@ -365,6 +380,7 @@ export default function PhaseSection({
             nyelv={nyelv}
             onPick={onAdd}
             onPickEgyedi={onAddEgyedi}
+            fokuszAtadva={fokuszAtadva}
             autoFocus={autoFokusz}
           />
 

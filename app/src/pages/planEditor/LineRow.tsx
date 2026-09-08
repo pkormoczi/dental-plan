@@ -62,6 +62,8 @@ export interface LineRowProps {
   canMoveDown: boolean;
   onPatch: (patch: Partial<Sor>) => void;
   onRequestArFrissites: () => void;
+  /** A Fog mezőben az Enter -- a hívó viszi a fókuszt a fázis keresőjébe. */
+  onFogKesz: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
@@ -84,6 +86,7 @@ export default function LineRow({
   canMoveDown,
   onPatch,
   onRequestArFrissites,
+  onFogKesz,
   onMoveUp,
   onMoveDown,
   onRemove,
@@ -335,6 +338,17 @@ export default function LineRow({
               value={line.fogak}
               placeholder="pl. 16, 17, 26"
               onChange={(e) => onPatch({ fogak: e.target.value })}
+              // Enterrel vissza a fázis keresőjébe -- így zárul a
+              // billentyűzetes ciklus: tétel -> fogszám -> következő tétel.
+              // Üresen is visz, ha a dokinak ehhez a sorhoz nincs fogszáma.
+              // Nem Tab (az a natív sorrendben a fogtérkép-gombra vinne) és
+              // nem Escape (annak az appban "elvet" jelentése van).
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return;
+                if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+                e.preventDefault();
+                onFogKesz();
+              }}
               aria-invalid={invalidFormat || undefined}
               // lásd a soron fentebb: box-shadow, nem borderColor -- az
               // utóbbi nem hatna semmit a Radix TextField-en.

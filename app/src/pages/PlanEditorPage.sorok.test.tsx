@@ -1278,3 +1278,86 @@ describe('PlanEditorPage -- fogszám a soron belüli keresőben', () => {
     expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('18');
   });
 });
+
+describe('PlanEditorPage -- fókusz a Fog mezőre tételfelvitel után', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('fogszámot nem kívánó tételnél (fogszamNemKell) a fókusz a keresőben marad', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'cbct');
+    await user.click(await screen.findByText('CBCT'));
+
+    await waitFor(() => expect(search).toHaveValue(''));
+    await waitFor(() => expect(search).toHaveFocus());
+    expect(document.getElementById('fog-0-0')).not.toHaveFocus();
+  });
+
+  it('egyedi (árlistai tétel nélküli) sor felvételekor is a Fog mező kapja a fókuszt', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'Érzéstelenítés');
+    await screen.findByText(/Egyedi tétel felvétele/);
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(search).toHaveValue(''));
+    await waitFor(() => expect(document.getElementById('fog-0-0')).toHaveFocus());
+  });
+
+  it('a "gyakori" gyorsgombbal felvett sor is a Fog mezőre visz', async () => {
+    const user = userEvent.setup();
+    // A seedben egyetlen tétel sincs `gyakori`-nak jelölve -- a gyorsgomb
+    // létezéséhez itt jelölünk meg egyet.
+    localStorage.setItem(
+      'dp:arlista.json',
+      JSON.stringify({
+        ...seedPriceList,
+        tetelek: seedPriceList.tetelek.map((x) =>
+          x.nev.hu === 'Fogeltávolítás' ? { ...x, gyakori: true } : x,
+        ),
+      }),
+    );
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+    renderEditor();
+
+    await user.click(await screen.findByRole('button', { name: '+ Fogeltávolítás' }));
+
+    await waitFor(() => expect(document.getElementById('fog-0-0')).toHaveFocus());
+  });
+
+  it('a fogtérképről indult, soron belüli kereső NEM mozdítja a fókuszt a Fog mezőre', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
+    const chart = await screen.findByRole('toolbar');
+    await user.click(chart.querySelector('[data-tooth="16"]') as Element);
+
+    const soronBeluli = screen.getAllByPlaceholderText(/Tétel keresése/)[0];
+    await user.type(soronBeluli, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+
+    // A sor a helyén töltődött ki; a fogszám már megvolt, nincs mit odavinni.
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+    expect(document.getElementById('fog-0-0')).not.toHaveFocus();
+  });
+
+  it('a Fog mezőben az Enter üresen is visszavisz a fázis keresőjébe', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(document.getElementById('fog-0-0')).toHaveFocus());
+
+    await user.keyboard('{Enter}');
+    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('');
+    await waitFor(() => expect(search).toHaveFocus());
+  });
+});

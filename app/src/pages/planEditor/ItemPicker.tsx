@@ -76,6 +76,14 @@ export interface ItemPickerProps {
    * válik), ezért nincs mit kiüríteni/visszafókuszálni.
    */
   clearOnPick?: boolean;
+  /**
+   * Ha igazat ad a most választott tételre (egyedi sornál `null`-ra), a
+   * komponens NEM veszi vissza a fókuszt -- a hívó viszi máshova (a
+   * `PlanEditorPage` a felvett sor Fog mezőjébe). A mező kiürítése ettől
+   * függetlenül megtörténik. A döntés a hívóé, mert tételenként más: fogszám
+   * nélküli tételnél (`fogszamNemKell`) a fókusz a keresőben marad.
+   */
+  fokuszAtadva?: (item: Tetel | null) => boolean;
   /** A mező DOM `id`-ja -- a `fokuszCel`-effekt (PlanEditorPage.tsx) ez alapján találja meg a soron belüli VAGY a fázis alatti keresőt. */
   id?: string;
 }
@@ -90,6 +98,7 @@ export default function ItemPicker({
   floating = 'inline',
   autoFocus = false,
   clearOnPick = true,
+  fokuszAtadva,
   id,
 }: ItemPickerProps) {
   const [q, setQ] = useState('');
@@ -173,16 +182,18 @@ export default function ItemPicker({
   // olyan pénznemben keres, amiben SEMMI sincs beárazva.
   const nincsBearazottTetel = available.every((x) => !x.ar[currency]);
 
-  function finishPick() {
-    if (clearOnPick) {
-      setQ('');
-      requestAnimationFrame(() => ref.current?.focus());
-    }
+  function finishPick(item: Tetel | null) {
+    if (!clearOnPick) return;
+    setQ('');
+    // A hívó fókusz-szándéka erősebb: egy rAF-fel késleltetett
+    // visszafókuszálás különben visszalopná a kurzort a `fokuszCel`-effekt alól.
+    if (fokuszAtadva?.(item)) return;
+    requestAnimationFrame(() => ref.current?.focus());
   }
 
   function pickTetel(item: Tetel) {
     onPick(item, bontas.fogak);
-    finishPick();
+    finishPick(item);
   }
 
   function pickEgyedi() {
@@ -191,7 +202,7 @@ export default function ItemPicker({
     const nev = bontas.nevResz.trim();
     if (!nev) return;
     onPickEgyedi?.(nev, bontas.fogak);
-    finishPick();
+    finishPick(null);
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {

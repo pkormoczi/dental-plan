@@ -217,6 +217,17 @@ export default function PlanEditorPage() {
   }
 
   /**
+   * Kíván-e fogszámot a most felvett sor. Ugyanaz a szabály, ami a
+   * véglegesítés-őr puha „nincs fogszám" jelzését hajtja
+   * (`domain/kitoltetlen.ts` `fogszamNelkuliSorok`): hiányzó/false
+   * `fogszamNemKell` = kell fogszám, egyedi (árlistai tétel nélküli) sor is
+   * kell. Két, egymástól elcsúszó definíció rosszabb lenne, mint egy.
+   */
+  function fogszamotKivan(item: Tetel | null): boolean {
+    return !item?.fogszamNemKell;
+  }
+
+  /**
    * A `fogak` a keresőszövegből leválasztott fogszám (`domain/search.ts`
    * `fogszamBontas`), `''`, ha nem volt. A darabszám a fogak számát követi --
    * kézzel beírva is ez történne --, a sor `mennyisegKezi: false` marad.
@@ -225,6 +236,7 @@ export default function PlanEditorPage() {
    */
   function addLine(phaseIdx: number, item: Tetel, fogak = '') {
     const mezok = sorMezokTetelbol(item, currency, nyelv);
+    const ujIndex = plan.fazisok[phaseIdx].sorok.length;
     updatePlan((draft) => {
       draft.fazisok[phaseIdx].sorok.push({
         ...mezok,
@@ -233,9 +245,11 @@ export default function PlanEditorPage() {
         mennyisegKezi: false,
       });
     });
+    if (fogszamotKivan(item)) setFokuszCel({ mit: 'fogak', pi: phaseIdx, li: ujIndex });
   }
 
   function addEgyediLine(phaseIdx: number, nev: string, fogak = '') {
+    const ujIndex = plan.fazisok[phaseIdx].sorok.length;
     updatePlan((draft) => {
       draft.fazisok[phaseIdx].sorok.push({
         ...sorMezokEgyedibol(nev, nyelv),
@@ -244,6 +258,7 @@ export default function PlanEditorPage() {
         mennyisegKezi: false,
       });
     });
+    if (fogszamotKivan(null)) setFokuszCel({ mit: 'fogak', pi: phaseIdx, li: ujIndex });
   }
 
   function patchLine(pi: number, li: number, patch: Partial<Sor>) {
@@ -457,6 +472,7 @@ export default function PlanEditorPage() {
             onAdd={(item, fogak) => addLine(pi, item, fogak)}
             onAddEgyedi={(nev, fogak) => addEgyediLine(pi, nev, fogak)}
             onPatchLine={(li, patch) => patchLine(pi, li, patch)}
+            fokuszAtadva={fogszamotKivan}
             onRequestArFrissites={(li) => setPendingArFrissites({ pi, li })}
             onMoveLine={(li, irany) => moveLine(pi, li, irany)}
             onRemoveLine={(li) =>
@@ -480,6 +496,7 @@ export default function PlanEditorPage() {
               })
             }
             onNevKesz={() => setFokuszCel({ mit: 'fazisKereso', pi })}
+            onFogKesz={() => setFokuszCel({ mit: 'fazisKereso', pi })}
             onNote={(v) =>
               updatePlan((draft) => {
                 const f = draft.fazisok[pi];
