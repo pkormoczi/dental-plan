@@ -23,6 +23,15 @@ import type { PatientFolder } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
 import UjPaciensDialog from './paciensek/UjPaciensDialog';
 
+/**
+ * „Érintetlen kereső = nincs kiemelt sor” -- ugyanaz a szabály, ami a
+ * tételkeresőben (`planEditor/ItemPicker.tsx`) már él (ott üres `q`-nál
+ * `opcioSzam === 0`, az Enter no-op). Az állapot a kereső TARTALMÁHOZ
+ * kötődik, nem egy egyszeri mozdulathoz: a kitörölt szöveg is visszahozza,
+ * különben a gépel → töröl állapotban újra ott állna a hamis kiválasztottság.
+ */
+const NINCS_KIEMELES = -1;
+
 export default function NewPlanPage() {
   const { storage } = useStorage();
 
@@ -30,7 +39,7 @@ export default function NewPlanPage() {
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
   const [q, setQ] = useState('');
-  const [hi, setHi] = useState(0);
+  const [hi, setHi] = useState(NINCS_KIEMELES);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -93,7 +102,7 @@ export default function NewPlanPage() {
   const ujPaciensOpcio = isSearching && talalatok.length === 0;
   const opcioSzam = listaTetelek.length + (ujPaciensOpcio ? 1 : 0);
 
-  useEffect(() => setHi(0), [q]);
+  useEffect(() => setHi(trimmed ? 0 : NINCS_KIEMELES), [trimmed]);
   useEffect(() => {
     itemRefs.current[hi]?.scrollIntoView({ block: 'nearest' });
   }, [hi]);
@@ -152,14 +161,19 @@ export default function NewPlanPage() {
       return;
     }
     if (!opcioSzam) return;
+    // A nyíl az érintetlen keresőből is kiemel (le → első, fel → utolsó) --
+    // enélkül a billentyűzetes út zsákutca lenne (PRODUCT.md § Napi flow).
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setHi((h) => (h + 1) % opcioSzam);
+      setHi((h) => (h === NINCS_KIEMELES ? 0 : (h + 1) % opcioSzam));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setHi((h) => (h - 1 + opcioSzam) % opcioSzam);
+      setHi((h) => (h === NINCS_KIEMELES ? opcioSzam - 1 : (h - 1 + opcioSzam) % opcioSzam));
     } else if (e.key === 'Enter') {
       e.preventDefault();
+      // Nincs kiemelés → némán nem történik semmi: a panasz a HAMIS
+      // kiválasztottság volt, nem a hiányzó visszajelzés.
+      if (hi === NINCS_KIEMELES) return;
       if (hi < listaTetelek.length) akciok.inditas({ kind: 'ujTerv', patientDir: listaTetelek[hi].dirName });
       else if (ujPaciensOpcio) akciok.inditas({ kind: 'ujPaciens', nev: trimmed });
     }

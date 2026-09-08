@@ -102,6 +102,20 @@ function renderNewPlan() {
   );
 }
 
+/**
+ * A kiemelt sorok: a kiemelést kizárólag INLINE `boxShadow` jelöli
+ * (NewPlanPage.tsx), a többi gomb Radix-osztályokból kapja a stílusát --
+ * ezért az inline érték megléte az egyetlen megbízható jel jsdom alatt.
+ */
+function kiemeltSorok(): HTMLElement[] {
+  return [...document.querySelectorAll('button')].filter((b) => b.style.boxShadow !== '');
+}
+
+/** A választható lista sorai, a lap fölötti „+ Új páciens” gomb nélkül. */
+function listaSorok(): HTMLElement[] {
+  return screen.getAllByRole('button').filter((b) => b.textContent !== '+ Új páciens');
+}
+
 describe('NewPlanPage', () => {
   beforeEach(async () => {
     localStorage.clear();
@@ -210,6 +224,82 @@ describe('NewPlanPage', () => {
       .map((b) => nevek.find((n) => b.textContent === n))
       .filter((n): n is string => n != null);
     expect(sorrend).toEqual(nevek);
+  });
+
+  it('gépelés nélkül egyetlen páciens-sor sincs kiemelve, és az Enter nem indít tervet', async () => {
+    const user = userEvent.setup();
+    renderNewPlan();
+
+    const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
+    await screen.findByRole('button', { name: /Kovács János/ });
+    expect(kiemeltSorok()).toHaveLength(0);
+
+    await user.type(input, '{Enter}');
+
+    expect(screen.queryByTestId('draft-oldal')).not.toBeInTheDocument();
+    expect(kiemeltSorok()).toHaveLength(0);
+  });
+
+  it('egy leütés után az első opció kiemelt, és az Enter arra indít', async () => {
+    const user = userEvent.setup();
+    renderNewPlan();
+
+    const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
+    await screen.findByRole('button', { name: /Kovács János/ });
+
+    // Egyetlen karakter: a lista MÉG a recents (a keresés 2 karaktertől indul),
+    // a kiemelés viszont már az első soron áll.
+    await user.type(input, 'k');
+    await waitFor(() => expect(kiemeltSorok()).toHaveLength(1));
+    const elso = screen.getAllByRole('button').filter((b) => b.style.boxShadow !== '')[0];
+    const kiemeltNev = elso.textContent ?? '';
+
+    await user.keyboard('{Enter}');
+
+    expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
+    expect(kiemeltNev).toContain(screen.getByTestId('draft-nev').textContent ?? '');
+  });
+
+  it('a keresőszöveg kitörlése után újra nincs kiemelt sor, és az Enter nem indít', async () => {
+    const user = userEvent.setup();
+    renderNewPlan();
+
+    const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
+    await user.type(input, 'kov');
+    await waitFor(() => expect(kiemeltSorok()).toHaveLength(1));
+
+    await user.clear(input);
+    await waitFor(() => expect(kiemeltSorok()).toHaveLength(0));
+
+    await user.type(input, '{Enter}');
+    expect(screen.queryByTestId('draft-oldal')).not.toBeInTheDocument();
+  });
+
+  it('üres keresőn az ArrowDown az első opciót emeli ki', async () => {
+    const user = userEvent.setup();
+    renderNewPlan();
+
+    const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
+    await screen.findByRole('button', { name: /Kovács János/ });
+
+    await user.type(input, '{ArrowDown}');
+
+    await waitFor(() => expect(kiemeltSorok()).toHaveLength(1));
+    expect(kiemeltSorok()[0]).toBe(listaSorok()[0]);
+  });
+
+  it('üres keresőn az ArrowUp az utolsó opciót emeli ki', async () => {
+    const user = userEvent.setup();
+    renderNewPlan();
+
+    const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
+    await screen.findByRole('button', { name: /Kovács János/ });
+
+    await user.type(input, '{ArrowUp}');
+
+    await waitFor(() => expect(kiemeltSorok()).toHaveLength(1));
+    const sorok = listaSorok();
+    expect(kiemeltSorok()[0]).toBe(sorok[sorok.length - 1]);
   });
 
   it('nyíl le majd Enter a második találatot választja', async () => {
