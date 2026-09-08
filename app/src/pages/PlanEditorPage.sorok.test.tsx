@@ -42,33 +42,23 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
 
     await nyisdKiFogterkepet(user);
     expect(await screen.findByRole('toolbar')).toBeInTheDocument();
-    expect(await screen.findByText(/Kattints egy fogra/)).toBeInTheDocument();
+    // Az útmutató a fogszám-megadás két útjára mutat, sor-felvételt nem ígér.
+    expect(await screen.findByText(/„Fog” mezőjébe írd be/)).toBeInTheDocument();
+    expect(screen.queryByText(/felveszünk rá egy sort/)).not.toBeInTheDocument();
   });
 
-  it('kezeletlen fogra kattintva új, tétel nélküli sort hoz létre a fogszámmal, és a soron belüli keresőre fókuszál -- a választás a helyén tölti ki, nem fűz újat', async () => {
+  it('kezeletlen fogra kattintva nem keletkezik sor, a fázis sorainak száma változatlan', async () => {
     const user = userEvent.setup();
     renderEditor();
     await nyisdKiFogterkepet(user);
 
     const chart = await screen.findByRole('toolbar');
-    const tooth16 = chart.querySelector('[data-tooth="16"]') as Element;
-    await user.click(tooth16);
+    await user.click(chart.querySelector('[data-tooth="16"]') as Element);
 
-    // Az új sor Fog mezője már "16"-ot tartalmaz.
-    expect(screen.getByDisplayValue('16')).toBeInTheDocument();
-
-    // A soron belüli kereső (a táblázatban, a fázis alatti előtt) fókuszban van.
-    const keresok = screen.getAllByPlaceholderText(/Tétel keresése/);
-    expect(keresok).toHaveLength(2); // soron belüli + fázis alatti
-    expect(keresok[0]).toHaveFocus();
-
-    await user.type(keresok[0], 'fogeltavolitas');
-    await user.click(await screen.findByText('Fogeltávolítás'));
-
-    // A sor a helyén töltődött ki -- a fogszám megmaradt, nincs második sor.
-    expect(screen.getByDisplayValue('16')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
-    expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(1); // csak a fázis alatti maradt
+    // Se új sor (a sornak Fog mezője és saját keresője lenne), se beírt fogszám.
+    expect(screen.queryAllByPlaceholderText('pl. 16, 17, 26')).toHaveLength(0);
+    expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(1); // csak a fázis alatti
+    expect(screen.queryByDisplayValue('16')).not.toBeInTheDocument();
   });
 
   it('már kezelt fogra kattintva a sorára ugrik, ismételt kattintásra a következő érintett sorra lép, majd körbeér', async () => {
@@ -107,25 +97,15 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     expect(document.getElementById('fog-0-0')).toHaveFocus(); // körbeér
   });
 
-  it('egyetlen fázisnál nincs fázisválasztó; kettőnél megjelenik, és az új sor a kiválasztott fázisba kerül', async () => {
+  it('több fázis mellett sincs „Új sor ide” fázisválasztó a fogtérkép fölött', async () => {
     const user = userEvent.setup();
     renderEditor();
     await nyisdKiFogterkepet(user);
-
     await screen.findByRole('toolbar');
-    expect(screen.queryByRole('combobox', { name: /Új sor ide/ })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
 
-    const valaszto = screen.getByRole('combobox', { name: /Új sor ide/ });
-    await user.click(valaszto);
-    await user.click(await screen.findByRole('option', { name: '2. fázis' }));
-
-    const chart = screen.getByRole('toolbar');
-    const tooth26 = chart.querySelector('[data-tooth="26"]') as Element;
-    await user.click(tooth26);
-
-    expect(document.getElementById('kereso-1-0')).toHaveFocus();
+    expect(screen.queryByRole('combobox', { name: /Új sor ide/ })).not.toBeInTheDocument();
   });
 
   it('a sor melletti fogválasztó ikonnal is kijelölhető fog -- a Fog mező frissül', async () => {
@@ -1376,50 +1356,6 @@ describe('PlanEditorPage -- fogszám a keresőszövegben', () => {
   });
 });
 
-describe('PlanEditorPage -- fogszám a soron belüli keresőben', () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  /** A fogtérképről kattintott, még meg nem nevezett sor -- ez az egyetlen eset, ami soron belüli keresővel indul. */
-  async function fogterkeprolUjSor(user: ReturnType<typeof userEvent.setup>, fdi: string) {
-    renderEditor();
-    await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
-    const chart = await screen.findByRole('toolbar');
-    await user.click(chart.querySelector(`[data-tooth="${fdi}"]`) as Element);
-  }
-
-  it('a fogtérképről kapott fogszámot a keresőbe gépelt fogszám NEM írja felül', async () => {
-    const user = userEvent.setup();
-    await fogterkeprolUjSor(user, '16');
-    expect(screen.getByDisplayValue('16')).toBeInTheDocument();
-
-    const soronBeluli = screen.getAllByPlaceholderText(/Tétel keresése/)[0];
-    await user.type(soronBeluli, '18 fogeltavolitas');
-    await user.click(await screen.findByText('Fogeltávolítás'));
-
-    // A doki explicit fogtérképi választása marad -- egy elgépelt szám némán elvinné.
-    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('16');
-  });
-
-  it('ÜRES Fog mezőbe viszont beírja a keresőből leválasztott fogszámot', async () => {
-    const user = userEvent.setup();
-    await fogterkeprolUjSor(user, '16');
-
-    // A doki kitörli a fogtérképről kapott számot, a sor még névtelen.
-    const fogMezo = screen.getByDisplayValue('16');
-    await user.clear(fogMezo);
-
-    const soronBeluli = screen.getAllByPlaceholderText(/Tétel keresése/)[0];
-    await user.type(soronBeluli, '18 fogeltavolitas');
-    await user.click(await screen.findByText('Fogeltávolítás'));
-
-    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('18');
-  });
-});
-
 describe('PlanEditorPage -- fókusz a Fog mezőre tételfelvitel után', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -1470,22 +1406,6 @@ describe('PlanEditorPage -- fókusz a Fog mezőre tételfelvitel után', () => {
     await user.click(await screen.findByRole('button', { name: '+ Fogeltávolítás' }));
 
     await waitFor(() => expect(document.getElementById('fog-0-0')).toHaveFocus());
-  });
-
-  it('a fogtérképről indult, soron belüli kereső NEM mozdítja a fókuszt a Fog mezőre', async () => {
-    const user = userEvent.setup();
-    renderEditor();
-    await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
-    const chart = await screen.findByRole('toolbar');
-    await user.click(chart.querySelector('[data-tooth="16"]') as Element);
-
-    const soronBeluli = screen.getAllByPlaceholderText(/Tétel keresése/)[0];
-    await user.type(soronBeluli, 'fogeltavolitas');
-    await user.click(await screen.findByText('Fogeltávolítás'));
-
-    // A sor a helyén töltődött ki; a fogszám már megvolt, nincs mit odavinni.
-    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
-    expect(document.getElementById('fog-0-0')).not.toHaveFocus();
   });
 
   it('a Fog mezőben az Enter üresen is visszavisz a fázis keresőjébe', async () => {

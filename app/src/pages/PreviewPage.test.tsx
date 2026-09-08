@@ -1,6 +1,8 @@
-// A kitöltetlen-sor véglegesítés-őr tesztje: egy fogtérkép-kattintással
-// létrehozott, de be nem azonosított sor KEMÉNY blokk -- nem folytatható,
-// amíg a doki nem választ hozzá beavatkozást vagy nem törli a sort. A
+// A kitöltetlen-sor véglegesítés-őr tesztje: egy be nem azonosított (név
+// nélküli) sor KEMÉNY blokk -- nem folytatható, amíg a doki nem választ hozzá
+// beavatkozást vagy nem törli a sort. Ilyen sor a felületről már nem
+// keletkezik (a fogtérkép csak navigál, `PRODUCT.md § Nem cél`), betöltött
+// piszkozatban viszont igen -- ezért a fixture piszkozatot ír, nem kattint. A
 // @react-pdf/renderer usePDF()-jét ugyanúgy mockoljuk, mint App.test.tsx-ben
 // (lásd ott a header-kommentet az indoklásért). A véglegesítés-gomb
 // engedélyezettségét mindenhol `waitFor` várja ki: az előnézet a PDF előtt
@@ -57,29 +59,68 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
     window.location.hash = '';
   });
 
+  /** Egy fázis, benne EGY be nem azonosított sor (`tetelId` és `nevSnapshot` üresen). */
+  function seedDraftWithUresSor() {
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({
+        schemaVersion: 1,
+        mentve: '2026-08-09T10:15:00.000Z',
+        plan: {
+          schemaVersion: 1,
+          tervId: '',
+          verzio: 0,
+          statusz: 'PISZKOZAT',
+          nyelv: 'hu',
+          penznem: 'HUF',
+          keltezes: '2026-08-05',
+          ervenyesIg: '2026-11-03',
+          arlistaVerzio: '2026-07-01',
+          orvos: 'Dr. Mándoki István',
+          paciens: {
+            nev: 'Teszt Ilona',
+            szuletesiIdo: '',
+            lakcim: '',
+            telefon: '',
+            email: '',
+            taj: '',
+            kiskoru: false,
+            torvenyesKepviselo: null,
+          },
+          fazisok: [
+            {
+              sorszam: 1,
+              megnevezes: '1. fázis',
+              megjegyzes: '',
+              sorok: [
+                {
+                  tetelId: '',
+                  nevSnapshot: '',
+                  savos: false,
+                  fogak: '16',
+                  mennyiseg: 1,
+                  listaEgysegar: 0,
+                  tenylegesEgysegar: 0,
+                },
+              ],
+            },
+          ],
+          osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+        },
+      }),
+    );
+  }
+
   it(
     'kitöltetlen sorral a véglegesítés blokkolva -- kitöltés után folytatható',
     async () => {
       const user = userEvent.setup();
+      localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+      localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+      seedDraftWithUresSor();
       render(<App />);
+      window.location.hash = '#/elonezet';
 
-      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
-      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
-      const nameInput = await screen.findByPlaceholderText('Kovács János');
-      await user.type(nameInput, 'Teszt Ilona');
-      await user.click(screen.getByRole('button', { name: 'Mentés' }));
-      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
-
-      // Fogtérkép-kattintással létrehozott, tétel nélküli sor -- a panel
-      // alapból csukva, előbb ki kell nyitni.
-      await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
-      const chart = await screen.findByRole('toolbar');
-      const tooth16 = chart.querySelector('[data-tooth="16"]') as Element;
-      await user.click(tooth16);
-      expect(screen.getByDisplayValue('16')).toBeInTheDocument();
-
-      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       const finalizeBtn = await screen.findByRole(
         'button',
         { name: /Véglegesítés és mentés/ },

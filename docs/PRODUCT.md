@@ -76,11 +76,12 @@ Az aláírt PDF-ből következő szabályok — jogi, nem stíluskérdések:
 - Automatikus HUF↔EUR átváltás — minden ár pénznemenként, kézzel; a pénznemváltás munkaállapota sosem
   kerül nyomtatványra.
 - Statisztika, riport (a „gyakori” jelölés kézi, nem használati adatból).
-- Szerveroldali komponens bármilyen formában.
-- EESZT-integráció és e-mail-küldés az appból: legfeljebb távlati backlog-ötlet, nem az MVP része.
-- A `Fog` mező jegyzetmezővé válása elfogadott (szabadszöveget elbír, automatika ekkor nem indul).
-- Kezdőlapi páciens-kereső: nem, amíg az állomány pár száz alatt marad — a Páciensek lap keresője egy
-  kattintás, a kezdőlap 5-ös recent-listája a napi eseteket fedi.
+- Szerveroldali komponens.
+- EESZT-integráció és e-mail-küldés: legfeljebb távlati backlog-ötlet, nem MVP.
+- A `Fog` mező jegyzetmezővé válása elfogadott (szabadszöveget elbír, automatika nem indul).
+- Fogtérkép mint tétel-felvitel: csak a kezelt fog sorára navigál.
+- Kezdőlapi páciens-kereső, amíg az állomány pár száz alatt marad — a Páciensek lap keresője egy
+  kattintás, a recent-lista a napi eseteket fedi.
 
 ## Szándékos hiányok és nyitott kérdések
 

@@ -7,7 +7,7 @@
 // animáció visszajelzési funkció nélkül tilos (app/src/CLAUDE.md).
 
 import { useState } from 'react';
-import { Button, Flex, Select, Text } from '@radix-ui/themes';
+import { Button, Flex, Text } from '@radix-ui/themes';
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import DentalChart from './DentalChart';
 import DentalChartLegend from './DentalChartLegend';
@@ -16,18 +16,9 @@ import type { FogterkepAllapot } from '../domain/toothVisual';
 export interface ToothChartPanelProps {
   allapot: FogterkepAllapot;
   onToothClick: (fdi: string) => void;
-  fazisok: { megnevezes: string }[];
-  celFazisIndex: number;
-  onCelFazisChange: (i: number) => void;
 }
 
-export default function ToothChartPanel({
-  allapot,
-  onToothClick,
-  fazisok,
-  celFazisIndex,
-  onCelFazisChange,
-}: ToothChartPanelProps) {
+export default function ToothChartPanel({ allapot, onToothClick }: ToothChartPanelProps) {
   const [open, setOpen] = useState(false);
   const erintettSzam = allapot.fogak.size + allapot.tejfogak.length;
   const hasFogterkep = erintettSzam > 0;
@@ -46,23 +37,6 @@ export default function ToothChartPanel({
           {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
           Érintett fogak
         </Button>
-        {open && fazisok.length > 1 && (
-          <Flex align="center" gap="2">
-            <Text as="div" size="1" color="gray">
-              Új sor ide:
-            </Text>
-            <Select.Root value={String(celFazisIndex)} onValueChange={(v) => onCelFazisChange(Number(v))}>
-              <Select.Trigger aria-label="Új sor ide melyik fázisba kerüljön" />
-              <Select.Content>
-                {fazisok.map((f, i) => (
-                  <Select.Item key={i} value={String(i)}>
-                    {f.megnevezes}
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Root>
-          </Flex>
-        )}
       </Flex>
       {open && (
         <Flex id="fogterkep-panel" direction="column" style={{ maxWidth: 480 }}>
@@ -75,8 +49,8 @@ export default function ToothChartPanel({
           )}
           {!hasFogterkep && (
             <Text as="div" size="1" color="gray" mt="2">
-              Kattints egy fogra, és felveszünk rá egy sort — vagy írd be a fogszámokat a sor
-              „Fog” mezőjébe.
+              A felvett kezelések fogszámai látszanak itt — a fogszámot a sor „Fog” mezőjébe írd be,
+              vagy a mellette lévő fogválasztóval jelöld ki.
             </Text>
           )}
         </Flex>

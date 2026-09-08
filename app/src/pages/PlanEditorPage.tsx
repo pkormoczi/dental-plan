@@ -87,12 +87,6 @@ export default function PlanEditorPage() {
   const [sorDraft, setSorDraft] = useState<
     ({ pi: number; li: number } & SorDraftErtekek) | null
   >(null);
-  // Melyik fázisba kerüljön az új sor, ha a doki kezeletlen fogra kattint a
-  // fogtérképen -- csak akkor látszik a választó, ha >1 fázis van (lásd
-  // lent). Renderléskor mindig `Math.min`-nel szorítva a fázisok
-  // számához, hogy egy törölt fázis ne hagyjon lógó indexet.
-  const [celFazisIndex, setCelFazisIndex] = useState(0);
-  const celFazisIndexClamped = Math.min(celFazisIndex, plan.fazisok.length - 1);
   // Hova kell fókuszálni/görgetni renderelés UTÁN -- a `useFokuszEffekt`
   // hook dolgozza fel (lásd `pages/planEditor/useFokuszEffekt.ts`), mert a
   // célelem DOM-ja (most felvett sor, most hozzáadott fázis) csak a
@@ -350,33 +344,15 @@ export default function PlanEditorPage() {
   const ujUresPiszkozat = plan.tervId === '' && plan.fazisok.every((f) => f.sorok.length === 0);
 
   /**
-   * A fogtérkép beviteli logikája: ha a fog már érintett, ugrás a sorára
-   * (ismételt kattintásra a következő érintettre, körbe); ha nem, tétel
-   * nélküli új sor a kiválasztott fázisban, a fog már beírva, fókusz a
-   * soron belüli keresőn.
+   * A fogtérkép NAVIGÁCIÓ, nem tétel-felvitel (`PRODUCT.md § Nem cél`): kezelt
+   * fogra a sorára ugrik (ismételt kattintásra a következő érintettre, körbe),
+   * kezeletlen fogra némán nem történik semmi -- a fogszám a sor `Fog` mezőjén
+   * és a melletti fogválasztón át kerül a tervbe. Ugyanez a viselkedés, mint a
+   * Terv részletei lap térképén (`tervReszletei/FogterkepPanel.tsx`).
    */
   function onToothClick(fdi: string) {
     const cimek = fogterkep.fogak.get(fdi)?.kezelesek ?? [];
-    if (cimek.length === 0) {
-      const pi = celFazisIndexClamped;
-      const ujIndex = plan.fazisok[pi].sorok.length;
-      updatePlan((draft) => {
-        draft.fazisok[pi].sorok.push({
-          tetelId: '',
-          nevSnapshot: '',
-          savos: false,
-          fogak: fdi,
-          mennyiseg: 1,
-          listaEgysegar: 0,
-          tenylegesEgysegar: 0,
-          leirasSnapshot: '',
-          mennyisegKezi: false,
-        });
-      });
-      ciklusRef.current = null;
-      setFokuszCel({ pi, li: ujIndex, mit: 'kereso' });
-      return;
-    }
+    if (cimek.length === 0) return;
     const elozo = ciklusRef.current;
     const idx = elozo && elozo.fdi === fdi ? (elozo.index + 1) % cimek.length : 0;
     ciklusRef.current = { fdi, index: idx };
@@ -468,13 +444,7 @@ export default function PlanEditorPage() {
       {/* A beavatkozás lista fölött, alapból csukva -- kattintásra nyílik
           (lásd components/ToothChartPanel.tsx). Korábban az oldal alján,
           mindig nyitva állt; a doki kérésére show-hide módra váltott. */}
-      <ToothChartPanel
-        allapot={fogterkep}
-        onToothClick={onToothClick}
-        fazisok={plan.fazisok}
-        celFazisIndex={celFazisIndexClamped}
-        onCelFazisChange={setCelFazisIndex}
-      />
+      <ToothChartPanel allapot={fogterkep} onToothClick={onToothClick} />
       <Separator size="4" mb="6" mt="4" />
 
       {plan.fazisok.map((p, pi) => (
