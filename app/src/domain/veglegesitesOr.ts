@@ -471,7 +471,7 @@ export function veglegesitesDiagnozis(
     tetelek.push({
       id: 'torzsadat-elteres',
       sulyossag: 'info',
-      cim: `A páciens törzsadata ${masterElteresek.length} mezőben eltér a terv adataitól (${masterElteresek.map((m) => m.cimke).join(', ')}).`,
+      cim: `A páciens adatlapja ${masterElteresek.length} mezőben eltér a terv adataitól (${masterElteresek.map((m) => m.cimke).join(', ')}).`,
       szamlalo: masterElteresek.length,
       route: '/paciens',
     });

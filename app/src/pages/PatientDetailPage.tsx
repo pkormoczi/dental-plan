@@ -386,7 +386,7 @@ export default function PatientDetailPage() {
         onOpenChange={(open) => !open && guard.cancel()}
         onConfirm={guard.confirm}
         title="Nem mentett módosítás"
-        description="A Páciens adatai lapon van nem mentett módosításod. Ha lapot váltasz, ez elvész — csak a Mentés gomb rögzíti a törzsadatban. Biztosan folytatod?"
+        description="A Páciens adatai lapon van nem mentett módosításod. Ha lapot váltasz, ez elvész — csak a Mentés gomb rögzíti az adatlapon. Biztosan folytatod?"
         confirmLabel="Váltás, módosítás elvetésével"
       />
 
@@ -394,7 +394,7 @@ export default function PatientDetailPage() {
         <AlertDialog.Content maxWidth="440px">
           <AlertDialog.Title>Páciens törlése</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            „{displayedAdatok.nev}” végleges törlése — a törzsadata és az összes hozzá tartozó fájl
+            „{displayedAdatok.nev}” végleges törlése — az adatlapja és az összes hozzá tartozó fájl
             elvész. A művelet nem vonható vissza.
           </AlertDialog.Description>
           <Flex gap="3" mt="4" justify="end">

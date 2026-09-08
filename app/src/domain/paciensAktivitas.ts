@@ -60,7 +60,7 @@ export function legutobbAktivPaciensek(patients: PatientFolder[], limit: number)
 
 const AKTIVITAS_CIMKE: Record<AktivitasTipus, string> = {
   letrehozva: 'Páciens létrehozva',
-  'torzsadat-mentve': 'Törzsadat mentve',
+  'torzsadat-mentve': 'Adatlap mentve',
   'terv-veglegesitve': 'Terv véglegesítve',
 };
 

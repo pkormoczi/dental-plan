@@ -254,7 +254,7 @@ describe('TervReszleteiPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Megjelenítés' }));
 
     expect(screen.queryByText(/mező azóta módosult/)).not.toBeInTheDocument();
-    expect(screen.queryByText('Törzsadat')).not.toBeInTheDocument();
+    expect(screen.queryByText('Adatlap')).not.toBeInTheDocument();
   });
 
   it('sérült paciens-adatok.json esetén a lap NEM hibaágban renderel -- a pillanatkép-szekcióban halk jelzés helyettesíti a diffet', async () => {
@@ -270,7 +270,7 @@ describe('TervReszleteiPage', () => {
     expect(screen.queryByText(/A terv betöltése nem sikerült/)).not.toBeInTheDocument();
 
     await user.click(await screen.findByRole('button', { name: 'Megjelenítés' }));
-    expect(screen.getByText('A jelenlegi törzsadat nem olvasható, az összevetés kimarad.')).toBeInTheDocument();
+    expect(screen.getByText('A páciens jelenlegi adatlapja nem olvasható, az összevetés kimarad.')).toBeInTheDocument();
   });
 
   it('a lánc legfrissebb verzióján csak a "régebbi" nav-gomb jelenik meg; rákattintva a szomszédos verzióra vált', async () => {

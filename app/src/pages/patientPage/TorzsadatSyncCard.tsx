@@ -3,7 +3,7 @@
 // mezői ALATT (backlog-51
 // óta kártyakeret nélkül, lásd lent). A törzsadat invariánsa (nincs automatikus
 // szinkron, lásd app/src/storage/CLAUDE.md) változatlan: ez a rész KÉT külön, explicit irányú műveletet ad
-// -- "Frissítés a törzsadatból" (master -> draft) és "Törzsadat frissítése
+// -- "Frissítés az adatlapról" (master -> draft) és "Az adatlap frissítése
 // a tervből" (draft -> master), soha nem egy közös "Szinkronizálás" gomb
 // -- plusz a lépés-elhagyáskor (a "Tovább" gomb, `PatientPage.tsx`)
 // egyszer felkínált ajánlatot (`components/LepesGuardContext.tsx`).
@@ -13,7 +13,7 @@
 // hasonlítani a draftot.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Separator, Text } from '@radix-ui/themes';
+import { AlertDialog, Box, Button, Callout, Flex, Separator, Text } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import TorzsadatDiffDialog from '../../components/TorzsadatDiffDialog';
 import { useLepesElhagyas, useLepesGuard } from '../../components/LepesGuardContext';
@@ -38,10 +38,10 @@ export default function TorzsadatSyncCard() {
     setLetrehozasPromptEldontve,
   } = useLepesGuard();
   // 94. tétel: amíg a Név mező egy MÁSIK, létező páciensre illik pontosan,
-  // egyik draft->master írási út sem tilthat el a doki elől -- a "Törzsadat
-  // frissítése a tervből" gomb, a "Törzsadat létrehozása a terv adataiból"
+  // egyik draft->master írási út sem tilthat el a doki elől -- az "Az adatlap
+  // frissítése a tervből" gomb, az "Adatlap létrehozása a terv adataiból"
   // gomb ÉS a lépés-elhagyási prompt draft->master ajánlata is. A master->
-  // draft irány ("Frissítés a törzsadatból") érintetlen.
+  // draft irány ("Frissítés az adatlapról") érintetlen.
   const { utkozok } = usePaciensKotes();
   const nevUtkozes = utkozok.length > 0;
 
@@ -58,7 +58,6 @@ export default function TorzsadatSyncCard() {
 
   const [lepesPromptOpen, setLepesPromptOpen] = useState(false);
   const [letrehozasPromptOpen, setLetrehozasPromptOpen] = useState(false);
-  const [letrehozzaMost, setLetrehozzaMost] = useState(false);
   const [letrehozasFolyamatban, setLetrehozasFolyamatban] = useState(false);
   const [letrehozasHiba, setLetrehozasHiba] = useState<string | null>(null);
   const proceedRef = useRef<(() => void) | null>(null);
@@ -79,7 +78,7 @@ export default function TorzsadatSyncCard() {
       } catch (err) {
         if (!cancelled) {
           setLoadError(
-            err instanceof Error ? err.message : 'A törzsadat betöltése váratlanul meghiúsult.',
+            err instanceof Error ? err.message : 'A páciens adatlapjának betöltése váratlanul meghiúsult.',
           );
         }
       }
@@ -133,7 +132,7 @@ export default function TorzsadatSyncCard() {
     try {
       await createMasterFromDraft();
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : 'A törzsadat létrehozása váratlanul meghiúsult.');
+      setCreateError(err instanceof Error ? err.message : 'Az adatlap létrehozása váratlanul meghiúsult.');
     } finally {
       setCreating(false);
     }
@@ -153,24 +152,21 @@ export default function TorzsadatSyncCard() {
 
   function skipLetrehozasPrompt() {
     setLetrehozasPromptOpen(false);
-    setLetrehozzaMost(false);
     setLetrehozasHiba(null);
     setLetrehozasPromptEldontve(true);
     runProceed();
   }
 
+  // Az elsődleges gomb MINDIG ír, egy kattintással -- korábban egy
+  // bepipálatlan jelölőnégyzet mellett némán a kihagyás-útra esett.
   async function confirmLetrehozasPrompt() {
-    if (!letrehozzaMost) {
-      skipLetrehozasPrompt();
-      return;
-    }
     setLetrehozasFolyamatban(true);
     setLetrehozasHiba(null);
     try {
       await createMasterFromDraft();
       skipLetrehozasPrompt();
     } catch (err) {
-      setLetrehozasHiba(err instanceof Error ? err.message : 'A törzsadat létrehozása váratlanul meghiúsult.');
+      setLetrehozasHiba(err instanceof Error ? err.message : 'Az adatlap létrehozása váratlanul meghiúsult.');
     } finally {
       setLetrehozasFolyamatban(false);
     }
@@ -188,7 +184,6 @@ export default function TorzsadatSyncCard() {
       if (nevUtkozes) return false;
       if (torzsadat === null && !loadError && !letrehozasPromptEldontve) {
         proceedRef.current = proceed;
-        setLetrehozzaMost(false);
         setLetrehozasHiba(null);
         setLetrehozasPromptOpen(true);
         return true;
@@ -210,7 +205,7 @@ export default function TorzsadatSyncCard() {
     <Box>
       <Separator size="4" my="3" />
       <Text as="p" size="1" weight="bold" mb="3" color="gray">
-        Páciens törzsadata
+        Páciens adatlapja
       </Text>
 
       {loadError && (
@@ -218,7 +213,7 @@ export default function TorzsadatSyncCard() {
           <Callout.Icon>
             <CrossCircledIcon />
           </Callout.Icon>
-          <Callout.Text>A törzsadat betöltése nem sikerült: {loadError}</Callout.Text>
+          <Callout.Text>A páciens adatlapjának betöltése nem sikerült: {loadError}</Callout.Text>
         </Callout.Root>
       )}
 
@@ -235,7 +230,7 @@ export default function TorzsadatSyncCard() {
               <InfoCircledIcon />
             </Callout.Icon>
             <Callout.Text>
-              Ennek a páciensnek még nincs önálló törzsadata — a mentés a legutóbb mentett terv
+              Ennek a páciensnek még nincs önálló adatlapja — a mentés a legutóbb mentett terv
               adataiból hoz létre egyet, a most a lapon látott mezőkkel.
             </Callout.Text>
           </Callout.Root>
@@ -250,12 +245,12 @@ export default function TorzsadatSyncCard() {
             disabled={creating || nevUtkozes}
             onClick={() => void handleManualCreate()}
           >
-            {creating ? 'Létrehozás…' : 'Törzsadat létrehozása a terv adataiból'}
+            {creating ? 'Létrehozás…' : 'Adatlap létrehozása a terv adataiból'}
           </Button>
           {nevUtkozes && (
             <Text as="div" size="1" mt="2" style={{ color: t.danger }}>
               A Név mező egy másik, létező páciensre illik pontosan — javítsd a nevet, mielőtt a
-              törzsadatot a terv adataiból hoznád létre.
+              adatlapot a terv adataiból hoznád létre.
             </Text>
           )}
         </Box>
@@ -265,16 +260,16 @@ export default function TorzsadatSyncCard() {
         <Box>
           {elteresek.length === 0 ? (
             <Text size="2" color="gray">
-              A törzsadat és a terv adatai megegyeznek.
+              A páciens adatlapja és a terv adatai megegyeznek.
             </Text>
           ) : (
             <>
               <Text as="p" size="2" color="gray" mb="3">
-                {elteresek.length} mező eltér a páciens törzsadatától.
+                {elteresek.length} mező eltér a páciens adatlapjától.
               </Text>
               <Flex gap="2" wrap="wrap">
                 <Button size="1" variant="soft" onClick={() => setManualDialog('master-to-draft')}>
-                  Frissítés a törzsadatból
+                  Frissítés az adatlapról
                 </Button>
                 <Button
                   size="1"
@@ -282,13 +277,13 @@ export default function TorzsadatSyncCard() {
                   disabled={nevUtkozes}
                   onClick={() => setManualDialog('draft-to-master')}
                 >
-                  Törzsadat frissítése a tervből
+                  Az adatlap frissítése a tervből
                 </Button>
               </Flex>
               {nevUtkozes && (
                 <Text as="div" size="1" mt="2" style={{ color: t.danger }}>
                   A Név mező egy másik, létező páciensre illik pontosan — javítsd a nevet, mielőtt
-                  a törzsadatot a terv adataiból frissítenéd.
+                  az adatlapot a terv adataiból frissítenéd.
                 </Text>
               )}
             </>
@@ -323,18 +318,12 @@ export default function TorzsadatSyncCard() {
         onOpenChange={(o) => !o && skipLetrehozasPrompt()}
       >
         <AlertDialog.Content maxWidth="440px">
-          <AlertDialog.Title>Törzsadat létrehozása</AlertDialog.Title>
+          <AlertDialog.Title>Mentsem a páciens adatlapjára is?</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            Ennek a páciensnek még nincs önálló törzsadata — a mezők egyelőre a terv adataiból
-            látszanak. Létrehozod most, a lapon jelenleg látott adatokból?
+            Ennek a páciensnek még nincs önálló adatlapja — a most beírt adatok egyelőre csak ehhez
+            a tervhez tartoznak. Ha mented, a következő terve már ezekkel indul; ha kihagyod,
+            később a páciens lapján is pótolhatod.
           </AlertDialog.Description>
-          <Text as="label" size="2" mt="3" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <Checkbox
-              checked={letrehozzaMost}
-              onCheckedChange={(checked) => setLetrehozzaMost(checked === true)}
-            />
-            Törzsadat létrehozása most
-          </Text>
           {letrehozasHiba && (
             <Callout.Root color="red" size="1" mt="3">
               <Callout.Icon>
@@ -354,7 +343,7 @@ export default function TorzsadatSyncCard() {
               Kihagyás, tovább lépek
             </Button>
             <Button disabled={letrehozasFolyamatban} onClick={() => void confirmLetrehozasPrompt()}>
-              {letrehozasFolyamatban ? 'Létrehozás…' : letrehozasHiba ? 'Újra' : 'Tovább'}
+              {letrehozasFolyamatban ? 'Mentés…' : letrehozasHiba ? 'Újra' : 'Mentés az adatlapra'}
             </Button>
           </Flex>
         </AlertDialog.Content>

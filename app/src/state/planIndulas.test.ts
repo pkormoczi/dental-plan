@@ -133,7 +133,7 @@ describe('ujTervForrasPaciensbol -- nyelv/pénznem-öröklés', () => {
     localStorage.setItem(key, 'not valid json {{{');
 
     await expect(ujTervForrasPaciensbol(storage, settings, priceList, ref.patientDir)).rejects.toThrow(
-      'Ehhez a pácienshez nincs sem törzsadata, sem olvasható korábbi terve.',
+      'Ehhez a pácienshez nincs sem adatlapja, sem olvasható korábbi terve.',
     );
   });
 });

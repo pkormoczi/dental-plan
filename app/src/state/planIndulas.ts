@@ -93,7 +93,7 @@ export async function ujTervForrasPaciensbol(
   }
 
   if (!legfrissebb) {
-    throw new Error('Ehhez a pácienshez nincs sem törzsadata, sem olvasható korábbi terve.');
+    throw new Error('Ehhez a pácienshez nincs sem adatlapja, sem olvasható korábbi terve.');
   }
   return {
     plan: planUjPaciensselTervhez(legfrissebb, settings, priceList, oroklesForras),

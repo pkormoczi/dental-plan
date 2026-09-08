@@ -81,7 +81,7 @@ describe('VeglegesitesChecklist -- szamlalo-jelvény', () => {
         {
           id: 'torzsadat-elteres',
           sulyossag: 'info',
-          cim: 'A páciens törzsadata 2 mezőben eltér a terv adataitól.',
+          cim: 'A páciens adatlapja 2 mezőben eltér a terv adataitól.',
           szamlalo: 2,
         },
       ],

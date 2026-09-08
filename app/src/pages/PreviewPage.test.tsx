@@ -1409,7 +1409,7 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
       await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
 
       expect(
-        await screen.findByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/),
+        await screen.findByText(/A páciens adatlapja \d+ mezőben eltér a terv adataitól/),
       ).toBeInTheDocument();
       expect(screen.getByText(/Telefon/)).toBeInTheDocument();
 
@@ -1440,7 +1440,7 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
       await waitFor(() => expect(search).toHaveValue(''));
 
       await user.click(screen.getByRole('button', { name: 'Előnézet' }));
-      await screen.findByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/);
+      await screen.findByText(/A páciens adatlapja \d+ mezőben eltér a terv adataitól/);
       // A hiányos páciensadat (puha) is /paciens-re routolt "Terv adatai"
       // gombot ad -- mindkettő ugyanoda navigál, elég az elsőt kattintani.
       const [terveAdataiGomb] = screen.getAllByRole('button', { name: 'Terv adatai' });
@@ -1501,7 +1501,7 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
       // Előfeltétel: mindkét tétel a gombnyomás ELŐTT is látszik, nem blokkol.
       expect(await screen.findByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
       expect(
-        await screen.findByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/),
+        await screen.findByText(/A páciens adatlapja \d+ mezőben eltér a terv adataitól/),
       ).toBeInTheDocument();
       await waitFor(() => expect(finalizeBtn).not.toBeDisabled());
 
@@ -1515,7 +1515,7 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
       const nullaTetelSiker = screen.getByText(/A terv 1 0 Ft-os tételt tartalmaz/);
       expect(within(nullaTetelSiker).getByText(/Érintett sorok: Érzéstelenítés/)).toBeInTheDocument();
       expect(
-        screen.getByText(/A páciens törzsadata \d+ mezőben eltér a terv adataitól/),
+        screen.getByText(/A páciens adatlapja \d+ mezőben eltér a terv adataitól/),
       ).toBeInTheDocument();
 
       // Sem "Terv adatai", sem "Vissza a szerkesztőbe" gomb -- a piszkozat
@@ -1557,7 +1557,7 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
       // kitöltése itt fill-in eltérést adna a törzsadathoz képest. Hogy a
       // "hiányzó páciensadat" ÉS a "törzsadat-eltérés" egyaránt kimaradjon,
       // a mezők kitöltése UTÁN a törzsadatot explicit szinkronizáljuk a
-      // terv adataival (lásd lent, "Törzsadat frissítése a tervből").
+      // terv adataival (lásd lent, "Az adatlap frissítése a tervből").
       await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Tiszta');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -1570,13 +1570,13 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
       await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
       await user.type(screen.getByLabelText('E-mail'), 'teszt.tiszta@example.hu');
 
-      await user.click(await screen.findByRole('button', { name: 'Törzsadat frissítése a tervből' }));
-      const syncDialog = await screen.findByRole('dialog', { name: 'Törzsadat frissítése a tervből' });
+      await user.click(await screen.findByRole('button', { name: 'Az adatlap frissítése a tervből' }));
+      const syncDialog = await screen.findByRole('dialog', { name: 'Az adatlap frissítése a tervből' });
       await user.click(within(syncDialog).getByRole('checkbox', { name: 'Összes kijelölése' }));
-      await user.click(within(syncDialog).getByRole('button', { name: 'Törzsadat mentése' }));
+      await user.click(within(syncDialog).getByRole('button', { name: 'Mentés az adatlapra' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       await waitFor(() =>
-        expect(screen.getByText('A törzsadat és a terv adatai megegyeznek.')).toBeInTheDocument(),
+        expect(screen.getByText('A páciens adatlapja és a terv adatai megegyeznek.')).toBeInTheDocument(),
       );
 
       await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));

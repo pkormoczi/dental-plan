@@ -126,7 +126,7 @@ function stripAllUtolsoAktivitas() {
  * várt szöveg összeállításához, nem a döntési logikához (azt `paciensAktivitas.test.ts` fedi). */
 const AKTIVITAS_CIMKE: Record<AktivitasTipus, string> = {
   letrehozva: 'Páciens létrehozva',
-  'torzsadat-mentve': 'Törzsadat mentve',
+  'torzsadat-mentve': 'Adatlap mentve',
   'terv-veglegesitve': 'Terv véglegesítve',
 };
 

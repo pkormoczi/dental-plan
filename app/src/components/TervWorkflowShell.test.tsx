@@ -379,7 +379,43 @@ describe('TervWorkflowShell -- backlog-40: lépés-elhagyási törzsadat-prompt'
     return kovacs;
   }
 
-  it('törzsadat nélküli páciensnél a "Törzsadat létrehozása" ajánlat kihagyás után nem jelenik meg újra oda-vissza navigációnál', async () => {
+  it('az elsődleges gomb EGY kattintással létrehozza a páciens adatlapját és továbbnavigál', async () => {
+    const user = userEvent.setup();
+    const kovacs = await seedKovacsNoMasterDraft();
+    renderShell('/paciens');
+    await screen.findByPlaceholderText('Kovács János');
+
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    // Nincs jelölőnégyzet: a gomb maga a döntés.
+    expect(within(dialog).queryByRole('checkbox')).toBeNull();
+    await user.click(within(dialog).getByRole('button', { name: 'Mentés az adatlapra' }));
+
+    expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
+    const olvaso = new DemoStorage();
+    await olvaso.init();
+    await waitFor(async () =>
+      expect((await olvaso.loadPatientData(kovacs.dirName))?.telefon).toBe('+36 20 111 2222'),
+    );
+  });
+
+  it('a másodlagos gomb írás nélkül navigál', async () => {
+    const user = userEvent.setup();
+    const kovacs = await seedKovacsNoMasterDraft();
+    renderShell('/paciens');
+    await screen.findByPlaceholderText('Kovács János');
+
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Kihagyás, tovább lépek' }));
+
+    expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
+    const olvaso = new DemoStorage();
+    await olvaso.init();
+    expect(await olvaso.loadPatientData(kovacs.dirName)).toBeNull();
+  });
+
+  it('adatlap nélküli páciensnél a mentési ajánlat kihagyás után nem jelenik meg újra oda-vissza navigációnál', async () => {
     const user = userEvent.setup();
     await seedKovacsNoMasterDraft();
     renderShell('/paciens');

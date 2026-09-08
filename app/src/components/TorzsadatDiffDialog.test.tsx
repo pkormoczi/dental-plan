@@ -72,7 +72,7 @@ describe('TorzsadatDiffDialog', () => {
     await screen.findByRole('dialog');
 
     await user.click(screen.getByRole('checkbox', { name: 'Telefon' }));
-    await user.click(screen.getByRole('button', { name: 'Törzsadat mentése' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés az adatlapra' }));
 
     await waitFor(() => expect(onApplyToMaster).toHaveBeenCalledTimes(1));
     const next = onApplyToMaster.mock.calls[0][0] as Paciens;
@@ -86,7 +86,7 @@ describe('TorzsadatDiffDialog', () => {
     renderDialog({ onApplyToMaster });
     await screen.findByRole('dialog');
 
-    await user.click(screen.getByRole('button', { name: 'Törzsadat mentése' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés az adatlapra' }));
 
     expect(await screen.findByText('Jelölj ki legalább egy mezőt.')).toBeInTheDocument();
     expect(onApplyToMaster).not.toHaveBeenCalled();
@@ -119,7 +119,7 @@ describe('TorzsadatDiffDialog', () => {
     await screen.findByRole('dialog');
 
     await user.click(screen.getByRole('checkbox', { name: 'Telefon' }));
-    await user.click(screen.getByRole('button', { name: 'Törzsadat mentése' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés az adatlapra' }));
 
     expect(await screen.findByText('Megtelt a tárhely.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Újra' })).toBeInTheDocument();
@@ -163,7 +163,7 @@ describe('TorzsadatDiffDialog', () => {
     await screen.findByRole('dialog');
 
     await user.click(screen.getByRole('checkbox', { name: 'Telefon' }));
-    await user.click(screen.getByRole('button', { name: 'Törzsadat mentése' }));
+    await user.click(screen.getByRole('button', { name: 'Mentés az adatlapra' }));
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });

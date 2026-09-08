@@ -190,7 +190,7 @@ export default function PatientEditorPanel({
         {!isLocked && (
           <Text as="p" size="1" color="gray" mb="3">
             Ez az adat a páciens legutóbbi mentett tervéből látszik — mentéssel önálló, terv-
-            mentéstől független törzsadattá válik.
+            mentéstől független adatlappá válik.
           </Text>
         )}
 
@@ -240,7 +240,7 @@ export default function PatientEditorPanel({
       {!isLocked && (
         <Text as="p" size="1" color="gray" mb="3">
           Ez az adat a páciens legutóbbi mentett tervéből látszik — mentéssel önálló, terv-
-          mentéstől független törzsadattá válik.
+          mentéstől független adatlappá válik.
         </Text>
       )}
 

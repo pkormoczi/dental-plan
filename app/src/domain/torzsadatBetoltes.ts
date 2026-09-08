@@ -63,7 +63,7 @@ export async function loadMegjelenitettTorzsadat(
   const utolsoTerv = planResult.status === 'fulfilled' ? planResult.value : null;
 
   const hibaUzenet = (r: PromiseRejectedResult): string =>
-    r.reason instanceof Error ? r.reason.message : 'A törzsadat betöltése váratlanul meghiúsult.';
+    r.reason instanceof Error ? r.reason.message : 'A páciens adatlapjának betöltése váratlanul meghiúsult.';
   const hibak = [masterResult, planResult]
     .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
     .map(hibaUzenet);

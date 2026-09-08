@@ -110,16 +110,20 @@ export default function TorzsadatDiffDialog({
 
   const cim =
     irany === 'master-to-draft'
-      ? 'Frissítés a törzsadatból'
+      ? 'Frissítés az adatlapról'
       : onSkip
-        ? 'Mielőtt továbblépsz — törzsadat eltérés'
-        : 'Törzsadat frissítése a tervből';
+        ? 'Mielőtt továbblépsz — eltérés a páciens adatlapjától'
+        : 'Az adatlap frissítése a tervből';
   const leiras =
     irany === 'master-to-draft'
-      ? 'Jelöld ki, mely mezőket vegye át a piszkozat a páciens törzsadatából.'
-      : 'Jelöld ki, mely mezőkkel frissüljön a páciens törzsadata a terv adataiból.';
+      ? 'Jelöld ki, mely mezőket vegye át a piszkozat a páciens adatlapjáról.'
+      : 'Jelöld ki, mely mezőkkel frissüljön a páciens adatlapja a terv adataiból.';
   const primaryLabel =
-    irany === 'master-to-draft' ? 'Frissítés a piszkozatban' : onSkip ? 'Frissítés és tovább' : 'Törzsadat mentése';
+    irany === 'master-to-draft'
+      ? 'Frissítés a piszkozatban'
+      : onSkip
+        ? 'Frissítés és tovább'
+        : 'Mentés az adatlapra';
   const masodlagosGomb = onSkip
     ? { label: saveError ? 'Folytatás írás nélkül' : 'Kihagyás, tovább lépek', onClick: onSkip }
     : { label: 'Mégse', onClick: () => onOpenChange(false) };
@@ -162,7 +166,7 @@ export default function TorzsadatDiffDialog({
               <Table.Row>
                 <Table.ColumnHeaderCell width="32px" />
                 <Table.ColumnHeaderCell>Mező</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Törzsadat</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Adatlap</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Terv adata</Table.ColumnHeaderCell>
               </Table.Row>
             </Table.Header>

@@ -166,7 +166,7 @@ export default function TervReszleteiPage() {
               masterRes.status === 'rejected'
                 ? masterRes.reason instanceof Error
                   ? masterRes.reason.message
-                  : 'A törzsadat betöltése váratlanul meghiúsult.'
+                  : 'A páciens adatlapjának betöltése váratlanul meghiúsult.'
                 : null,
           },
         });
@@ -561,7 +561,7 @@ function PaciensPillanatkep({
         <Box id="paciens-pillanatkep" mt="3">
           {masterHiba && (
             <Text as="p" size="1" color="gray" mb="3">
-              A jelenlegi törzsadat nem olvasható, az összevetés kimarad.
+              A páciens jelenlegi adatlapja nem olvasható, az összevetés kimarad.
             </Text>
           )}
           <Grid columns={{ initial: '1', sm: '2' }} gap="3">
@@ -573,7 +573,7 @@ function PaciensPillanatkep({
           {elteresek.length > 0 && !masterHiba && (
             <>
               <Text as="p" size="2" color="gray" mt="3" mb="2">
-                A páciens törzsadata azóta módosult — ez a blokk a véglegesítéskori pillanatképet
+                A páciens adatlapja azóta módosult — ez a blokk a véglegesítéskori pillanatképet
                 mutatja, a véglegesített terv nem módosul.
               </Text>
               <Box style={{ border: `1px solid ${t.uiLine}`, borderRadius: t.radius, overflow: 'hidden' }}>
@@ -581,7 +581,7 @@ function PaciensPillanatkep({
                   <Table.Header>
                     <Table.Row>
                       <Table.ColumnHeaderCell>Mező</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell>Törzsadat</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Adatlap</Table.ColumnHeaderCell>
                       <Table.ColumnHeaderCell>A terv adata</Table.ColumnHeaderCell>
                     </Table.Row>
                   </Table.Header>

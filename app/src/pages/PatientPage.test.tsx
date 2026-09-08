@@ -498,11 +498,11 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
   });
 });
 
-// backlog-40: a "Páciens törzsadata" eltérés-jelzés. A rész csak akkor renderelődik, ha a piszkozat
+// backlog-40: a "Páciens adatlapja" eltérés-jelzés. A rész csak akkor renderelődik, ha a piszkozat
 // patientDir-je ismert -- ezért itt közvetlenül a `dp:piszkozat`
 // kulcsba seedelünk, a TervWorkflowShell.test.tsx `seedActiveDraft`
 // mintáját követve, MIELŐTT a StorageProvider renderelne.
-describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
+describe('PatientPage -- backlog-40: páciens adatlapja kártya', () => {
   function makePaciens(overrides: Partial<Paciens> = {}): Paciens {
     return {
       nev: 'Teszt Elek',
@@ -564,10 +564,10 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
 
     renderPatient();
 
-    expect(await screen.findByText('Páciens törzsadata')).toBeInTheDocument();
-    expect(await screen.findByText(/mező eltér a páciens törzsadatától/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Frissítés a törzsadatból' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Törzsadat frissítése a tervből' })).toBeInTheDocument();
+    expect(await screen.findByText('Páciens adatlapja')).toBeInTheDocument();
+    expect(await screen.findByText(/mező eltér a páciens adatlapjától/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Frissítés az adatlapról' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Az adatlap frissítése a tervből' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Szinkronizálás/ })).toBeNull();
   });
 
@@ -584,11 +584,11 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
 
     renderPatient();
 
-    expect(await screen.findByText('A törzsadat és a terv adatai megegyeznek.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Frissítés a törzsadatból' })).toBeNull();
+    expect(await screen.findByText('A páciens adatlapja és a terv adatai megegyeznek.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Frissítés az adatlapról' })).toBeNull();
   });
 
-  it('"Frissítés a törzsadatból": a kijelölt mező a törzsadat értékét írja a piszkozatba', async () => {
+  it('"Frissítés az adatlapról": a kijelölt mező az adatlap értékét írja a piszkozatba', async () => {
     const user = userEvent.setup();
     const seeder = new DemoStorage();
     await seeder.init();
@@ -599,8 +599,8 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
     await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
 
     renderPatient();
-    await screen.findByText(/mező eltér a páciens törzsadatától/);
-    await user.click(screen.getByRole('button', { name: 'Frissítés a törzsadatból' }));
+    await screen.findByText(/mező eltér a páciens adatlapjától/);
+    await user.click(screen.getByRole('button', { name: 'Frissítés az adatlapról' }));
 
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByRole('checkbox', { name: 'Telefon' }));
@@ -612,7 +612,7 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
     expect(screen.getByLabelText('E-mail')).toHaveValue('regi@example.hu');
   });
 
-  it('"Törzsadat frissítése a tervből": a kijelölt mező perzisztálódik a paciens-adatok.json-ba', async () => {
+  it('"Az adatlap frissítése a tervből": a kijelölt mező perzisztálódik a paciens-adatok.json-ba', async () => {
     const user = userEvent.setup();
     const seeder = new DemoStorage();
     await seeder.init();
@@ -623,12 +623,12 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
     await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
 
     renderPatient();
-    await screen.findByText(/mező eltér a páciens törzsadatától/);
-    await user.click(screen.getByRole('button', { name: 'Törzsadat frissítése a tervből' }));
+    await screen.findByText(/mező eltér a páciens adatlapjától/);
+    await user.click(screen.getByRole('button', { name: 'Az adatlap frissítése a tervből' }));
 
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByRole('checkbox', { name: 'Összes kijelölése' }));
-    await user.click(within(dialog).getByRole('button', { name: 'Törzsadat mentése' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Mentés az adatlapra' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
@@ -649,9 +649,9 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
     renderPatient();
 
     expect(
-      await screen.findByText(/még nincs önálló törzsadata/),
+      await screen.findByText(/még nincs önálló adatlapja/),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Törzsadat létrehozása a terv adataiból' }));
+    await user.click(screen.getByRole('button', { name: 'Adatlap létrehozása a terv adataiból' }));
 
     await waitFor(async () => {
       const verify = new DemoStorage();
@@ -672,8 +672,8 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
     await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
 
     renderPatient();
-    await screen.findByText(/mező eltér a páciens törzsadatától/);
-    await user.click(screen.getByRole('button', { name: 'Törzsadat frissítése a tervből' }));
+    await screen.findByText(/mező eltér a páciens adatlapjától/);
+    await user.click(screen.getByRole('button', { name: 'Az adatlap frissítése a tervből' }));
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByRole('checkbox', { name: 'Telefon' }));
 
@@ -682,7 +682,7 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
       .mockImplementation(() => {
         throw new Error('Megtelt a tárhely.');
       });
-    await user.click(within(dialog).getByRole('button', { name: 'Törzsadat mentése' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Mentés az adatlapra' }));
 
     expect(await screen.findByText('Megtelt a tárhely.')).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -811,7 +811,7 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
     expect(screen.queryByText(/illik pontosan/)).toBeNull();
   });
 
-  it('ütközés esetén a "Törzsadat frissítése a tervből" gomb letiltott', async () => {
+  it('ütközés esetén az "Az adatlap frissítése a tervből" gomb letiltott', async () => {
     const user = userEvent.setup();
     const seeder = new DemoStorage();
     await seeder.init();
@@ -819,16 +819,16 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
     await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
 
     renderPatient();
-    await screen.findByText(/mező eltér a páciens törzsadatától/);
+    await screen.findByText(/mező eltér a páciens adatlapjától/);
     const nameInput = screen.getByPlaceholderText('Kovács János');
     await user.clear(nameInput);
     await user.type(nameInput, 'Kovács János');
 
-    const gomb = await screen.findByRole('button', { name: 'Törzsadat frissítése a tervből' });
+    const gomb = await screen.findByRole('button', { name: 'Az adatlap frissítése a tervből' });
     expect(gomb).toBeDisabled();
   });
 
-  it('törzsadat nélküli páciensnél ütközés esetén a "Törzsadat létrehozása a terv adataiból" gomb letiltott', async () => {
+  it('adatlap nélküli páciensnél ütközés esetén az "Adatlap létrehozása a terv adataiból" gomb letiltott', async () => {
     const user = userEvent.setup();
     const seeder = new DemoStorage();
     await seeder.init();
@@ -838,12 +838,12 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
     await seedDraft(kovacs.dirName, makePaciens({ nev: 'Kovács János' }), kovacs.paciensId);
 
     renderPatient();
-    await screen.findByText(/még nincs önálló törzsadata/);
+    await screen.findByText(/még nincs önálló adatlapja/);
     const nameInput = screen.getByPlaceholderText('Kovács János');
     await user.clear(nameInput);
     await user.type(nameInput, utkozo.nev);
 
-    const gomb = await screen.findByRole('button', { name: 'Törzsadat létrehozása a terv adataiból' });
+    const gomb = await screen.findByRole('button', { name: 'Adatlap létrehozása a terv adataiból' });
     expect(gomb).toBeDisabled();
   });
 });

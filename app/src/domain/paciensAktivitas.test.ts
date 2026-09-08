@@ -113,7 +113,7 @@ describe('aktivitasSzoveg', () => {
 
   it.each([
     ['letrehozva', 'Páciens létrehozva'],
-    ['torzsadat-mentve', 'Törzsadat mentve'],
+    ['torzsadat-mentve', 'Adatlap mentve'],
     ['terv-veglegesitve', 'Terv véglegesítve'],
   ] as const)('%s -> "%s · <relatív idő>"', (tipus, cimke) => {
     const aktivitas: PatientActivity = { tipus, idopont: '2026-08-09T10:00:00.000Z' };
