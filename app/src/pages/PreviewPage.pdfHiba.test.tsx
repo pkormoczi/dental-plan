@@ -20,7 +20,7 @@ const pdfMock = vi.hoisted(() => ({
     loading: false,
     error: null as Error | null,
     blob: new Blob(['%PDF-fake'], { type: 'application/pdf' }),
-    url: 'blob:fake-preview-url',
+    url: 'blob:fake-preview-url' as string | null,
   },
   updatePdf: vi.fn(),
 }));
@@ -154,6 +154,85 @@ describe('PreviewPage -- 68. tétel: PDF-render hiba állapota', () => {
       await waitFor(() =>
         expect(screen.getByRole('button', { name: /Véglegesítés és mentés/ })).not.toBeDisabled(),
       );
+    },
+    20000,
+  );
+});
+
+// Az első PDF-előállítás alatt a doki magyarázat nélkül csak egy szürke
+// véglegesítés-gombot látott: a letöltés-gombhely és a PDF helye is néma volt.
+describe('PreviewPage -- az első nyomtatvány készül', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+    pdfMock.state.loading = false;
+    pdfMock.state.error = null;
+    pdfMock.state.url = 'blob:fake-preview-url';
+    pdfMock.updatePdf.mockClear();
+  });
+
+  it(
+    'amíg nincs URL, letiltott "Nyomtatvány készül…" gomb áll a letöltés helyén és a PDF helyén is ott a felirat',
+    async () => {
+      const user = userEvent.setup();
+      pdfMock.state.url = null;
+      pdfMock.state.loading = true;
+      seedValidDraft();
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      const keszulGomb = await screen.findByRole(
+        'button',
+        { name: 'Nyomtatvány készül…' },
+        { timeout: 10000 },
+      );
+      expect(keszulGomb).toBeDisabled();
+      // a gombfelirat MELLETT a PDF helyén álló felirat is ott van
+      expect(screen.getAllByText('Nyomtatvány készül…').length).toBeGreaterThan(1);
+      expect(screen.queryByTitle('Kezelési terv előnézet')).not.toBeInTheDocument();
+
+      // A PDF elkészültével a Letöltés gomb és az iframe váltja fel -- a
+      // "Csak ajánlat" kapcsoló csak újrarenderelést vált ki a mockolt
+      // usePDF mellett.
+      pdfMock.state.url = 'blob:fake-preview-url';
+      pdfMock.state.loading = false;
+      await user.click(screen.getByRole('checkbox'));
+
+      expect(await screen.findByRole('link', { name: 'Letöltés' })).toBeInTheDocument();
+      expect(screen.getByTitle('Kezelési terv előnézet')).toBeInTheDocument();
+      expect(screen.queryByText('Nyomtatvány készül…')).not.toBeInTheDocument();
+    },
+    20000,
+  );
+
+  it(
+    'egy MÁR látott PDF újrarenderelésekor továbbra is "PDF frissítése…" áll ott',
+    async () => {
+      pdfMock.state.loading = true;
+      seedValidDraft();
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      expect(
+        await screen.findByRole('button', { name: 'PDF frissítése…' }, { timeout: 10000 }),
+      ).toBeDisabled();
+      expect(screen.queryByText('Nyomtatvány készül…')).not.toBeInTheDocument();
+    },
+    20000,
+  );
+
+  it(
+    'az élő régió a mount pillanatától a DOM-ban van, és csak a szövege vált',
+    async () => {
+      pdfMock.state.url = null;
+      pdfMock.state.loading = true;
+      seedValidDraft();
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      await screen.findByRole('button', { name: 'Nyomtatvány készül…' }, { timeout: 10000 });
+      const eloRegio = document.querySelector('[aria-live="polite"]');
+      expect(eloRegio?.textContent).toBe('Nyomtatvány készül…');
     },
     20000,
   );

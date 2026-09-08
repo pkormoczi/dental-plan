@@ -7,7 +7,16 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePDF } from '@react-pdf/renderer';
 import '../pdf/bufferShim';
-import { Box, Button, Callout, Checkbox, Flex, Skeleton, Text } from '@radix-ui/themes';
+import {
+  Box,
+  Button,
+  Callout,
+  Checkbox,
+  Flex,
+  Skeleton,
+  Text,
+  VisuallyHidden,
+} from '@radix-ui/themes';
 import { useNyelviReview } from '../components/NyelviReviewContext';
 import { usePaciensKotes } from '../components/PaciensKotesContext';
 import { t } from '../design/tokens';
@@ -608,6 +617,9 @@ export default function PreviewPage() {
       : (pdfError as unknown) instanceof Error
         ? (pdfError as unknown as Error).message
         : String(pdfError);
+  // Az ELSŐ előállítás (még sosem volt `url`) -- külön a `pdfStale`-től, ami
+  // egy MÁR látott PDF újrarenderelése; ott van mit "frissíteni", itt nincs.
+  const elsoPdfKeszul = !pdfInstance.url && !pdfError;
   const busy = saving || pdfStale || foglalas === undefined;
   // A piszkozatban a VEGLEGES státusz KIZÁRÓLAG a `markPlanSaved` után álló,
   // frissen mentett tartalom lehet (minden más betöltési út PISZKOZAT-ra
@@ -663,6 +675,13 @@ export default function PreviewPage() {
           checklistet, utána ott a kapcsoló és a gomb, mielőtt a hosszú
           PDF-iframe-hez érne. */}
       <Flex direction="column" gap="4">
+        {/* Mountkor már a DOM-ban lévő élő régió, ami csak SZÖVEGET vált -- egy
+            dinamikusan beszúrt régiót sok képernyőolvasó nem mond be (lásd
+            PriceListAdminPage.tsx, NumberField.tsx). */}
+        <VisuallyHidden aria-live="polite">
+          {elsoPdfKeszul ? 'Nyomtatvány készül…' : ''}
+        </VisuallyHidden>
+
         <VeglegesitesChecklist
           csekklista={csekklista}
           onNavigate={navigate}
@@ -688,41 +707,47 @@ export default function PreviewPage() {
             Csak ajánlat — a nyilatkozat és aláírás oldal nélkül
           </Text>
           <Flex direction="column" align="end" gap="1">
+            {/* A gombhely az első betöltés alatt SEM marad rejtve: enélkül a
+                doki csak a néma szürke véglegesítés-gombot látná, magyarázat
+                nélkül. */}
             <Flex gap="3" wrap="wrap">
-              {pdfInstance.url &&
-                (!foglalas ? (
-                  // Technikai zár, nem a véglegesítés-őr tétele: amíg az
-                  // azonosító nincs lefoglalva, a letölthető PDF fejléce nem a
-                  // mentendő verziót mutatná.
-                  <Button variant="soft" color="gray" disabled>
-                    {foglalas === undefined ? 'Azonosító foglalása…' : 'Azonosító hiányzik'}
-                  </Button>
-                ) : pdfError ? (
-                  // A könyvtár hibán át megőrzi az utolsó sikeres `url`-t
-                  // (lásd a `pdfError` Callout fölötti kommentet) --
-                  // letöltés nélküle egy a képernyőn látott tervvel már
-                  // nem egyező PDF-et adna.
-                  <Button variant="soft" color="gray" disabled>
-                    Elavult PDF
-                  </Button>
-                ) : pdfStale ? (
-                  <Button variant="soft" color="gray" disabled>
-                    PDF frissítése…
-                  </Button>
-                ) : (
-                  <Button asChild variant="soft" color="gray">
-                    <a
-                      href={pdfInstance.url}
-                      download={buildDownloadFileName(plan.paciens.nev, {
-                        tervId: foglalas.tervId,
-                        isDraft: plan.statusz !== 'VEGLEGES',
-                        suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
-                      })}
-                    >
-                      Letöltés
-                    </a>
-                  </Button>
-                ))}
+              {!foglalas ? (
+                // Technikai zár, nem a véglegesítés-őr tétele: amíg az
+                // azonosító nincs lefoglalva, a letölthető PDF fejléce nem a
+                // mentendő verziót mutatná.
+                <Button variant="soft" color="gray" disabled>
+                  {foglalas === undefined ? 'Azonosító foglalása…' : 'Azonosító hiányzik'}
+                </Button>
+              ) : pdfError ? (
+                // A könyvtár hibán át megőrzi az utolsó sikeres `url`-t
+                // (lásd a `pdfError` Callout fölötti kommentet) --
+                // letöltés nélküle egy a képernyőn látott tervvel már
+                // nem egyező PDF-et adna.
+                <Button variant="soft" color="gray" disabled>
+                  Elavult PDF
+                </Button>
+              ) : !pdfInstance.url ? (
+                <Button variant="soft" color="gray" disabled>
+                  Nyomtatvány készül…
+                </Button>
+              ) : pdfStale ? (
+                <Button variant="soft" color="gray" disabled>
+                  PDF frissítése…
+                </Button>
+              ) : (
+                <Button asChild variant="soft" color="gray">
+                  <a
+                    href={pdfInstance.url}
+                    download={buildDownloadFileName(plan.paciens.nev, {
+                      tervId: foglalas.tervId,
+                      isDraft: plan.statusz !== 'VEGLEGES',
+                      suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
+                    })}
+                  >
+                    Letöltés
+                  </a>
+                </Button>
+              )}
               <Button
                 onClick={attemptFinalize}
                 disabled={
@@ -774,17 +799,26 @@ export default function PreviewPage() {
           ) : (
             // Skeleton a végleges elrendezés alakjában, ne pörgő spinner (a
             // layout ne ugorjon) -- a végleges elem az iframe fenti
-            // stílusával megegyező méretű, keretes doboz.
-            <Skeleton>
-              <Box
-                style={{
-                  width: '100%',
-                  height: '80vh',
-                  border: `1px solid ${t.uiLine}`,
-                  borderRadius: t.radiusLg,
-                }}
-              />
-            </Skeleton>
+            // stílusával megegyező méretű, keretes doboz. A felirat a
+            // Skeletonon KÍVÜL áll: a Radix Skeleton a gyerekeit elrejti.
+            // Bemondását a fenti élő régió intézi, itt csak vizuális.
+            <Flex direction="column" gap="2">
+              {elsoPdfKeszul && (
+                <Text size="2" color="gray" aria-hidden="true">
+                  Nyomtatvány készül…
+                </Text>
+              )}
+              <Skeleton>
+                <Box
+                  style={{
+                    width: '100%',
+                    height: '80vh',
+                    border: `1px solid ${t.uiLine}`,
+                    borderRadius: t.radiusLg,
+                  }}
+                />
+              </Skeleton>
+            </Flex>
           )}
         </Box>
       </Flex>
