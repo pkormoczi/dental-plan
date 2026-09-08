@@ -399,6 +399,20 @@ describe('TervWorkflowShell -- backlog-40: lépés-elhagyási törzsadat-prompt'
     );
   });
 
+  it('nyitáskor a fókusz a dialóguson belülre, a másodlagos gombra kerül', async () => {
+    const user = userEvent.setup();
+    await seedKovacsNoMasterDraft();
+    renderShell('/paciens');
+    await screen.findByPlaceholderText('Kovács János');
+
+    await user.click(screen.getByRole('link', { name: /Kezelések/ }));
+    const dialog = await screen.findByRole('alertdialog');
+
+    await waitFor(() =>
+      expect(within(dialog).getByRole('button', { name: 'Kihagyás, tovább lépek' })).toHaveFocus(),
+    );
+  });
+
   it('a másodlagos gomb írás nélkül navigál', async () => {
     const user = userEvent.setup();
     const kovacs = await seedKovacsNoMasterDraft();

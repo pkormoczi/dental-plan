@@ -397,15 +397,23 @@ export default function TorzsadatSyncCard() {
             </Callout.Root>
           )}
           <Flex gap="3" mt="4" justify="end">
-            <Button
-              type="button"
-              variant="soft"
-              color="gray"
-              disabled={letrehozasFolyamatban}
-              onClick={skipLetrehozasPrompt}
-            >
-              Kihagyás, tovább lépek
-            </Button>
+            {/* `AlertDialog.Cancel`, nem sima `Button`: a Radix
+                `onOpenAutoFocus`-a preventDefault-ol és a Cancel-elemre
+                fókuszál -- enélkül nyitáskor SEMMI nem kap fókuszt, a
+                billentyűzetes doki a nyitó gombon marad. Az elsődleges gomb
+                marad sima `Button` (NEM `AlertDialog.Action`), mert írási
+                hibánál nyitva kell maradnia -- `UjPaciensDialog.tsx` mintája. */}
+            <AlertDialog.Cancel>
+              <Button
+                type="button"
+                variant="soft"
+                color="gray"
+                disabled={letrehozasFolyamatban}
+                onClick={skipLetrehozasPrompt}
+              >
+                Kihagyás, tovább lépek
+              </Button>
+            </AlertDialog.Cancel>
             <Button disabled={letrehozasFolyamatban} onClick={() => void confirmLetrehozasPrompt()}>
               {letrehozasFolyamatban ? 'Mentés…' : letrehozasHiba ? 'Újra' : 'Mentés az adatlapra'}
             </Button>
