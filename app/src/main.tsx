@@ -24,6 +24,10 @@ document.documentElement.style.setProperty('--solid-fill-text', t.onBrand)
 // hogy az accentWash-nak EGY forrása maradjon.
 document.documentElement.style.setProperty('--accent-wash', t.accentWash)
 
+// A Radix `--focus-8` aliasa (index.css) -- az accentből örökölt gyűrű 2,09:1,
+// a WCAG 1.4.11 3:1-e alatt. Ugyanaz a "token -> main.tsx -> index.css" lánc.
+document.documentElement.style.setProperty('--focus-ring', t.focusRing)
+
 // Ugyanez a minta a Radix amber/red/green `--accent-a11` szövegszínére (Callout,
 // soft Badge/Button, accent-colorral festett Text): a Calloutba ágyazott jelvény
 // kettős `accent-a3` washán a Radix saját aliasa 4,5:1 alá bukik -- index.css

@@ -46,6 +46,23 @@ describe('t.uiTextFaint kontraszt', () => {
   });
 });
 
+// A fókuszgyűrű grafikus elem: WCAG 1.4.11 szerint 3:1 a SZOMSZÉDOS felület
+// ellen. jsdomban nincs Radix CSS, a kirajzolt gyűrű csak a `visual-css`
+// manual-check szeletben mérhető -- itt a token értéke őrizhető.
+describe('t.focusRing kontraszt', () => {
+  const hatterek: [string, string][] = [
+    ['t.surface (szövegmező, panel)', t.surface],
+    ['t.page (laphátter)', t.page],
+    ['t.accentWash (fókuszált pácienslista-sor)', t.accentWash],
+  ];
+
+  for (const [nev, hatter] of hatterek) {
+    it(`legalább 3:1 a ${nev} hátterén`, () => {
+      expect(contrastRatio(t.focusRing, hatter)).toBeGreaterThanOrEqual(3);
+    });
+  }
+});
+
 // `main.tsx` + `index.css` ezekre a hexekre irányítja a Radix `--accent-a11`
 // szövegszínt (Callout, soft Badge/Button, accent-colorral festett Text) --
 // a legszigorúbb háttér a Calloutba ágyazott jelvény, ami a Callout ÉS a

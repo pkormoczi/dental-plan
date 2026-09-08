@@ -140,6 +140,25 @@ button {
 }
 
 /*
+ * Fókuszgyűrű: a Radix `--focus-8` a `brown` accent step-8-a (#dbb594), fehér
+ * mezőn 2,09:1 -- a WCAG 1.4.11 3:1-e alatt, pedig az Enter-lánccal mezőről
+ * mezőre ugró doki (`PRODUCT.md § Napi flow`) végig ezt a gyűrűt követi. Ez az
+ * EGY alias táplálja mind a ~25 Radix outline-szabályt (szövegmező, gomb, tab,
+ * Select) ÉS a fogtérkép wrapperét (`design/toothChartSvg.ts`), ezért itt
+ * írjuk felül, nem szabályonként. A `[data-accent-color]` azért szerepel
+ * `:where(:not(gray))` szűkítés nélkül, mert a `color="red"`/`"amber"`
+ * kontrollok különben a SAJÁT accentjükből kapnák a gyűrűt (2,0--2,2:1); a
+ * gray-elemek úgyis ugyanezt öröklik. A `--focus-a8` szándékosan marad: a
+ * Radix definiálja, de egyetlen komponens-szabály sem olvassa. Az értéket
+ * `main.tsx` írja be `tokens.ts` `focusRing`-jéből; a specificitás azonos a
+ * Radix saját blokkjával, sorrendben nyerünk.
+ */
+.radix-themes,
+[data-accent-color] {
+  --focus-8: var(--focus-ring);
+}
+
+/*
  * A Radix `ghost` Button paddinget ÉS egy azt kiegyenlítő negatív margót ad
  * (lásd a Radix forrás-CSS-t) -- alapból (--button-ghost-padding-x: 7.6px
  * size="1"-en) a FESTETT (hover/active) háttér ennyivel túllóg a feliraton,

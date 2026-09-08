@@ -68,6 +68,10 @@ export const t = {
   // kulso (t.page) szomszedok ellen 2-3:1 volt) -- WCAG 1.4.11: minden
   // interaktiv kontroll kerete. Onallo token -- ne vond ossze `uiTextFaint`-tel,
   // akkor sem, ha az ertekuk korabban egybeesett
+  focusRing: '#976445', // a Radix `--focus-8` (brown step-8) feheren csak 2.09:1;
+  // ez 4.97:1 feheren, 4.56:1 a lap hatteren -- WCAG 1.4.11 fole. Onallo token,
+  // NEM `brand`-hivatkozas: a `brand` a pdf/-bol importalt nyomtatvany-token,
+  // a gyuru kesobbi hangolasa nem mozdithatja el a nyomtatvanyt
 
   // Szerep -- csak app, PDF nem hasznalja. Ugyanezek a `--accent-a11`
   // Radix-aliason keresztul a Callout/Badge/Button/Text szoveget is festik
