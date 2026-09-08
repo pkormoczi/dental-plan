@@ -29,6 +29,7 @@ import { elteresBontas, fazisOsszeg, sorokOsszeg, tervVegosszeg } from '../domai
 import type { Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
 import type { FokuszCel } from './planEditor/elemIdk';
+import type { SorDraftErtekek } from './planEditor/LineRow';
 import EgyediVegosszegBlokk from './planEditor/EgyediVegosszegBlokk';
 import ElolegBlokk from './planEditor/ElolegBlokk';
 import PhaseSection from './planEditor/PhaseSection';
@@ -79,6 +80,13 @@ export default function PlanEditorPage() {
   const [pendingArFrissites, setPendingArFrissites] = useState<{ pi: number; li: number } | null>(
     null,
   );
+  // Az éppen szerkesztett sor még nem committált ár/darabszáma -- a Fázis
+  // összesen és a Mindösszesen ebből számol élőben (lásd `eloFazisok` lent).
+  // A `pendingArFrissites`-hez hasonlóan a szülőben él: a fázison ÁTNYÚLÓ
+  // Mindösszesen egyik `PhaseSection` state-jéből sem látszana.
+  const [sorDraft, setSorDraft] = useState<
+    ({ pi: number; li: number } & SorDraftErtekek) | null
+  >(null);
   // Melyik fázisba kerüljön az új sor, ha a doki kezeletlen fogra kattint a
   // fogtérképen -- csak akkor látszik a választó, ha >1 fázis van (lásd
   // lent). Renderléskor mindig `Math.min`-nel szorítva a fázisok
@@ -275,7 +283,33 @@ export default function PlanEditorPage() {
   // a mező kiindulási alapjához, NEM a tervVegosszeg() eredményére.
   const sorszintuOsszeg = sorokOsszeg(plan.fazisok);
   const grand = tervVegosszeg(plan.fazisok, plan.kedvezmenyOsszeg);
-  const bontas = elteresBontas(plan.fazisok, plan.kedvezmenyOsszeg);
+
+  // Az ÉPPEN GÉPELT sor draftjával patchelt fázis-másolat -- a lenti
+  // `pendingUjFazisok` mintája: a meglévő `domain/totals.ts` függvények
+  // számolnak rajta, a szignatúrájuk (és a `tervVegosszeg` „EGYETLEN hely"
+  // invariánsa) érintetlen. Egyszerre csak egy mező lehet fókuszban, ezért
+  // egyetlen sor override-ja elég.
+  const eloFazisok = useMemo(() => {
+    if (!sorDraft || plan.fazisok[sorDraft.pi]?.sorok[sorDraft.li] == null) return plan.fazisok;
+    return plan.fazisok.map((f, fi) =>
+      fi !== sorDraft.pi
+        ? f
+        : {
+            ...f,
+            sorok: f.sorok.map((s, si) =>
+              si !== sorDraft.li
+                ? s
+                : {
+                    ...s,
+                    tenylegesEgysegar: sorDraft.tenylegesEgysegar,
+                    mennyiseg: sorDraft.mennyiseg,
+                  },
+            ),
+          },
+    );
+  }, [plan.fazisok, sorDraft]);
+  const eloGrand = tervVegosszeg(eloFazisok, plan.kedvezmenyOsszeg);
+  const eloBontas = elteresBontas(eloFazisok, plan.kedvezmenyOsszeg);
   const fogterkep = useMemo(() => buildToothVisualStates(plan, priceList), [plan, priceList]);
 
   // Az ár-frissítés megerősítő dialógusának "Hatás a tervre" előnézete --
@@ -458,7 +492,7 @@ export default function PlanEditorPage() {
             fogterkep={fogterkep}
             fokuszCel={fokuszCel}
             canDelete={plan.fazisok.length > 1}
-            total={fazisOsszeg(p)}
+            total={fazisOsszeg(eloFazisok[pi])}
             autoFokusz={pi === 0 && ujUresPiszkozat}
             open={!fazisCsukva.has(pi)}
             onToggleOpen={() =>
@@ -476,6 +510,7 @@ export default function PlanEditorPage() {
             onAdd={(item, fogak) => addLine(pi, item, fogak)}
             onAddEgyedi={(nev, fogak) => addEgyediLine(pi, nev, fogak)}
             onPatchLine={(li, patch) => patchLine(pi, li, patch)}
+            onLineDraft={(li, draft) => setSorDraft(draft && { pi, li, ...draft })}
             fokuszAtadva={fogszamotKivan}
             onRequestArFrissites={(li) => setPendingArFrissites({ pi, li })}
             onMoveLine={(li, irany) => moveLine(pi, li, irany)}
@@ -538,12 +573,12 @@ export default function PlanEditorPage() {
         <Flex mt="4" justify="end">
           <Box style={{ flex: '0 1 320px' }}>
             <Summary
-              grand={grand}
-              kedvezmeny={bontas.kedvezmeny}
-              felar={bontas.felar}
+              grand={eloGrand}
+              kedvezmeny={eloBontas.kedvezmeny}
+              felar={eloBontas.felar}
               fazisOsszegek={
-                plan.fazisok.length > 1
-                  ? plan.fazisok.map((f) => ({ nev: f.megnevezes, osszeg: fazisOsszeg(f) }))
+                eloFazisok.length > 1
+                  ? eloFazisok.map((f) => ({ nev: f.megnevezes, osszeg: fazisOsszeg(f) }))
                   : []
               }
               currency={currency}

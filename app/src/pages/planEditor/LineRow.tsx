@@ -41,6 +41,12 @@ import type { Kategoria, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
 import { arId, fogId, keresoId, leirasId, mennyisegId, nevId, sorMenuId } from './elemIdk';
 import ItemPicker from './ItemPicker';
 
+/** A `Sor` azon mezői, amiket a szerkesztés alatt álló sor élőben felülír. */
+export interface SorDraftErtekek {
+  tenylegesEgysegar: number;
+  mennyiseg: number;
+}
+
 export interface LineRowProps {
   pi: number;
   li: number;
@@ -61,6 +67,12 @@ export interface LineRowProps {
   canMoveUp: boolean;
   canMoveDown: boolean;
   onPatch: (patch: Partial<Sor>) => void;
+  /**
+   * Az ÉPPEN GÉPELT (még nem committált) ár/darabszám a szülő felé -- ebből
+   * épül a Fázis összesen és a Mindösszesen élő értéke. `null` = a sor
+   * kilépett a szerkesztésből, innentől a committált érték az igaz.
+   */
+  onDraftOsszeg: (draft: SorDraftErtekek | null) => void;
   onRequestArFrissites: () => void;
   /** A Fog mezőben az Enter -- a hívó viszi a fókuszt a fázis keresőjébe. */
   onFogKesz: () => void;
@@ -85,6 +97,7 @@ export default function LineRow({
   canMoveUp,
   canMoveDown,
   onPatch,
+  onDraftOsszeg,
   onRequestArFrissites,
   onFogKesz,
   onMoveUp,
@@ -386,7 +399,12 @@ export default function LineRow({
               penz={false}
               min={1}
               onCommit={(v) => onPatch({ mennyiseg: v })}
-              onDraftChange={(v) => setMennyisegDraft(v ?? line.mennyiseg)}
+              onDraftChange={(v) => {
+                const m = v ?? line.mennyiseg;
+                setMennyisegDraft(m);
+                onDraftOsszeg({ tenylegesEgysegar: arDraft, mennyiseg: m });
+              }}
+              onBlur={() => onDraftOsszeg(null)}
               textAlign="center"
               aria-label="Darabszám"
             />
@@ -469,7 +487,12 @@ export default function LineRow({
                   // képest.
                   onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
                 }
-                onDraftChange={(v) => setArDraft(v ?? line.tenylegesEgysegar)}
+                onDraftChange={(v) => {
+                  const a = v ?? line.tenylegesEgysegar;
+                  setArDraft(a);
+                  onDraftOsszeg({ tenylegesEgysegar: a, mennyiseg: mennyisegDraft });
+                }}
+                onBlur={() => onDraftOsszeg(null)}
                 textAlign="right"
                 // 62. tétel: beárazatlan tétel, még kézi ár nélkül -- a
                 // kedvezmény-/felár-kiemeléssel azonos slot, csak

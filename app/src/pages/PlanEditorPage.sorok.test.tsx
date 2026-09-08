@@ -1060,7 +1060,7 @@ describe('PlanEditorPage -- 108. tétel: élő Összeg oszlop gépelés közben'
     expect(osszeg).not.toHaveTextContent('0,36 €');
   });
 
-  it('gépelés közben a "Fázis összesen" és a "Mindösszesen" NEM változik, csak commit után', async () => {
+  it('gépelés közben a "Fázis összesen" és a "Mindösszesen" is az éppen gépelt értéket mutatja', async () => {
     const user = userEvent.setup();
     seedWithStalePriceRow();
     renderEditor();
@@ -1073,15 +1073,73 @@ describe('PlanEditorPage -- 108. tétel: élő Összeg oszlop gépelés közben'
     await user.clear(priceField);
     await user.type(priceField, '12000');
 
-    // Az Összeg cella már 12 000 Ft, de a Fázis összesen és a Mindösszesen még a régi.
+    expect(screen.getByText(/Fázis összesen:/).parentElement).toHaveTextContent('12 000 Ft');
+    expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('12 000 Ft');
+
+    await user.tab();
+    expect(screen.getByText(/Fázis összesen:/).parentElement).toHaveTextContent('12 000 Ft');
+    expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('12 000 Ft');
+  });
+
+  it('a darabszám mezőbe gépelve is élőben követi a "Fázis összesen" és a "Mindösszesen"', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const mennyisegField = await screen.findByLabelText('Darabszám');
+    await screen.findByText(/Fázis összesen:/);
+
+    await user.clear(mennyisegField);
+    await user.type(mennyisegField, '3');
+
+    expect(screen.getByText(/Fázis összesen:/).parentElement).toHaveTextContent('60 000 Ft');
+    expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('60 000 Ft');
+  });
+
+  it('commit nélkül (Escape, üres mező elhagyása) a "Fázis összesen" és a "Mindösszesen" a committált értéken marad', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = (await screen.findByLabelText('Ajánlati egységár')) as HTMLInputElement;
+    await screen.findByText(/Fázis összesen:/);
+
+    await user.clear(priceField);
+    await user.type(priceField, '12000');
+    await user.keyboard('{Escape}');
+
     expect(screen.getByText(/Fázis összesen:/).parentElement).toHaveTextContent('20 000 Ft');
     expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('20 000 Ft');
 
+    // Üres mező elhagyása: a NumberField az utolsó ismert értékre áll vissza,
+    // az összegzők nem csúsznak 0-ra.
+    await user.clear(priceField);
     await user.tab();
-    await waitFor(() =>
-      expect(screen.getByText(/Fázis összesen:/).parentElement).toHaveTextContent('12 000 Ft'),
-    );
+
+    expect(screen.getByText(/Fázis összesen:/).parentElement).toHaveTextContent('20 000 Ft');
+    expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('20 000 Ft');
+  });
+
+  it('gépelés közben az Előleg és az Egyedi végösszeg blokk a committált végösszeggel számol', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = (await screen.findByLabelText('Ajánlati egységár')) as HTMLInputElement;
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
+    const eloleg = await screen.findByLabelText('Előleg összege');
+    await user.type(eloleg, '5000');
+    await user.tab();
+    // 20 000 committált végösszeg − 5 000 előleg.
+    expect(await screen.findByText('15 000 Ft')).toBeInTheDocument();
+
+    await user.clear(priceField);
+    await user.type(priceField, '12000');
+
+    // A Mindösszesen már él, a Fennmaradó rész (Előleg blokk) még nem.
     expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('12 000 Ft');
+    expect(screen.getByText('15 000 Ft')).toBeInTheDocument();
+    expect(screen.queryByText('7 000 Ft')).not.toBeInTheDocument();
   });
 });
 

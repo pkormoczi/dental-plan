@@ -25,7 +25,7 @@ import type { FogterkepAllapot } from '../../domain/toothVisual';
 import { fazisKeresoId, fazisNevId, fazisPanelId, type FokuszCel } from './elemIdk';
 import FazisMegjegyzes from './FazisMegjegyzes';
 import ItemPicker from './ItemPicker';
-import LineRow from './LineRow';
+import LineRow, { type SorDraftErtekek } from './LineRow';
 
 export interface PhaseSectionProps {
   pi: number;
@@ -58,6 +58,8 @@ export interface PhaseSectionProps {
    */
   fokuszAtadva: (item: Tetel | null) => boolean;
   onPatchLine: (li: number, patch: Partial<Sor>) => void;
+  /** Az éppen szerkesztett sor még nem committált ár/darabszáma -- lásd `LineRow` `onDraftOsszeg`. */
+  onLineDraft: (li: number, draft: SorDraftErtekek | null) => void;
   onRequestArFrissites: (li: number) => void;
   onMoveLine: (li: number, irany: -1 | 1) => void;
   onRemoveLine: (li: number) => void;
@@ -105,6 +107,7 @@ export default function PhaseSection({
   onAddEgyedi,
   fokuszAtadva,
   onPatchLine,
+  onLineDraft,
   onRequestArFrissites,
   onMoveLine,
   onRemoveLine,
@@ -357,6 +360,7 @@ export default function PhaseSection({
                       canMoveUp={li > 0}
                       canMoveDown={li < phase.sorok.length - 1}
                       onPatch={(p) => onPatchLine(li, p)}
+                      onDraftOsszeg={(d) => onLineDraft(li, d)}
                       onRequestArFrissites={() => onRequestArFrissites(li)}
                       onFogKesz={onFogKesz}
                       onMoveUp={() => moveLine(li, -1)}
