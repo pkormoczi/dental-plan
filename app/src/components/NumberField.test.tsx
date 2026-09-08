@@ -315,4 +315,42 @@ describe('NumberField', () => {
     expect(input).toHaveAttribute('name', 'mennyiseg');
     expect(input).toHaveAttribute('autocomplete', 'off');
   });
+
+  it('parseAlternativ nélkül a nem szám alakú bevitel az előző értékre áll vissza', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(<NumberField value={100} penz={false} onCommit={onCommit} />);
+
+    const input = screen.getByRole('textbox') as HTMLInputElement;
+    await user.clear(input);
+    await user.type(input, '10%');
+    await user.tab();
+
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(input.value).toBe('100');
+  });
+
+  it('parseAlternativ-val a hívó saját alakja nyer, a felismeretlen szöveg a normál parse-ra esik', async () => {
+    const user = userEvent.setup();
+    const onCommit = vi.fn();
+    render(
+      <NumberField
+        value={100}
+        penz={false}
+        onCommit={onCommit}
+        parseAlternativ={(text) => (text.trim() === '10%' ? 90 : null)}
+      />,
+    );
+
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.type(input, '10%');
+    await user.tab();
+    expect(onCommit).toHaveBeenCalledWith(90);
+
+    await user.clear(input);
+    await user.type(input, '250');
+    await user.tab();
+    expect(onCommit).toHaveBeenLastCalledWith(250);
+  });
 });

@@ -57,6 +57,16 @@ export interface NumberFieldProps {
    */
   onDraftChange?: (parsed: number | null) => void;
   /**
+   * A normál számparse ELÉ fűzött, hívó-specifikus alak-felismerés; `null` =
+   * "nem az én alakom", ilyenkor a normál parse fut. Opt-in: csak az a mező
+   * kapja meg, ahol a bevitt alak a mező SAJÁT kontextusától függ (a sor
+   * Ajánlati árán a `%` a sor referenciaárához képest értendő), a többi mező
+   * viselkedése változatlan. A visszaadott érték a mező tárolási
+   * egységében van (EUR-on cent), és ugyanúgy átmegy a `min`-őrön, mint egy
+   * begépelt szám.
+   */
+  parseAlternativ?: (text: string) => number | null;
+  /**
    * Blur UTÁN hívódik, a `commit()` lefutása után -- kizárólag "a mező most
    * vesztette el a fókuszt" jelzéshez (pl. egy kötelező-mező hiba, ami csak
    * blur/Enter után jelenhet meg, nem azonnal fókuszáláskor, backlog-64 6.
@@ -93,6 +103,7 @@ export default function NumberField({
   unit = 'HUF',
   min,
   onDraftChange,
+  parseAlternativ,
   onBlur,
   placeholder,
   textAlign,
@@ -116,8 +127,12 @@ export default function NumberField({
     if (!focused) setDraft(formatForDisplay(value, unit));
   }, [value, unit, focused]);
 
+  function parse(text: string): number | null {
+    return parseAlternativ?.(text) ?? parseDraft(text, unit);
+  }
+
   function commit() {
-    const parsed = parseDraft(draft, unit);
+    const parsed = parse(draft);
     if (parsed == null || !Number.isFinite(parsed) || (min != null && parsed < min)) {
       // Üres/érvénytelen/min alatti érték -- SOHA nem esik 0-ra, az utolsó
       // ismert értékre áll vissza (P0-4). A visszaállás NEM néma (lásd a
@@ -143,7 +158,7 @@ export default function NumberField({
   // ±1 Ft/cent lépés sosem hasznos szerződéses összegen, csak véletlen
   // elmozdulás kockázata (doctor-review 2026-09-05, 6. megállapítás).
   function step(delta: number) {
-    const base = parseDraft(draft, unit) ?? value ?? 0;
+    const base = parse(draft) ?? value ?? 0;
     const next = Math.round(base) + delta;
     const clamped = min != null ? Math.max(min, next) : next;
     setDraft(formatForDisplay(clamped, unit));
@@ -175,7 +190,7 @@ export default function NumberField({
         }}
         onChange={(e) => {
           setDraft(e.target.value);
-          onDraftChange?.(parseDraft(e.target.value, unit));
+          onDraftChange?.(parse(e.target.value));
         }}
         onBlur={() => {
           commit();

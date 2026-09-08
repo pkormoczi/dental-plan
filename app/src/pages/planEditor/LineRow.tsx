@@ -32,6 +32,7 @@ import { arlistaiLeiras, leirasKoveti, nevAtirt, resolveNev, type SorFallbackOk 
 import { nyelviMismatch, reviewElfogadva } from '../../domain/nyelviReview';
 import { orokoltKeziAru } from '../../domain/orokoltJelzesek';
 import { nincsListaar } from '../../domain/penznemValtas';
+import { sorReferenciaAr } from '../../domain/savHatar';
 import { sorElteres } from '../../domain/sorElteres';
 import { sorMezokEgyedibol, sorMezokTetelbol } from '../../domain/sorMezok';
 import { invalidFdiTokens, parseTeeth } from '../../domain/teeth';
@@ -146,6 +147,23 @@ export default function LineRow({
   // lista" -- ha ezt nem jeleznénk a classifiernek, egy kézzel beírt
   // ajánlati ár tévesen "Felár" jelvényt kapna. Lásd `domain/sorElteres.ts`.
   const elteres = sorElteres(line, egyedi || araHianyzik);
+
+  // „−10%" / „+10%" / csupasz „10%" (= kedvezmény) az Ajánlati ár mezőben:
+  // ez a papír nyelve („koronára 10% kedv."), és a leggyakoribb eset
+  // mínuszjel nélkül is gépelhető. A százalék SOSEM tárolódik -- az
+  // `ElolegBlokk` mintáját követi: a `Sor`-ra csak a belőle számolt abszolút
+  // ár kerül. Az alap a `sorReferenciaAr`, ugyanaz, amiből a visszaigazoló
+  // jelvény számol -- így a beírt „−10%" és a jelvény sosem térhet el.
+  function szazalekosAr(text: string): number | null {
+    const m = /^([+-]?)\s*(\d+(?:[.,]\d+)?)\s*%$/.exec(text.trim());
+    if (!m) return null;
+    const arany = Number(m[2].replace(',', '.'));
+    if (!Number.isFinite(arany)) return null;
+    // Negatív eredményt (pl. „150%" kedvezmény) SZÁNDÉKOSAN visszaadunk: a
+    // NumberField `min={0}` őre állítja vissza az előző értékre, saját
+    // hibaüzenet nélkül.
+    return Math.round(sorReferenciaAr(line) * (1 + ((m[1] === '+' ? 1 : -1) * arany) / 100));
+  }
 
   // backlog-60, 1. döntés: a `sorFallback`-tól FÜGGETLEN, nyelvfüggetlen
   // "kézzel átírt" komparátor -- lásd `domain/nev.ts` `nevAtirt()`.
@@ -487,6 +505,7 @@ export default function LineRow({
                   // képest.
                   onPatch(egyedi ? { tenylegesEgysegar: v, listaEgysegar: v } : { tenylegesEgysegar: v })
                 }
+                parseAlternativ={szazalekosAr}
                 onDraftChange={(v) => {
                   const a = v ?? line.tenylegesEgysegar;
                   setArDraft(a);

@@ -18,6 +18,7 @@ import {
   seedGermanPlanWithOneTranslatedItem,
   seedWithIntactPriceList,
   seedWithNoEurPrices,
+  seedWithSavosRow,
   seedWithStalePriceRow,
 } from './planEditor/testFixtures';
 
@@ -1140,6 +1141,88 @@ describe('PlanEditorPage -- 108. tétel: élő Összeg oszlop gépelés közben'
     expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('12 000 Ft');
     expect(screen.getByText('15 000 Ft')).toBeInTheDocument();
     expect(screen.queryByText('7 000 Ft')).not.toBeInTheDocument();
+  });
+});
+
+describe('PlanEditorPage -- százalékos bevitel az Ajánlati ár mezőben', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  async function arMezo(user: ReturnType<typeof userEvent.setup>, szoveg: string) {
+    const priceField = (await screen.findByLabelText('Ajánlati egységár')) as HTMLInputElement;
+    await user.clear(priceField);
+    await user.type(priceField, szoveg);
+    await user.tab();
+    return priceField;
+  }
+
+  it('"-10%" a referenciaár 90%-ára kerekített egész árat menti, és megjelenik a −10% jelvény', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = await arMezo(user, '-10%');
+
+    expect(priceField.value).toBe('18000');
+    expect(await screen.findByText('−10%')).toBeInTheDocument();
+  });
+
+  it('csupasz "10%" ugyanaz, mint a "-10%" -- a kedvezmény a mínuszjel nélküli alapeset', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = await arMezo(user, '10%');
+
+    expect(priceField.value).toBe('18000');
+    expect(await screen.findByText('−10%')).toBeInTheDocument();
+  });
+
+  it('"+10%" a referenciaár 110%-ára emel, felár-jelvénnyel', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = await arMezo(user, '+10%');
+
+    expect(priceField.value).toBe('22000');
+    expect(await screen.findByText('+10%')).toBeInTheDocument();
+  });
+
+  it('sávos soron a sávon belüli ajánlati ár az alap, nem a nyers listaár', async () => {
+    const user = userEvent.setup();
+    seedWithSavosRow();
+    renderEditor();
+
+    // A sáv 15000–25000, az ajánlati ár 18000 (sávon belül), a listaár 20000.
+    const priceField = await arMezo(user, '-10%');
+
+    expect(priceField.value).toBe('16200');
+  });
+
+  it('negatív árat adó százalék ("150%") az előző értékre áll vissza, "Érvénytelen érték" jelzéssel', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = await arMezo(user, '150%');
+
+    expect(priceField.value).toBe('20000');
+    expect(await screen.findByText('Érvénytelen érték — az előző maradt')).toBeInTheDocument();
+  });
+
+  it('a Darabszám mező NEM ismeri a %-alakot -- az előző értékre áll vissza', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const mennyisegField = (await screen.findByLabelText('Darabszám')) as HTMLInputElement;
+    await user.clear(mennyisegField);
+    await user.type(mennyisegField, '10%');
+    await user.tab();
+
+    expect(mennyisegField.value).toBe('1');
   });
 });
 

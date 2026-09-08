@@ -67,6 +67,32 @@ export function seedWithIntactPriceList() {
  * rekord-alakjában (DemoDraftStorage.ts `save()` mintája), MIELŐTT a
  * StorageProvider renderelne.
  */
+/**
+ * Egy piszkozat egyetlen SÁVOS sorral: a felvételkori sáv 15000–25000, az
+ * ajánlati ár a sávon BELÜL 18000 -- így a `sorReferenciaAr` a 18000, nem a
+ * 20000-es nyers listaár.
+ */
+export function seedWithSavosRow() {
+  localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+  localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+  const plan = createBlankPlan(seedSettings, seedPriceList);
+  plan.paciens.nev = 'Teszt Elek';
+  plan.fazisok[0].sorok.push({
+    tetelId: 't041',
+    nevSnapshot: 'Fogeltávolítás',
+    savos: true,
+    fogak: '',
+    mennyiseg: 1,
+    listaEgysegar: 20000,
+    tenylegesEgysegar: 18000,
+    savHatar: { min: 15000, max: 25000 },
+  });
+  localStorage.setItem(
+    'dp:piszkozat',
+    JSON.stringify({ schemaVersion: 1, mentve: new Date().toISOString(), plan }),
+  );
+}
+
 export function seedWithStalePriceRow() {
   localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
   localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
