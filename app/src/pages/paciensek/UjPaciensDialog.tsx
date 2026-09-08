@@ -33,7 +33,10 @@ import { formatShortDate, todayIso } from '../../domain/date';
 import type { DuplikaciosJelolt } from '../../domain/paciensDuplikacio';
 import { szuletesiIdoHiba } from '../../domain/paciensValidacio';
 import type { PatientFolder } from '../../domain/types';
+import { enterFokusz } from '../patientPage/enterFokusz';
 import { useStorage } from '../../storage/StorageContext';
+
+const MENTES_GOMB_ID = 'uj-paciens-mentes';
 
 export interface UjPaciensDialogProps {
   open: boolean;
@@ -219,6 +222,7 @@ export default function UjPaciensDialog({
                 autoFocus
                 value={nev}
                 onChange={(e) => setNev(e.target.value)}
+                onKeyDown={enterFokusz('uj-paciens-szuletesiido')}
                 placeholder="Kovács János"
                 aria-invalid={nevHiba ? true : undefined}
                 style={nevHiba ? { boxShadow: `inset 0 0 0 1px ${t.danger}` } : undefined}
@@ -243,6 +247,7 @@ export default function UjPaciensDialog({
                 type="date"
                 value={szuletesiIdo}
                 onChange={(e) => setSzuletesiIdo(e.target.value)}
+                onKeyDown={enterFokusz('uj-paciens-telefon')}
                 aria-invalid={szuletesiIdoHibaSzoveg ? true : undefined}
                 style={szuletesiIdoHibaSzoveg ? { boxShadow: `inset 0 0 0 1px ${t.danger}` } : undefined}
               />
@@ -253,6 +258,7 @@ export default function UjPaciensDialog({
                 autoComplete="off"
                 value={telefon}
                 onChange={(e) => setTelefon(e.target.value)}
+                onKeyDown={enterFokusz(MENTES_GOMB_ID)}
                 placeholder="+36 30 123 4567"
               />
             </Field>
@@ -275,7 +281,10 @@ export default function UjPaciensDialog({
                 Mégse
               </Button>
             </Dialog.Close>
-            <Button type="submit" disabled={ellenorzesFolyamatban}>
+            {/* Az Enter-lánc zárótagja: a Telefonról CSAK fókuszt kap, egy
+                MÁSODIK Enter (már a gombon) ment -- a mezőből azonnal mentő
+                Enter épp az a meglepetés, amit a lánc megszüntet. */}
+            <Button id={MENTES_GOMB_ID} type="submit" disabled={ellenorzesFolyamatban}>
               Mentés
             </Button>
           </Flex>

@@ -1325,6 +1325,35 @@ describe('PatientPage -- backlog-51: terv címe mező', () => {
   });
 });
 
+describe('PatientPage -- quick-create utáni "<Név> felvéve" jelzés', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('az "Új terv indítása" lapon felvett páciens neve a Terv adatai lapon "felvéve" jelzéssel fogad', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+    await user.type(await screen.findByPlaceholderText('Kovács János'), 'Felvéve Ferenc');
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Terv adatai' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Felvéve Ferenc felvéve')).toBeInTheDocument();
+  });
+
+  it('a lapra jelzés nélkül érkezve nincs "felvéve" sor', async () => {
+    renderPatient();
+    await screen.findByRole('heading', { name: 'Terv adatai' });
+
+    expect(screen.queryByText(/felvéve$/)).toBeNull();
+  });
+});
+
 describe('PatientPage -- Enter a következő mezőre visz', () => {
   beforeEach(() => {
     localStorage.clear();

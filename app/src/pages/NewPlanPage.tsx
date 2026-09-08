@@ -128,7 +128,7 @@ export default function NewPlanPage() {
       const folder = await storage.createPatient(nev, kezdoAdatok);
       setPatients((prev) => [...prev, folder]);
       setUjOpen(false);
-      akciok.futtat({ kind: 'ujTerv', patientDir: folder.dirName });
+      akciok.futtat({ kind: 'ujTerv', patientDir: folder.dirName, felvettNev: folder.nev });
     } catch (err) {
       setCreateError(
         err instanceof Error ? err.message : 'Az új páciens felvitele váratlanul meghiúsult.',

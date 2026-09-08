@@ -26,12 +26,17 @@ export type PendingKind = 'open' | 'copy' | 'ujTerv' | 'ujPaciens';
  * `pages/NewPlanPage.tsx` soronként más pácienst indít). `nev` kizárólag
  * `kind: 'ujPaciens'`-nél értelmes: a quick-create dialógust ezzel a
  * begépelt névvel előtöltve nyitja meg a hívó `onUjPaciens` callbackje.
+ *
+ * `felvettNev` kizárólag a quick-create sikeres mentése UTÁN indított
+ * `kind: 'ujTerv'`-nél van kitöltve -- a célképernyő ebből mondja ki a
+ * „<Név> felvéve” jelzést (`components/PaciensFelvetelJelzo.tsx`).
  */
 export type PendingAction = Partial<VersionRef> & {
   kind: PendingKind;
   historical?: boolean;
   patientDir?: string;
   nev?: string;
+  felvettNev?: string;
 };
 
 export interface MegerositesTartalom {

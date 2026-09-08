@@ -273,6 +273,20 @@ describe('PatientDetailPage', () => {
     expect(await screen.findByRole('button', { name: '+ Új terv' })).toBeInTheDocument();
   });
 
+  it('quick-create után a lap "<Név> felvéve" jelzéssel fogad, szerkesztés módban', async () => {
+    renderDetail(kovacsDir, { tab: 'adatai', mod: 'szerkesztes', felvettNev: 'Kovács János' });
+
+    expect(await screen.findByText('Kovács János felvéve')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Mentés' })).toBeInTheDocument();
+  });
+
+  it('jelzés nélküli érkezéskor nincs "felvéve" sor', async () => {
+    renderDetail(kovacsDir, { tab: 'adatai' });
+
+    await screen.findByRole('button', { name: 'Szerkesztés' });
+    expect(screen.queryByText(/felvéve$/)).toBeNull();
+  });
+
   it('terv-láncos páciensnél a lap kimondja, mi a különbség az "Új verzió" és az "Új terv" között', async () => {
     renderDetail(kovacsDir);
 

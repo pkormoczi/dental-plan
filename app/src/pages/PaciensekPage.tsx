@@ -93,7 +93,7 @@ export default function PaciensekPage() {
       // meglévő páciens kiválasztásának ága (`onUseExisting` lent)
       // szándékosan nézet módban marad.
       navigate(`/paciensek/${encodeURIComponent(folder.dirName)}`, {
-        state: { tab: 'adatai', mod: 'szerkesztes' },
+        state: { tab: 'adatai', mod: 'szerkesztes', felvettNev: folder.nev },
       });
     } catch (err) {
       setCreateError(

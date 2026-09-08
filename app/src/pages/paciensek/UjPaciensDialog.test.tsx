@@ -76,6 +76,31 @@ describe('UjPaciensDialog', () => {
     seededPatients = await seeder.listPatients();
   });
 
+  it('az Enter mezőnként a következőre visz, a Telefonról a Mentés gombra -- egy második Enter ment', async () => {
+    const { onSave } = renderHarness(syntheticPatients(0, ''));
+    const user = userEvent.setup();
+
+    const nev = await screen.findByRole('textbox', { name: 'Név *' });
+    await user.type(nev, 'Enter Elek');
+    await user.keyboard('{Enter}');
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Született')).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('textbox', { name: 'Telefon' })).toHaveFocus();
+    expect(onSave).not.toHaveBeenCalled();
+
+    await user.keyboard('{Enter}');
+    const mentes = screen.getByRole('button', { name: 'Mentés' });
+    expect(mentes).toHaveFocus();
+    expect(onSave).not.toHaveBeenCalled();
+
+    // A gombon állva egy MÁSODIK Enter ment (natív submit).
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave).toHaveBeenCalledWith('Enter Elek', { szuletesiIdo: '', telefon: '' });
+  });
+
   it('pontos névegyezés azonnal, betöltés előtt is megjelenik javaslatként (regresszió-őr)', async () => {
     renderHarness(seededPatients);
     const user = userEvent.setup();

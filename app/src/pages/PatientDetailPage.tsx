@@ -29,6 +29,10 @@ import { sajatDraft, useAktivDraft } from '../components/useAktivDraft';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import { useListStateMemory } from '../components/useListStateMemory';
 import { useNavGuard } from '../components/NavGuardContext';
+import {
+  felvettNevAllapotbol,
+  PaciensFelvetelJelzo,
+} from '../components/PaciensFelvetelJelzo';
 import PatientDetailHeader from '../components/PatientDetailHeader';
 import PatientEditorPanel from '../components/PatientEditorPanel';
 import PatientPlanChains from '../components/PatientPlanChains';
@@ -81,6 +85,10 @@ export default function PatientDetailPage() {
   const [editorMod, setEditorMod] = useState<EditorMod>(
     (location.state as { mod?: EditorMod } | null)?.mod === 'szerkesztes' ? 'szerkesztes' : 'nezet',
   );
+
+  // Quick-create utáni „<Név> felvéve” -- ugyanaz a csak-kezdőérték
+  // doktrína, mint a `tab`/`mod`-nál.
+  const [felvettNev] = useState(() => felvettNevAllapotbol(location.state));
 
   // A Radix `Tabs` unmountolja a nem aktív tab tartalmát -- a "Páciens
   // adatai" tabon félbehagyott szerkesztés máskülönben némán elveszne
@@ -296,6 +304,8 @@ export default function PatientDetailPage() {
           </DropdownMenu.Root>
         }
       />
+
+      <PaciensFelvetelJelzo nev={felvettNev} />
 
       {deleteError && (
         <Callout.Root color="red" size="1" mb="4">

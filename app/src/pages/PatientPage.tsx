@@ -15,7 +15,7 @@
 // láncon is -- itt sosem volt zárolás, ami alól ki kellene venni.
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
   Box,
@@ -33,6 +33,7 @@ import { ExclamationTriangleIcon, InfoCircledIcon } from '@radix-ui/react-icons'
 import ChipGroup from '../components/ChipGroup';
 import { Field, FieldGroup, ReadOnlyField } from '../components/Field';
 import { useLepesGuard } from '../components/LepesGuardContext';
+import { felvettNevAllapotbol, PaciensFelvetelJelzo } from '../components/PaciensFelvetelJelzo';
 import { usePaciensKotes } from '../components/PaciensKotesContext';
 import Section from '../components/Section';
 import { lefedettseg } from '../domain/coverage';
@@ -122,10 +123,14 @@ export default function PatientPage() {
   const { plan, setPlan, settings, priceList, orokoltNyelv, orokoltPenznem, nyugtazOrokoltJelzes } =
     useAppState();
   const navigate = useNavigate();
+  const location = useLocation();
   const { kerLepesValtas } = useLepesGuard();
   const { patientDir: kotottPatientDir, kotott, utkozok } = usePaciensKotes();
   const paciens = plan.paciens;
   const [pending, setPending] = useState<PendingChange | null>(null);
+  // Quick-create utáni „<Név> felvéve” -- csak a kezdőértékhez olvassuk a
+  // navigációs state-et (`components/PaciensFelvetelJelzo.tsx`).
+  const [felvettNev] = useState(() => felvettNevAllapotbol(location.state));
   const aktivOrvosNevek = aktivOrvosok(settings);
   // Egy időközben deaktivált/törölt orvosra hivatkozó, még mentetlen sor --
   // a draft szabadon szerkeszthető marad ilyen állapotban is, a
@@ -265,6 +270,8 @@ export default function PatientPage() {
       <Heading size="5" mb="4" style={{ color: t.brand }}>
         Terv adatai
       </Heading>
+
+      <PaciensFelvetelJelzo nev={felvettNev} />
 
       <Section title="Terv címe">
         <TervCimField />

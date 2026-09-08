@@ -169,7 +169,7 @@ export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): Plan
       // Ezért 'alapallapot': a
       // "Piszkozat folytatása" kártya csak TÉNYLEGES szerkesztés után jelenik meg.
       copyPlanIntoDraft(next, 'alapallapot', patientDir, oroklott);
-      navigate('/paciens');
+      navigate('/paciens', action.felvettNev ? { state: { felvettNev: action.felvettNev } } : undefined);
     } catch (err) {
       setHiba({
         planDir: null,
