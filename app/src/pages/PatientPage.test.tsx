@@ -695,6 +695,196 @@ describe('PatientPage -- backlog-40: páciens adatlapja kártya', () => {
   });
 });
 
+// Az „üres az egyik oldalon" eset NEM eltérés, hanem pótlás: saját sáv, egy
+// gomb, dialógus nélkül.
+describe('PatientPage -- pótlás: csak az egyik helyen kitöltött mező', () => {
+  function makePaciens(overrides: Partial<Paciens> = {}): Paciens {
+    return {
+      nev: 'Teszt Elek',
+      szuletesiIdo: '1980-05-05',
+      lakcim: '',
+      telefon: '+36 30 000 0000',
+      email: '',
+      taj: '',
+      kiskoru: false,
+      torvenyesKepviselo: null,
+      ...overrides,
+    };
+  }
+
+  function makePlanWithPaciens(paciens: Paciens, paciensId: string): Plan {
+    return {
+      schemaVersion: 1,
+      tervId: '',
+      verzio: 0,
+      statusz: 'PISZKOZAT',
+      nyelv: 'hu',
+      penznem: 'HUF',
+      keltezes: '2026-08-05',
+      ervenyesIg: '2026-11-03',
+      arlistaVerzio: '2026-07-01',
+      orvos: 'Dr. Mándoki István',
+      paciens,
+      fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [] }],
+      osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+      paciensId,
+    };
+  }
+
+  async function seedDraft(patientDir: string, paciens: Paciens, paciensId: string) {
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({
+        schemaVersion: 1,
+        mentve: '2026-08-09T10:15:00.000Z',
+        plan: makePlanWithPaciens(paciens, paciensId),
+        patientDir,
+      }),
+    );
+  }
+
+  /** Csak névvel és születési dátummal felvett páciens -- a telefon csak a tervben van meg. */
+  async function seedCsakNevvelFelvett() {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', {
+      szuletesiIdo: '1980-05-05',
+      telefon: '',
+    });
+    await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
+    return patient;
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('a tervbe írt telefonszám nem eltérésként, hanem pótlásként jelenik meg', async () => {
+    await seedCsakNevvelFelvett();
+
+    renderPatient();
+
+    expect(
+      await screen.findByText(/1 mező csak az egyik helyen van kitöltve/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/mező eltér a páciens adatlapjától/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Az adatlap frissítése a tervből' })).toBeNull();
+  });
+
+  it('a pótlás-gomb egy kattintással a paciens-adatok.json-be írja a hiányzó mezőt', async () => {
+    const user = userEvent.setup();
+    const patient = await seedCsakNevvelFelvett();
+
+    renderPatient();
+    await screen.findByText(/1 mező csak az egyik helyen van kitöltve/);
+    await user.click(screen.getByRole('button', { name: 'Hiányzó mezők pótlása mindkét helyen' }));
+
+    await waitFor(async () => {
+      const verify = new DemoStorage();
+      await verify.init();
+      expect((await verify.loadPatientData(patient.dirName))?.telefon).toBe('+36 30 000 0000');
+    });
+    // A pótlás után nincs sem eltérés, sem pótolandó mező.
+    expect(
+      await screen.findByText('A páciens adatlapja és a terv adatai megegyeznek.'),
+    ).toBeInTheDocument();
+  });
+
+  it('a fordított irányt is pótolja: az adatlapon meglévő, a tervből hiányzó mező a lapra kerül', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', {
+      szuletesiIdo: '1980-05-05',
+      telefon: '+36 70 999 8888',
+    });
+    await seedDraft(patient.dirName, makePaciens({ telefon: '' }), patient.paciensId);
+
+    renderPatient();
+    await screen.findByText(/1 mező csak az egyik helyen van kitöltve/);
+    await user.click(screen.getByRole('button', { name: 'Hiányzó mezők pótlása mindkét helyen' }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Telefon')).toHaveValue('+36 70 999 8888'),
+    );
+  });
+
+  it('vegyes esetben a két sáv egyszerre látszik, és a pótlás nem nyúl az ütköző mezőhöz', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', {
+      szuletesiIdo: '1980-05-05',
+      telefon: '+36 70 999 8888',
+    });
+    // telefon: mindkét oldal kitöltött, de eltér -> ütközés
+    // email: csak a tervben -> pótlás
+    await seedDraft(patient.dirName, makePaciens({ email: 'uj@example.hu' }), patient.paciensId);
+
+    renderPatient();
+    expect(await screen.findByText(/1 mező eltér a páciens adatlapjától/)).toBeInTheDocument();
+    expect(screen.getByText(/1 mező csak az egyik helyen van kitöltve/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Hiányzó mezők pótlása mindkét helyen' }));
+
+    const verify = new DemoStorage();
+    await verify.init();
+    await waitFor(async () =>
+      expect((await verify.loadPatientData(patient.dirName))?.email).toBe('uj@example.hu'),
+    );
+    // Az ütköző telefon érintetlen az adatlapon, és a sáv is marad.
+    expect((await verify.loadPatientData(patient.dirName))?.telefon).toBe('+36 70 999 8888');
+    expect(screen.getByText(/1 mező eltér a páciens adatlapjától/)).toBeInTheDocument();
+  });
+
+  it('írási hibánál a pótlás-gomb újrapróbálható, és a piszkozat érintetlen', async () => {
+    const user = userEvent.setup();
+    await seedCsakNevvelFelvett();
+
+    renderPatient();
+    await screen.findByText(/1 mező csak az egyik helyen van kitöltve/);
+
+    const setItemSpy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('Megtelt a tárhely.');
+    });
+    await user.click(screen.getByRole('button', { name: 'Hiányzó mezők pótlása mindkét helyen' }));
+
+    expect(await screen.findByText('Megtelt a tárhely.')).toBeInTheDocument();
+    setItemSpy.mockRestore();
+
+    await user.click(screen.getByRole('button', { name: 'Újra' }));
+    expect(
+      await screen.findByText('A páciens adatlapja és a terv adatai megegyeznek.'),
+    ).toBeInTheDocument();
+  });
+
+  it('névütközésnél a pótlás-gomb letiltott', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', {
+      szuletesiIdo: '1980-05-05',
+      telefon: '',
+    });
+    const utkozo = await seeder.createPatient('Ütköző Napsugár', {
+      szuletesiIdo: '1990-01-01',
+      telefon: '',
+    });
+    await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
+
+    renderPatient();
+    await screen.findByText(/1 mező csak az egyik helyen van kitöltve/);
+    const nameInput = screen.getByPlaceholderText('Kovács János');
+    await user.clear(nameInput);
+    await user.type(nameInput, utkozo.nev);
+
+    expect(
+      await screen.findByRole('button', { name: 'Hiányzó mezők pótlása mindkét helyen' }),
+    ).toBeDisabled();
+  });
+});
+
 // 94. tétel: Másolás új tervbe -- páciens-identitás védőháló.
 describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
   function makePaciens(overrides: Partial<Paciens> = {}): Paciens {
@@ -815,7 +1005,10 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
     const user = userEvent.setup();
     const seeder = new DemoStorage();
     await seeder.init();
-    const kotott = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    const kotott = await seeder.createPatient('Teszt Elek', {
+      szuletesiIdo: '1980-05-05',
+      telefon: '+36 70 999 8888',
+    });
     await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
 
     renderPatient();

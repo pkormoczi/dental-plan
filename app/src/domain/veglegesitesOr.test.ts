@@ -744,6 +744,26 @@ describe('veglegesitesDiagnozis', () => {
       expect(t?.szamlalo).toBe(1);
       expect(vanKemenyBlokk(diag)).toBe(false);
     });
+
+    it('a csak az adatlapon üres mező (pótlás) NEM ad tételt', () => {
+      const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '+36 20 123 4567' }) });
+      const master = paciens({ telefon: '' });
+      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+      expect(tetel(diag, 'torzsadat-elteres')).toBeUndefined();
+    });
+
+    it('vegyes esetben csak az ütköző mezőt sorolja fel, a pótolhatót nem', () => {
+      const plan = makePlan([[sor()]], {
+        paciens: paciens({ telefon: '+36 20 123 4567', email: 'uj@example.hu' }),
+      });
+      const master = paciens({ telefon: '+36 70 999 8888', email: '' });
+      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+      const t = tetel(diag, 'torzsadat-elteres');
+      expect(t?.szamlalo).toBe(1);
+      expect(t?.cim).toContain('(Telefon)');
+    });
   });
 
   // 94. tétel: a Név mező egy MÁSIK, létező páciensre illő pontos egyezése

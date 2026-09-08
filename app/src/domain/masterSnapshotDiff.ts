@@ -71,18 +71,28 @@ export function alkalmazMezoket(cel: Paciens, forras: Paciens, kulcsok: (keyof P
 /**
  * Az `elteresek` azon részhalmaza, ahol MINDKÉT oldalon van érték, és azok
  * különböznek -- egy üres mező pótlása (a másik oldal kitöltött) nem
- * ÜTKÖZÉS, csak hiányzó adat kiegészítése. A lépés-elhagyási prompt
- * (backlog-40, 1. döntés) EZT használja a megjelenítés eldöntéséhez, hogy
- * egy vadonatúj páciens első adatkitöltése (a quick-create után a doki
- * kitölti a többi mezőt a Terv adatai lapon, miközben a master még csak a
- * nevet tartalmazza) ne szakítsa félbe minden alkalommal a workflow-t. A
- * kártya (`TorzsadatSyncCard`) és az Előnézet info-sora ellenben a TELJES
- * `masterSnapshotDiff`-et mutatja -- ott egy üres mező pótlása is hasznos
- * infó, nem zavaró megszakítás.
+ * ÜTKÖZÉS, csak hiányzó adat kiegészítése. MINDEN doki-látta felület ezt
+ * mutatja "eltérés"-ként (a lépés-elhagyási prompt, a `TorzsadatSyncCard`
+ * sávja és dialógusa, az Előnézet info-sora, a Terv részletei jelvénye) --
+ * egy csak névvel felvett páciensnél a Terv adatai lapon kitöltött mezők
+ * különben mind "eltérésnek" látszanának. A másik részhalmaz a
+ * `potolhatoMezok`, saját, pótlás-nyelvű jelzéssel.
  */
 export function valodiUtkozesek(elteresek: MezoElteres[], master: Paciens, snapshot: Paciens): MezoElteres[] {
   return elteresek.filter(
     ({ kulcs }) => mezoErtekSzoveg(master, kulcs) !== '' && mezoErtekSzoveg(snapshot, kulcs) !== '',
+  );
+}
+
+/**
+ * A `valodiUtkozesek` párja: az `elteresek` azon része, ahol az EGYIK oldal
+ * üres -- nincs mit mérlegelni, a kitöltött érték a helyes érték mindkét
+ * irányban. A `kiskoru` sosem kerül ide, mert a `mezoErtekSzoveg` rá
+ * `Igen`/`Nem`-et ad, üres stringet soha.
+ */
+export function potolhatoMezok(elteresek: MezoElteres[], master: Paciens, snapshot: Paciens): MezoElteres[] {
+  return elteresek.filter(
+    ({ kulcs }) => mezoErtekSzoveg(master, kulcs) === '' || mezoErtekSzoveg(snapshot, kulcs) === '',
   );
 }
 

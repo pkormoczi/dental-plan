@@ -1386,19 +1386,25 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
       await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
-      // A quick-create után a törzsadat még csak a nevet tartalmazza -- a
-      // többi mező kitöltése itt egy master<->draft ELTÉRÉS (fill-in), ami
-      // az Előnézeten info-sávot ad, de a lépés-elhagyáskor NEM szakítja
-      // félbe a workflow-t (`domain/masterSnapshotDiff.ts` `valodiUtkozesek`).
+      // Az adatlap a felvételkor kap telefonszámot, a Terv adatai lapon
+      // MÁSIK szám kerül a helyére -- ez VALÓDI ütközés (mindkét oldal
+      // kitöltött), nem pusztán pótlás (`domain/masterSnapshotDiff.ts`).
+      const ujPaciensDialog = await screen.findByRole('dialog');
       await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Info');
+      await user.type(within(ujPaciensDialog).getByLabelText('Telefon'), '+36 70 999 8888');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       fireEvent.change(await screen.findByLabelText('Született'), { target: { value: '1990-01-01' } });
       await user.type(screen.getByLabelText('TAJ'), '123 456 789');
       await user.type(screen.getByLabelText('Lakcím'), '1113 Budapest, Bartók Béla út 42. 2/5');
+      await user.clear(screen.getByLabelText('Telefon'));
       await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
       await user.type(screen.getByLabelText('E-mail'), 'teszt.info@example.hu');
       await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      // Valódi ütközésnél a lépés-elhagyási ajánlat feljön -- itt nem az a
+      // téma, a doki kihagyja, az eltérés marad.
+      const lepesPrompt = await screen.findByRole('dialog');
+      await user.click(within(lepesPrompt).getByRole('button', { name: 'Kihagyás, tovább lépek' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'Fogeltávolítás');
@@ -1428,11 +1434,16 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
       await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      const ujPaciensDialog = await screen.findByRole('dialog');
       await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Info2');
+      await user.type(within(ujPaciensDialog).getByLabelText('Telefon'), '+36 70 999 8888');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-      await user.type(await screen.findByLabelText('Telefon'), '+36 30 123 4567');
+      await user.clear(await screen.findByLabelText('Telefon'));
+      await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
       await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      const lepesPrompt = await screen.findByRole('dialog');
+      await user.click(within(lepesPrompt).getByRole('button', { name: 'Kihagyás, tovább lépek' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'Fogeltávolítás');
@@ -1470,10 +1481,12 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
       await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
-      // A quick-create után a törzsadat még csak a nevet tartalmazza -- a
-      // Terv adatai lapon kitöltött többi mező a masterrel szemben
-      // eltérést (fill-in) ad, ami a sikerképernyőn is megjelenő info-tétel.
+      // Az adatlapon MÁS telefonszám áll, mint amit a doki a Terv adatai
+      // lapon beír -- valódi ütközés, ami a sikerképernyőn is megjelenő
+      // info-tétel.
+      const ujPaciensDialog = await screen.findByRole('dialog');
       await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Visszatekint');
+      await user.type(within(ujPaciensDialog).getByLabelText('Telefon'), '+36 70 999 8888');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
       fireEvent.change(await screen.findByLabelText('Született'), { target: { value: '1990-01-01' } });
@@ -1482,9 +1495,12 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
         screen.getByLabelText('Lakcím'),
         '1113 Budapest, Bartók Béla út 42. 2/5',
       );
+      await user.clear(screen.getByLabelText('Telefon'));
       await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
       await user.type(screen.getByLabelText('E-mail'), 'teszt.visszatekint@example.hu');
       await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+      const lepesPrompt = await screen.findByRole('dialog');
+      await user.click(within(lepesPrompt).getByRole('button', { name: 'Kihagyás, tovább lépek' }));
 
       const search = await screen.findByPlaceholderText(/Tétel keresése/);
       await user.type(search, 'Érzéstelenítés');
@@ -1553,11 +1569,10 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
 
       await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
       await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
-      // A quick-create csak a nevet írja a törzsadatba -- minden más mező
-      // kitöltése itt fill-in eltérést adna a törzsadathoz képest. Hogy a
-      // "hiányzó páciensadat" ÉS a "törzsadat-eltérés" egyaránt kimaradjon,
-      // a mezők kitöltése UTÁN a törzsadatot explicit szinkronizáljuk a
-      // terv adataival (lásd lent, "Az adatlap frissítése a tervből").
+      // A quick-create csak a nevet írja az adatlapra -- minden más mező a
+      // tervben pótlandó marad. Hogy a "hiányzó páciensadat" tétel is
+      // kimaradjon és az adatlap se maradjon hiányos, a mezők kitöltése UTÁN
+      // egy kattintással pótoljuk a hiányzókat (lásd lent).
       await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Tiszta');
       await user.click(screen.getByRole('button', { name: 'Mentés' }));
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -1570,11 +1585,9 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
       await user.type(screen.getByLabelText('Telefon'), '+36 30 123 4567');
       await user.type(screen.getByLabelText('E-mail'), 'teszt.tiszta@example.hu');
 
-      await user.click(await screen.findByRole('button', { name: 'Az adatlap frissítése a tervből' }));
-      const syncDialog = await screen.findByRole('dialog', { name: 'Az adatlap frissítése a tervből' });
-      await user.click(within(syncDialog).getByRole('checkbox', { name: 'Összes kijelölése' }));
-      await user.click(within(syncDialog).getByRole('button', { name: 'Mentés az adatlapra' }));
-      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(
+        await screen.findByRole('button', { name: 'Hiányzó mezők pótlása mindkét helyen' }),
+      );
       await waitFor(() =>
         expect(screen.getByText('A páciens adatlapja és a terv adatai megegyeznek.')).toBeInTheDocument(),
       );

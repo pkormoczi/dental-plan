@@ -26,7 +26,7 @@ import {
   uresFazisok,
 } from './kitoltetlen';
 import { arElteroSorok } from './arKoveti';
-import { MASTER_DIFF_MEZOK, masterSnapshotDiff } from './masterSnapshotDiff';
+import { MASTER_DIFF_MEZOK, masterSnapshotDiff, valodiUtkozesek } from './masterSnapshotDiff';
 import { formatMoney } from './money';
 import { igazolatlanNemetKategoriak, igazolatlanNemetNevek } from './nemetNev';
 import {
@@ -466,7 +466,11 @@ export function veglegesitesDiagnozis(
   // törzsadat és a terv `paciens` pillanatképe között nincs automatikus
   // szinkron egyik irányban sem, az átvétel mindig explicit doki-akció, a
   // véglegesítés nem kényszeríti ki.
-  const masterElteresek = master ? masterSnapshotDiff(master, plan.paciens) : [];
+  // Csak a VALÓDI ütközés (mindkét oldalon van érték, és eltér) -- egy üres
+  // mező pótlása nem eltérés, azt a Terv adatai lap kínálja fel külön.
+  const masterElteresek = master
+    ? valodiUtkozesek(masterSnapshotDiff(master, plan.paciens), master, plan.paciens)
+    : [];
   if (masterElteresek.length > 0) {
     tetelek.push({
       id: 'torzsadat-elteres',

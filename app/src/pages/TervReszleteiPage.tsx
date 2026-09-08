@@ -25,7 +25,12 @@ import MentettPdfPanel from './tervReszletei/MentettPdfPanel';
 import PenzugyiOsszesites from './tervReszletei/PenzugyiOsszesites';
 import { t } from '../design/tokens';
 import { formatLongDate, formatShortDate } from '../domain/date';
-import { MASTER_DIFF_MEZOK, masterSnapshotDiff, mezoErtekSzoveg } from '../domain/masterSnapshotDiff';
+import {
+  MASTER_DIFF_MEZOK,
+  masterSnapshotDiff,
+  mezoErtekSzoveg,
+  valodiUtkozesek,
+} from '../domain/masterSnapshotDiff';
 import { megjelenitettTorzsadat, paciensTorzsadatbol } from '../domain/paciensAdatok';
 import { legfrissebbVerzio, verziokFrissessegSzerint } from '../domain/planFolders';
 import { tervReszleteiUtvonal } from '../domain/planVersionActions';
@@ -301,7 +306,13 @@ export default function TervReszleteiPage() {
   // nem kell külön "nincs törzsadat" ágat írni.
   const megjelenitett = megjelenitettTorzsadat(master, plan, patient);
   const masterPaciens = paciensTorzsadatbol(megjelenitett);
-  const elteresek = masterSnapshotDiff(masterPaciens, plan.paciens);
+  // Csak a VALÓDI ütközés számít "azóta módosult"-nak: egy azóta kitöltött,
+  // a pillanatképben üres mező kiegészítés, nem módosítás.
+  const elteresek = valodiUtkozesek(
+    masterSnapshotDiff(masterPaciens, plan.paciens),
+    masterPaciens,
+    plan.paciens,
+  );
   const tervCim = megjelenitettTervCim(planFolder.tervCim, plan, priceList);
   const sorrend = verziokFrissessegSzerint([planFolder], () => versions);
   const idx = sorrend.findIndex((l) => l.version.dirName === versionDir);

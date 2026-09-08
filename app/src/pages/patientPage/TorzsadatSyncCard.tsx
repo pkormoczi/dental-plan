@@ -19,7 +19,14 @@ import TorzsadatDiffDialog from '../../components/TorzsadatDiffDialog';
 import { useLepesElhagyas, useLepesGuard } from '../../components/LepesGuardContext';
 import { usePaciensKotes } from '../../components/PaciensKotesContext';
 import { t } from '../../design/tokens';
-import { diffAzonosito, masterSnapshotDiff, valodiUtkozesek } from '../../domain/masterSnapshotDiff';
+import {
+  alkalmazMezoket,
+  diffAzonosito,
+  masterSnapshotDiff,
+  mezoErtekSzoveg,
+  potolhatoMezok,
+  valodiUtkozesek,
+} from '../../domain/masterSnapshotDiff';
 import { paciensTorzsadatbol, torzsadatTervbol } from '../../domain/paciensAdatok';
 import { feloldPatientDir } from '../../domain/torzsadatBetoltes';
 import type { Paciens, PatientMasterData } from '../../domain/types';
@@ -55,6 +62,9 @@ export default function TorzsadatSyncCard() {
 
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+
+  const [potlasFolyamatban, setPotlasFolyamatban] = useState(false);
+  const [potlasHiba, setPotlasHiba] = useState<string | null>(null);
 
   const [lepesPromptOpen, setLepesPromptOpen] = useState(false);
   const [letrehozasPromptOpen, setLetrehozasPromptOpen] = useState(false);
@@ -95,10 +105,10 @@ export default function TorzsadatSyncCard() {
   const master = torzsadat ? paciensTorzsadatbol(torzsadat) : null;
   const elteresek = master ? masterSnapshotDiff(master, plan.paciens) : [];
   const diffId = master ? diffAzonosito(elteresek, master, plan.paciens) : null;
-  // A lépés-elhagyási prompt csak VALÓDI ütközésnél szól -- lásd
-  // `valodiUtkozesek` doc-kommentjét (a kártya gombjai/dialógusa a TELJES
-  // `elteresek`-kel dolgozik, ez csak a megszakítás-döntéshez szűkít).
+  // A diff két, KÜLÖN jelzett fele -- lásd `valodiUtkozesek` doc-kommentjét:
+  // az ütközés mérlegelést kíván (két-gombos dialógus), a pótlás nem.
   const utkozesek = master ? valodiUtkozesek(elteresek, master, plan.paciens) : [];
+  const potlasok = master ? potolhatoMezok(elteresek, master, plan.paciens) : [];
 
   function applyToDraft(next: Paciens) {
     setPlan((prev) => ({ ...prev, paciens: next }));
@@ -125,6 +135,29 @@ export default function TorzsadatSyncCard() {
     await storage.savePatientData(patientDir, toSave);
     setTorzsadat(toSave);
   }, [storage, patientDir, paciensId, plan.paciens]);
+
+  // Egy lépésben, dialógus nélkül: amelyik oldal üres, a másikról veszi az
+  // értéket. Az írás megy előre -- ha az adatlap írása hibázik, a piszkozat
+  // érintetlen marad, és a gomb változatlan állapotból újrapróbálható.
+  async function handlePotlas() {
+    if (!master) return;
+    setPotlasFolyamatban(true);
+    setPotlasHiba(null);
+    try {
+      const masterbe = potlasok
+        .filter(({ kulcs }) => mezoErtekSzoveg(master, kulcs) === '')
+        .map(({ kulcs }) => kulcs);
+      const draftba = potlasok
+        .filter(({ kulcs }) => mezoErtekSzoveg(plan.paciens, kulcs) === '')
+        .map(({ kulcs }) => kulcs);
+      if (masterbe.length > 0) await writeMaster(alkalmazMezoket(master, plan.paciens, masterbe));
+      if (draftba.length > 0) applyToDraft(alkalmazMezoket(plan.paciens, master, draftba));
+    } catch (err) {
+      setPotlasHiba(err instanceof Error ? err.message : 'A hiányzó mezők pótlása váratlanul meghiúsult.');
+    } finally {
+      setPotlasFolyamatban(false);
+    }
+  }
 
   async function handleManualCreate() {
     setCreating(true);
@@ -258,14 +291,44 @@ export default function TorzsadatSyncCard() {
 
       {!loadError && master && (
         <Box>
-          {elteresek.length === 0 ? (
+          {utkozesek.length === 0 && potlasok.length === 0 && (
             <Text size="2" color="gray">
               A páciens adatlapja és a terv adatai megegyeznek.
             </Text>
-          ) : (
-            <>
+          )}
+
+          {/* Pótlás: csak az egyik oldalon van érték -- nincs mit mérlegelni,
+              ezért egyetlen gomb, checkbox-tábla nélkül. Ára, hogy egy mező
+              nem hagyható ki a pótlásból. */}
+          {potlasok.length > 0 && (
+            <Box mb={utkozesek.length > 0 ? '4' : '0'}>
               <Text as="p" size="2" color="gray" mb="3">
-                {elteresek.length} mező eltér a páciens adatlapjától.
+                {potlasok.length} mező csak az egyik helyen van kitöltve — a pótlás mindkét
+                irányban a kitöltött értéket veszi át.
+              </Text>
+              {potlasHiba && (
+                <Text as="div" size="1" mb="2" style={{ color: t.danger }}>
+                  {potlasHiba}
+                </Text>
+              )}
+              <Button
+                size="1"
+                disabled={potlasFolyamatban || nevUtkozes}
+                onClick={() => void handlePotlas()}
+              >
+                {potlasFolyamatban
+                  ? 'Pótlás…'
+                  : potlasHiba
+                    ? 'Újra'
+                    : 'Hiányzó mezők pótlása mindkét helyen'}
+              </Button>
+            </Box>
+          )}
+
+          {utkozesek.length > 0 && (
+            <Box>
+              <Text as="p" size="2" color="gray" mb="3">
+                {utkozesek.length} mező eltér a páciens adatlapjától.
               </Text>
               <Flex gap="2" wrap="wrap">
                 <Button size="1" variant="soft" onClick={() => setManualDialog('master-to-draft')}>
@@ -280,20 +343,21 @@ export default function TorzsadatSyncCard() {
                   Az adatlap frissítése a tervből
                 </Button>
               </Flex>
-              {nevUtkozes && (
-                <Text as="div" size="1" mt="2" style={{ color: t.danger }}>
-                  A Név mező egy másik, létező páciensre illik pontosan — javítsd a nevet, mielőtt
-                  az adatlapot a terv adataiból frissítenéd.
-                </Text>
-              )}
-            </>
+            </Box>
+          )}
+
+          {nevUtkozes && (utkozesek.length > 0 || potlasok.length > 0) && (
+            <Text as="div" size="1" mt="2" style={{ color: t.danger }}>
+              A Név mező egy másik, létező páciensre illik pontosan — javítsd a nevet, mielőtt az
+              adatlapot a terv adataiból frissítenéd.
+            </Text>
           )}
 
           <TorzsadatDiffDialog
             open={manualDialog !== null}
             onOpenChange={(o) => !o && setManualDialog(null)}
             irany={manualDialog ?? 'draft-to-master'}
-            elteresek={elteresek}
+            elteresek={utkozesek}
             master={master}
             draft={plan.paciens}
             onApplyToDraft={applyToDraft}
@@ -304,7 +368,7 @@ export default function TorzsadatSyncCard() {
             open={lepesPromptOpen}
             onOpenChange={(o) => !o && skipLepesPrompt()}
             irany="draft-to-master"
-            elteresek={elteresek}
+            elteresek={utkozesek}
             master={master}
             draft={plan.paciens}
             onApplyToMaster={writeMaster}

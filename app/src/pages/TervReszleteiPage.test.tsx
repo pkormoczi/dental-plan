@@ -238,6 +238,27 @@ describe('TervReszleteiPage', () => {
     expect(screen.queryByRole('button', { name: /Frissítés/ })).not.toBeInTheDocument();
   });
 
+  it('az adatlapon azóta KITÖLTÖTT (a pillanatképben üres) mező nem számít "azóta módosult"-nak', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const plan = makePlan({ paciensId: 'teszt-potlas' });
+    plan.paciens = { ...plan.paciens, email: '' };
+    const ref = await seeder.savePlan(plan, new Uint8Array([1]));
+    await seeder.savePatientData(ref.patientDir, {
+      schemaVersion: 1,
+      paciensId: 'teszt-potlas',
+      ...plan.paciens,
+      email: 'azota@example.hu',
+    });
+
+    const user = userEvent.setup();
+    renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
+    await user.click(await screen.findByRole('button', { name: 'Megjelenítés' }));
+
+    expect(screen.queryByText(/mező azóta módosult/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
   it('egyező törzsadatnál nincs eltérés-jelző badge és nincs diff-tábla', async () => {
     const seeder = new DemoStorage();
     await seeder.init();

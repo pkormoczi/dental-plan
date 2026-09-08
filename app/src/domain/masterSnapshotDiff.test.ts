@@ -6,6 +6,7 @@ import {
   diffAzonosito,
   masterSnapshotDiff,
   mezoErtekSzoveg,
+  potolhatoMezok,
   valodiUtkozesek,
 } from './masterSnapshotDiff';
 import type { Paciens } from './types';
@@ -134,6 +135,33 @@ describe('valodiUtkozesek', () => {
     const elteresek = masterSnapshotDiff(master, snapshot);
     expect(elteresek.map((e) => e.kulcs).sort()).toEqual(['email', 'telefon']);
     expect(valodiUtkozesek(elteresek, master, snapshot).map((e) => e.kulcs)).toEqual(['telefon']);
+  });
+});
+
+describe('potolhatoMezok', () => {
+  it('a `valodiUtkozesek` komplementere: az egyik oldalon üres mezőket adja', () => {
+    const master = makePaciens({ telefon: '+36 30 000 0000', email: '' });
+    const snapshot = makePaciens({ telefon: '+36 70 999 8888', email: 'uj@example.hu' });
+    const elteresek = masterSnapshotDiff(master, snapshot);
+    expect(potolhatoMezok(elteresek, master, snapshot).map((e) => e.kulcs)).toEqual(['email']);
+  });
+
+  it('mindkét irányt felismeri -- az adatlapon vagy a tervben üres mezőt is', () => {
+    const master = makePaciens({ telefon: '', email: 'master@example.hu' });
+    const snapshot = makePaciens({ telefon: '+36 70 999 8888', email: '' });
+    const elteresek = masterSnapshotDiff(master, snapshot);
+    expect(potolhatoMezok(elteresek, master, snapshot).map((e) => e.kulcs).sort()).toEqual([
+      'email',
+      'telefon',
+    ]);
+  });
+
+  it('a kiskoru sosem pótlás -- Igen/Nem értéke sosem üres', () => {
+    const master = makePaciens({ kiskoru: false });
+    const snapshot = makePaciens({ kiskoru: true });
+    const elteresek = masterSnapshotDiff(master, snapshot);
+    expect(potolhatoMezok(elteresek, master, snapshot)).toEqual([]);
+    expect(valodiUtkozesek(elteresek, master, snapshot).map((e) => e.kulcs)).toEqual(['kiskoru']);
   });
 });
 
