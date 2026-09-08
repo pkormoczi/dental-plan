@@ -63,6 +63,21 @@ button {
 }
 
 /*
+ * A rádió-család (`RadioGroup`, `RadioCards`) a fenti Checkbox-szabállyal azonos
+ * felépítésű, de az app addig nem írta felül: a Radix `--gray-a7`/`--gray-a5`-e
+ * 2:1 alatt marad a lap háttere ellen (docs/reviews/2026-09-06-manual-checks-all.md).
+ * Csak a nem bejelölt állapot kap keretet -- a bejelölt kitöltése, illetve a
+ * RadioCards `outline`-ja már hordozza a határt.
+ */
+.rt-BaseRadioRoot[data-state='unchecked']:not(:disabled)::before {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+.rt-RadioCardsItem:not([data-state='checked']):not(:disabled)::after {
+  box-shadow: inset 0 0 0 1px var(--control-border);
+}
+
+/*
  * K5 (docs/reviews/2026-08-10-browser-validation.md): a `controlBorder` sor
  * a "chip"-et és a "dropdown"-t is név szerint követeli, de a fenti K1
  * szabályok egyike sem éri el a SegmentedControl-t (`ChipGroup.tsx` ÉS a
