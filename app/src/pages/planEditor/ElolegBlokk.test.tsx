@@ -45,7 +45,7 @@ describe('az előleg-kapcsoló (abszolút összeg)', () => {
     // Alapból nincs előleg-blokk, csak a kapcsoló.
     expect(screen.queryByLabelText('Előleg összege')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
 
     const osszeg = await screen.findByLabelText('Előleg összege');
     expect(osszeg).toHaveValue('');
@@ -65,7 +65,7 @@ describe('az előleg-kapcsoló (abszolút összeg)', () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
     const osszeg = await screen.findByLabelText('Előleg összege');
     // 25 000 Ft végösszeg -> 12 500 Ft előleg, 12 500 Ft fennmaradó.
     await user.type(osszeg, '12500');
@@ -79,7 +79,7 @@ describe('az előleg-kapcsoló (abszolút összeg)', () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
     const osszeg = await screen.findByLabelText('Előleg összege');
     await user.type(osszeg, '0');
     await user.tab();
@@ -87,14 +87,14 @@ describe('az előleg-kapcsoló (abszolút összeg)', () => {
     await waitFor(() =>
       expect(screen.queryByLabelText('Előleg összege')).not.toBeInTheDocument(),
     );
-    expect(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ })).not.toBeChecked();
   });
 
   it('kötelező-mező hiba csak blur után jelenik meg, bekapcsoláskor még nem', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
     expect(screen.queryByText(/Add meg az előleg összegét/)).not.toBeInTheDocument();
 
     const osszeg = await screen.findByLabelText('Előleg összege');
@@ -108,7 +108,7 @@ describe('az előleg-kapcsoló (abszolút összeg)', () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
     const osszeg = await screen.findByLabelText('Előleg összege');
     // 25 000 Ft a fizetendő, 30 000 Ft-ot írunk be.
     await user.type(osszeg, '30000');
@@ -128,7 +128,7 @@ describe('az előleg-kapcsoló Ft/% módváltója', () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
     const osszeg = await screen.findByLabelText('Előleg összege');
     await user.type(osszeg, '10000');
     await user.tab();
@@ -153,7 +153,7 @@ describe('az előleg-kapcsoló Ft/% módváltója', () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
     await user.click(screen.getByRole('radio', { name: '%' }));
 
     const szazalek = await screen.findByLabelText('Előleg százaléka');
@@ -169,7 +169,7 @@ describe('az előleg-kapcsoló Ft/% módváltója', () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
     await user.click(screen.getByRole('radio', { name: '%' }));
 
     const szazalek = await screen.findByLabelText('Előleg százaléka');
@@ -179,7 +179,7 @@ describe('az előleg-kapcsoló Ft/% módváltója', () => {
     await waitFor(() =>
       expect(screen.queryByLabelText('Előleg százaléka')).not.toBeInTheDocument(),
     );
-    expect(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ })).not.toBeChecked();
   });
 
   it('a felkerekítés miatt a fizetendő fölé kerülő összeg a meglévő hard errort váltja ki', async () => {
@@ -189,7 +189,7 @@ describe('az előleg-kapcsoló Ft/% módváltója', () => {
     // fizetendővel indítani, ugyanazzal a felkerekítési hatással.
     renderBlokk(20001);
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
     await user.click(screen.getByRole('radio', { name: '%' }));
 
     const szazalek = await screen.findByLabelText('Előleg százaléka');
@@ -204,7 +204,7 @@ describe('az előleg-kapcsoló Ft/% módváltója', () => {
     const user = userEvent.setup();
     renderBlokk(0);
 
-    await user.click(screen.getByRole('checkbox', { name: /fogtechnikai munkát tartalmaz/ }));
+    await user.click(screen.getByRole('checkbox', { name: /Előleg feltüntetése a nyomtatványon/ }));
 
     expect(screen.queryByRole('radio', { name: '%' })).not.toBeInTheDocument();
     expect(

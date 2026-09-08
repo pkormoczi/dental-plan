@@ -103,7 +103,7 @@ export default function ElolegBlokk({ grand, currency, nyelv, elolegOsszeg, onCh
             kuld(null);
           }}
         />
-        Ez a terv fogtechnikai munkát tartalmaz — előleg feltüntetése
+        Előleg feltüntetése a nyomtatványon
       </Text>
 
       {on && (
