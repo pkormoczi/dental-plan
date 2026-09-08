@@ -1,7 +1,7 @@
 # fogterkep-hozzaadas-fazisvalasztas
 Type: feature
 Source: Réka feedback 2026-08
-Prio: later
+Prio: next
 Target: master
 Baseline: 58f063df9d423a56d92ec99aef0e9a7bb68f2ba3
 
