@@ -1,8 +1,9 @@
 # Szelet: `visual-css` — kontraszt, `controlBorder`, fókuszgyűrű
 
-Minden snippet ténylegesen lefutott és bizonyítottan működik (2026-08-10-i menet). A
-protokoll a `SKILL.md`-ben; a szabályok forrása az `app/src/CLAUDE.md` („Két felület,
-két szabály”, „Akadálymentesség”). Becsült idő: ~10 perc.
+Minden snippet ténylegesen lefutott és bizonyítottan működik (2026-08-10-i menet; a
+`control-border-contrast`/`control-no-border` ág 2026-09-08-án frissült és újra lefutott
+mind a 7 route-on). A protokoll a `SKILL.md`-ben; a szabályok forrása az `app/src/CLAUDE.md`
+(„Két felület, két szabály”, „Akadálymentesség”). Becsült idő: ~10 perc.
 
 Route-onként egy hívás, mind a 7 route-on (`#/`, `#/paciens`, `#/terv`, `#/elonezet`,
 `#/demo/tervek`, `#/arlista`, `#/beallitasok`), plusz egy nyitott
@@ -81,37 +82,74 @@ alfa-kompozitálás kell.
   const shadowBorderColor = (cs) => {
     const sh = cs.boxShadow;
     if (!sh || sh === 'none' || !sh.includes('inset')) return null; // csak inset szamit keretnek, a fokuszgyuru/emeles-arnyek nem
+    // csak a teljes korvonalu inset (offsetX=0, offsetY=0, spread>0) szamit keretnek --
+    // az egy-elu, spread nelkuli inset (pl. rt-TableCell sor-elvalaszto also vonala,
+    // "0px -1px 0px 0px inset") diszito, nem a kontroll hatarat jelzi
+    const nums = (sh.match(/-?\d+(\.\d+)?px/g) || []).map(parseFloat);
+    const [offsetX = 0, offsetY = 0, , spread = 0] = nums;
+    if (offsetX !== 0 || offsetY !== 0 || !spread) return null;
     const c = parseColor(sh);
     return c.a > 0 ? c : null;
   };
-  const ownBorder = (el) => {
-    const cs = getComputedStyle(el);
+  // a bejelölt RadioCards-swatch a Radix sajátjából `outline`-t kap
+  // (`--accent-indicator`), nem box-shadow-t -- a fókuszgyűrű ELLEN nem véd,
+  // de az csak a ténylegesen fókuszban álló egy elemet érintheti egy menetben
+  const outlineOf = (cs) => {
+    if (cs.outlineStyle === 'none' || parseFloat(cs.outlineWidth) === 0) return null;
+    const c = parseColor(cs.outlineColor);
+    return c.a > 0 ? c : null;
+  };
+  // a kereten/kitöltésen kívül a Radix hol a ::before-on (Checkbox, Radio),
+  // hol a ::after-en (RadioCards) rajzol -- mindkettőt nézni kell, elemenként
+  // AZ ELSŐ találat számít, hogy egy checked-Radio ::before-ján maradt
+  // halvány gray-a7 ne előzze meg a ténylegesen látszó kitöltést/keretet
+  const borderOf = (cs) => {
     const bc = parseColor(cs.borderTopColor), bw = parseFloat(cs.borderTopWidth);
     if (bw && bc.a > 0) return bc;
-    return shadowBorderColor(cs);
+    return shadowBorderColor(cs) || outlineOf(cs);
   };
-  const beforeBorder = (el) => {
-    const cs = getComputedStyle(el, '::before');
-    const bc = parseColor(cs.borderTopColor), bw = parseFloat(cs.borderTopWidth);
-    if (bw && bc.a > 0) return bc;
-    return shadowBorderColor(cs);
-  };
+  const findOwnBorder = (el) => borderOf(getComputedStyle(el)) || borderOf(getComputedStyle(el, '::before')) || borderOf(getComputedStyle(el, '::after'));
   const findBorder = (el) => {
-    const direct = ownBorder(el) || beforeBorder(el);
+    const direct = findOwnBorder(el);
     if (direct) return direct;
     let n = el.parentElement;
     for (let depth = 0; n && depth < 3; depth++, n = n.parentElement) {
       if (n.matches && n.matches(WRAPPER)) {
-        const found = ownBorder(n) || beforeBorder(n);
+        const found = findOwnBorder(n);
         if (found) return found;
       }
     }
     return null;
   };
+  const ownFillColor = (el) => {
+    // a bepipált checkbox/radio kitöltése a Radix ::before-ján, a RadioCards
+    // pipája a ::after-en ül, nem a sajátján -- ugyanaz a párosítás, mint a findBorder-nél
+    const own = parseColor(getComputedStyle(el).backgroundColor);
+    if (own.a > 0) return own;
+    const before = parseColor(getComputedStyle(el, '::before').backgroundColor);
+    if (before.a > 0) return before;
+    return parseColor(getComputedStyle(el, '::after').backgroundColor);
+  };
+  const isChecked = (el) =>
+    el.getAttribute('data-state') === 'checked' ||
+    el.getAttribute('data-state') === 'indeterminate' ||
+    el.getAttribute('aria-checked') === 'true';
   let noBorderCount = 0;
   const noBorderSample = [];
   for (const el of document.querySelectorAll(CTRL)) {
     if (el.classList.contains('rt-IconButton') || el.classList.contains('rt-variant-ghost')) continue; // app/src/CLAUDE.md controlBorder-kivételek (IconButton, ghost) -- tudatos, nem hiányzó keret
+    if (el.disabled || el.getAttribute('data-disabled') === 'true' || el.getAttribute('aria-disabled') === 'true') continue; // WCAG 1.4.11 letiltott kontrollra nem kötelező
+    if (isChecked(el)) {
+      // bejelölt radio/checkbox/switch: a Radix checked-szabálya csak a
+      // background-colort írja felül, a ::before-on maradó, nem-checked
+      // ágból örökölt gray-a7 box-shadow (pl. natív <input> hiányában a
+      // Radix :not(:checked) mindig igaz egy <button>-ön) VIZUÁLISAN
+      // eltűnik a kitöltés alatt -- a kitöltés a valódi jelzés, azt kell
+      // 3:1-hez mérni, nem az alatta maradt halvány keretet
+      const outsideBg = effectiveBg(el.parentElement || el);
+      const ownFill = ownFillColor(el);
+      if (ownFill.a > 0 && ratio(compositeOver(ownFill, outsideBg), outsideBg) >= 3) continue;
+    }
     const bc = findBorder(el);
     if (bc) {
       const bg = effectiveBg(el);
@@ -120,9 +158,9 @@ alfa-kompozitálás kell.
       if (r < 3) out.push({ rule: 'control-border-contrast', el: name(el), border: `rgba(${bc.r.toFixed(0)},${bc.g.toFixed(0)},${bc.b.toFixed(0)},${bc.a.toFixed(2)})`, ratio: +r.toFixed(2) });
       continue;
     }
-    // nincs keret sehol -- a solid Button és a bepipált checkbox itt a SAJÁT kitöltése kontrasztjával megy át
+    // nincs keret sehol -- a solid Button és a bepipált checkbox/radio itt a SAJÁT (vagy ::before) kitöltése kontrasztjával megy át
     const outsideBg = effectiveBg(el.parentElement || el);
-    const ownFill = parseColor(getComputedStyle(el).backgroundColor);
+    const ownFill = ownFillColor(el);
     const fillOk = ownFill.a > 0 && ratio(compositeOver(ownFill, outsideBg), outsideBg) >= 3;
     if (!fillOk) {
       noBorderCount++;
