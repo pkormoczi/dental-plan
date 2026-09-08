@@ -7,8 +7,9 @@
 - Egy fogtérkép-forrás: `design/toothChartSvg.ts` → DOM a szerkesztőben, canvas→PNG itt; `interactive:
   true` sosem a PDF-úton. jsdom alatt nincs canvas → a PNG `null`, a térkép kimarad.
   → symbol:app/src/design/toothChartSvg.ts#interactive; symbol:app/src/pdf/toothChartImage.ts#renderToothChartPng
-- Font: NotoSans regisztrálva (a Roboto a képernyőé); a Helvetica nem tud ő/ű — csak a kész PDF-en látszik.
-  → symbol:app/src/pdf/fonts.ts#registerPdfFonts; test:app/src/pdf/fonts.test.ts#SemiBold name table identifies itself as SemiBold, not Regular
+- Font: NotoSans; a Helvetica nem tud ő/ű, csak a kész PDF-en látszik. Sortörés `Text`-en
+  belül visszaejt rá: több sor = több `Text`.
+  → symbol:app/src/pdf/fonts.ts#registerPdfFonts; test:app/src/pdf/TervDocument.test.tsx#a nyomtatvány egyetlen szövege sem tartalmaz sortörést
 - Kedvezmény és sor-szintű eltérés SOHA nem a nyomtatványon.
   → test:app/src/pdf/TervDocument.test.tsx#a terv-szintű kedvezmény összege, aránya és a "kedvezmény" szó SOHA nem jelenik meg a nyomtatványon
 - Előleg > fizetendő → „—”, nem negatív. → symbol:app/src/domain/totals.ts#elolegOsszegek

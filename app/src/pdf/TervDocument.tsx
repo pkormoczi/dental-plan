@@ -248,11 +248,14 @@ export function TervDocument({
               </View>
             </>
           )}
+          {/* Két külön `Text`, NEM egy `\n`-nel tördelt: a react-pdf a
+              sortörést önálló, glyph nélküli szövegfutamként rendereli, ami a
+              pdfkit alapértelmezett fontjára (Helvetica) vált, és ezzel be is
+              ágyazza azt a PDF-be. → pdf/CLAUDE.md font-sora. */}
           <Text style={s.validityNote}>
             {L.ervenyessegMondat(formatLongDate(plan.ervenyesIg, plan.nyelv))}
-            {'\n'}
-            {L.anyagkoltseg}
           </Text>
+          <Text style={[s.validityNote, { marginTop: 0 }]}>{L.anyagkoltseg}</Text>
         </View>
 
         <Footer plan={plan} settings={settings} L={L} />

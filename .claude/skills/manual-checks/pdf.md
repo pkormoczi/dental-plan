@@ -56,6 +56,45 @@ async () => {
 }
 ```
 
+### Oldalankénti `/Resources /Font` — ez a riasztás kritériuma
+
+A puszta `hasHelvetica` substring KEVÉS: a `PDFFont.finalize()` korán kilép
+`dictionary == null` esetén, tehát egy sosem hivatkozott font ki sem íródik — ha a
+substring mégis megjelenik, az azt jelenti, hogy egy oldal `/Resources /Font` szótára
+ténylegesen hivatkozik rá, vagyis egy szövegfutam a pdfkit alapértelmezésére esett vissza.
+
+```js
+// ugyanabban az evaluate_script-ben, a `raw` fölött
+const objDict = {};
+for (const m of raw.matchAll(/(\d+)\s+0\s+obj\s*([\s\S]*?)\s*(?:stream\r?\n|endobj)/g)) objDict[m[1]] = m[2];
+const fontObj = {};
+for (const [id, d] of Object.entries(objDict)) {
+  if (!/\/Type\s*\/Font/.test(d)) continue;
+  const bf = /\/BaseFont\s*\/([^\s\/>\]]+)/.exec(d);
+  if (bf) fontObj[id] = bf[1];
+}
+const oldalak = [];
+for (const [id, d] of Object.entries(objDict)) {
+  if (!/\/Type\s*\/Page[^s]/.test(d)) continue;
+  const ind = /\/Resources\s+(\d+)\s+0\s+R/.exec(d);  // a Resources INDIREKT hivatkozás
+  const res = ind ? objDict[ind[1]] : d;
+  const fd = /\/Font\s*<<([\s\S]*?)>>/.exec(res);
+  oldalak.push({ oldal: id, fontok: fd ? [...fd[1].matchAll(/\/([\w+.-]+)\s+(\d+)\s+0\s+R/g)].map(r => fontObj[r[2]]) : [] });
+}
+return oldalak.filter(o => o.fontok.some(f => /Helvetica/.test(f)));  // VÁRT: üres tömb
+```
+
+**Várt érték:** üres tömb; `allBaseFonts` kizárólag a két NotoSans-subset
+(`XXXXXX+NotoSans-Regular`, `XXXXXX+NotoSans-SemiBold`), `hasHelvetica: false`.
+**Riasztás:** bármelyik oldal Helveticára hivatkozik. Ilyenkor a bűnös szövegfutam a
+content stream-ben kereshető: dekompresszáld az oldal `/Contents` stream-jét
+(`DecompressionStream('deflate')`, a hosszt a `/Length`-ből vedd), és keresd a
+glyph nélküli `BT … /F<n> … Tf … ET` blokkot. A 2026-09-08-i menetben ez egy `Text`-en
+BELÜLI sortörés volt (`{'\n'}` gyerek ÉS a stringbe írt `\n` egyaránt) — a react-pdf a
+sortörést önálló, glyph nélküli futamként rendereli, ami a pdfkit alapértelmezésére vált.
+Több sor = több `Text`; a vitest-oldali őr: `pdf/TervDocument.test.tsx` „egyetlen
+nyomtatvány-szövegcsomópont sem tartalmaz sortörést".
+
 **Fontos:** `@react-pdf/renderer` (pdfkit) klasszikus, tömörítetlen xref-táblát és
 objektum-szótárakat ír (csak content stream-ek és font fájlok Flate-tömörítettek) —
 ezért a nyers regex-vizsgálat megbízható. Ha egy jövőbeli verzió object stream-eket

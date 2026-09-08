@@ -115,6 +115,24 @@ function renderDoc(savos: boolean, nyelv: Nyelv = 'hu', arak: Arak = AZONOS_AR) 
   );
 }
 
+describe('TervDocument -- font-visszaesés őre', () => {
+  // A react-pdf a `Text`-en belüli sortörést önálló, glyph nélküli
+  // szövegfutamként rendereli, ami a pdfkit alapértelmezett fontjára
+  // (Helvetica) vált, és ezzel be is ágyazza azt a PDF-be -- a Helvetica
+  // viszont nem tud ő/ű. A valódi PDF-bájtokat a `/manual-checks pdf` szelet
+  // méri; a vitest-réteg ennyit lát belőle: a nyomtatvány egyetlen
+  // szövegcsomópontja se tartalmazzon sortörést. Több sor = több `Text`.
+  it('a nyomtatvány egyetlen szövege sem tartalmaz sortörést', () => {
+    const { container } = renderDoc(false);
+
+    const sortoroSzovegek = [...container.querySelectorAll('span')]
+      .map((el) => el.textContent ?? '')
+      .filter((szoveg) => szoveg.includes('\n'));
+
+    expect(sortoroSzovegek).toEqual([]);
+  });
+});
+
 describe('TervDocument -- backlog-4: kézzel bekapcsolt "becsült ár" csillag a nyomtatványon', () => {
   it('bekapcsolt csillag: "*" az Egységár mellett (nem a névnél), lábjegyzet a táblázat alatt', () => {
     renderDoc(true);
