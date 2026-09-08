@@ -89,14 +89,21 @@ térképén is.
   const cs = getComputedStyle(toolbar);
   return {
     beforeFocusDisplay: kurzor && getComputedStyle(kurzor).display, // 'none' fókusz előtt
-    wrapperOutlineWidth: cs.outlineWidth,   // '0px' fókusz előtt
+    // a gyűrű LÁTHATÓSÁGÁRÓL az `outline-style` dönt: a böngésző az
+    // `outline-width` computed értékét `outline-style: none` mellett is
+    // megtartja (mért példa: `none` / `3px` fókusz előtt), tehát a szélesség
+    // önmagában hamis találatot ad -- ugyanez a kritérium a `visual-css.md`
+    // `outlineOf()`-jában
+    wrapperOutlineStyle: cs.outlineStyle,   // 'none' fókusz előtt
+    wrapperOutlineWidth: cs.outlineWidth,   // kísérő adat, önmagában nem dönt
   };
 }
 ```
 
-Tab a fogtérképre, majd ugyanez a lekérdezés: `wrapperOutlineWidth` `2px`-re vált, a
-kurzor `display`-je `inline`-ra; egérrel egy fogra kattintva a kurzor visszavált
-`none`-ra (a wrapper `:focus-visible`, nem `:focus`).
+Tab a fogtérképre, majd ugyanez a lekérdezés: `wrapperOutlineStyle` `none`-ról `solid`-ra
+vált (a `wrapperOutlineWidth` csak kísérő adat, konkrét px-értéket ne várj — a tokennel
+együtt mozdulhat), a kurzor `display`-je `inline`-ra; egérrel egy fogra kattintva a kurzor
+visszavált `none`-ra (a wrapper `:focus-visible`, nem `:focus`).
 
 **Vonalvastagság mindkét megjelenített szélességen** (a `vector-effect:
 non-scaling-stroke` miatt a mért CSS-pixel értéknek a 340 px-es popoverben és a
