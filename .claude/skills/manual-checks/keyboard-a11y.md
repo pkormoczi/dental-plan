@@ -6,26 +6,36 @@ protokoll a `SKILL.md`-ben; a szabályok forrása az `app/src/CLAUDE.md` („Ami
 
 ## A kritikus ciklus
 
-`app/src/CLAUDE.md` Amit soha: a tételfelvitel ciklusát eltörni (gépel → ↑↓ → Enter →
-kereső ürül, fókusz marad) — ez az Excel elleni fő előny. 3× egymás után, egér nélkül:
-`type_text` → `wait_for` (tömb!) → `press_key ArrowDown` → `press_key Enter` →
-ellenőrzés:
+`app/src/CLAUDE.md` Amit soha: a tételfelvitel ciklusát eltörni — ez az Excel elleni fő
+előny. A ciklusnak KÖZTES megállója van: a felvett sor `Fog` mezője, ahonnan egy `Enter`
+visz vissza a kiürült keresőbe. 3× egymás után, egér nélkül: `type_text` → `wait_for`
+(tömb!) → `press_key ArrowDown` → `press_key Enter` → **1. ellenőrzés** → `press_key
+Enter` → **2. ellenőrzés**:
 
 ```js
 () => {
-  const search = document.activeElement;
+  const el = document.activeElement;
+  const ph = el.getAttribute('placeholder') || '';
   return {
-    value: search.value,
-    isSearch: (search.getAttribute('placeholder') || '').includes('Tétel'),
+    value: el.value,
+    // a ciklus két megállója a placeholderéről azonosítható: a fázis alatti
+    // kereső "Tétel keresése…", a soron belüli Fog mező "pl. 16, 17, 26"
+    hol: ph.includes('Tétel') ? 'kereső' : ph.includes('pl. 16') ? 'Fog' : ph,
     popoverOpen: !!document.querySelector('[data-radix-popper-content-wrapper]'),
   };
 }
 ```
 
-Várt minden körben: `value === ''`, `isSearch === true`, `popoverOpen === false`.
+Várt minden körben: az 1. ellenőrzésnél `hol === 'Fog'`, a 2.-nál `hol === 'kereső'`,
+`value === ''`, `popoverOpen === false`. Az `isSearch === true` NEM elvárás minden
+körben — a Fog-megállón `hol === 'Fog'` a helyes.
+
+**Fogszámot nem kívánó tétel** (`fogszamNemKell`, a seedben pl. „CBCT"): egyetlen `Enter`
+után rögtön `hol === 'kereső'` — itt nincs Fog-megálló, ez nem hiba.
 
 **Egyedi sor** (nulla találat → Enter): ugyanaz a ciklus egy nem létező tétel nevével;
-ellenőrizd, hogy létrejött-e egy `egyedi` jelöléssel ellátott sor a beírt névvel.
+ellenőrizd, hogy létrejött-e egy `egyedi` jelöléssel ellátott sor a beírt névvel — az
+egyedi sor is megáll a Fog mezőn.
 
 **Escape:** kereső megnyitva (van szöveg + popover), `press_key Escape`, utána
 `value === ''`, a popover zárva, a fókusz a keresőn marad.

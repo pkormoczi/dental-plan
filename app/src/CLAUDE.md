@@ -16,8 +16,8 @@ Egy fogorvos órákig használt belső eszköze: sűrű, billentyűzet-központ�
 
 ## Amit soha
 - Adattáblából carousel/kártyarács/scroll-snap; animáció visszajelzés nélkül; generált kép.
-- A tételfelvitel ciklusát eltörni (gépel → ↑↓ → Enter → kereső ürül, fókusz marad) — ez az Excel
-  elleni fő előny. → symbol:app/src/pages/planEditor/ItemPicker.tsx#onPickEgyedi
+- Tételfelvitel-ciklust eltörni (gépel → ↑↓ → Enter → Fog → Enter → kereső, `fogszamNemKell` Fog
+  nélkül) — Excel-előny. → symbol:app/src/pages/planEditor/ItemPicker.tsx#fokuszAtadva
 - Kérdés nélkül nyúlni: nyomtatvány-elrendezés, sémák/`schemaVersion`, mappastruktúra, tétel-`id`-k.
 
 ## Akadálymentesség (nem opcionális)

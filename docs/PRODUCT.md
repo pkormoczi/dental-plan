@@ -18,8 +18,8 @@ készítésére — nem termék, nincs több rendelő, nincs bejelentkezés. Az 
 ## Napi flow
 
 1. Páciens kiválasztása vagy létrehozása (törzsadat), majd a terv adatai (nyelv, pénznem, orvos, dátumok).
-2. Tételfelvitel billentyűzettel: gépel → `↑`/`↓` → `Enter` hozzáad → a kereső kiürül és visszakapja a
-   fókuszt → gépel tovább. Ez a ciklus dönti el, hogy gyorsabb-e az Excelnél; egér nélkül kell működnie.
+2. Tételfelvitel billentyűzettel, egér nélkül: gépel → `↑`/`↓` → `Enter` → fókusz a sor `Fog` mezőjén
+   → `Enter` → kiürült kereső (fogszámot nem kívánó tételnél a fókusz ott marad). Ez dönti el, hogy gyorsabb-e az Excelnél.
 3. Előnézet + véglegesítési checklist → PDF letöltés/mentés új verzióként.
 4. Korábbi terv új verzióra nyitása: a keltezés/érvényesség a betöltés pillanatában frissül, a többi
    mező pillanatkép.
