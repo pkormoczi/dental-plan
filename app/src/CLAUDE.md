@@ -9,8 +9,8 @@ Egy fogorvos órákig használt belső eszköze: sűrű, billentyűzet-központ�
   slate. → symbol:app/src/design/tokens.ts#toothInactive
 - App: a doki látja — hideg slate, a márka csak akcentus; a háttér SOHA nem meleg krém/bézs.
 - `accent` soha nem szövegszín (2,82:1). → symbol:app/src/design/tokens.ts#accent
-- `controlBorder` minden interaktív kontroll kerete (3:1), nem `uiLine`; kivétel: `solid` Button,
-  `IconButton`, `ghost` Button. → symbol:app/src/design/tokens.ts#controlBorder
+- `controlBorder` minden interaktív kontroll kerete (3:1), nem `uiLine`; kivétel: `solid`/`ghost`
+  Button, `IconButton`, inaktív `Tabs.Trigger`. → symbol:app/src/design/tokens.ts#controlBorder
 - Radix Themes az egyetlen UI-lib; ikon csak `@radix-ui/react-icons`, kézi SVG nem. Kivétel a „Becsült
   ár” `≈` szövegglyph (a csillag a „gyakori” csillaggal keverhető).
 

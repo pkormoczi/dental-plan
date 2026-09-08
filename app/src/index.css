@@ -49,6 +49,12 @@ button {
  * `PlanHistoryPage.tsx` "N terv", `PlanEditorPage.tsx` "Leírás"), ahol a
  * kötelező hajszálvonal ugyanúgy feketés dobozkeretnek hat, mint a
  * Kivétel 2-nél az IconButtonon.
+ * Kivétel 4: az INAKTÍV `Tabs.Trigger`. Szerkezetileg a Kivétel 3 esete
+ * (nincs saját kitöltése, szövegszintű kapcsoló), az ÁLLAPOT jelzése pedig
+ * már ma 3:1 fölött van: az aktív fül `::before` aláhúzása
+ * `--accent-indicator` (3,2:1 a lapháttéren). Per-fül keret esetén az
+ * inaktív fülek látszanának erősebbnek az aktívnál -- a kiemelés
+ * megfordulna, a fülcsík gombsorrá változna. Szabály ezért nem tartozik alá.
  */
 .rt-BaseButton:where(.rt-variant-soft):not(.rt-IconButton):not([data-disabled]) {
   box-shadow: inset 0 0 0 1px var(--control-border);

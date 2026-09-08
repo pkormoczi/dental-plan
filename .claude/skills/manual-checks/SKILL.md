@@ -63,7 +63,7 @@ visszaállítása lent.
 | Szelet | Fájl | Mit fed | Becsült idő* |
 |---|---|---|---|
 | `pdf` | `pdf.md` | NotoSans letöltés/beágyazás valós PDF-bájtokon, ő/ű glyphek, placeholder-zár oldalszámmal, fogtérkép A/B (`imageXObjects`), letöltés-instrumentálás | ~15 perc |
-| `visual-css` | `visual-css.md` | accent-mint-szövegszín, szövegkontraszt, `controlBorder` + a 3 nevesített kivétel, fókuszgyűrű, route-onként | ~10 perc |
+| `visual-css` | `visual-css.md` | accent-mint-szövegszín, szövegkontraszt, `controlBorder` + a 4 nevesített kivétel, fókuszgyűrű, route-onként | ~10 perc |
 | `keyboard-a11y` | `keyboard-a11y.md` | tételfelvitel-ciklus ×3 egér nélkül, egyedi sor, Escape, fogtérkép egy Tab-stop, `paint-order`/fókusz-kurzor, popover-geometria | ~10 perc |
 
 \* A 2026-08-10-i teljes menet alapján becsülve; minden jelentés végén rögzítsd a

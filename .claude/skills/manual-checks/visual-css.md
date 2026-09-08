@@ -138,6 +138,10 @@ alfa-kompozitálás kell.
   const noBorderSample = [];
   for (const el of document.querySelectorAll(CTRL)) {
     if (el.classList.contains('rt-IconButton') || el.classList.contains('rt-variant-ghost')) continue; // app/src/CLAUDE.md controlBorder-kivételek (IconButton, ghost) -- tudatos, nem hiányzó keret
+    // 4. kivétel: csak az INAKTÍV fül. Az aktív fül szándékosan BENT marad a
+    // mérésben -- a saját `::before` aláhúzásán (`--accent-indicator`) megy át,
+    // és épp ez a kivétel indoka; ha az aláhúzás egyszer eltűnik, szólnia kell.
+    if (el.classList.contains('rt-BaseTabListTrigger') && el.getAttribute('data-state') === 'inactive') continue;
     if (el.disabled || el.getAttribute('data-disabled') === 'true' || el.getAttribute('aria-disabled') === 'true') continue; // WCAG 1.4.11 letiltott kontrollra nem kötelező
     if (isChecked(el)) {
       // bejelölt radio/checkbox/switch: a Radix checked-szabálya csak a
@@ -172,8 +176,9 @@ alfa-kompozitálás kell.
 }
 ```
 
-Kivétel-osztály (`rt-IconButton`, `rt-variant-ghost`) marad kettő — nevesített WCAG 1.4.11
-kivétel, nincs se keretük, se kitöltésük. A `solid` Button és a bepipált checkbox nem
+Kivétel-osztály (`rt-IconButton`, `rt-variant-ghost`, valamint az inaktív
+`rt-BaseTabListTrigger`) marad három — nevesített WCAG 1.4.11 kivétel, nincs se keretük, se
+kitöltésük. A `solid` Button és a bepipált checkbox nem
 osztály-kihagyással megy át, hanem a fenti fallback méri a saját kitöltésük kontrasztját;
 ha ez mégis `control-no-border`-ként jelenik meg, az valódi hiányt jelez, nem a mérés hibáját.
 
