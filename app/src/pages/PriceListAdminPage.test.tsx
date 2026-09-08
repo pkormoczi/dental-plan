@@ -281,6 +281,15 @@ describe('PriceListAdminPage', () => {
     expect(screen.queryByLabelText('Megnevezés (magyar)')).not.toBeInTheDocument();
   });
 
+  // A sor-hover és a fókuszgyűrű `index.css`-ben él (`.arlista-tabla`), jsdom
+  // alatt nincs Radix CSS -- a varrat, amit itt őrizni lehet, az osztálynév.
+  it('a tétel-tábla viseli a sor-kiemelés osztálynevét', async () => {
+    renderAdmin();
+
+    const nameCell = await screen.findByText('CBCT');
+    expect(nameCell.closest('.arlista-tabla')).not.toBeNull();
+  });
+
   it('the "Nincs EUR ár" filter still shows everything before any EUR price is filled in', async () => {
     const user = userEvent.setup();
     renderAdmin();
@@ -1084,6 +1093,22 @@ describe('PriceListAdminPage', () => {
       await user.keyboard('{Enter}');
       expect(nameCell).toHaveAttribute('aria-expanded', 'true');
       expect(within(catPanel()).getByDisplayValue(first.nev.hu)).toBeInTheDocument();
+
+      await user.keyboard(' ');
+      expect(nameCell).toHaveAttribute('aria-expanded', 'false');
+      expect(within(catPanel()).queryByDisplayValue(first.nev.hu)).not.toBeInTheDocument();
+    });
+
+    // A sor-hover és a fókuszgyűrű `index.css`-ben él (`.arlista-tabla`), jsdom
+    // alatt nincs Radix CSS -- a varrat, amit itt őrizni lehet, az osztálynév.
+    it('a kategória-tábla viseli a sor-kiemelés osztálynevét', async () => {
+      const user = userEvent.setup();
+      renderAdmin();
+      await openCatPanel(user);
+
+      const first = readPriceList().kategoriak.slice().sort((a, b) => a.sorrend - b.sorrend)[0];
+      const nameCell = within(catPanel()).getByText(first.nev.hu);
+      expect(nameCell.closest('.arlista-tabla')).not.toBeNull();
     });
 
     it('az új kategória a tétel-szerkesztő Kategória legördülőjében is megjelenik', async () => {

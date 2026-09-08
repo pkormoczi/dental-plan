@@ -142,6 +142,10 @@ alfa-kompozitálás kell.
     // mérésben -- a saját `::before` aláhúzásán (`--accent-indicator`) megy át,
     // és épp ez a kivétel indoka; ha az aláhúzás egyszer eltűnik, szólnia kell.
     if (el.classList.contains('rt-BaseTabListTrigger') && el.getAttribute('data-state') === 'inactive') continue;
+    // A `#/arlista` kattintható sornevei (`RowHeaderCell role="button"`, ~118 cella):
+    // állandó cellakeret helyett sor-hover + `:focus-visible` gyűrű jelzi őket
+    // (`index.css` `.arlista-tabla`) -- elrendezési döntés, nem hiányzó keret.
+    if (el.tagName === 'TH' && el.closest('.arlista-tabla')) continue;
     if (el.disabled || el.getAttribute('data-disabled') === 'true' || el.getAttribute('aria-disabled') === 'true') continue; // WCAG 1.4.11 letiltott kontrollra nem kötelező
     if (isChecked(el)) {
       // bejelölt radio/checkbox/switch: a Radix checked-szabálya csak a
@@ -181,6 +185,10 @@ Kivétel-osztály (`rt-IconButton`, `rt-variant-ghost`, valamint az inaktív
 kitöltésük. A `solid` Button és a bepipált checkbox nem
 osztály-kihagyással megy át, hanem a fenti fallback méri a saját kitöltésük kontrasztját;
 ha ez mégis `control-no-border`-ként jelenik meg, az valódi hiányt jelez, nem a mérés hibáját.
+
+A `#/arlista` `.arlista-tabla` sorfejléc-cellái külön, nem osztály-alapú kihagyás: ott a
+kattinthatóságot elrendezési döntésből sor-hover és `:focus-visible` gyűrű jelzi, nem ~118
+állandó cellakeret.
 
 ## Fókuszgyűrű
 

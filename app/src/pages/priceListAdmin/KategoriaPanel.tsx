@@ -178,7 +178,7 @@ function KategoriaPanelBody({
 
   return (
     <Box id="kategoriak-panel" mt="3">
-      <Table.Root size="1" mb="2">
+      <Table.Root size="1" mb="2" className="arlista-tabla">
         <Table.Header>
           <Table.Row>
             <Table.ColumnHeaderCell width="24px" />

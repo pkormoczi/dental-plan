@@ -197,6 +197,28 @@ button {
 }
 
 /*
+ * Árlista (PriceListAdminPage.tsx tétel-táblája, priceListAdmin/KategoriaPanel.tsx
+ * kategória-táblája): a sornév kattintható (`RowHeaderCell role="button"`), de ezt
+ * ma csak a kurzor árulja el. Állandó cellakeretet szándékosan NEM kap a
+ * `controlBorder`-szabály szerint: ~118 keretes cella sűrű rácsot rajzolna a
+ * táblába. Helyette hover/fókusz alatt kiemelt sor -- ugyanaz a `.paciens-lista`
+ * minta és ugyanaz az `--accent-wash` token, a `--table-row-background-color`-on
+ * át, mert a Radix a hátteret cellánként rajzolja.
+ * A fókuszgyűrű `outline` (nem `box-shadow`: az a cella saját sor-elválasztóját
+ * írná felül), és nem tol layoutot. Negatív `outline-offset`, hogy a gyűrű a
+ * cellán belül maradjon, ne lógjon a szomszéd sorba.
+ */
+.arlista-tabla tbody tr:hover,
+.arlista-tabla tbody tr:focus-within {
+  --table-row-background-color: var(--accent-wash);
+}
+
+.arlista-tabla tbody th[role='button']:focus-visible {
+  outline: 2px solid var(--control-border);
+  outline-offset: -2px;
+}
+
+/*
  * Terv részletei (TervReszleteiPage.tsx) fázis-táblázatai -- a
  * `Table.Root` a <table>-t egy saját ScrollAreába csomagolja. A ScrollArea
  * gyökerén az `overflow: hidden` sima CSS-osztályból jön (felülírható), DE

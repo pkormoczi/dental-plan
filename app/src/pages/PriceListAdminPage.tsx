@@ -477,7 +477,7 @@ export default function PriceListAdminPage() {
           </Callout.Text>
         </Callout.Root>
       ) : (
-        <Table.Root size="1" mb="4">
+        <Table.Root size="1" mb="4" className="arlista-tabla">
           <Table.Header>
             <Table.Row>
               <Table.ColumnHeaderCell width="32px" />
