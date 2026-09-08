@@ -164,6 +164,18 @@ export default function LineRow({
   const arlistaLeirasSzoveg = tetel ? arlistaiLeiras(tetel, nyelv) : '';
   const leirasEltero = tetel != null && arlistaLeirasSzoveg !== '' && !leirasKoveti(line, tetel, nyelv);
 
+  // A jelvénysáv csak akkor renderelődik, ha van benne mit mutatni -- a
+  // névmező szélessége így soronként azonos, de a jelvény nélküli sorok (a
+  // többség) nem magasodnak meg. A felsorolás a sáv tartalmát tükrözi, ezért
+  // vele együtt bővül.
+  const vanJelveny =
+    egyedi ||
+    fallback === 'nincsForditas' ||
+    (nevEltero && tetel != null) ||
+    nevNyelvMismatch ||
+    elteres != null ||
+    orokoltKeziAru(line);
+
   return (
     <>
     <Table.Row>
@@ -188,101 +200,119 @@ export default function LineRow({
             }}
           />
         ) : (
-          <Flex align="center" gap="1" wrap="wrap">
-            <Box flexGrow="1" style={{ minWidth: 160 }}>
-              <TextField.Root
-                id={nevId(pi, li)}
-                value={line.nevSnapshot}
-                onChange={(e) => onPatch({ nevSnapshot: e.target.value })}
-                aria-label="Beavatkozás megnevezése"
-                aria-invalid={!line.nevSnapshot.trim() || undefined}
-                // Radix a TextField keretét box-shadow-val rajzolja, nem
-                // border-rel (lásd index.css) -- `borderColor` itt nem
-                // hatna semmit, a hibaállapotot ezért box-shadow-val kell
-                // felülírni. Alapállapotban a globális CSS-szabály elég.
-                style={
-                  line.nevSnapshot.trim() ? undefined : { boxShadow: `inset 0 0 0 1px ${t.danger}` }
-                }
-              />
-            </Box>
-            {egyedi && (
-              <Badge color="gray" variant="soft" size="1">
-                egyedi
-              </Badge>
-            )}
-            {fallback === 'nincsForditas' && <HuChip />}
-            {nevEltero && tetel && (
-              <>
-                <Badge color="amber" variant="soft" size="1">
-                  átírt
-                </Badge>
-                <IconButton
-                  type="button"
-                  variant="ghost"
-                  color="gray"
-                  size="1"
-                  aria-label="Név visszaállítása az árlistaira"
-                  title="Név visszaállítása az árlistaira"
-                  onClick={() =>
-                    // backlog-65, 7. döntés: a reset a nyelvi
-                    // review-metaadatot is törli -- egy default-following
-                    // szövegnek nincs értelme review-státuszt hordoznia.
-                    onPatch({ nevSnapshot: resolveNev(tetel.nev, nyelv).szoveg, nevNyelv: null })
+          // Két sáv: felül a névmező + "+ leírás" (nem tördelő, hogy a
+          // névmező szélessége soronként azonos legyen), alatta -- csak ha van
+          // mit mutatni -- a jelvények. Egy sávban a jelvények a mező
+          // szélességéből vettek el, és a gomb a mező alá tördelődött.
+          <Box>
+            <Flex align="center" gap="1" wrap="nowrap">
+              <Box flexGrow="1" style={{ minWidth: 0 }}>
+                <TextField.Root
+                  id={nevId(pi, li)}
+                  value={line.nevSnapshot}
+                  onChange={(e) => onPatch({ nevSnapshot: e.target.value })}
+                  aria-label="Beavatkozás megnevezése"
+                  aria-invalid={!line.nevSnapshot.trim() || undefined}
+                  // A mező szűkebb lehet a névnél -- a teljes szöveg így
+                  // egérrel is előhívható, görgetés nélkül.
+                  title={line.nevSnapshot}
+                  // Radix a TextField keretét box-shadow-val rajzolja, nem
+                  // border-rel (lásd index.css) -- `borderColor` itt nem
+                  // hatna semmit, a hibaállapotot ezért box-shadow-val kell
+                  // felülírni. Alapállapotban a globális CSS-szabály elég.
+                  style={
+                    line.nevSnapshot.trim() ? undefined : { boxShadow: `inset 0 0 0 1px ${t.danger}` }
                   }
-                >
-                  <ResetIcon />
-                </IconButton>
-              </>
+                />
+              </Box>
+              <Button
+                type="button"
+                size="1"
+                variant="ghost"
+                // A leírás-mismatch (backlog-65) is korai amber jelzést kap a
+                // triggeren, mint a `hianyzoCsomagLeiras` -- a badge maga csak
+                // nyitott sávban látszik, összecsukva enélkül néma maradna.
+                color={hianyzoCsomagLeiras || leirasNyelvMismatch ? 'amber' : 'gray'}
+                aria-expanded={leirasNyitva}
+                title={
+                  hianyzoCsomagLeiras
+                    ? 'Csomagtétel — hiányzik a leírás'
+                    : leirasNyelvMismatch
+                      ? 'A leírás nyelve ellenőrzésre vár'
+                      : 'Leírás (mi van benne?)'
+                }
+                onClick={() => setLeirasNyitva((v) => !v)}
+                style={{ flexShrink: 0 }}
+              >
+                {leirasTartalom ? 'Leírás' : '+ leírás'}
+              </Button>
+            </Flex>
+            {vanJelveny && (
+              <Flex align="center" gap="1" wrap="wrap" mt="1">
+                {egyedi && (
+                  <Badge color="gray" variant="soft" size="1">
+                    egyedi
+                  </Badge>
+                )}
+                {fallback === 'nincsForditas' && <HuChip />}
+                {nevEltero && tetel && (
+                  <>
+                    <Badge color="amber" variant="soft" size="1">
+                      átírt
+                    </Badge>
+                    <IconButton
+                      type="button"
+                      variant="ghost"
+                      color="gray"
+                      size="1"
+                      aria-label="Név visszaállítása az árlistaira"
+                      title="Név visszaállítása az árlistaira"
+                      onClick={() =>
+                        // backlog-65, 7. döntés: a reset a nyelvi
+                        // review-metaadatot is törli -- egy default-following
+                        // szövegnek nincs értelme review-státuszt hordoznia.
+                        onPatch({ nevSnapshot: resolveNev(tetel.nev, nyelv).szoveg, nevNyelv: null })
+                      }
+                    >
+                      <ResetIcon />
+                    </IconButton>
+                  </>
+                )}
+                {nevNyelvMismatch && (
+                  <>
+                    <Badge color="amber" variant="soft" size="1">
+                      {line.nevNyelv?.authoredInLanguage === 'de' ? 'DE szöveg' : 'HU szöveg'}
+                    </Badge>
+                    <IconButton
+                      type="button"
+                      variant="ghost"
+                      color="gray"
+                      size="1"
+                      aria-label="Nyelv ellenőrizve"
+                      title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
+                      onClick={() => onPatch({ nevNyelv: reviewElfogadva(line.nevNyelv, nyelv) })}
+                    >
+                      <CheckIcon />
+                    </IconButton>
+                  </>
+                )}
+                {elteres && (
+                  <Badge
+                    color={elteres.tipus === 'kedvezmeny' ? 'green' : 'amber'}
+                    variant="soft"
+                    size="1"
+                  >
+                    {elteres.cimke}
+                  </Badge>
+                )}
+                {orokoltKeziAru(line) && (
+                  <Badge color="gray" variant="soft" size="1">
+                    örökölt ár
+                  </Badge>
+                )}
+              </Flex>
             )}
-            {nevNyelvMismatch && (
-              <>
-                <Badge color="amber" variant="soft" size="1">
-                  {line.nevNyelv?.authoredInLanguage === 'de' ? 'DE szöveg' : 'HU szöveg'}
-                </Badge>
-                <IconButton
-                  type="button"
-                  variant="ghost"
-                  color="gray"
-                  size="1"
-                  aria-label="Nyelv ellenőrizve"
-                  title="Nyelv ellenőrizve — a szöveg megfelel ezen a nyelven"
-                  onClick={() => onPatch({ nevNyelv: reviewElfogadva(line.nevNyelv, nyelv) })}
-                >
-                  <CheckIcon />
-                </IconButton>
-              </>
-            )}
-            {elteres && (
-              <Badge color={elteres.tipus === 'kedvezmeny' ? 'green' : 'amber'} variant="soft" size="1">
-                {elteres.cimke}
-              </Badge>
-            )}
-            {orokoltKeziAru(line) && (
-              <Badge color="gray" variant="soft" size="1">
-                örökölt ár
-              </Badge>
-            )}
-            <Button
-              type="button"
-              size="1"
-              variant="ghost"
-              // A leírás-mismatch (backlog-65) is korai amber jelzést kap a
-              // triggeren, mint a `hianyzoCsomagLeiras` -- a badge maga csak
-              // nyitott sávban látszik, összecsukva enélkül néma maradna.
-              color={hianyzoCsomagLeiras || leirasNyelvMismatch ? 'amber' : 'gray'}
-              aria-expanded={leirasNyitva}
-              title={
-                hianyzoCsomagLeiras
-                  ? 'Csomagtétel — hiányzik a leírás'
-                  : leirasNyelvMismatch
-                    ? 'A leírás nyelve ellenőrzésre vár'
-                    : 'Leírás (mi van benne?)'
-              }
-              onClick={() => setLeirasNyitva((v) => !v)}
-            >
-              {leirasTartalom ? 'Leírás' : '+ leírás'}
-            </Button>
-          </Flex>
+          </Box>
         )}
       </Table.Cell>
 

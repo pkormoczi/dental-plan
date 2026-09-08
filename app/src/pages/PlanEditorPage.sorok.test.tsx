@@ -1084,3 +1084,67 @@ describe('PlanEditorPage -- 108. tétel: élő Összeg oszlop gépelés közben'
     expect(screen.getByText('Mindösszesen').parentElement).toHaveTextContent('12 000 Ft');
   });
 });
+
+describe('PlanEditorPage -- a Beavatkozás-cella két sávja', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('jelvény nélküli soron nincs jelvénysáv, a névmező és a "+ leírás" egy sávban áll', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const nevMezo = screen.getByLabelText('Beavatkozás megnevezése');
+    const leirasGomb = screen.getByRole('button', { name: '+ leírás' });
+    // Egy sávban: a gomb sávja tartalmazza a névmezőt is, tehát a gomb sosem
+    // tördelődik a mező alá.
+    expect(leirasGomb.parentElement?.contains(nevMezo)).toBe(true);
+
+    // Árlistai, magyar, listaáron álló sor: egyetlen jelvény sem indokolt.
+    expect(screen.queryByText('egyedi')).not.toBeInTheDocument();
+    expect(screen.queryByText('átírt')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^[−+]\d+%$/)).not.toBeInTheDocument();
+  });
+
+  it('jelvényes soron a jelvények KÜLÖN sávba kerülnek, a névmező és a "+ leírás" sávján kívülre', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // Ajánlati ár levitele -> "−20%" kedvezmény-jelvény kerül a sorra.
+    const arMezo = screen.getByDisplayValue('25000');
+    await user.clear(arMezo);
+    await user.type(arMezo, '20000');
+    await user.tab();
+
+    const jelveny = await screen.findByText(/20%$/);
+    const nevMezo = screen.getByLabelText('Beavatkozás megnevezése');
+    const leirasGomb = screen.getByRole('button', { name: '+ leírás' });
+    // A jelvény a névmező/gomb sávján KÍVÜL van -- nem a mező szélességéből vesz el.
+    expect(leirasGomb.parentElement?.contains(nevMezo)).toBe(true);
+    expect(leirasGomb.parentElement?.contains(jelveny)).toBe(false);
+  });
+
+  it('a sor névmezője a teljes nevet a title-jében hordozza', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'bolcsessegfog');
+    const talalat = await screen.findByText(/Bölcsességfog/);
+    const teljesNev = talalat.textContent ?? '';
+    await user.click(talalat);
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(screen.getByLabelText('Beavatkozás megnevezése')).toHaveAttribute('title', teljesNev);
+  });
+});

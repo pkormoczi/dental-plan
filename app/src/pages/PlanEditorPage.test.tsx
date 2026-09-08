@@ -404,18 +404,19 @@ describe('PlanEditorPage -- fázisnév után a tételkeresőbe visz a Tab és az
     expect(document.getElementById('nev-0-1')).not.toHaveFocus();
   });
 
-  it('összecsukott fázisnál marad a natív Tab -- a kereső nincs a DOM-ban', async () => {
+  it('összecsukott fázisfejlécben a név statikus szöveg, nem beviteli mező -- kinyitás után újra szerkeszthető', async () => {
     const user = userEvent.setup();
     renderEditor();
     await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
+
+    expect(screen.getByDisplayValue('1. fázis')).toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: 'Összecsukás' }));
+    expect(screen.queryByDisplayValue('1. fázis')).not.toBeInTheDocument();
+    expect(screen.getByText('1. fázis')).toBeInTheDocument();
 
-    const nevMezo = screen.getByDisplayValue('1. fázis');
-    await user.click(nevMezo);
-    await user.tab();
-
-    expect(document.getElementById('kereso-fazis-0')).toBeNull();
-    expect(nevMezo).not.toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Kinyitás' }));
+    expect(await screen.findByDisplayValue('1. fázis')).toBeInTheDocument();
   });
 });
 

@@ -183,11 +183,14 @@ export default function PhaseSection({
             {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
             {open ? 'Összecsukás' : 'Kinyitás'}
           </Button>
-          {/* A címke a mező FÖLÖTT (app/src/CLAUDE.md, akadálymentesség), és
-              csak nyitott fázisban: a mező sosem üres, ezért placeholder nem
-              látszana, a csukott fejléc pedig egysoros összegzés. */}
-          <Box style={{ minWidth: 0 }}>
-            {open && (
+          {/* Csukva statikus szöveg (a tervReszletei/FazisReszlet.tsx olvasó
+              nézetének mintája), nyitva a fejléc szabad szélességét kitöltő
+              mező, felső plafon nélkül: a csukott fejléc célja az áttekintés,
+              ott a mezőkeret üres zaj, nyitva viszont szerkeszteni kell. A
+              címke a mező FÖLÖTT (app/src/CLAUDE.md, akadálymentesség) --
+              csukva nincs mező, amit címkézni kellene. */}
+          {open ? (
+            <Box flexGrow="1" style={{ minWidth: 0 }}>
               <Text
                 as="label"
                 htmlFor={fazisNevId(pi)}
@@ -197,28 +200,30 @@ export default function PhaseSection({
               >
                 Fázis neve
               </Text>
-            )}
-            <TextField.Root
-              id={fazisNevId(pi)}
-              value={phase.megnevezes}
-              onChange={(e) => onRename(e.target.value)}
-              // "Kész a név, jöhet a tétel": a Tab és az Enter is a fázis
-              // keresőjébe visz, nem a tábla első sorának Beavatkozás-mezőjébe
-              // -- a sietve gépelt karakterek ne írjanak át egy meglévő
-              // tételnevet. A fel/le/törlés gombokat az előre-Tab így átugorja;
-              // Shift+Tabbal (a keresőből visszafelé) és egérrel elérhetők
-              // maradnak. Csukott fázisnál marad a natív Tab: a kereső nincs a
-              // DOM-ban, az elnyelt Tab fókuszcsapda lenne.
-              onKeyDown={(e) => {
-                if (!open) return;
-                if (e.key !== 'Tab' && e.key !== 'Enter') return;
-                if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
-                e.preventDefault();
-                onNevKesz();
-              }}
-              style={{ maxWidth: 360, fontWeight: 600, color: t.brand }}
-            />
-          </Box>
+              <TextField.Root
+                id={fazisNevId(pi)}
+                value={phase.megnevezes}
+                onChange={(e) => onRename(e.target.value)}
+                // "Kész a név, jöhet a tétel": a Tab és az Enter is a fázis
+                // keresőjébe visz, nem a tábla első sorának Beavatkozás-mezőjébe
+                // -- a sietve gépelt karakterek ne írjanak át egy meglévő
+                // tételnevet. A fel/le/törlés gombokat az előre-Tab így átugorja;
+                // Shift+Tabbal (a keresőből visszafelé) és egérrel elérhetők
+                // maradnak.
+                onKeyDown={(e) => {
+                  if (e.key !== 'Tab' && e.key !== 'Enter') return;
+                  if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+                  e.preventDefault();
+                  onNevKesz();
+                }}
+                style={{ fontWeight: 600, color: t.brand }}
+              />
+            </Box>
+          ) : (
+            <Text weight="bold" style={{ color: t.brand }}>
+              {phase.megnevezes}
+            </Text>
+          )}
           {megnevezesNyelvMismatch && (
             <>
               <Badge color="amber" variant="soft" size="1">
