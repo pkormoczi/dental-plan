@@ -31,6 +31,7 @@ import { formatPrice } from '../../domain/money';
 import { resolveNev } from '../../domain/nev';
 import {
   egyezoKategoriaIdk,
+  fogszamBontas,
   nevEgyezik,
   norm,
   rangsoroltTetelTalalatok,
@@ -44,13 +45,20 @@ export interface ItemPickerProps {
   kategoriak: Kategoria[];
   currency: Penznem;
   nyelv: Nyelv;
-  onPick: (item: Tetel) => void;
+  /**
+   * A `fogak` a keresőszövegből leválasztott fogszámok (`domain/search.ts`
+   * `fogszamBontas`), a `fogak` mező elválasztójával összefűzve; `''`, ha a
+   * doki nem gépelt fogszámot.
+   */
+  onPick: (item: Tetel, fogak: string) => void;
   /**
    * Ha adott, a találati lista alján megjelenik egy "Egyedi tétel
    * felvétele: ..." opció, ami a gépelt szöveget adja át -- lásd a fájl
-   * fejléckommentjét. Hiányában a komponens a régi viselkedést tartja.
+   * fejléckommentjét. A név a fogszám NÉLKÜLI maradék: a fogszám a Fog
+   * mezőbe kerül, a `nevSnapshot` pedig a nyomtatványra megy. Hiányában a
+   * komponens a régi viselkedést tartja.
    */
-  onPickEgyedi?: (nev: string) => void;
+  onPickEgyedi?: (nev: string, fogak: string) => void;
   /**
    * `'inline'` (alap): a találati lista egy `position:absolute` dobozban,
    * közvetlen a mező alatt -- a fázis alatti eredeti eset, változatlan.
@@ -106,9 +114,17 @@ export default function ItemPicker({
   // kategória-egyezés sosem szorítson ki egy névtalálatot. A levágott
   // találatok száma is kell: eddig a csonkítás NÉMA volt, a doki nem
   // tudta, hogy pontosítania kellene (backlog-7). A limit maga változatlan.
+  // A fogszám-tokenek leválasztása a NYERS szövegről fut, az egyezés-vizsgálat
+  // pedig már csak a maradék névrészre -- „18 fogeltávolítás" így megtalálja a
+  // Fogeltávolítás tételt. Csupa fogszámnál a bontás az eredeti szöveget adja
+  // vissza, tehát a mai viselkedés marad (lásd `fogszamBontas`).
+  const bontas = useMemo(() => fogszamBontas(q.trim()), [q]);
+
   const { results, katResults, tobbiTalalat } = useMemo(() => {
-    if (!q.trim()) return { results: [] as Tetel[], katResults: [] as Tetel[], tobbiTalalat: 0 };
-    const nq = norm(q);
+    if (!bontas.nevResz.trim()) {
+      return { results: [] as Tetel[], katResults: [] as Tetel[], tobbiTalalat: 0 };
+    }
+    const nq = norm(bontas.nevResz);
     const nevTalalat = rangsoroltTetelTalalatok(
       available.filter((x) => nevEgyezik(x.nev, nq)),
       nq,
@@ -136,7 +152,7 @@ export default function ItemPicker({
       katResults,
       tobbiTalalat: Math.max(0, osszesTalalat - results.length - katResults.length),
     };
-  }, [q, available, kategoriak]);
+  }, [bontas, available, kategoriak]);
 
   useEffect(() => setHi(0), [q]);
 
@@ -148,7 +164,7 @@ export default function ItemPicker({
   // Az egyedi opció csak akkor létezik, ha a hívó kéri ÉS van gépelt szöveg
   // -- mindig a lista VÉGÉN, ezért az index-tartomány [0, valaszthato.length]
   // (a valaszthato.length-edik = az egyedi opció).
-  const egyediElerheto = Boolean(onPickEgyedi) && q.trim() !== '';
+  const egyediElerheto = Boolean(onPickEgyedi) && bontas.nevResz.trim() !== '';
   const opcioSzam = valaszthato.length + (egyediElerheto ? 1 : 0);
 
   // 62. tétel: `available` már nem szűr `currency`-re (egy
@@ -165,14 +181,16 @@ export default function ItemPicker({
   }
 
   function pickTetel(item: Tetel) {
-    onPick(item);
+    onPick(item, bontas.fogak);
     finishPick();
   }
 
   function pickEgyedi() {
-    const nev = q.trim();
+    // A fogszám nélküli maradék lesz a `nevSnapshot` -- az kerül a
+    // nyomtatványra, a fogszám a Fog mezőbe megy, nem duplázódik.
+    const nev = bontas.nevResz.trim();
     if (!nev) return;
-    onPickEgyedi?.(nev);
+    onPickEgyedi?.(nev, bontas.fogak);
     finishPick();
   }
 
@@ -271,6 +289,21 @@ export default function ItemPicker({
         boxShadow: t.shadowLg,
       }}
     >
+      {bontas.fogak !== '' && (
+        // Statikus, NEM választható sor -- a "+N további találat" mintája:
+        // nincs `hi` indexe, nem számít bele az `opcioSzam`-ba, tehát a
+        // gépel -> nyíl -> Enter ciklus változatlan.
+        <div
+          style={{
+            padding: '8px 10px',
+            fontSize: 12.5,
+            color: t.uiTextFaint,
+            borderBottom: `1px solid ${t.controlBorder}`,
+          }}
+        >
+          Fog: {bontas.fogak} — a felvett sor Fog mezőjébe kerül
+        </div>
+      )}
       {results.length > 0 &&
         results.map((r, i) => {
           const category = catName(r.kategoriaId);
@@ -350,7 +383,7 @@ export default function ItemPicker({
             boxShadow: hi === valaszthato.length ? `inset 3px 0 0 ${t.accent}` : 'none',
           }}
         >
-          Egyedi tétel felvétele: „{q.trim()}”
+          Egyedi tétel felvétele: „{bontas.nevResz.trim()}”
         </div>
       )}
     </div>

@@ -190,12 +190,23 @@ export default function LineRow({
             autoFocus
             clearOnPick={false}
             id={keresoId(pi, li)}
-            onPick={(item) => {
-              onPatch(sorMezokTetelbol(item, currency, nyelv));
+            // A keresőszövegből leválasztott fogszám csak ÜRES `fogak` mezőbe
+            // íródik: ez a sor a fogtérképi kattintásból született, ott a
+            // fogszám a doki explicit választása -- egy elgépelt szám némán
+            // elvinné. A patch a `sorPatchKovetessel`-en megy át, tehát a
+            // darabszám is szinkronizálódik.
+            onPick={(item, fogak) => {
+              onPatch({
+                ...sorMezokTetelbol(item, currency, nyelv),
+                ...(fogak && !line.fogak.trim() ? { fogak } : {}),
+              });
               setKeresoMod(false);
             }}
-            onPickEgyedi={(nev) => {
-              onPatch(sorMezokEgyedibol(nev, nyelv));
+            onPickEgyedi={(nev, fogak) => {
+              onPatch({
+                ...sorMezokEgyedibol(nev, nyelv),
+                ...(fogak && !line.fogak.trim() ? { fogak } : {}),
+              });
               setKeresoMod(false);
             }}
           />

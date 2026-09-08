@@ -48,8 +48,9 @@ export interface PhaseSectionProps {
   canMoveDown: boolean;
   onMoveUp: () => void;
   onMoveDown: () => void;
-  onAdd: (item: Tetel) => void;
-  onAddEgyedi: (nev: string) => void;
+  /** A `fogak` a keresőszövegből leválasztott fogszám -- lásd `ItemPicker`. */
+  onAdd: (item: Tetel, fogak: string) => void;
+  onAddEgyedi: (nev: string, fogak: string) => void;
   onPatchLine: (li: number, patch: Partial<Sor>) => void;
   onRequestArFrissites: (li: number) => void;
   onMoveLine: (li: number, irany: -1 | 1) => void;
@@ -376,7 +377,7 @@ export default function PhaseSection({
                   size="1"
                   variant="soft"
                   color="gray"
-                  onClick={() => onAdd(f)}
+                  onClick={() => onAdd(f, '')}
                 >
                   + {resolveNev(f.nev, nyelv).szoveg}
                 </Button>

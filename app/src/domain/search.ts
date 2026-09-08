@@ -4,6 +4,7 @@
 // NFD-normalizalas szetszedi az ekezetes betuket alapbetu + kombinalo
 // ekezetjel (U+0300-U+036F) parra, amit utana levagunk.
 
+import { ervenyesFdi } from './teeth';
 import type { Kategoria, LokalizaltSzoveg, Tetel } from './types';
 
 const COMBINING_MARKS = /[̀-ͯ]/g;
@@ -13,6 +14,37 @@ export function norm(s: string | null | undefined): string {
     .toLowerCase()
     .normalize('NFD')
     .replace(COMBINING_MARKS, '');
+}
+
+export interface KeresoBontas {
+  /** A leválasztott fogszámok, a `fogak` mező elválasztójával összefűzve; `''`, ha nincs. */
+  fogak: string;
+  /** A keresőszöveg fogszám nélküli maradéka -- erre fut az egyezés-vizsgálat. */
+  nevResz: string;
+}
+
+/**
+ * A doki a papírlistáról „18 fogeltávolítás" alakban olvassa fel a kezelést.
+ * Ez a függvény választja szét a NYERS keresőszöveget fogszám-tokenekre és a
+ * maradék névrészre -- a `nevEgyezik` szabálya és szignatúrája érintetlen
+ * marad, tehát az Árlista admin szűrője (`arlistaSzures.ts`) továbbra is a
+ * teljes szövegre szűr.
+ *
+ * Csak az ÉRVÉNYES, kétjegyű FDI kód válik le: az árlistában egyetlen szám
+ * sem érvényes FDI („tömés 2 felszín", „Klipsz 3 fog", „All-on-4"), egy
+ * egyjegyű szabálynál viszont lenne ütközés.
+ *
+ * Ha a leválasztás után NEM marad névrész (a doki csupa fogszámot gépelt), a
+ * hívó a mai viselkedést tartja: `nevResz` ilyenkor az EREDETI szöveg, a
+ * `fogak` pedig üres -- így a szétválasztás sosem üríti ki a keresést.
+ */
+export function fogszamBontas(q: string): KeresoBontas {
+  const tokenek = q.split(/[\s,;]+/).filter(Boolean);
+  const fogak = tokenek.filter(ervenyesFdi);
+  const nevTokenek = tokenek.filter((x) => !ervenyesFdi(x));
+  if (!fogak.length || !nevTokenek.length) return { fogak: '', nevResz: q };
+  // A `Set` sorrendtartó -- a `parseTeeth` dedup-logikájával azonos elv.
+  return { fogak: [...new Set(fogak)].join(', '), nevResz: nevTokenek.join(' ') };
 }
 
 /**

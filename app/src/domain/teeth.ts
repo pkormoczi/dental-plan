@@ -8,6 +8,16 @@ export interface ParsedTeeth {
 
 const FDI = /^(?:[1-4][1-8]|[5-8][1-5])$/;
 
+/**
+ * Egyetlen token érvényes FDI fogszám-e. Azért exportált, mert a
+ * tételkereső fogszám-leválasztása (`domain/search.ts`) is ezt a kérdést
+ * teszi fel -- a `FDI` regex így egy helyen marad, a `parseTeeth`
+ * mindent-vagy-semmit logikája pedig nem használható rá.
+ */
+export function ervenyesFdi(token: string): boolean {
+  return FDI.test(token);
+}
+
 export function parseTeeth(input: string | null | undefined): ParsedTeeth {
   const tokens = (input || '').split(/[\s,;]+/).filter(Boolean);
   if (!tokens.length) return { valid: false, teeth: [] };

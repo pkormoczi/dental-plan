@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { egyezoKategoriaIdk, nevEgyezik, norm, rangsoroltTetelTalalatok } from './search';
+import {
+  egyezoKategoriaIdk,
+  fogszamBontas,
+  nevEgyezik,
+  norm,
+  rangsoroltTetelTalalatok,
+} from './search';
 import type { Kategoria, LokalizaltSzoveg, Tetel } from './types';
 
 describe('norm', () => {
@@ -148,5 +154,38 @@ describe('egyezoKategoriaIdk', () => {
 
   it('nem illeszkedő szóra üres halmazt ad', () => {
     expect(egyezoKategoriaIdk(kategoriak, norm('implantatum'))).toEqual(new Set());
+  });
+});
+
+describe('fogszamBontas', () => {
+  it('leválasztja a fogszám-tokent, a maradék a névrész', () => {
+    expect(fogszamBontas('18 fogeltávolítás')).toEqual({ fogak: '18', nevResz: 'fogeltávolítás' });
+  });
+
+  it('több fogszámot a Fog mező elválasztójával fűz össze, a sorrendet tartva', () => {
+    expect(fogszamBontas('16 17 korona')).toEqual({ fogak: '16, 17', nevResz: 'korona' });
+  });
+
+  it('a fogszám a szöveg végén is leválik', () => {
+    expect(fogszamBontas('korona 26')).toEqual({ fogak: '26', nevResz: 'korona' });
+  });
+
+  it('ismételt fogszám nem duplikálódik', () => {
+    expect(fogszamBontas('16 16 korona')).toEqual({ fogak: '16', nevResz: 'korona' });
+  });
+
+  it('csupa fogszámnál nem bont: az eredeti szöveg marad a névrész, a fogak üres', () => {
+    expect(fogszamBontas('36')).toEqual({ fogak: '', nevResz: '36' });
+    expect(fogszamBontas('16 17')).toEqual({ fogak: '', nevResz: '16 17' });
+  });
+
+  it('fogszám nélküli keresés érintetlen', () => {
+    expect(fogszamBontas('gyokertomes')).toEqual({ fogak: '', nevResz: 'gyokertomes' });
+  });
+
+  it('a nem érvényes FDI szám NEM válik le -- az árlistában vannak számos nevek', () => {
+    expect(fogszamBontas('tomes 3 felszin')).toEqual({ fogak: '', nevResz: 'tomes 3 felszin' });
+    expect(fogszamBontas('All-on-4')).toEqual({ fogak: '', nevResz: 'All-on-4' });
+    expect(fogszamBontas('klipsz 99')).toEqual({ fogak: '', nevResz: 'klipsz 99' });
   });
 });

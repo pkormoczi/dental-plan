@@ -1148,3 +1148,133 @@ describe('PlanEditorPage -- a Beavatkozás-cella két sávja', () => {
     expect(screen.getByLabelText('Beavatkozás megnevezése')).toHaveAttribute('title', teljesNev);
   });
 });
+
+describe('PlanEditorPage -- fogszám a keresőszövegben', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('"18 fogeltávolítás" a Fogeltávolítás tételt adja, és a felvett sor Fog mezőjében "18" áll', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, '18 fogeltavolitas');
+
+    // A leválasztás jelzése statikus sor, nem választható opció.
+    expect(await screen.findByText(/^Fog: 18/)).toBeInTheDocument();
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('18');
+    expect(screen.getByRole('textbox', { name: 'Darabszám' })).toHaveValue('1');
+  });
+
+  it('"16 17 korona" két fogszámot ír a sorba, és a darabszám a fogak számát követi', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, '16 17 teleszkop korona');
+    await user.click(await screen.findByText('Teleszkóp korona (primer-szekunder)'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('16, 17');
+    expect(screen.getByRole('textbox', { name: 'Darabszám' })).toHaveValue('2');
+  });
+
+  it('a fogszám-jelző sor nem választható: az azonnali Enter a névtalálatot veszi fel', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, '18 fogeltavolitas');
+    await screen.findByText('Fogeltávolítás');
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(search).toHaveValue(''));
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('18');
+  });
+
+  it('nulla találatnál az egyedi tétel neve a fogszám NÉLKÜLI maradék, a fogszám a Fog mezőbe kerül', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, '18 Érzéstelenítés');
+    expect(await screen.findByText(/Egyedi tétel felvétele: „Érzéstelenítés”/)).toBeInTheDocument();
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => expect(search).toHaveValue(''));
+    expect(screen.getByDisplayValue('Érzéstelenítés')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('18');
+  });
+
+  it('csupa fogszám gépelése változatlan: nincs "Fog:" sor, az egyedi tétel neve a beírt szám', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, '36');
+
+    expect(screen.queryByText(/^Fog: /)).not.toBeInTheDocument();
+    expect(await screen.findByText(/Egyedi tétel felvétele: „36”/)).toBeInTheDocument();
+  });
+
+  it('a fogszám nélküli keresés és a kétnyelvű egyezés érintetlen', async () => {
+    const user = userEvent.setup();
+    seedGermanPlanWithOneTranslatedItem();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    expect(screen.queryByText(/^Fog: /)).not.toBeInTheDocument();
+    expect(await screen.findByText('Zahnextraktion')).toBeInTheDocument();
+  });
+});
+
+describe('PlanEditorPage -- fogszám a soron belüli keresőben', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  /** A fogtérképről kattintott, még meg nem nevezett sor -- ez az egyetlen eset, ami soron belüli keresővel indul. */
+  async function fogterkeprolUjSor(user: ReturnType<typeof userEvent.setup>, fdi: string) {
+    renderEditor();
+    await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
+    const chart = await screen.findByRole('toolbar');
+    await user.click(chart.querySelector(`[data-tooth="${fdi}"]`) as Element);
+  }
+
+  it('a fogtérképről kapott fogszámot a keresőbe gépelt fogszám NEM írja felül', async () => {
+    const user = userEvent.setup();
+    await fogterkeprolUjSor(user, '16');
+    expect(screen.getByDisplayValue('16')).toBeInTheDocument();
+
+    const soronBeluli = screen.getAllByPlaceholderText(/Tétel keresése/)[0];
+    await user.type(soronBeluli, '18 fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+
+    // A doki explicit fogtérképi választása marad -- egy elgépelt szám némán elvinné.
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('16');
+  });
+
+  it('ÜRES Fog mezőbe viszont beírja a keresőből leválasztott fogszámot', async () => {
+    const user = userEvent.setup();
+    await fogterkeprolUjSor(user, '16');
+
+    // A doki kitörli a fogtérképről kapott számot, a sor még névtelen.
+    const fogMezo = screen.getByDisplayValue('16');
+    await user.clear(fogMezo);
+
+    const soronBeluli = screen.getAllByPlaceholderText(/Tétel keresése/)[0];
+    await user.type(soronBeluli, '18 fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+
+    expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('18');
+  });
+});

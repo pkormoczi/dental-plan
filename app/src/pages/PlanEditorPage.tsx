@@ -19,7 +19,7 @@ import {
   fazisokFelcserelve,
   sorokFelcserelve,
 } from '../domain/fazisSorrend';
-import { sorPatchKovetessel } from '../domain/mennyiseg';
+import { kovetettMennyiseg, sorPatchKovetessel } from '../domain/mennyiseg';
 import { formatMoney } from '../domain/money';
 import { reviewElfogadva, reviewIrasUtan, sorPatchNyelvvel } from '../domain/nyelviReview';
 import { sorPatchOroklessel } from '../domain/orokoltJelzesek';
@@ -49,6 +49,9 @@ export default function PlanEditorPage() {
     piszkozatKonfliktus,
     piszkozatPatientDir,
     resetPlanDraft,
+    // A CSUKOTT fázisok indexei -- se PhaseSection-, se lap-lokális state,
+    // mert az Előnézetre lépés unmountolja ezt a lapot (lásd az AppState
+    // doc-kommentjét). A `fazisResetToken` bumpot is túl kell élnie.
     fazisCsukva,
     setFazisCsukva,
   } = useAppState();
@@ -76,11 +79,6 @@ export default function PlanEditorPage() {
   const [pendingArFrissites, setPendingArFrissites] = useState<{ pi: number; li: number } | null>(
     null,
   );
-  // A CSUKOTT fázisok indexei. Se PhaseSection-, se lap-lokális state: az
-  // Előnézetre lépés unmountolja ezt a lapot, a halmaz ezért az
-  // `AppState`-ben él (lásd ott a doc-kommentet). A `fazisResetToken` bumpot
-  // is túl kell élnie -- lásd deletePhase/movePhase, ahol a tagság
-  // újraindexelődik/felcserélődik.
   // Melyik fázisba kerüljön az új sor, ha a doki kezeletlen fogra kattint a
   // fogtérképen -- csak akkor látszik a választó, ha >1 fázis van (lásd
   // lent). Renderléskor mindig `Math.min`-nel szorítva a fázisok
@@ -218,24 +216,31 @@ export default function PlanEditorPage() {
     navigate(dir ? `/paciensek/${encodeURIComponent(dir)}` : '/paciensek');
   }
 
-  function addLine(phaseIdx: number, item: Tetel) {
+  /**
+   * A `fogak` a keresőszövegből leválasztott fogszám (`domain/search.ts`
+   * `fogszamBontas`), `''`, ha nem volt. A darabszám a fogak számát követi --
+   * kézzel beírva is ez történne --, a sor `mennyisegKezi: false` marad.
+   * Ezek a hívások a draftba KÖZVETLENÜL push-olnak, nem a `patchLine`-on át,
+   * ezért a `sorPatchKovetessel` itt nem fut le magától.
+   */
+  function addLine(phaseIdx: number, item: Tetel, fogak = '') {
     const mezok = sorMezokTetelbol(item, currency, nyelv);
     updatePlan((draft) => {
       draft.fazisok[phaseIdx].sorok.push({
         ...mezok,
-        fogak: '',
-        mennyiseg: 1,
+        fogak,
+        mennyiseg: kovetettMennyiseg(fogak) ?? 1,
         mennyisegKezi: false,
       });
     });
   }
 
-  function addEgyediLine(phaseIdx: number, nev: string) {
+  function addEgyediLine(phaseIdx: number, nev: string, fogak = '') {
     updatePlan((draft) => {
       draft.fazisok[phaseIdx].sorok.push({
         ...sorMezokEgyedibol(nev, nyelv),
-        fogak: '',
-        mennyiseg: 1,
+        fogak,
+        mennyiseg: kovetettMennyiseg(fogak) ?? 1,
         mennyisegKezi: false,
       });
     });
@@ -449,8 +454,8 @@ export default function PlanEditorPage() {
             canMoveDown={pi < plan.fazisok.length - 1}
             onMoveUp={() => movePhase(pi, -1)}
             onMoveDown={() => movePhase(pi, 1)}
-            onAdd={(item) => addLine(pi, item)}
-            onAddEgyedi={(nev) => addEgyediLine(pi, nev)}
+            onAdd={(item, fogak) => addLine(pi, item, fogak)}
+            onAddEgyedi={(nev, fogak) => addEgyediLine(pi, nev, fogak)}
             onPatchLine={(li, patch) => patchLine(pi, li, patch)}
             onRequestArFrissites={(li) => setPendingArFrissites({ pi, li })}
             onMoveLine={(li, irany) => moveLine(pi, li, irany)}

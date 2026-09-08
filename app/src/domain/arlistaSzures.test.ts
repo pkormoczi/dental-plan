@@ -28,6 +28,14 @@ describe('tetelIlleszkedik', () => {
     expect(tetelIlleszkedik(tetel(), 'zzznincsilyen', 'all', URES_KAT_IDK)).toBe(false);
   });
 
+  it('az admin szűrője a TELJES szövegre szűr -- a fogszám nem válik le, mint a tételkeresőben', () => {
+    // A tervszerkesztő keresője a fogszám-tokent leválasztja
+    // (`domain/search.ts` `fogszamBontas`), az Árlista admin szűrője NEM:
+    // ott a fogszám nem értelmes bemenet, a részsztring-egyezés viszont igen.
+    expect(tetelIlleszkedik(tetel(), '18 fogeltavolitas', 'all', URES_KAT_IDK)).toBe(false);
+    expect(tetelIlleszkedik(tetel(), 'fogeltavolitas', 'all', URES_KAT_IDK)).toBe(true);
+  });
+
   it('a kategórianévre illeszkedő kategória-id-n át is találat, akkor is, ha a tétel neve nem egyezik', () => {
     const item = tetel({ kategoriaId: 'k02' });
     expect(tetelIlleszkedik(item, 'zzznincsilyen', 'all', new Set(['k02']))).toBe(true);

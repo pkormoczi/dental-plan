@@ -60,7 +60,7 @@ describe('ItemPicker', () => {
     await screen.findByText('Gyökértömés');
     await user.keyboard('{Enter}');
 
-    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
+    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }), '');
     await waitFor(() => expect(input).toHaveValue(''));
     expect(input).toHaveFocus();
   });
@@ -79,7 +79,7 @@ describe('ItemPicker', () => {
     await screen.findByText('Esztétikus tömés');
     await user.keyboard('{Enter}');
 
-    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }));
+    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }), '');
     expect(input).toHaveValue('eszt');
   });
 
@@ -92,7 +92,7 @@ describe('ItemPicker', () => {
     const talalat = await screen.findByText('Gyökértömés');
     await user.click(talalat);
 
-    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
+    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }), '');
   });
 
   it('regresszió: onPickEgyedi átadása mellett is a találat marad az Enter célja, nem az egyedi opció', async () => {
@@ -104,7 +104,7 @@ describe('ItemPicker', () => {
     await screen.findByText('Gyökértömés');
     await user.keyboard('{Enter}');
 
-    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }));
+    expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't1' }), '');
     expect(onPickEgyedi).not.toHaveBeenCalled();
   });
 
@@ -117,7 +117,7 @@ describe('ItemPicker', () => {
     await screen.findByText(/Egyedi tétel felvétele/);
     await user.keyboard('{Enter}');
 
-    expect(onPickEgyedi).toHaveBeenCalledWith('érzéstelenítés');
+    expect(onPickEgyedi).toHaveBeenCalledWith('érzéstelenítés', '');
     expect(onPick).not.toHaveBeenCalled();
     // A ciklus (kereső kiürül és visszakapja a fókuszt) egyedi opciónál is él.
     await waitFor(() => expect(input).toHaveValue(''));
@@ -149,7 +149,7 @@ describe('ItemPicker', () => {
     // lista végén túlra, az egyedi opcióra visz.
     await user.keyboard('{ArrowDown}{Enter}');
 
-    expect(onPickEgyedi).toHaveBeenCalledWith('gyoker');
+    expect(onPickEgyedi).toHaveBeenCalledWith('gyoker', '');
     expect(onPick).not.toHaveBeenCalled();
   });
 
@@ -192,7 +192,7 @@ describe('ItemPicker', () => {
       // opcióként számítana, itt semmi nem commitálódna Enterre.
       await user.keyboard('{ArrowDown>12/}{Enter}');
 
-      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 's0' }));
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 's0' }), '');
     });
   });
 
@@ -227,7 +227,7 @@ describe('ItemPicker', () => {
       await screen.findByText('Tömés két felszínen');
       await user.keyboard('{Enter}');
 
-      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }));
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }), '');
     });
   });
 
@@ -290,7 +290,7 @@ describe('ItemPicker', () => {
       await screen.findByText('Komplett kezelés: ultrahang, sófúvás');
       await user.keyboard('{Enter}');
 
-      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }));
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }), '');
     });
 
     it('12 névtalálat mellett a kategória-blokk egyáltalán nem jelenik meg', async () => {
@@ -338,14 +338,14 @@ describe('ItemPicker', () => {
       // Két kategória-egyezés van (t2, t3), nincs névtalálat -- beírás után a
       // 0. opció (t2) az alap kijelölés, Enter azonnal azt veszi fel.
       await user.keyboard('{Enter}');
-      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }));
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }), '');
 
       // Egy ArrowDown a következő (t3) sorra visz -- a fejléc nem számít bele.
       onPick.mockClear();
       await user.type(input, 'fogko');
       await screen.findByText('Kategória: Fogkőeltávolítás');
       await user.keyboard('{ArrowDown}{Enter}');
-      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't3' }));
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't3' }), '');
     });
   });
 });
