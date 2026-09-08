@@ -101,9 +101,16 @@ export default function TervWorkflowShell() {
   // véglegesítve · az imént" sora mondja meg, hogy a mentés sikerült.
   if (uresElonezet) return <Navigate to="/" replace />;
 
+  // A héj EBBEN a Boxban rendereli az Outletet, tehát ez a valódi
+  // szélesség-plafon a /paciens, /terv, /elonezet lapokon -- egy lap saját
+  // Box-ja (pl. `PreviewPage.tsx` maxWidth 1100) csak SZŰKÍTHETI ezt, tágabbra
+  // nem viheti. A /terv Beavatkozás-oszlopának ezért itt kell szélesebb
+  // plafon, nem csak `PlanEditorPage.tsx`-ben -- a másik két lap változatlan.
+  const shellMaxWidth = pathname === '/terv' ? 1180 : 900;
+
   return (
     <PaciensKotesProvider>
-      <Box style={{ maxWidth: 900, margin: '0 auto' }}>
+      <Box style={{ maxWidth: shellMaxWidth, margin: '0 auto' }}>
         <PaciensBreadcrumb />
 
         <nav
