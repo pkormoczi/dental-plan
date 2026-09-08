@@ -13,6 +13,13 @@ import type { Kategoria, Plan, PriceList } from './types';
 export const ALAPERTELMEZETT_TERV_CIM = 'Terv';
 
 /**
+ * A mentett lánc címke-mezői alatt álló súgó — szó szerint azonos a Terv
+ * adatai lapon és a Korábbi tervek ceruzája alatt, ezért egy forrásból jön.
+ */
+export const URESEN_MENTVE_SUGO =
+  'Üresen mentve a cím visszaáll a legnagyobb összegű kategória nevére.';
+
+/**
  * A legnagyobb ÖSSZEGŰ kategória a tervben (a tie-break szabályt lásd a
  * fájl fejlécében), vagy `null`, ha nincs kategóriába sorolható sor. Ezt a
  * `javasoltTervCim()` ÉS a `pdf/pdfCimLokalizacio.ts` PDF-cím-feloldója is

@@ -49,7 +49,11 @@ import { piszkozatCelRoute } from '../domain/piszkozat';
 import { tervReszleteiUtvonal, type VersionRef } from '../domain/planVersionActions';
 import { rendezettLancok, versionDataKey, type VersionTotal } from '../domain/planChainData';
 import { tervVegosszeg } from '../domain/totals';
-import { ALAPERTELMEZETT_TERV_CIM, megjelenitettTervCim } from '../domain/tervCim';
+import {
+  ALAPERTELMEZETT_TERV_CIM,
+  megjelenitettTervCim,
+  URESEN_MENTVE_SUGO,
+} from '../domain/tervCim';
 import { workflowLepesFelirat } from '../domain/workflowLepesek';
 import type { PatientFolder, Plan, PlanFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
@@ -478,7 +482,7 @@ export default function PatientPlanChains({
             </Flex>
             {isEditing && (
               <Text as="p" size="1" color="gray" mt="0" mb="2">
-                Üresen mentve visszaáll az automatikus javaslatra.
+                {URESEN_MENTVE_SUGO}
               </Text>
             )}
             {labelError?.planDir === plan.dirName && (

@@ -20,7 +20,7 @@ import { useEffect, useState } from 'react';
 import { Box, Button, Callout, Flex, Skeleton, Text, TextField } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import { feloldTervCimke } from '../../domain/torzsadatBetoltes';
-import { javasoltTervCim } from '../../domain/tervCim';
+import { javasoltTervCim, URESEN_MENTVE_SUGO } from '../../domain/tervCim';
 import { useAppState } from '../../state/AppState';
 import { useStorage } from '../../storage/StorageContext';
 
@@ -123,8 +123,8 @@ export default function TervCimField() {
       </Flex>
       <Text as="div" size="1" color="gray" mt="1">
         {isNewChain
-          ? 'Üresen a domináns kategória neve lesz a cím — a véglegesítéskor rögzül.'
-          : 'Üresen mentve visszaáll az automatikus javaslatra.'}
+          ? 'Üresen a legnagyobb összegű kategória neve lesz a cím (pl. »Korona és hídpótlások«) — a véglegesítéskor rögzül.'
+          : URESEN_MENTVE_SUGO}
       </Text>
       {saveError && (
         <Callout.Root color="red" size="1" mt="2">

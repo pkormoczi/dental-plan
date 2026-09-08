@@ -1309,6 +1309,74 @@ describe('PatientPage -- backlog-51: terv címe mező', () => {
   });
 });
 
+describe('PatientPage -- a pénznem és a terv-cím feliratai', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('a Pénznem mező alatt az áll, hogy a kezelésnek ott van ára, ahol az Árlistán rögzítették', async () => {
+    renderPatient();
+    await screen.findByText('Pénznem');
+
+    expect(
+      screen.getByText(
+        /Egy kezelésnek abban a pénznemben van ára, amelyikben az Árlistán árat rögzítettél hozzá/,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/ajánlhatók/)).toBeNull();
+  });
+
+  it('beárazatlan pénznemben a figyelmeztetés nem a keresőre, hanem az ár nélkül maradó sorokra és a véglegesítésre hivatkozik', async () => {
+    const user = userEvent.setup();
+    seedWithNoEurPrices();
+    renderPatient();
+    await screen.findByText('Pénznem');
+
+    await user.click(screen.getByRole('radio', { name: 'EUR — euró' }));
+
+    const figyelmeztetes = await screen.findByText(/egyetlen tétel sincs beárazva/);
+    expect(figyelmeztetes).toHaveTextContent(/ár nélkül maradnak/);
+    expect(figyelmeztetes).toHaveTextContent(/nem véglegesíthető/);
+    expect(figyelmeztetes).not.toHaveTextContent(/keresője/);
+  });
+
+  it('vadonatúj láncnál a terv-cím felirata a legnagyobb összegű kategóriát nevezi meg, példával, és a véglegesítéskori rögzülést', async () => {
+    renderPatient();
+    await screen.findByRole('textbox', { name: 'Terv címe' });
+
+    const sugo = screen.getByText(/legnagyobb összegű kategória neve lesz a cím/);
+    expect(sugo).toHaveTextContent(/Korona és hídpótlások/);
+    expect(sugo).toHaveTextContent(/véglegesítéskor rögzül/);
+    expect(screen.queryByText(/domináns kategória/)).toBeNull();
+  });
+
+  it('mentett láncnál és a Korábbi tervek ceruzájánál ugyanaz a "legnagyobb összegű kategória" szóhasználat', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    window.location.hash = '#/tervek';
+    const patientNameEl = await screen.findByText('Kovács János');
+    const card = patientNameEl.closest('[data-patient]') as HTMLElement;
+    await user.click(within(card).getByRole('button', { name: 'Terv címének szerkesztése' }));
+
+    expect(
+      await screen.findByText(
+        'Üresen mentve a cím visszaáll a legnagyobb összegű kategória nevére.',
+      ),
+    ).toBeInTheDocument();
+
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
+    await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+    await screen.findByRole('textbox', { name: 'Terv címe' });
+
+    expect(
+      screen.getByText('Üresen mentve a cím visszaáll a legnagyobb összegű kategória nevére.'),
+    ).toBeInTheDocument();
+  });
+});
+
 // A "Dátumok" szekció: új terv piszkozatán a `keltezes` szerkeszthető
 // (papírról bevitt terv), korábbi terv új verzióján olvasható marad; az
 // `ervenyesIg` alapértéke `plan.keltezes + settings.ervenyessegNap`.

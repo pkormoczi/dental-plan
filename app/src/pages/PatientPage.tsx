@@ -435,7 +435,7 @@ export default function PatientPage() {
       </Section>
 
       <Section title="Pénznem">
-        <FieldGroup label="Pénznem (ez dönti el, mely tételek ajánlhatók)">
+        <FieldGroup label="Pénznem (a nyomtatvány pénzneme)">
           <ChipGroup
             value={plan.penznem}
             options={[
@@ -444,6 +444,10 @@ export default function PatientPage() {
             ]}
             onChange={changePenznem}
           />
+          <Text as="div" size="1" color="gray" mt="1">
+            Egy kezelésnek abban a pénznemben van ára, amelyikben az Árlistán árat rögzítettél
+            hozzá.
+          </Text>
         </FieldGroup>
 
         {cov.arazott === 0 && (
@@ -452,9 +456,9 @@ export default function PatientPage() {
               <ExclamationTriangleIcon />
             </Callout.Icon>
             <Callout.Text>
-              Ebben a pénznemben ({plan.penznem}) egyetlen tétel sincs beárazva — a szerkesztő
-              keresője nem fog találatot adni. Válts pénznemet, vagy töltsd ki az árakat az
-              Árlistán.
+              Ebben a pénznemben ({plan.penznem}) egyetlen tétel sincs beárazva — a kezeléseket fel
+              tudod venni, de ár nélkül maradnak, és a terv így nem véglegesíthető. Válts
+              pénznemet, vagy töltsd ki az árakat az Árlistán.
             </Callout.Text>
           </Callout.Root>
         )}
