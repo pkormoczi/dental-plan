@@ -3,7 +3,7 @@
 // között nem tudna dönteni). A tényleges huzalozást az AppState.test.tsx
 // "piszkozat-ütközés két fül között" leírása fedi.
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Theme } from '@radix-ui/themes';
 import { describe, expect, it, vi } from 'vitest';
@@ -93,6 +93,26 @@ describe('PiszkozatKonfliktusDialog', () => {
 
     await user.click(screen.getByRole('button', { name: 'A másik ablak változatát töltöm be' }));
     expect(onBetoltomMasikat).toHaveBeenCalledTimes(1);
+  });
+
+  it('nyitáskor a fókusz a dialóguson belülre kerül, de egyik döntésgombra sem', async () => {
+    renderDialog();
+
+    const dialog = screen.getByRole('alertdialog');
+    await waitFor(() => expect(dialog).toHaveFocus());
+    expect(screen.getByRole('button', { name: 'A saját változatomat mentem' })).not.toHaveFocus();
+    expect(screen.getByRole('button', { name: 'A másik ablak változatát töltöm be' })).not.toHaveFocus();
+  });
+
+  it('a bejelentett leírás mindkét változat sorszámát és végösszegét tartalmazza', () => {
+    renderDialog();
+
+    const leirasId = screen.getByRole('alertdialog').getAttribute('aria-describedby')!;
+    const leiras = document.getElementById(leirasId)!;
+    expect(leiras).toHaveTextContent('1 sor');
+    expect(leiras).toHaveTextContent('10 000');
+    expect(leiras).toHaveTextContent('2 sor');
+    expect(leiras).toHaveTextContent('25 000');
   });
 
   it('Escape-re zár (onOpenChange(false)) -- se néma elnyelés, se bezárhatatlan csapda', async () => {
