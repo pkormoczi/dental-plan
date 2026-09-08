@@ -76,21 +76,57 @@ alfa-kompozitálás kell.
 
   // minden interaktív kontroll >=3:1 keret (controlBorder, soha nem uiLine)
   const CTRL = 'input,button,select,textarea,[role="button"],[role="combobox"],[role="checkbox"],[role="switch"],[role="option"]';
+  // az index.css wrapper-szelektorai: a keret gyakran nem a CTRL-elemen, hanem ezen ül
+  const WRAPPER = '.rt-BaseButton.rt-variant-soft,.rt-TextFieldRoot,.rt-SegmentedControlRoot,.rt-SelectTrigger,.rt-CheckboxRoot';
+  const shadowBorderColor = (cs) => {
+    const sh = cs.boxShadow;
+    if (!sh || sh === 'none' || !sh.includes('inset')) return null; // csak inset szamit keretnek, a fokuszgyuru/emeles-arnyek nem
+    const c = parseColor(sh);
+    return c.a > 0 ? c : null;
+  };
+  const ownBorder = (el) => {
+    const cs = getComputedStyle(el);
+    const bc = parseColor(cs.borderTopColor), bw = parseFloat(cs.borderTopWidth);
+    if (bw && bc.a > 0) return bc;
+    return shadowBorderColor(cs);
+  };
+  const beforeBorder = (el) => {
+    const cs = getComputedStyle(el, '::before');
+    const bc = parseColor(cs.borderTopColor), bw = parseFloat(cs.borderTopWidth);
+    if (bw && bc.a > 0) return bc;
+    return shadowBorderColor(cs);
+  };
+  const findBorder = (el) => {
+    const direct = ownBorder(el) || beforeBorder(el);
+    if (direct) return direct;
+    let n = el.parentElement;
+    for (let depth = 0; n && depth < 3; depth++, n = n.parentElement) {
+      if (n.matches && n.matches(WRAPPER)) {
+        const found = ownBorder(n) || beforeBorder(n);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
   let noBorderCount = 0;
   const noBorderSample = [];
   for (const el of document.querySelectorAll(CTRL)) {
     if (el.classList.contains('rt-IconButton') || el.classList.contains('rt-variant-ghost')) continue; // app/src/CLAUDE.md controlBorder-kivételek (IconButton, ghost) -- tudatos, nem hiányzó keret
-    const cs = getComputedStyle(el);
-    const bc = parseColor(cs.borderTopColor), bw = parseFloat(cs.borderTopWidth);
-    const sh = cs.boxShadow;
-    if ((!bw || bc.a === 0) && sh === 'none') {
-      noBorderCount++;
-      if (noBorderSample.length < 5) noBorderSample.push(name(el) + ' [' + el.tagName + ']');
-    } else if (bw && bc.a > 0) {
+    const bc = findBorder(el);
+    if (bc) {
       const bg = effectiveBg(el);
       const borderColor = compositeOver(bc, bg);
       const r = ratio(borderColor, bg);
-      if (r < 3) out.push({ rule: 'control-border-contrast', el: name(el), border: cs.borderTopColor, ratio: +r.toFixed(2) });
+      if (r < 3) out.push({ rule: 'control-border-contrast', el: name(el), border: `rgba(${bc.r.toFixed(0)},${bc.g.toFixed(0)},${bc.b.toFixed(0)},${bc.a.toFixed(2)})`, ratio: +r.toFixed(2) });
+      continue;
+    }
+    // nincs keret sehol -- a solid Button és a bepipált checkbox itt a SAJÁT kitöltése kontrasztjával megy át
+    const outsideBg = effectiveBg(el.parentElement || el);
+    const ownFill = parseColor(getComputedStyle(el).backgroundColor);
+    const fillOk = ownFill.a > 0 && ratio(compositeOver(ownFill, outsideBg), outsideBg) >= 3;
+    if (!fillOk) {
+      noBorderCount++;
+      if (noBorderSample.length < 5) noBorderSample.push(name(el) + ' [' + el.tagName + ']');
     }
   }
   if (noBorderCount) out.push({ rule: 'control-no-border', count: noBorderCount, sample: noBorderSample });
@@ -98,9 +134,10 @@ alfa-kompozitálás kell.
 }
 ```
 
-A harmadik nevesített kivétel a `solid` Button: annak saját kitöltése 3:1 fölött van
-a lap háttere felől, a snippet `boxShadow`-ágán átmegy — ha `control-no-border`-ként
-jelenik meg, az a kaszkád hibája, nem kivétel.
+Kivétel-osztály (`rt-IconButton`, `rt-variant-ghost`) marad kettő — nevesített WCAG 1.4.11
+kivétel, nincs se keretük, se kitöltésük. A `solid` Button és a bepipált checkbox nem
+osztály-kihagyással megy át, hanem a fenti fallback méri a saját kitöltésük kontrasztját;
+ha ez mégis `control-no-border`-ként jelenik meg, az valódi hiányt jelez, nem a mérés hibáját.
 
 ## Fókuszgyűrű
 
