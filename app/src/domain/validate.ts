@@ -22,6 +22,15 @@ function isFiniteNumber(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v);
 }
 
+// A pénzmezők guardja szigorúbb a véges számnál: a tört érték (`10.5`) sem a
+// betöltési, sem a mentési határon nem juthat át. Nincs néma kerekítés --
+// egy kézzel piszkált fájl kerekítése azt a végösszeget írná át, ami a
+// nyomtatványon szerződésként szerepel. PRODUCT.md § A nyomtatvány
+// szerződéses dokumentum
+function isMoneyInt(v: unknown): v is number {
+  return typeof v === 'number' && Number.isInteger(v);
+}
+
 function isArray(v: unknown): v is unknown[] {
   return Array.isArray(v);
 }
@@ -35,10 +44,10 @@ function assertAr(ar: unknown, fileKind: string, path: string): void {
   if (typeof ar !== 'object') fail(fileKind, `${path} nem objektum`);
   const a = ar as Record<string, unknown>;
   if (a.tipus === 'FIX') {
-    if (!isFiniteNumber(a.ertek)) fail(fileKind, `${path}.ertek nem véges szám`);
+    if (!isMoneyInt(a.ertek)) fail(fileKind, `${path}.ertek nem egész pénzérték`);
   } else if (a.tipus === 'SAVOS') {
-    if (!isFiniteNumber(a.min)) fail(fileKind, `${path}.min nem véges szám`);
-    if (!isFiniteNumber(a.max)) fail(fileKind, `${path}.max nem véges szám`);
+    if (!isMoneyInt(a.min)) fail(fileKind, `${path}.min nem egész pénzérték`);
+    if (!isMoneyInt(a.max)) fail(fileKind, `${path}.max nem egész pénzérték`);
   } else {
     fail(fileKind, `${path}.tipus ismeretlen ("${String(a.tipus)}")`);
   }
@@ -80,11 +89,11 @@ export function assertPlanShape(data: unknown, fileKind = 'terv.json'): void {
       const sor = rawSor as Record<string, unknown>;
       const prefix = `fazisok[${fi}].sorok[${si}]`;
       if (!isFiniteNumber(sor.mennyiseg)) fail(fileKind, `${prefix}.mennyiseg nem véges szám`);
-      if (!isFiniteNumber(sor.listaEgysegar)) {
-        fail(fileKind, `${prefix}.listaEgysegar nem véges szám`);
+      if (!isMoneyInt(sor.listaEgysegar)) {
+        fail(fileKind, `${prefix}.listaEgysegar nem egész pénzérték`);
       }
-      if (!isFiniteNumber(sor.tenylegesEgysegar)) {
-        fail(fileKind, `${prefix}.tenylegesEgysegar nem véges szám`);
+      if (!isMoneyInt(sor.tenylegesEgysegar)) {
+        fail(fileKind, `${prefix}.tenylegesEgysegar nem egész pénzérték`);
       }
     });
   });
@@ -93,7 +102,14 @@ export function assertPlanShape(data: unknown, fileKind = 'terv.json'): void {
   }
   const osszesitok = plan.osszesitok as Record<string, unknown>;
   for (const key of ['kezelesekOsszesen', 'kedvezmeny', 'fizetendo']) {
-    if (!isFiniteNumber(osszesitok[key])) fail(fileKind, `osszesitok.${key} nem véges szám`);
+    if (!isMoneyInt(osszesitok[key])) fail(fileKind, `osszesitok.${key} nem egész pénzérték`);
+  }
+  // Opcionális mezők: hiányzó/`null` = nincs előleg-sor, illetve nincs
+  // terv-szintű eltérés -- csak a jelen lévő szám kerül a védett körbe.
+  for (const key of ['elolegOsszeg', 'kedvezmenyOsszeg']) {
+    if (plan[key] != null && !isMoneyInt(plan[key])) {
+      fail(fileKind, `${key} nem egész pénzérték`);
+    }
   }
 }
 

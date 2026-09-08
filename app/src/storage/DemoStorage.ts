@@ -494,6 +494,11 @@ export class DemoStorage implements PlanStorage {
   }
 
   private async doSavePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<PlanRef> {
+    // Írás előtt is validálunk, nem csak betöltéskor: ez a hívás adja ki a
+    // véglegesített, append-only verziómappát -- egy tört pénzértékkel ide
+    // beírt terv.json később csak betöltési hibaként derülne ki, amikor már
+    // nem írható felül. A piszkozat-autosave szándékosan NEM validál.
+    assertPlanShape(plan, 'terv.json');
     const patients = await this.listPatients();
     let paciensId = plan.paciensId;
     let patientDir = paciensId ? patients.find((p) => p.paciensId === paciensId)?.dirName : undefined;

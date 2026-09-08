@@ -352,6 +352,19 @@ describe('DemoStorage', () => {
     expect(versions.map((v) => v.verzio)).toEqual([1]);
   });
 
+  it('savePlan tört pénzértéket tartalmazó tervnél hibát dob, és nem hoz létre verziómappát', async () => {
+    const before = await storage.listPatients();
+
+    await expect(
+      storage.savePlan(
+        makeBlankPlan({ osszesitok: { kezelesekOsszesen: 10.5, kedvezmeny: 0, fizetendo: 10.5 } }),
+        new Uint8Array([1]),
+      ),
+    ).rejects.toThrow(/osszesitok\.kezelesekOsszesen nem egész pénzérték/);
+
+    expect(await storage.listPatients()).toEqual(before);
+  });
+
   it('savePlan az előre lefoglalt, EGYEZŐ verzio-t elfogadja', async () => {
     const plan = makeBlankPlan();
     const ref1 = await storage.savePlan(plan, new Uint8Array([1]));
