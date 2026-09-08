@@ -69,13 +69,20 @@ export const t = {
   // interaktiv kontroll kerete. Onallo token -- ne vond ossze `uiTextFaint`-tel,
   // akkor sem, ha az ertekuk korabban egybeesett
 
-  // Szerep -- csak app, PDF nem hasznalja
-  warn: '#9A5B00', // 5.43:1 feheren, 5.06:1 warnBg-n (a regi #B26A00 4.24:1/3.95:1 bukott)
+  // Szerep -- csak app, PDF nem hasznalja. Ugyanezek a `--accent-a11`
+  // Radix-aliason keresztul a Callout/Badge/Button/Text szoveget is festik
+  // (`main.tsx` -> `index.css` `[data-accent-color]`), a legszigorubb merce a
+  // Calloutba agyazott azonos szinu jelvny KETSZERES `accent-a3` washa:
+  // warn 6.11:1 feheren, 5.70:1 warnBg-n, 5.03:1 a kettos amber washon (a regi
+  // #9A5B00 5.43:1/5.06:1/4.42:1 bukott a kettos washon)
+  warn: '#8F5400',
   warnBg: '#FFF6E6',
-  danger: '#B3261E',
+  danger: '#B3261E', // valtozatlan -- 4.61:1 a kettos red washon, mar megfelel
   dangerBg: '#FDECEA',
   dangerBorder: '#F3C9C5',
-  ok: '#1F7A4D',
+  // ok 6.53:1 feheren, 5.89:1 okBg-n, 4.85:1 a kettos green washon (a regi
+  // #1F7A4D 3.95:1 bukott a kettos washon)
+  ok: '#176B41',
   okBg: '#EAF6F0',
   shadowLg: '0 8px 24px rgba(45,45,45,0.14)',
 

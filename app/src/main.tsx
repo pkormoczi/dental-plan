@@ -24,6 +24,14 @@ document.documentElement.style.setProperty('--solid-fill-text', t.onBrand)
 // hogy az accentWash-nak EGY forrása maradjon.
 document.documentElement.style.setProperty('--accent-wash', t.accentWash)
 
+// Ugyanez a minta a Radix amber/red/green `--accent-a11` szövegszínére (Callout,
+// soft Badge/Button, accent-colorral festett Text): a Calloutba ágyazott jelvény
+// kettős `accent-a3` washán a Radix saját aliasa 4,5:1 alá bukik -- index.css
+// erre a három változóra irányítja át.
+document.documentElement.style.setProperty('--warn-accent-text', t.warn)
+document.documentElement.style.setProperty('--danger-accent-text', t.danger)
+document.documentElement.style.setProperty('--ok-accent-text', t.ok)
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

@@ -118,6 +118,28 @@ button {
 }
 
 /*
+ * `warn`/`danger`/`ok` (`tokens.ts`): a Calloutba ágyazott jelvény a Callout ÉS
+ * a Badge saját `--accent-a3` washán ül (kettős kompozit) -- ezen a Radix
+ * amber `--accent-a11`-je 4,42:1-re, a zöldé 3,95:1-re bukik. Ugyanaz a minta,
+ * mint a `brown` blokk: csak `--accent-a11`, mert az egyetlen alias, amit a
+ * Callout/soft Badge/soft és ghost Button/accent-colorral festett Text a
+ * szövegszínéhez használ -- a `--accent-11` a stíluslapon kizárólag
+ * `--focus-11`-et táplálja, ehhez semmi köze. Az értékeket `main.tsx` írja be
+ * `tokens.ts`-ből.
+ */
+[data-accent-color='amber'] {
+  --accent-a11: var(--warn-accent-text);
+}
+
+[data-accent-color='red'] {
+  --accent-a11: var(--danger-accent-text);
+}
+
+[data-accent-color='green'] {
+  --accent-a11: var(--ok-accent-text);
+}
+
+/*
  * A Radix `ghost` Button paddinget ÉS egy azt kiegyenlítő negatív margót ad
  * (lásd a Radix forrás-CSS-t) -- alapból (--button-ghost-padding-x: 7.6px
  * size="1"-en) a FESTETT (hover/active) háttér ennyivel túllóg a feliraton,
