@@ -1051,7 +1051,7 @@ describe('OsszesTervSection', () => {
 
       expect(within(card).getByText('Új terv')).toBeInTheDocument();
       expect(within(card).getByText('Kezelések')).toBeInTheDocument();
-      expect(within(card).getByText(/Utolsó módosítás:/)).toBeInTheDocument();
+      expect(within(card).getByText(/^Automatikusan mentve /)).toBeInTheDocument();
       expect(within(card).getByText(penz(10000))).toBeInTheDocument();
 
       // A blokk a láncok FÖLÖTT áll: a DOM-sorrendben a "Folytatás" gomb

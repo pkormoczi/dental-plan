@@ -39,16 +39,16 @@ export default function PlanEditorHeader({
             ez csak a SIKERES mentés pozitív visszajelzése, hiba mellett nem
             látszik, hogy ne mondjon ellent egymásnak a két jelzés. */}
         {piszkozatKonfliktus ? (
-          // Feloldatlan ütközésnél a mentés NEM történt meg -- a "Piszkozat
-          // mentve" felirat itt hazudna, a doki döntésére vár a dialógus.
+          // Feloldatlan ütközésnél a mentés NEM történt meg -- a pozitív
+          // felirat itt hazudna, a doki döntésére vár a dialógus.
           <Text as="div" size="1" color="amber" mt="1">
-            Piszkozat nincs mentve — egy másik ablak változtatása feloldásra vár
+            Nincs automatikusan mentve — egy másik ablak változtatása feloldásra vár
           </Text>
         ) : (
           piszkozatMentve &&
           !piszkozatHiba && (
             <Text as="div" size="1" color="gray" mt="1">
-              Piszkozat mentve {formatPiszkozatIdo(piszkozatMentve)}
+              Automatikusan mentve {formatPiszkozatIdo(piszkozatMentve)}
             </Text>
           )
         )}

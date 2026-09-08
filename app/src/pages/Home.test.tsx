@@ -181,13 +181,13 @@ describe('Home -- piszkozat-perzisztencia', () => {
     expect(screen.queryByRole('button', { name: 'Minden adat törlése' })).not.toBeInTheDocument();
   });
 
-  it('a "Piszkozat folytatása" kártya a páciensnevet és az utolsó mentés időpontját mutatja', async () => {
+  it('a "Piszkozat folytatása" kártya a páciensnevet és az automatikus mentés időpontját mutatja', async () => {
     seedPersistedDraft(makeDirtyPlan());
     renderHome();
 
     expect(await screen.findByText('Piszkozat folytatása')).toBeInTheDocument();
     expect(screen.getByText('Teszt Piroska')).toBeInTheDocument();
-    expect(screen.getByText(/Utolsó módosítás:/)).toBeInTheDocument();
+    expect(screen.getByText(/^Automatikusan mentve /)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Megnyitás' })).toBeInTheDocument();
   });
 

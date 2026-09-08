@@ -50,7 +50,7 @@ describe('PlanEditorHeader', () => {
     expect(screen.getByText(/véglegesítve/)).toBeInTheDocument();
   });
 
-  it('a "Piszkozat mentve" jelzés csak hiba NÉLKÜL látszik, hiba esetén elrejtőzik (a két jelzés ne mondjon ellent egymásnak)', () => {
+  it('az "Automatikusan mentve" jelzés csak hiba NÉLKÜL látszik, hiba esetén elrejtőzik (a két jelzés ne mondjon ellent egymásnak)', () => {
     const { rerender } = render(
       <Theme>
         <PlanEditorHeader
@@ -64,7 +64,7 @@ describe('PlanEditorHeader', () => {
         />
       </Theme>,
     );
-    expect(screen.getByText(/^Piszkozat mentve /)).toBeInTheDocument();
+    expect(screen.getByText(/^Automatikusan mentve /)).toBeInTheDocument();
 
     rerender(
       <Theme>
@@ -79,7 +79,7 @@ describe('PlanEditorHeader', () => {
         />
       </Theme>,
     );
-    expect(screen.queryByText(/^Piszkozat mentve /)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Automatikusan mentve /)).not.toBeInTheDocument();
   });
 
   it('az Előnézet gomb az onPreview-t, a kuka ikon az onDiscard-ot hívja', async () => {
@@ -107,7 +107,7 @@ describe('PlanEditorHeader', () => {
     expect(onDiscard).toHaveBeenCalledTimes(1);
   });
 
-  it('feloldatlan ütközésnél a "Piszkozat mentve" helyett a nem-mentett állapot látszik', () => {
+  it('feloldatlan ütközésnél az "Automatikusan mentve" helyett a nem-mentett állapot látszik', () => {
     render(
       <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
         <PlanEditorHeader
@@ -122,7 +122,7 @@ describe('PlanEditorHeader', () => {
       </Theme>,
     );
 
-    expect(screen.getByText(/Piszkozat nincs mentve/)).toBeInTheDocument();
-    expect(screen.queryByText(/Piszkozat mentve/)).not.toBeInTheDocument();
+    expect(screen.getByText(/^Nincs automatikusan mentve — /)).toBeInTheDocument();
+    expect(screen.queryByText(/^Automatikusan mentve /)).not.toBeInTheDocument();
   });
 });

@@ -85,7 +85,7 @@ export class DemoDraftStorage implements DraftStorage {
    * ezért SZIGORÚAN NÖVEKVŐ: két, ugyanabba az ezredmásodpercbe eső írás
    * (két fül egyszerre) különben azonos bélyeget kapna, és a következő
    * ellenőrzés nem venné észre az idegen írást. A pár ezredmásodperces
-   * előresietés a "Piszkozat mentve HH:MM" kijelzésen láthatatlan.
+   * előresietés az "Automatikusan mentve HH:MM" kijelzésen láthatatlan.
    */
   private ujIdobelyeg(tarolt: DraftRecord | null): string {
     const most = Date.now();

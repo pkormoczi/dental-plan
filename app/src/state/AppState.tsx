@@ -215,7 +215,7 @@ interface AppStateValue {
    * A szerkesztőben ÖSSZECSUKOTT fázisok indexei -- tisztán vizuális
    * munkaállapot, ezért memóriában él, nem a `Plan`-ben és nem a
    * `DraftMeta`-ban: perzisztálva minden összecsukás újraírná a piszkozatot
-   * és a „Piszkozat mentve" bélyeget egy kattintásra frissítené. Azért ITT
+   * és az „Automatikusan mentve" bélyeget egy kattintásra frissítené. Azért ITT
    * (a `piszkozatMeta` szomszédjaként) és nem a `PlanEditorPage`-ben, mert
    * az Előnézetre lépés unmountolja a lapot -- a doki által összecsukott
    * fázisoknak a visszalépést is túl kell élniük. Ott nullázódik, ahol a

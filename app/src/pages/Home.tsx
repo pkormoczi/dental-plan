@@ -199,7 +199,7 @@ export default function Home() {
           </Text>
           {piszkozatMentve && (
             <Text as="p" size="1" color="gray" mt="0" mb="3">
-              Utolsó módosítás: {formatPiszkozatIdo(piszkozatMentve)}
+              Automatikusan mentve {formatPiszkozatIdo(piszkozatMentve)}
             </Text>
           )}
           <Flex gap="3">

@@ -49,7 +49,7 @@ export function formatShortDate(isoDate: string, nyelv: Nyelv): string {
 }
 
 /**
- * A piszkozat-autosave "Piszkozat mentve"/"Utolsó módosítás" időbélyege
+ * A piszkozat-autosave "Automatikusan mentve" időbélyege
  * (Home.tsx, pages/planEditor/PlanEditorHeader.tsx) -- NEM a nyomtatvány
  * formátuma, ezért nem `formatLongDate`/
  * `formatShortDate`: azok tisztán naptári dátumot (nap felbontás, UTC-re

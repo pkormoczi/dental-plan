@@ -893,7 +893,7 @@ describe('PlanEditorPage -- backlog-32: piszkozat-mentés jelzés és eldobás',
     localStorage.clear();
   });
 
-  it('sikeres autosave után "Piszkozat mentve …" jelenik meg a fejlécben', async () => {
+  it('sikeres autosave után "Automatikusan mentve …" jelenik meg a fejlécben', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -902,7 +902,7 @@ describe('PlanEditorPage -- backlog-32: piszkozat-mentés jelzés és eldobás',
     await user.click(await screen.findByText('Fogeltávolítás'));
     await waitFor(() => expect(search).toHaveValue(''));
 
-    expect(await screen.findByText(/^Piszkozat mentve /)).toBeInTheDocument();
+    expect(await screen.findByText(/^Automatikusan mentve /)).toBeInTheDocument();
   });
 
   it('a trash-ikon megerősítést kér, elfogadás után a piszkozat kiürül és törlődik a localStorage-ból', async () => {

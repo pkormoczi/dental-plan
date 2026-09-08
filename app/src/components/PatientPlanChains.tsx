@@ -726,7 +726,7 @@ function AktivDraftBlokk({
       )}
       {mentve && (
         <Text as="p" size="1" color="gray" mt="0" mb="1">
-          Utolsó módosítás: {formatPiszkozatIdo(mentve)}
+          Automatikusan mentve {formatPiszkozatIdo(mentve)}
         </Text>
       )}
       {osszeg && (
