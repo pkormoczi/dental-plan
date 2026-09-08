@@ -57,6 +57,7 @@ import {
 import { workflowLepesFelirat } from '../domain/workflowLepesek';
 import type { PatientFolder, Plan, PlanFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
+import { LetoltesEloRegio, LetoltesFajlnevSor } from './LetoltesJelzo';
 import type { AktivDraft } from './useAktivDraft';
 import PlanVersionActionDialog, {
   nincsMentettPdfHiba,
@@ -177,8 +178,15 @@ export default function PatientPlanChains({
 
   const latestOverall = latestVersionAcrossPlans(plans, (planDir) => versionsByPlan[planDir] ?? []);
 
+  // A látható "Letöltve: …" sor a soronkénti üzenet-helyre kerül, de a
+  // BEMONDÁS egy lap-szintű élő régió (lent) -- a soronkénti `aria-live` a
+  // `PriceListAdminPage.tsx` kimondott ellenpéldája. Nem az `akciok.jelezHiba`
+  // csatornán: az hiba-csatorna, nem sikerjelzés.
+  const [letoltott, setLetoltott] = useState<(VersionRef & { fajlnev: string }) | null>(null);
+
   async function downloadVersion(ref: VersionRef, tervId: string) {
     akciok.jelezHiba(null);
+    setLetoltott(null);
     try {
       const bytes = await loadPlanPdf({
         patientDir: patient.dirName,
@@ -207,6 +215,7 @@ export default function PatientPlanChains({
       });
       a.click();
       URL.revokeObjectURL(url);
+      setLetoltott({ ...ref, fajlnev: a.download });
     } catch (err) {
       akciok.jelezHiba({
         ...ref,
@@ -659,6 +668,9 @@ export default function PatientPlanChains({
                         {akciok.hiba?.planDir === plan.dirName && akciok.hiba.versionDir === v.dirName && (
                           <VerzioAkcioUzenet hiba={akciok.hiba} />
                         )}
+                        {letoltott?.planDir === plan.dirName && letoltott.versionDir === v.dirName && (
+                          <LetoltesFajlnevSor fajlnev={letoltott.fajlnev} />
+                        )}
                       </Box>
                     );
                   })}
@@ -668,6 +680,8 @@ export default function PatientPlanChains({
           </Box>
         );
       })}
+
+      <LetoltesEloRegio fajlnev={letoltott?.fajlnev ?? null} />
 
       <PlanVersionActionDialog akciok={akciok} />
     </Box>

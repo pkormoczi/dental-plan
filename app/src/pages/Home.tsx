@@ -13,6 +13,7 @@ import {
   Text,
 } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
+import { LetoltesJelzo, useLetoltesJelzo } from '../components/LetoltesJelzo';
 import PatientListRow from '../components/PatientListRow';
 import { t } from '../design/tokens';
 import { formatPiszkozatIdo } from '../domain/date';
@@ -313,6 +314,12 @@ function ImentVeglegesitveKartya({
 }) {
   const pdf = usePlanPdfObjectUrl(planRef);
   const [hiba, setHiba] = useState<string | null>(null);
+  const letoltesJelzo = useLetoltesJelzo();
+  const fajlnev = buildDownloadFileName(patient.nev, {
+    tervId,
+    isDraft: false,
+    suffix: planRef.versionDir,
+  });
 
   async function megnyitasKulon() {
     setHiba(null);
@@ -350,11 +357,8 @@ function ImentVeglegesitveKartya({
           <Button asChild variant="soft" color="gray">
             <a
               href={pdf.url}
-              download={buildDownloadFileName(patient.nev, {
-                tervId,
-                isDraft: false,
-                suffix: planRef.versionDir,
-              })}
+              download={fajlnev}
+              onClick={() => letoltesJelzo.jelezLetoltes(fajlnev)}
             >
               Letöltés
             </a>
@@ -365,6 +369,7 @@ function ImentVeglegesitveKartya({
           </Button>
         )}
       </Flex>
+      <LetoltesJelzo fajlnev={letoltesJelzo.fajlnev} />
     </Card>
   );
 }

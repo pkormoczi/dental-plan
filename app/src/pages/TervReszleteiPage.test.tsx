@@ -595,4 +595,54 @@ describe('TervReszleteiPage', () => {
     );
     expect(revokeSpy).toHaveBeenCalledWith('blob:teszt-1');
   });
+
+  it('a Letöltés után a gomb mellett a letöltött fájl neve áll, és magától nem tűnik el', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const ref = await seeder.savePlan(makePlan(), new Uint8Array([1, 2, 3]));
+    const [planFolder] = await seeder.listPlans(ref.patientDir);
+    const fajlnev = buildDownloadFileName('Egyedi Elek', {
+      tervId: planFolder.tervId,
+      isDraft: false,
+      suffix: ref.versionDir,
+    });
+
+    const user = userEvent.setup();
+    renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
+
+    const link = await screen.findByRole('link', { name: 'Letöltés' });
+    expect(screen.queryByText(/^Letöltve:/)).toBeNull();
+
+    await user.click(link);
+
+    const jelzes = await screen.findByText(/^Letöltve:/);
+    expect(jelzes).toHaveTextContent(`Letöltve: ${fajlnev}`);
+    expect(link).toHaveAttribute('download', fajlnev);
+
+    // Nincs időzítő: a felirat marad, amíg új dolog nem történik.
+    await new Promise((r) => setTimeout(r, 2500));
+    expect(screen.getByText(/^Letöltve:/)).toBeInTheDocument();
+  });
+
+  it('verzióváltás után nem marad ott az előző verzió fájlneve', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const refV1 = await seeder.savePlan(makePlan(), new Uint8Array([1]));
+    const v1 = await seeder.loadPlan(refV1);
+    const refV2 = await seeder.savePlan(
+      { ...v1, verzio: 0, keltezes: '2026-08-19' },
+      new Uint8Array([2]),
+    );
+
+    const user = userEvent.setup();
+    renderReszletek(reszleteiUrl(refV2.patientDir, refV2.planDir, refV2.versionDir));
+
+    await user.click(await screen.findByRole('link', { name: 'Letöltés' }));
+    const elsoJelzes = (await screen.findByText(/^Letöltve:/)).textContent ?? '';
+    expect(elsoJelzes).toContain(refV2.versionDir);
+
+    await user.click(screen.getByText(`v${v1.verzio} · ${formatShortDate(v1.keltezes, 'hu')}`));
+
+    await waitFor(() => expect(screen.queryByText(/^Letöltve:/)).toBeNull());
+  });
 });

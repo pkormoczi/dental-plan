@@ -673,6 +673,32 @@ describe('OsszesTervSection', () => {
     );
   });
 
+  it('sikeres letöltés után a verziósor alatt a letöltött fájl neve áll, és a bemondás EGY lap-szintű élő régióból jön', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const ref = await seeder.savePlan(makeVeglegesPlan(), new Uint8Array([1, 2, 3]));
+
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-download-url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Letöltés Teszt');
+    const card = patientCard('Letöltés Teszt');
+    await user.click(await verzioMenupont(user, card, 'Letöltés'));
+
+    const fajlnev = buildDownloadFileName('Letöltés Teszt', {
+      tervId: 'lt0001',
+      isDraft: false,
+      suffix: ref.versionDir,
+    });
+    expect(await within(card).findByText(/^Letöltve:/)).toHaveTextContent(`Letöltve: ${fajlnev}`);
+    // Soronkénti `aria-live` helyett egyetlen, páciens-szintű régió.
+    expect(card.querySelectorAll('[aria-live]')).toHaveLength(1);
+  });
+
   // "Megnézés" a Terv részletei route-ra navigál -- a nyers PDF új lapon
   // való megnyitása (window.open + popup-blokkoló őr) a Terv részletei lap
   // saját "Megnyitás külön" akciójába költözött.

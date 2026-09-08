@@ -1670,6 +1670,41 @@ describe('PreviewPage -- letöltési fájlnév', () => {
     },
     10000,
   );
+
+  it(
+    'az előnézeti Letöltés után a gomb mellett a letöltött fájl neve áll; a letiltott ágak feliratai változatlanok',
+    async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(await screen.findByRole('button', { name: '+ Új kezelési terv' }));
+      await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+      await user.type(await screen.findByPlaceholderText('Kovács János'), 'Teszt Ilona');
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await user.click(await screen.findByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
+
+      const search = await screen.findByPlaceholderText(/Tétel keresése/);
+      await user.type(search, 'fogeltavolitas');
+      await user.click(await screen.findByText('Fogeltávolítás'));
+      await waitFor(() => expect(search).toHaveValue(''));
+
+      await user.click(screen.getByRole('button', { name: 'Előnézet' }));
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+
+      const link = await screen.findByRole('link', { name: 'Letöltés' });
+      expect(screen.queryByText(/^Letöltve:/)).toBeNull();
+
+      await user.click(link);
+
+      const jelzes = await screen.findByText(/^Letöltve:/);
+      expect(jelzes).toHaveTextContent(`Letöltve: ${link.getAttribute('download')}`);
+      // A letiltott gombhely feliratai (más tétel tárgya) nem jelennek meg.
+      expect(screen.queryByText('Nyomtatvány készül…')).toBeNull();
+      expect(screen.queryByText('Elavult PDF')).toBeNull();
+    },
+    15000,
+  );
 });
 
 // A "Csak ajánlat" a `Plan.csakAjanlat` mezője, nem helyi React

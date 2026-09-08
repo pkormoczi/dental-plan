@@ -15,6 +15,7 @@ import {
 } from '@radix-ui/react-icons';
 import Section from '../components/Section';
 import { ReadOnlyField } from '../components/Field';
+import { LetoltesJelzo, useLetoltesJelzo } from '../components/LetoltesJelzo';
 import PlanVersionActionDialog, {
   nincsMentettPdfHiba,
   usePlanVersionActions,
@@ -205,6 +206,15 @@ export default function TervReszleteiPage() {
     window.scrollTo(0, 0);
   }, [planDir, versionDir]);
 
+  // A verzióváltás `{ replace: true }` navigáció -- a sticky fejléc NEM
+  // unmountol, tehát a jelzést itt kell üríteni, különben egy MÁSIK verzió
+  // fájlneve maradna a képernyőn.
+  const letoltesJelzo = useLetoltesJelzo();
+  const { urit: uritLetoltesJelzo } = letoltesJelzo;
+  useEffect(() => {
+    uritLetoltesJelzo();
+  }, [planDir, versionDir, uritLetoltesJelzo]);
+
   // A sticky lap-fejléc magassága CSS változóként -- a fázisok blokk
   // `.fazis-tabla` sticky szabálya (index.css) ebből számolja a saját
   // offsetjét, hogy a két komponensnek ne kelljen ismernie egymás
@@ -320,6 +330,11 @@ export default function TervReszleteiPage() {
   const regebbi = idx >= 0 && idx < sorrend.length - 1 ? sorrend[idx + 1] : null;
   const legfrissebb = legfrissebbVerzio(versions);
   const isLegfrissebb = versionDir === legfrissebb?.dirName;
+  const letoltesFajlnev = buildDownloadFileName(plan.paciens.nev, {
+    tervId: planFolder.tervId,
+    isDraft: false,
+    suffix: versionDir,
+  });
   const dob = megjelenitett.szuletesiIdo ? formatShortDate(megjelenitett.szuletesiIdo, 'hu') : null;
 
   return (
@@ -411,11 +426,8 @@ export default function TervReszleteiPage() {
             <Button asChild size="1" variant="soft" color="gray">
               <a
                 href={pdfState.url}
-                download={buildDownloadFileName(plan.paciens.nev, {
-                  tervId: planFolder.tervId,
-                  isDraft: false,
-                  suffix: versionDir,
-                })}
+                download={letoltesFajlnev}
+                onClick={() => letoltesJelzo.jelezLetoltes(letoltesFajlnev)}
               >
                 Letöltés
               </a>
@@ -434,6 +446,8 @@ export default function TervReszleteiPage() {
           </Button>
         </Flex>
       </Flex>
+
+      <LetoltesJelzo fajlnev={letoltesJelzo.fajlnev} />
 
       {akciok.hiba && <VerzioAkcioUzenet hiba={akciok.hiba} />}
 

@@ -182,4 +182,24 @@ describe('PreviewPage -- a sikerképernyő PDF-műveletei és a Vissza útja', (
     },
     30000,
   );
+
+  it(
+    'a sikerképernyőn a Letöltés után a gomb mellett a letöltött fájl neve áll',
+    async () => {
+      const user = userEvent.setup();
+      seedAlap();
+      render(<App />);
+      window.location.hash = '#/elonezet';
+      await veglegesit(user);
+
+      const link = await screen.findByRole('link', { name: 'Letöltés' }, { timeout: 10000 });
+      expect(screen.queryByText(/^Letöltve:/)).toBeNull();
+
+      await user.click(link);
+
+      const jelzes = await screen.findByText(/^Letöltve:/);
+      expect(jelzes).toHaveTextContent(`Letöltve: ${link.getAttribute('download')}`);
+    },
+    30000,
+  );
 });

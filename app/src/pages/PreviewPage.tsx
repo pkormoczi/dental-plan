@@ -17,6 +17,7 @@ import {
   Text,
   VisuallyHidden,
 } from '@radix-ui/themes';
+import { LetoltesJelzo, useLetoltesJelzo } from '../components/LetoltesJelzo';
 import { useNyelviReview } from '../components/NyelviReviewContext';
 import { usePaciensKotes } from '../components/PaciensKotesContext';
 import { t } from '../design/tokens';
@@ -193,6 +194,11 @@ export default function PreviewPage() {
   // ugyanaz a hook, mint a Terv részletei lapon. `null` ref = nem tölt.
   const mentettPdf = usePlanPdfObjectUrl(savedRef);
 
+  // Két külön jelző: az előnézet PISZKOZAT-fájlneve nem szivároghat át a
+  // véglegesítés utáni sikerképernyőre, ahol már az archivált verzió a tárgy.
+  const elonezetJelzo = useLetoltesJelzo();
+  const sikerJelzo = useLetoltesJelzo();
+
   async function megnyitasKulon(ref: PlanRef) {
     setMentettPdfHiba(null);
     const eredmeny = await openPlanPdfInNewTab(ref, loadPlanPdf);
@@ -321,6 +327,14 @@ export default function PreviewPage() {
   // `offerOnly` state-et mindenhol ez az effektív érték váltja fel.
   const nyilatkozatIsPlaceholder = isPlaceholderTemplate(nyilatkozatMd);
   const effectiveOfferOnly = offerOnly || nyilatkozatIsPlaceholder;
+
+  function elonezetFajlnev(tervId: string): string {
+    return buildDownloadFileName(plan.paciens.nev, {
+      tervId,
+      isDraft: plan.statusz !== 'VEGLEGES',
+      suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
+    });
+  }
 
   // A `TervDocument` ugyanezzel a predikátummal dönti el a szekció-kihagyást
   // a nyomtatványon -- itt csak a checklist-jelzéshez ismételjük meg a nevekkel.
@@ -516,6 +530,11 @@ export default function PreviewPage() {
   }
 
   if (savedRef) {
+    const mentettFajlnev = buildDownloadFileName(plan.paciens.nev, {
+      tervId: plan.tervId,
+      isDraft: false,
+      suffix: savedRef.versionDir,
+    });
     return (
       <Box style={{ maxWidth: 640, margin: '40px auto', textAlign: 'center' }}>
         <Text as="p" size="4" style={{ color: t.ok }} mb="2">
@@ -578,11 +597,8 @@ export default function PreviewPage() {
             <Button asChild variant="soft" color="gray">
               <a
                 href={mentettPdf.url}
-                download={buildDownloadFileName(plan.paciens.nev, {
-                  tervId: plan.tervId,
-                  isDraft: false,
-                  suffix: savedRef.versionDir,
-                })}
+                download={mentettFajlnev}
+                onClick={() => sikerJelzo.jelezLetoltes(mentettFajlnev)}
               >
                 Letöltés
               </a>
@@ -593,6 +609,9 @@ export default function PreviewPage() {
             </Button>
           )}
         </Flex>
+        <Box mb="3">
+          <LetoltesJelzo fajlnev={sikerJelzo.fajlnev} />
+        </Box>
         <Flex gap="3" justify="center" wrap="wrap">
           <Button onClick={startNewPlan}>Új terv indítása</Button>
           {/* backlog-31: a MOST mentett páciens részletoldalára visz
@@ -749,11 +768,10 @@ export default function PreviewPage() {
                 <Button asChild variant="soft" color="gray">
                   <a
                     href={pdfInstance.url}
-                    download={buildDownloadFileName(plan.paciens.nev, {
-                      tervId: foglalas.tervId,
-                      isDraft: plan.statusz !== 'VEGLEGES',
-                      suffix: effectiveOfferOnly ? 'ajanlat' : undefined,
-                    })}
+                    download={elonezetFajlnev(foglalas.tervId)}
+                    onClick={() =>
+                      elonezetJelzo.jelezLetoltes(elonezetFajlnev(foglalas.tervId))
+                    }
                   >
                     Letöltés
                   </a>
@@ -769,6 +787,7 @@ export default function PreviewPage() {
                 {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
               </Button>
             </Flex>
+            <LetoltesJelzo fajlnev={elonezetJelzo.fajlnev} />
             {/* Állandó, mindig látható sor, nem megerősítő dialógus -- a
                 szekvenciális modal-lánc szándékosan megszűnt, és ez a mondat a
                 GOMB tulajdonságáról szól, nem a terv adathiányairól, ezért nem

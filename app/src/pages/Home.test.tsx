@@ -410,6 +410,21 @@ describe('Home -- "Az imént véglegesített terv" kártya', () => {
     expect(await screen.findByRole('link', { name: 'Letöltés' })).toBeInTheDocument();
   });
 
+  it('a kártya Letöltés gombja után a gomb mellett a letöltött fájl neve áll', async () => {
+    await seedVeglegesitettPacienst(2);
+
+    const user = userEvent.setup();
+    renderHome();
+
+    const link = await screen.findByRole('link', { name: 'Letöltés' });
+    expect(screen.queryByText(/^Letöltve:/)).toBeNull();
+
+    await user.click(link);
+
+    const jelzes = await screen.findByText(/^Letöltve:/);
+    expect(jelzes).toHaveTextContent(`Letöltve: ${link.getAttribute('download')}`);
+  });
+
   it('30 percnél régebbi véglegesítésnél nem jelenik meg', async () => {
     await seedVeglegesitettPacienst(45);
 
