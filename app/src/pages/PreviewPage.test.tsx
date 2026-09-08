@@ -91,7 +91,7 @@ describe('PreviewPage -- kitöltetlen sorok véglegesítés-őre', () => {
       expect(
         await screen.findByText(/A terv 1 kitöltetlen sort tartalmaz/),
       ).toBeInTheDocument();
-      expect(screen.getByText(/1\. kezelés — 16/)).toBeInTheDocument();
+      expect(screen.getByText(/1\. fázis — 16/)).toBeInTheDocument();
       expect(finalizeBtn).toBeDisabled();
       expect(screen.queryByText('A terv elmentve ✓')).not.toBeInTheDocument();
 
@@ -166,7 +166,7 @@ describe('PreviewPage -- hiányzó/nem aktív kezelőorvos kemény blokk', () =>
           fazisok: [
             {
               sorszam: 1,
-              megnevezes: '1. kezelés',
+              megnevezes: '1. fázis',
               megjegyzes: '',
               sorok: [
                 {
@@ -309,7 +309,7 @@ describe('PreviewPage -- 94. tétel: névütközés kemény blokkja', () => {
           fazisok: [
             {
               sorszam: 1,
-              megnevezes: '1. kezelés',
+              megnevezes: '1. fázis',
               megjegyzes: '',
               sorok: [
                 {
@@ -839,7 +839,7 @@ function seedGermanNameDraft(sorok: Record<string, unknown>[]) {
           kiskoru: false,
           torvenyesKepviselo: null,
         },
-        fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok }],
+        fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok }],
         osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
       },
     }),

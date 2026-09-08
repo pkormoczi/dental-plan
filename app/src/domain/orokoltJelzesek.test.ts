@@ -47,7 +47,7 @@ function makePlan(fazisok: Partial<Fazis>[]): Plan {
     },
     fazisok: fazisok.map((f, i) => ({
       sorszam: i + 1,
-      megnevezes: f.megnevezes ?? `${i + 1}. kezelés`,
+      megnevezes: f.megnevezes ?? `${i + 1}. fázis`,
       megjegyzes: '',
       sorok: [],
       ...f,
@@ -193,13 +193,13 @@ describe('orokoltKeziAru / orokoltMegjegyzesu -- megosztott predikátumok', () =
   });
 
   it('fázis-megjegyzés: igaz, ha a marker be van állítva ÉS a szöveg nem üres', () => {
-    expect(orokoltMegjegyzesu({ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: 'Régi', sorok: [], orokoltMegjegyzes: true })).toBe(
+    expect(orokoltMegjegyzesu({ sorszam: 1, megnevezes: '1. fázis', megjegyzes: 'Régi', sorok: [], orokoltMegjegyzes: true })).toBe(
       true,
     );
   });
 
   it('fázis-megjegyzés: hamis, ha a marker be van állítva, de a szöveget kiürítették', () => {
-    expect(orokoltMegjegyzesu({ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [], orokoltMegjegyzes: true })).toBe(
+    expect(orokoltMegjegyzesu({ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [], orokoltMegjegyzes: true })).toBe(
       false,
     );
   });
@@ -219,6 +219,6 @@ describe('checklist-collectorok', () => {
     ]);
     expect(orokoltKeziAruSorok(plan)).toEqual(['Kézi ár']);
     expect(orokoltInaktivSorok(plan)).toEqual(['Inaktív']);
-    expect(orokoltMegjegyzesuFazisok(plan)).toEqual(['1. kezelés']);
+    expect(orokoltMegjegyzesuFazisok(plan)).toEqual(['1. fázis']);
   });
 });

@@ -103,7 +103,7 @@ describe('piszkozatTartalmas', () => {
     const plan = createBlankPlan(settings, priceList);
     const withExtraPhase = {
       ...plan,
-      fazisok: [...plan.fazisok, { sorszam: 2, megnevezes: '2. kezelés', megjegyzes: '', sorok: [] }],
+      fazisok: [...plan.fazisok, { sorszam: 2, megnevezes: '2. fázis', megjegyzes: '', sorok: [] }],
     };
     expect(piszkozatTartalmas(withExtraPhase)).toBe(true);
   });

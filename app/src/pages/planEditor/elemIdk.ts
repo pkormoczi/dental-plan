@@ -12,6 +12,7 @@
  */
 export type FokuszCel =
   | { mit: 'fogak'; pi: number; li: number }
+  | { mit: 'sorMenu'; pi: number; li: number }
   | { mit: 'kereso'; pi: number; li: number }
   | { mit: 'nev'; pi: number; li: number }
   | { mit: 'leiras'; pi: number; li: number }
@@ -58,4 +59,9 @@ export function mennyisegId(pi: number, li: number): string {
 
 export function arId(pi: number, li: number): string {
   return `ar-${pi}-${li}`;
+}
+
+/** A sor `⋯` menüjének triggere -- a sor-mozgatás utáni fókusz célpontja. */
+export function sorMenuId(pi: number, li: number): string {
+  return `sor-menu-${pi}-${li}`;
 }

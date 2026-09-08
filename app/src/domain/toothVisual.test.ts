@@ -92,7 +92,7 @@ function makeMultiPhasePlan(fazisok: Sor[][]): Plan {
     },
     fazisok: fazisok.map((sorok, i) => ({
       sorszam: i + 1,
-      megnevezes: `${i + 1}. kezelés`,
+      megnevezes: `${i + 1}. fázis`,
       megjegyzes: '',
       sorok,
     })),

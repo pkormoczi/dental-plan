@@ -47,7 +47,7 @@ function makePlan(fazisok: Sor[][]): Plan {
     },
     fazisok: fazisok.map((sorok, i) => ({
       sorszam: i + 1,
-      megnevezes: `${i + 1}. kezelés`,
+      megnevezes: `${i + 1}. fázis`,
       megjegyzes: '',
       sorok,
     })),
@@ -81,12 +81,12 @@ describe('uresFazisok', () => {
 
   it('egy 0 soros fázist jelez a nevével', () => {
     const plan = makePlan([[sor({ tetelId: 't1' })], []]);
-    expect(uresFazisok(plan)).toEqual([{ fazisIndex: 1, fazisNev: '2. kezelés' }]);
+    expect(uresFazisok(plan)).toEqual([{ fazisIndex: 1, fazisNev: '2. fázis' }]);
   });
 
   it('sor felvétele után a fázis eltűnik a listából', () => {
     const uresPlan = makePlan([[]]);
-    expect(uresFazisok(uresPlan)).toEqual([{ fazisIndex: 0, fazisNev: '1. kezelés' }]);
+    expect(uresFazisok(uresPlan)).toEqual([{ fazisIndex: 0, fazisNev: '1. fázis' }]);
     const feltoltottPlan = makePlan([[sor({ tetelId: 't1' })]]);
     expect(uresFazisok(feltoltottPlan)).toEqual([]);
   });
@@ -105,7 +105,7 @@ describe('kitoltetlenSorok', () => {
   it('egy meg nem nevezett sort jelez a fázis nevével és a fogszámmal', () => {
     const plan = makePlan([[sor({ tetelId: '', nevSnapshot: '', fogak: '16' })]]);
     expect(kitoltetlenSorok(plan)).toEqual([
-      { fazisIndex: 0, fazisNev: '1. kezelés', sorIndex: 0, fogak: '16' },
+      { fazisIndex: 0, fazisNev: '1. fázis', sorIndex: 0, fogak: '16' },
     ]);
   });
 
@@ -134,8 +134,8 @@ describe('kitoltetlenSorok', () => {
       [sor({ tetelId: '', nevSnapshot: '', fogak: '26' }), sor({ tetelId: 't2' })],
     ]);
     expect(kitoltetlenSorok(plan)).toEqual([
-      { fazisIndex: 0, fazisNev: '1. kezelés', sorIndex: 1, fogak: '16' },
-      { fazisIndex: 1, fazisNev: '2. kezelés', sorIndex: 0, fogak: '26' },
+      { fazisIndex: 0, fazisNev: '1. fázis', sorIndex: 1, fogak: '16' },
+      { fazisIndex: 1, fazisNev: '2. fázis', sorIndex: 0, fogak: '26' },
     ]);
   });
 
@@ -225,7 +225,7 @@ describe('hianyzoCsomagLeirasok', () => {
   it('csomag tételre hivatkozó, üres leírású sort jelez', () => {
     const plan = makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: 'All-on-4 csomag' })]]);
     expect(hianyzoCsomagLeirasok(plan, priceList)).toEqual([
-      { fazisIndex: 0, fazisNev: '1. kezelés', sorIndex: 0, nev: 'All-on-4 csomag' },
+      { fazisIndex: 0, fazisNev: '1. fázis', sorIndex: 0, nev: 'All-on-4 csomag' },
     ]);
   });
 

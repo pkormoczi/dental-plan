@@ -233,7 +233,7 @@ describe('nyelvvaltasHatasa', () => {
       fazisok: [
         {
           sorszam: 1,
-          megnevezes: '1. kezelés',
+          megnevezes: '1. fázis',
           megjegyzes: '',
           sorok: [
             { tetelId: 't1', nevSnapshot: 'Van DE', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 1000, tenylegesEgysegar: 1000 },
@@ -250,7 +250,7 @@ describe('nyelvvaltasHatasa', () => {
       fazisok: [
         {
           sorszam: 1,
-          megnevezes: '1. kezelés',
+          megnevezes: '1. fázis',
           megjegyzes: '',
           sorok: [
             { tetelId: 't1', nevSnapshot: 'Kézzel írt magyar szöveg', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 1000, tenylegesEgysegar: 1000 },
@@ -267,7 +267,7 @@ describe('nyelvvaltasHatasa', () => {
       fazisok: [
         {
           sorszam: 1,
-          megnevezes: '1. kezelés',
+          megnevezes: '1. fázis',
           megjegyzes: '',
           sorok: [
             { tetelId: '', nevSnapshot: 'Egyedi sor', savos: false, fogak: '', mennyiseg: 1, listaEgysegar: 0, tenylegesEgysegar: 0 },

@@ -70,7 +70,7 @@ describe('VeglegesitesChecklist -- szamlalo-jelvény', () => {
           sulyossag: 'hard',
           cim: 'A terv 2 kitöltetlen sort tartalmaz.',
           szamlalo: 2,
-          reszletek: [{ cim: 'Érintett sorok', nevek: ['1. kezelés — 16', '1. kezelés — 26'] }],
+          reszletek: [{ cim: 'Érintett sorok', nevek: ['1. fázis — 16', '1. fázis — 26'] }],
         },
         {
           id: 'nulla-osszegu-sor',

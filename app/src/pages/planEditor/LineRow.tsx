@@ -2,8 +2,25 @@
 // PlanEditorPage.tsx-ből.
 
 import { useEffect, useState } from 'react';
-import { Badge, Box, Button, Flex, IconButton, Table, Text, TextArea, TextField } from '@radix-ui/themes';
-import { CheckIcon, ResetIcon, TrashIcon, UpdateIcon } from '@radix-ui/react-icons';
+import {
+  Badge,
+  Box,
+  Button,
+  DropdownMenu,
+  Flex,
+  IconButton,
+  Table,
+  Text,
+  TextArea,
+  TextField,
+} from '@radix-ui/themes';
+import {
+  CheckIcon,
+  DotsHorizontalIcon,
+  ResetIcon,
+  TrashIcon,
+  UpdateIcon,
+} from '@radix-ui/react-icons';
 import HuChip from '../../components/HuChip';
 import NumberField from '../../components/NumberField';
 import ToothPickerPopover from '../../components/ToothPickerPopover';
@@ -21,7 +38,7 @@ import { invalidFdiTokens, parseTeeth } from '../../domain/teeth';
 import type { FogterkepAllapot } from '../../domain/toothVisual';
 import { sorOsszeg } from '../../domain/totals';
 import type { Kategoria, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
-import { arId, fogId, keresoId, leirasId, mennyisegId, nevId } from './elemIdk';
+import { arId, fogId, keresoId, leirasId, mennyisegId, nevId, sorMenuId } from './elemIdk';
 import ItemPicker from './ItemPicker';
 
 export interface LineRowProps {
@@ -41,8 +58,12 @@ export interface LineRowProps {
   arFrissitesJavaslat: ArFrissites | null;
   /** 65. tétel: a guided review kényszerítve nyitja a leírás-sávot -- lásd lent. */
   forceLeirasOpen: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
   onPatch: (patch: Partial<Sor>) => void;
   onRequestArFrissites: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
   onRemove: () => void;
 }
 
@@ -59,8 +80,12 @@ export default function LineRow({
   tetel,
   arFrissitesJavaslat,
   forceLeirasOpen,
+  canMoveUp,
+  canMoveDown,
   onPatch,
   onRequestArFrissites,
+  onMoveUp,
+  onMoveDown,
   onRemove,
 }: LineRowProps) {
   // A fogtérkép-kattintással létrehozott, még meg nem nevezett sor -- ez az
@@ -454,16 +479,45 @@ export default function LineRow({
       </Table.Cell>
 
       <Table.Cell>
-        <IconButton
-          type="button"
-          aria-label="Sor törlése"
-          variant="ghost"
-          color="gray"
-          size="1"
-          onClick={onRemove}
-        >
-          <TrashIcon />
-        </IconButton>
+        <Flex gap="1" align="center">
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              {/* A sor pozíciója az azonosító, nem a neve: két azonos tétel
+                  egy fázisban ugyanazt a nevet viselné. */}
+              <IconButton
+                id={sorMenuId(pi, li)}
+                type="button"
+                variant="ghost"
+                color="gray"
+                size="1"
+                aria-label={`${li + 1}. sor — további műveletek`}
+              >
+                <DotsHorizontalIcon />
+              </IconButton>
+            </DropdownMenu.Trigger>
+            {/* onCloseAutoFocus: mozgatás után a `fokuszCel` viszi a fókuszt a
+                mozgatott sor `⋯` gombjára -- a menü záráskori
+                fókusz-visszavétele ezt halászná el. */}
+            <DropdownMenu.Content size="1" onCloseAutoFocus={(e) => e.preventDefault()}>
+              <DropdownMenu.Item disabled={!canMoveUp} onSelect={onMoveUp}>
+                Feljebb
+              </DropdownMenu.Item>
+              <DropdownMenu.Item disabled={!canMoveDown} onSelect={onMoveDown}>
+                Lejjebb
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+          <IconButton
+            type="button"
+            aria-label="Sor törlése"
+            variant="ghost"
+            color="gray"
+            size="1"
+            onClick={onRemove}
+          >
+            <TrashIcon />
+          </IconButton>
+        </Flex>
       </Table.Cell>
     </Table.Row>
     {leirasNyitva && (

@@ -23,9 +23,13 @@ export function pdfTervCim(tervCim: string, plan: Plan, priceList: PriceList): s
   return kategoria ? resolveNev(kategoria.nev, plan.nyelv).szoveg : tervCim;
 }
 
-/** A generált fázisnév-minta németül -- lásd `domain/blankPlan.ts` `generaltFazisNev()`. */
+/**
+ * A generált fázisnév-minta németül -- lásd `domain/blankPlan.ts`
+ * `generaltFazisNev()`. „Phase”, nem „Behandlung”: a szakasz lábában a
+ * nyomtatványon már ma is „Phase gesamt” áll (`pdf/labels.ts`).
+ */
 function generaltFazisNevDe(pos: number): string {
-  return `${pos}. Behandlung`;
+  return `${pos}. Phase`;
 }
 
 /**

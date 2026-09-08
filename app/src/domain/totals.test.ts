@@ -14,7 +14,7 @@ import type { Fazis, Sor } from './types';
 const fazisok: Fazis[] = [
   {
     sorszam: 1,
-    megnevezes: '1. kezelés',
+    megnevezes: '1. fázis',
     megjegyzes: '',
     sorok: [
       {
@@ -44,7 +44,7 @@ describe('elteresBontas', () => {
     return [
       {
         sorszam: 1,
-        megnevezes: '1. kezelés',
+        megnevezes: '1. fázis',
         megjegyzes: '',
         // A bejelentés repró-terve: +27 000 felár, −23 000 kedvezmény.
         sorok: [sor(38000, 65000), sor(95000, 85500), sor(135000, 121500)],
@@ -65,7 +65,7 @@ describe('elteresBontas', () => {
     const egyezo: Fazis[] = [
       {
         sorszam: 1,
-        megnevezes: '1. kezelés',
+        megnevezes: '1. fázis',
         megjegyzes: '',
         sorok: [
           {
@@ -106,7 +106,7 @@ describe('sávon belüli ár az összegzésben', () => {
     return [
       {
         sorszam: 1,
-        megnevezes: '1. kezelés',
+        megnevezes: '1. fázis',
         megjegyzes: '',
         sorok: [
           {

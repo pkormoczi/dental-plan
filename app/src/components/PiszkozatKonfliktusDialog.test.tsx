@@ -35,7 +35,7 @@ function makePlan(sorArak: number[]): Plan {
     fazisok: [
       {
         sorszam: 1,
-        megnevezes: '1. kezelés',
+        megnevezes: '1. fázis',
         megjegyzes: '',
         sorok: sorArak.map((ar) => ({
           tetelId: '',

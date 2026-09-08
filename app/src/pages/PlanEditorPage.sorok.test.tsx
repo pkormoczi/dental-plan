@@ -118,7 +118,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
 
     const valaszto = screen.getByRole('combobox', { name: /Új sor ide/ });
     await user.click(valaszto);
-    await user.click(await screen.findByRole('option', { name: '2. kezelés' }));
+    await user.click(await screen.findByRole('option', { name: '2. fázis' }));
 
     const chart = screen.getByRole('toolbar');
     const tooth26 = chart.querySelector('[data-tooth="26"]') as Element;

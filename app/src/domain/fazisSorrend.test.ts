@@ -13,28 +13,28 @@ describe('fazisokFelcserelve', () => {
     // névsor önmagában változatlan marad, holott a tartalom (itt: a
     // megjegyzés mint egyedi jelölő) ténylegesen felcserélődik.
     const fazisok = [
-      { ...fazis(1, '1. kezelés'), megjegyzes: 'A' },
-      { ...fazis(2, '2. kezelés'), megjegyzes: 'B' },
-      { ...fazis(3, '3. kezelés'), megjegyzes: 'C' },
+      { ...fazis(1, '1. fázis'), megjegyzes: 'A' },
+      { ...fazis(2, '2. fázis'), megjegyzes: 'B' },
+      { ...fazis(3, '3. fázis'), megjegyzes: 'C' },
     ];
     const next = fazisokFelcserelve(fazisok, 0, 1);
-    expect(next.map((f) => f.megnevezes)).toEqual(['1. kezelés', '2. kezelés', '3. kezelés']);
+    expect(next.map((f) => f.megnevezes)).toEqual(['1. fázis', '2. fázis', '3. fázis']);
     expect(next.map((f) => f.megjegyzes)).toEqual(['B', 'A', 'C']);
     expect(next.map((f) => f.sorszam)).toEqual([1, 2, 3]);
   });
 
   it('kézzel átírt fázisnevet nem bánt, csak a generáltakat frissíti', () => {
-    const fazisok = [fazis(1, 'Fogpótlás'), fazis(2, '2. kezelés')];
+    const fazisok = [fazis(1, 'Fogpótlás'), fazis(2, '2. fázis')];
     const next = fazisokFelcserelve(fazisok, 0, 1);
     // A kézzel átírt "Fogpótlás" változatlan marad, csak pozíciót vált; a
-    // generált "2. kezelés" az új (1.) pozíciójára igazodik.
-    expect(next.map((f) => f.megnevezes)).toEqual(['1. kezelés', 'Fogpótlás']);
+    // generált "2. fázis" az új (1.) pozíciójára igazodik.
+    expect(next.map((f) => f.megnevezes)).toEqual(['1. fázis', 'Fogpótlás']);
   });
 
   it('nem mutálja az eredeti tömböt', () => {
-    const fazisok = [fazis(1, '1. kezelés'), fazis(2, '2. kezelés')];
+    const fazisok = [fazis(1, '1. fázis'), fazis(2, '2. fázis')];
     fazisokFelcserelve(fazisok, 0, 1);
-    expect(fazisok.map((f) => f.megnevezes)).toEqual(['1. kezelés', '2. kezelés']);
+    expect(fazisok.map((f) => f.megnevezes)).toEqual(['1. fázis', '2. fázis']);
   });
 });
 

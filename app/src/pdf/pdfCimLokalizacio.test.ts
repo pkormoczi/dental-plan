@@ -64,7 +64,7 @@ function makePlan(nyelv: Plan['nyelv'], sorok: Sor[]): Plan {
       kiskoru: false,
       torvenyesKepviselo: null,
     },
-    fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok }],
+    fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok }],
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
   };
 }
@@ -106,7 +106,7 @@ describe('pdfTervCim', () => {
 
 describe('pdfFazisNev', () => {
   it('DE nyelven, generált fázisnévnél a német mintát adja', () => {
-    expect(pdfFazisNev('2. kezelés', 2, 'de')).toBe('2. Behandlung');
+    expect(pdfFazisNev('2. fázis', 2, 'de')).toBe('2. Phase');
   });
 
   it('DE nyelven, kézzel átnevezett fázisnál a tárolt nevet adja változatlanul', () => {
@@ -114,10 +114,10 @@ describe('pdfFazisNev', () => {
   });
 
   it('DE nyelven, más pozícióhoz tartozó generált mintánál nem cseréli (nem egyezik pontosan)', () => {
-    expect(pdfFazisNev('2. kezelés', 3, 'de')).toBe('2. kezelés');
+    expect(pdfFazisNev('2. fázis', 3, 'de')).toBe('2. fázis');
   });
 
   it('HU nyelven a fázisnév mindig változatlan (no-op)', () => {
-    expect(pdfFazisNev('2. kezelés', 2, 'hu')).toBe('2. kezelés');
+    expect(pdfFazisNev('2. fázis', 2, 'hu')).toBe('2. fázis');
   });
 });

@@ -13,7 +13,12 @@ import ToothChartPanel from '../components/ToothChartPanel';
 import { arFrissites, arFrissitesPatch, type ArFrissites } from '../domain/arKoveti';
 import { generaltFazisNev } from '../domain/blankPlan';
 import { formatLongDate } from '../domain/date';
-import { fazisCsukvaMozgatasUtan, fazisCsukvaTorlesUtan, fazisokFelcserelve } from '../domain/fazisSorrend';
+import {
+  fazisCsukvaMozgatasUtan,
+  fazisCsukvaTorlesUtan,
+  fazisokFelcserelve,
+  sorokFelcserelve,
+} from '../domain/fazisSorrend';
 import { sorPatchKovetessel } from '../domain/mennyiseg';
 import { formatMoney } from '../domain/money';
 import { reviewElfogadva, reviewIrasUtan, sorPatchNyelvvel } from '../domain/nyelviReview';
@@ -185,6 +190,21 @@ export default function PlanEditorPage() {
     });
     setFazisResetToken((n) => n + 1);
     setFazisCsukva((prev) => fazisCsukvaMozgatasUtan(prev, pi, cel));
+  }
+
+  /**
+   * Sor-sorrendezés EGY fázison belül, a `movePhase()` mintáján. A fókusz a
+   * MOZGATOTT sor `⋯` gombjára megy: a `PhaseSection` remountolja a sorokat
+   * (`sorResetToken`), ami különben elnyelné a fókuszt, és az ismételt
+   * mozgatás egérrel is újranyitást kérne.
+   */
+  function moveLine(pi: number, li: number, irany: -1 | 1) {
+    const cel = li + irany;
+    if (cel < 0 || cel >= plan.fazisok[pi].sorok.length) return;
+    updatePlan((draft) => {
+      draft.fazisok[pi].sorok = sorokFelcserelve(draft.fazisok[pi].sorok, li, cel);
+    });
+    setFokuszCel({ mit: 'sorMenu', pi, li: cel });
   }
 
   // A teljes piszkozat eldobása (6. döntés) -- a `patientDir`-t a
@@ -432,6 +452,7 @@ export default function PlanEditorPage() {
             onAddEgyedi={(nev) => addEgyediLine(pi, nev)}
             onPatchLine={(li, patch) => patchLine(pi, li, patch)}
             onRequestArFrissites={(li) => setPendingArFrissites({ pi, li })}
+            onMoveLine={(li, irany) => moveLine(pi, li, irany)}
             onRemoveLine={(li) =>
               updatePlan((draft) => {
                 draft.fazisok[pi].sorok.splice(li, 1);

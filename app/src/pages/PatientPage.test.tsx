@@ -215,7 +215,7 @@ describe('PatientPage -- 89. tétel: egyedi végösszeg/előleg pénznemenkénti
         kiskoru: false,
         torvenyesKepviselo: null,
       },
-      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+      fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [] }],
       osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
       kedvezmenyOsszeg: 50000,
       elolegOsszeg: 100000,
@@ -530,7 +530,7 @@ describe('PatientPage -- backlog-40: páciens törzsadata kártya', () => {
       arlistaVerzio: '2026-07-01',
       orvos: 'Dr. Mándoki István',
       paciens,
-      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+      fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [] }],
       osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
       paciensId,
     };
@@ -724,7 +724,7 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
       arlistaVerzio: '2026-07-01',
       orvos: 'Dr. Mándoki István',
       paciens,
-      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+      fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [] }],
       osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
       paciensId,
     };
@@ -918,7 +918,7 @@ describe('PatientPage -- Kezelőorvos szekció', () => {
             kiskoru: false,
             torvenyesKepviselo: null,
           },
-          fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+          fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [] }],
           osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
         },
       }),
@@ -1217,7 +1217,7 @@ describe('PatientPage -- a nyelv- és pénznemváltás megerősítő gombja', ()
 
   it('a nyelv- és a pénznemváltás dialógusának "Folytatás" gombja ugyanazt a színt kapja, egyik sem piros', async () => {
     const user = userEvent.setup();
-    seedDraft([{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [makeSor()] }]);
+    seedDraft([{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [makeSor()] }]);
     renderPatient();
 
     await screen.findByText('Dokumentum nyelve');
@@ -1269,7 +1269,7 @@ describe('PatientPage -- örökölt nyelv/pénznem jelzése', () => {
         kiskoru: false,
         torvenyesKepviselo: null,
       },
-      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+      fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [] }],
       osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
       ...overrides,
     };
@@ -1398,7 +1398,7 @@ describe('PatientPage -- örökölt nyelv/pénznem jelzése', () => {
       makePlan({
         nyelv: 'de',
         penznem: 'EUR',
-        fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [makeSor()] }],
+        fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [makeSor()] }],
       }),
       { nyelv: 'de', penznem: 'EUR' },
     );

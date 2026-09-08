@@ -1,5 +1,5 @@
 import { fazisNevGeneralt, generaltFazisNev } from './blankPlan';
-import type { Fazis } from './types';
+import type { Fazis, Sor } from './types';
 
 /**
  * Egy fázis felcserélése a `cel` pozícióval -- a `PriceListAdminPage.tsx`
@@ -7,7 +7,7 @@ import type { Fazis } from './types';
  * `Kategoria`-szerű `id`-je). A hívó felelőssége a `cel` tartomány-
  * ellenőrzése (`PlanEditorPage.tsx` `movePhase()`) -- ez a függvény
  * feltételezi, hogy `cel` érvényes index. Csak a GENERÁLT (pl. "2.
- * kezelés") nevet frissíti pozíció szerint, a kézzel átírt fázisnevet a
+ * fázis") nevet frissíti pozíció szerint, a kézzel átírt fázisnevet a
  * mozgatás nem bántja. Új tömböt ad vissza, az eredeti `fazisok`-at nem
  * mutálja.
  */
@@ -20,6 +20,18 @@ export function fazisokFelcserelve(fazisok: Fazis[], pi: number, cel: number): F
     x.sorszam = i + 1;
   });
   return f;
+}
+
+/**
+ * Két sor felcserélése EGY fázison belül -- a `fazisokFelcserelve` mintáján,
+ * de névszámozás nélkül: a sornak nincs pozícióból generált mezője. A hívó
+ * felelőssége a `cel` tartomány-ellenőrzése (`PlanEditorPage.tsx`
+ * `moveLine()`). Új tömböt ad vissza, az eredetit nem mutálja.
+ */
+export function sorokFelcserelve(sorok: Sor[], li: number, cel: number): Sor[] {
+  const s = sorok.slice();
+  [s[li], s[cel]] = [s[cel], s[li]];
+  return s;
 }
 
 /**

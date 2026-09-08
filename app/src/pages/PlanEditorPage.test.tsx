@@ -364,13 +364,13 @@ describe('PlanEditorPage -- fázisnév után a tételkeresőbe visz a Tab és az
     renderEditor();
     await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
 
-    const nevMezo = screen.getByDisplayValue('1. kezelés');
+    const nevMezo = screen.getByDisplayValue('1. fázis');
     await user.click(nevMezo);
     await user.tab();
 
     await waitFor(() => expect(document.getElementById('kereso-fazis-0')).toHaveFocus());
     expect(document.getElementById('nev-0-0')).not.toHaveFocus();
-    expect(nevMezo).toHaveValue('1. kezelés');
+    expect(nevMezo).toHaveValue('1. fázis');
   });
 
   it('nyitott fázisban az Enter ugyanoda visz, és nem írja át a fázisnevet', async () => {
@@ -378,12 +378,12 @@ describe('PlanEditorPage -- fázisnév után a tételkeresőbe visz a Tab és az
     renderEditor();
     await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
 
-    const nevMezo = screen.getByDisplayValue('1. kezelés');
+    const nevMezo = screen.getByDisplayValue('1. fázis');
     await user.click(nevMezo);
     await user.keyboard('{Enter}');
 
     await waitFor(() => expect(document.getElementById('kereso-fazis-0')).toHaveFocus());
-    expect(nevMezo).toHaveValue('1. kezelés');
+    expect(nevMezo).toHaveValue('1. fázis');
   });
 
   it('több soros fázisnál is a keresőbe visz, nem a legutolsó sorra', async () => {
@@ -392,7 +392,7 @@ describe('PlanEditorPage -- fázisnév után a tételkeresőbe visz a Tab és az
     await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
     await sorFelvetel(user, 'csatornaszam', 'Gyökértömés csatornaszámtól függően');
 
-    const nevMezo = screen.getByDisplayValue('1. kezelés');
+    const nevMezo = screen.getByDisplayValue('1. fázis');
     await user.click(nevMezo);
     await user.tab();
 
@@ -407,7 +407,7 @@ describe('PlanEditorPage -- fázisnév után a tételkeresőbe visz a Tab és az
     await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
     await user.click(screen.getByRole('button', { name: 'Fázis összecsukása' }));
 
-    const nevMezo = screen.getByDisplayValue('1. kezelés');
+    const nevMezo = screen.getByDisplayValue('1. fázis');
     await user.click(nevMezo);
     await user.tab();
 
@@ -527,7 +527,7 @@ describe('PlanEditorPage -- backlog-58: fázis sorrendezés', () => {
 
     // A 2. fázis nevét kézzel átírjuk -- ez utántól nem generált név, a
     // mozgatás nem frissítheti.
-    const masodikNev = screen.getByDisplayValue('2. kezelés');
+    const masodikNev = screen.getByDisplayValue('2. fázis');
     await user.clear(masodikNev);
     await user.type(masodikNev, 'Röntgen fázis');
 
@@ -541,20 +541,140 @@ describe('PlanEditorPage -- backlog-58: fázis sorrendezés', () => {
     expect(screen.getAllByRole('button', { name: 'Fázis lejjebb' })[1]).toBeDisabled();
 
     // A "Röntgen fázis" (2. pozíció) feljebb mozgatása -- az 1. fázis
-    // generált neve ("1. kezelés") a mozgatással "2. kezelés"-re frissül,
+    // generált neve ("1. fázis") a mozgatással "2. fázis"-ra frissül,
     // a kézzel átírt "Röntgen fázis" érintetlen marad.
     await user.click(screen.getAllByRole('button', { name: 'Fázis feljebb' })[1]);
 
     // A DOM-sorrend igazolja: a "Röntgen fázis" került előre, ÉS a sora
     // ("Gyökértömés…") vele ment -- nem a másik fázis alá "vándorolt".
     const sorrend = screen
-      .getAllByDisplayValue(/^(Röntgen fázis|2\. kezelés|Gyökértömés csatornaszámtól függően)$/)
+      .getAllByDisplayValue(/^(Röntgen fázis|2. fázis|Gyökértömés csatornaszámtól függően)$/)
       .map((el) => (el as HTMLInputElement).value);
-    expect(sorrend).toEqual(['Röntgen fázis', 'Gyökértömés csatornaszámtól függően', '2. kezelés']);
+    expect(sorrend).toEqual(['Röntgen fázis', 'Gyökértömés csatornaszámtól függően', '2. fázis']);
 
     // A szélek után a tiltott nyilak is a helyes (új) pozícióra vonatkoznak.
     expect(screen.getAllByRole('button', { name: 'Fázis feljebb' })[0]).toBeDisabled();
     expect(screen.getAllByRole('button', { name: 'Fázis lejjebb' })[1]).toBeDisabled();
+  });
+});
+
+describe('PlanEditorPage -- fázisnév: generált alapnév és a mező címkéje', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('az új terv első fázisa "1. fázis", a hozzáadott második "2. fázis"', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    expect(await screen.findByDisplayValue('1. fázis')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
+    expect(screen.getByDisplayValue('2. fázis')).toBeInTheDocument();
+  });
+
+  it('a fázisnév mező a "Fázis neve" címkével érhető el, csukott fázisban a címke nincs a DOM-ban', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const mezo = await screen.findByLabelText('Fázis neve');
+    expect(mezo).toHaveValue('1. fázis');
+
+    await user.click(screen.getByRole('button', { name: 'Fázis összecsukása' }));
+    expect(screen.queryByLabelText('Fázis neve')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Fázis kinyitása' }));
+    expect(await screen.findByLabelText('Fázis neve')).toHaveValue('1. fázis');
+  });
+});
+
+describe('PlanEditorPage -- sor mozgatása fázison belül', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  /** Két sor egy fázisban, a felvétel sorrendjében: Fogeltávolítás, majd Gyökértömés. */
+  async function ketSor(user: ReturnType<typeof userEvent.setup>) {
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+    await user.type(search, 'csatornaszam');
+    await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
+    await waitFor(() => expect(search).toHaveValue(''));
+  }
+
+  function sorNevek(): string[] {
+    return screen
+      .getAllByLabelText('Beavatkozás megnevezése')
+      .map((el) => (el as HTMLInputElement).value);
+  }
+
+  it('a "Lejjebb" eggyel hátrébb viszi a sort, és a mozgatott sor "⋯" gombja kapja a fókuszt', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await ketSor(user);
+
+    expect(sorNevek()).toEqual(['Fogeltávolítás', 'Gyökértömés csatornaszámtól függően']);
+
+    await user.click(screen.getByRole('button', { name: '1. sor — további műveletek' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Lejjebb' }));
+
+    expect(sorNevek()).toEqual(['Gyökértömés csatornaszámtól függően', 'Fogeltávolítás']);
+    // A mozgatott sor a 2. pozícióra került -- a fókusz oda megy, hogy az
+    // ismételt mozgatás ne kérjen újranyitást.
+    await waitFor(() => expect(document.getElementById('sor-menu-0-1')).toHaveFocus());
+  });
+
+  it('az első soron a "Feljebb", az utolsón a "Lejjebb" tiltott', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await ketSor(user);
+
+    await user.click(screen.getByRole('button', { name: '1. sor — további műveletek' }));
+    expect(await screen.findByRole('menuitem', { name: 'Feljebb' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(screen.getByRole('menuitem', { name: 'Lejjebb' })).not.toHaveAttribute('aria-disabled');
+    await user.keyboard('{Escape}');
+
+    await user.click(screen.getByRole('button', { name: '2. sor — további műveletek' }));
+    expect(await screen.findByRole('menuitem', { name: 'Lejjebb' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(screen.getByRole('menuitem', { name: 'Feljebb' })).not.toHaveAttribute('aria-disabled');
+  });
+
+  it('a mozgatás nem visz sort másik fázisba', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await ketSor(user);
+
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
+    const keresok = screen.getAllByPlaceholderText(/Tétel keresése/);
+    await user.type(keresok[1], 'tomes 3');
+    await user.click(await screen.findByText('Esztétikus tömés 3 felszín'));
+    await waitFor(() => expect(keresok[1]).toHaveValue(''));
+
+    // A 2. fázis EGYETLEN sora: mindkét irány tiltott, nincs hova mozdulnia.
+    await user.click(screen.getAllByRole('button', { name: '1. sor — további műveletek' })[1]);
+    expect(await screen.findByRole('menuitem', { name: 'Feljebb' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(screen.getByRole('menuitem', { name: 'Lejjebb' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    await user.keyboard('{Escape}');
+
+    expect(sorNevek()).toEqual([
+      'Fogeltávolítás',
+      'Gyökértömés csatornaszámtól függően',
+      'Esztétikus tömés 3 felszín',
+    ]);
   });
 });
 

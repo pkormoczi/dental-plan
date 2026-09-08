@@ -60,7 +60,7 @@ function makePlan(fazisok: Sor[][], overrides: Partial<Plan> = {}): Plan {
     paciens: paciens(),
     fazisok: fazisok.map((sorok, i) => ({
       sorszam: i + 1,
-      megnevezes: `${i + 1}. kezelés`,
+      megnevezes: `${i + 1}. fázis`,
       megjegyzes: '',
       sorok,
     })),
@@ -161,7 +161,7 @@ describe('veglegesitesDiagnozis', () => {
 
     const t = tetel(diag, 'kitoltetlen-sor');
     expect(t?.sulyossag).toBe('hard');
-    expect(t?.reszletek).toEqual([{ cim: 'Érintett sorok', nevek: ['1. kezelés — 16'] }]);
+    expect(t?.reszletek).toEqual([{ cim: 'Érintett sorok', nevek: ['1. fázis — 16'] }]);
     // egy névtelen sor összege is 0, de a "nulla-osszegu-sor" tétel CSAK a
     // megnevezett sorokat listázza -- lásd domain/kitoltetlen.ts.
     expect(tetel(diag, 'nulla-osszegu-sor')).toBeUndefined();
@@ -173,7 +173,7 @@ describe('veglegesitesDiagnozis', () => {
 
     const t = tetel(diag, 'ures-fazis');
     expect(t?.sulyossag).toBe('hard');
-    expect(t?.reszletek).toEqual([{ cim: 'Érintett fázisok', nevek: ['2. kezelés'] }]);
+    expect(t?.reszletek).toEqual([{ cim: 'Érintett fázisok', nevek: ['2. fázis'] }]);
   });
 
   it('hiányzó egyéb páciensadat a "hianyzo-paciensadat" soft tételt adja', () => {
@@ -454,7 +454,7 @@ describe('veglegesitesDiagnozis', () => {
     const t = tetel(diag, 'orokolt-fazismegjegyzes');
     expect(t?.sulyossag).toBe('info');
     expect(t?.szamlalo).toBe(1);
-    expect(t?.reszletek).toEqual([{ cim: 'Érintett fázisok', nevek: ['1. kezelés'] }]);
+    expect(t?.reszletek).toEqual([{ cim: 'Érintett fázisok', nevek: ['1. fázis'] }]);
     expect(vanKemenyBlokk(diag)).toBe(false);
   });
 

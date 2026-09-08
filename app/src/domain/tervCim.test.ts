@@ -63,7 +63,7 @@ function makePlan(sorok: Sor[]): Plan {
       kiskoru: false,
       torvenyesKepviselo: null,
     },
-    fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok }],
+    fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok }],
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
   };
 }

@@ -52,6 +52,7 @@ export interface PhaseSectionProps {
   onAddEgyedi: (nev: string) => void;
   onPatchLine: (li: number, patch: Partial<Sor>) => void;
   onRequestArFrissites: (li: number) => void;
+  onMoveLine: (li: number, irany: -1 | 1) => void;
   onRemoveLine: (li: number) => void;
   onRestoreLine: (li: number, sor: Sor) => void;
   onRename: (v: string) => void;
@@ -91,6 +92,7 @@ export default function PhaseSection({
   onAddEgyedi,
   onPatchLine,
   onRequestArFrissites,
+  onMoveLine,
   onRemoveLine,
   onRestoreLine,
   onRename,
@@ -144,6 +146,14 @@ export default function PhaseSection({
     undoTimerRef.current = setTimeout(() => setPendingUndo(null), 8000);
   }
 
+  // A `sorResetToken` a `removeWithUndo` mintáját követi: a mozgatás után a
+  // sorok indexe eltolódik, index-kulcs mellett a `LineRow` lokális állapota
+  // (keresőmód, leírás-sáv) átvándorolna egy MÁSIK sorra.
+  function moveLine(li: number, irany: -1 | 1) {
+    onMoveLine(li, irany);
+    setSorResetToken((n) => n + 1);
+  }
+
   function undoRemove() {
     if (!pendingUndo) return;
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
@@ -168,26 +178,42 @@ export default function PhaseSection({
           >
             {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
           </IconButton>
-          <TextField.Root
-            id={fazisNevId(pi)}
-            value={phase.megnevezes}
-            onChange={(e) => onRename(e.target.value)}
-            // "Kész a név, jöhet a tétel": a Tab és az Enter is a fázis
-            // keresőjébe visz, nem a tábla első sorának Beavatkozás-mezőjébe
-            // -- a sietve gépelt karakterek ne írjanak át egy meglévő
-            // tételnevet. A fel/le/törlés gombokat az előre-Tab így átugorja;
-            // Shift+Tabbal (a keresőből visszafelé) és egérrel elérhetők
-            // maradnak. Csukott fázisnál marad a natív Tab: a kereső nincs a
-            // DOM-ban, az elnyelt Tab fókuszcsapda lenne.
-            onKeyDown={(e) => {
-              if (!open) return;
-              if (e.key !== 'Tab' && e.key !== 'Enter') return;
-              if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
-              e.preventDefault();
-              onNevKesz();
-            }}
-            style={{ maxWidth: 360, fontWeight: 600, color: t.brand }}
-          />
+          {/* A címke a mező FÖLÖTT (app/src/CLAUDE.md, akadálymentesség), és
+              csak nyitott fázisban: a mező sosem üres, ezért placeholder nem
+              látszana, a csukott fejléc pedig egysoros összegzés. */}
+          <Box style={{ minWidth: 0 }}>
+            {open && (
+              <Text
+                as="label"
+                htmlFor={fazisNevId(pi)}
+                size="1"
+                color="gray"
+                style={{ display: 'block' }}
+              >
+                Fázis neve
+              </Text>
+            )}
+            <TextField.Root
+              id={fazisNevId(pi)}
+              value={phase.megnevezes}
+              onChange={(e) => onRename(e.target.value)}
+              // "Kész a név, jöhet a tétel": a Tab és az Enter is a fázis
+              // keresőjébe visz, nem a tábla első sorának Beavatkozás-mezőjébe
+              // -- a sietve gépelt karakterek ne írjanak át egy meglévő
+              // tételnevet. A fel/le/törlés gombokat az előre-Tab így átugorja;
+              // Shift+Tabbal (a keresőből visszafelé) és egérrel elérhetők
+              // maradnak. Csukott fázisnál marad a natív Tab: a kereső nincs a
+              // DOM-ban, az elnyelt Tab fókuszcsapda lenne.
+              onKeyDown={(e) => {
+                if (!open) return;
+                if (e.key !== 'Tab' && e.key !== 'Enter') return;
+                if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+                e.preventDefault();
+                onNevKesz();
+              }}
+              style={{ maxWidth: 360, fontWeight: 600, color: t.brand }}
+            />
+          </Box>
           {megnevezesNyelvMismatch && (
             <>
               <Badge color="amber" variant="soft" size="1">
@@ -276,7 +302,8 @@ export default function PhaseSection({
                   <Table.ColumnHeaderCell width="112px" justify="end">
                     Összeg ({penznemJel})
                   </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell width="32px" />
+                  {/* Két gomb fér el: a `⋯` sor-menü és a kuka. */}
+                  <Table.ColumnHeaderCell width="72px" />
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -302,8 +329,12 @@ export default function PhaseSection({
                       forceLeirasOpen={
                         fokuszCel?.mit === 'leiras' && fokuszCel.pi === pi && fokuszCel.li === li
                       }
+                      canMoveUp={li > 0}
+                      canMoveDown={li < phase.sorok.length - 1}
                       onPatch={(p) => onPatchLine(li, p)}
                       onRequestArFrissites={() => onRequestArFrissites(li)}
+                      onMoveUp={() => moveLine(li, -1)}
+                      onMoveDown={() => moveLine(li, 1)}
                       onRemove={() => removeWithUndo(li, l)}
                     />
                   </Fragment>

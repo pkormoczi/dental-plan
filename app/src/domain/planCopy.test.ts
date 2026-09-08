@@ -52,7 +52,7 @@ function makePlan(overrides: Partial<Plan> = {}): Plan {
     fazisok: [
       {
         sorszam: 1,
-        megnevezes: '1. kezelés',
+        megnevezes: '1. fázis',
         megjegyzes: '',
         sorok: [
           {
@@ -390,7 +390,7 @@ describe('planMasolatKent — priceList paraméterrel', () => {
       fazisok: [
         {
           sorszam: 1,
-          megnevezes: '1. kezelés',
+          megnevezes: '1. fázis',
           megjegyzes: '',
           sorok: [
             {
@@ -429,7 +429,7 @@ describe('planMasolatKent — priceList paraméterrel', () => {
       fazisok: [
         {
           sorszam: 1,
-          megnevezes: '1. kezelés',
+          megnevezes: '1. fázis',
           megjegyzes: '',
           sorok: [
             {
@@ -454,7 +454,7 @@ describe('planMasolatKent — priceList paraméterrel', () => {
       fazisok: [
         {
           sorszam: 1,
-          megnevezes: '1. kezelés',
+          megnevezes: '1. fázis',
           megjegyzes: '',
           sorok: [
             {
@@ -476,7 +476,7 @@ describe('planMasolatKent — priceList paraméterrel', () => {
 
   it('nem üres fázismegjegyzés örökölt jelzést kap, priceList paraméterrel', () => {
     const plan = makePlan({
-      fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: 'Régi ütemezés', sorok: [] }],
+      fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: 'Régi ütemezés', sorok: [] }],
     });
     const masolat = planMasolatKent(plan, settings, '2026-08-10', null, ujPriceList);
     expect(masolat.fazisok[0].orokoltMegjegyzes).toBe(true);

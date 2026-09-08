@@ -22,7 +22,7 @@ function sor(partial: Partial<Sor> = {}): Sor {
 }
 
 function fazis(sorok: Sor[], overrides: Partial<Fazis> = {}, i = 0): Fazis {
-  return { sorszam: i + 1, megnevezes: `${i + 1}. kezelés`, megjegyzes: '', sorok, ...overrides };
+  return { sorszam: i + 1, megnevezes: `${i + 1}. fázis`, megjegyzes: '', sorok, ...overrides };
 }
 
 function makePlan(fazisok: Fazis[], overrides: Partial<Plan> = {}): Plan {

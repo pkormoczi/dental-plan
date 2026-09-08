@@ -44,7 +44,7 @@ function makeDirtyPlan(overrides: Partial<Plan> = {}): Plan {
       kiskoru: false,
       torvenyesKepviselo: null,
     },
-    fazisok: [{ sorszam: 1, megnevezes: '1. kezelés', megjegyzes: '', sorok: [] }],
+    fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [] }],
     osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
     ...overrides,
   };
@@ -370,7 +370,7 @@ describe('Home -- "Az imént véglegesített terv" kártya', () => {
         fazisok: [
           {
             sorszam: 1,
-            megnevezes: '1. kezelés',
+            megnevezes: '1. fázis',
             megjegyzes: '',
             sorok: [
               {

@@ -14,6 +14,7 @@ import {
   keresoId,
   leirasId,
   nevId,
+  sorMenuId,
   type FokuszCel,
 } from './elemIdk';
 
@@ -27,11 +28,22 @@ export function useFokuszEffekt(fokuszCel: FokuszCel, setFokuszCel: (cel: Fokusz
     // `requestAnimationFrame`-mel késleltetjük (a `PatientPlanChains.tsx`
     // `ugrasLegfrissebbre` mintája) -- a `fokuszCel`-t csak EZUTÁN nullázzuk,
     // hogy a gyerek addig lássa a kényszerítő propot.
-    if (fokuszCel.mit === 'leiras' || fokuszCel.mit === 'fazisMegjegyzes') {
+    //
+    // A `sorMenu` ugyanezt az ágat kéri, más okból: a cél a sor-mozgatást
+    // kiváltó `DropdownMenu.Item` `onSelect`-jéből származik, ami még a menü
+    // FocusScope-ja alatt fut -- egy szinkron `.focus()` ide kívülre a trap
+    // visszalökné.
+    if (
+      fokuszCel.mit === 'leiras' ||
+      fokuszCel.mit === 'fazisMegjegyzes' ||
+      fokuszCel.mit === 'sorMenu'
+    ) {
       const id =
         fokuszCel.mit === 'leiras'
           ? leirasId(fokuszCel.pi, fokuszCel.li)
-          : fazisMegjegyzesId(fokuszCel.pi);
+          : fokuszCel.mit === 'sorMenu'
+            ? sorMenuId(fokuszCel.pi, fokuszCel.li)
+            : fazisMegjegyzesId(fokuszCel.pi);
       requestAnimationFrame(() => {
         const el = document.getElementById(id);
         el?.scrollIntoView({ block: 'nearest', behavior: csokkentettMozgas() ? 'auto' : 'smooth' });

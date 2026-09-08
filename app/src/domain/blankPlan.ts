@@ -9,12 +9,15 @@ import type { Nyelv, Penznem, Plan, PriceList, Settings } from './types';
 
 /**
  * Egy generált fázisnév adott pozícióra (1-alapú), pl. `generaltFazisNev(2)`
- * -> `"2. kezelés"`. Az EGYETLEN hely, ahol ez a minta él -- a „+ Fázis
- * hozzáadása" gomb ÉS a fázis-sorrendezés (backlog-58, `movePhase()`) is
+ * -> `"2. fázis"`. Az EGYETLEN hely, ahol ez a minta él -- a „+ Fázis
+ * hozzáadása" gomb ÉS a fázis-sorrendezés (`movePhase()`) is
  * ezt hívja, hogy a két hívóhely string-literálja ne driftelhessen szét.
+ *
+ * „fázis”, nem „kezelés”: egy SOR is egy kezelés, a fázis neve ne ugyanaz a
+ * szó legyen, mint amit a sorai jelentenek.
  */
 export function generaltFazisNev(pos: number): string {
-  return `${pos}. kezelés`;
+  return `${pos}. fázis`;
 }
 
 /** Igaz, ha `nev` PONTOSAN a `pos` pozícióhoz tartozó generált fázisnév -- lásd `generaltFazisNev()`. */
