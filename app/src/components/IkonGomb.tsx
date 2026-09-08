@@ -15,6 +15,12 @@
 // egérmozgás-eseményt, a Radix Tooltip így sosem nyílna -- épp ott, ahol a
 // hiányzó magyarázat ára a legnagyobb. A span nem kap `tabIndex`-et, tehát nem
 // lesz új Tab-megálló: letiltott gombnál a tooltip egér-only, ez tudatos.
+//
+// A span ÖNMAGÁBAN nem elég: a letiltott gomb `pointer-events: auto`-val
+// továbbra is ő a találati cél, a böngésző pedig a letiltott vezérlő
+// egéreseményét elnyeli ÉS nem irányítja át a szülőre -- a tooltip néma
+// maradna (2026-09-08-i böngészős menet mérte). A `pointer-events: none`
+// teszi a spant találati céllá; a gomb amúgy sem kattintható letiltva.
 
 import { forwardRef } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
@@ -30,13 +36,21 @@ export interface IkonGombProps extends Omit<IconButtonProps, 'aria-label' | 'tit
 }
 
 const IkonGomb = forwardRef<HTMLButtonElement, IkonGombProps>(function IkonGomb(
-  { cimke, ariaLabel, ...rest },
+  { cimke, ariaLabel, style, ...rest },
   ref,
 ) {
-  const gomb = <IconButton ref={ref} aria-label={ariaLabel ?? cimke} {...rest} />;
+  const { disabled } = rest;
+  const gomb = (
+    <IconButton
+      ref={ref}
+      aria-label={ariaLabel ?? cimke}
+      style={disabled ? { ...style, pointerEvents: 'none' } : style}
+      {...rest}
+    />
+  );
   return (
     <Tooltip content={cimke}>
-      {rest.disabled ? <span style={{ display: 'inline-flex' }}>{gomb}</span> : gomb}
+      {disabled ? <span style={{ display: 'inline-flex' }}>{gomb}</span> : gomb}
     </Tooltip>
   );
 });

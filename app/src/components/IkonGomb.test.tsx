@@ -37,6 +37,10 @@ describe('IkonGomb', () => {
     // körülölelő <span>, ami viszont nem kap tabIndexet.
     const wrapper = gomb.parentElement!;
     expect(wrapper).not.toHaveAttribute('tabindex');
+    // jsdomban nincs valódi találat-teszt: a span csak akkor kapja meg az
+    // egeret, ha a letiltott gomb nem a találati cél. Ezt a `pointer-events`
+    // dönti el, ezért itt az a megfigyelhető szerződés.
+    expect(gomb).toHaveStyle({ pointerEvents: 'none' });
 
     await user.hover(wrapper);
 
