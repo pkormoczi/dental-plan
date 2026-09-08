@@ -8,6 +8,7 @@ import { TestProviders } from '../../testUtils';
 import { patientCard, verzioMenupont } from '../../testQueries';
 import { DemoStorage } from '../../storage/DemoStorage';
 import { seedPlans } from '../../storage/seed/plans';
+import { formatShortDate } from '../../domain/date';
 import { formatMoney } from '../../domain/money';
 import { buildDownloadFileName } from '../../storage/paths';
 import { useAppState } from '../../state/AppState';
@@ -875,8 +876,8 @@ describe('OsszesTervSection', () => {
       const doboz = lancDoboz(card, v1.planDir);
       const headerRow = doboz.firstElementChild as HTMLElement;
 
-      expect(within(headerRow).getByText(/v2 · 2026-07-22/)).toBeInTheDocument();
-      expect(within(headerRow).queryByText(/v1 · 2026-06-10/)).not.toBeInTheDocument();
+      expect(within(headerRow).getByText(/v2 · 2026\.07\.22\./)).toBeInTheDocument();
+      expect(within(headerRow).queryByText(/v1 · 2026\.06\.10\./)).not.toBeInTheDocument();
       expect(within(headerRow).getByText(penz(v2.plan.osszesitok.fizetendo))).toBeInTheDocument();
       expect(within(headerRow).queryByText(penz(v1.plan.osszesitok.fizetendo))).not.toBeInTheDocument();
     });
@@ -935,9 +936,9 @@ describe('OsszesTervSection', () => {
       const doboz = lancDoboz(card, v1.planDir);
       await nyissLancot(user, doboz);
 
-      const v2Sor = within(doboz).getByText(new RegExp(`^v${v2.plan.verzio} · ${v2.plan.keltezes}`))
+      const v2Sor = within(doboz).getByText(new RegExp(`^v${v2.plan.verzio} · ${formatShortDate(v2.plan.keltezes, 'hu')}`))
         .closest('.rt-Flex') as HTMLElement;
-      const v1Sor = within(doboz).getByText(new RegExp(`^v${v1.plan.verzio} · ${v1.plan.keltezes}`))
+      const v1Sor = within(doboz).getByText(new RegExp(`^v${v1.plan.verzio} · ${formatShortDate(v1.plan.keltezes, 'hu')}`))
         .closest('.rt-Flex') as HTMLElement;
       expect(within(v2Sor).getByText('Legutóbbi')).toBeInTheDocument();
       expect(within(v1Sor).queryByText('Legutóbbi')).not.toBeInTheDocument();
@@ -964,9 +965,9 @@ describe('OsszesTervSection', () => {
       const doboz = lancDoboz(card, v1.planDir);
       await nyissLancot(user, doboz);
 
-      const v2Sor = within(doboz).getByText(new RegExp(`^v${v2.plan.verzio} · ${v2.plan.keltezes}`))
+      const v2Sor = within(doboz).getByText(new RegExp(`^v${v2.plan.verzio} · ${formatShortDate(v2.plan.keltezes, 'hu')}`))
         .closest('.rt-Flex') as HTMLElement;
-      const v1Sor = within(doboz).getByText(new RegExp(`^v${v1.plan.verzio} · ${v1.plan.keltezes}`))
+      const v1Sor = within(doboz).getByText(new RegExp(`^v${v1.plan.verzio} · ${formatShortDate(v1.plan.keltezes, 'hu')}`))
         .closest('.rt-Flex') as HTMLElement;
       expect(within(v2Sor).getByText('Csak ajánlat')).toBeInTheDocument();
       expect(within(v1Sor).queryByText('Csak ajánlat')).not.toBeInTheDocument();

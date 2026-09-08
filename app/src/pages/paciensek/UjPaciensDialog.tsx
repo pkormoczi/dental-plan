@@ -29,7 +29,7 @@ import { Field } from '../../components/Field';
 import { usePaciensDuplikacio } from '../../components/usePaciensDuplikacio';
 import { draftDirty } from '../../components/useDirtyDraft';
 import { t } from '../../design/tokens';
-import { todayIso } from '../../domain/date';
+import { formatShortDate, todayIso } from '../../domain/date';
 import type { DuplikaciosJelolt } from '../../domain/paciensDuplikacio';
 import { szuletesiIdoHiba } from '../../domain/paciensValidacio';
 import type { PatientFolder } from '../../domain/types';
@@ -233,7 +233,10 @@ export default function UjPaciensDialog({
           </Box>
 
           <Grid columns="2" gap="3" mb="1">
-            <Field label="Született">
+            <Field
+              label="Született"
+              olvashatoErtek={szuletesiIdo ? formatShortDate(szuletesiIdo, 'hu') : undefined}
+            >
               <TextField.Root
                 id="uj-paciens-szuletesiido"
                 autoComplete="off"

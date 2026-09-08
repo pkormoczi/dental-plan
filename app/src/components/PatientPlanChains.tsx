@@ -42,7 +42,7 @@ import {
 } from '@radix-ui/react-icons';
 import { csokkentettMozgas } from '../design/motion';
 import { t } from '../design/tokens';
-import { formatPiszkozatIdo } from '../domain/date';
+import { formatPiszkozatIdo, formatShortDate } from '../domain/date';
 import { formatMoney } from '../domain/money';
 import { latestVersionAcrossPlans, legfrissebbVerzio } from '../domain/planFolders';
 import { piszkozatCelRoute } from '../domain/piszkozat';
@@ -441,7 +441,8 @@ export default function PatientPlanChains({
                     >
                       {lancNyitva ? <ChevronDownIcon /> : <ChevronRightIcon />}
                       <Text size="2" weight="medium">
-                        {label} · v{legfrissebb?.verzio ?? '—'} · {legfrissebb?.isoDate ?? '—'}
+                        {label} · v{legfrissebb?.verzio ?? '—'} ·{' '}
+                        {legfrissebb ? formatShortDate(legfrissebb.isoDate, 'hu') : '—'}
                       </Text>
                       {lancDraftJelzett && (
                         <Badge color="amber" variant="soft" size="1" ml="1">
@@ -521,7 +522,7 @@ export default function PatientPlanChains({
                         <Flex justify="between" align="center" py="2">
                           <Flex align="center" gap="2">
                             <Text size="2" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                              v{v.verzio} · {v.isoDate}
+                              v{v.verzio} · {formatShortDate(v.isoDate, 'hu')}
                             </Text>
                             {legutobbi && (
                               <Badge color="gray" variant="soft" size="1">

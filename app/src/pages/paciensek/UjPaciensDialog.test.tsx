@@ -5,7 +5,7 @@
 // hook `useStorage()`-ot hív).
 
 import { useState } from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import UjPaciensDialog from './UjPaciensDialog';
@@ -98,6 +98,19 @@ describe('UjPaciensDialog', () => {
     expect(await screen.findByText('+36 30 123 4567', undefined, { timeout: 3000 })).toBeInTheDocument();
   });
 
+  // A natív `type="date"` mezőt a Chrome a saját FELÜLET-nyelvéből formázza --
+  // a magyar alak a mező alatt, olvasható szövegként áll.
+  it('a "Született" mező alatt magyar alakban áll a beírt dátum, üres mezőnél semmi', async () => {
+    renderHarness(syntheticPatients(0, ''));
+    const szuletesiIdoInput = await screen.findByLabelText('Született');
+    expect(screen.queryByText('1978.03.14.')).toBeNull();
+
+    fireEvent.change(szuletesiIdoInput, { target: { value: '1978-03-14' } });
+
+    expect(await screen.findByText('1978.03.14.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Született')).toBe(szuletesiIdoInput);
+  });
+
   it('betöltés előtt "adatok betöltése…", adat nélküli jelöltnél "nincs rögzített adat" jelenik meg', async () => {
     renderHarness(syntheticPatients(1, 'Teszt Adatnélküli'));
     const user = userEvent.setup();
@@ -119,8 +132,11 @@ describe('UjPaciensDialog', () => {
     await user.type(screen.getByLabelText('Született'), '1990-11-02');
 
     expect(await screen.findByText('Nagy Éva', undefined, { timeout: 3000 })).toBeInTheDocument();
-    expect(await screen.findByText('1990.11.02.', undefined, { timeout: 3000 })).toBeInTheDocument();
-    expect(screen.getByText('hasonló név')).toBeInTheDocument();
+    const hasonloJelzes = await screen.findByText('hasonló név', undefined, { timeout: 3000 });
+    // A dátum a JELÖLT sorában -- a beírt mező alatti olvasható érték
+    // ugyanezt a szöveget mutatja, ezért a jelölt sorára szűkítünk.
+    const jeloltSor = hasonloJelzes.parentElement as HTMLElement;
+    expect(within(jeloltSor).getByText('1990.11.02.')).toBeInTheDocument();
   });
 
   it('hasonló nevű, ellentmondó telefonú páciens NEM jelenik meg -- egy korábban megjelent javaslat is eltűnik, ha a telefon utólag ellentmondóra változik', async () => {

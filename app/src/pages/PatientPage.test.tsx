@@ -1347,6 +1347,32 @@ describe('PatientPage -- backlog-51: dátumok szekció', () => {
     await waitFor(() => expect(ervenyesIgInput).toHaveValue(alapErtek));
     expect(screen.queryByRole('button', { name: /Vissza az alapértelmezettre/ })).toBeNull();
   });
+
+  // A natív `type="date"` mező a Chrome FELÜLET-nyelvéből formáz (angol
+  // Chrome-on `mm/dd/yyyy`), ezért a mező alatt magyar alakban is ott az érték.
+  it('az "Érvényes eddig" mező alatt hosszú magyar alakban áll az érték, és követi a mező átírását', async () => {
+    renderPatient();
+    const ervenyesIgInput = (await screen.findByLabelText('Érvényes eddig')) as HTMLInputElement;
+    const alapErtek = addDaysIso(todayIso(), seedSettings.ervenyessegNap);
+    expect(screen.getByText(formatLongDate(alapErtek, 'hu'))).toBeInTheDocument();
+
+    fireEvent.change(ervenyesIgInput, { target: { value: '2026-12-04' } });
+
+    expect(await screen.findByText('2026. december 4.')).toBeInTheDocument();
+  });
+
+  it('a "Született" mező alatt rövid magyar alakban áll az érték, üres mezőnél semmi', async () => {
+    renderPatient();
+    const szuletesiIdoInput = (await screen.findByLabelText('Született')) as HTMLInputElement;
+    expect(szuletesiIdoInput).toHaveValue('');
+    expect(screen.queryByText('1978.03.14.')).toBeNull();
+
+    fireEvent.change(szuletesiIdoInput, { target: { value: '1978-03-14' } });
+
+    expect(await screen.findByText('1978.03.14.')).toBeInTheDocument();
+    // A címke továbbra is az INPUT-ot azonosítja, nem az alatta álló szöveget.
+    expect(screen.getByLabelText('Született')).toBe(szuletesiIdoInput);
+  });
 });
 
 // backlog "nyelv-penznem-gombszin": egyik váltás sem töröl adatot, ezért a

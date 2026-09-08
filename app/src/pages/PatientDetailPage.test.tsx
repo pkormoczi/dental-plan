@@ -10,7 +10,7 @@
 // alapértelmezett/átadott tab, tab-váltás navigáció NÉLKÜL, 0 láncú páciens
 // CTA-ja, sticky fejléc.
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { Theme } from '@radix-ui/themes';
@@ -199,6 +199,20 @@ describe('PatientDetailPage', () => {
 
   // A tabsor már kínálja a "Kezelési tervek" váltást -- a
   // PatientEditorPanel alján nincs tükör-link ugyanerre.
+  // A natív `type="date"` mezőt a Chrome a saját FELÜLET-nyelvéből formázza --
+  // a magyar alak a szerkesztő mezője alatt, olvasható szövegként áll.
+  it('a szerkesztő "Született" mezője alatt magyar alakban áll a dátum', async () => {
+    const user = userEvent.setup();
+    renderDetail(nagyDir, { tab: 'adatai' });
+
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+    const input = (await screen.findByLabelText('Született')) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '1978-03-14' } });
+
+    expect(await screen.findByText('1978.03.14.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Született')).toBe(input);
+  });
+
   it('a Páciens adatai tabon nincs "Korábbi tervek" gomb', async () => {
     renderDetail(nagyDir, { tab: 'adatai' });
 

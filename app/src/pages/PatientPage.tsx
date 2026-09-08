@@ -36,7 +36,7 @@ import { useLepesGuard } from '../components/LepesGuardContext';
 import { usePaciensKotes } from '../components/PaciensKotesContext';
 import Section from '../components/Section';
 import { lefedettseg } from '../domain/coverage';
-import { addDaysIso, formatLongDate } from '../domain/date';
+import { addDaysIso, formatLongDate, formatShortDate } from '../domain/date';
 import { alapertelmezettPenznem } from '../domain/beallitasok';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import { aktivOrvosok } from '../domain/orvosok';
@@ -291,7 +291,10 @@ export default function PatientPage() {
         )}
 
         <Grid columns="2" gap="3">
-          <Field label="Született">
+          <Field
+            label="Született"
+            olvashatoErtek={paciens.szuletesiIdo ? formatShortDate(paciens.szuletesiIdo, 'hu') : undefined}
+          >
             <TextField.Root
               id="paciens-szuletesiido"
               autoComplete="off"
@@ -502,7 +505,10 @@ export default function PatientPage() {
         <ReadOnlyField label="Kiadás dátuma" value={formatLongDate(plan.keltezes, 'hu')} />
 
         <Box mt="3">
-          <Field label="Érvényes eddig">
+          <Field
+            label="Érvényes eddig"
+            olvashatoErtek={plan.ervenyesIg ? formatLongDate(plan.ervenyesIg, 'hu') : undefined}
+          >
             <TextField.Root
               id="terv-ervenyes-eddig"
               type="date"

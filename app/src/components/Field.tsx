@@ -7,14 +7,39 @@
 
 import { Box, Text } from '@radix-ui/themes';
 
-export function Field({ label, children }: { label: string; children: React.ReactNode }) {
+export function Field({
+  label,
+  children,
+  olvashatoErtek,
+}: {
+  label: string;
+  children: React.ReactNode;
+  /**
+   * A mező értéke emberi alakban, a mező ALATT -- a natív `type="date"`
+   * bemenetet a Chrome a saját FELÜLET-nyelvéből formázza (angol Chrome-on
+   * `mm/dd/yyyy`), a `lang` attribútum ezen nem segít. Szándékosan a
+   * `<label>`-en KÍVÜL renderelődik: a labelbe zárva beleszámítana az input
+   * accessible name-jébe (lásd a `FieldGroup` alatti kommentet).
+   */
+  olvashatoErtek?: string;
+}) {
+  // A burkoló mindig ott van, akkor is, ha épp nincs olvasható érték: egy
+  // feltételes burkoló a mező kiürítésekor ÚJRA MOUNTOLNÁ az inputot (a React
+  // más elemtípust lát a pozíción), amitől gépelés közben elveszne a fókusz.
   return (
-    <label style={{ display: 'block' }}>
-      <Text as="div" size="1" color="gray" mb="1">
-        {label}
-      </Text>
-      {children}
-    </label>
+    <Box>
+      <label style={{ display: 'block' }}>
+        <Text as="div" size="1" color="gray" mb="1">
+          {label}
+        </Text>
+        {children}
+      </label>
+      {olvashatoErtek && (
+        <Text as="div" size="1" color="gray" mt="1">
+          {olvashatoErtek}
+        </Text>
+      )}
+    </Box>
   );
 }
 

@@ -259,7 +259,10 @@ export default function PatientEditorPanel({
       )}
 
       <Grid columns="2" gap="3" mt="3">
-        <Field label="Született">
+        <Field
+          label="Született"
+          olvashatoErtek={draft.szuletesiIdo ? formatShortDate(draft.szuletesiIdo, 'hu') : undefined}
+        >
           <TextField.Root
             id="patient-editor-szuletesiido"
             autoComplete="off"
