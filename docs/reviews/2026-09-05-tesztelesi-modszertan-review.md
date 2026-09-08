@@ -505,7 +505,7 @@ T3, T6, T10 és T12 szükség szerint kisebb tételekre bontandó: egy tételnek
 
 1. A 7.2 válaszhelyeire kerüljön döntés és rövid indok; az eltérően elfogadott ajánlást az 5–6. szakaszban is át kell vezetni, hogy ne maradjon két álláspont érvényben.
 2. A K9 mezőszabályai, K1 kapukritériumai és K3 kezdősorrendje legyenek konkrétak. A későbbi feladatra halasztott kérdéshez az érintett feladat és a feloldás időpontja szerepeljen; ne maradjon észrevétlen implementációs függőség.
-3. Friss backlog-dedup után csak a ténylegesen hiányzó munka kapjon ötletet. Kapcsolódó meglévő tételek: [Minor pénztípus](../../backlog/idea/later/branded-minor-penztipus.md), [sémamigrációs keret](../../backlog/idea/later/sema-migracios-keret.md). A PDF-verziószám termékhibája már lezárt történet (F01).
+3. Friss backlog-dedup után csak a ténylegesen hiányzó munka kapjon ötletet. Kapcsolódó meglévő tételek: [pénz egész validáció](../../backlog/penz-egesz-validacio.md), [sémamigrációs keret](../../backlog/idea/later/sema-migracios-keret.md). A PDF-verziószám termékhibája már lezárt történet (F01).
 4. A kiválasztott tételekből a repó szokásos terve készüljön (`Goal / Current state / Approach / Decisions / Verification`, friss `Baseline`, budget); a `Source` erre a review-ra és az F/T jelre utalhat. `Prio` csak kimondott doki/fejlesztői döntésből származik.
 5. Tételenként implementáció → előírt kapu → kézi ellenőrzés a munkafán → lezárás/commit/push a meglévő workflow szerint. A koncepció elfogadása nem helyettesíti a termékváltozás kézi ellenőrzését.
 
