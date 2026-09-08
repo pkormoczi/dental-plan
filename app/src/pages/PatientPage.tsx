@@ -36,7 +36,7 @@ import { useLepesGuard } from '../components/LepesGuardContext';
 import { usePaciensKotes } from '../components/PaciensKotesContext';
 import Section from '../components/Section';
 import { lefedettseg } from '../domain/coverage';
-import { addDaysIso, formatLongDate, formatShortDate } from '../domain/date';
+import { addDaysIso, formatLongDate, formatShortDate, todayIso } from '../domain/date';
 import { alapertelmezettPenznem } from '../domain/beallitasok';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import { aktivOrvosok } from '../domain/orvosok';
@@ -225,6 +225,22 @@ export default function PatientPage() {
     setPlan((prev) => ({ ...prev, ervenyesIg: value }));
   }
 
+  /**
+   * Az `ervenyesIg` KÖVETI a keltezést, amíg az alapértékén áll -- kézi
+   * érték után nem (`domain/arKoveti.ts`, `domain/nev.ts` mintája).
+   */
+  function patchKeltezes(value: string) {
+    setPlan((prev) => {
+      const kovetiAzAlapot = prev.ervenyesIg === addDaysIso(prev.keltezes, settings.ervenyessegNap);
+      return {
+        ...prev,
+        keltezes: value,
+        ervenyesIg:
+          kovetiAzAlapot && value ? addDaysIso(value, settings.ervenyessegNap) : prev.ervenyesIg,
+      };
+    });
+  }
+
   // Az alapérték a `plan.keltezes`-ből számol, NEM `todayIso()`-ból: a
   // visszaállítás a nyomtatványon megjelenő kiadás dátumához mért ablakot
   // kell adja, ne a mai naphoz mérten (az új verzió nyitása a `keltezes`-t úgyis mai napra
@@ -233,6 +249,12 @@ export default function PatientPage() {
   const alapErvenyesIg = addDaysIso(plan.keltezes, settings.ervenyessegNap);
   const ervenyesIgEltrErAlaptol = plan.ervenyesIg !== alapErvenyesIg;
   const ervenyesIgHibas = plan.ervenyesIg < plan.keltezes;
+  // Csak a vadonatúj terv piszkozata (`verzio: 0`) írható át: egy korábbi
+  // terv új verziója BETÖLTÉSKOR kap mai dátumbélyeget
+  // (`domain/ujVerzioDatum.ts`), és egy visszadátumozott verzió a saját
+  // láncán belül egy frissebb verzió mögé kerülne.
+  const keltezesSzerkesztheto = plan.verzio === 0;
+  const keltezesJovobeli = plan.keltezes > todayIso();
 
   return (
     <Box style={{ maxWidth: 560, margin: '0 auto' }}>
@@ -502,7 +524,38 @@ export default function PatientPage() {
       </Section>
 
       <Section title="Dátumok">
-        <ReadOnlyField label="Kiadás dátuma" value={formatLongDate(plan.keltezes, 'hu')} />
+        {keltezesSzerkesztheto ? (
+          <Field
+            label="Kiadás dátuma"
+            olvashatoErtek={plan.keltezes ? formatLongDate(plan.keltezes, 'hu') : undefined}
+          >
+            <TextField.Root
+              id="terv-keltezes"
+              type="date"
+              value={plan.keltezes}
+              onChange={(e) => patchKeltezes(e.target.value)}
+              onBlur={(e) => {
+                if (!e.target.value) patchKeltezes(todayIso());
+              }}
+            />
+          </Field>
+        ) : (
+          <>
+            <ReadOnlyField label="Kiadás dátuma" value={formatLongDate(plan.keltezes, 'hu')} />
+            <Text as="p" size="1" color="gray" mt="1">
+              Egy korábbi terv új verziója — a nyomtatvány a mai dátummal készül.
+            </Text>
+          </>
+        )}
+
+        {keltezesJovobeli && (
+          <Callout.Root color="amber" size="1" mt="2">
+            <Callout.Icon>
+              <ExclamationTriangleIcon />
+            </Callout.Icon>
+            <Callout.Text>A kiadás dátuma a mai napnál későbbre esik.</Callout.Text>
+          </Callout.Root>
+        )}
 
         <Box mt="3">
           <Field

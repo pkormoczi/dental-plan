@@ -1309,21 +1309,98 @@ describe('PatientPage -- backlog-51: terv címe mező', () => {
   });
 });
 
-// backlog-51: a "Dátumok" szekció -- a `keltezes` marad
-// automatikus, az `ervenyesIg` szerkeszthető, alapértéke
-// `plan.keltezes + settings.ervenyessegNap`.
-describe('PatientPage -- backlog-51: dátumok szekció', () => {
+// A "Dátumok" szekció: új terv piszkozatán a `keltezes` szerkeszthető
+// (papírról bevitt terv), korábbi terv új verzióján olvasható marad; az
+// `ervenyesIg` alapértéke `plan.keltezes + settings.ervenyessegNap`.
+describe('PatientPage -- dátumok szekció', () => {
+  /** Egy BETÖLTÖTT terv piszkozata: `verzio > 0` -- a dátumbélyeg a betöltéskor kerül rá. */
+  function seedDraftUjVerzioval() {
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({
+        schemaVersion: 1,
+        mentve: '2026-08-09T10:15:00.000Z',
+        plan: {
+          schemaVersion: 1,
+          tervId: 'meglevo123',
+          verzio: 2,
+          statusz: 'PISZKOZAT',
+          nyelv: 'hu',
+          penznem: 'HUF',
+          keltezes: '2026-08-05',
+          ervenyesIg: '2026-11-03',
+          arlistaVerzio: '2026-07-01',
+          orvos: 'Dr. Mándoki István',
+          paciens: {
+            nev: 'Teszt Elek',
+            szuletesiIdo: '',
+            lakcim: '',
+            telefon: '',
+            email: '',
+            taj: '',
+            kiskoru: false,
+            torvenyesKepviselo: null,
+          },
+          fazisok: [{ sorszam: 1, megnevezes: '1. fázis', megjegyzes: '', sorok: [] }],
+          osszesitok: { kezelesekOsszesen: 0, kedvezmeny: 0, fizetendo: 0 },
+        },
+      }),
+    );
+  }
+
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
   });
 
-  it('a "Kiadás dátuma" nem szerkeszthető, csak olvasható hosszú dátumot mutat', async () => {
+  it('új terv piszkozatán a "Kiadás dátuma" szerkeszthető, és a beírt múltbeli nap marad a terven', async () => {
+    renderPatient();
+    const keltezesInput = (await screen.findByLabelText('Kiadás dátuma')) as HTMLInputElement;
+    expect(keltezesInput).toHaveValue(todayIso());
+
+    fireEvent.change(keltezesInput, { target: { value: '2026-08-12' } });
+
+    expect(keltezesInput).toHaveValue('2026-08-12');
+    expect(await screen.findByText(formatLongDate('2026-08-12', 'hu'))).toBeInTheDocument();
+  });
+
+  it('jövőbeli kiadás dátumára a szakasz figyelmeztet', async () => {
+    renderPatient();
+    const keltezesInput = await screen.findByLabelText('Kiadás dátuma');
+    expect(screen.queryByText('A kiadás dátuma a mai napnál későbbre esik.')).toBeNull();
+
+    fireEvent.change(keltezesInput, { target: { value: addDaysIso(todayIso(), 3) } });
+
+    expect(
+      await screen.findByText('A kiadás dátuma a mai napnál későbbre esik.'),
+    ).toBeInTheDocument();
+  });
+
+  it('az "Érvényes eddig" elmozdul a keltezéssel, amíg alapértéken áll, kézi érték után nem', async () => {
+    renderPatient();
+    const keltezesInput = await screen.findByLabelText('Kiadás dátuma');
+    const ervenyesIgInput = screen.getByLabelText('Érvényes eddig') as HTMLInputElement;
+
+    fireEvent.change(keltezesInput, { target: { value: '2026-08-12' } });
+    expect(ervenyesIgInput).toHaveValue(addDaysIso('2026-08-12', seedSettings.ervenyessegNap));
+
+    fireEvent.change(ervenyesIgInput, { target: { value: '2026-09-30' } });
+    fireEvent.change(keltezesInput, { target: { value: '2026-08-20' } });
+    expect(ervenyesIgInput).toHaveValue('2026-09-30');
+  });
+
+  it('korábbi terv új verzióján a "Kiadás dátuma" nem szerkeszthető, és a lap megmondja, miért', async () => {
+    seedDraftUjVerzioval();
     renderPatient();
     await screen.findByRole('heading', { name: 'Terv adatai' });
 
     expect(screen.queryByLabelText('Kiadás dátuma')).toBeNull();
-    expect(screen.getByText(formatLongDate(todayIso(), 'hu'))).toBeInTheDocument();
+    expect(screen.getByText(formatLongDate('2026-08-05', 'hu'))).toBeInTheDocument();
+    expect(
+      screen.getByText('Egy korábbi terv új verziója — a nyomtatvány a mai dátummal készül.'),
+    ).toBeInTheDocument();
   });
 
   it('az "Érvényes eddig" alapértéke keltezés + ervenyessegNap, módosítható, üresen visszaáll, jelzi a hibás sorrendet', async () => {
