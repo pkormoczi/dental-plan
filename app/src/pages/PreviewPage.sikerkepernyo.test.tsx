@@ -157,4 +157,29 @@ describe('PreviewPage -- a sikerképernyő PDF-műveletei és a Vissza útja', (
     },
     30000,
   );
+
+  it(
+    'a sikerképernyő a páciens nevét, a terv címét és a verziószámot mondja ki, a mappaútvonal megnevezve alatta marad',
+    async () => {
+      const user = userEvent.setup();
+      seedAlap();
+      render(<App />);
+      window.location.hash = '#/elonezet';
+      await veglegesit(user);
+
+      // Tétel nélküli kategóriájú terv -- az élő javaslat az
+      // ALAPERTELMEZETT_TERV_CIM ("Terv", domain/tervCim.ts).
+      expect(screen.getByText('Siker Elek · Terv · 1. verzió')).toBeInTheDocument();
+      expect(screen.getByText('Mappa:')).toBeInTheDocument();
+
+      const storage = new DemoStorage();
+      const patient = (await storage.listPatients()).find((p) => p.nev === 'Siker Elek')!;
+      const [chain] = await storage.listPlans(patient.dirName);
+      const [version] = await storage.listVersions(patient.dirName, chain.dirName);
+      expect(
+        screen.getByText(`${patient.dirName} / ${chain.dirName} / ${version.dirName}`),
+      ).toBeInTheDocument();
+    },
+    30000,
+  );
 });

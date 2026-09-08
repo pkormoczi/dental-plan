@@ -141,8 +141,16 @@ export function TervDocument({
   const footerExtra = footerExtraMagassag(plan.paciens.nev, plan.tervId);
   const pageStyle = footerExtra > 0 ? [s.page, { paddingBottom: s.page.paddingBottom + footerExtra }] : s.page;
 
+  // A dokumentum Title metaadata: ez lesz a böngészőfül és a nyomtatási
+  // párbeszéd neve a belső azonosítók helyett. A nyomtatvány nyelvét követi
+  // (`pdfTervCim`), mert a metaadat a dokumentumé, nem a felületé.
+  const dokumentumCim =
+    [plan.paciens.nev.trim(), pdfTervCim(tervCim, plan, priceList).trim()]
+      .filter(Boolean)
+      .join(' — ') || undefined;
+
   return (
-    <Document>
+    <Document title={dokumentumCim}>
       {/* ---------- A blokk -- terv és ár ---------- */}
       <Page size="A4" style={pageStyle}>
         {/* A nagy fejléc csak a dokumentum ELSŐ fizikai oldalán jelenik meg

@@ -297,10 +297,13 @@ export default function PatientPage() {
             tartalmától függetlenül. */}
         {kotott && (
           <Box mb="3">
-            <ReadOnlyField
-              label="A terv ehhez a páciensmappához kötve mentődik"
-              value={`${kotott.nev} (${kotottPatientDir})`}
-            />
+            {/* Elsődlegesen a páciens NEVE; a mappanév megnevezve, halványan
+                marad alatta -- a doki a Fájlkezelőben erre keres, és azonos
+                nevű pácienseknél ez különbözteti meg a kötést. */}
+            <ReadOnlyField label="A terv ehhez a pácienshez kötve mentődik" value={kotott.nev} />
+            <Text as="div" size="1" color="gray" mt="1" style={{ fontFamily: t.mono }}>
+              Páciensmappa: {kotottPatientDir}
+            </Text>
           </Box>
         )}
 

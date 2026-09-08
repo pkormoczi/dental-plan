@@ -46,7 +46,7 @@ import { VeglegesitesChecklist } from './previewPage/VeglegesitesChecklist';
 import { useAppState } from '../state/AppState';
 import { nincsMentettPdfHiba } from '../components/PlanVersionActionDialog';
 import { openPlanPdfInNewTab } from '../storage/openPlanPdfInNewTab';
-import { buildDownloadFileName } from '../storage/paths';
+import { buildDownloadFileName, parseVersionDirName } from '../storage/paths';
 import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
 import { useStorage } from '../storage/StorageContext';
 
@@ -521,9 +521,20 @@ export default function PreviewPage() {
         <Text as="p" size="4" style={{ color: t.ok }} mb="2">
           A terv elmentve ✓
         </Text>
-        <Text as="p" size="2" color="gray" mb="5" style={{ fontFamily: t.mono }}>
-          {savedRef.patientDir} / {savedRef.planDir} / {savedRef.versionDir}
+        {/* Először a doki nyelvén: KI, MI, HÁNYADIK. A mappaútvonal alatta,
+            megnevezve marad -- a Fájlkezelőben erre keres rá. A "Mappa:"
+            felirat és az útvonal külön elemben áll. */}
+        <Text as="p" size="3" mb="1">
+          {`${plan.paciens.nev} · ${tervCim} · ${parseVersionDirName(savedRef.versionDir)?.verzio ?? '—'}. verzió`}
         </Text>
+        <Flex justify="center" gap="1" wrap="wrap" mb="5">
+          <Text size="2" color="gray">
+            Mappa:
+          </Text>
+          <Text size="2" color="gray" style={{ fontFamily: t.mono }}>
+            {savedRef.patientDir} / {savedRef.planDir} / {savedRef.versionDir}
+          </Text>
+        </Flex>
         {cimkeHiba && (
           <Callout.Root color="amber" mb="5" style={{ textAlign: 'left' }}>
             <Callout.Text>

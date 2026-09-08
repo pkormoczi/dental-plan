@@ -937,7 +937,7 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
     window.location.hash = '';
   });
 
-  it('kötött piszkozatnál mutatja, melyik páciensmappához mentődik a terv', async () => {
+  it('kötött piszkozatnál a páciens NEVE az elsődleges szöveg, a mappanév megnevezve alatta áll', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
     const patient = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
@@ -945,15 +945,31 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
 
     renderPatient();
 
-    expect(await screen.findByText('A terv ehhez a páciensmappához kötve mentődik')).toBeInTheDocument();
-    expect(screen.getByText(`Teszt Elek (${patient.dirName})`)).toBeInTheDocument();
+    const cimke = await screen.findByText('A terv ehhez a pácienshez kötve mentődik');
+    // A felirat alatt a NÉV áll önmagában, a mappanév nélkül.
+    expect(cimke.parentElement).toHaveTextContent(`A terv ehhez a pácienshez kötve mentődikTeszt Elek`);
+    expect(screen.getByText(`Páciensmappa: ${patient.dirName}`)).toBeInTheDocument();
+  });
+
+  it('két azonos nevű páciens közül a mappanév mondja meg, melyikhez kötött a terv', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const elso = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    const masodik = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1991-01-01', telefon: '' });
+    expect(masodik.dirName).not.toBe(elso.dirName);
+    await seedDraft(masodik.dirName, makePaciens(), masodik.paciensId);
+
+    renderPatient();
+
+    expect(await screen.findByText(`Páciensmappa: ${masodik.dirName}`)).toBeInTheDocument();
+    expect(screen.queryByText(`Páciensmappa: ${elso.dirName}`)).toBeNull();
   });
 
   it('vadonatúj (kötés nélküli) piszkozatnál nem mutatja a kötés-jelzést', async () => {
     renderPatient();
     await screen.findByRole('heading', { name: 'Terv adatai' });
 
-    expect(screen.queryByText('A terv ehhez a páciensmappához kötve mentődik')).toBeNull();
+    expect(screen.queryByText('A terv ehhez a pácienshez kötve mentődik')).toBeNull();
   });
 
   it('a beírt név egy MÁSIK, létező páciens NEVÉRE pontosan illesztve figyelmeztet', async () => {

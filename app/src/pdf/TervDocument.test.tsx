@@ -25,6 +25,7 @@ import type { ReactNode } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createBlankPlan, ELSO_FAZIS_NEV } from '../domain/blankPlan';
+import { dominansKategoria, javasoltTervCim } from '../domain/tervCim';
 import type { Nyelv, Plan, Sor } from '../domain/types';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
@@ -44,7 +45,13 @@ vi.mock('@react-pdf/renderer', () => {
       return <div data-mock-tag={tag}>{render ? render(pageState) : children}</div>;
     };
   return {
-    Document: dom('document'),
+    // A `title` a dokumentum PDF-metaadata (nem felületszöveg) -- a mock
+    // data-attribútumra képezi le, hogy tesztelhető legyen.
+    Document: ({ children, title }: { children?: ReactNode; title?: string }) => (
+      <div data-mock-tag="document" data-title={title}>
+        {children}
+      </div>
+    ),
     Page: dom('page'),
     // A `minPresenceAhead` propot -- ellentétben a többi react-pdf-specifikus
     // proppal -- egy data-attribútumra képezzük le, hogy az árva-védelem
@@ -114,6 +121,67 @@ function renderDoc(savos: boolean, nyelv: Nyelv = 'hu', arak: Arak = AZONOS_AR) 
     />,
   );
 }
+
+describe('TervDocument -- a dokumentum Title metaadata', () => {
+  /** Egy árlistai tétellel -- így a `dominansKategoria` fel tud oldani egy valódi kategóriát. */
+  function planKategoriaval(nyelv: Nyelv): Plan {
+    const plan = createBlankPlan(seedSettings, seedPriceList);
+    plan.nyelv = nyelv;
+    plan.paciens.nev = 'Teszt Aladár';
+    plan.tervId = 'ab12cd';
+    const tetel = seedPriceList.tetelek.find((x) => x.aktiv)!;
+    plan.fazisok[0].sorok.push({
+      tetelId: tetel.id,
+      nevSnapshot: tetel.nev.hu,
+      savos: false,
+      fogak: '',
+      mennyiseg: 1,
+      listaEgysegar: 45000,
+      tenylegesEgysegar: 45000,
+    });
+    return plan;
+  }
+
+  function docCim(plan: Plan, tervCim: string): string | null {
+    const { container } = render(
+      <TervDocument
+        plan={plan}
+        settings={seedSettings}
+        priceList={seedPriceList}
+        offerOnly
+        nyilatkozatMd=""
+        fizetesiFeltetelekMd=""
+        garanciaMd=""
+        tervCim={tervCim}
+        toothChartPng={null}
+      />,
+    );
+    return container.querySelector('[data-mock-tag="document"]')!.getAttribute('data-title');
+  }
+
+  it('a páciens nevét és a terv címét tartalmazza, belső azonosító nélkül', () => {
+    const plan = planKategoriaval('hu');
+    const cim = docCim(plan, 'Gyökérkezelés és korona');
+
+    expect(cim).toBe('Teszt Aladár — Gyökérkezelés és korona');
+    expect(cim).not.toContain(plan.tervId);
+  });
+
+  it('német terven az automatikus cím a nyomtatvány nyelvén kerül a metaadatba', () => {
+    const plan = planKategoriaval('de');
+    const kategoria = dominansKategoria(plan, seedPriceList)!;
+
+    const cim = docCim(plan, javasoltTervCim(plan, seedPriceList));
+
+    expect(cim).toBe(`Teszt Aladár — ${kategoria.nev.de}`);
+    expect(cim).not.toContain(kategoria.nev.hu);
+  });
+
+  it('cím nélkül csak a páciens neve áll benne, elválasztó nélkül', () => {
+    const plan = planKategoriaval('hu');
+    expect(docCim(plan, '')).toBe('Teszt Aladár');
+  });
+});
 
 describe('TervDocument -- font-visszaesés őre', () => {
   // A react-pdf a `Text`-en belüli sortörést önálló, glyph nélküli
