@@ -59,14 +59,15 @@ export const t = {
   // App UI (semleges, hideg slate) -- a fenti négy PDF-tokennek EBBEN a
   // szerepben ez a megfeleloje, csak components/ es pages/ hasznalja
   uiTextMuted: '#475569', // slate-600 -- 7.58:1 feheren
-  uiTextFaint: '#64748B', // slate-500 -- 4.76:1 feheren (a regi #8C8580 3.63:1 bukott)
+  uiTextFaint: '#60646C', // Radix gray-11 -- 5.94:1 feheren, 5.42:1 t.page-en (a regi
+  // #64748B 4.76:1 feheren, de csak 4.34:1 t.page-en -- ez utobbi bukott)
   uiLine: '#E2E8F0', // slate-200 -- CSAK diszito sorelvalasztora (tablasor, kartyaszel)
   uiLineStrong: '#CBD5E1', // slate-300 -- diszito, erosebb hajszalvonal
   controlBorder: '#64748B', // slate-500, 3:1 folött minden szomszed ellen (K4: a
   // regi #8896AB csak feheren 3.00:1, a tenyleges belso (soft-kitoltes) es
   // kulso (t.page) szomszedok ellen 2-3:1 volt) -- WCAG 1.4.11: minden
-  // interaktiv kontroll kerete. Azonos ertek, mint `uiTextFaint`, de kulon
-  // szerep -- szandekos egyezes, ne vond ossze a ket tokent
+  // interaktiv kontroll kerete. Onallo token -- ne vond ossze `uiTextFaint`-tel,
+  // akkor sem, ha az ertekuk korabban egybeesett
 
   // Szerep -- csak app, PDF nem hasznalja
   warn: '#9A5B00', // 5.43:1 feheren, 5.06:1 warnBg-n (a regi #B26A00 4.24:1/3.95:1 bukott)
