@@ -80,6 +80,14 @@ export function VeglegesitesChecklist({
 
   return (
     <Flex direction="column" gap="2">
+      {/* Csak interaktív módban: a sikerképernyőn a terv MÁR véglegesítve van,
+          ott a "nem véglegesíthető" mondat hamis lenne. */}
+      {onNavigate && (
+        <Text size="1" color="gray">
+          Piros: amíg fennáll, a terv nem véglegesíthető. Sárga és szürke: csak jelzés, a
+          véglegesítés mehet.
+        </Text>
+      )}
       {csekklista.tetelek.map((tetel) => (
         <Callout.Root key={tetel.id} color={SULYOSSAG_SZIN[tetel.sulyossag]}>
           <Callout.Text>

@@ -26,7 +26,7 @@ import {
   uresFazisok,
 } from './kitoltetlen';
 import { arElteroSorok } from './arKoveti';
-import { masterSnapshotDiff } from './masterSnapshotDiff';
+import { MASTER_DIFF_MEZOK, masterSnapshotDiff } from './masterSnapshotDiff';
 import { formatMoney } from './money';
 import { igazolatlanNemetKategoriak, igazolatlanNemetNevek } from './nemetNev';
 import {
@@ -76,6 +76,32 @@ export function vanKemenyBlokk(csekklista: VeglegesitesCsekklista): boolean {
  * lásd `NyomtatvanyokTab.tsx` `templateLang` kezdőértékét. */
 function nyomtatvanyokRoute(nyelv: Plan['nyelv']): CsekklistaRoute {
   return nyelv === 'de' ? '/beallitasok?tab=nyomtatvanyok&nyelv=de' : '/beallitasok?tab=nyomtatvanyok&nyelv=hu';
+}
+
+/**
+ * A `hianyzo-paciensadat` tétel mezőköre: a nyomtatványon megjelenő, de nem
+ * kötelező adatok. A `nev` kimarad (saját `hard` tétele van), a `kiskoru` és a
+ * `torvenyesKepviselo` szintén (nem "marad üresen" a nyomtatványon). A
+ * címkéket a `MASTER_DIFF_MEZOK` adja, hogy a doki ugyanazt a szót lássa itt
+ * és a törzsadat-eltérésnél ugyanarra a mezőre.
+ */
+const HIANYOZHATO_PACIENSMEZOK: ReadonlyArray<keyof Paciens> = [
+  'szuletesiIdo',
+  'lakcim',
+  'telefon',
+  'email',
+  'taj',
+];
+
+/**
+ * „Garancia" -> „Garancia", „Fizetési feltételek" + „Garancia" -> „Fizetési
+ * feltételek és a Garancia": az utolsó tag elé „és a" kerül, nem vessző. A
+ * névelő fixen „a", mert a hívó (`PreviewPage`) zárt szakasznév-halmaza
+ * (Fizetési feltételek, Garancia) mindkét tagja mássalhangzóval kezdődik.
+ */
+function szekcioFelsorolas(nevek: string[]): string {
+  if (nevek.length < 2) return nevek.join('');
+  return `${nevek.slice(0, -1).join(', a ')} és a ${nevek[nevek.length - 1]}`;
 }
 
 const NYELVI_REVIEW_MEZO_CIMKE: Record<ReviewMezo, string> = {
@@ -275,13 +301,18 @@ export function veglegesitesDiagnozis(
   // tisztán adatminőségi/adminisztratív tétellel. `sablon-kihagyott-szekcio`
   // előzi meg `sablon-fallback`-ot: a teljesen hiányzó tartalom súlyosabb,
   // mint a rossz nyelvű, de meglévő tartalom.
+  // A szakasznevek a CÍMBEN sorolódnak fel, külön `reszletek`-blokk és
+  // `szamlalo` nélkül: legfeljebb két szakasz van, egy részletsor és egy
+  // jelvény ugyanazt mondaná el harmadszor.
   if (sablon.kihagyottSzekciok.length > 0) {
+    const tobbSzekcio = sablon.kihagyottSzekciok.length > 1;
     tetelek.push({
       id: 'sablon-kihagyott-szekcio',
       sulyossag: 'soft',
-      cim: 'A szakasz szövege hiányzik, vagy még jogi lektorálásra vár — a címével együtt kimarad a nyomtatványból.',
-      szamlalo: sablon.kihagyottSzekciok.length,
-      reszletek: [{ cim: 'Kimaradó szakaszok', nevek: sablon.kihagyottSzekciok }],
+      cim:
+        `A ${szekcioFelsorolas(sablon.kihagyottSzekciok)} szövege nincs kitöltve — ` +
+        `${tobbSzekcio ? 'a címükkel együtt kimaradnak' : 'a címével együtt kimarad'} a ` +
+        'nyomtatványból. Pótlás: Beállítások → Nyomtatvány szövegei.',
       route: nyomtatvanyokRoute(plan.nyelv),
     });
   }
@@ -291,23 +322,20 @@ export function veglegesitesDiagnozis(
       id: 'sablon-fallback',
       sulyossag: 'soft',
       cim:
-        'A tervhez tartozó sablon nem érhető el a megfelelő nyelven (hiányzik, vagy még jogi ' +
-        'lektorálásra vár) — helyette a magyar szöveg jelenik meg a nyomtatványon.',
+        'A nyomtatvány szövegei nincsenek kitöltve a terv nyelvén — helyettük a magyar szöveg ' +
+        'kerül a nyomtatványra. Pótlás: Beállítások → Nyomtatvány szövegei.',
       route: nyomtatvanyokRoute(plan.nyelv),
     });
   }
 
-  const otherFieldsMissing =
-    !plan.paciens.szuletesiIdo ||
-    !plan.paciens.lakcim ||
-    !plan.paciens.telefon ||
-    !plan.paciens.email ||
-    !plan.paciens.taj;
-  if (otherFieldsMissing) {
+  const hianyzoPaciensMezok = MASTER_DIFF_MEZOK.filter(
+    ({ kulcs }) => HIANYOZHATO_PACIENSMEZOK.includes(kulcs) && !plan.paciens[kulcs],
+  ).map(({ cimke }) => cimke);
+  if (hianyzoPaciensMezok.length > 0) {
     tetelek.push({
       id: 'hianyzo-paciensadat',
       sulyossag: 'soft',
-      cim: 'Néhány páciensadat hiányzik (nem kötelező, de a nyomtatványon üresen marad).',
+      cim: `Nem kötelező, de a nyomtatványon üresen marad: ${hianyzoPaciensMezok.join(', ')}.`,
       route: '/paciens',
     });
   }
@@ -428,9 +456,8 @@ export function veglegesitesDiagnozis(
       id: 'nyilatkozat-placeholder',
       sulyossag: 'info',
       cim:
-        'A nyilatkozat szövege ezen a nyelven hiányzik, vagy még jogi lektorálásra vár — a ' +
-        'nyilatkozat és aláírás oldal emiatt nem kerülhet a nyomtatványra, a „Csak ajánlat” mód ' +
-        'kényszerítve van.',
+        'A Nyilatkozat szövege nincs kitöltve ezen a nyelven — aláírás-oldal nélkül, „Csak ' +
+        'ajánlat” módban készül a nyomtatvány. Pótlás: Beállítások → Nyomtatvány szövegei.',
       route: nyomtatvanyokRoute(plan.nyelv),
     });
   }

@@ -182,6 +182,28 @@ describe('veglegesitesDiagnozis', () => {
     expect(tetel(diag, 'hianyzo-paciensadat')?.sulyossag).toBe('soft');
   });
 
+  it('a "hianyzo-paciensadat" pontosan a ténylegesen üres mezőket nevezi meg, a kitöltötteket nem', () => {
+    const plan = makePlan([[sor()]], {
+      paciens: paciens({ szuletesiIdo: '', telefon: '', taj: '' }),
+    });
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+    expect(tetel(diag, 'hianyzo-paciensadat')?.cim).toBe(
+      'Nem kötelező, de a nyomtatványon üresen marad: Született, Telefon, TAJ.',
+    );
+  });
+
+  it('mind az öt nem kötelező mező üresen a "Született, Lakcím, Telefon, E-mail, TAJ" sorrendet adja', () => {
+    const plan = makePlan([[sor()]], {
+      paciens: paciens({ szuletesiIdo: '', lakcim: '', telefon: '', email: '', taj: '' }),
+    });
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+    expect(tetel(diag, 'hianyzo-paciensadat')?.cim).toBe(
+      'Nem kötelező, de a nyomtatványon üresen marad: Született, Lakcím, Telefon, E-mail, TAJ.',
+    );
+  });
+
   describe('nemet-nev', () => {
     it('fordítás nélküli tétel érintetlen sorral a "nincsArlistaiNev" csoportba kerül, hard tétel', () => {
       const plan = makePlan([[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás' })]], { nyelv: 'de' });
@@ -619,10 +641,64 @@ describe('veglegesitesDiagnozis', () => {
       );
       const t = tetel(diag, 'sablon-kihagyott-szekcio');
       expect(t?.sulyossag).toBe('soft');
-      expect(t?.szamlalo).toBe(1);
-      expect(t?.reszletek?.[0].nevek).toEqual(['Garancia']);
+      expect(t?.cim).toBe(
+        'A Garancia szövege nincs kitöltve — a címével együtt kimarad a nyomtatványból. ' +
+          'Pótlás: Beállítások → Nyomtatvány szövegei.',
+      );
+      // A szakasznév a címben áll: nincs külön részletsor és jelvény ugyanarról.
+      expect(t?.reszletek).toBeUndefined();
+      expect(t?.szamlalo).toBeUndefined();
       expect(t?.route).toBe('/beallitasok?tab=nyomtatvanyok&nyelv=hu');
       expect(vanKemenyBlokk(diag)).toBe(false);
+    });
+
+    it('két kimaradó szakasz mindkét nevét többes számban mondja ki', () => {
+      const plan = makePlan([[sor()]]);
+      const diag = veglegesitesDiagnozis(
+        plan,
+        priceList,
+        true,
+        NO_MASTER,
+        AKTIV_ORVOSOK,
+        { ...NO_SABLON, kihagyottSzekciok: ['Fizetési feltételek', 'Garancia'] },
+        NO_NEV_UTKOZES,
+      );
+      expect(tetel(diag, 'sablon-kihagyott-szekcio')?.cim).toBe(
+        'A Fizetési feltételek és a Garancia szövege nincs kitöltve — a címükkel együtt ' +
+          'kimaradnak a nyomtatványból. Pótlás: Beállítások → Nyomtatvány szövegei.',
+      );
+    });
+
+    it('a "sablon-fallback" címe kimondja, hol pótolható a szöveg', () => {
+      const diag = veglegesitesDiagnozis(
+        makePlan([[sor()]]),
+        priceList,
+        true,
+        NO_MASTER,
+        AKTIV_ORVOSOK,
+        { ...NO_SABLON, sablonFallback: true },
+        NO_NEV_UTKOZES,
+      );
+      expect(tetel(diag, 'sablon-fallback')?.cim).toBe(
+        'A nyomtatvány szövegei nincsenek kitöltve a terv nyelvén — helyettük a magyar szöveg ' +
+          'kerül a nyomtatványra. Pótlás: Beállítások → Nyomtatvány szövegei.',
+      );
+    });
+
+    it('a "nyilatkozat-placeholder" címe kimondja, hol pótolható a szöveg', () => {
+      const diag = veglegesitesDiagnozis(
+        makePlan([[sor()]]),
+        priceList,
+        true,
+        NO_MASTER,
+        AKTIV_ORVOSOK,
+        { ...NO_SABLON, nyilatkozatPlaceholder: true },
+        NO_NEV_UTKOZES,
+      );
+      expect(tetel(diag, 'nyilatkozat-placeholder')?.cim).toBe(
+        'A Nyilatkozat szövege nincs kitöltve ezen a nyelven — aláírás-oldal nélkül, „Csak ' +
+          'ajánlat” módban készül a nyomtatvány. Pótlás: Beállítások → Nyomtatvány szövegei.',
+      );
     });
 
     it('kihagyottSzekciok üres esetén nem ad tételt', () => {

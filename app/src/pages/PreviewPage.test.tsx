@@ -1011,12 +1011,12 @@ describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
       expect(checkbox).toBeChecked();
       expect(checkbox).toBeDisabled();
       expect(
-        await screen.findByText(/A nyilatkozat szövege ezen a nyelven/),
+        await screen.findByText(/A Nyilatkozat szövege nincs kitöltve ezen a nyelven/),
       ).toBeInTheDocument();
       // Mindkét seed DE sablon placeholder -- a fizetési feltételek a
       // meglévő sárga fallback-Callouton át is jelez (2. döntés).
       expect(
-        screen.getByText(/A tervhez tartozó sablon nem érhető el a megfelelő nyelven/),
+        screen.getByText(/A nyomtatvány szövegei nincsenek kitöltve a terv nyelvén/),
       ).toBeInTheDocument();
     },
     20000,
@@ -1052,7 +1052,7 @@ describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
       const checkbox = screen.getByRole('checkbox');
       expect(checkbox).toBeChecked();
       expect(checkbox).toBeDisabled();
-      expect(await screen.findByText(/A nyilatkozat szövege ezen a nyelven/)).toBeInTheDocument();
+      expect(await screen.findByText(/A Nyilatkozat szövege nincs kitöltve ezen a nyelven/)).toBeInTheDocument();
     },
     20000,
   );
@@ -1104,10 +1104,10 @@ describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
       await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
 
       expect(
-        await screen.findByText(/A tervhez tartozó sablon nem érhető el a megfelelő nyelven/),
+        await screen.findByText(/A nyomtatvány szövegei nincsenek kitöltve a terv nyelvén/),
       ).toBeInTheDocument();
       expect(
-        screen.queryByText(/A nyilatkozat szövege ezen a nyelven/),
+        screen.queryByText(/A Nyilatkozat szövege nincs kitöltve ezen a nyelven/),
       ).not.toBeInTheDocument();
       const checkbox = screen.getByRole('checkbox');
       expect(checkbox).not.toBeChecked();
@@ -1138,7 +1138,7 @@ describe('PreviewPage -- HU-visszaesés elmarad, ha a magyar tartalék is placeh
   });
 
   it(
-    'német terven, alap seeddel csak a "Kimaradó szakaszok: Garancia" tétel jelenik meg, a HU-visszaesés-jelzés nem',
+    'német terven, alap seeddel csak a Garancia-szakaszt megnevező tétel jelenik meg, a HU-visszaesés-jelzés nem',
     async () => {
       const user = userEvent.setup();
       seedGermanPlanWithOneTranslatedItem();
@@ -1160,9 +1160,11 @@ describe('PreviewPage -- HU-visszaesés elmarad, ha a magyar tartalék is placeh
       await user.click(screen.getByRole('button', { name: 'Előnézet' }));
       await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
 
-      expect(await screen.findByText(/Kimaradó szakaszok: Garancia/)).toBeInTheDocument();
       expect(
-        screen.queryByText(/A tervhez tartozó sablon nem érhető el a megfelelő nyelven/),
+        await screen.findByText(/A Garancia szövege nincs kitöltve — a címével együtt kimarad/),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(/A nyomtatvány szövegei nincsenek kitöltve a terv nyelvén/),
       ).not.toBeInTheDocument();
     },
     20000,
@@ -1355,7 +1357,7 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
       );
 
       expect(
-        await screen.findByText(/Néhány páciensadat hiányzik/),
+        await screen.findByText(/Nem kötelező, de a nyomtatványon üresen marad:/),
       ).toBeInTheDocument();
       expect(screen.getByText(/A terv 1 0 Ft-os tételt tartalmaz/)).toBeInTheDocument();
       await waitFor(() => expect(finalizeBtn).not.toBeDisabled());

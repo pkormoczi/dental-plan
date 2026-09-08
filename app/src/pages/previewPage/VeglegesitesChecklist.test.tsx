@@ -97,7 +97,7 @@ describe('VeglegesitesChecklist -- szamlalo-jelvény', () => {
         {
           id: 'sablon-fallback',
           sulyossag: 'soft',
-          cim: 'A tervhez tartozó sablon nem érhető el a megfelelő nyelven.',
+          cim: 'A nyomtatvány szövegei nincsenek kitöltve a terv nyelvén.',
         },
       ],
     });
@@ -190,5 +190,37 @@ describe('VeglegesitesChecklist -- onNavigate nélküli, csak-olvasó mód', () 
     expect(
       screen.queryByRole('button', { name: 'Irányított ellenőrzés' }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('VeglegesitesChecklist -- szín-magyarázat', () => {
+  const EGY_TETEL: VeglegesitesCsekklista = {
+    tetelek: [
+      { id: 'nulla-osszegu-sor', sulyossag: 'soft', cim: 'A terv 1 0 Ft-os tételt tartalmaz.' },
+    ],
+  };
+  const MAGYARAZAT =
+    /Piros: amíg fennáll, a terv nem véglegesíthető\. Sárga és szürke: csak jelzés, a véglegesítés mehet\./;
+
+  it('az előnézeten egy sor mondja meg, melyik szín blokkolja a véglegesítést', () => {
+    renderChecklist(EGY_TETEL);
+
+    expect(screen.getByText(MAGYARAZAT)).toBeInTheDocument();
+  });
+
+  it('a sikerképernyőn (onNavigate nélkül) nincs magyarázó sor', () => {
+    render(
+      <Theme>
+        <VeglegesitesChecklist csekklista={EGY_TETEL} />
+      </Theme>,
+    );
+
+    expect(screen.queryByText(MAGYARAZAT)).not.toBeInTheDocument();
+  });
+
+  it('üres csekklistán nincs magyarázó sor', () => {
+    renderChecklist({ tetelek: [] });
+
+    expect(screen.queryByText(MAGYARAZAT)).not.toBeInTheDocument();
   });
 });
