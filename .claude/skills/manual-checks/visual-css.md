@@ -167,6 +167,30 @@ Ismert korlát: az `effectiveBg` ős-bejárás lapos slate UI-n helyes, de féli
 overlay alatt (pl. egy `AlertDialog` MÖGÖTT látszó tartalom) téved — dialóguson belüli
 találatokat kézzel is nézd át.
 
+## Oszlopszélesség: Beavatkozás (`#/terv`)
+
+jsdomban nincs layout, a `PlanEditorPage.tsx` lap-plafonja és a `PhaseSection.tsx`
+oszlopszélességei csak pixelben, valódi Chrome-ban ellenőrizhetők. Fussa le EGY nyitott
+fázissal (van legalább egy sor) 1440×900-on ÉS 1280×720-on is (`resize_page`):
+
+```js
+() => {
+  const nevInput = document.querySelector('input[aria-label="Beavatkozás megnevezése"]');
+  const headerCell = [...document.querySelectorAll('th')].find((th) => th.textContent.trim().startsWith('Beavatkozás'));
+  return {
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    beavatkozasOszlopPx: headerCell ? Math.round(headerCell.getBoundingClientRect().width) : null,
+    nevmezoPx: nevInput ? Math.round(nevInput.getBoundingClientRect().width) : null,
+    horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  };
+}
+```
+
+Elvárt mindkét felbontáson: `beavatkozasOszlopPx` ~524px, `nevmezoPx` ~465px,
+`horizontalOverflow: false`. Egy hosszú tételnév (pl. a seed „Bölcsességfog műtéti
+eljárással (seb. gond., varratszedés)” tétele) a névmező `title`-jében egérrel előhívható,
+csonkolás nélkül.
+
 ## Háttér és skeleton
 
 - Az app háttere hideg slate — `getComputedStyle(document.body).backgroundColor` és a
