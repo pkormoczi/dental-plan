@@ -48,6 +48,7 @@ import {
 } from '../domain/penznemValtas';
 import type { Nyelv, Penznem } from '../domain/types';
 import { t } from '../design/tokens';
+import { enterFokusz } from './patientPage/enterFokusz';
 import TervCimField from './patientPage/TervCimField';
 import TorzsadatSyncCard from './patientPage/TorzsadatSyncCard';
 import { useAppState } from '../state/AppState';
@@ -56,6 +57,9 @@ type PendingChange = { kind: 'nyelv'; value: Nyelv } | { kind: 'penznem'; value:
 
 /** A `ChipGroup` options és az öröklés-jelzés sávja közös nyelv-címkéje -- ne driftelhessen szét. */
 const NYELV_CIMKE: Record<Nyelv, string> = { hu: 'Magyar', de: 'Deutsch' };
+
+/** Az Enter-lánc zárótagja -- lásd `patientPage/enterFokusz.ts`. */
+const TOVABB_GOMB_ID = 'tovabb-a-terv-szerkesztohoz';
 
 const TERV_SZINTU_NEV: Record<'vegosszeg' | 'eloleg', string> = {
   vegosszeg: 'az egyedi végösszeg',
@@ -275,6 +279,7 @@ export default function PatientPage() {
               autoFocus
               value={paciens.nev}
               onChange={(e) => patch({ nev: e.target.value })}
+              onKeyDown={enterFokusz('paciens-szuletesiido')}
               placeholder="Kovács János"
             />
           </Field>
@@ -323,6 +328,7 @@ export default function PatientPage() {
               type="date"
               value={paciens.szuletesiIdo}
               onChange={(e) => patch({ szuletesiIdo: e.target.value })}
+              onKeyDown={enterFokusz('paciens-taj')}
             />
           </Field>
           <Field label="TAJ">
@@ -331,6 +337,7 @@ export default function PatientPage() {
               autoComplete="off"
               value={paciens.taj}
               onChange={(e) => patch({ taj: e.target.value })}
+              onKeyDown={enterFokusz('paciens-lakcim')}
               placeholder="123 456 789"
             />
           </Field>
@@ -343,6 +350,7 @@ export default function PatientPage() {
               autoComplete="off"
               value={paciens.lakcim}
               onChange={(e) => patch({ lakcim: e.target.value })}
+              onKeyDown={enterFokusz('paciens-telefon')}
               placeholder="1113 Budapest, Bartók Béla út 42. 2/5"
             />
           </Field>
@@ -355,6 +363,7 @@ export default function PatientPage() {
               autoComplete="off"
               value={paciens.telefon}
               onChange={(e) => patch({ telefon: e.target.value })}
+              onKeyDown={enterFokusz('paciens-email')}
               placeholder="+36 30 123 4567"
             />
           </Field>
@@ -365,6 +374,9 @@ export default function PatientPage() {
               type="email"
               value={paciens.email}
               onChange={(e) => patch({ email: e.target.value })}
+              onKeyDown={enterFokusz(
+                paciens.kiskoru ? 'paciens-torvenyes-kepviselo' : TOVABB_GOMB_ID,
+              )}
               placeholder="kovacs.janos@example.hu"
             />
           </Field>
@@ -386,6 +398,7 @@ export default function PatientPage() {
                 autoComplete="off"
                 value={paciens.torvenyesKepviselo ?? ''}
                 onChange={(e) => patch({ torvenyesKepviselo: e.target.value || null })}
+                onKeyDown={enterFokusz(TOVABB_GOMB_ID)}
                 placeholder="Kovács Ildikó (édesanya) — +36 30 111 2222"
               />
             </Field>
@@ -602,7 +615,9 @@ export default function PatientPage() {
       </Section>
 
       <Flex justify="end" mt="4">
-        <Button onClick={() => kerLepesValtas(() => navigate('/terv'))}>
+        {/* Az Enter-lánc utolsó tagja: a gomb csak FÓKUSZT kap, nem sül el --
+            az azonnali navigáció épp az a meglepetés, amit a lánc megszüntet. */}
+        <Button id={TOVABB_GOMB_ID} onClick={() => kerLepesValtas(() => navigate('/terv'))}>
           Tovább a terv szerkesztőhöz
         </Button>
       </Flex>

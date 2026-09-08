@@ -1309,6 +1309,117 @@ describe('PatientPage -- backlog-51: terv címe mező', () => {
   });
 });
 
+describe('PatientPage -- Enter a következő mezőre visz', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.location.hash = '';
+  });
+
+  it('vadonatúj láncon a Terv címe mezőből Enter a Név mezőre visz, mentés-jelzés nélkül', async () => {
+    const user = userEvent.setup();
+    renderPatient();
+
+    const cimInput = await screen.findByRole('textbox', { name: 'Terv címe' });
+    await user.click(cimInput);
+    await user.keyboard('{Enter}');
+
+    expect(screen.getByRole('textbox', { name: 'Név *' })).toHaveFocus();
+    expect(screen.queryByText('Mentve ✓')).toBeNull();
+  });
+
+  it('a páciens-mezők Enter-lánca a Név mezőtől a "Tovább" gombig fut, és a gomb nem sül el', async () => {
+    const user = userEvent.setup();
+    renderPatient();
+
+    const nev = await screen.findByRole('textbox', { name: 'Név *' });
+    await user.click(nev);
+    await user.keyboard('{Enter}');
+    expect(document.getElementById('paciens-szuletesiido')).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('textbox', { name: 'TAJ' })).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('textbox', { name: 'Lakcím' })).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('textbox', { name: 'Telefon' })).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('textbox', { name: 'E-mail' })).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+    const tovabb = screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' });
+    expect(tovabb).toHaveFocus();
+    // Csak fókusz: a szerkesztő keresője nem jelenik meg.
+    expect(screen.queryByPlaceholderText(/Tétel keresése/)).toBeNull();
+  });
+
+  it('Kiskorú bepipálva az E-mailből Enter a Törvényes képviselő mezőre visz', async () => {
+    const user = userEvent.setup();
+    renderPatient();
+
+    await user.click(await screen.findByRole('checkbox', { name: 'Kiskorú' }));
+
+    await user.click(screen.getByRole('textbox', { name: 'E-mail' }));
+    await user.keyboard('{Enter}');
+
+    expect(
+      screen.getByRole('textbox', { name: 'Törvényes képviselő (név, elérhetőség)' }),
+    ).toHaveFocus();
+
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' })).toHaveFocus();
+  });
+
+  it('mentett láncon az Enter ment, "Mentve ✓"-t mutat, és a fókusz a Név mezőre lép', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    window.location.hash = '#/tervek';
+    const patientNameEl = await screen.findByText('Kovács János');
+    const card = patientNameEl.closest('[data-patient]') as HTMLElement;
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
+    await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+
+    const cimInput = await screen.findByRole('textbox', { name: 'Terv címe' });
+    await user.type(cimInput, 'Enter viszi tovább{Enter}');
+
+    expect(await screen.findByText('Mentve ✓')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Név *' })).toHaveFocus());
+
+    const storage = new DemoStorage();
+    const kovacs = (await storage.listPatients()).find((p) => p.nev === 'Kovács János')!;
+    const [chain] = await storage.listPlans(kovacs.dirName);
+    expect(chain.tervCim).toBe('Enter viszi tovább');
+  });
+
+  it('sikertelen mentésnél a fókusz a Terv címe mezőben marad, a hibaüzenet mellett', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(DemoStorage.prototype, 'savePlanLabel').mockRejectedValue(
+      new Error('megtelt a tárhely'),
+    );
+    render(<App />);
+
+    window.location.hash = '#/tervek';
+    const patientNameEl = await screen.findByText('Kovács János');
+    const card = patientNameEl.closest('[data-patient]') as HTMLElement;
+    await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
+    await screen.findAllByPlaceholderText(/Tétel keresése/, {}, { timeout: 5000 });
+    await user.click(screen.getByRole('link', { name: 'Terv adatai' }));
+
+    const cimInput = await screen.findByRole('textbox', { name: 'Terv címe' });
+    await user.type(cimInput, 'Nem megy{Enter}');
+
+    expect(await screen.findByText(/A címke mentése nem sikerült/)).toBeInTheDocument();
+    expect(cimInput).toHaveFocus();
+    expect(screen.queryByText('Mentve ✓')).toBeNull();
+
+    vi.restoreAllMocks();
+  });
+});
+
 describe('PatientPage -- a pénznem és a terv-cím feliratai', () => {
   beforeEach(() => {
     localStorage.clear();

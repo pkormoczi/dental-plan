@@ -21,8 +21,13 @@ import { Box, Button, Callout, Flex, Skeleton, Text, TextField } from '@radix-ui
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import { feloldTervCimke } from '../../domain/torzsadatBetoltes';
 import { javasoltTervCim, URESEN_MENTVE_SUGO } from '../../domain/tervCim';
+import { useMentesJelzo } from '../../components/useMentesJelzo';
 import { useAppState } from '../../state/AppState';
 import { useStorage } from '../../storage/StorageContext';
+import { fokuszra } from './enterFokusz';
+
+/** A lánc következő tagja a Terv adatai lapon (PatientPage.tsx "Név *"). */
+const KOVETKEZO_MEZO_ID = 'paciens-nev';
 
 interface SavedRef {
   patientDir: string;
@@ -40,8 +45,8 @@ export default function TervCimField() {
   // mentett cím (vagy a lánc/mappa nem oldható fel -- ugyanaz az ág, mint a
   // TorzsadatSyncCard `torzsadat === null` fallback-ja).
   const [mentettLabel, setMentettLabel] = useState<string | null | undefined>(undefined);
-  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const jelzo = useMentesJelzo();
 
   useEffect(() => {
     if (isNewChain) {
@@ -73,24 +78,39 @@ export default function TervCimField() {
   const loading = !isNewChain && mentettLabel === undefined;
   const dirty = !isNewChain && mentettLabel !== undefined && value.trim() !== (mentettLabel ?? '').trim();
 
-  async function handleSave() {
-    if (!ref) return;
-    setSaving(true);
+  /** `true`, ha a címke ténylegesen kiíródott -- az Enter csak ekkor lép tovább. */
+  async function handleSave(): Promise<boolean> {
+    if (!ref) return false;
     setSaveError(null);
     try {
-      await storage.savePlanLabel(ref.patientDir, ref.planDir, value);
-      const trimmed = value.trim();
-      setMentettLabel(trimmed || null);
-      jelezTervCim(trimmed);
+      await jelzo.futtat(async () => {
+        await storage.savePlanLabel(ref.patientDir, ref.planDir, value);
+        const trimmed = value.trim();
+        setMentettLabel(trimmed || null);
+        jelezTervCim(trimmed);
+      });
+      return true;
     } catch (err) {
       setSaveError(
         err instanceof Error
           ? `A címke mentése nem sikerült: ${err.message}`
           : 'A címke mentése váratlanul meghiúsult.',
       );
-    } finally {
-      setSaving(false);
+      return false;
     }
+  }
+
+  // Sikertelen mentésnél a fókusz a mezőben marad -- a hibaüzenet közvetlenül
+  // alatta jelenik meg, az elugró fókusz elvágná az összefüggést.
+  function handleEnter() {
+    if (jelzo.saving) return;
+    if (!dirty) {
+      fokuszra(KOVETKEZO_MEZO_ID);
+      return;
+    }
+    void handleSave().then((sikerult) => {
+      if (sikerult) fokuszra(KOVETKEZO_MEZO_ID);
+    });
   }
 
   if (loading) {
@@ -110,15 +130,27 @@ export default function TervCimField() {
           value={value}
           onChange={(e) => jelezTervCim(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && dirty && !saving) void handleSave();
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            handleEnter();
           }}
           placeholder={placeholder}
           style={{ minWidth: 260, flex: '1 1 260px' }}
         />
         {dirty && (
-          <Button type="button" variant="soft" disabled={saving} onClick={() => void handleSave()}>
-            {saving ? 'Mentés…' : 'Mentés'}
+          <Button
+            type="button"
+            variant="soft"
+            disabled={jelzo.saving}
+            onClick={() => void handleSave()}
+          >
+            {jelzo.saving ? 'Mentés…' : 'Mentés'}
           </Button>
+        )}
+        {jelzo.saved && (
+          <Text size="1" color="gray" style={{ alignSelf: 'center' }}>
+            Mentve ✓
+          </Text>
         )}
       </Flex>
       <Text as="div" size="1" color="gray" mt="1">
