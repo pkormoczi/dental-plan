@@ -12,7 +12,7 @@ describe('Summary', () => {
   it('kedvezmény/felár nélkül csak a végösszeget mutatja', () => {
     render(
       <Theme>
-        <Summary grand={25000} kedvezmeny={0} felar={0} currency="HUF" nyelv="hu" />
+        <Summary grand={25000} kedvezmeny={0} felar={0} fazisOsszegek={[]} currency="HUF" nyelv="hu" />
       </Theme>,
     );
 
@@ -24,7 +24,7 @@ describe('Summary', () => {
   it('csak kedvezmény esetén egyetlen "Kedvezmény" sort mutat -- csak a szerkesztőben, a nyomtatványon nem', () => {
     render(
       <Theme>
-        <Summary grand={20000} kedvezmeny={5000} felar={0} currency="HUF" nyelv="hu" />
+        <Summary grand={20000} kedvezmeny={5000} felar={0} fazisOsszegek={[]} currency="HUF" nyelv="hu" />
       </Theme>,
     );
 
@@ -36,7 +36,7 @@ describe('Summary', () => {
   it('csak felár esetén egyetlen "Eltérés a listaártól" sort mutat', () => {
     render(
       <Theme>
-        <Summary grand={30000} kedvezmeny={0} felar={5000} currency="HUF" nyelv="hu" />
+        <Summary grand={30000} kedvezmeny={0} felar={5000} fazisOsszegek={[]} currency="HUF" nyelv="hu" />
       </Theme>,
     );
 
@@ -50,7 +50,7 @@ describe('Summary', () => {
   it('mindkét irányú eltérés esetén a kedvezmény és a felár KÜLÖN sorban áll, nem nettózva', () => {
     render(
       <Theme>
-        <Summary grand={272000} kedvezmeny={23000} felar={27000} currency="HUF" nyelv="hu" />
+        <Summary grand={272000} kedvezmeny={23000} felar={27000} fazisOsszegek={[]} currency="HUF" nyelv="hu" />
       </Theme>,
     );
 
@@ -59,10 +59,47 @@ describe('Summary', () => {
     expect(screen.queryByText(/4000 Ft/)).not.toBeInTheDocument();
   });
 
+  it('fázis-részösszegeket a Mindösszesen FÖLÖTT sorolja fel, névvel és összeggel', () => {
+    render(
+      <Theme>
+        <Summary
+          grand={30000}
+          kedvezmeny={0}
+          felar={0}
+          fazisOsszegek={[
+            { nev: '1. fázis', osszeg: 12000 },
+            { nev: 'Fogpótlás', osszeg: 18000 },
+          ]}
+          currency="HUF"
+          nyelv="hu"
+        />
+      </Theme>,
+    );
+
+    expect(screen.getByText('1. fázis')).toBeInTheDocument();
+    expect(screen.getByText('12 000 Ft')).toBeInTheDocument();
+    expect(screen.getByText('Fogpótlás')).toBeInTheDocument();
+    expect(screen.getByText('18 000 Ft')).toBeInTheDocument();
+
+    const szoveg = document.body.textContent ?? '';
+    expect(szoveg.indexOf('1. fázis')).toBeLessThan(szoveg.indexOf('Mindösszesen'));
+  });
+
+  it('üres fázislistánál egyetlen részösszeg-sor sincs -- a Mindösszesen áll magában', () => {
+    render(
+      <Theme>
+        <Summary grand={30000} kedvezmeny={0} felar={0} fazisOsszegek={[]} currency="HUF" nyelv="hu" />
+      </Theme>,
+    );
+
+    expect(screen.getByText('Mindösszesen')).toBeInTheDocument();
+    expect(screen.getAllByText('30 000 Ft')).toHaveLength(1);
+  });
+
   it('a pénzösszegek a terv nyelvét/pénznemét követik (52. tétel)', () => {
     render(
       <Theme>
-        <Summary grand={2500} kedvezmeny={0} felar={0} currency="EUR" nyelv="de" />
+        <Summary grand={2500} kedvezmeny={0} felar={0} fazisOsszegek={[]} currency="EUR" nyelv="de" />
       </Theme>,
     );
 

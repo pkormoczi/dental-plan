@@ -49,6 +49,8 @@ export default function PlanEditorPage() {
     piszkozatKonfliktus,
     piszkozatPatientDir,
     resetPlanDraft,
+    fazisCsukva,
+    setFazisCsukva,
   } = useAppState();
   const navigate = useNavigate();
   const currency = plan.penznem;
@@ -74,12 +76,11 @@ export default function PlanEditorPage() {
   const [pendingArFrissites, setPendingArFrissites] = useState<{ pi: number; li: number } | null>(
     null,
   );
-  // Melyik fázisok vannak összecsukva -- a halmaz a CSUKOTT
-  // indexeket tartja, alapból üres (minden fázis nyitva). A szülőben él,
-  // NEM PhaseSection lokális state-je, hogy túlélje a `fazisResetToken`
-  // bump-ot törléskor/mozgatáskor -- lásd deletePhase/movePhase, ahol a
-  // tagság újraindexelődik/felcserélődik.
-  const [fazisCsukva, setFazisCsukva] = useState<Set<number>>(() => new Set());
+  // A CSUKOTT fázisok indexei. Se PhaseSection-, se lap-lokális state: az
+  // Előnézetre lépés unmountolja ezt a lapot, a halmaz ezért az
+  // `AppState`-ben él (lásd ott a doc-kommentet). A `fazisResetToken` bumpot
+  // is túl kell élnie -- lásd deletePhase/movePhase, ahol a tagság
+  // újraindexelődik/felcserélődik.
   // Melyik fázisba kerüljön az új sor, ha a doki kezeletlen fogra kattint a
   // fogtérképen -- csak akkor látszik a választó, ha >1 fázis van (lásd
   // lent). Renderléskor mindig `Math.min`-nel szorítva a fázisok
@@ -514,6 +515,11 @@ export default function PlanEditorPage() {
               grand={grand}
               kedvezmeny={bontas.kedvezmeny}
               felar={bontas.felar}
+              fazisOsszegek={
+                plan.fazisok.length > 1
+                  ? plan.fazisok.map((f) => ({ nev: f.megnevezes, osszeg: fazisOsszeg(f) }))
+                  : []
+              }
               currency={currency}
               nyelv={nyelv}
             />

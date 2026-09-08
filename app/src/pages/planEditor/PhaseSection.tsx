@@ -166,18 +166,23 @@ export default function PhaseSection({
     <Box>
       <Flex justify="between" align="center" mb="3" gap="3">
         <Flex align="center" gap="2" flexGrow="1" style={{ minWidth: 0 }}>
-          <IconButton
+          {/* Látható felirat a chevron mellett, és ez az akadálymentes NÉV is
+              (nincs külön aria-label) -- különben kétszer hangzana el. A
+              felirat a KÖVETKEZŐ műveletet mondja, nem az állapotot: azt az
+              aria-expanded hordozza. */}
+          <Button
             type="button"
             variant="ghost"
             color="gray"
             size="1"
             aria-expanded={open}
             aria-controls={fazisPanelId(pi)}
-            aria-label={open ? 'Fázis összecsukása' : 'Fázis kinyitása'}
             onClick={onToggleOpen}
+            style={{ flexShrink: 0 }}
           >
             {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
-          </IconButton>
+            {open ? 'Összecsukás' : 'Kinyitás'}
+          </Button>
           {/* A címke a mező FÖLÖTT (app/src/CLAUDE.md, akadálymentesség), és
               csak nyitott fázisban: a mező sosem üres, ezért placeholder nem
               látszana, a csukott fejléc pedig egysoros összegzés. */}

@@ -8,12 +8,15 @@
 // (`pages/planEditor/ElolegBlokk.test.tsx`,
 // `pages/planEditor/EgyediVegosszegBlokk.test.tsx`).
 
-import { screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createBlankPlan } from '../domain/blankPlan';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
+import { TestProviders } from '../testUtils';
+import PlanEditorPage from './PlanEditorPage';
 import { renderEditor } from './planEditor/testFixtures';
 import { duplikaltIdk, mezokIdVagyNameNelkul } from '../testQueries';
 
@@ -405,7 +408,7 @@ describe('PlanEditorPage -- fázisnév után a tételkeresőbe visz a Tab és az
     const user = userEvent.setup();
     renderEditor();
     await sorFelvetel(user, 'fogeltavolitas', 'Fogeltávolítás');
-    await user.click(screen.getByRole('button', { name: 'Fázis összecsukása' }));
+    await user.click(screen.getByRole('button', { name: 'Összecsukás' }));
 
     const nevMezo = screen.getByDisplayValue('1. fázis');
     await user.click(nevMezo);
@@ -489,7 +492,7 @@ describe('PlanEditorPage -- backlog-58: fázis összecsukás', () => {
     // Mindkét fázis alapból nyitva -- két kereső látszik.
     expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(2);
 
-    const csukoGombok = screen.getAllByRole('button', { name: 'Fázis összecsukása' });
+    const csukoGombok = screen.getAllByRole('button', { name: 'Összecsukás' });
     expect(csukoGombok).toHaveLength(2);
 
     // Az első (soros) fázis összecsukása -- a sora és a keresője eltűnik,
@@ -500,10 +503,10 @@ describe('PlanEditorPage -- backlog-58: fázis összecsukás', () => {
     expect(await screen.findByText(/1 tétel/)).toBeInTheDocument();
 
     // A második (üres, nyitott) fázis érintetlen marad.
-    expect(screen.getByRole('button', { name: 'Fázis összecsukása' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Összecsukás' })).toBeInTheDocument();
 
     // Visszanyitás -- a sor újra látszik.
-    await user.click(screen.getByRole('button', { name: 'Fázis kinyitása' }));
+    await user.click(screen.getByRole('button', { name: 'Kinyitás' }));
     expect(screen.getAllByPlaceholderText(/Tétel keresése/)).toHaveLength(2);
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
   });
@@ -558,6 +561,147 @@ describe('PlanEditorPage -- backlog-58: fázis sorrendezés', () => {
   });
 });
 
+describe('PlanEditorPage -- összecsukott fázisok és fázis-részösszegek', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  /**
+   * A lap ki-be kapcsolható ugyanazon `AppStateProvider` alatt -- ezt teszi az
+   * Előnézetre lépés is (`/terv` és `/elonezet` testvér route-ok, a
+   * `PlanEditorPage` unmountol). A providert NEM újramountoljuk, mert a doki
+   * sem lép ki a workflow-ból.
+   */
+  function Harness() {
+    const [lathato, setLathato] = useState(true);
+    return (
+      <>
+        <button type="button" onClick={() => setLathato((v) => !v)}>
+          Lap ki/be
+        </button>
+        {lathato && <PlanEditorPage />}
+      </>
+    );
+  }
+
+  function renderHarness() {
+    return render(
+      <TestProviders>
+        <Harness />
+      </TestProviders>,
+    );
+  }
+
+  it('az Előnézetre lépés és vissza után a korábban összecsukott fázis csukva marad, a nyitottak nyitva', async () => {
+    const user = userEvent.setup();
+    renderHarness();
+
+    await user.click(await screen.findByRole('button', { name: 'Fázis hozzáadása' }));
+    // Az 1. fázist csukjuk össze, a 2. nyitva marad.
+    await user.click(screen.getAllByRole('button', { name: 'Összecsukás' })[0]);
+    expect(screen.getAllByRole('button', { name: 'Összecsukás' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Kinyitás' })).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: 'Lap ki/be' }));
+    expect(screen.queryByRole('button', { name: 'Fázis hozzáadása' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Lap ki/be' }));
+
+    await screen.findByRole('button', { name: 'Fázis hozzáadása' });
+    expect(screen.getAllByRole('button', { name: 'Kinyitás' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Összecsukás' })).toHaveLength(1);
+  });
+
+  it('a piszkozat eldobása után minden fázis nyitva van', async () => {
+    const user = userEvent.setup();
+    renderHarness();
+
+    // A "Piszkozat eldobása" csak tartalmas piszkozaton látszik.
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
+    await user.click(screen.getAllByRole('button', { name: 'Összecsukás' })[0]);
+    expect(screen.getAllByRole('button', { name: 'Kinyitás' })).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: 'Piszkozat eldobása' }));
+    await user.click(await screen.findByRole('button', { name: 'Eldobás' }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Kinyitás' })).not.toBeInTheDocument(),
+    );
+  });
+
+  it('a fejléc gombja a KÖVETKEZŐ műveletet írja ki: nyitva "Összecsukás", csukva "Kinyitás"', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const gomb = await screen.findByRole('button', { name: 'Összecsukás' });
+    expect(gomb).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(gomb);
+    const csukva = screen.getByRole('button', { name: 'Kinyitás' });
+    expect(csukva).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('egyetlen fázisnál nincs részösszeg-sor; kettőnél fázisonként egy, a Mindösszesen fölött', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    // Egy fázis: a részösszeg szó szerint a Mindösszesen ismétlése lenne.
+    expect(screen.queryByText('1. fázis')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
+    const keresok = screen.getAllByPlaceholderText(/Tétel keresése/);
+    await user.type(keresok[1], 'tomes 3');
+    await user.click(await screen.findByText('Esztétikus tömés 3 felszín'));
+    await waitFor(() => expect(keresok[1]).toHaveValue(''));
+
+    // A fázisnév a részösszeg-sorban SZÖVEGKÉNT jelenik meg (a fejlécben mező).
+    expect(screen.getByText('1. fázis')).toBeInTheDocument();
+    expect(screen.getByText('2. fázis')).toBeInTheDocument();
+
+    const szoveg = document.body.textContent ?? '';
+    expect(szoveg.indexOf('1. fázis')).toBeLessThan(szoveg.indexOf('Mindösszesen'));
+  });
+
+  it('a részösszeg-sor a fázis NYERS összegét mutatja akkor is, ha egyedi végösszeg van beállítva', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
+    const keresok = screen.getAllByPlaceholderText(/Tétel keresése/);
+    await user.type(keresok[1], 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(keresok[1]).toHaveValue(''));
+
+    // Két 25 000 Ft-os sor, külön fázisban -- a Mindösszesen 50 000 Ft.
+    expect(screen.getAllByText('25 000 Ft').length).toBeGreaterThanOrEqual(2);
+
+    await user.click(screen.getByRole('checkbox', { name: /Egyedi végösszeg beállítása/ }));
+    const vegosszegMezo = await screen.findByRole('textbox', { name: 'Egyedi végösszeg' });
+    await user.clear(vegosszegMezo);
+    await user.type(vegosszegMezo, '40000');
+    await user.tab();
+
+    // A terv-szintű kedvezmény a Mindösszesent viszi le, a fázissorok
+    // nyersen maradnak -- nincs fázisra osztott kedvezmény-fogalom.
+    await waitFor(() => expect(screen.getByText('40 000 Ft')).toBeInTheDocument());
+    expect(screen.getAllByText('25 000 Ft').length).toBeGreaterThanOrEqual(2);
+  });
+});
+
 describe('PlanEditorPage -- fázisnév: generált alapnév és a mező címkéje', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -580,10 +724,10 @@ describe('PlanEditorPage -- fázisnév: generált alapnév és a mező címkéje
     const mezo = await screen.findByLabelText('Fázis neve');
     expect(mezo).toHaveValue('1. fázis');
 
-    await user.click(screen.getByRole('button', { name: 'Fázis összecsukása' }));
+    await user.click(screen.getByRole('button', { name: 'Összecsukás' }));
     expect(screen.queryByLabelText('Fázis neve')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Fázis kinyitása' }));
+    await user.click(screen.getByRole('button', { name: 'Kinyitás' }));
     expect(await screen.findByLabelText('Fázis neve')).toHaveValue('1. fázis');
   });
 });

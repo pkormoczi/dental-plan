@@ -211,6 +211,18 @@ interface AppStateValue {
    * fel -- nem a (potenciálisan React-batch miatt elavult) closure-ből.
    */
   reloadFromStorage: () => Promise<void>;
+  /**
+   * A szerkesztőben ÖSSZECSUKOTT fázisok indexei -- tisztán vizuális
+   * munkaállapot, ezért memóriában él, nem a `Plan`-ben és nem a
+   * `DraftMeta`-ban: perzisztálva minden összecsukás újraírná a piszkozatot
+   * és a „Piszkozat mentve" bélyeget egy kattintásra frissítené. Azért ITT
+   * (a `piszkozatMeta` szomszédjaként) és nem a `PlanEditorPage`-ben, mert
+   * az Előnézetre lépés unmountolja a lapot -- a doki által összecsukott
+   * fázisoknak a visszalépést is túl kell élniük. Ott nullázódik, ahol a
+   * `piszkozatMeta`.
+   */
+  fazisCsukva: Set<number>;
+  setFazisCsukva: (updater: (prev: Set<number>) => Set<number>) => void;
 }
 
 const AppStateContext = createContext<AppStateValue | null>(null);
@@ -233,6 +245,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   // UI-workflow metaadat (patientDir/lastRoute) -- nem a Plan tartalma,
   // lásd storage/DraftStorage.ts DraftMeta.
   const [piszkozatMeta, setPiszkozatMeta] = useState<DraftMeta>({});
+  const [fazisCsukva, setFazisCsukva] = useState<Set<number>>(() => new Set());
   const [loadedOsszesitokDiff, setLoadedOsszesitokDiff] = useState<Osszesitok | null>(null);
   const [frissitettDatum, setFrissitettDatum] = useState<UjVerzioDatum | null>(null);
   const [orvosFallback, setOrvosFallback] = useState<OrvosFallback>(null);
@@ -409,6 +422,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setPiszkozatHiba(null);
     setPiszkozatKonfliktus(null);
     setPiszkozatMeta({});
+    setFazisCsukva(new Set());
     irtPiszkozatRef.current = null;
     piszkozatKiirvaRef.current = false;
   }, [storage, applySettings, applyPriceList]);
@@ -436,6 +450,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setPiszkozatHiba(null);
         setPiszkozatKonfliktus(null);
         setPiszkozatMeta({});
+        setFazisCsukva(new Set());
         irtPiszkozatRef.current = null;
         piszkozatKiirvaRef.current = false;
         // Explicit törlés -- egy üres tervre az író effekt nem fut le,
@@ -553,6 +568,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setPiszkozatMentve(null);
         setPiszkozatKonfliktus(null);
         setPiszkozatMeta({});
+        setFazisCsukva(new Set());
         piszkozatKiirvaRef.current = false;
       },
       markPlanSaved: async (persisted) => {
@@ -568,6 +584,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setOrokoltNyelv(false);
         setOrokoltPenznem(false);
         setPiszkozatMeta({});
+        setFazisCsukva(new Set());
         await drafts.clear();
       },
       loadedOsszesitokDiff,
@@ -598,6 +615,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         await storage.savePriceList(next);
       },
       reloadFromStorage,
+      fazisCsukva,
+      setFazisCsukva,
     };
   }, [
     settings,
@@ -608,6 +627,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     piszkozatHiba,
     piszkozatKonfliktus,
     piszkozatMeta,
+    fazisCsukva,
     loadedOsszesitokDiff,
     frissitettDatum,
     orvosFallback,
