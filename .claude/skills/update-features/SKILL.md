@@ -116,18 +116,15 @@ The file opens with `# Funkciók` and a one-line explanation, exactly like `docs
 opens with `# Változásnapló` — this line is outside any `##` section, so the parser (and the
 card) ignores it.
 
-## Step 6 — Confirm before writing
+## Step 6 — Write and commit
 
-Never write directly to `docs/FEATURES.md` without showing the drafted content first — including
-anything you're removing or rewording, not just what's new. Present the full new content and
-wait for explicit approval. This file gets rewritten wholesale, not appended to, so a bad run
-can silently delete something true; the confirmation step is the safety net.
+This skill runs end-to-end without pausing for review or approval: write the drafted content
+directly to `docs/FEATURES.md` — this file gets rewritten wholesale, not appended to, so re-read
+the current content in Step 2 carefully before overwriting it, since a bad run can silently
+delete something true. Then commit and push.
 
-## Step 7 — Commit
-
-After the approved content is written to `docs/FEATURES.md`, commit **only that file** and
-push it at once — every shared-state change in this repo is committed and pushed by the skill
-that made it:
+Commit **only that file** and push it at once — every shared-state change in this repo is
+committed and pushed by the skill that made it:
 
 ```
 node scripts/workflow/commit-push.mjs -m "docs: FEATURES.md frissítése (<a mai nap magyar dátuma>.)" \

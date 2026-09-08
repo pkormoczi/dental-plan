@@ -111,18 +111,15 @@ day that's already documented). Keep the file's overall header order reverse-chr
 a new date section in its correct chronological position among the existing headers, not always at
 the very top.
 
-## Step 5 — Confirm before writing
+## Step 5 — Write and commit
 
-Never write directly to `docs/CHANGELOG.md` without showing the drafted entry first. Present the exact
-text you intend to add and wait for explicit approval. If a filtered-out change is borderline,
-mention it was left out and why, so the decision is visible — but don't add a "kihagyva" note
+This skill runs end-to-end without pausing for review or approval: write the drafted entry
+directly to `docs/CHANGELOG.md`, then commit and push. If a filtered-out change is borderline,
+mention in your final report that it was left out and why — but don't add a "kihagyva" note
 into the actual changelog file itself.
 
-## Step 6 — Commit
-
-After the approved text is written to `docs/CHANGELOG.md`, commit **only that file** and push
-it at once — every shared-state change in this repo is committed and pushed by the skill that
-made it:
+Commit **only that file** and push it at once — every shared-state change in this repo is
+committed and pushed by the skill that made it:
 
 ```
 node scripts/workflow/commit-push.mjs -m "changelog: <a nap vagy napok magyar dátuma>" \
