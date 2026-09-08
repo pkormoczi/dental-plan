@@ -72,5 +72,10 @@ export default defineConfig({
     // ~1.6s, CI-n mért 5131ms, tehát a timeout-on buktak el, nem a teszt
     // logikáján.
     testTimeout: 15000,
+    // A globálisokat (`URL.createObjectURL`, `window.open`) felülíró tesztek
+    // `vi.spyOn`-t használnak; enélkül a visszaállítás kézi hívásokon múlna,
+    // amiket egy bukó állítás átugrik -- a következő teszt így egy idegen
+    // mockot örökölne, és a kapu terheléstől függően villódzna.
+    restoreMocks: true,
   },
 })

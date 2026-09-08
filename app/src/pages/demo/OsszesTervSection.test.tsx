@@ -636,8 +636,8 @@ describe('OsszesTervSection', () => {
     await seeder.init();
     const ref = await seeder.savePlan(makeVeglegesPlan(), new Uint8Array([1, 2, 3]));
 
-    URL.createObjectURL = vi.fn(() => 'blob:mock-download-url') as unknown as typeof URL.createObjectURL;
-    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-download-url');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
     let capturedDownload: string | null = null;
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
       this: HTMLAnchorElement,
@@ -669,8 +669,7 @@ describe('OsszesTervSection', () => {
     it('a legfrissebb sor látható "Megnézés" gombja a saját verziójának route-jára navigál', async () => {
       const seeder = new DemoStorage();
       await seeder.init();
-      const openMock = vi.fn(() => null);
-      window.open = openMock as unknown as typeof window.open;
+      const openMock = vi.spyOn(window, 'open').mockReturnValue(null);
       const plan = makeVeglegesPlan();
       const { versionDir } = await seeder.savePlan(plan, new Uint8Array([1, 2, 3]));
 

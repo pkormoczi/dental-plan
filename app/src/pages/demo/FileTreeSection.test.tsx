@@ -116,10 +116,8 @@ describe('FileTreeSection', () => {
 
   it('egy ténylegesen mentett terv PDF-je "Megnyitás új lapon" linket ad, a valódi bájtokból épített blob-URL-lel', async () => {
     const objectUrl = 'blob:mock-pdf-url';
-    const createObjectURLMock = vi.fn(() => objectUrl);
-    const revokeObjectURLMock = vi.fn();
-    URL.createObjectURL = createObjectURLMock as unknown as typeof URL.createObjectURL;
-    URL.revokeObjectURL = revokeObjectURLMock;
+    const createObjectURLMock = vi.spyOn(URL, 'createObjectURL').mockReturnValue(objectUrl);
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
     const ref = await seeder.savePlan(makeBlankPlan(), new Uint8Array([1, 2, 3]));
     const user = userEvent.setup();
@@ -172,7 +170,6 @@ describe('FileTreeSection', () => {
     renderFileTree();
 
     expect(await screen.findByText('Nincs megjeleníthető fájl — a tároló üres.')).toBeInTheDocument();
-    vi.restoreAllMocks();
   });
 
   it('hiba esetén piros Callout jelenik meg a hibaüzenettel', async () => {
@@ -183,6 +180,5 @@ describe('FileTreeSection', () => {
     renderFileTree();
 
     expect(await screen.findByText(/A fájlfa betöltése nem sikerült: boom/)).toBeInTheDocument();
-    vi.restoreAllMocks();
   });
 });

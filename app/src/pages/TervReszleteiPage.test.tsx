@@ -442,15 +442,14 @@ describe('TervReszleteiPage', () => {
 
     const callOrder: string[] = [];
     const mockWin = { location: { href: '' }, close: vi.fn() };
-    const openMock = vi.fn(() => {
+    const openMock = vi.spyOn(window, 'open').mockImplementation(() => {
       callOrder.push('open');
       return mockWin as unknown as Window;
     });
-    window.open = openMock as unknown as typeof window.open;
-    URL.createObjectURL = vi.fn(() => {
+    vi.spyOn(URL, 'createObjectURL').mockImplementation(() => {
       callOrder.push('createObjectURL');
       return 'blob:teszt';
-    }) as unknown as typeof URL.createObjectURL;
+    });
 
     const user = userEvent.setup();
     renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
@@ -491,9 +490,12 @@ describe('TervReszleteiPage', () => {
 
   it('75. tétel: PDF nélküli verzión a viewer helyén üzenet, DE a fejléc/fázisok/összesítés továbbra is látszik', async () => {
     renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
-    await screen.findByTestId('terv-reszletei-fejlec');
+    // A PDF-slot `toltes` ága SEM a calloutot, SEM az iframe-et nem rendereli,
+    // és a betöltés a fejléc megjelenése után indul -- a fejlécre várva a
+    // slot-állítások versenyeznének. A slot végállapotát kell bevárni.
+    expect(await screen.findByText(/beépített demó-adatkészletből származik/)).toBeInTheDocument();
 
-    expect(screen.getByText(/beépített demó-adatkészletből származik/)).toBeInTheDocument();
+    expect(screen.getByTestId('terv-reszletei-fejlec')).toBeInTheDocument();
     expect(screen.queryByTitle('A verzió mentett PDF-je')).not.toBeInTheDocument();
     expect(screen.getByText('Pénzügyi összesítés')).toBeInTheDocument();
     expect(screen.getByText('1. kezelés — fogkő és tömés')).toBeInTheDocument();
@@ -556,9 +558,8 @@ describe('TervReszleteiPage', () => {
     );
 
     let counter = 0;
-    URL.createObjectURL = vi.fn(() => `blob:teszt-${++counter}`) as unknown as typeof URL.createObjectURL;
-    const revokeSpy = vi.fn();
-    URL.revokeObjectURL = revokeSpy;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation(() => `blob:teszt-${++counter}`);
+    const revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 
     const user = userEvent.setup();
     renderReszletek(reszleteiUrl(refV2.patientDir, refV2.planDir, refV2.versionDir));
