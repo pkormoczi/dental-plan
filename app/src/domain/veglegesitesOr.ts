@@ -26,6 +26,7 @@ import {
   uresFazisok,
 } from './kitoltetlen';
 import { arElteroSorok } from './arKoveti';
+import { MAGAS_MENNYISEG_KUSZOB, magasMennyiseguSorok } from './mennyiseg';
 import { MASTER_DIFF_MEZOK, masterSnapshotDiff, valodiUtkozesek } from './masterSnapshotDiff';
 import { formatMoney } from './money';
 import { igazolatlanNemetKategoriak, igazolatlanNemetNevek } from './nemetNev';
@@ -364,6 +365,26 @@ export function veglegesitesDiagnozis(
       cim: `${fogszamNelkul.length} soron nincs fogszám.`,
       szamlalo: fogszamNelkul.length,
       reszletek: [{ cim: 'Érintett sorok', nevek: fogszamNelkul }],
+      route: '/terv',
+    });
+  }
+
+  // Közvetlenül a fogszám UTÁN: egy fogszám a Db mezőbe elgépelve mindkét
+  // tételt kiváltja ugyanarra a sorra, egymás mellett diagnosztikus.
+  const magasMennyisegek = magasMennyiseguSorok(plan);
+  if (magasMennyisegek.length > 0) {
+    tetelek.push({
+      id: 'magas-mennyiseg',
+      sulyossag: 'soft',
+      cim: `${magasMennyisegek.length} soron ${MAGAS_MENNYISEG_KUSZOB}-nál nagyobb a darabszám.`,
+      szamlalo: magasMennyisegek.length,
+      reszletek: [
+        {
+          cim: 'Érintett sorok',
+          // A puszta névből nem látszik, elgépelés-e -- a darabszám dönti el.
+          nevek: magasMennyisegek.map((m) => `${m.nev} — ${m.mennyiseg} db`),
+        },
+      ],
       route: '/terv',
     });
   }

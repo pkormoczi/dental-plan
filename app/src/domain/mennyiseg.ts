@@ -6,7 +6,20 @@
 // szinkronizálás helye a `nev.ts` precedense (nevKoveti/leirasKoveti).
 
 import { parseTeeth } from './teeth';
-import type { Sor } from './types';
+import type { Plan, Sor } from './types';
+
+/**
+ * E fölött a darabszám fölött már valószínűbb az elgépelés, mint a valós
+ * mennyiség -- egy fogszám (36) a Db mezőbe csúszva máskülönben némán
+ * hatványozza a sor összegét. Fix küszöb, nem FDI-alakú (11-48) felismerés:
+ * az a 136-ot is átengedné.
+ */
+export const MAGAS_MENNYISEG_KUSZOB = 8;
+
+export interface MagasMennyisegSor {
+  nev: string;
+  mennyiseg: number;
+}
 
 /**
  * A `fogak` mezőből következő darabszám, vagy `null`, ha a mező nem tiszta
@@ -48,4 +61,27 @@ export function sorPatchKovetessel(sor: Sor, patch: Partial<Sor>): Partial<Sor> 
     return kovetett == null ? patch : { ...patch, mennyiseg: kovetett };
   }
   return patch;
+}
+
+/**
+ * A gyanúsan magas darabszámú sorok, terv-sorrendben -- puha jelzés forrása,
+ * sosem blokk: egy legitim 10 db elolvasása olcsóbb, mint egy adminmunkát
+ * igénylő kivétel-lista.
+ *
+ * A fogakat KÖVETŐ sor (`mennyisegKezi === false`) kimarad: ott a darabszám a
+ * felsorolt fogakból származik, nem gépelésből. Hiányzó mezőnél (régi sor)
+ * jelez -- az nem igazolt követő. Csak megnevezett sor számít: a névtelent a
+ * `kitoltetlen-sor` kemény tétele fedi.
+ */
+export function magasMennyiseguSorok(plan: Plan): MagasMennyisegSor[] {
+  const eredmeny: MagasMennyisegSor[] = [];
+  plan.fazisok.forEach((fazis) => {
+    fazis.sorok.forEach((sor) => {
+      if (!sor.nevSnapshot.trim()) return;
+      if (sor.mennyisegKezi === false) return;
+      if (sor.mennyiseg <= MAGAS_MENNYISEG_KUSZOB) return;
+      eredmeny.push({ nev: sor.nevSnapshot, mennyiseg: sor.mennyiseg });
+    });
+  });
+  return eredmeny;
 }

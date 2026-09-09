@@ -352,6 +352,58 @@ describe('veglegesitesDiagnozis', () => {
     });
   });
 
+  describe('magas-mennyiseg', () => {
+    it('8 db-os soron nem ad tételt', () => {
+      const plan = makePlan([[sor({ mennyiseg: 8 })]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      expect(tetel(diag, 'magas-mennyiseg')).toBeUndefined();
+    });
+
+    it('9 db-os soron puha, nem blokkoló tételt ad a sor nevével és darabszámával, a szerkesztőbe vezetve', () => {
+      const plan = makePlan([[sor({ nevSnapshot: 'Gyökértömés', mennyiseg: 36 })]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+      const t = tetel(diag, 'magas-mennyiseg');
+      expect(t?.sulyossag).toBe('soft');
+      expect(t?.szamlalo).toBe(1);
+      expect(t?.route).toBe('/terv');
+      expect(t?.reszletek).toEqual([{ cim: 'Érintett sorok', nevek: ['Gyökértömés — 36 db'] }]);
+      expect(vanKemenyBlokk(diag)).toBe(false);
+    });
+
+    it('a fogakat követő sor magas darabszámmal sem ad tételt', () => {
+      const plan = makePlan([
+        [sor({ fogak: '11, 12, 13, 14, 15, 16, 17, 18, 21', mennyiseg: 9, mennyisegKezi: false })],
+      ]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      expect(tetel(diag, 'magas-mennyiseg')).toBeUndefined();
+    });
+
+    it('több soron a számláló és a felsorolás terv sorrendben gyűlik', () => {
+      const plan = makePlan([
+        [sor({ nevSnapshot: 'Első', mennyiseg: 12 })],
+        [sor({ nevSnapshot: 'Második', mennyiseg: 36 })],
+      ]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+      const t = tetel(diag, 'magas-mennyiseg');
+      expect(t?.szamlalo).toBe(2);
+      expect(t?.reszletek).toEqual([
+        { cim: 'Érintett sorok', nevek: ['Első — 12 db', 'Második — 36 db'] },
+      ]);
+    });
+
+    // Egy fogszám a Db mezőbe elgépelve mindkét tételt kiváltja ugyanarra a
+    // sorra -- egymás mellett diagnosztikus.
+    it('a magas darabszám közvetlenül a hiányzó fogszám UTÁN áll', () => {
+      const plan = makePlan([[sor({ nevSnapshot: 'Gyökértömés', fogak: '', mennyiseg: 36 })]]);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+
+      const ids = diag.tetelek.map((x) => x.id);
+      expect(ids.indexOf('magas-mennyiseg')).toBe(ids.indexOf('hianyzo-fogszam') + 1);
+    });
+  });
+
   it('névvel ellátott, 0 összegű sor a "nulla-osszegu-sor" soft tételt adja', () => {
     const plan = makePlan([
       [sor({ nevSnapshot: 'Ingyenes kontroll', listaEgysegar: 0, tenylegesEgysegar: 0 })],
