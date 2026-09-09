@@ -634,19 +634,30 @@ Prefer deletion over abstraction when code is no longer needed.
 
 This avoids anchoring the current review to previous findings.
 
-After both fresh passes are complete, check `docs/reviews/` for the most recent prior review.
+After both fresh passes are complete, run `node scripts/workflow/reviews.mjs --json`: every
+prior finding of every review type (root and `archive/`) with its id (`review:<report>#<id>`),
+title, severity, files and derived state (`nyitott`, `tudomásul véve`, `backlog <slug>`,
+`javítva`, `elvetve`, `duplikátum`). Match by file + title; open the prior report only for a
+hit. Compare against the most recent prior arch-react report for the `Executive Summary`
+trend; for per-finding classification use the derived state.
 
 Classify findings as:
 
 - `NEW`
-- `CARRIED FORWARD`
-- `RESOLVED`
+- `CARRIED FORWARD` (cite `review:<id>`; state `nyitott`/`tudomásul véve`/`backlog <slug>`)
+- `RESOLVED` (cite `review:<id>` and the fixing commit)
+- `REGRESSED` (state `javítva`, but the issue is back — cite the commit)
+- `REJECTED` (state `elvetve`; report it anyway with the recorded reason if it still applies)
 
 Only carry a finding forward when the underlying issue materially remains.
 
 If no prior report exists, skip comparison.
 
 Do not fabricate a baseline.
+
+Keep the `### ARCH-nnn — title` / `### REACT-nnn — title` heading form: the number after the
+prefix is the finding id (`review:<this report basename>#ARCH-003`), which backlog items,
+`Döntés:` lines and the docs-check resolve.
 
 ---
 
@@ -745,22 +756,30 @@ Use `-2`, `-3`, etc. for additional same-day runs.
 
 ## After the report
 
-Commit and push the report — `docs/reviews/` is append-only and the next run's
-comparison source:
+Book what this run verified into the prior reports — bookkeeping, not backlog
+writing: for every `RESOLVED` finding
+`node scripts/workflow/reviews.mjs dontes review:<prior id> "javítva <commit>, ellenőrizte review:<this report basename> (<YYYY-MM-DD>)"`.
+If every finding of the previous arch-react report was re-checked (resolved, or
+carried forward here), close it:
+`node scripts/workflow/reviews.mjs feldolgozas <prior basename> "felülírta review:<this report basename>"`.
+
+Commit and push the report together with the modified prior reports —
+`docs/reviews/` is append-only apart from `Döntés:`/`Feldolgozás:` lines, and the
+`Döntés:` lines are the next run's comparison source:
 
 ```
 node scripts/workflow/commit-push.mjs -m "review: arch-react <YYYY-MM-DD>" \
-  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/reviews/<this report>
+  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/reviews/<this report> [docs/reviews/<prior report>...]
 ```
 
 **No backlog files.** The review reports; the only writer into the backlog is
 `/idea`, with the doki's approval. In the closing message give one ready-made
-command per `Critical` and `Major` finding with `Status: NEW`:
-`/idea <suggested-slug> docs/reviews/<this report>` — with the suggested `Type`
-(`bug` when behaviour is wrong, `chore` when structural) and a dedup note
-(check `ls backlog backlog/later backlog/idea backlog/idea/later` first: an existing slug or identical `Source:`
-means "already tracked", no command). `Minor` and `Observation` stay in the
-report only. Still no application code changes.
+command per `Critical` and `Major` finding with `Status: NEW` or `REGRESSED`:
+`/idea <suggested-slug> review:<this report basename>#<ARCH-nnn|REACT-nnn>` — with
+the suggested `Type` (`bug` when behaviour is wrong, `chore` when structural) and
+the derived-state note (`backlog <slug>` means "already tracked", no command).
+`Minor` and `Observation` stay in the report only. Still no application code
+changes; the only `Döntés:` lines this skill writes are verified fixes.
 
 ---
 

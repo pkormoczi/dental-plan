@@ -192,13 +192,17 @@ csoport ugyanazt a tételfájl-alakot és scriptkészletet használja (4. szakas
 
 ### 5a. Egy-tételes út
 
-#### `/idea <slug> [szöveg | forrás-fájl]`
+#### `/idea <slug> [szöveg | forrás-fájl | review:<jelentés>#<id>]`
 
 - **Bemenet:** kebab-case slug, és vagy egy-két mondat, vagy egy forrás-fájl (pl. review-jelentés),
-  vagy semmi (akkor a beszélgetés a forrás). Többötletes forrásnál ötletenként javasol slugot, a
-  felhasználó választ.
+  vagy egy megállapítás-azonosító (`review:<jelentés>#<id>`), vagy semmi (akkor a beszélgetés a
+  forrás). Többötletes forrásnál ötletenként javasol slugot, a felhasználó választ; review-forrásnál
+  minden jelöltről döntés születik (felvesz / elvetve / duplikátum / tudomásul véve / később), és a
+  döntés `Döntés:` sorként a jelentésbe kerül, a tételfájllal egy commitban (6. szakasz).
 - **Előfeltétel — megáll, ha:** létező tétel (a négy mappa slugjai vagy `Source:` sorai) már fedi a
-  felvetést. Nem cél / hard invariáns ütközést kimond, de a tétel felvehető.
+  felvetést, vagy a megállapítás levezetett állapota (`reviews.mjs --json`) `backlog`/`javítva`/
+  `elvetve` — kivéve kimondott regressziót. Nem cél / hard invariáns ütközést kimond, de a tétel
+  felvehető.
 - **Létrehoz/mozgat:** `backlog/idea/<slug>.md` — kimondott `later`-nél `backlog/idea/later/<slug>.md`
   — a teljes tartalom bemutatása és jóváhagyás után, majd `commit-push.mjs -m "backlog: +<slug>"`.
   `Prio:` csak akkor, ha a doki vagy a fejlesztő kimondta.
@@ -347,8 +351,33 @@ Egy közös szabály: **a review jelent, nem ír a backlogba és nem módosít a
 `docs/reviews/YYYY-MM-DD-<típus>[-<slug>].md`, a mappa **append-only** (minden futás dedup- vagy
 összehasonlítási forrás a következőnek; csak képernyőkép-mappa törölhető), és a futás végén
 `commit-push.mjs -m "review: <típus> … <dátum>"`. A záró üzenet a súlyos találatokra kész
-parancssort ad — `/idea <javasolt-slug> docs/reviews/<jelentés>` — dedup-jelzéssel; a backlogba
+parancssort ad — `/idea <javasolt-slug> review:<jelentés>#<id>` — dedup-jelzéssel; a backlogba
 így egy írói út van, a doki jóváhagyásával.
+
+**A megállapítás azonosítója és állapota.** Minden jelentésben minden megállapítás egy
+`### <id>. <cím>` (vagy `### ARCH-nnn — <cím>`) heading; a teljes azonosító
+`review:<jelentés-basename>#<id>`, mappa-független (a gyökér és az `archive/` egyenrangú), a
+docs-check feloldja. Az állapot nem külön index, hanem levezetett (`scripts/workflow/reviews.mjs`):
+élő tétel `Source: review:<id>` sora → `backlog <slug>`; a megállapítás alatti `- Döntés:` sor →
+annak értéke (`backlog <slug>` · `javítva <slug|commit>[, ellenőrizte review:<id>]` · `elvetve:
+<indok>` · `duplikátum -> review:<id>` · `tudomásul véve`, a végén dátum); törölt tétel
+`"<slug>: …"` lezáró commitja → `javítva`, `backlog: -<slug>` commit → `elvetve`; Közepes/Kis
+pont döntés nélkül → `tudomásul véve`; egyébként `nyitott`. Ellentmondás (élő tétel mellett
+`Döntés: elvetve`) nem dönt, figyelmeztetés. **Teendő** = nyitott Blokkoló/Súlyos/ISMÉT (vagy
+ismeretlen súlyosságú) pont; egy jelentés feldolgozott, ha ilyen nincs, vagy a fejlécében
+`Feldolgozás: felülírta review:<újabb jelentés>` áll (az újabb futás minden pontját
+újraellenőrizte). Az append-only pontosítása: a megfigyelés szövege nem változik, a `Döntés:` és a
+`Feldolgozás:` sor írható. A feldolgozott jelentés `git mv`-vel `docs/reviews/archive/` alá
+kerülhet — hivatkozás-javítás nélkül, mert az azonosító basename-alapú.
+
+**Ki ír `Döntés:` sort — három író, egy implementáció (`reviews.mjs dontes`):** az `/idea`
+(felvétel, elvetés indokkal, duplikátum, tudomásul véve — a tételfájllal egy commitban); a
+review-skillek (kizárólag az általuk bizonyítottan javítva talált korábbi pontokra, és a teljes
+felülírás `Feldolgozás:` sora); a `close.mjs` (`javítva <slug>` a tétel `Source:` hivatkozásaira,
+a lezáró commitban) és a `discard.mjs` (`elvetve: <indok>` + `backlog: -<slug>` commit). A
+`/reviews` csak listáz. A `reviews.mjs --check` (ellentmondás, feloldhatatlan hivatkozás,
+nyitott pont `archive/` alatt) nem része a kapunak — a docs-check csak a `review:` anchor
+feloldását őrzi.
 
 - **`/doctor-review [scenario-slug]`** — István-persona bejárás izolált Chrome-ban. `/idea`-sor
   minden `ÚJ`/`ISMÉT` **Blokkoló** és **Súlyos** megállapításra; `Közepes`/`Kis` a jelentésben marad.
@@ -365,7 +394,10 @@ parancssort ad — `/idea <javasolt-slug> docs/reviews/<jelentés>` — dedup-je
   számolt szelet(ek)re hívja (üres halmaznál kimarad), és nincs jelentésfájl: a `Kritikus`
   találatot helyben javítja, a többi a záró jelentésbe kerül.
 
-→ file:.claude/skills/doctor-review/SKILL.md; file:.claude/skills/code-and-architecture-review/SKILL.md; file:.claude/skills/manual-checks/SKILL.md
+- **`/reviews [--all]`** — a jelentések listája a fenti állapotokkal és a nyitott pontok kész
+  `/idea` sorával; csak olvas. A döntés útja az `/idea <slug> review:<jelentés>#<id>`.
+
+→ file:.claude/skills/doctor-review/SKILL.md; file:.claude/skills/code-and-architecture-review/SKILL.md; file:.claude/skills/manual-checks/SKILL.md; file:.claude/skills/reviews/SKILL.md; symbol:scripts/workflow/reviewsLib.mjs#computeStates; file:scripts/workflow/discard.mjs
 
 ---
 
@@ -386,9 +418,12 @@ D-szám vagy legacy-útvonal.
 
 **Amit nem fog meg:** a `Current state` pointereit nem oldja fel — az elavulást a `drift.mjs` +
 az `/implement` preflightja fogja; szemantikai igazságot nem bizonyít. Anchorokat (nyíl után
-`file:` / `symbol:` / `test:` / `product:`) a context-fájlokban (`CLAUDE.md`-k, `AGENTS.md`,
+`file:` / `symbol:` / `test:` / `product:` / `review:`) a context-fájlokban (`CLAUDE.md`-k, `AGENTS.md`,
 `docs/PRODUCT.md`) és ebben a README-ben old fel — ezért egy script- vagy skill-átnevezés itt
-pirosat ad.
+pirosat ad. A `review:<jelentés>#<id>` alakot ezen felül a tételfájlok `Source:` sorában és a
+jelentések `Döntés:`/`Feldolgozás:` soraiban is feloldja (létező jelentés a gyökérben vagy az
+`archive/` alatt, létező `### <id>.` heading) — a review-állapot ellentmondásait nem, az a
+`reviews.mjs --check` dolga, kapun kívül.
 
 → symbol:scripts/docs-check.mjs#backlogStatus; symbol:scripts/docs-check.mjs#backlogTetel
 
@@ -476,7 +511,10 @@ szakasz diagramja. A kimaradt tétel mindig visszaesik a 10a. útra.
 | Ötlet és terv sosem ír app-kódot | a „mintakód" is döntés | `/idea`, `/plan` Korlátok |
 | `/implement` nem bővít scope-ot, nem commitol | olvasható commit; a doki előbb a munkafát nézi | `/implement` 4., 5c., 6. |
 | Review-skill csak jelent, egy írói út a backlogba | a review megállapít, a döntés (felvesz-e tételt) a dokié; kivétel nélkül | mindhárom review-skill Lezárása; `/idea` a jóváhagyással |
-| `docs/reviews/` append-only, commitolva | dedup- és összehasonlítási forrás; a történet ne a lemezen éljen | review-skillek `commit-push` lépése |
+| `docs/reviews/` append-only, commitolva — kivéve a `Döntés:` és `Feldolgozás:` sort | dedup- és összehasonlítási forrás; a történet ne a lemezen éljen; a megfigyelés szövege bizonyíték, a sorsa viszont változik | review-skillek `commit-push` lépése; `reviews.mjs dontes` az egyetlen író |
+| **A megállapítás állapota levezetett, nem külön index; a hivatkozás mappa-független `review:<jelentés>#<id>`** | egy kézi döntéstábla a tétel törlésekor elavulna; a `Source:` sor és a lezáró/elvető commit már ma is tartalmazza a tényt; egy `archive/` mozgatás ne legyen linkjavítás | `reviews.mjs` (élő `Source:` > `Döntés:` > történet > implicit); `docs-check` `review:` anchor; `close.mjs`/`discard.mjs` visszaírás; `workflow.test.mjs` |
+| Teendő csak a nyitott Blokkoló/Súlyos/ISMÉT pont; Közepes/Kis döntés nélkül „tudomásul véve” | 150+ megállapításról egyenként dönteni nem történik meg, a lista sosem ürülne; az ismétlődés (`ISMÉT`) emeli döntésre a kisebbet | `reviews.mjs` küszöb; `/reviews` alaplista; `/idea` csak kérésre kérdez rá |
+| Review-skill `Döntés:`-t csak az általa igazolt javításra ír | a felvétel és az elvetés a dokié; az igazolt javítás könyvelése viszont a review bizonyítéka, és nélküle a régi jelentés örökre „teendő" maradna | mindhárom review-skill Lezárása (`dontes "javítva …, ellenőrizte review:<ez>"`, `feldolgozas "felülírta …"`) |
 | Kész tétel törlődik, nincs napló | a git history a történet | `close.mjs` `git rm`; `docs-check` legacy-ref |
 | Dokumentáció default nem íródik | ami kódból levezethető, ott igaz; a context-budget véges | `/finish` 3.; `docs-check` budget és anchor |
 | Determinisztikus lépés scriptben, ítélet a skillben | a git-koreográfia szabad szövegben ígéret volt, nem bizonyíték; más agent is hívhatja | `scripts/workflow/*`, `workflow.test.mjs`, `AGENTS.md` |

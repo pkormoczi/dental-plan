@@ -7,8 +7,8 @@ Electron-fázis terve · `backlog/` egy fájl = egy tétel: `idea/` ötlet, gyö
 `cd app && npm run dev | build | lint | test | docs-check`
 
 # Product context
-`docs/PRODUCT.md` — termékcél, napi flow, nem-cél, adat/jogi korlátok. Nested `CLAUDE.md`: `app/src`
-(felület-rendszer), `app/src/domain`, `app/src/storage`, `app/src/pdf` — automatikusan betöltődnek.
+`docs/PRODUCT.md` — termékcél, napi flow, nem-cél, adat/jogi korlátok. Nested `CLAUDE.md`-k
+(`app/src` felület-rendszer, `domain`, `storage`, `pdf`) automatikusan betöltődnek.
 
 # Authority
 Aktuális viselkedés: kód + futó tesztek. Szándék és nem-cél: `docs/PRODUCT.md`. A `CLAUDE.md` contextet ad,
@@ -41,8 +41,7 @@ A chrome-devtools MCP KIZÁRÓLAG izolált módban futhat. TILOS a configba: `--
 csatlakozni vagy remote debuggingot bekapcsolni bármilyen böngészőben. Ha egy feladat valós profilt
 igényelne (bejelentkezés, mappa-engedély), ne kerüld meg: jelezd, és javasolj `PlanStorage`
 teszt-implementációt. Kikényszerítés: a követett, verzió-pinnelt `.mcp.json` (`--isolated`). A
-jsdom nem ellenőrizhető rétegét (kontraszt, valódi PDF, canvas→PNG, popover-geometria) a
-`/manual-checks` fedi, sosem magától, doki-indítva.
+jsdom nem ellenőrizhető rétegét a `/manual-checks` fedi, sosem magától, doki-indítva.
 
 # Kommentek
 Csak WHY, invariáns vagy gotcha. Nincs „mit csinál”. Nincs `D<szám>`/`DP-<szám>` döntési azonosító,
@@ -51,7 +50,7 @@ backlog-slug, `backlog/` vagy legacy-doksi hivatkozás. Ha a WHY termékszándé
 
 # Dokumentáció
 Default: ne írj. Nested `CLAUDE.md`-be csak discovery/szándék kerül, egy állítás egy sor,
-path-qualified anchorral (típusok: file, symbol, test, product), amit a `docs-check` felold.
+path-qualified anchorral (file/symbol/test/product/review), amit a `docs-check` felold.
 Budget-túllépést ne production-refactorral oldj — erősebb mechanizmust (teszt/típus/lint) vagy
 redundanciát keress.
 
@@ -60,6 +59,7 @@ Nincs `.skip`/`.only`. A tesztnév konkrét, megfigyelhető viselkedést ír le,
 
 # Workflow
 `/idea <slug>` → `/plan <slug> [--quick]` → `/implement <slug>` → kézi ellenőrzés → `/finish
-<slug>`; `/backlog` listáz; `/plan-batch`/`/implement-batch <slug>...` több tételt egy
+<slug>`; `/backlog`, `/reviews` listáz; `/plan-batch`/`/implement-batch <slug>...` több tételt egy
 pushsal, kapu nélkül tervez/zár. Skillek commitolnak, pusholnak (`scripts/workflow/`); master-push
-→ Pages. `/update-changelog`, `/update-features`: külön, kézi hívás.
+→ Pages. `/update-changelog`, `/update-features`: külön, kézi hívás. Review-jelentések sorsa:
+`/reviews`, `backlog/README.md` §6.

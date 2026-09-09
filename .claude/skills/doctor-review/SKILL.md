@@ -181,21 +181,27 @@ Minden találat `Lencse: rontás`, `megfigyelt` bizonyossággal.
 
 ### 2d. Dedup és rangsor
 
-1. **Dedup-címke.** Olvasd át a `docs/reviews/*doctor-review*.md` korábbi
-   jelentéseket és a backlog négy mappájának (`backlog/`, `backlog/later/`, `backlog/idea/`,
-   `backlog/idea/later/`) tételfájljait (slug és `Source:` sor), és minden
-   megállapítást jelölj:
+1. **Dedup-címke.** A bemenet `node scripts/workflow/reviews.mjs --json`: minden
+   korábbi megállapítás (mindhárom review-típus, a gyökér és az `archive/`
+   is) azonosítóval (`review:<jelentés>#<id>`), címmel, súlyossággal,
+   érintett folyamattal/fájllal és levezetett állapottal (`nyitott`,
+   `tudomásul véve`, `backlog <slug>`, `javítva`, `elvetve`, `duplikátum`).
+   Párosíts érintett folyamat/fájl + cím alapján; a korábbi jelentést csak
+   találatnál nyisd meg a részletekért. Minden megállapítást jelölj:
    - `ÚJ`;
-   - `MÁR JELZETT (<korábbi review-fájl neve>, <n>. megállapítás)`;
-   - `ISMÉT (<korábbi review-fájl neve>, <n>. megállapítás)` — ha a
-     korábbi jelentés óta a `git log -- <érintett fájl(ok)>` szerint volt
-     a területet érintő commit, azaz a jelenség javítási kísérlet UTÁN is
-     fennáll. Írd oda a commit rövid hash-ét;
-   - `MÁR TERVEZETT (backlog/<slug>.md)`.
+   - `MÁR JELZETT (review:<id>)` — az állapot `nyitott` vagy `tudomásul véve`;
+   - `ISMÉT (review:<id>, <commit>)` — ha a korábbi jelentés óta a
+     `git log -- <érintett fájl(ok)>` szerint volt a területet érintő commit,
+     vagy az állapot `javítva`, azaz a jelenség javítási kísérlet UTÁN is
+     fennáll (regresszió). Írd oda a commit rövid hash-ét;
+   - `MÁR TERVEZETT (backlog/<slug>.md)` — az állapot `backlog <slug>`;
+   - `ELVETVE (review:<id>: <indok>)` — az állapot `elvetve`; a megállapítás
+     ettől még a jelentésbe kerül, az indokkal együtt, hogy a doki újra
+     mérlegelhesse.
    Az ismétlődés megerősítő jel, nem zaj — ne hagyd ki emiatt a
    megállapítást. A korábbi jelentések tartósan a `docs/reviews/`-ban
-   maradnak, dátum-prefixszel; ez a dedup egyetlen forrása, külön
-   nyilvántartás nincs.
+   maradnak, dátum-prefixszel; a `Döntés:` soruk és a git a dedup forrása,
+   külön nyilvántartás nincs.
 2. **Súlyosság** — négy fokú, fix skála, a user-teszthez kötött
    definícióval; szabad-szöveges árnyalás a fokozat után zárójelben
    maradhat:
@@ -251,7 +257,10 @@ Utána a hat kötelező szekció:
    István nem találta meg vagy nem ismerte fel; külön jelölve, hogy
    megtalálta-e végül, és hány próbálkozásból.
 4. **Ami jól működik** — amit István elsőre megértett vagy megtalált; védi
-   a jót a túljavítástól.
+   a jót a túljavítástól. A végén külön tábla: a korábbi jelentések
+   megállapításai, amiket ez a futás **bizonyítottan javítva** talált
+   (`review:<id>`, a javító commit rövid hash-e, mi bizonyítja) — a Lezárás
+   ezt könyveli a régi jelentésbe.
 5. **Nem javítandó, hanem Istvántól megkérdezendő** — max. 10 tétel:
    olyan súrlódás vagy tervezői feltételezés, ahol nem a kód dönt, hanem a
    valódi felhasználó válasza; konkrét múltbeli viselkedésre kérdezve,
@@ -297,19 +306,31 @@ bizonyosságú a jelentésben.
 
 ## Lezárás
 
-Állítsd le a dev szervert. A jelentés a `docs/reviews/`-ban marad — ez a következő futások
-dedup-forrása —, és **commitolva**:
+Állítsd le a dev szervert. **Könyveld a régi jelentésekbe, amit ez a futás igazolt** — ez
+könyvelés, nem backlog-írás, és a kézi triázs nagy részét elviszi:
+
+- minden bizonyítottan javítva talált korábbi pontra:
+  `node scripts/workflow/reviews.mjs dontes review:<id> "javítva <commit>, ellenőrizte review:<ez a jelentés basename> (<YYYY-MM-DD>)"`;
+- ha ugyanennek a forgatókönyvnek az előző futása **minden** pontját újraellenőrizted (javítva,
+  vagy ma is fennáll és ebben a jelentésben `ISMÉT`/`MÁR JELZETT` címkével szerepel), a régi
+  jelentés lezárható: `node scripts/workflow/reviews.mjs feldolgozas <régi basename>
+  "felülírta review:<ez a jelentés basename>"`. Részleges újraellenőrzésnél nem.
+
+A jelentés a `docs/reviews/`-ban marad — a `Döntés:` sorai a következő futások dedup-forrása —,
+és **commitolva**, a módosított régi jelentésekkel együtt:
 
 ```
 node scripts/workflow/commit-push.mjs -m "review: doctor-review <scenario-slug> <YYYY-MM-DD>" \
-  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/reviews/<ez a jelentés>
+  --trailer "Co-Authored-By: …" --trailer "Claude-Session: …" -- docs/reviews/<ez a jelentés> [docs/reviews/<régi jelentés>...]
 ```
 
 **Nincs tételfájl.** A review megállapít, a backlogba egy írói út van: az `/idea`, a doki
 jóváhagyásával. A záró üzenetben minden `ÚJ` vagy `ISMÉT` dedup-címkéjű `Blokkoló` és `Súlyos`
-megállapításhoz egy kész parancssor: `/idea <javasolt-slug> docs/reviews/<ez a jelentés>` —
+megállapításhoz egy kész parancssor: `/idea <javasolt-slug> review:<ez a jelentés basename>#<n>` —
 mellette a javasolt `Type` (`bug` reprodukált hibánál, `feature` hiányzó viselkedésnél) és a
 dedup-jelzés (`MÁR TERVEZETT` találatnál a meglévő slug, parancs nélkül). A `Közepes`/`Kis`
-megállapítások a jelentésben maradnak. A skill app-kódot nem módosít.
+megállapítások a jelentésben maradnak, döntés nélkül „tudomásul véve” állapotúak. A skill
+app-kódot nem módosít, és `Döntés:` sort csak az igazolt javításra ír — felvételről, elvetésről a
+doki dönt az `/idea`-ban.
 
 A képernyőkép-mappa törölhető. A záró üzenet végén a `User-teszt készültség` ítélet.

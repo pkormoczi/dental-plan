@@ -188,9 +188,15 @@ a végső ítélethez a PDF-bájt- vagy képernyőkép-bizonyíték számít.
 ## Kimenet
 
 `docs/reviews/YYYY-MM-DD-manual-checks-<szelet>.md` (az `all` egy fájlba, szeletenként
-szakaszolva), a `code-and-architecture-review` konvenciója szerint
-(`Kritikus`/`Közepes`/`Apró`). A végén: futásidő percben. A jelentés **megmarad** —
-`docs/reviews/` append-only. Önálló futásnál a végén commit + push:
+szakaszolva), a `code-and-architecture-review` konvenciója szerint: `## Kritikus` / `## Közepes`
+/ `## Apró` szekciók, és **minden találat egy `### <n>. <cím>` heading** (a számozás a jelentésen
+belül folyamatos, a súlyosság a szekcióból öröklődik) — a szám a találat azonosítója
+(`review:<jelentés basename>#<n>`), amit a backlog `Source:` sora, a `Döntés:` sorok és a
+docs-check feloldanak. Dedup a `node scripts/workflow/reviews.mjs --json` levezetett állapotából
+(érintett fájl + cím): `MÁR JELZETT (review:<id>)`, `MÁR TERVEZETT (backlog/<slug>.md)`, vagy
+`ISMÉT`, ha `javítva` állapotú pont reprodukálódik újra. A végén: futásidő percben. A jelentés
+**megmarad** — `docs/reviews/` append-only, csak a `Döntés:`/`Feldolgozás:` sor írható. Önálló
+futásnál a végén commit + push:
 
 ```
 node scripts/workflow/commit-push.mjs -m "review: manual-checks <szelet> <YYYY-MM-DD>" \
@@ -203,9 +209,10 @@ a hívó helyben dolgozza fel a találatokat: a `Kritikus`-at azonnal javítja, 
 a többi a batch záró jelentésébe kerül, kész `/idea` parancssorral.
 
 A záró üzenetben minden `Kritikus` találathoz egy kész parancssor: `/idea <javasolt-slug>
-docs/reviews/<ez a jelentés>` (dedup: `ls backlog backlog/later backlog/idea backlog/idea/later`, meglévő slug vagy azonos
-`Source:` → „már felvéve”, parancs nélkül). Kódot ez a skill nem javít — rendszerszintű
-találatnál (sok fájlt érintő vizuális döntés, upstream könyvtár hibája) is csak jelent.
+review:<ez a jelentés basename>#<n>` (`backlog <slug>` levezetett állapotnál „már felvéve”, parancs
+nélkül). Kódot ez a skill nem javít — rendszerszintű találatnál (sok fájlt érintő vizuális
+döntés, upstream könyvtár hibája) is csak jelent; `Döntés:` sort nem ír (a felvételről és az
+elvetésről az `/idea`-ban dönt a doki).
 
 ---
 

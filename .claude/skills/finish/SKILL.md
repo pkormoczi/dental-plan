@@ -57,7 +57,10 @@ node scripts/workflow/close.mjs <slug> --title "<cím>" --body "<1–2 mondat ma
 
 A cím a tételfájl `## Goal` mondatának rövid alakja; a commit első sora `<slug>: <cím>`. A
 script sorban: fetch + ff; **hatókör-őr** (untracked fájl csak `app/` alatt megy be magától,
-minden más — így a manual-check jelentés is — csak `--add`-del névre szólóan); a **teljes
+minden más — így a manual-check jelentés is — csak `--add`-del névre szólóan); a tétel
+`Source: review:<jelentés>#<id>` hivatkozásaira **`Döntés: javítva <slug> (<dátum>)`** a
+forrás-jelentésbe (így a `/reviews` és a review-skillek dedupja a jelentésből látja a lezárást;
+a commit SHA-ja a `git log --grep "^<slug>: "`-vel oldható fel); a **teljes
 kapu** (`build`, `lint`, `test`, `docs-check`); `git rm backlog[/later]/<slug>.md` (a tételt a
 `Prio` szerinti mappában találja meg); a követett módosítások és az engedett új fájlok
 stage-elése; commit; `git push origin master`. Ha az origin közben előrelépett: rebase, **a
