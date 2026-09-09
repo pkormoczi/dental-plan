@@ -16,7 +16,7 @@
 // domain/planChainData.ts) hívónként eltérhessen, a renderelés viszont
 // egy helyen éljen.
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
@@ -200,6 +200,7 @@ export default function PatientPlanChains({
   const [ervIndok, setErvIndok] = useState('');
   const [visszavonas, setVisszavonas] = useState<ErvDialogAllapot | null>(null);
   const [ervHiba, setErvHiba] = useState<(VersionRef & { message: string }) | null>(null);
+  const ervIndokRef = useRef<HTMLInputElement>(null);
 
   async function mentErvenytelenites(ref: VersionRef, indok: string) {
     setErvHiba(null);
@@ -802,14 +803,32 @@ export default function PatientPlanChains({
       {/* NEM a `PlanVersionActionDialog`: az piszkozat-felülírás elleni
           megerősítő őr, itt viszont szöveges bevitelt kérünk. A `⋯` menü
           `onCloseAutoFocus` gátja (fent) ehhez a dialógushoz is kell --
-          enélkül a Radix visszavenné a fókuszt a triggerre. */}
+          enélkül a Radix visszavenné a fókuszt a triggerre.
+          `AlertDialog` és nem `Dialog`, pedig az app minden MÁS mezős
+          dialógusa `Dialog` (UjPaciensDialog, UjTetelDialog, TomegesArDialog):
+          a `Dialog` kívülre kattintásra is zár, és a begépelt indok elveszne
+          -- az `UjPaciensDialog` ezt egy teljes záró-őrrel kerüli meg, ami egy
+          egymezős dialógushoz aránytalan. Az `AlertDialog` viszont nem
+          reagál a kívülre kattintásra, ezért nem kell őr. */}
       <AlertDialog.Root
         open={ervenytelenites !== null}
         onOpenChange={(nyitva) => {
           if (!nyitva) setErvenytelenites(null);
         }}
       >
-        <AlertDialog.Content maxWidth="480px">
+        {/* Az `AlertDialog` a WAI-ARIA alertdialog-minta szerint a `Cancel`-re
+            fókuszál nyitáskor, és ezzel a mező `autoFocus`-át is elnyomná --
+            a `preventDefault()` a Radix `composeEventHandlers`-én át kihagyja
+            ezt az alapértelmezést. Itt a mező a helyes cél: a doki első dolga
+            a gépelés, a mentés üres indoknál tiltott (véletlen Enter nem indít
+            semmit), a jelölés pedig visszavonható. */}
+        <AlertDialog.Content
+          maxWidth="480px"
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+            ervIndokRef.current?.focus();
+          }}
+        >
           <AlertDialog.Title>Verzió érvénytelenítése</AlertDialog.Title>
           <AlertDialog.Description size="2" mb="3">
             „{ervenytelenites?.megnevezes}" tévesen kiadottként jelölése. A kiadott PDF és a
@@ -818,7 +837,7 @@ export default function PatientPlanChains({
           <Field label="Az érvénytelenítés indoka">
             <TextField.Root
               id="ervenytelenites-indok"
-              autoFocus
+              ref={ervIndokRef}
               value={ervIndok}
               onChange={(e) => setErvIndok(e.target.value)}
               onKeyDown={(e) => {

@@ -1230,6 +1230,25 @@ describe('OsszesTervSection', () => {
       expect(osszegElem(doboz, v2.plan)).toHaveStyle({ textDecoration: 'line-through' });
     });
 
+    // A többi eset `user.type()`-pal maga viszi a fókuszt a mezőre, ezért a
+    // nyitáskori fókuszról egyik sem mond semmit -- ez a teszt gépelés NÉLKÜL
+    // nézi, hogy a doki első leütése az indoklásba fut-e.
+    it('a dialógus nyitásakor a fókusz az indoklás-mezőn áll, nem a Mégse gombon', async () => {
+      const user = userEvent.setup();
+      const [, v2] = nagyEvaMultiVersionChain;
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const doboz = lancDoboz(patientCard('Nagy Éva'), v2.planDir);
+      await nyissLancot(user, doboz);
+      const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+      await user.click(triggers[0]);
+      await user.click(await screen.findByRole('menuitem', { name: 'Érvénytelenítés' }));
+
+      const mezo = await screen.findByRole('textbox', { name: /indoka/ });
+      await waitFor(() => expect(mezo).toHaveFocus());
+    });
+
     it('indoklás nélkül nem menthető: az Érvénytelenítés gomb tiltott, amíg a mező üres', async () => {
       const user = userEvent.setup();
       const [, v2] = nagyEvaMultiVersionChain;
