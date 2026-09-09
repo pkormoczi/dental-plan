@@ -130,6 +130,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Siker mércéje: 65 000 Ft beírása a 38 000–65 000 sávú tételen nem ad „+71%" jelvényt, nem
   ad „Felár" sort, és az előnézet nem sorolja „kézzel felülírt ár"-ként.
 - Backlog: `savos-ar-savon-beluli-ertek`
+- Döntés: backlog savos-ar-savon-beluli-ertek (2026-09-09)
 
 ### 3. A fogszámmal együtt gépelt keresés („18 fogeltávolítás") nulla találatot ad, és egyetlen kiútja az ár nélküli egyedi tétel
 

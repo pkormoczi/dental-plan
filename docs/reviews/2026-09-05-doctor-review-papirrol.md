@@ -124,6 +124,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   — nekem ez csak a 3 csatornás ár." A „csatornaszámtól függően" tétel a csatornaszámot nem
   kérdezi; István a „3 csatorna" leírásba írta, ami a nyomtatványra rá is került (jó).
 - Backlog: `savos-ar-savon-beluli-ertek` (a nagy-terv jelentés javaslata, még nincs tételfájl)
+- Döntés: duplikátum → review:2026-09-05-doctor-review-nagy-terv#2 (2026-09-09)
 
 ### 4. Soronkénti kedvezményhez nincs százalék-mező: „koronára 10% kedv." fejben számolva, az Ajánlati árba gépelve
 
