@@ -52,8 +52,17 @@ import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
 import { useStorage } from '../storage/StorageContext';
 
 export default function PreviewPage() {
-  const { plan, setPlan, settings, priceList, markPlanSaved, piszkozatPatientDir, piszkozatTervCim } =
-    useAppState();
+  const {
+    plan,
+    setPlan,
+    settings,
+    priceList,
+    markPlanSaved,
+    piszkozatPatientDir,
+    piszkozatTervCim,
+    piszkozatFoglaltTervId,
+    jelezFoglaltTervId,
+  } = useAppState();
   const { storage, loadLatestTemplateByBase, loadPlanPdf, isSeedVersion } = useStorage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -164,9 +173,19 @@ export default function PreviewPage() {
   // tervId-je állna, a mentett terv.json-ban meg a storage kiosztotta valódi.
   // `undefined` = még tart, `null` = nem oldható fel (ekkor nem adunk ki papírt).
   const [foglalas, setFoglalas] = useState<FoglaltAzonosito | null | undefined>(undefined);
-  // Vadonatúj lánc frissen generált tervId-je az előnézeten belül STABIL --
-  // egy újrafutó feloldás nem cserélheti ki a papíron már látott azonosítót.
-  const ujLancTervIdRef = useRef<string | null>(null);
+  // Vadonatúj lánc frissen generált tervId-je a PISZKOZAT ÉLETTARTAMÁN belül
+  // stabil -- egy újrafutó feloldás nem cserélheti ki a papíron már látott
+  // azonosítót, és a szerkesztő <-> Előnézet kör vagy egy böngésző-újratöltés
+  // sem. Ezért nem mount-lokális ref: a `DraftMeta.foglaltTervId` hordozza.
+  //
+  // A tükör-refek (useListStateMemory.ts mintája) tartják a foglalás-effekt
+  // dependency-listáját szűken: a saját visszaírásunk különben újrafuttatná
+  // az effektet, az új `foglalas` OBJEKTUM pedig feleslegesen újragenerálná
+  // a PDF-et (lásd lent az `updatePdf` effekt dependency-listáját).
+  const foglaltTervIdRef = useRef(piszkozatFoglaltTervId);
+  foglaltTervIdRef.current = piszkozatFoglaltTervId;
+  const jelezFoglaltTervIdRef = useRef(jelezFoglaltTervId);
+  jelezFoglaltTervIdRef.current = jelezFoglaltTervId;
 
   useEffect(() => {
     let cancelled = false;
@@ -179,8 +198,9 @@ export default function PreviewPage() {
       );
       if (cancelled) return;
       if (f && !plan.tervId) {
-        ujLancTervIdRef.current ??= f.tervId;
-        setFoglalas({ tervId: ujLancTervIdRef.current, verzio: f.verzio });
+        const tervId = foglaltTervIdRef.current ?? f.tervId;
+        jelezFoglaltTervIdRef.current(tervId);
+        setFoglalas({ tervId, verzio: f.verzio });
         return;
       }
       setFoglalas(f);

@@ -138,6 +138,17 @@ interface AppStateValue {
    */
   jelezTervCim: (tervCim: string) => void;
   /**
+   * A vadonatúj lánchoz az Előnézeten lefoglalt terv-azonosító, vagy `null`,
+   * ha ez a piszkozat még nem járt Előnézeten -- lásd `DraftMeta.foglaltTervId`.
+   */
+  piszkozatFoglaltTervId: string | null;
+  /**
+   * A `jelezTervCim` mintája szerint: az EGYETLEN hely, ahol a
+   * `piszkozatMeta.foglaltTervId` íródik. Egyetlen hívója a `PreviewPage`,
+   * az első sikeres foglaláskor.
+   */
+  jelezFoglaltTervId: (tervId: string) => void;
+  /**
    * A Home "Piszkozat elvetése" gombja hívja egy nem visszaállítható
    * (sérült/inkompatibilis) perzisztált piszkozatnál (7. döntés) -- addig a
    * kulcs a helyén marad, a hiba minden indításkor visszatér.
@@ -312,6 +323,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
               patientDir: rec.patientDir,
               lastRoute: rec.lastRoute,
               tervCim: rec.tervCim,
+              foglaltTervId: rec.foglaltTervId,
             };
             irtPiszkozatRef.current = { plan: rec.plan, meta, mentve: rec.mentve };
             piszkozatKiirvaRef.current = true;
@@ -542,6 +554,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           patientDir: tarolt.patientDir,
           lastRoute: tarolt.lastRoute,
           tervCim: tarolt.tervCim,
+          foglaltTervId: tarolt.foglaltTervId,
         };
         // A refet a state-ek ELŐTT állítjuk: az író effektus így a
         // frissen betöltött tervet a sajátjaként ismeri fel, és nem ír vissza.
@@ -561,6 +574,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       piszkozatTervCim: piszkozatMeta.tervCim ?? null,
       jelezTervCim: (tervCim) => {
         setPiszkozatMeta((prev) => (prev.tervCim === tervCim ? prev : { ...prev, tervCim }));
+      },
+      piszkozatFoglaltTervId: piszkozatMeta.foglaltTervId ?? null,
+      jelezFoglaltTervId: (foglaltTervId) => {
+        setPiszkozatMeta((prev) =>
+          prev.foglaltTervId === foglaltTervId ? prev : { ...prev, foglaltTervId },
+        );
       },
       discardPersistedDraft: async () => {
         await drafts.clear();

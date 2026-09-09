@@ -32,6 +32,16 @@ export interface DraftMeta {
    * címkére.
    */
   tervCim?: string;
+  /**
+   * Az első Előnézet-belépéskor lefoglalt terv-azonosító, VADONATÚJ
+   * (`plan.tervId === ''`) lánchoz. Azért itt él és nem a `plan.tervId`-ben,
+   * mert az üres `tervId` több helyen a "vadonatúj lánc" diszkriminátora
+   * (lásd PreviewPage.tsx nyomtatvány-bélyegzés) -- itt viszont túléli a
+   * szerkesztő -> Előnézet köröket és a piszkozat újratöltését, tehát a
+   * papíron, a PDF fájlnevében és a mentett verziómappán ugyanaz a szám áll.
+   * `undefined` = még nem járt Előnézeten ez a lánc.
+   */
+  foglaltTervId?: string;
 }
 
 export interface DraftRecord extends DraftMeta {

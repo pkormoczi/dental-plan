@@ -189,7 +189,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
 - Siker mércéje: ugyanahhoz a piszkozathoz tetszőleges számú előnézet-belépés után is
   ugyanaz az azonosító tartozik, és a mentett verzió ezt kapja.
 - Backlog: `terv-azonosito-elonezetek-kozott-stabil`
-- Döntés: backlog terv-azonositoja-minden-elonezet-belepeskor (2026-09-09)
+- Döntés: javítva terv-azonositoja-minden-elonezet-belepeskor (2026-09-09)
 
 ### 4. A darabszámnak nincs felső korlátja és nincs józan-ész-ellenőrzése
 

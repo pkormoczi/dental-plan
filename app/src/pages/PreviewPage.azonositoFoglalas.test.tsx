@@ -221,6 +221,67 @@ describe('PreviewPage -- az azonosító előzetes lefoglalása', () => {
   );
 
   it(
+    'a szerkesztőbe visszalépve és újra az Előnézetre jőve a papír és a PISZKOZAT-PDF fájlneve ugyanazt az azonosítót viseli',
+    async () => {
+      localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+      localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+      seedDraft(planSablon());
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+      await waitFor(() => expect(nyomtatvanyPlan().tervId).toMatch(/^[a-z0-9]{6}$/));
+      const elsoId = nyomtatvanyPlan().tervId;
+      const elsoFajlnev = (
+        await screen.findByRole('link', { name: 'Letöltés' })
+      ).getAttribute('download');
+      expect(elsoFajlnev).toContain(elsoId);
+
+      window.location.hash = '#/terv';
+      await screen.findByRole('heading', { name: /Kezelési terv/ }, { timeout: 10000 });
+      window.location.hash = '#/elonezet';
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+
+      await waitFor(() => expect(nyomtatvanyPlan().tervId).toBe(elsoId));
+      expect(
+        (await screen.findByRole('link', { name: 'Letöltés' })).getAttribute('download'),
+      ).toBe(elsoFajlnev);
+    },
+    30000,
+  );
+
+  it(
+    'a piszkozat újratöltése (app-boot) után is ugyanaz az azonosító áll a papíron',
+    async () => {
+      localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+      localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+      seedDraft(planSablon());
+      const elso = render(<App />);
+      window.location.hash = '#/elonezet';
+
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+      await waitFor(() => expect(nyomtatvanyPlan().tervId).toMatch(/^[a-z0-9]{6}$/));
+      const elsoId = nyomtatvanyPlan().tervId;
+      // A foglalás a perzisztált piszkozatba is kiíródik -- enélkül az
+      // újratöltés új számot adna.
+      await waitFor(() => {
+        const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+        expect(rec.foglaltTervId).toBe(elsoId);
+      });
+
+      elso.unmount();
+      pdfMock.lastDocument = null;
+      window.location.hash = '';
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+      await waitFor(() => expect(nyomtatvanyPlan().tervId).toBe(elsoId));
+    },
+    30000,
+  );
+
+  it(
     'feloldhatatlan foglalásnál nincs kiadható papír: a Letöltés és a véglegesítés zárva, a doki magyarázatot kap',
     async () => {
       localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));

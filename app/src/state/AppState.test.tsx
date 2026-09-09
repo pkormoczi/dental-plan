@@ -295,11 +295,15 @@ function MetaProbe() {
     markPlanSaved,
     piszkozatPatientDir,
     piszkozatLastRoute,
+    piszkozatFoglaltTervId,
+    jelezFoglaltTervId,
   } = useAppState();
   return (
     <div>
       <div data-testid="patientDir">{piszkozatPatientDir ?? 'null'}</div>
       <div data-testid="lastRoute">{piszkozatLastRoute ?? 'null'}</div>
+      <div data-testid="foglaltTervId">{piszkozatFoglaltTervId ?? 'null'}</div>
+      <button onClick={() => jelezFoglaltTervId('fog123')}>signal-foglalas</button>
       <button
         onClick={() =>
           copyPlanIntoDraft(
@@ -394,6 +398,41 @@ describe('piszkozat-metaadat (patientDir/lastRoute)', () => {
     await waitFor(() => expect(screen.getByTestId('lastRoute')).toHaveTextContent('/elonezet'));
 
     expect(localStorage.getItem('dp:piszkozat')).toBeNull();
+  });
+
+  it('jelezFoglaltTervId a dp:piszkozat rekordba írja az azonosítót, hogy az újratöltést túlélje', async () => {
+    const user = userEvent.setup();
+    renderMetaProbe();
+    await screen.findByTestId('foglaltTervId');
+    await user.click(screen.getByRole('button', { name: 'copy-with-patient' }));
+    await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
+
+    await user.click(screen.getByRole('button', { name: 'signal-foglalas' }));
+
+    expect(await screen.findByTestId('foglaltTervId')).toHaveTextContent('fog123');
+    await waitFor(() => {
+      const rec = JSON.parse(localStorage.getItem('dp:piszkozat') as string);
+      expect(rec.foglaltTervId).toBe('fog123');
+    });
+  });
+
+  // Ez adja az "új terv új számot kap" garanciát: a foglalás a piszkozattal
+  // együtt szűnik meg, tehát a következő Előnézet-belépés frissen foglal.
+  it('resetPlanDraft() és egy másolatból indított új terv is nullázza a foglalt azonosítót', async () => {
+    const user = userEvent.setup();
+    renderMetaProbe();
+    await screen.findByTestId('foglaltTervId');
+    await user.click(screen.getByRole('button', { name: 'copy-with-patient' }));
+    await user.click(screen.getByRole('button', { name: 'signal-foglalas' }));
+    await waitFor(() => expect(screen.getByTestId('foglaltTervId')).toHaveTextContent('fog123'));
+
+    await user.click(screen.getByRole('button', { name: 'reset' }));
+    expect(screen.getByTestId('foglaltTervId')).toHaveTextContent('null');
+
+    await user.click(screen.getByRole('button', { name: 'signal-foglalas' }));
+    await waitFor(() => expect(screen.getByTestId('foglaltTervId')).toHaveTextContent('fog123'));
+    await user.click(screen.getByRole('button', { name: 'copy-with-patient' }));
+    expect(screen.getByTestId('foglaltTervId')).toHaveTextContent('null');
   });
 });
 

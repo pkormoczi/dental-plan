@@ -241,4 +241,35 @@ describe('DemoDraftStorage', () => {
       expect(loaded!.plan).toEqual(makeBlankPlan());
     });
   });
+
+  // Az Előnézeten lefoglalt terv-azonosító -- ugyanaz a puha metaadat
+  // mintázat, de az üres string itt NEM valódi érték.
+  describe('meta (foglaltTervId)', () => {
+    it('roundtrips a foglaltTervId', async () => {
+      const rec = await drafts.save(makeBlankPlan(), { foglaltTervId: 'k7m2p9' });
+      expect(rec.foglaltTervId).toBe('k7m2p9');
+
+      const loaded = await drafts.load();
+      expect(loaded!.foglaltTervId).toBe('k7m2p9');
+    });
+
+    it('missing foglaltTervId (no preview visit yet) stays undefined', async () => {
+      const rec = await drafts.save(makeBlankPlan());
+      expect(rec.foglaltTervId).toBeUndefined();
+
+      const loaded = await drafts.load();
+      expect(loaded!.foglaltTervId).toBeUndefined();
+    });
+
+    it('an empty-string foglaltTervId drops on load, so nothing stamps a blank id on the paper', async () => {
+      await drafts.save(makeBlankPlan());
+      const raw = JSON.parse(localStorage.getItem('dp:piszkozat')!);
+      raw.foglaltTervId = '';
+      localStorage.setItem('dp:piszkozat', JSON.stringify(raw));
+
+      const loaded = await drafts.load();
+      expect(loaded).not.toBeNull();
+      expect(loaded!.foglaltTervId).toBeUndefined();
+    });
+  });
 });

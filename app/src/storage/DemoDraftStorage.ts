@@ -44,6 +44,12 @@ export class DemoDraftStorage implements DraftStorage {
       delete rec.lastRoute;
     }
     if (typeof rec.tervCim !== 'string') delete rec.tervCim;
+    // Az üres string itt NEM valódi érték (szemben a `tervCim`-mel): a hívók
+    // a mező hiányát olvassák "még nincs foglalás"-nak, egy `''` viszont
+    // üres azonosítót bélyegezne a papírra.
+    if (typeof rec.foglaltTervId !== 'string' || rec.foglaltTervId === '') {
+      delete rec.foglaltTervId;
+    }
     return rec;
   }
 
@@ -63,6 +69,7 @@ export class DemoDraftStorage implements DraftStorage {
       ...(meta?.lastRoute != null ? { lastRoute: meta.lastRoute } : {}),
       // `!= null`, nem truthy -- az üres string valódi érték (lásd DraftStorage.ts).
       ...(meta?.tervCim != null ? { tervCim: meta.tervCim } : {}),
+      ...(meta?.foglaltTervId ? { foglaltTervId: meta.foglaltTervId } : {}),
     };
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(rec));
