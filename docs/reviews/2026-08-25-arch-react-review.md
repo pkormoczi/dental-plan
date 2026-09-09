@@ -155,6 +155,7 @@ Confidence: High
 Status: CARRIED FORWARD (evidence updated, severity raised from Observation)
 Category: Maintainability / component design
 Location: `app/src/pages/PlanEditorPage.tsx` (2,249 lines; the top-level `PlanEditorPage` function alone spans ~660 lines, `pages/PriceListAdminPage.tsx` is second-largest at 1,476)
+- Döntés: javítva planeditorpage-felbontasa (2026-09-09)
 
 Evidence: The prior review carried forward "three largest files unsplit" as an Observation without giving line counts for this specific file. It has grown substantially since (the file now contains phase CRUD, tooth-click routing with a click-cycle ref, an inline sortable-list undo mechanism, a guided-review focus-navigation effect, and three sizeable summary sub-blocks — `Summary`, `EgyediVegosszegBlokk`, `ElolegBlokk` — each with their own multi-field local state machine, all as sibling functions in one file).
 
