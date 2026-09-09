@@ -96,6 +96,7 @@ Confidence: High
 Status: CARRIED FORWARD
 Category: Dependency/tooling hygiene
 Location: `app/src/storage/seed/priceList.ts` (`import raw from '../../../../data/arlista.seed.json'`)
+- Döntés: tudomásul véve (2026-09-09)
 
 Evidence: Unchanged; CLAUDE.md documents `app/` as the only directory meant to be edited, everything else "reference only" — this import crosses that line.
 
