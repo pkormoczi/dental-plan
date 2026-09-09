@@ -28,7 +28,7 @@ A doki mindhárom adminfeladatot (árfrissítés, tétel-inaktiválás, új orvo
 - Jelenlegi kerülőút: minden ármódosítás után vizuálisan újra át kell néznie a beírt számot, mielőtt továbblép — ez plusz, manuális ellenőrzési lépés.
 - Javasolt javítási irány: egy puha figyelmeztetés (nem feltétlenül blokkoló), ha egy ár egy adott százaléknál (pl. 50%) nagyobb mértékben tér el az előző értéktől, vagy ha a HUF/EUR arány szokatlanul eltér a korábbi aránytól.
 - Siker mércéje: egy szokatlanul nagy ármódosítás legalább egy visszaigazoló lépést igényel, mielőtt érvénybe lép.
-- Döntés: backlog az-arlista-adminban-nincs-vedelem (2026-09-09)
+- Döntés: elvetve: már megvalósult: az elgépelés-védelem 2026-09-04 óta él (a30bdf3) -- domain/arElgepeles.ts relatív (>=5x / <=1/5 a sor kinyitásakori értékhez) és abszolút (>=3x a legdrágább másik aktív tétel) detektora, ItemEditor amber jelzés + Visszaállítás gomb mind a hat ár-sloton; a review 2026-08-26-i menete ennél régebbi kódot látott (2026-09-09)
 
 ### 2. Egy inaktivált tétel újra-aktiváló gombjának képernyőolvasó-címkéje nem tükrözi a tényleges állapotot
 
