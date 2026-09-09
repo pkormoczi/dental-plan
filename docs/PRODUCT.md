@@ -7,17 +7,17 @@ tesztek; ez a fájl szándékot rögzít.
 ## Mi ez
 
 Egyetlen rendelő (Mándoki Dental), egyetlen fogorvos belső eszköze kezelési terv és árajánlat
-készítésére — nem termék, nincs több rendelő, nincs bejelentkezés. Az Excel-alapú elődöt váltja, mert:
+készítésére — nem termék, nincs több rendelő. Az Excel-alapú elődöt váltja, mert:
 
-- az árlookup `INDEX()`-szel, sorindex alapján ment — egy beszúrt sor minden korábbi tervben némán más
-  árat mutatott, egy páciens által aláírt dokumentumban;
+- az árlookup `INDEX()`-szel, sorindex alapján ment — egy beszúrt sor minden korábbi, már aláírt
+  tervben némán más árat mutatott;
 - a tábla LinkedCell-jei szétestek („A 4. sor nem működik, ezért kihagyva!”);
 - kemény limit: max 3 fázis, fázisonként 7–9 sor;
 - nincs tervtörténet és verziókövetés.
 
 ## Napi flow
 
-1. Páciens kiválasztása vagy létrehozása (törzsadat), majd a terv adatai (nyelv, pénznem, orvos, dátumok).
+1. Páciens kiválasztása/létrehozása (törzsadat), majd a terv adatai (nyelv, pénznem, orvos, dátumok).
 2. Tételfelvitel billentyűzettel, egér nélkül: gépel → `↑`/`↓` → `Enter` → fókusz a sor `Fog` mezőjén
    → `Enter` → kiürült kereső (fogszámot nem kívánó tételnél a fókusz ott marad). Ez dönti el, hogy gyorsabb-e az Excelnél.
 3. Előnézet + véglegesítési checklist → PDF letöltés/mentés új verzióként.
@@ -43,7 +43,7 @@ készítésére — nem termék, nincs több rendelő, nincs bejelentkezés. Az 
 
 1. **Mockup** (ez él): GitHub Pages, `localStorage`-alapú tároló, demó adat — valódi páciensadat nem
    kerül bele. Cél: a doki validálja a UX-et.
-2. **Végleges**: Electron + `FileSystemStorage` a `PlanStorage` interfész mögött; minden más (domain,
+2. **Végleges**: Electron + `FileSystemStorage` a `PlanStorage` interfész mögött; más (domain,
    UI, PDF) változatlan. Egy Chromium mindkét platformon = bájtra azonos PDF. Terv:
    `docs/desktop-app-migration-plan.md`.
 
@@ -61,8 +61,8 @@ Az aláírt PDF-ből következő szabályok — jogi, nem stíluskérdések:
   eltérésnél figyelmeztetés. Verziómappa sosem íródik felül, csak `_v<n+1>` keletkezik.
 - **Pénz egész szám** a pénznem alapegységében (HUF forint, EUR cent). Szám sosem `toLocaleString()`:
   elválasztó a nyelvtől, tizedes és jel a pénznemtől (`1 234 567 Ft`, `1 234,56 €`, `1.234.567 Ft`,
-  `1.234,56 €`), a tagolás már négyjegyűtől kötelező (`9 000 Ft`). Rövid dátum kézzel formázva (a `de-DE` Intl vezető nulla nélkül adna, a lábléc jogi
-  metaadat).
+  `1.234,56 €`), a tagolás már négyjegyűtől kötelező (`9 000 Ft`). Rövid dátum kézzel formázva
+  (a `de-DE` Intl vezető nulla nélkül adna).
 - **Német terven** lefordítatlan tételnév vagy a fogtérképen megjelenő kategória blokkolja a véglegesítést.
   A tétel-leírás hiányzó német fordítása némán elmarad, nem esik magyarra (vegyes nyelvű leírás rosszabb
   a hiánynál).
@@ -81,7 +81,8 @@ Az aláírt PDF-ből következő szabályok — jogi, nem stíluskérdések:
 - A `Fog` mező jegyzetmezővé válása elfogadott (szabadszöveget elbír, automatika nem indul).
 - Fogtérkép mint tétel-felvitel: csak a kezelt fog sorára navigál.
 - Kezdőlapi páciens-kereső, amíg az állomány pár száz alatt marad — a Páciensek lap keresője egy
-  kattintás, a recent-lista a napi eseteket fedi.
+  kattintás, a recent-lista a napi eseteket fedi; elrejtésük sem cél, a doki csak saját
+  páciense tervén dolgozva fordul laptoppal felé.
 
 ## Szándékos hiányok és nyitott kérdések
 
