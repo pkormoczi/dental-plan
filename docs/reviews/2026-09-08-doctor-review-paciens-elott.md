@@ -55,6 +55,7 @@ A fő ügynök ezen felül egy szisztematikus rontás-próbát is végzett (2c s
 - Javasolt javítási irány: nem a doki dönti el, hogy ez a viselkedés elfogadott-e (lásd az 5. kérdezendő pontot) — ha nem az, egy lehetőség a Kezdőlap „Legutóbbi páciensek" blokkjának és/vagy a Páciensek lista kezdő nézetének elrejtése/elhomályosítása, amíg valaki nem indít rajta keresést vagy explicit interakciót.
 - Siker mércéje: a doki a páciens jelenlétében megnyitva a Kezdőlapot vagy a Páciensek listát, más páciens nevét/telefonszámát nem látja addig, amíg maga nem kér rá (kereséssel vagy egy explicit „mutasd" művelettel).
 - Backlog: `paciens-lista-nem-rejtheto-paciens-elott`
+- Döntés: backlog kezdolap-es-paciensek-lista-kattintas (2026-09-09)
 
 ### 3. Nincs kedvezmény-százalék mező; a már létező „−10%" gyorsírás az Ajánlati ár mezőben semmilyen látható jelzést nem kap
 
