@@ -499,6 +499,14 @@ test('reviews: az állapot az élő tétel Source sorából és a törlő commit
   assert.equal(by['2026-01-03-manual-checks-pdf#1'].state, 'elvetve');
   assert.equal(warnings.length, 1);
   assert.match(warnings[0], /konvencio-nelkul.*konvenció nélkül/);
+  // Elvetett tétel + "Döntés: javítva" nem ütközik (a tételt azért vetették el, mert a pont már
+  // javítva volt); lezárt tétel + "Döntés: elvetve" viszont igen.
+  r.run('reviews', ['dontes', 'review:2026-01-02-arch-react-review#ARCH-001', 'javítva abc1234, ellenőrizte review:2026-01-03-manual-checks-pdf (2026-01-09)']);
+  r.run('reviews', ['dontes', 'review:2026-01-01-doctor-review-x#3', 'elvetve: mégsem (2026-01-09)']);
+  const after = r.json();
+  assert.equal(after.findings.find((f) => f.id === '2026-01-02-arch-react-review#ARCH-001').state, 'javítva');
+  assert.equal(after.warnings.filter((w) => w.includes('ARCH-001')).length, 0);
+  assert.equal(after.warnings.filter((w) => /x#3: a történet szerint javítva.*Döntés sor szerint elvetve/.test(w)).length, 1);
 });
 
 test('reviews dontes: egy sor a mezőblokk végére, újraírás felülírja; --check az ellentmondásra piros', (t) => {

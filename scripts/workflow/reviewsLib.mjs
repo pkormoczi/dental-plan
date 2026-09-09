@@ -240,7 +240,10 @@ export function computeStates() {
         if (d.kind === 'ismeretlen') warnings.push(`${f.id}: értelmezhetetlen Döntés sor: "${d.raw}"`);
         if (d.kind === 'backlog' && !h && !liveSlugs.has(d.slug)) warnings.push(`${f.id}: "Döntés: backlog ${d.slug}", de nincs ilyen élő tétel és a történetben sem zárult`);
         if (d.kind === 'duplikátum' && !known.has(d.target)) warnings.push(`${f.id}: duplikátum-cél nem létezik: review:${d.target}`);
-        if (h && h.state !== d.kind && !(d.kind === 'backlog' && h.state === 'javítva')) {
+        // Egy tétel elvetése nem a pont elvetése (pl. mert közben javítva lett): csak a
+        // "backlog" döntéssel ütközik. Egy tétel lezárása viszont javítás -- ezzel minden más ütközik.
+        const conflict = (h?.state === 'elvetve' && d.kind === 'backlog') || (h?.state === 'javítva' && !['javítva', 'backlog'].includes(d.kind));
+        if (conflict) {
           warnings.push(`${f.id}: a történet szerint ${h.state} (${h.evidence}), a Döntés sor szerint ${d.kind}`);
         }
         if (h && (h.state === d.kind || (d.kind === 'backlog' && h.state === 'javítva'))) {
