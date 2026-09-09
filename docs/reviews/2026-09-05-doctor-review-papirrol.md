@@ -91,6 +91,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
 - Siker mércéje: ugyanezzel a tíz sorral a szerkesztő nem ír „Felár"-t, és a nyomtatvány
   összesítője nem tartalmaz a Végösszegnél kisebb „Kezelések összege" sort.
 - Backlog: `nyomtatvany-osszesites-netto-felar`
+- Döntés: javítva nyomtatvany-osszesites-netto-felar (2026-09-09)
 
 ### 2. Az Enter az első találatot veszi, és a „neodent", „implantátumfej" keresésre az első találat nem a keresett tétel
 
@@ -107,6 +108,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
 - Tapasztalt probléma: „az Enter-az-elsőre szokásom kétszer is majdnem rossz tételt vitt be";
   ettől kezdve minden listát végigolvasott.
 - Backlog: `kereso-talalat-rangsor` (a nagy-terv jelentés javaslata, még nincs tételfájl)
+- Döntés: javítva kereso-talalat-rangsor (2026-09-09)
 
 ### 3. Sávos tételnél az alsó ár kerül be kérdés nélkül; a 3 csatornás 65 000 Ft „+71%" jelvényt és „Felár" sort kap
 
@@ -148,6 +150,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   kér és kiszámolja az árat; a Mindösszesen alatt „Kedvezmény összesen: 23 000 Ft".
 - Siker mércéje: „koronára 10%" bevitele számolás nélkül, és a kedvezmény összege egy helyen
   látszik.
+- Döntés: javítva soronkenti-szazalek-kedvezmeny (2026-09-09)
 
 ### 5. A kiadás dátuma nem írható át: a papír augusztusi, a nyomtatvány „2026. szeptember 5."-ét ír
 
@@ -170,6 +173,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   nyomtatvány a mai dátummal készül"); ha nem, szerkeszthető keltezés múltbeli dátumra, a
   véglegesítés-őr puha figyelmeztetésével. **Istvántól megkérdezendő** (5. szekció).
 - Siker mércéje: a doki a Terv adatai lapról tudja, miért az a dátum, vagy át tudja írni.
+- Döntés: javítva keltezes-datum-szerkesztheto (2026-09-09)
 
 ### 6. A böngésző Vissza gombja az előnézeten hibaoldalt hoz a dokumentum helyén — István két próbálkozás után kollégát hívna
 
@@ -182,6 +186,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   a `nagy-terv` futásban reprodukálta)
 - Dedup: **MÁR JELZETT** (`2026-09-05-doctor-review-nagy-terv.md`, 4. megállapítás) — itt
   kétszer egymás után, és a persona kimondott elakadásával; a megállapítás súlya ezzel nőtt.
+- Döntés: javítva elonezet-vissza-iframe-hibaoldal (2026-09-09)
 
 ### 7. A „Véglegesítés és mentés" egy kattintásra, megerősítés nélkül zár le egy visszavonhatatlan lépést
 
@@ -206,6 +211,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   megerősítés csak akkor, ha az előnézetet a doki még nem görgette végig. **Istvántól
   megkérdezendő**, hányszor véglegesített volna tévedésből.
 - Siker mércéje: a persona a kattintás előtt tudja, hogy a lépés visszavonhatatlan.
+- Döntés: javítva veglegesites-visszavonhatatlansag-jelzes (2026-09-09)
 
 ### 8. Véglegesítés után a sikerképernyő belső mappanevet mutat a terv címe helyett, és nincs rajta Letöltés
 
@@ -234,6 +240,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   seed-tervek hiányzó PDF-jéről szól)
 - Javasolt javítási irány: a kattintás után rövid visszajelzés a gomb mellett („Letöltve:
   Kiss-Marta_Terv-aug_v1.pdf"), ahogy a böngésző letöltéssávja nem mindig látszik.
+- Döntés: javítva letoltes-visszajelzes (2026-09-09)
 
 ### 10. „Új verzió" és „+ Új terv" egymás mellett a páciens lapján, magyarázat nélkül — a jó választás rendelői logikából jött, nem a felületből
 
@@ -249,6 +256,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
 - Javasolt javítási irány: az „Új verzió" mellé félmondat („ennek a tervnek a folytatása"),
   vagy a gomb a terv-lánc fejlécében, a „+ Új terv" pedig a lap tetején — a kettő ne egy
   sorban legyen.
+- Döntés: javítva uj-verzio-vagy-uj-terv-valasztas (2026-09-09)
 
 ### 11. Az előnézet figyelmeztetései („Garancia kimarad", „Néhány sor ára eltér") nem mondják meg, kinek a dolga és megállít-e
 
@@ -277,6 +285,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   végösszeg továbbra is a commitra vár)
 - Javasolt javítási irány: vagy a fázis/végösszeg is kövesse az élő piszkozatot, vagy —
   ha ez szándékos — a két összegző halványodjon el, amíg egy ármező nyitva van.
+- Döntés: javítva elo-fazis-es-vegosszeg (2026-09-09)
 
 ### 13. A fázisnév után a Tab a lista első sorának nevébe ugrik — sietve a kezelés nevét írja át a doki
 
@@ -291,6 +300,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   elem a sor névmezője — `app/src/pages/planEditor/PhaseSection.tsx`)
 - Dedup: **ÚJ**
 - Javasolt javítási irány: a fázisnév-mezőből a Tab (és az Enter) a fázis keresőjébe ugorjon.
+- Döntés: javítva fazisnev-tab-fokusz (2026-09-09)
 
 ### 14. Oldalfrissítés és a szerkesztőbe visszatérés után a kurzor az Előleg mezőbe ugrik, az oldal aljára
 
@@ -303,6 +313,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   bekapcsoláskor szándékos, de betöltött előlegnél is tüzel — `app/src/pages/planEditor/ElolegBlokk.tsx`)
 - Dedup: **ÚJ**
 - Javasolt javítási irány: az `autoFocus` csak a doki bekapcsolásakor, nem betöltéskor.
+- Döntés: javítva eloleg-autofocus-betolteskor (2026-09-09)
 
 ### 15. Enter a Terv címe mezőben nem lép tovább és nem jelez
 
@@ -312,6 +323,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
 - Dedup: **ÚJ** (az `elso-megnyitas` 7. megállapítása a Név mező Enterjéről szól, ahol az
   Enter viszont túl sokat csinál)
 - Javasolt javítási irány: Enter a címben → fókusz a következő mezőre vagy a „Tovább" gombra.
+- Döntés: javítva terv-cim-enter (2026-09-09)
 
 ### 16. Az előleg helye a „fogtechnikai munkát tartalmaz — előleg feltüntetése" pipa alatt van; a pipa felirata nem mondja, hogy ez az előleg mezője
 
@@ -321,6 +333,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
 - Dedup: **ÚJ** mint felirat-kérdés (a nemet-euro jelentés a blokk működését jónak találta)
 - Javasolt javítási irány: „Előleg feltüntetése (fogtechnikai munkánál)" — az előleg szó
   elöl. **Istvántól megkérdezendő**, kér-e előleget fogtechnika nélkül.
+- Döntés: javítva eloleg-pipa-felirat (2026-09-09)
 
 ### 17. „Terv véglegesítve · az imént" a Kezdőlapon egy először megnyitott programban
 
@@ -330,6 +343,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
 - Dedup: **ÚJ** (az `elso-megnyitas` 15. megállapítása a feliratot a véglegesítés utáni
   jelzésként említi)
 - Javasolt javítási irány: a seed-tervek dátuma ne „most" legyen, hanem napokkal korábbi.
+- Döntés: javítva seed-terv-datum-az-iment (2026-09-09)
 
 ### 18. A nyomtatványon a születési dátum „1992-12-01", az appban mindenhol „1992.12.01."
 
@@ -343,6 +357,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   szól; a nyomtatvány ISO-alakja nem szerepelt)
 - Javasolt javítási irány: a nyomtatványon is a magyar alak („1992. 12. 01."), a
   keltezéssel azonos formázóval.
+- Döntés: javítva pdf-szuletesi-datum-formatum (2026-09-09)
 
 ### 19. A nyomtatvány fejlécében „v0", a listán és a Terv részletein „v1"
 
@@ -368,6 +383,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
   `VEGLEGES`, 615 000 Ft, a `_v1` érintetlen, a piszkozat törölve)
 - Dedup: **MÁR JELZETT** (`2026-09-05-doctor-review-elso-megnyitas.md`, 15.;
   `2026-09-05-doctor-review-nagy-terv.md`, 16.)
+- Döntés: javítva frissites-veglegesites-kozben-ures-elonezet (2026-09-09)
 
 ### 22. Konzol: „Buffer is not defined" (14×) az előnézet renderelésekor; „A form field element should have an id or name attribute"
 
@@ -375,6 +391,7 @@ becsült sor, a két leírás nyomtatva. A dokumentum összesítője viszont „
 - Bizonyosság: **megfigyelt**
 - Dedup: **MÁR JELZETT** (`2026-09-05-doctor-review-nagy-terv.md`, 17. és 18.;
   `2026-09-05-doctor-review-elso-megnyitas.md`, 16.)
+- Döntés: javítva konzol-buffer-is-not-defined (2026-09-09)
 
 ### Rontás-próba, ami rendben volt
 

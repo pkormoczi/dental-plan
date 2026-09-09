@@ -95,9 +95,11 @@ route-onként:
 
 ## Találatok
 
-### Közepes
-- **`control-no-border`** (`visual-css` szelet öröksége, NEM ennek a batchnek a
-  hatása): `#/arlista` oldalon 13 kontroll (pl. `+ Új tétel`, "Keresés a tételek
+## Közepes
+
+### 1. `control-no-border` — 13 kontroll keret nélkül az árlistán
+
+`visual-css` szelet öröksége, NEM ennek a batchnek a hatása: `#/arlista` oldalon 13 kontroll (pl. `+ Új tétel`, "Keresés a tételek
   között" input, a `SegmentedControl`/`RadioGroup` szűrő-chipek) box-shadow/border
   nélkül mérve a snippet szerint. Az `id`/`name`/`autoComplete` attribútumok
   bizonyíthatóan NEM hatnak border/box-shadow computed style-ra, tehát ez nem
@@ -105,11 +107,13 @@ route-onként:
   Javaslat: `/idea arlista-kontroll-keret-hianyzik docs/reviews/2026-09-06-manual-checks-all.md`
   (dedup: `ls backlog backlog/later backlog/idea backlog/idea/later` — nincs ilyen
   slug vagy `Source:` még).
+- Döntés: javítva arlista-kontroll-keret-hianyzik (2026-09-09)
 
-### Apró
+## Apró
+
 - Nincs.
 
-### Nem ellenőrizhető
+## Nem ellenőrizhető
 - `prefers-reduced-motion` — a `emulate` tool nem támogat CSS media-feature
   emulációt (lásd `SKILL.md`).
 - Placeholder-zár valós bájtokon, letöltés-instrumentálás, popover-geometria,

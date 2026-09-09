@@ -31,6 +31,7 @@ Záró bekezdés a naplóból, szó szerint:
 - Dedup: **MÁR JELZETT** (`2026-09-08-doctor-review-paciens-elott.md`, 1. megállapítás — azóta nem volt a `DemoDraftStorage`-t érintő commit)
 - Helyzet, orvosi elvárás, javasolt irány stb.: lásd a korábbi jelentés 1. megállapítását.
 - Backlog: `piszkozat-masik-fulon-elveszik` (a korábbi jelentésben javasolt slug, még nincs tételfájl)
+- Döntés: javítva ket-ful-piszkozat-utolso-iro-nyer, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 2. A „Másolás új tervbe" nem alkalmas páciensváltásra, és a hibaüzenet nem irányít a helyes megoldáshoz
 
@@ -76,6 +77,7 @@ Záró bekezdés a naplóból, szó szerint:
 - Dedup: **MÁR JELZETT** (`2026-09-08-doctor-review-paciens-elott.md`, 2. megállapítás; `2026-09-08-doctor-review-surgos.md`, 2. megállapítás — most már HARMADSZOR, egymástól független forgatókönyvekben)
 - Helyzet és reprodukció: lásd a korábbi jelentéseket; itt az „Új terv indítása" lap „Legutóbbi páciensek" listája (`02-uj-terv.png`) és a Páciensek lista (`19-paciensek-lista.png`) mutatta ugyanezt.
 - Backlog: `paciens-lista-nem-rejtheto-paciens-elott` (a korábbi jelentésben javasolt slug, még nincs tételfájl)
+- Döntés: duplikátum → review:2026-09-08-doctor-review-paciens-elott#2 (2026-09-09)
 
 ### 5. A tétel-kereső nem talál semmit egy köznyelvi, összetett kifejezésre („fémkerámia korona"), csak a törzsadatban szereplő rövidebb névre
 

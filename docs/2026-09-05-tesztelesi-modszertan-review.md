@@ -250,7 +250,7 @@ A CI Node-verziója `lts/*`, az R1/R2 helyi futása v26.4.0 volt. A [test-setup]
 
 ### F12 — Közepes: a vizuális és böngészős védelem kézi; az automatizálás után a hívási rend is rendezendő
 
-A `/manual-checks` jó és konkrét eljárás. Nem helyes azt állítani, hogy a PDF/canvas/CSS réteget soha nem ellenőrzik: a [2026-08-10-i böngészős jelentés](reviews/2026-08-10-browser-validation.md) valódi PDF-bájtokat és vizuális hibát is tárgyal, többek között a SemiBold-font problémáját.
+A `/manual-checks` jó és konkrét eljárás. Nem helyes azt állítani, hogy a PDF/canvas/CSS réteget soha nem ellenőrzik: a [2026-08-10-i böngészős jelentés](reviews/archive/2026-08-10-browser-validation.md) valódi PDF-bájtokat és vizuális hibát is tárgyal, többek között a SemiBold-font problémáját.
 
 Viszont ez nem CI-ban ismétlődő védelem. R1 elavult `/finish`-hívásrendet talált; S ellenőrzésekor a [manual-checks skill](../.claude/skills/manual-checks/SKILL.md) már megnevezi az `/implement` 5b és az `/implement-batch` hívót. Az E2E bevezetésekor az összes hívó, a megmaradó szeletek és az önálló `all` futás szerepe együtt rendezendő, nem egy régi eltérés változatlan fennállását feltételezve.
 
@@ -322,7 +322,7 @@ A szövegkinyerés nem bizonyít glyphminőséget, tördelést vagy képmegjelen
 
 R1 öt esetet vázolt; E három pilotot javasolt. Az összevont ajánlás a fenti hárommal indul; **bővítésként** jön a placeholder/nyilatkozat, sávos csillag/lábjegyzet és kedvezménytilalom valós PDF-en, majd a hosszú többoldalas terv magyar ékezetekkel és canvas→PNG→PDF fogtérképpel. Escape/Tab, popover-geometria két felbontáson, font/CSP és fájlnév az érintett technikai állítások alapján kerülhet át. A részletes PDF-szövegmátrix továbbra is az olcsóbb szinteken él.
 
-A production builden PDF-et előállító teszt értékét a korábbi `Buffer is not defined` hiba is indokolja; javításának böngészős bizonyítéka a [2026-09-06-i jelentésben](reviews/2026-09-06-manual-checks-all.md) szerepel.
+A production builden PDF-et előállító teszt értékét a korábbi `Buffer is not defined` hiba is indokolja; javításának böngészős bizonyítéka a [2026-09-06-i jelentésben](reviews/archive/2026-09-06-manual-checks-all.md) szerepel.
 
 ### 5.5 Technikai keret
 

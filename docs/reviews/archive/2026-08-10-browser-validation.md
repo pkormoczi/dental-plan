@@ -37,6 +37,7 @@ derült ki — nem az eredeti menet találatai.
 `docs/07-felulet-rendszer.md`: *"`controlBorder` — Minden interaktív kontroll (input,
 gomb, chip, dropdown) kerete — 3,00:1, WCAG 1.4.11. Nem az `uiLine`, az ahhoz túl
 halvány."*
+- Döntés: javítva a jelentés címe szerint (2026-08-10)
 
 A forráskódban a `t.controlBorder` (`app/src/design/tokens.ts:63`) kizárólag a kézzel
 írt input mezőkön van bedrótozva: `NumberField.tsx:28`, `ItemPicker.tsx:174/251`,
@@ -143,6 +144,7 @@ dokumentálva a `docs/07-felulet-rendszer.md` `controlBorder` sorában
 (`App.tsx:27` — `<Theme accentColor="brown" ...>`), ami `rgb(173,127,88)` — **nem**
 `t.ink`. Fehér szöveggel a mért kontraszt **3,53:1**, a WCAG AA 4,5:1 (normál szöveg)
 helyett.
+- Döntés: javítva a jelentés címe szerint (2026-08-10)
 
 Előfordulás (kompozitált, valódi renderelt szín — nem a nyers Radix-token):
 
@@ -230,6 +232,7 @@ egyike sem kapcsolódik ehhez a javításhoz.
 (`Font.register({ family: 'NotoSans', fonts: [{...400}, {...600}] })`), és a
 hálózati kérés (`list_network_requests`/`performance`) igazolja, hogy mindkét TTF
 ténylegesen letöltődik (~59-60 KB, valódi tartalom).
+- Döntés: javítva a jelentés címe szerint (2026-08-10)
 
 A **valódi generált PDF bájtjait** vizsgálva (fetch a blob URL-ről, `%PDF-1.3`
 fejléc, nincs objektum-stream/cross-reference-stream tömörítés, tehát a nyers
@@ -335,6 +338,7 @@ ez pontosan igaz, de **nulla tartalékkal**: `#8896AB` fehér (`#FFFFFF`) hátte
 feltételez, miközben az app UI-ja sehol nem tesz ki kontrollt tiszta fehér
 háttérre. A K1 javítás böngészős visszaellenőrzése során, most hogy a keret
 ténylegesen megjelenik és mérhető, minden mért előfordulás a névleges alá esett:
+- Döntés: javítva a jelentés címe szerint (2026-08-10)
 
 | Háttér | Példa | Mért kontraszt |
 |---|---|---|
@@ -459,6 +463,7 @@ eredeti K1-mérés nem talált ilyet — de a `PatientPage`/`SettingsPage`/
 `PriceListAdminPage` nyelv-, pénznem- és alapértelmezett nyelv-váltója mind a
 közös `ChipGroup.tsx`-en (Radix `SegmentedControl.Root`/`.Item`) megy át, ami
 **nem** `Button`, tehát a mai globális CSS-szabály nem éri el.
+- Döntés: javítva a jelentés címe szerint (2026-08-10)
 
 Böngészőben mérve (`#/paciens`): `.rt-SegmentedControlRoot`/`.Item`
 `box-shadow: none` — nulla keret, ugyanaz a hibaosztály, mint K1 eredetileg

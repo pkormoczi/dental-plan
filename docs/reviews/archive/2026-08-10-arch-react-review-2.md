@@ -1,5 +1,7 @@
 # Architecture + React Review
 
+Feldolgozás: felülírta review:2026-08-25-arch-react-review
+
 Date: 2026-08-10 (second run this day — see "Previous Review Comparison" for why)
 
 ## Executive Summary
@@ -53,6 +55,7 @@ Confidence: High
 Status: CARRIED FORWARD
 Category: Data/API architecture
 Location: `pages/PlanEditorPage.tsx` (buffered, single commit on navigate/finalize) vs. `pages/PriceListAdminPage.tsx` / `pages/SettingsPage.tsx` (immediate per-field commit)
+- Döntés: duplikátum → review:2026-08-25-arch-react-review#ARCH-002 (2026-09-09)
 
 Evidence:
 `docs/08-backlog.md` "Technikai adósság" already documents this: the `PlanStorage` interface standardizes *how* to write, not *when*. Reconfirmed present and unchanged.
@@ -70,6 +73,7 @@ Confidence: High
 Status: CARRIED FORWARD
 Category: State architecture
 Location: `pages/PriceListAdminPage.tsx:74-99`, `pages/SettingsPage.tsx:228-237`
+- Döntés: javítva, review:2026-08-25-arch-react-review (2026-08-25)
 
 Evidence:
 Both close over render-scope `priceList`/`settings` rather than using the functional `setState` updater form. `SettingsPage.tsx`'s text fields call `patch()` on every `onChange` (not just blur), which is the wider-surface instance of the two.
@@ -87,6 +91,7 @@ Confidence: High
 Status: CARRIED FORWARD
 Category: Dependency/tooling hygiene
 Location: `app/src/storage/seed/priceList.ts:7` (`import raw from '../../../../data/arlista.seed.json'`)
+- Döntés: duplikátum → review:2026-08-25-arch-react-review#ARCH-004 (2026-09-09)
 
 Evidence:
 CLAUDE.md documents `app/` as the only directory meant to be edited, with everything else "reference only" — this import silently crosses that line four `../` deep.
@@ -119,6 +124,7 @@ Severity: Minor
 Confidence: High
 Category: Maintainability / component reuse
 Location: `pages/PriceListAdminPage.tsx:863-891`, `pages/SettingsPage.tsx:488-497`, `pages/PatientPage.tsx:318-344`
+- Döntés: javítva, review:2026-08-25-arch-react-review (2026-08-25)
 
 Evidence:
 All three independently define a label-wrapper component, including the same non-trivial accessibility rationale (a `<div>` is used instead of `<label>` specifically to avoid an ambiguous accessible name when the wrapped control is a `<button>`/chip group).
@@ -151,6 +157,7 @@ Severity: Minor
 Confidence: High
 Category: Architectural consistency / design-system compliance
 Location: `components/ErrorBoundary.tsx:69-74` (inline-styled raw `<button>`s), `components/NumberField.tsx:162-179` (raw `<button>` stepper controls, `tabIndex={-1}`)
+- Döntés: duplikátum → review:2026-08-25-arch-react-review#REACT-003 (2026-09-09)
 
 Evidence:
 `docs/07-felulet-rendszer.md`: "Minden UI elem `@radix-ui/themes` komponensből jön. Ne írj kézzel gombot…" names exactly two exceptions (the dental chart SVG, the printed PDF document) — neither of these is one of them. `App.tsx`'s own comment confirms `ErrorBoundary` renders *inside* the `<Theme>` provider, so there's no technical reason it can't use Radix `Button`.
@@ -167,6 +174,7 @@ Severity: Observation
 Confidence: High
 Category: Performance architecture / bundle size
 Location: Build output — `dist/assets/index-*.js` (688.89 kB / 256.91 kB gzip), `dist/assets/PreviewPage-*.js` (1,448.99 kB / 487.37 kB gzip)
+- Döntés: duplikátum → review:2026-08-25-arch-react-review#ARCH-006 (2026-09-09)
 
 Evidence:
 `vite build` output, this run.
@@ -183,6 +191,7 @@ Severity: Observation
 Confidence: Medium
 Category: Tooling/CI hygiene
 Location: `.github/workflows/deploy.yml` (only workflow found)
+- Döntés: duplikátum → review:2026-08-25-arch-react-review#ARCH-007 (2026-09-09)
 
 Evidence:
 Repository search found exactly one GitHub Actions workflow, for GitHub Pages deployment; no workflow runs `npm run lint`/`tsc -b`/`npm test` on PRs or pushes independent of deploy.
@@ -202,6 +211,7 @@ Confidence: **High — reproduced live in-browser**
 Status: NEW
 Category: Focus management / keyboard accessibility
 Location: `pages/PlanEditorPage.tsx` (inline picker close/unmount around `setKeresoMod(false)`, ~line 621-625), contrasted with the phase-level picker's `finishPick()` which does explicitly refocus itself
+- Döntés: duplikátum → review:2026-08-25-arch-react-review#REACT-001 (2026-09-09)
 
 Evidence:
 Reproduced directly against the running dev server via `chrome-devtools`:
@@ -222,6 +232,7 @@ Confidence: Medium
 Status: NEW
 Category: Accessibility
 Location: `pages/planEditor/ItemPicker.tsx` — input (~line 154-161), result rows (~182-228)
+- Döntés: duplikátum → review:2026-08-25-arch-react-review#REACT-002 (2026-09-09)
 
 Evidence:
 The `<input>` has no `role="combobox"`, `aria-expanded`, `aria-controls`, or `aria-activedescendant`; result rows have no `role="option"`/`id`. The currently-highlighted result is conveyed only through background color.
@@ -238,6 +249,7 @@ Severity: Observation
 Confidence: High
 Category: React performance
 Location: `pages/PlanEditorPage.tsx` `updatePlan` (~line 154-160)
+- Döntés: duplikátum → review:2026-08-25-arch-react-review#REACT-004 (2026-09-09)
 
 Evidence:
 Every `onChange` (not blur/commit) for phase name, phase comment, line name, and the teeth field runs `structuredClone(prev)` on the *entire* plan object, which also re-triggers `AppState`'s per-change `localStorage` draft write (by design, no debounce — see `state/AppState.tsx`'s own comment on this).
@@ -335,6 +347,7 @@ Confidence: High
 Status: CARRIED FORWARD
 Category: Component design / maintainability
 Location: `pdf/TervDocument.tsx` (503 lines: style objects, 5 subcomponents, and the top-level `Document`)
+- Döntés: duplikátum → review:2026-08-25-arch-react-review#REACT-006 (2026-09-09)
 
 Evidence:
 Unchanged since `docs/08-backlog.md`'s "three largest files" item was written.

@@ -28,28 +28,37 @@ halvány listaár-sor nem jelenik meg. Konzol mindkét route-on tiszta (0 error/
 
 ## Közepes — nem ehhez a tételhez tartozik, már felvett tétel fedi
 
-1. **Halvány slate szöveg 4,34:1** (`rgb(100, 116, 139)`), a `#/terv` ár-cellái (köztük az új
-   sáv-tartomány, változatlan színnel és mérettel), a „Növelés"/„Csökkentés" léptető-feliratok,
-   és a Terv részletei ár-oszlopa. → `backlog/idea/terv-lap-halvany-szoveg-kontraszt.md`
-2. **Amber jelvény-feliratok 3,95:1** (`rgb(171, 100, 0)`): a `+100%` eltérés-jelvény és a
-   „Becsült ár" jelvény. A felvett tétel kimondja, hogy a javítás a tokennél dől el, és
-   nevesíti a jelvényeket. → `backlog/idea/checklist-callout-szoveg-kontraszt.md`
+### 1. Halvány slate szöveg 4,34:1
+
+ (`rgb(100, 116, 139)`), a `#/terv` ár-cellái (köztük az új
+sáv-tartomány, változatlan színnel és mérettel), a „Növelés"/„Csökkentés" léptető-feliratok,
+és a Terv részletei ár-oszlopa. → `backlog/idea/terv-lap-halvany-szoveg-kontraszt.md`
+- Döntés: javítva terv-lap-halvany-szoveg-kontraszt (2026-09-09)
+### 2. Amber jelvény-feliratok 3,95:1
+
+ (`rgb(171, 100, 0)`): a `+100%` eltérés-jelvény és a
+„Becsült ár" jelvény. A felvett tétel kimondja, hogy a javítás a tokennél dől el, és
+nevesíti a jelvényeket. → `backlog/idea/checklist-callout-szoveg-kontraszt.md`
+- Döntés: javítva checklist-callout-szoveg-kontraszt (2026-09-09)
 
 Egyik sem regresszió: mindkét szín és méret változatlan a tétel diffjéhez képest, a sáv-string
 ugyanazt a `uiTextFaint` tokent használja, mint korábban az egyszámos listaár.
 
 ## Apró — triázsra vár, nincs felvéve
 
-3. **`control-no-border`: 10 kontroll** keret és `box-shadow` nélkül a `#/terv`-en; a minta
-   döntően `solid` Button (`Előnézet`, sötét kitöltéssel) és Radix `TextField` belső
-   `<input>`-jei. Utóbbiaknál a látható keret a wrapperen ül, tehát a mérés a Radix
-   DOM-szerkezete miatt vélhetően téves pozitív; a `solid` Button esetét a szelet-fájl maga
-   nevesíti kivételként. Nem a tétel diffjéből ered. Eldöntéséhez a snippet pontosítása kellene
-   — a doki döntése, hogy megéri-e:
+### 3. `control-no-border`: 10 kontroll
 
-   ```
-   /idea control-border-meres-radix-wrapper docs/reviews/2026-09-07-manual-checks-visual-css.md
-   ```
+ keret és `box-shadow` nélkül a `#/terv`-en; a minta
+döntően `solid` Button (`Előnézet`, sötét kitöltéssel) és Radix `TextField` belső
+`<input>`-jei. Utóbbiaknál a látható keret a wrapperen ül, tehát a mérés a Radix
+DOM-szerkezete miatt vélhetően téves pozitív; a `solid` Button esetét a szelet-fájl maga
+nevesíti kivételként. Nem a tétel diffjéből ered. Eldöntéséhez a snippet pontosítása kellene
+— a doki döntése, hogy megéri-e:
+- Döntés: javítva control-border-meres-radix-wrapper (2026-09-09)
+
+```
+/idea control-border-meres-radix-wrapper docs/reviews/2026-09-07-manual-checks-visual-css.md
+```
 
 ## Nem ellenőrizhető
 

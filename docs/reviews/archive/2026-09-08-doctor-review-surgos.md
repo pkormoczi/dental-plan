@@ -32,6 +32,7 @@ A fő ügynök ezen felül egy szisztematikus rontás-próbát is végzett (2c s
 - Helyzet és reprodukció: 1. fül — Fekete Márton terve (3 tétel, Előnézet lépés). 2. fül — `Páciensek` → Kiss Márta → „+ Új terv" → helyesen megjelenő „Piszkozat felülírása" dialógus → „Új terv, piszkozat elvetésével" → a 2. fül a „Terv adatai" lépésre navigál, Kiss Márta nevével előtöltve. Ezután az 1. fülön „Véglegesítés és mentés". A 2. fület frissítve (F5) egy **teljesen üres „Új páciens" űrlap** jelenik meg (`r01-tab2-utan-tab1-veglegesites.png`) — Kiss Márta neve és minden adata eltűnt.
 - Orvosi elvárás, Tapasztalt probléma, Napi hatás, Jelenlegi kerülőút, Javasolt javítási irány, Siker mércéje: lásd a `2026-09-08-doctor-review-paciens-elott.md` 1. megállapítását — a jelenség és a gyökérok azonos, csak a szereplők mások.
 - Backlog: `piszkozat-masik-fulon-elveszik` (a korábbi jelentésben javasolt slug, még nincs tételfájl)
+- Döntés: javítva ket-ful-piszkozat-utolso-iro-nyer, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 2. Más páciensek neve, adatai és aktivitása kattintás/keresés nélkül látszik — most egy HARMADIK felületen is
 
@@ -43,6 +44,7 @@ A fő ügynök ezen felül egy szisztematikus rontás-próbát is végzett (2c s
 - Dedup: **MÁR JELZETT** (`2026-09-08-doctor-review-paciens-elott.md`, 2. megállapítás), **bővítve**: a korábbi jelentés a Kezdőlap „Legutóbbi páciensek" és a Páciensek lista két felületét dokumentálta; ez a menet egy HARMADIK felületet is megtalált: az „Új terv indítása" képernyő „Meglévő páciens keresése" panelje az „+ Új páciens" dialógus MÖGÖTT, keresés nélkül, egy hosszú, görgethető AKTIVITÁS-listát mutat legalább 14 páciensről, névvel ÉS az utolsó műveletükkel („Terv véglegesítve", „Páciens létrehozva", „Adatlap mentve", időbélyeggel) — ez több információt fed fel, mint a másik két felület (`04-enter-utan.png`, a dialógus mögött látszó lista).
 - Orvosi elvárás, Tapasztalt probléma, Napi hatás, Jelenlegi kerülőút, Javasolt javítási irány, Siker mércéje: lásd a korábbi jelentés 2. megállapítását; a javítási iránynak erre a harmadik felületre is ki kell terjednie.
 - Backlog: `paciens-lista-nem-rejtheto-paciens-elott` (a korábbi jelentésben javasolt slug, még nincs tételfájl)
+- Döntés: duplikátum → review:2026-09-08-doctor-review-paciens-elott#2 (2026-09-09)
 
 ### 3. Nincs gyors mód ugyanazt a kezelést egy másik fogra felvenni — minden ismétlésnél új keresés kell
 

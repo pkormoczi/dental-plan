@@ -37,6 +37,7 @@ A fő ügynök ezen felül egy szisztematikus rontás-próbát is végzett (2c s
 - Javasolt javítási irány: a piszkozat-rekord kapjon egy azonosítót (pl. a piszkozatba mentett `paciensId`/tervId), és a véglegesítés utáni törlés (`DemoDraftStorage` `clear`/`removeItem`) csak akkor fusson, ha a jelenleg tárolt piszkozat még ugyanahhoz a lezárt tervhez tartozik — különben hagyja érintetlenül a közben mást ott hagyó fület.
 - Siker mércéje: két fülön, két különböző páciensen dolgozva, az egyik fül véglegesítése/törlése nem változtatja meg vagy törli a másik fül aktív piszkozatát; ha mégis ütközés áll fenn, a másik fül kapjon látható jelzést, ne csendben vesszen el az adat.
 - Backlog: `piszkozat-masik-fulon-elveszik`
+- Döntés: javítva ket-ful-piszkozat-utolso-iro-nyer, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 2. A Kezdőlap és a Páciensek lista kattintás/keresés nélkül, azonnal megmutatja más páciensek nevét, születési dátumát és telefonszámát
 

@@ -114,6 +114,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
 - Siker mércéje: a mentett PDF fejlécében pontosan az a verziószám áll, amit a verziósor
   és a Terv részletei lap mutat; a fejléc nem kezdődik elválasztójellel.
 - Backlog: `pdf-verzioszam-mentett-verzio`
+- Döntés: javítva pdf-verzioszam-mentett-verzio, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 2. Véglegesítés után a kész dokumentum eltűnik — nincs Nyomtatás vagy Letöltés a sikerképernyőn
 
@@ -148,6 +149,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
 - Siker mércéje: a „Véglegesítés és mentés" utáni képernyőről egy kattintással nyomtatható
   vagy letölthető a kiadott dokumentum; a persona nem használ kerülőutat.
 - Backlog: `sikerkepernyo-nyomtatas-letoltes`
+- Döntés: javítva sikerkepernyo-nyomtatas-letoltes, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 3. Fogszám nélküli korona szó nélkül átmegy a véglegesítésen — a papíron „—" áll a Fog oszlopban
 
@@ -179,6 +181,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
 - Siker mércéje: fogszám nélküli fogra vonatkozó tétel mellett a véglegesítés előtt egy
   jelzés látszik, amiről egy kattintással a sorhoz lehet ugrani.
 - Backlog: `checklist-hianyzo-fogszam`
+- Döntés: javítva checklist-hianyzo-fogszam, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 4. Tétel felvétele után a kurzor a keresőben marad, a doki a fogszámot oda gépeli — az app „egyedi tételt" kínál a „36"-ból
 
@@ -209,6 +212,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   sor Fog mezőjébe írja a számot.
 - Siker mércéje: a „tétel → fogszám" sorrendben gépelő doki nem kap „Egyedi tétel"
   ajánlatot, és nem keletkezik „36" nevű sor.
+- Döntés: javítva tetelfelvitel-fokusz-fog-mezore, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 5. A tervbe beírt telefonszám „eltér a törzsadattól" — két, egyformán hangsúlyos gomb, és a szám nem kerül a páciens kartonjára
 
@@ -246,6 +250,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   adataihoz is mentem").
 - Siker mércéje: egy csak névvel felvett páciensnek a Terv adatai lapon beírt telefonszáma
   gomb nélkül megjelenik a Kezdőlap „Legutóbbi páciensek" sorában.
+- Döntés: javítva torzsadat-elteres-ures-mezo (2026-09-09)
 
 ### 6. Dátummezők amerikai sorrendben („mm/dd/yyyy", „12/04/2026") ugyanazon a lapon, ahol a másik dátum magyarul van
 
@@ -277,6 +282,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   attribútum a mezőn, ami a Chrome-ot magyar sorrendre bírja a felület nyelvétől
   függetlenül — ezt kézzel ellenőrizni kell (`/manual-checks`).
 - Siker mércéje: a Terv adatai lapon minden dátum ugyanabban az alakban olvasható.
+- Döntés: javítva datummezo-formatum-inkonzisztens (2026-09-09)
 
 ### 7. Az Enter a Név mezőben azonnal menti a pácienst és továbblép — dátum és telefon kimarad
 
@@ -303,6 +309,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   felvéve" jelzés a Terv adatai lap tetején.
 - Siker mércéje: a doki a dialógusban ki tudja tölteni mindhárom mezőt Enterrel lépkedve,
   és a mentés pillanatában látja, hogy a páciens létrejött.
+- Döntés: javítva uj-paciens-enter-mentes (2026-09-09)
 
 ### 8. Az „Új terv indítása" lapon a lista első sora (Kiss Márta) kiemelt, mintha ki lenne választva — Enter tényleg őt indítaná
 
@@ -329,6 +336,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   leütés vagy nyíl után jelenjen meg); vagy a kiemelt sor kapjon feliratot („Enter: terv
   indítása neki").
 - Siker mércéje: gépelés nélküli Enter nem indít tervet senkinek.
+- Döntés: javítva uj-terv-kiemelt-elso-sor, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 9. Belső kódok a felületen: „Teszt Elek (Teszt-Elek_dqyezl)", „Korona és hídpótlások_uczsr0 / 2026-09-05_v1", a PDF-nézegető és a külön lap címe egy UUID
 
@@ -351,6 +359,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   `title`-je a páciens neve.
 - Siker mércéje: a doki egyetlen képernyőn sem lát hat karakteres véletlen utótagot vagy
   UUID-t.
+- Döntés: javítva belso-kodok-helyett-nevek (2026-09-09)
 
 ### 10. Az előnézet figyelmeztetései a doki nyelvén nem mondják meg, mit tegyen
 
@@ -376,6 +385,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   a törzsadat-eltérés tétel már teszi („(Telefon)").
 - Siker mércéje: a doki a dobozból, továbbkattintás nélkül tudja, mi hiányzik és hol
   pótolja.
+- Döntés: javítva checklist-figyelmeztetes-szovege (2026-09-09)
 
 ### 11. A „koron" keresésre a végleges koronák nem az első képernyőn vannak
 
@@ -394,6 +404,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   elejére; a részszó-találat rangsorolása a tétel nevének elejére eső egyezés szerint
   („Korona…" előrébb, mint „Impl. ideiglenes korona").
 - Siker mércéje: „koron"-ra a lista első öt sorában van fémkerámia és cirkon korona.
+- Döntés: javítva kereso-talalat-rangsor (2026-09-09)
 
 ### 12. Ikon felirat nélkül: „≈" az ajánlati ár alatt, célkereszt a Fog mező mellett, kuka a fejlécben, „…" a verziósorban
 
@@ -430,6 +441,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
 - Javasolt javítási irány: „Euróban csak azok a kezelések választhatók, amelyeknek van
   euró-áruk"; „Ha üresen hagyod, a legnagyobb összegű kezeléscsoport neve lesz a cím
   (pl. »Korona és hídpótlások«)".
+- Döntés: javítva penznem-es-cim-felirat (2026-09-09)
 
 ### 14. Két fülön nyitva ugyanaz a piszkozat: az utolsó író nyer, jelzés nélkül
 
@@ -452,6 +464,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   Betöltés / Felülírás" jelzés; vagy a `storage` esemény figyelése és a másik fül
   frissítése.
 - Siker mércéje: két fülön felvett sorok egyike sem tűnik el csendben.
+- Döntés: javítva ket-ful-piszkozat-utolso-iro-nyer, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 15. Frissítés a véglegesítés kellős közepén: a mentés befejeződik, de a doki nem tudja meg
 
@@ -466,6 +479,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   v4 (a dupla kattintás elleni védelem ezt nem fogja, mert két külön oldalbetöltés).
 - Javasolt javítási irány: a Kezdőlapon (vagy a páciens lapján) egy „az imént véglegesített
   terv" kártya Nyomtatás/Letöltés gombbal — ez a 2. megállapítás megoldásával egybeesik.
+- Döntés: javítva frissites-veglegesites-kozben-ures-elonezet, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### 16. Konzol: „A form field element should have an id or name attribute"
 
@@ -479,6 +493,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
 - Javasolt javítási irány: a `/manual-checks` vagy egy jsdom-teszt keresse meg a
   `name`/`id` nélküli mezőt; a böngésző automatikus kitöltése és a képernyőolvasók emiatt
   nem párosítják a mezőt.
+- Döntés: javítva urlap-mezo-id-name, ellenőrizte review:2026-09-09-doctor-review-elso-megnyitas (2026-09-09)
 
 ### Rontás-próba, ami rendben volt
 

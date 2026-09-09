@@ -86,6 +86,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Siker mércéje: a „gyökértömés", „neodent", „implantátumfej", „ideiglenes" keresésekre a
   kiemelt első találat a listán szereplő tétel.
 - Backlog: `kereso-talalat-rangsor`
+- Döntés: javítva kereso-talalat-rangsor (2026-09-09)
 
 ### 2. Sávos tételnél az alsó ár kerül be kérdés nélkül, a sávon belüli 3 csatornás ár pedig „+71%" és „Felár: 81 000 Ft" jelzést kap
 
@@ -156,6 +157,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
   → Fogeltávolítás, Fog: 18); vagy nulla találatnál egy sor: „Próbáld fogszám nélkül".
   Emellett egy törlő X a keresőben.
 - Siker mércéje: „18 fogeltávolítás" keresésre a Fogeltávolítás tételek megjelennek.
+- Döntés: javítva kereso-fogszam-tokenezes (2026-09-09)
 
 ### 4. A böngésző Vissza gombja az előnézeten a beágyazott PDF-nézegetőt lépteti vissza: a dokumentum helyén angol hibaoldal, az app az Előnézeten marad
 
@@ -180,6 +182,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
   (pl. `location.replace` az iframe-en belül, vagy a nézegető újra-mountolása `key`-jel
   `src` csere helyett); és/vagy a Vissza az app előző lépésére vigyen.
 - Siker mércéje: az előnézetről a böngésző Vissza a Kezelések lapra visz, hibaoldal nélkül.
+- Döntés: javítva elonezet-vissza-iframe-hibaoldal (2026-09-09)
 
 ### 5. A „Törzsadat létrehozása" ablak a szerkesztőbe lépéskor felugrik, és István nem érti, mit kérdez
 
@@ -204,6 +207,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Javasolt javítási irány: laikus szöveg, a következmény kimondásával („Később is
   megteheted a páciens lapján"); vagy a kérdést a véglegesítéshez kötni, nem a lépésváltáshoz.
 - Siker mércéje: a persona egy következő futásban kimondja, mit jelent a kérdés, mielőtt választ.
+- Döntés: javítva torzsadat-letrehozas-dialogus-szovege (2026-09-09)
 
 ### 6. Az előnézeten a „Véglegesítés és mentés" gomb szürkén, magyarázat nélkül vár, amíg a nyomtatvány készül
 
@@ -227,6 +231,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Javasolt javítási irány: „Nyomtatvány készül…" felirat a szürke gomb mellett és az üres
   dobozban, ugyanúgy, ahogy a frissítéskor már van „PDF frissítése…".
 - Siker mércéje: az első megnyitáskor a szürke gomb mellett látszik, miért szürke.
+- Döntés: javítva elonezet-veglegesites-gomb-toltes-jelzes (2026-09-09)
 
 ### 7. A fázisok összecsukott áttekintése (n tétel · összeg) a legjobb válasz a „mennyi a 2. szakasz külön" kérdésre, de csak véletlenül található meg, és a szerkesztőbe visszatérve minden fázis újra kinyílik
 
@@ -252,6 +257,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
   fázisnévvel); a csukott állapot megőrzése a piszkozat élete alatt; a fejlécben „5 sor" a
   „5 tétel" helyett, vagy fogszámot is számolva „7 kezelés".
 - Siker mércéje: a szerkesztő alján, görgetés nélkül látszik a 2. szakasz külön összege.
+- Döntés: javítva fazis-osszecsukas-megorzese-es-osszegzo (2026-09-09)
 
 ### 8. A „Garancia kimarad" figyelmeztetés nem mondja meg, mit tegyen, és nem derül ki, megállít-e
 
@@ -271,6 +277,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Javasolt javítási irány: mint a korábbi jelentésben — a doki felől fogalmazva, a
   „csak szól / megállít" különbség kimondva (a sárga = csak szól, piros = megállít színkód
   ma nincs megnevezve).
+- Döntés: javítva checklist-figyelmeztetes-szovege (2026-09-09)
 
 ### 9. A fázis alapneve „1. kezelés", miközben a gombok „Fázis"-t mondanak; a név átírhatósága nem látszik, az Enter nem csinál semmit; a sorok sorrendje nem mozgatható
 
@@ -292,6 +299,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Javasolt javítási irány: alapnév „1. szakasz" vagy „1. fázis" (egyeztetve a gombokkal);
   a mezőben placeholder-szerű halvány „Fázis neve — kattints az átíráshoz"; Enter a mezőben
   ugorjon a fázis keresőjébe; sor fel/le nyilak a fázisokéhoz hasonlóan.
+- Döntés: javítva fazisnev-terminologia-es-sor-mozgatas (2026-09-09)
 
 ### 10. „Piszkozat mentve HH:MM" — nem derül ki, hogy ez automatikus és folyamatos
 
@@ -304,6 +312,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Dedup: **ÚJ** mint szövegezés (a `2026-09-05-doctor-review-elso-megnyitas.md` „Ami jól
   működik" szakasza az automatikus mentést pozitívumként említi)
 - Javasolt javítási irány: „Automatikusan mentve 19:51" — egyetlen szó.
+- Döntés: javítva piszkozat-mentve-automatikus-szoveg (2026-09-09)
 
 ### 11. Feliratlan ikonok a soron: fogtérkép-célkereszt, „≈" becsült ár, Db nyilak; a Fog és Db mező egymáshoz közel
 
@@ -340,6 +349,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Javasolt javítási irány: a fázisnév-mező szélessége kövesse a tartalmat (vagy legyen a
   fejléc teljes szélessége); csukott fejlécben a név statikus szövegként, nem mezőben; a
   jelvények a névmező alá vagy fölé, ne a mező rovására.
+- Döntés: javítva sor-fazisnev-mezok-levagott-szoveg (2026-09-09)
 
 ### 13. „9000 Ft" tagolás nélkül a „24 000 Ft" mellett
 
@@ -352,6 +362,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Pontosítás: ez a `hu-HU` locale szabálya (négyjegyű számot nem tagol — `toLocaleString('hu-HU')`,
   `app/src/domain/money.ts`), a nyomtatványon is így van; nem hiba, de a képernyőn
   egymás alatt következetlennek látszik. Istvántól megkérdezendő, zavarja-e a papíron.
+- Döntés: javítva osszeg-tagolas-kerdes (2026-09-09)
 
 ### 14. A Chrome PDF-nézegető saját fejléce: UUID címként, „Save to Google Drive" gomb a szerződéses dokumentum fölött
 
@@ -370,6 +381,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Javasolt javítási irány: ez a Chrome beépített nézegetője (a mockup-fázis korlátja);
   az Electron-fázisban saját nézegető vagy a Chromium PDF-viewer eszköztárának letiltása
   (`#toolbar=0`), addig a jelentésben rögzítve. A „Letöltés" gomb az app sajátja, az marad.
+- Döntés: backlog pdf-nezegeto-google-drive-gomb (2026-09-09)
 
 ### 15. Két fülön nyitva ugyanaz a piszkozat: az utolsó író nyer, egyik fül sem szól
 
@@ -400,6 +412,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
   képződik (`app/src/storage/DemoStorage.ts` `buildPlanDirName(javasoltTervCim(...))`), a cím
   külön `terv-cimke.json`-ban él. A felületen ez most nem látszik (a DEMO Fájlok fülön igen),
   az Electron-fázis fájlböngészőjében viszont a doki a saját címét keresné.
+- Döntés: javítva frissites-veglegesites-kozben-ures-elonezet; tervmappa-nev-nem-koveti-egyeni-cimet (2026-09-09)
 
 ### 17. Konzol: „Buffer is not defined" figyelmeztetés 14–19-szer az előnézet renderelése közben
 
@@ -413,6 +426,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Dedup: **ÚJ**
 - Javasolt javítási irány: a figyelmeztetés forrásának azonosítása a devtools-ban (stack),
   és vagy egy `Buffer` polyfill a Vite configban, vagy annak igazolása, hogy ártalmatlan.
+- Döntés: javítva konzol-buffer-is-not-defined (2026-09-09)
 
 ### 18. Konzol: „A form field element should have an id or name attribute" (2, ill. 32 mező)
 
@@ -422,6 +436,7 @@ a három becsült sor `*`-gal, a „felár" a nyomtatványon nem szerepel — a 
 - Dedup: **MÁR JELZETT** (`2026-09-05-doctor-review-elso-megnyitas.md`, 16. megállapítás)
 - Megjegyzés: a szerkesztőben 16 sornál a szám 32-re nő — soronként két mező (valószínűleg a
   Fog és az Ajánlati ár, vagy a Beavatkozás és a Fog) `name`/`id` nélkül.
+- Döntés: javítva urlap-mezo-id-name (2026-09-09)
 
 ### Rontás-próba, ami rendben volt
 
