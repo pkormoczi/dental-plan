@@ -28,6 +28,7 @@ A persona a Kezdőlapról indulva kereste meg Nagy Évát (nem volt a "Legutóbb
 - Jelenlegi kerülőút: átváltás az Árlista oldalra, ott keresni meg a pontos tételnevet, majd visszatérni és azt begépelni.
 - Javasolt javítási irány: a kereső terjedjen ki a kategórianévre is, VAGY nulla találat esetén jelenjen meg egy utalás ("Ezt keresed? [Kategórianév] alatt N tétel") — egyik sem igényel új funkciót, csak a meglévő `nevEgyezik` hívás bővítését/egy kiegészítő üzenetet.
 - Siker mércéje: egy kategórianévre rákeresve a doki vagy közvetlen találatot kap, vagy egyértelmű utalást a helyes tételnevekre — nem üres listát.
+- Döntés: backlog kereso-nem-talal-ra-kategorianevre (2026-09-09)
 
 ### 2. A fogtérkép-választó billentyűzetes fókusza nem elég kontrasztos
 
