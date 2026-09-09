@@ -28,6 +28,7 @@ A doki mindhárom adminfeladatot (árfrissítés, tétel-inaktiválás, új orvo
 - Jelenlegi kerülőút: minden ármódosítás után vizuálisan újra át kell néznie a beírt számot, mielőtt továbblép — ez plusz, manuális ellenőrzési lépés.
 - Javasolt javítási irány: egy puha figyelmeztetés (nem feltétlenül blokkoló), ha egy ár egy adott százaléknál (pl. 50%) nagyobb mértékben tér el az előző értéktől, vagy ha a HUF/EUR arány szokatlanul eltér a korábbi aránytól.
 - Siker mércéje: egy szokatlanul nagy ármódosítás legalább egy visszaigazoló lépést igényel, mielőtt érvénybe lép.
+- Döntés: backlog az-arlista-adminban-nincs-vedelem (2026-09-09)
 
 ### 2. Egy inaktivált tétel újra-aktiváló gombjának képernyőolvasó-címkéje nem tükrözi a tényleges állapotot
 
