@@ -198,7 +198,8 @@ export function derivedStates() {
     const s = /^-Source:\s*(.+)$/.exec(line);
     if (!s || !file) continue;
     const slug = path.posix.basename(file, '.md');
-    if (liveSlugs.has(slug)) continue;
+    // Az idea/ → gyökér átmenet (git mv + átírt tartalom) a historyban törlés+létrehozás -- nem elvetés.
+    if (liveSlugs.has(slug) || /^backlog: plan /.test(subject)) continue;
     const closed = subject.startsWith(`${slug}: `);
     const state = closed ? 'javítva' : 'elvetve';
     const konvencio = closed || subject === `backlog: -${slug}`;
@@ -208,7 +209,7 @@ export function derivedStates() {
       if (!hist.has(id)) hist.set(id, { state, slug, evidence: `${sha.slice(0, 7)} "${subject}"`, konvencio });
     }
   }
-  return { live, hist, legacy };
+  return { live, hist, legacy, liveSlugs };
 }
 
 export const aboveThreshold = (f) => f.ismet || f.severity === null || f.severity === 'Blokkoló' || f.severity === 'Súlyos';
@@ -216,7 +217,7 @@ export const aboveThreshold = (f) => f.ismet || f.severity === null || f.severit
 // Levezetési sorrend: élő tétel > Döntés sor > történet > implicit (Közepes/Kis) > nyitott.
 // Ellentmondás nem dönt, csak figyelmeztet.
 export function computeStates() {
-  const { live, hist, legacy } = derivedStates();
+  const { live, hist, legacy, liveSlugs } = derivedStates();
   const warnings = [];
   const reports = listReports().map((r) => parseReport(r.path));
   const known = new Set(reports.flatMap((r) => r.findings.map((f) => f.id)));
@@ -237,7 +238,7 @@ export function computeStates() {
         state = d.kind;
         evidence = d.slug ?? d.evidence ?? d.reason ?? d.target ?? d.raw ?? null;
         if (d.kind === 'ismeretlen') warnings.push(`${f.id}: értelmezhetetlen Döntés sor: "${d.raw}"`);
-        if (d.kind === 'backlog' && !h) warnings.push(`${f.id}: "Döntés: backlog ${d.slug}", de nincs ilyen élő tétel és a történetben sem zárult`);
+        if (d.kind === 'backlog' && !h && !liveSlugs.has(d.slug)) warnings.push(`${f.id}: "Döntés: backlog ${d.slug}", de nincs ilyen élő tétel és a történetben sem zárult`);
         if (d.kind === 'duplikátum' && !known.has(d.target)) warnings.push(`${f.id}: duplikátum-cél nem létezik: review:${d.target}`);
         if (h && h.state !== d.kind && !(d.kind === 'backlog' && h.state === 'javítva')) {
           warnings.push(`${f.id}: a történet szerint ${h.state} (${h.evidence}), a Döntés sor szerint ${d.kind}`);
