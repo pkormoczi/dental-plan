@@ -111,6 +111,7 @@ kiolvasásával firsthand megerősítette (lásd 1. megállapítás).
   kötődni, és nem tud véletlenül egy másik létező páciens nevét viselő,
   de az eredeti páciens azonosító adataival mentett dokumentumot
   létrehozni anélkül, hogy erről explicit figyelmeztetést kapna.
+- Döntés: backlog masolas-uj-tervbe-egy-masik (2026-09-09)
 
 ### 2. Seed-elt, korábban véglegesített terveknél nincs mentett PDF — a hibaüzenet nem különbözteti meg a demó-korlátot egy valódi hibától
 
