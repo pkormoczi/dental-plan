@@ -103,6 +103,7 @@ A persona Horváth Péternél (meglévő, két verziós német/eurós terv-lánc
 - Jelenlegi kerülőút: n/a.
 - Javasolt javítási irány: fejlesztői, kézi böngészős újrateszt a `NumberField`-en, hogy kizárja/megerősítse, hogy a jelenség kizárólag automatizálási műtermék.
 - Siker mércéje: egy fejlesztő kézi billentyűzettel nem tudja reprodukálni a jelenséget — ha mégis tudja, ez önálló, magasabb súlyosságú tétellé válik.
+- Döntés: javítva numberfield-penzmezo-megerosites (2026-09-09)
 
 ## 3. Nehezen felfedezhető vagy kihasználatlan funkciók
 
