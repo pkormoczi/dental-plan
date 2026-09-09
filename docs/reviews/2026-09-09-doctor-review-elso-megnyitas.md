@@ -218,6 +218,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
 - Siker mércéje: 8 fölötti darabszámnál az előnézeten jelzés áll, amiről egy kattintással
   a sorhoz lehet ugrani; a véglegesítés nem blokkolt.
 - Backlog: `darabszam-ellenorzes`
+- Döntés: backlog darabszamnak-nincs-felso-korlatja-es (2026-09-09)
 
 ### 5. A kedvezmény nem jelenik meg a nyomtatványon, és a szerkesztő nem mondja meg előre
 
