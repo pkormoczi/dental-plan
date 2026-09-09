@@ -28,7 +28,7 @@ A forgatókönyv indulásakor egy előkészített, tartalmas piszkozat várta a 
 - Jelenlegi kerülőút: tudatosan mindig a Kezdőlap "+ Új kezelési terv" gombján keresztül indítani új tervet, soha nem közvetlenül egy még terv nélküli páciens saját adatlapjáról — ez azonban nem magától értetődő, és egy másik felhasználó (asszisztens, helyettesítő orvos) valószínűleg nem fedezné fel ezt a különbséget, mielőtt egyszer már veszítene valamit.
 - Javasolt javítási irány: a `startFirstPlan()` (`PatientDetailPage.tsx`) is menjen át a meglévő `usePlanVersionActions().inditas({ kind: 'ujTerv', ... })` úton, vagy legalább hívja meg közvetlenül a `kellMegerosites`/`vanMentetlenPiszkozat` ellenőrzést és mutassa meg ugyanazt az AlertDialog-ot — egyetlen, közös védelmi út minden "új terv indítása" művelethez, nem négy, egymástól függetlenül karbantartott hely.
 - Siker mércéje: egy terv nélküli páciens "+ Új terv" gombja is felugrasztja a "Piszkozat felülírása" megerősítést, ha van bárhonnan aktív, mentetlen piszkozat — ugyanúgy, mint a Kezdőlap gombja.
-- Döntés: backlog egy-terv-nelkuli-paciens-uj (2026-09-09)
+- Döntés: elvetve: a 83df528 (2026-09-04) óta a PatientDetailPage üres-állapot »+ Új terv« gombja is usePlanVersionActions().inditas()-t hív, a leírt hiba nem reprodukálható (2026-09-09)
 
 ### 2. Az "+ Új páciens" gyorsfelvétel-dialógus elveszíti a begépelt nevet megszakításkor
 
