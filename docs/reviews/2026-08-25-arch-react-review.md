@@ -56,7 +56,7 @@ Confidence: High
 Status: NEW
 Category: Data architecture / test coverage
 Location: `app/src/domain/validate.ts` (all of it); consumed by `storage/DemoStorage.ts` `loadPlan`/`loadPriceList`/`loadSettings`/`loadPatientData`/`migratePatientLegacyLayout`
-- Döntés: backlog domain-validate-ts-json-shape (2026-09-09)
+- Döntés: javítva domain-validate-ts-json-shape (2026-09-09)
 
 Evidence:
 `validate.ts` has no `validate.test.ts`, and a repo-wide search for its exports (`assertPlanShape`, `assertPriceListShape`, `assertSettingsShape`, `assertPatientMasterDataShape`, `ValidationError`) inside any `*.test.ts` file returns zero matches — not even indirectly through `storage/DemoStorage.test.ts`, which exercises `loadPlan`/`loadPriceList` extensively but apparently never with malformed input. Every other module in `domain/` that CLAUDE.md documents as a "don't reinvent this" cross-cutting rule has a co-located test file; this is the one exception, and it happens to be the module load-time integrity depends on.

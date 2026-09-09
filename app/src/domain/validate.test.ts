@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { assertPlanShape, assertPriceListShape, ValidationError } from './validate';
+import {
+  assertPatientMasterDataShape,
+  assertPlanShape,
+  assertPriceListShape,
+  assertSettingsShape,
+  ValidationError,
+} from './validate';
 
 function planWith(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -98,5 +104,172 @@ describe('assertPriceListShape — tört pénzérték', () => {
       assertPriceListShape(priceListWith({ tipus: 'SAVOS', min: 10000, max: 20000 })),
     ).not.toThrow();
     expect(() => assertPriceListShape({ kategoriak: [], tetelek: [{ id: 'x1', ar: {} }] })).not.toThrow();
+  });
+});
+
+describe('assertPriceListShape — szerkezeti hibák', () => {
+  it('nem objektum adaton bukik', () => {
+    expect(() => assertPriceListShape(null)).toThrow(/nem objektum/);
+    expect(() => assertPriceListShape('x')).toThrow(/nem objektum/);
+  });
+
+  it('hiányzó vagy nem tömb "kategoriak" mezőn bukik', () => {
+    expect(() => assertPriceListShape({ tetelek: [] })).toThrow(/"kategoriak" mező/);
+    expect(() => assertPriceListShape({ kategoriak: {}, tetelek: [] })).toThrow(/"kategoriak" mező/);
+  });
+
+  it('hiányzó vagy nem tömb "tetelek" mezőn bukik', () => {
+    expect(() => assertPriceListShape({ kategoriak: [] })).toThrow(/"tetelek" mező/);
+    expect(() => assertPriceListShape({ kategoriak: [], tetelek: {} })).toThrow(/"tetelek" mező/);
+  });
+
+  it('nem objektum tétel elemen bukik', () => {
+    expect(() => assertPriceListShape({ kategoriak: [], tetelek: [null] })).toThrow(
+      /tetelek\[0\] nem objektum/,
+    );
+  });
+
+  it('hiányzó tétel-id-n bukik', () => {
+    expect(() => assertPriceListShape({ kategoriak: [], tetelek: [{ ar: {} }] })).toThrow(
+      /tetelek\[0\]\.id hiányzik/,
+    );
+  });
+
+  it('hiányzó tétel-ar-on bukik', () => {
+    expect(() => assertPriceListShape({ kategoriak: [], tetelek: [{ id: 'x1' }] })).toThrow(
+      /tetelek\[0\]\.ar hiányzik/,
+    );
+  });
+
+  it('ismeretlen ar.tipus-on bukik', () => {
+    expect(() => assertPriceListShape(priceListWith({ tipus: 'PERCENT' }))).toThrow(
+      /ar\.HUF\.tipus ismeretlen \("PERCENT"\)/,
+    );
+  });
+
+  it('az érvényes minimál-alakot elfogadja', () => {
+    expect(() => assertPriceListShape({ kategoriak: [], tetelek: [] })).not.toThrow();
+  });
+});
+
+describe('assertPlanShape — szerkezeti hibák', () => {
+  it('nem objektum adaton bukik', () => {
+    expect(() => assertPlanShape(null)).toThrow(/nem objektum/);
+  });
+
+  it('hiányzó "tervId" mezőn bukik', () => {
+    expect(() => assertPlanShape(planWith({ tervId: undefined }))).toThrow(/"tervId" mező/);
+  });
+
+  it('hiányzó vagy nem tömb "fazisok" mezőn bukik', () => {
+    expect(() => assertPlanShape(planWith({ fazisok: undefined }))).toThrow(/"fazisok" mező/);
+    expect(() => assertPlanShape(planWith({ fazisok: {} }))).toThrow(/"fazisok" mező/);
+  });
+
+  it('nem objektum fázis-elemen bukik', () => {
+    expect(() => assertPlanShape(planWith({ fazisok: [null] }))).toThrow(/fazisok\[0\] nem objektum/);
+  });
+
+  it('hiányzó vagy nem tömb "sorok" mezőn bukik', () => {
+    expect(() => assertPlanShape(planWith({ fazisok: [{}] }))).toThrow(
+      /fazisok\[0\]\.sorok hiányzik vagy nem tömb/,
+    );
+    expect(() => assertPlanShape(planWith({ fazisok: [{ sorok: {} }] }))).toThrow(
+      /fazisok\[0\]\.sorok hiányzik vagy nem tömb/,
+    );
+  });
+
+  it('nem objektum sor-elemen bukik', () => {
+    expect(() => assertPlanShape(planWith({ fazisok: [{ sorok: [null] }] }))).toThrow(
+      /fazisok\[0\]\.sorok\[0\] nem objektum/,
+    );
+  });
+
+  it('nem véges "mennyiseg"-en bukik', () => {
+    expect(() => assertPlanShape(sorWith({ mennyiseg: undefined }))).toThrow(
+      /sorok\[0\]\.mennyiseg nem véges szám/,
+    );
+    expect(() => assertPlanShape(sorWith({ mennyiseg: 'egy' }))).toThrow(
+      /sorok\[0\]\.mennyiseg nem véges szám/,
+    );
+  });
+
+  it('hiányzó "osszesitok" mezőn bukik', () => {
+    expect(() => assertPlanShape(planWith({ osszesitok: undefined }))).toThrow(/"osszesitok" mező/);
+  });
+
+  it('az érvényes minimál-alakot elfogadja', () => {
+    expect(() => assertPlanShape(planWith())).not.toThrow();
+  });
+});
+
+describe('assertSettingsShape', () => {
+  function settingsWith(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return { rendelo: {}, orvosok: [], ervenyessegNap: 30, ...overrides };
+  }
+
+  it('nem objektum adaton bukik', () => {
+    expect(() => assertSettingsShape(null)).toThrow(/nem objektum/);
+  });
+
+  it('hiányzó "rendelo" mezőn bukik', () => {
+    expect(() => assertSettingsShape(settingsWith({ rendelo: undefined }))).toThrow(/"rendelo" mező/);
+  });
+
+  it('hiányzó vagy nem tömb "orvosok" mezőn bukik', () => {
+    expect(() => assertSettingsShape(settingsWith({ orvosok: undefined }))).toThrow(/"orvosok" mező/);
+    expect(() => assertSettingsShape(settingsWith({ orvosok: {} }))).toThrow(/"orvosok" mező/);
+  });
+
+  it('nem tömb "inaktivOrvosok" mezőn bukik, ha jelen van', () => {
+    expect(() => assertSettingsShape(settingsWith({ inaktivOrvosok: {} }))).toThrow(
+      /"inaktivOrvosok" nem tömb/,
+    );
+  });
+
+  it('nem véges "ervenyessegNap"-on bukik', () => {
+    expect(() => assertSettingsShape(settingsWith({ ervenyessegNap: undefined }))).toThrow(
+      /"ervenyessegNap" nem véges szám/,
+    );
+  });
+
+  it('az érvényes minimál-alakot elfogadja, "inaktivOrvosok" nélkül is', () => {
+    expect(() => assertSettingsShape(settingsWith())).not.toThrow();
+    expect(() => assertSettingsShape(settingsWith({ inaktivOrvosok: ['o1'] }))).not.toThrow();
+  });
+});
+
+describe('assertPatientMasterDataShape', () => {
+  function masterDataWith(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return { paciensId: 'p1', nev: 'Teszt Elek', kiskoru: false, ...overrides };
+  }
+
+  it('nem objektum adaton bukik', () => {
+    expect(() => assertPatientMasterDataShape(null)).toThrow(/nem objektum/);
+  });
+
+  it('hiányzó "paciensId" mezőn bukik', () => {
+    expect(() => assertPatientMasterDataShape(masterDataWith({ paciensId: '' }))).toThrow(
+      /"paciensId" mező/,
+    );
+    expect(() => assertPatientMasterDataShape(masterDataWith({ paciensId: undefined }))).toThrow(
+      /"paciensId" mező/,
+    );
+  });
+
+  it('hiányzó "nev" mezőn bukik', () => {
+    expect(() => assertPatientMasterDataShape(masterDataWith({ nev: undefined }))).toThrow(
+      /"nev" mező/,
+    );
+  });
+
+  it('nem logikai "kiskoru"-n bukik', () => {
+    expect(() => assertPatientMasterDataShape(masterDataWith({ kiskoru: undefined }))).toThrow(
+      /"kiskoru" nem logikai érték/,
+    );
+  });
+
+  it('az érvényes minimál-alakot elfogadja', () => {
+    expect(() => assertPatientMasterDataShape(masterDataWith())).not.toThrow();
   });
 });
