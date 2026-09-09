@@ -146,6 +146,10 @@ alfa-kompozitálás kell.
     // állandó cellakeret helyett sor-hover + `:focus-visible` gyűrű jelzi őket
     // (`index.css` `.arlista-tabla`) -- elrendezési döntés, nem hiányzó keret.
     if (el.tagName === 'TH' && el.closest('.arlista-tabla')) continue;
+    // A tabból kivett léptető (`NumberField` ▲/▼) a mező SAJÁT keretén belül ül, és
+    // nem önállóan operálható kontroll -- a mező kerete jelöli, saját keret nélkül.
+    // Szándékos, lásd app/src/CLAUDE.md; nem hiányzó keret.
+    if (el.tagName === 'BUTTON' && el.tabIndex < 0) continue;
     if (el.disabled || el.getAttribute('data-disabled') === 'true' || el.getAttribute('aria-disabled') === 'true') continue; // WCAG 1.4.11 letiltott kontrollra nem kötelező
     if (isChecked(el)) {
       // bejelölt radio/checkbox/switch: a Radix checked-szabálya csak a
@@ -189,6 +193,13 @@ ha ez mégis `control-no-border`-ként jelenik meg, az valódi hiányt jelez, ne
 A `#/arlista` `.arlista-tabla` sorfejléc-cellái külön, nem osztály-alapú kihagyás: ott a
 kattinthatóságot elrendezési döntésből sor-hover és `:focus-visible` gyűrű jelzi, nem ~118
 állandó cellakeret.
+
+A tabból kivett gomb (`tabIndex < 0`) szintén kihagyás, nem osztály alapján: ma egyedül a
+`NumberField` ▲/▼ léptetője ilyen, ami a mező saját `controlBorder` keretén BELÜL ül, tehát
+a mező kerete jelöli. 2026-09-09-ig `control-no-border`-ként jelent meg a `#/terv`-en; a doki
+döntése, hogy ez szándékos, nem hiány — ne nyíljon rá újra backlog-tétel. A szabály a
+fókuszálhatóságra épül, nem feliratra: ha egyszer egy tabbal elérhető gomb marad keret és
+kitöltés nélkül, az továbbra is találat.
 
 ## Fókuszgyűrű
 
