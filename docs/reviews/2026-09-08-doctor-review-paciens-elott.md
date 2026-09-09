@@ -73,6 +73,7 @@ A fő ügynök ezen felül egy szisztematikus rontás-próbát is végzett (2c s
 - Javasolt javítási irány: egy rövid, halvány placeholder vagy segédszöveg az Ajánlati ár mező mellett/alatt (pl. „…vagy −10%"), hogy a képesség első használat előtt is felfedezhető legyen.
 - Siker mércéje: egy első alkalommal használó doki a papíron szereplő „10% kedv." szöveget minden fejszámolás nélkül, közvetlenül be tudja gépelni az Ajánlati ár mezőbe.
 - Backlog: `kedvezmeny-szazalek-gyorsiras-nem-felfedezheto` (chore/UX — a `952acf2` már megoldotta a számítást, csak a felfedezhetőség hiányzik)
+- Döntés: backlog nincs-kedvezmeny-szazalek-mezo-mar (2026-09-09)
 
 ### 4. „Mentsem a páciens adatlapjára is?" — zavaró és duplán jelzett figyelmeztetés egy már korábbi tervekkel rendelkező páciensnél
 
