@@ -35,7 +35,7 @@ import { Field, ReadOnlyField } from './Field';
 import { useDirtyDraft } from './useDirtyDraft';
 import { usePaciensDuplikacio } from './usePaciensDuplikacio';
 import { t } from '../design/tokens';
-import { formatShortDate, todayIso } from '../domain/date';
+import { formatLongDate, formatShortDate, todayIso } from '../domain/date';
 import { megjelenitettTorzsadat } from '../domain/paciensAdatok';
 import type { DuplikaciosJelolt } from '../domain/paciensDuplikacio';
 import { emailHiba, szuletesiIdoHiba } from '../domain/paciensValidacio';
@@ -261,7 +261,7 @@ export default function PatientEditorPanel({
       <Grid columns="2" gap="3" mt="3">
         <Field
           label="Született"
-          olvashatoErtek={draft.szuletesiIdo ? formatShortDate(draft.szuletesiIdo, 'hu') : undefined}
+          olvashatoErtek={draft.szuletesiIdo ? formatLongDate(draft.szuletesiIdo, 'hu') : undefined}
         >
           <TextField.Root
             id="patient-editor-szuletesiido"

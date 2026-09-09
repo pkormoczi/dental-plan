@@ -37,7 +37,7 @@ import { felvettNevAllapotbol, PaciensFelvetelJelzo } from '../components/Pacien
 import { usePaciensKotes } from '../components/PaciensKotesContext';
 import Section from '../components/Section';
 import { lefedettseg } from '../domain/coverage';
-import { addDaysIso, formatLongDate, formatShortDate, todayIso } from '../domain/date';
+import { addDaysIso, formatLongDate, todayIso } from '../domain/date';
 import { alapertelmezettPenznem } from '../domain/beallitasok';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import { aktivOrvosok } from '../domain/orvosok';
@@ -330,7 +330,7 @@ export default function PatientPage() {
         <Grid columns="2" gap="3">
           <Field
             label="Született"
-            olvashatoErtek={paciens.szuletesiIdo ? formatShortDate(paciens.szuletesiIdo, 'hu') : undefined}
+            olvashatoErtek={paciens.szuletesiIdo ? formatLongDate(paciens.szuletesiIdo, 'hu') : undefined}
           >
             <TextField.Root
               id="paciens-szuletesiido"

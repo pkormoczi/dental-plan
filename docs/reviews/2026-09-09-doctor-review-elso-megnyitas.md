@@ -375,7 +375,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   nyelvfüggés miatt a mérés a `/manual-checks` hatásköre.
 - Siker mércéje: a mező és az alatta lévő szöveg ugyanabban a sorrendben mutatja a napot.
 - Backlog: a `9275791` folytatása (meglévő terület)
-- Döntés: backlog datummezok-amerikai-sorrendben-magyar-alak (2026-09-09)
+- Döntés: javítva datummezok-amerikai-sorrendben-magyar-alak (2026-09-09)
 
 ### 11. A „Csak ajánlat" felirat mást ígér, mint amit csinál
 

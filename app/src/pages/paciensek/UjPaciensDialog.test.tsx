@@ -125,14 +125,14 @@ describe('UjPaciensDialog', () => {
 
   // A natív `type="date"` mezőt a Chrome a saját FELÜLET-nyelvéből formázza --
   // a magyar alak a mező alatt, olvasható szövegként áll.
-  it('a "Született" mező alatt magyar alakban áll a beírt dátum, üres mezőnél semmi', async () => {
+  it('a "Született" mező alatt hónapnévvel áll a beírt dátum, üres mezőnél semmi', async () => {
     renderHarness(syntheticPatients(0, ''));
     const szuletesiIdoInput = await screen.findByLabelText('Született');
-    expect(screen.queryByText('1978.03.14.')).toBeNull();
+    expect(screen.queryByText('1978. március 14.')).toBeNull();
 
     fireEvent.change(szuletesiIdoInput, { target: { value: '1978-03-14' } });
 
-    expect(await screen.findByText('1978.03.14.')).toBeInTheDocument();
+    expect(await screen.findByText('1978. március 14.')).toBeInTheDocument();
     expect(screen.getByLabelText('Született')).toBe(szuletesiIdoInput);
   });
 

@@ -1662,15 +1662,15 @@ describe('PatientPage -- dátumok szekció', () => {
     expect(await screen.findByText('2026. december 4.')).toBeInTheDocument();
   });
 
-  it('a "Született" mező alatt rövid magyar alakban áll az érték, üres mezőnél semmi', async () => {
+  it('a "Született" mező alatt hónapnévvel áll az érték, üres mezőnél semmi', async () => {
     renderPatient();
     const szuletesiIdoInput = (await screen.findByLabelText('Született')) as HTMLInputElement;
     expect(szuletesiIdoInput).toHaveValue('');
-    expect(screen.queryByText('1978.03.14.')).toBeNull();
+    expect(screen.queryByText('1978. március 14.')).toBeNull();
 
     fireEvent.change(szuletesiIdoInput, { target: { value: '1978-03-14' } });
 
-    expect(await screen.findByText('1978.03.14.')).toBeInTheDocument();
+    expect(await screen.findByText('1978. március 14.')).toBeInTheDocument();
     // A címke továbbra is az INPUT-ot azonosítja, nem az alatta álló szöveget.
     expect(screen.getByLabelText('Született')).toBe(szuletesiIdoInput);
   });

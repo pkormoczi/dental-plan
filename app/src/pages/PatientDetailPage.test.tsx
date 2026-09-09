@@ -202,7 +202,7 @@ describe('PatientDetailPage', () => {
   // PatientEditorPanel alján nincs tükör-link ugyanerre.
   // A natív `type="date"` mezőt a Chrome a saját FELÜLET-nyelvéből formázza --
   // a magyar alak a szerkesztő mezője alatt, olvasható szövegként áll.
-  it('a szerkesztő "Született" mezője alatt magyar alakban áll a dátum', async () => {
+  it('a szerkesztő "Született" mezője alatt hónapnévvel áll a dátum', async () => {
     const user = userEvent.setup();
     renderDetail(nagyDir, { tab: 'adatai' });
 
@@ -210,7 +210,7 @@ describe('PatientDetailPage', () => {
     const input = (await screen.findByLabelText('Született')) as HTMLInputElement;
     fireEvent.change(input, { target: { value: '1978-03-14' } });
 
-    expect(await screen.findByText('1978.03.14.')).toBeInTheDocument();
+    expect(await screen.findByText('1978. március 14.')).toBeInTheDocument();
     expect(screen.getByLabelText('Született')).toBe(input);
   });
 
