@@ -122,6 +122,9 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
     reset: resetTemplateDrafts,
   } = useDirtyDraft<Record<string, string>>(savedTemplateTexts);
   const cancelTemplatesGuard = useDiscardGuard(templatesDirty);
+  // A megerősítés bezárása után ide kell visszaesnie a fókusznak -- lásd a
+  // `DiscardChangesDialog` `visszaFokuszRef` kommentjét.
+  const cancelVisszaFokuszRef = useRef<HTMLElement | null>(null);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [templateLoadError, setTemplateLoadError] = useState<string | null>(null);
   const templateJelzo = useMentesJelzo();
@@ -336,7 +339,10 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
           type="button"
           variant="soft"
           color="gray"
-          onClick={() => cancelTemplatesGuard.request(handleCancelTemplates)}
+          onClick={() => {
+            cancelVisszaFokuszRef.current = document.activeElement as HTMLElement | null;
+            cancelTemplatesGuard.request(handleCancelTemplates);
+          }}
           disabled={templatesLoading || templateJelzo.saving || !templatesDirty}
         >
           Mégse
@@ -359,6 +365,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
         title="Nem mentett módosítás"
         description="Minden nyelven/szövegen elveted a nem mentett módosításokat — ez nem vonható vissza."
         confirmLabel="Elvetés"
+        visszaFokuszRef={cancelVisszaFokuszRef}
       />
     </>
   );

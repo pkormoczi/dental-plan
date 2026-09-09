@@ -924,4 +924,22 @@ describe('PlanEditorPage -- backlog-32: piszkozat-mentés jelzés és eldobás',
     expect(screen.queryByDisplayValue('Fogeltávolítás')).not.toBeInTheDocument();
     await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).toBeNull());
   });
+
+  it('a "Piszkozat eldobása" ablakot Escape-pel zárva a fókusz a megnyitó gombra tér vissza, nem a body-ra', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    const eldobasGomb = screen.getByRole('button', { name: 'Piszkozat eldobása' });
+    await user.click(eldobasGomb);
+    expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(eldobasGomb).toHaveFocus());
+  });
 });

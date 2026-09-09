@@ -63,6 +63,11 @@ export default function PlanEditorPage() {
   // AlertDialog-ját lent: két külön Root, mert egyszerre csak az egyik
   // vonatkozó `open`-állapot kell.
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  // A megerősítés Escape-es bezárása után ide kell visszaesnie a fókusznak,
+  // ne a <body>-ra -- lásd a `components/DiscardChangesDialog.tsx`
+  // `visszaFokuszRef` kommentjét: kontrollált (trigger nélküli) AlertDialog-
+  // nál a Radix beépített visszafókuszálása nem fut le.
+  const discardVisszaFokuszRef = useRef<HTMLElement | null>(null);
   // P1-7: index-kulcs helyett -- fázistörléskor a maradék PhaseSection-ok
   // pozíciója (pi) eltolódik, és egy sima `key={pi}` React-remount nélkül
   // ugyanazt a DOM-csomópontot (és benne az ItemPicker lokális kereső-
@@ -377,7 +382,10 @@ export default function PlanEditorPage() {
         piszkozatMentve={piszkozatMentve}
         piszkozatHiba={piszkozatHiba}
         piszkozatKonfliktus={piszkozatKonfliktus != null}
-        onDiscard={() => setConfirmDiscard(true)}
+        onDiscard={() => {
+          discardVisszaFokuszRef.current = document.activeElement as HTMLElement | null;
+          setConfirmDiscard(true);
+        }}
       />
 
       {/* Korábbi terv új verzióra nyitása (dátum betöltéskor bélyegezve, lásd
@@ -631,7 +639,13 @@ export default function PlanEditorPage() {
         open={confirmDiscard}
         onOpenChange={(open) => !open && setConfirmDiscard(false)}
       >
-        <AlertDialog.Content maxWidth="440px">
+        <AlertDialog.Content
+          maxWidth="440px"
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            requestAnimationFrame(() => discardVisszaFokuszRef.current?.focus());
+          }}
+        >
           <AlertDialog.Title>Piszkozat eldobása</AlertDialog.Title>
           <AlertDialog.Description size="2">
             A teljes piszkozat elvész, ez nem vonható vissza. Folytatod?

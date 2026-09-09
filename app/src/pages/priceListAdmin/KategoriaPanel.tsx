@@ -6,7 +6,7 @@
 // szinkronizálva fölfelé) -- ez a protokoll csak akkor olvasható, ha egy
 // fejléc-komment mindkét felét egy helyen magyarázza.
 
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Box, Button, Flex, Grid, RadioCards, Table, Text } from '@radix-ui/themes';
 import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, ChevronRightIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Field, FieldGroup } from '../../components/Field';
@@ -54,8 +54,12 @@ export default function KategoriaPanel({
   // A többi Mentés/Mégse-őrzött felület mintája: ugyanez a dirty
   // jelző a NavBar-navigációt is védi.
   useNavGuard(dirty);
+  // A megerősítés bezárása után ide kell visszaesnie a fókusznak -- lásd a
+  // `DiscardChangesDialog` `visszaFokuszRef` kommentjét.
+  const visszaFokuszRef = useRef<HTMLElement | null>(null);
 
   function requestClose() {
+    visszaFokuszRef.current = document.activeElement as HTMLElement | null;
     guard.request(() => {
       setDirty(false);
       onOpenChange(false);
@@ -94,6 +98,7 @@ export default function KategoriaPanel({
         title="Nem mentett módosítás"
         description="A Kategóriák panelen nem mentett módosításod van. Ha becsukod, ez elvész — csak a Mentés gomb rögzíti. Biztosan folytatod?"
         confirmLabel="Becsukás, módosítás elvetésével"
+        visszaFokuszRef={visszaFokuszRef}
       />
     </Box>
   );

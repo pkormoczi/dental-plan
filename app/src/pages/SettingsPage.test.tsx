@@ -388,8 +388,13 @@ describe('SettingsPage', () => {
       await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
 
       expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
+      const rendeloTab = screen.getByRole('tab', { name: /Rendelő adatai/ });
+      expect(rendeloTab).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByLabelText('Név')).toHaveValue('Dr. Mándoki Fogászat Kft.');
+      // A fókusz a maradó (kiválasztott) fülre tér vissza, nem a <body>-ra --
+      // és nem a kattintott célfülre, ami a Radix Tabs automatikus
+      // aktiválása miatt újranyitná ezt a guardot.
+      await waitFor(() => expect(rendeloTab).toHaveFocus());
     });
 
     it('dirty Rendelő adatai piszkozattal "Váltás, módosítás elvetésével" tényleg vált, és a piszkozat elvész', async () => {

@@ -391,7 +391,12 @@ describe('PatientDetailPage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(screen.getByDisplayValue('ideiglenes érték')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Páciens adatai/ })).toHaveAttribute('aria-selected', 'true');
+    const adataiTab = screen.getByRole('tab', { name: /Páciens adatai/ });
+    expect(adataiTab).toHaveAttribute('aria-selected', 'true');
+    // A fókusz a maradó (kiválasztott) fülre tér vissza, nem a <body>-ra --
+    // és nem a kattintott célfülre, ami a Radix Tabs automatikus
+    // aktiválása miatt újranyitná ezt a guardot.
+    await waitFor(() => expect(adataiTab).toHaveFocus());
   });
 
   it('mentetlen módosítással tabot váltva a megerősítés után elveszik a piszkozat', async () => {

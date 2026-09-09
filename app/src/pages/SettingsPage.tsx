@@ -10,7 +10,7 @@
 // `NavGuardContext` egy-boolean invariánsa, ide is érvényes), a mindenkori aktív tab tölti fel az
 // `onDirtyChange` callbacken át.
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box, Heading, Tabs } from '@radix-ui/themes';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
@@ -40,9 +40,22 @@ export default function SettingsPage() {
   const guard = useDiscardGuard(dirty);
   // Ugyanez a dirty jelző a NavBar-navigációt is védi.
   useNavGuard(dirty);
+  // A megerősítés bezárása után ide kell visszaesnie a fókusznak -- lásd a
+  // `DiscardChangesDialog` `visszaFokuszRef` kommentjét.
+  const visszaFokuszRef = useRef<HTMLElement | null>(null);
 
   function requestTab(next: SettingsTab) {
+    // NEM a kattintott (még nem kiválasztott) célfülre -- a Radix `Tabs`
+    // automatikus aktiválása a fókuszt kiválasztásnak veszi, ez Mégse után
+    // azonnal újranyitná ezt a guardot. A kiválasztás Mégse-nél változatlan
+    // marad, a fókusz oda tér vissza.
+    visszaFokuszRef.current = document.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
     guard.request(() => {
+      // Tényleges váltásnál (nem Mégse) a fenti fül már NEM a kiválasztott --
+      // ide visszafókuszálni ugyanúgy újraaktiválná (lásd fent), csak most a
+      // FRISS váltást vonná vissza. A guard.confirm() ezt az apply-t
+      // szinkron, a dialógus bezárása (és az auto-fókusz) ELŐTT futtatja.
+      visszaFokuszRef.current = null;
       // A Nyomtatványok tab piszkozat-cache-e (`dp:sablon-piszkozat`) túléli
       // az unmountot -- elvetéskor explicit törölni kell, különben egy F5 a
       // tab-váltás UTÁN visszahozná a már elvetett szöveget.
@@ -85,6 +98,7 @@ export default function SettingsPage() {
         title="Nem mentett módosítás"
         description="Ezen a lapon nem mentett módosításod van. Ha másik fülre váltasz, ez elvész — csak a Mentés gomb rögzíti. Biztosan folytatod?"
         confirmLabel="Váltás, módosítás elvetésével"
+        visszaFokuszRef={visszaFokuszRef}
       />
     </Box>
   );

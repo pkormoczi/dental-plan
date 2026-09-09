@@ -10,7 +10,7 @@
 // A `PatientPage.tsx`/`/paciens` (aktív draft nyelve/pénzneme/pillanatkép)
 // EZ NEM AZ -- az explicit KÍVÜL, nem ennek a tabnak a felelőssége.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   AlertDialog,
@@ -100,9 +100,22 @@ export default function PatientDetailPage() {
   // NavGuardContext-en keresztül -- a NavBar a MEGLÉVŐ guard-primitívvel
   // fogja el a kattintást, ez a hook csak regisztrál.
   useNavGuard(dirtyAdatai);
+  // A megerősítés bezárása után ide kell visszaesnie a fókusznak -- lásd a
+  // `DiscardChangesDialog` `visszaFokuszRef` kommentjét.
+  const visszaFokuszRef = useRef<HTMLElement | null>(null);
 
   function requestTab(next: DetailTab) {
+    // NEM a kattintott (még nem kiválasztott) célfülre -- a Radix `Tabs`
+    // automatikus aktiválása a fókuszt kiválasztásnak veszi, ez Mégse után
+    // azonnal újranyitná ezt a guardot. A kiválasztás Mégse-nél változatlan
+    // marad, a fókusz oda tér vissza.
+    visszaFokuszRef.current = document.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
     guard.request(() => {
+      // Tényleges váltásnál (nem Mégse) a fenti fül már NEM a kiválasztott --
+      // ide visszafókuszálni ugyanúgy újraaktiválná (lásd fent), csak most a
+      // FRISS váltást vonná vissza. A guard.confirm() ezt az apply-t
+      // szinkron, a dialógus bezárása (és az auto-fókusz) ELŐTT futtatja.
+      visszaFokuszRef.current = null;
       setDirtyAdatai(false);
       // A panel unmountol egy tab-váltásnál -- egy oda-vissza váltás nélküle
       // újra szerkesztés módban nyitná meg a "Páciens adatai" tabot.
@@ -199,7 +212,10 @@ export default function PatientDetailPage() {
       variant="ghost"
       color="gray"
       mb="3"
-      onClick={() => guard.request(() => navigate(-1))}
+      onClick={() => {
+        visszaFokuszRef.current = document.activeElement as HTMLElement | null;
+        guard.request(() => navigate(-1));
+      }}
     >
       <ArrowLeftIcon />
       Vissza
@@ -399,6 +415,7 @@ export default function PatientDetailPage() {
         title="Nem mentett módosítás"
         description="A Páciens adatai lapon van nem mentett módosításod. Ha lapot váltasz, ez elvész — csak a Mentés gomb rögzíti az adatlapon. Biztosan folytatod?"
         confirmLabel="Váltás, módosítás elvetésével"
+        visszaFokuszRef={visszaFokuszRef}
       />
 
       <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>

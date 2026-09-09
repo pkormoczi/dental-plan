@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useNavigate, type NavigateFunction, NavLink } from 'react-router-dom';
 import DiscardChangesDialog, { useDiscardGuard } from './DiscardChangesDialog';
 import { useNavGuardState } from './NavGuardContext';
@@ -40,9 +41,13 @@ function handleLinkClick(
   dirty: boolean,
   navigate: NavigateFunction,
   requestNavigation: (apply: () => void) => void,
+  visszaFokuszRef: React.RefObject<HTMLElement | null>,
 ) {
   if (!dirty) return;
   e.preventDefault();
+  // A kattintott link marad a fókuszban a megerősítés bezárása után -- lásd
+  // a `DiscardChangesDialog` `visszaFokuszRef` kommentjét.
+  visszaFokuszRef.current = document.activeElement as HTMLElement | null;
   requestNavigation(() => navigate(to));
 }
 
@@ -50,6 +55,7 @@ export default function NavBar() {
   const { dirty } = useNavGuardState();
   const navigate = useNavigate();
   const guard = useDiscardGuard(dirty);
+  const visszaFokuszRef = useRef<HTMLElement | null>(null);
 
   return (
     <nav
@@ -84,7 +90,7 @@ export default function NavBar() {
           to={link.to}
           end={link.to === '/'}
           style={({ isActive }) => navLinkStyle(isActive)}
-          onClick={(e) => handleLinkClick(e, link.to, dirty, navigate, guard.request)}
+          onClick={(e) => handleLinkClick(e, link.to, dirty, navigate, guard.request, visszaFokuszRef)}
         >
           {link.label}
         </NavLink>
@@ -97,6 +103,7 @@ export default function NavBar() {
         title="Nem mentett módosítás"
         description="Van nem mentett módosításod. Ha elnavigálsz, ez elvész — csak a Mentés gomb rögzíti. Biztosan folytatod?"
         confirmLabel="Váltás, módosítás elvetésével"
+        visszaFokuszRef={visszaFokuszRef}
       />
     </nav>
   );
