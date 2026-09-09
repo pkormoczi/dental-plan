@@ -483,34 +483,8 @@ szakasz diagramja. A kimaradt tétel mindig visszaesik a 10a. útra.
 
 ---
 
-## 12. A 2026-09-05-i review-k és ami lett belőlük
+## 12. Aktuális workflow-review
 
-**1. kör** (`docs/reviews/2026-09-05-backlog-flow-review.md`) és e fájl korábbi T1–T7 listája
-ugyanazt találta: a git-állapotátmenetek nem voltak kimondva.
-
-| Pont | Döntés |
-|---|---|
-| Tételfájl életciklusa (T1, T3, T4) | **átvéve** — `/idea`, `/plan` commit + azonnali push |
-| Helyi master mint push-queue; tételspecifikus push | **feloldva** — nincs várakozó commit, a `/push-backlog-item` megszűnt |
-| Branch/worktree + PR alapértelmezés | **elvetve** — master marad, a kézi kapu a munkafára került; a `--worktree` ág megmaradt |
-| Baseline két referenciája (T2) | **átvéve** — egy referencia, drift = app-diff |
-| Kapu rebase után (T7) | **átvéve** |
-| Prioritás | **átvéve, módosítva** — opcionális `Prio`, a doki írja, a `/backlog` legfeljebb 3 javaslatot tesz |
-| Review-skillek egységesítése (T5, T6) | **átvéve** — csak jelentés, nincs kódjavítás, `docs/reviews/` append-only |
-| Koreográfia, igazságforrás; hordozhatóság | **átvéve** — scriptek + vékonyabb skillek; `AGENTS.md` |
-
-**2. kör** (`docs/reviews/2026-09-05-backlog-flow-review-2.md`, a `7c714ae` állapotról): a
-maradék réseket a commit hatókörében, a folytathatóságban és az ellenőrzések sorrendjében találta.
-
-| Pont | Döntés |
-|---|---|
-| A fájlonkénti commit az egész indexet vitte; `close` `add -A` | **átvéve** — `commit-push` idegen-stage őr; `close` untracked-kör (`app/ docs/ data/ assets/`) |
-| `drift --set` × `git rm` (zöld kapu után megakadó lezárás) | **átvéve** — `--set` megszűnt, a Baseline nem íródik át; a `git rm` őr |
-| Megszakadt futás; `sync` kapu nélkül pusholt | **átvéve** — `sync` mindig kapuzik; `close` folytatás-mód |
-| Manual-check a doki jóváhagyása után | **átvéve** — az `/implement`-be, az átadás elé; a `/finish` visszaad viselkedésváltozásnál |
-| `/plan` baseline a ténylegesen vizsgált kódhoz | **átvéve** — sync az elején is, írás előtt app-diff |
-| Workflow-integrációs tesztek | **átvéve** — `workflow.test.mjs`, tíz eset, CI-ban |
-| Interjú arányosítása; `--quick` kockázat alapján | **átvéve** |
-| Prio használata; szerepek; célzott diff-review | **átvéve** — első Prio-kitöltés; „Szerepek" szakasz; `/implement` 5c |
-| CI PR-re, ha a worktree-ág aktív | **átvéve** — build-job `pull_request`-re, élesítés csak master-pushra |
-| Deploy eredményének ellenőrzése a `/finish` jelentésében | **elvetve** — a CI zöldje az Actions oldalon látszik, a Pages a dokinál |
+A ma is fennálló hibák, a javítási lehetőségek és az ellenőrzési bizonyítékok az
+[egységes backlog-flow review-ban](../docs/backlog-flow-review.md) szerepelnek.
+A jelentés döntés-előkészítő anyag; javaslatai önmagukban nem módosítják az itt leírt flow-t.

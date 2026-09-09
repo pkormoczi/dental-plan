@@ -98,7 +98,7 @@ Az F01–F12 alapja R1; R2 ezeket nagyrészt megerősítette. Az alábbi szöveg
 
 ### F01 — Súlyos: a PDF és a mentett JSON közös szerződését nem bizonyítja az automatikus készlet
 
-**Bizonyíték:** [App.test.tsx](../../app/src/App.test.tsx), [PreviewPage.test.tsx](../../app/src/pages/PreviewPage.test.tsx) és [PreviewPage.pdfHiba.test.tsx](../../app/src/pages/PreviewPage.pdfHiba.test.tsx) állandó vagy kézzel vezérelt `usePDF`-választ adnak, `%PDF-fake` tartalommal. A mock nem rendereli a neki átadott dokumentumot. A [TervDocument.test.tsx](../../app/src/pdf/TervDocument.test.tsx) külön teszteli a dokumentumot, de a PDF-primitíveket DOM-elemekre cseréli, az `Image` pedig `null`.
+**Bizonyíték:** [App.test.tsx](../app/src/App.test.tsx), [PreviewPage.test.tsx](../app/src/pages/PreviewPage.test.tsx) és [PreviewPage.pdfHiba.test.tsx](../app/src/pages/PreviewPage.pdfHiba.test.tsx) állandó vagy kézzel vezérelt `usePDF`-választ adnak, `%PDF-fake` tartalommal. A mock nem rendereli a neki átadott dokumentumot. A [TervDocument.test.tsx](../app/src/pdf/TervDocument.test.tsx) külön teszteli a dokumentumot, de a PDF-primitíveket DOM-elemekre cseréli, az `Image` pedig `null`.
 
 **Történeti termékhiba, azóta javítva:** R1 idején a JSON v1, a PDF v0 lehetett, mert a tároló a már elkészült PDF mentésekor osztott verziót. A `pdf-verzioszam-mentett-verzio` tétel javítása a `8f4d285` commitban, a tesztvárakozás korrekciója az `aebe32a` commitban szerepel; a tételfájl már nincs a backlogban. S ellenőrzésekor a `PreviewPage` előre foglalt azonosítót/verziót renderel, a `DemoStorage.doSavePlan` pedig elutasítja az eltérő, nem nulla verziót. Erre már célzott storage-tesztek is vannak.
 
@@ -112,28 +112,28 @@ Az F01–F12 alapja R1; R2 ezeket nagyrészt megerősítette. Az alábbi szöveg
 
 ### F02 — Súlyos: a betöltési validáció esetmátrixa lényegesen gyengébb a határ fontosságánál
 
-**Bizonyíték:** nincs közvetlen `validate.test.ts`. A [DemoStorage.test.ts](../../app/src/storage/DemoStorage.test.ts) és [DemoDraftStorage.test.ts](../../app/src/storage/DemoDraftStorage.test.ts) ugyanazzal a többszörösen hibás sorral tesztel: `mennyiseg: 'sok'`, miközben mindkét ármező hiányzik. Ha a mennyiség ellenőrzése véletlenül eltűnne, az ármező hiánya miatt a teszt továbbra is hibát kapna. Nem derül ki, melyik guard él.
+**Bizonyíték:** nincs közvetlen `validate.test.ts`. A [DemoStorage.test.ts](../app/src/storage/DemoStorage.test.ts) és [DemoDraftStorage.test.ts](../app/src/storage/DemoDraftStorage.test.ts) ugyanazzal a többszörösen hibás sorral tesztel: `mennyiseg: 'sok'`, miközben mindkét ármező hiányzik. Ha a mennyiség ellenőrzése véletlenül eltűnne, az ármező hiánya miatt a teszt továbbra is hibát kapna. Nem derül ki, melyik guard él.
 
-A [DemoStorage.test.ts](../../app/src/storage/DemoStorage.test.ts) neve szerkezetileg hibás törzsadatot ígér, de a bemenet `not valid json {{{`. Ez a JSON-parsert ellenőrzi, nem a törzsadat szerkezeti validálását. A sémaverzió-elutasításnak van jó terv-, draft- és törzsadattesztje; az árlista/beállítás betöltési mátrixa nincs ugyanilyen részletességgel védve.
+A [DemoStorage.test.ts](../app/src/storage/DemoStorage.test.ts) neve szerkezetileg hibás törzsadatot ígér, de a bemenet `not valid json {{{`. Ez a JSON-parsert ellenőrzi, nem a törzsadat szerkezeti validálását. A sémaverzió-elutasításnak van jó terv-, draft- és törzsadattesztje; az árlista/beállítás betöltési mátrixa nincs ugyanilyen részletességgel védve.
 
-**További helyi bizonyíték:** a változatlan [validate.ts](../../app/src/domain/validate.ts) `assertPlanShape` és `assertPriceListShape` függvénye egyaránt elfogadott `10.5` pénzértéket a memóriában futtatott próbában. A guard véges számot ellenőriz, nem egészet. Ez nem hipotetikus coverage-hiány; a „pénz egész” invariáns ezen a határon ténylegesen nincs kikényszerítve. A próba nem vizsgálta végig az ilyen adat teljes UI/PDF útját.
+**További helyi bizonyíték:** a változatlan [validate.ts](../app/src/domain/validate.ts) `assertPlanShape` és `assertPriceListShape` függvénye egyaránt elfogadott `10.5` pénzértéket a memóriában futtatott próbában. A guard véges számot ellenőriz, nem egészet. Ez nem hipotetikus coverage-hiány; a „pénz egész” invariáns ezen a határon ténylegesen nincs kikényszerítve. A próba nem vizsgálta végig az ilyen adat teljes UI/PDF útját.
 
 **Javaslat:** érvényes minimális fixture-ből induló, egyetlen mezőt elrontó táblázatos tesztek. Külön: `null`, hibás típus, hiányzó tömb/mező, ismeretlen ártípus, nem véges szám a közvetlen guardon, tört pénzérték a JSON-betöltési határon. Minden fájltípushoz egy-egy storage-integráció igazolja, hogy tényleg meghívja a validátort. A szándékosan megengedett régi/opcionális mezőhiányok pozitív kontrollt kapjanak; ne legyen automatikus sémaszigorítás termékdöntés nélkül.
 
 **R2 kiegészítése, S pontosításával:** a guardok nem ellenőrzik teljeskörűen az előjelet, a mennyiség értéktartományát, az ID-egyediséget, kategóriahivatkozást vagy a beállítások enumjait. Ez nem jelenti azt, hogy minden elfogadott negatív érték hibás: a `kedvezmenyOsszeg` szándékosan előjeles, negatívként felár, és az `osszesitok.kedvezmeny` is lehet negatív (`totals.ts`). A „minden pénz nemnegatív” szigorítás ezért hibás lenne. Az egész pénzérték követelménye már invariáns; az új értéktartományok, betöltéskori elutasítás és kompatibilitás részletei K9-ben döntendők el. Pozitív kontroll kell az opcionális `inaktivOrvosok` mezőre és az érvénytelen alapértelmezett orvos dokumentált visszaesésére is.
 
-**Korábbi review pontosítása:** a [2026-08-25-i architektúra-review](2026-08-25-arch-react-review.md) teljes közvetett lefedetlenséget is állított. Ezt a jelenlegi készletre nem lehet kijelenteni: közvetett negatív tesztek vannak, csak szűkek és részben rosszul izoláltak. A `branded-minor-penztipus` és `sema-migracios-keret` már létező ötletek; a futásidejű bemenetvédelem nem helyettesíthető pusztán TypeScript-branded típussal.
+**Korábbi review pontosítása:** a [2026-08-25-i architektúra-review](reviews/2026-08-25-arch-react-review.md) teljes közvetett lefedetlenséget is állított. Ezt a jelenlegi készletre nem lehet kijelenteni: közvetett negatív tesztek vannak, csak szűkek és részben rosszul izoláltak. A `branded-minor-penztipus` és `sema-migracios-keret` már létező ötletek; a futásidejű bemenetvédelem nem helyettesíthető pusztán TypeScript-branded típussal.
 
 ### F03 — Súlyos: több invariáns tesztneve erősebb, mint a tényleges assertion
 
 | Konkrét teszt | Mit bizonyít ma? | Hogyan kellene erősíteni? |
 |---|---|---|
-| [DemoStorage.test.ts](../../app/src/storage/DemoStorage.test.ts), „appends v2 without touching v1” | A korábbi tervben `verzio === 1`, és két verzió listázható | V1 teljes JSON-tartalma és PDF-bájtjai mentés előtt/után azonosak; V2 tartalma szándékosan eltér |
-| [planCopy.test.ts](../../app/src/domain/planCopy.test.ts), „nem mutálja a forrás tervet” | A páciensobjektum referenciája változatlan | Mély másolattal összevetés vagy fagyasztott bemenet; azonos referencia mellett a mezői még módosulhatnak |
-| [ItemPicker.test.tsx](../../app/src/pages/planEditor/ItemPicker.test.tsx), név-/kategóriatalálat nem duplikálódik | Olyan esetet használ, amelyben a kategórianév nem is illeszkedik | Ugyanaz a tétel egyszerre legyen név- és kategóriatalálat; a felkínált ID egyszer szerepeljen |
-| [useMentesJelzo.test.tsx](../../app/src/components/useMentesJelzo.test.tsx), unmount-takarítás | Nem történik `console.error` | Az időzítő megszűnését ellenőrizni, pl. kontrollált timer-darabszámmal |
-| [TervDocument.test.tsx](../../app/src/pdf/TervDocument.test.tsx), „teljes szélességben” | Két szöveg sorrendjét ellenőrzi | A névből kivenni a geometriai ígéretet; a szélességet renderelt PDF-en bizonyítani |
-| [seed/plans.test.ts](../../app/src/storage/seed/plans.test.ts), „minden demó sor hivatkozik…” | A paraméterezett sorlista nem üres; az utána álló két `it.each` minden releváns sor hivatkozását és árát ellenőrzi | **R2 helyesbítése, S ellenőrizte:** csak a név javítandó. Az üresség-őrt meg kell tartani; nincs itt hiányzó soronkénti lefedettség |
+| [DemoStorage.test.ts](../app/src/storage/DemoStorage.test.ts), „appends v2 without touching v1” | A korábbi tervben `verzio === 1`, és két verzió listázható | V1 teljes JSON-tartalma és PDF-bájtjai mentés előtt/után azonosak; V2 tartalma szándékosan eltér |
+| [planCopy.test.ts](../app/src/domain/planCopy.test.ts), „nem mutálja a forrás tervet” | A páciensobjektum referenciája változatlan | Mély másolattal összevetés vagy fagyasztott bemenet; azonos referencia mellett a mezői még módosulhatnak |
+| [ItemPicker.test.tsx](../app/src/pages/planEditor/ItemPicker.test.tsx), név-/kategóriatalálat nem duplikálódik | Olyan esetet használ, amelyben a kategórianév nem is illeszkedik | Ugyanaz a tétel egyszerre legyen név- és kategóriatalálat; a felkínált ID egyszer szerepeljen |
+| [useMentesJelzo.test.tsx](../app/src/components/useMentesJelzo.test.tsx), unmount-takarítás | Nem történik `console.error` | Az időzítő megszűnését ellenőrizni, pl. kontrollált timer-darabszámmal |
+| [TervDocument.test.tsx](../app/src/pdf/TervDocument.test.tsx), „teljes szélességben” | Két szöveg sorrendjét ellenőrzi | A névből kivenni a geometriai ígéretet; a szélességet renderelt PDF-en bizonyítani |
+| [seed/plans.test.ts](../app/src/storage/seed/plans.test.ts), „minden demó sor hivatkozik…” | A paraméterezett sorlista nem üres; az utána álló két `it.each` minden releváns sor hivatkozását és árát ellenőrzi | **R2 helyesbítése, S ellenőrizte:** csak a név javítandó. Az üresség-őrt meg kell tartani; nincs itt hiányzó soronkénti lefedettség |
 
 A timer-példa különösen félrevezető: a React 18 óta nincs általános figyelmeztetés unmount utáni `setState`-re, tehát a konzol csendje nem bizonyít takarítást. [React hivatalos változásleírás](https://react.dev/blog/2022/03/08/react-18-upgrade-guide#other-notable-changes).
 
@@ -141,9 +141,9 @@ Ezeknél nem új, a régi mellé tett teszt az első lépés. **A meglévő bizo
 
 ### F04 — Súlyos: a tárolási hibatesztek nem fedik a teljes műveleti szerződést
 
-**A rollback implementálva van; a hibamátrix bizonyítéka hiányos.** A [savePlan implementáció](../../app/src/storage/DemoStorage.ts) három kulcsot ír: terv, PDF, páciensindex. A részleges írás tesztje csak a második írás hibáját injektálja, új pácienssel. Ez jó kezdés, de nem bizonyítja a harmadik írás hibájánál a rollbacket, meglévő páciens indexének megmaradását, korábbi verziók épségét vagy azt, hogy a hibás művelet után a sorosító lánc tovább használható.
+**A rollback implementálva van; a hibamátrix bizonyítéka hiányos.** A [savePlan implementáció](../app/src/storage/DemoStorage.ts) három kulcsot ír: terv, PDF, páciensindex. A részleges írás tesztje csak a második írás hibáját injektálja, új pácienssel. Ez jó kezdés, de nem bizonyítja a harmadik írás hibájánál a rollbacket, meglévő páciens indexének megmaradását, korábbi verziók épségét vagy azt, hogy a hibás művelet után a sorosító lánc tovább használható.
 
-A `createPatient` és `savePatientData` szintén több írást végez; a jelenlegi tesztek elsősorban a sikeres kimenetet és UI-hibajelzést vizsgálják. A [PlanStorage](../../app/src/storage/PlanStorage.ts) jövőbeli implementációváltásához nincs újrafuttatható, implementációfüggetlen szerződésteszt-csomag. A `DemoStorage` belső kulcsainak vizsgálata a demóadapter tesztjében helyes, de nem lehet a leendő fájlrendszer-tároló teljes elfogadási bizonyítéka.
+A `createPatient` és `savePatientData` szintén több írást végez; a jelenlegi tesztek elsősorban a sikeres kimenetet és UI-hibajelzést vizsgálják. A [PlanStorage](../app/src/storage/PlanStorage.ts) jövőbeli implementációváltásához nincs újrafuttatható, implementációfüggetlen szerződésteszt-csomag. A `DemoStorage` belső kulcsainak vizsgálata a demóadapter tesztjében helyes, de nem lehet a leendő fájlrendszer-tároló teljes elfogadási bizonyítéka.
 
 **Javaslat:** a mentés szerződése mondja ki a hibánként elvárt megmaradó állapotot. Kevés, célzott eset: első/második/harmadik írás hibája; meglévő páciens; sikeres újrapróbálás; párhuzamos mentés; régi verziók teljes megőrzése. A közös szerződés adapterfüggetlen viselkedést vizsgáljon, a kvóta-/fájlrendszer-specifikus hibainjektálás külön adaptertesztben maradjon. Az Electron valós fájlrendszer-, jogosultság- és megszakítási eseteit a 2. fázis előtt kell hozzáadni, nem most minden leendő platformra előre implementálni.
 
@@ -158,7 +158,7 @@ A `createPatient` és `savePatientData` szintén több írást végez; a jelenle
 | `demo/OsszesTervSection.test.tsx` | 42 a leltárban; R1 táblája 43-at írt | 40,24 s |
 | `SettingsPage.test.tsx` | 36 | 32,34 s |
 
-Az árlista-admin fájl 52 esetéhez jellemzően teljes, 118 tételes árlista és teljes provider-lánc épül fel. A [fixture](../../app/src/pages/PriceListAdminPage.test.tsx) minden tétel EUR-árát törli, majd a tesztek sokszor az összes sort renderelik egyetlen mező vagy megerősítés vizsgálatához. A `PreviewPage.test.tsx` 1956 sorban sokszor az `App` első képernyőjéről indul ugyanazon véglegesítési szabály előkészítéséhez.
+Az árlista-admin fájl 52 esetéhez jellemzően teljes, 118 tételes árlista és teljes provider-lánc épül fel. A [fixture](../app/src/pages/PriceListAdminPage.test.tsx) minden tétel EUR-árát törli, majd a tesztek sokszor az összes sort renderelik egyetlen mező vagy megerősítés vizsgálatához. A `PreviewPage.test.tsx` 1956 sorban sokszor az `App` első képernyőjéről indul ugyanazon véglegesítési szabály előkészítéséhez.
 
 **Mérési cél:** a teljes falidő és a célzott fájl újrafuttatásának ideje; az összeadott fájlfutási idő csak másodlagos diagnosztika (2. szakasz).
 
@@ -172,11 +172,11 @@ A fájlok puszta szétvágása javíthatja a párhuzamos ütemezést, de változ
 
 | Hely | Értékelés |
 |---|---|
-| [money.test.ts](../../app/src/domain/money.test.ts) és [másik eset](../../app/src/domain/money.test.ts) | Ugyanaz a bemenet, ugyanaz a hívás, ugyanaz az elvárt kimenet. Tényleges duplikáció; a HU/DE × HUF/EUR mátrixban elég egyszer |
-| [penznemValtas.test.ts](../../app/src/domain/penznemValtas.test.ts) FIX árlista-visszatöltés és a „nincs automatikus FX” eset | Ugyanazt a 45000→15000 útvonalat ismétli; a külön invariánsnevet megőrizve összevonható, az anchor frissítésével |
-| [planCopy.test.ts](../../app/src/domain/planCopy.test.ts), „az orvos mindig a globális default…” és „a default akkor is érvényesül, ha … MÉG AKTÍV” | Mindkét fixture-ben aktív a forrás-orvos, ugyanazok az adatok. Összevonható vagy a másodiknak ténylegesen eltérő eset kell |
-| [DemoStorage.test.ts](../../app/src/storage/DemoStorage.test.ts), `paths re-export sanity` | Csak az importált osztály `.name`-jét ellenőrzi. A storage ütközési útját nem hívja. Önálló viselkedésvédelemként elhagyható |
-| [TervReszleteiPage.test.tsx](../../app/src/pages/TervReszleteiPage.test.tsx) | A teszt-helper regexének kényelmét védi egy másik oldalon. A helper lekérdezését kell jól szűkíteni; ez önmagában nem termékkövetelmény |
+| [money.test.ts](../app/src/domain/money.test.ts) és [másik eset](../app/src/domain/money.test.ts) | Ugyanaz a bemenet, ugyanaz a hívás, ugyanaz az elvárt kimenet. Tényleges duplikáció; a HU/DE × HUF/EUR mátrixban elég egyszer |
+| [penznemValtas.test.ts](../app/src/domain/penznemValtas.test.ts) FIX árlista-visszatöltés és a „nincs automatikus FX” eset | Ugyanazt a 45000→15000 útvonalat ismétli; a külön invariánsnevet megőrizve összevonható, az anchor frissítésével |
+| [planCopy.test.ts](../app/src/domain/planCopy.test.ts), „az orvos mindig a globális default…” és „a default akkor is érvényesül, ha … MÉG AKTÍV” | Mindkét fixture-ben aktív a forrás-orvos, ugyanazok az adatok. Összevonható vagy a másodiknak ténylegesen eltérő eset kell |
+| [DemoStorage.test.ts](../app/src/storage/DemoStorage.test.ts), `paths re-export sanity` | Csak az importált osztály `.name`-jét ellenőrzi. A storage ütközési útját nem hívja. Önálló viselkedésvédelemként elhagyható |
+| [TervReszleteiPage.test.tsx](../app/src/pages/TervReszleteiPage.test.tsx) | A teszt-helper regexének kényelmét védi egy másik oldalon. A helper lekérdezését kell jól szűkíteni; ez önmagában nem termékkövetelmény |
 
 **Az ütközésteszt vitájának feloldása (R2 + S):** a `.name` assertion nem véd érdemi viselkedést. A `paths.test.ts` „throws VersionConflictError for an existing directory name” esete viszont már védi a helper kivételosztályát; a `DemoStorage.test.ts` a foglalt verzió eltérését és az egyező verzió elfogadását is teszteli. A `savePlan` ma eltérő foglalásnál sima `Error`-t dob, nem `VersionConflictError`-t. Nem írunk mesterséges belső ütközést vagy új kivételszerződést pusztán a gyenge teszt pótlására. Előbb az elérhető adapterhibamódot és megmaradó állapotot azonosítjuk; a gyenge teszt törölhető, illetve tényleges hiány esetén viselkedéstesztre cserélhető.
 
@@ -188,9 +188,9 @@ A deduplikáció egysége: **azonos előfeltétel + művelet + megfigyelt eredm�
 
 ### F07 — Közepes: a fixture-ek egyszerre túl nagyok és túl erősen kötődnek a production seedhez
 
-A `TestProviders` teljes alkalmazásállapotot és `DemoStorage`-ot ad, a [StorageProvider](../../app/src/storage/StorageContext.tsx) pedig maga hozza létre a tárolót. Emiatt a célzott lapteszt is seedelésre, konkrét localStorage-kulcsokra és több, az adott esethez nem tartozó providerre támaszkodik. A test-wrapperben a lépésőr viszont **mindig továbbengedő helyettesítés** — így a wrapper használata önmagában nem jelent valódi workflow-integrációt. Ez dokumentált, de a helper neve nem teszi láthatóvá.
+A `TestProviders` teljes alkalmazásállapotot és `DemoStorage`-ot ad, a [StorageProvider](../app/src/storage/StorageContext.tsx) pedig maga hozza létre a tárolót. Emiatt a célzott lapteszt is seedelésre, konkrét localStorage-kulcsokra és több, az adott esethez nem tartozó providerre támaszkodik. A test-wrapperben a lépésőr viszont **mindig továbbengedő helyettesítés** — így a wrapper használata önmagában nem jelent valódi workflow-integrációt. Ez dokumentált, de a helper neve nem teszi láthatóvá.
 
-Konkrét kötődések: `118 / 118` számlálók az adminban; `t041` és konkrét ár a [szerkesztő-fixture-ben](../../app/src/pages/planEditor/testFixtures.tsx); `Nagy Éva` konkrét láncszerkezete sok listatesztben. Egy demóadat-módosítás emiatt üzleti szabálytól független teszteket is elronthat.
+Konkrét kötődések: `118 / 118` számlálók az adminban; `t041` és konkrét ár a [szerkesztő-fixture-ben](../app/src/pages/planEditor/testFixtures.tsx); `Nagy Éva` konkrét láncszerkezete sok listatesztben. Egy demóadat-módosítás emiatt üzleti szabálytól független teszteket is elronthat.
 
 **R2 központi javaslata:** explicit tárolóinjektálási lehetőség és kis memóriabeli tesztadapter/builder kell a laptesztekhez. Ez F05/F07 közös előfeltétele, de az adapterfüggetlen storage-szerződést React-provider nélkül is lehet vizsgálni. A provider teljes `StorageContextValue` szerződését kell végiggondolni (`ready`, PDF-visszaolvasás, demó-only metódusok is), nem elég két propot bevezetni, miközben a többi metódus rejtetten másik `DemoStorage`-ra mutat. A pontos prop/factory megoldás technikai tervezési feladat. A valódi adaptert bizonyító integrációs és E2E-tesztek továbbra is a valódi adaptert használják.
 
@@ -202,7 +202,7 @@ Production helper használható előkészítésre, ha nem éppen azt teszteljük
 
 **Erős részek:** `AppState.test.tsx` két, egy tickben indított updater hatását ellenőrzi; a tárolóteszt párhuzamos mentést vizsgál; a `useMentesJelzo` kontrollált promise-t és fake timert is használ.
 
-**Gyenge részek:** a három PDF-hook mockban nincs tesztelt `loading: true` átmenet. A PDF-hibateszt két külön induló állapotot vizsgál, nem a siker → új render → hiba → újrapróbálás → friss siker teljes állapotváltását. Az `updatePdf` hívásszámának növekedése nem bizonyítja, hogy az újrapróbálás után friss PDF készült. A [usePlanPdfObjectUrl](../../app/src/storage/usePlanPdfObjectUrl.ts) későn visszaérkező betöltést kezel, de a laptesztek nem kényszerítik ki azt, hogy A verzió kérése B után fejeződjön be.
+**Gyenge részek:** a három PDF-hook mockban nincs tesztelt `loading: true` átmenet. A PDF-hibateszt két külön induló állapotot vizsgál, nem a siker → új render → hiba → újrapróbálás → friss siker teljes állapotváltását. Az `updatePdf` hívásszámának növekedése nem bizonyítja, hogy az újrapróbálás után friss PDF készült. A [usePlanPdfObjectUrl](../app/src/storage/usePlanPdfObjectUrl.ts) későn visszaérkező betöltést kezel, de a laptesztek nem kényszerítik ki azt, hogy A verzió kérése B után fejeződjön be.
 
 Sok hibainjektálás végén kézzel fut `vi.restoreAllMocks()`. Ha az előtte álló assertion elbukik, a helyreállítás kimarad; a következő teszt másodlagos hibája elrejtheti az első okot. A `useListStateMemory.test.tsx` `Object.defineProperty`-vel változtat `scrollY`-t, amelyre a spy-helyreállítás önmagában nem megoldás.
 
@@ -216,7 +216,7 @@ Egy sikeres futás alapján nem állítok általános flakiness-problémát. Eze
 
 A tesztnevekben és `describe` blokkokban sok `backlog-…`, „N. tétel”, „korábbi viselkedés”, „ma” és „változatlan” fordulat maradt. Például a `totals.test.ts` több csoportja így szerveződik. A törölt terv nélkül ezek egyre kevésbé mondják meg, **mi a jelenlegi szabály és mikor alkalmazható**.
 
-A [root CLAUDE.md](../../CLAUDE.md) mentett pillanatképre mutató anchorja a `totals.test.ts` nem-mutáló összehasonlítási tesztjére mutat. Az a teszt hasznos, de nincs benne élő árlista-változtatás vagy mentett dokumentum újranyitása; a teljes, hivatkozott termékinvariánsnak csak egy részét bizonyítja.
+A [root CLAUDE.md](../CLAUDE.md) mentett pillanatképre mutató anchorja a `totals.test.ts` nem-mutáló összehasonlítási tesztjére mutat. Az a teszt hasznos, de nincs benne élő árlista-változtatás vagy mentett dokumentum újranyitása; a teljes, hivatkozott termékinvariánsnak csak egy részét bizonyítja.
 
 **Javaslat:** viselkedés szerint szervezett csoportok, rövid előfeltétel–akció–eredmény nevű esetek. A változás története a Gitben maradjon. A kötelező invariáns-anchor a valóban megfelelő réteghatárra mutasson. Ne legyen minden teszt átnevezéséből külön takarítási projekt; az érintett tesztcsalád refaktorakor rendezhető.
 
@@ -226,7 +226,7 @@ A teszt nem teszi automatikusan helyessé a leírt működést. Ha egy regresszi
 
 ### F10 — Közepes: a coverage és a tesztminőség jelenleg nem mérhető rendszeresen
 
-A [vite.config.ts](../../app/vite.config.ts) nem határoz meg coverage-beállítást, az [app/package.json](../../app/package.json) nem ad coverage-parancsot vagy coverage-provider csomagot. A zöld suite és a nagy esetszám ezért nem mondja meg, mely production ágak maradnak ki.
+A [vite.config.ts](../app/vite.config.ts) nem határoz meg coverage-beállítást, az [app/package.json](../app/package.json) nem ad coverage-parancsot vagy coverage-provider csomagot. A zöld suite és a nagy esetszám ezért nem mondja meg, mely production ágak maradnak ki.
 
 Nem javaslok teljes projektet kötelező 100%-ra hajtó küszöböt. Először egy diagnosztikai mérés kell, amely a **nem importált production fájlokat is tartalmazza**. A Vitest alapértelmezett coverage-listája csak a futásban importált fájlokat mutatja, ezért explicit `include` szükséges. [Vitest coverage-dokumentáció](https://vitest.dev/guide/coverage.html).
 
@@ -238,21 +238,21 @@ Az F03 példái mutatják, miért nem elég önmagában a coverage: egy sor lefu
 
 ### F11 — Közepes: a helyi és CI-kapu, illetve a tesztőrök szerződése eltér
 
-A CI futtatja a `test:workflow` parancsot, de a [workflow/lib.mjs `gate()`](../../scripts/workflow/lib.mjs) és a `/implement` négyes kapuja csak build/lint/test/docs-check. Így a workflow-scriptek saját regressziója a helyi „teljes kapu” után csak a push CI-jában derülhet ki. **A kapulisták tulajdonosát és azonosságát rendezni kell.**
+A CI futtatja a `test:workflow` parancsot, de a [workflow/lib.mjs `gate()`](../scripts/workflow/lib.mjs) és a `/implement` négyes kapuja csak build/lint/test/docs-check. Így a workflow-scriptek saját regressziója a helyi „teljes kapu” után csak a push CI-jában derülhet ki. **A kapulisták tulajdonosát és azonosságát rendezni kell.**
 
-A [docs-check tesztfelismerése](../../scripts/docs-check.mjs) csak `app/src/**/*.test.ts(x)` fájlokra vonatkozik; a skip/only regex az egyszerű `.skip(` és `.only(` alakot ismeri. A `.skip.each`, `.only.each`, a hívás előtti whitespace és a `scripts/*.test.mjs` nincs azonos védelem alatt. A jelenlegi keresés nem talált aktív skip/only használatot; ez az őr hiánya, nem jelenlegi kihagyott tesztek állítása.
+A [docs-check tesztfelismerése](../scripts/docs-check.mjs) csak `app/src/**/*.test.ts(x)` fájlokra vonatkozik; a skip/only regex az egyszerű `.skip(` és `.only(` alakot ismeri. A `.skip.each`, `.only.each`, a hívás előtti whitespace és a `scripts/*.test.mjs` nincs azonos védelem alatt. A jelenlegi keresés nem talált aktív skip/only használatot; ez az őr hiánya, nem jelenlegi kihagyott tesztek állítása.
 
 R2 további alakokat is jelzett (`skipIf`, `todo`). A tiltott kihagyás felismerése és az új alakokra vonatkozó szabály megalkotása külön kérdés; az E2E-s `fixme` és a feltételes kihagyás kezelése K7-ben szerepel.
 
 A docs-check saját negatív fixture-tesztje hiányzik, a workflow-tesztek pedig szándékosan helyettesítik a kaput, így azt nem vizsgálják. Egy jól működő szabályzat gépi védelmét is minimális elfogadott/elutasított példákkal kell tesztelni. Ha új tesztfájlnév kerül bevezetésre, pl. `*.integration.test.tsx` vagy `e2e/*.spec.ts`, a felismerés és az őr hatókörét együtt kell hozzáigazítani.
 
-A CI Node-verziója `lts/*`, az R1/R2 helyi futása v26.4.0 volt. A [test-setup](../../app/src/test-setup.ts) maga is dokumentál korábbi Node/localStorage-különbséget. Célszerű egy reprodukálható alapverziót megadni; több verzió csak tudatos kompatibilitási ellenőrzésként fusson.
+A CI Node-verziója `lts/*`, az R1/R2 helyi futása v26.4.0 volt. A [test-setup](../app/src/test-setup.ts) maga is dokumentál korábbi Node/localStorage-különbséget. Célszerű egy reprodukálható alapverziót megadni; több verzió csak tudatos kompatibilitási ellenőrzésként fusson.
 
 ### F12 — Közepes: a vizuális és böngészős védelem kézi; az automatizálás után a hívási rend is rendezendő
 
-A `/manual-checks` jó és konkrét eljárás. Nem helyes azt állítani, hogy a PDF/canvas/CSS réteget soha nem ellenőrzik: a [2026-08-10-i böngészős jelentés](2026-08-10-browser-validation.md) valódi PDF-bájtokat és vizuális hibát is tárgyal, többek között a SemiBold-font problémáját.
+A `/manual-checks` jó és konkrét eljárás. Nem helyes azt állítani, hogy a PDF/canvas/CSS réteget soha nem ellenőrzik: a [2026-08-10-i böngészős jelentés](reviews/2026-08-10-browser-validation.md) valódi PDF-bájtokat és vizuális hibát is tárgyal, többek között a SemiBold-font problémáját.
 
-Viszont ez nem CI-ban ismétlődő védelem. R1 elavult `/finish`-hívásrendet talált; S ellenőrzésekor a [manual-checks skill](../../.claude/skills/manual-checks/SKILL.md) már megnevezi az `/implement` 5b és az `/implement-batch` hívót. Az E2E bevezetésekor az összes hívó, a megmaradó szeletek és az önálló `all` futás szerepe együtt rendezendő, nem egy régi eltérés változatlan fennállását feltételezve.
+Viszont ez nem CI-ban ismétlődő védelem. R1 elavult `/finish`-hívásrendet talált; S ellenőrzésekor a [manual-checks skill](../.claude/skills/manual-checks/SKILL.md) már megnevezi az `/implement` 5b és az `/implement-batch` hívót. Az E2E bevezetésekor az összes hívó, a megmaradó szeletek és az önálló `all` futás szerepe együtt rendezendő, nem egy régi eltérés változatlan fennállását feltételezve.
 
 **Javaslat:** a kézi szakmai/olvashatósági ellenőrzés megmarad, néhány ismételhető, kritikus technikai állítást pedig automatizált böngészős/PDF-smoke teszt vegyen át. Ez jövőbeli módszertani változtatás, nem a jelenlegi „csak kézzel indítva” szabály csendes felülírása. Az izolált Chrome-profil és a kizárólag szintetikus adat változatlan követelmény.
 
@@ -322,7 +322,7 @@ A szövegkinyerés nem bizonyít glyphminőséget, tördelést vagy képmegjelen
 
 R1 öt esetet vázolt; E három pilotot javasolt. Az összevont ajánlás a fenti hárommal indul; **bővítésként** jön a placeholder/nyilatkozat, sávos csillag/lábjegyzet és kedvezménytilalom valós PDF-en, majd a hosszú többoldalas terv magyar ékezetekkel és canvas→PNG→PDF fogtérképpel. Escape/Tab, popover-geometria két felbontáson, font/CSP és fájlnév az érintett technikai állítások alapján kerülhet át. A részletes PDF-szövegmátrix továbbra is az olcsóbb szinteken él.
 
-A production builden PDF-et előállító teszt értékét a korábbi `Buffer is not defined` hiba is indokolja; javításának böngészős bizonyítéka a [2026-09-06-i jelentésben](2026-09-06-manual-checks-all.md) szerepel.
+A production builden PDF-et előállító teszt értékét a korábbi `Buffer is not defined` hiba is indokolja; javításának böngészős bizonyítéka a [2026-09-06-i jelentésben](reviews/2026-09-06-manual-checks-all.md) szerepel.
 
 ### 5.5 Technikai keret
 
@@ -331,7 +331,7 @@ A production builden PDF-et előállító teszt értékét a korábbi `Buffer is
 3. **Production build helyben:** `vite preview`, `127.0.0.1`, fix port és `strictPort`; példa útvonal: `http://127.0.0.1:4173/dental-plan/#/`. A `webServer` kezelje a preview életciklusát, a kapuban `reuseExistingServer: false` mellett. Így friss build, base path, asset és production CSP a vizsgálat tárgya. [Web server](https://playwright.dev/docs/test-webserver).
 4. **Valódi mentési út:** P3 production `DemoStorage`-ot és valódi PDF-renderelést használ. A laptesztek fake tárolója itt nem megfelelő helyettesítés. Az előkészítés/visszaolvasás tartsa a tárolóhatárt; a pontos elérési mód a pilot technikai terve, production UI-ba tett tesztkapu nélkül.
 5. **Stabil megfigyelések:** szemantikus feliratok, fókusz, visszatöltött adat, tényleges fájl; állapotra várás önkényes sleep helyett. Alkalmazás-/CSP-hibák ellenőrzése, hiba esetén trace/screenshot; feltöltött diagnosztika kizárólag szintetikus adatot tartalmazhat. Az újrapróbálás nem rejthet el bizonytalan hibát.
-6. **Electron külön határ:** a webes pilot nem bizonyítja a csomagolt app indulását vagy a fájlrendszer/jogosultság/folyamatmegszakítás viselkedését. Az [Electron-terv](../desktop-app-migration-plan.md) már saját indulástesztet kér; ezt a második fázisban össze kell hangolni. A Playwright Electron API kísérleti. [Electron API](https://playwright.dev/docs/api/class-electron).
+6. **Electron külön határ:** a webes pilot nem bizonyítja a csomagolt app indulását vagy a fájlrendszer/jogosultság/folyamatmegszakítás viselkedését. Az [Electron-terv](desktop-app-migration-plan.md) már saját indulástesztet kér; ezt a második fázisban össze kell hangolni. A Playwright Electron API kísérleti. [Electron API](https://playwright.dev/docs/api/class-electron).
 
 A bevezetés előtt a gyökér böngészőszabályának saját indítású tesztböngészőre vonatkozó részét és a manual-checks szerepét kifejezetten rendezni kell (K1). A valós profilok, futó felhasználói böngészők és valódi páciensadatok védelme marad. Helyi/CI szintetikus teszt nem változtatja meg az alkalmazás backend- és külsőadatküldés-tilalmát.
 
@@ -349,7 +349,7 @@ ugyanennek a dist-nek a Pages-artifact feltöltése
 deploy csak sikeres kapu után
 ```
 
-A `.github/workflows/deploy.yml` build-jobja PR-en és master-pushon ellenőriz; a Pages-artifact feltöltése előtt kell az E2E-lépés. A tesztelt `dist` után nincs új build. Külön E2E-job esetén a deploy attól is függjön. Hibadiagnosztikai artefaktum hibás tesztnél is megőrizhető. [Playwright CI](https://playwright.dev/docs/ci-intro).
+A `../.github/workflows/deploy.yml` build-jobja PR-en és master-pushon ellenőriz; a Pages-artifact feltöltése előtt kell az E2E-lépés. A tesztelt `dist` után nincs új build. Külön E2E-job esetén a deploy attól is függjön. Hibadiagnosztikai artefaktum hibás tesztnél is megőrizhető. [Playwright CI](https://playwright.dev/docs/ci-intro).
 
 A `gate()` és az összes érintett script-/skill-hívó kapulistája együtt változzon; a workflow-tesztek ne hívják rekurzívan a saját valódi kapujukat. Az egyező csomag ellenőrzése saját workflow-elfogadási esetet kapjon. A Node-verziót például verziófájl + `engines` + CI `node-version-file` rögzítheti; a kompatibilis konkrét verzió technikai választás.
 
@@ -365,7 +365,7 @@ Kevés, előzetesen ellenőrzött vizuális referencia később segíthet. Platf
 
 ## 6. Agenteknek szánt döntési rend — javasolt közös mag
 
-Tartós helye egy rövid `docs/TESTING.md`, a gyökér `CLAUDE.md` pointerével. A leltár és a mérések ebben a review-ban maradnak. A jelenlegi 4000 karakteres gyökérbudget miatt a pointer hozzáadásakor redundanciát kell kivenni, nem budgetet emelni. Az érintett skillek hivatkoznak a szabályra, nem másolják azt.
+Tartós helye egy rövid `docs/TESTING.md`, a gyökér `../CLAUDE.md` pointerével. A leltár és a mérések ebben a review-ban maradnak. A jelenlegi 4000 karakteres gyökérbudget miatt a pointer hozzáadásakor redundanciát kell kivenni, nem budgetet emelni. Az érintett skillek hivatkoznak a szabályra, nem másolják azt.
 
 1. **Keresés és szint:** nevezd meg a megfigyelhető állítást, keresd meg a meglévő bizonyítékát, és válassz a meglévő eset javítása, bővítése, új réteghatár vagy indokoltan nincs új teszt között. Új helperhez nem jár automatikusan új tesztfájl.
 2. **Egy részletes mátrix:** a legkisebb megfelelő szinten; magasabban célzott összekötési eset. A dinamikusan szűrt/generált esetlista ürességét védeni kell, ha attól észrevétlenül megszűnne a bizonyíték. A minden `it.each`-re kiterjedő szigor K5 kérdése.
@@ -505,7 +505,7 @@ T3, T6, T10 és T12 szükség szerint kisebb tételekre bontandó: egy tételnek
 
 1. A 7.2 válaszhelyeire kerüljön döntés és rövid indok; az eltérően elfogadott ajánlást az 5–6. szakaszban is át kell vezetni, hogy ne maradjon két álláspont érvényben.
 2. A K9 mezőszabályai, K1 kapukritériumai és K3 kezdősorrendje legyenek konkrétak. A későbbi feladatra halasztott kérdéshez az érintett feladat és a feloldás időpontja szerepeljen; ne maradjon észrevétlen implementációs függőség.
-3. Friss backlog-dedup után csak a ténylegesen hiányzó munka kapjon ötletet. Kapcsolódó meglévő tételek: [pénz egész validáció](../../backlog/penz-egesz-validacio.md), [sémamigrációs keret](../../backlog/idea/later/sema-migracios-keret.md). A PDF-verziószám termékhibája már lezárt történet (F01).
+3. Friss backlog-dedup után csak a ténylegesen hiányzó munka kapjon ötletet. Kapcsolódó meglévő tételek: [pénz egész validáció](../../backlog/penz-egesz-validacio.md), [sémamigrációs keret](../backlog/idea/later/sema-migracios-keret.md). A PDF-verziószám termékhibája már lezárt történet (F01).
 4. A kiválasztott tételekből a repó szokásos terve készüljön (`Goal / Current state / Approach / Decisions / Verification`, friss `Baseline`, budget); a `Source` erre a review-ra és az F/T jelre utalhat. `Prio` csak kimondott doki/fejlesztői döntésből származik.
 5. Tételenként implementáció → előírt kapu → kézi ellenőrzés a munkafán → lezárás/commit/push a meglévő workflow szerint. A koncepció elfogadása nem helyettesíti a termékváltozás kézi ellenőrzését.
 
@@ -519,106 +519,106 @@ A futó esetek száma paraméterezés utáni érték; minden felsorolt fájl zö
 
 | Tesztfájl | Futó eset |
 |---|---:|
-| [app/src/App.test.tsx](../../app/src/App.test.tsx) | 5 |
-| [app/src/components/DentalChart.test.tsx](../../app/src/components/DentalChart.test.tsx) | 13 |
-| [app/src/components/FeatureOverviewCard.test.tsx](../../app/src/components/FeatureOverviewCard.test.tsx) | 2 |
-| [app/src/components/NavBar.test.tsx](../../app/src/components/NavBar.test.tsx) | 2 |
-| [app/src/components/NavGuardContext.test.tsx](../../app/src/components/NavGuardContext.test.tsx) | 3 |
-| [app/src/components/NumberField.test.tsx](../../app/src/components/NumberField.test.tsx) | 22 |
-| [app/src/components/TervWorkflowShell.test.tsx](../../app/src/components/TervWorkflowShell.test.tsx) | 13 |
-| [app/src/components/ToothPickerPopover.test.tsx](../../app/src/components/ToothPickerPopover.test.tsx) | 5 |
-| [app/src/components/TorzsadatDiffDialog.test.tsx](../../app/src/components/TorzsadatDiffDialog.test.tsx) | 9 |
-| [app/src/components/useDirtyDraft.test.ts](../../app/src/components/useDirtyDraft.test.ts) | 4 |
-| [app/src/components/useListStateMemory.test.tsx](../../app/src/components/useListStateMemory.test.tsx) | 6 |
-| [app/src/components/useMentesJelzo.test.tsx](../../app/src/components/useMentesJelzo.test.tsx) | 8 |
-| [app/src/design/toothChartSvg.test.ts](../../app/src/design/toothChartSvg.test.ts) | 19 |
-| [app/src/domain/arElgepeles.test.ts](../../app/src/domain/arElgepeles.test.ts) | 15 |
-| [app/src/domain/arKoveti.test.ts](../../app/src/domain/arKoveti.test.ts) | 19 |
-| [app/src/domain/arlistaSzures.test.ts](../../app/src/domain/arlistaSzures.test.ts) | 9 |
-| [app/src/domain/beallitasok.test.ts](../../app/src/domain/beallitasok.test.ts) | 2 |
-| [app/src/domain/blankPlan.test.ts](../../app/src/domain/blankPlan.test.ts) | 9 |
-| [app/src/domain/date.test.ts](../../app/src/domain/date.test.ts) | 16 |
-| [app/src/domain/fazisSorrend.test.ts](../../app/src/domain/fazisSorrend.test.ts) | 8 |
-| [app/src/domain/kitoltetlen.test.ts](../../app/src/domain/kitoltetlen.test.ts) | 30 |
-| [app/src/domain/leirasHossz.test.ts](../../app/src/domain/leirasHossz.test.ts) | 3 |
-| [app/src/domain/markdownSections.test.ts](../../app/src/domain/markdownSections.test.ts) | 7 |
-| [app/src/domain/masterSnapshotDiff.test.ts](../../app/src/domain/masterSnapshotDiff.test.ts) | 19 |
-| [app/src/domain/mennyiseg.test.ts](../../app/src/domain/mennyiseg.test.ts) | 14 |
-| [app/src/domain/money.test.ts](../../app/src/domain/money.test.ts) | 24 |
-| [app/src/domain/nemetNev.test.ts](../../app/src/domain/nemetNev.test.ts) | 17 |
-| [app/src/domain/nev.test.ts](../../app/src/domain/nev.test.ts) | 28 |
-| [app/src/domain/nyelviReview.test.ts](../../app/src/domain/nyelviReview.test.ts) | 23 |
-| [app/src/domain/orokoltJelzesek.test.ts](../../app/src/domain/orokoltJelzesek.test.ts) | 16 |
-| [app/src/domain/orvosok.test.ts](../../app/src/domain/orvosok.test.ts) | 17 |
-| [app/src/domain/paciensAdatok.test.ts](../../app/src/domain/paciensAdatok.test.ts) | 9 |
-| [app/src/domain/paciensAktivitas.test.ts](../../app/src/domain/paciensAktivitas.test.ts) | 20 |
-| [app/src/domain/paciensDuplikacio.test.ts](../../app/src/domain/paciensDuplikacio.test.ts) | 30 |
-| [app/src/domain/paciensKereses.test.ts](../../app/src/domain/paciensKereses.test.ts) | 16 |
-| [app/src/domain/paciensKotes.test.ts](../../app/src/domain/paciensKotes.test.ts) | 9 |
-| [app/src/domain/paciensTorles.test.ts](../../app/src/domain/paciensTorles.test.ts) | 8 |
-| [app/src/domain/paciensValidacio.test.ts](../../app/src/domain/paciensValidacio.test.ts) | 7 |
-| [app/src/domain/penznemValtas.test.ts](../../app/src/domain/penznemValtas.test.ts) | 23 |
-| [app/src/domain/piszkozat.test.ts](../../app/src/domain/piszkozat.test.ts) | 19 |
-| [app/src/domain/planChainData.test.ts](../../app/src/domain/planChainData.test.ts) | 9 |
-| [app/src/domain/planCopy.test.ts](../../app/src/domain/planCopy.test.ts) | 25 |
-| [app/src/domain/planFolders.test.ts](../../app/src/domain/planFolders.test.ts) | 11 |
-| [app/src/domain/planVersionActions.test.ts](../../app/src/domain/planVersionActions.test.ts) | 11 |
-| [app/src/domain/priceListIds.test.ts](../../app/src/domain/priceListIds.test.ts) | 9 |
-| [app/src/domain/schema.test.ts](../../app/src/domain/schema.test.ts) | 3 |
-| [app/src/domain/search.test.ts](../../app/src/domain/search.test.ts) | 11 |
-| [app/src/domain/sorElteres.test.ts](../../app/src/domain/sorElteres.test.ts) | 13 |
-| [app/src/domain/sorMezok.test.ts](../../app/src/domain/sorMezok.test.ts) | 7 |
-| [app/src/domain/teeth.test.ts](../../app/src/domain/teeth.test.ts) | 26 |
-| [app/src/domain/templates.test.ts](../../app/src/domain/templates.test.ts) | 14 |
-| [app/src/domain/tervCim.test.ts](../../app/src/domain/tervCim.test.ts) | 7 |
-| [app/src/domain/tomegesAr.test.ts](../../app/src/domain/tomegesAr.test.ts) | 22 |
-| [app/src/domain/toothVisual.test.ts](../../app/src/domain/toothVisual.test.ts) | 22 |
-| [app/src/domain/torzsadatBetoltes.test.ts](../../app/src/domain/torzsadatBetoltes.test.ts) | 19 |
-| [app/src/domain/totals.test.ts](../../app/src/domain/totals.test.ts) | 25 |
-| [app/src/domain/ujVerzioDatum.test.ts](../../app/src/domain/ujVerzioDatum.test.ts) | 7 |
-| [app/src/domain/veglegesitesOr.test.ts](../../app/src/domain/veglegesitesOr.test.ts) | 55 |
-| [app/src/pages/DemoPage.test.tsx](../../app/src/pages/DemoPage.test.tsx) | 9 |
-| [app/src/pages/Home.test.tsx](../../app/src/pages/Home.test.tsx) | 13 |
-| [app/src/pages/NewPlanPage.test.tsx](../../app/src/pages/NewPlanPage.test.tsx) | 24 |
-| [app/src/pages/PaciensekPage.test.tsx](../../app/src/pages/PaciensekPage.test.tsx) | 16 |
-| [app/src/pages/PatientDetailPage.test.tsx](../../app/src/pages/PatientDetailPage.test.tsx) | 25 |
-| [app/src/pages/PatientPage.test.tsx](../../app/src/pages/PatientPage.test.tsx) | 49 |
-| [app/src/pages/PlanEditorPage.sorok.test.tsx](../../app/src/pages/PlanEditorPage.sorok.test.tsx) | 41 |
-| [app/src/pages/PlanEditorPage.test.tsx](../../app/src/pages/PlanEditorPage.test.tsx) | 21 |
-| [app/src/pages/PreviewPage.pdfHiba.test.tsx](../../app/src/pages/PreviewPage.pdfHiba.test.tsx) | 2 |
-| [app/src/pages/PreviewPage.test.tsx](../../app/src/pages/PreviewPage.test.tsx) | 32 |
-| [app/src/pages/PriceListAdminPage.arElgepeles.test.tsx](../../app/src/pages/PriceListAdminPage.arElgepeles.test.tsx) | 7 |
-| [app/src/pages/PriceListAdminPage.leiras.test.tsx](../../app/src/pages/PriceListAdminPage.leiras.test.tsx) | 2 |
-| [app/src/pages/PriceListAdminPage.test.tsx](../../app/src/pages/PriceListAdminPage.test.tsx) | 52 |
-| [app/src/pages/PriceListAdminPage.tomegesAr.test.tsx](../../app/src/pages/PriceListAdminPage.tomegesAr.test.tsx) | 8 |
-| [app/src/pages/SettingsPage.test.tsx](../../app/src/pages/SettingsPage.test.tsx) | 36 |
-| [app/src/pages/TervReszleteiPage.test.tsx](../../app/src/pages/TervReszleteiPage.test.tsx) | 34 |
-| [app/src/pages/demo/AdatkezelesSection.test.tsx](../../app/src/pages/demo/AdatkezelesSection.test.tsx) | 4 |
-| [app/src/pages/demo/FileTreeSection.test.tsx](../../app/src/pages/demo/FileTreeSection.test.tsx) | 8 |
-| [app/src/pages/demo/OsszesTervSection.test.tsx](../../app/src/pages/demo/OsszesTervSection.test.tsx) | 42 |
-| [app/src/pages/paciensek/UjPaciensDialog.test.tsx](../../app/src/pages/paciensek/UjPaciensDialog.test.tsx) | 18 |
-| [app/src/pages/planEditor/EgyediVegosszegBlokk.test.tsx](../../app/src/pages/planEditor/EgyediVegosszegBlokk.test.tsx) | 6 |
-| [app/src/pages/planEditor/ElolegBlokk.test.tsx](../../app/src/pages/planEditor/ElolegBlokk.test.tsx) | 10 |
-| [app/src/pages/planEditor/ItemPicker.test.tsx](../../app/src/pages/planEditor/ItemPicker.test.tsx) | 18 |
-| [app/src/pages/planEditor/PlanEditorHeader.test.tsx](../../app/src/pages/planEditor/PlanEditorHeader.test.tsx) | 4 |
-| [app/src/pages/planEditor/Summary.test.tsx](../../app/src/pages/planEditor/Summary.test.tsx) | 4 |
-| [app/src/pages/previewPage/VeglegesitesChecklist.test.tsx](../../app/src/pages/previewPage/VeglegesitesChecklist.test.tsx) | 8 |
-| [app/src/pages/tervReszletei/FazisokBlokk.test.tsx](../../app/src/pages/tervReszletei/FazisokBlokk.test.tsx) | 24 |
-| [app/src/pages/tervReszletei/PenzugyiOsszesites.test.tsx](../../app/src/pages/tervReszletei/PenzugyiOsszesites.test.tsx) | 11 |
-| [app/src/pdf/TervDocument.test.tsx](../../app/src/pdf/TervDocument.test.tsx) | 50 |
-| [app/src/pdf/fonts.test.ts](../../app/src/pdf/fonts.test.ts) | 2 |
-| [app/src/pdf/footerLayout.test.ts](../../app/src/pdf/footerLayout.test.ts) | 3 |
-| [app/src/pdf/labels.test.ts](../../app/src/pdf/labels.test.ts) | 5 |
-| [app/src/pdf/markdownLite.test.ts](../../app/src/pdf/markdownLite.test.ts) | 17 |
-| [app/src/pdf/pdfCimLokalizacio.test.ts](../../app/src/pdf/pdfCimLokalizacio.test.ts) | 9 |
-| [app/src/state/AppState.test.tsx](../../app/src/state/AppState.test.tsx) | 20 |
-| [app/src/state/planIndulas.test.ts](../../app/src/state/planIndulas.test.ts) | 6 |
-| [app/src/storage/DemoDraftStorage.test.ts](../../app/src/storage/DemoDraftStorage.test.ts) | 16 |
-| [app/src/storage/DemoStorage.test.ts](../../app/src/storage/DemoStorage.test.ts) | 47 |
-| [app/src/storage/demoFileTree.test.ts](../../app/src/storage/demoFileTree.test.ts) | 9 |
-| [app/src/storage/paths.test.ts](../../app/src/storage/paths.test.ts) | 31 |
-| [app/src/storage/seed/plans.test.ts](../../app/src/storage/seed/plans.test.ts) | 292 |
-| [app/src/storage/seed/priceList.test.ts](../../app/src/storage/seed/priceList.test.ts) | 1 |
-| [app/src/storage/seed/templates.test.ts](../../app/src/storage/seed/templates.test.ts) | 10 |
+| [app/src/App.test.tsx](../app/src/App.test.tsx) | 5 |
+| [app/src/components/DentalChart.test.tsx](../app/src/components/DentalChart.test.tsx) | 13 |
+| [app/src/components/FeatureOverviewCard.test.tsx](../app/src/components/FeatureOverviewCard.test.tsx) | 2 |
+| [app/src/components/NavBar.test.tsx](../app/src/components/NavBar.test.tsx) | 2 |
+| [app/src/components/NavGuardContext.test.tsx](../app/src/components/NavGuardContext.test.tsx) | 3 |
+| [app/src/components/NumberField.test.tsx](../app/src/components/NumberField.test.tsx) | 22 |
+| [app/src/components/TervWorkflowShell.test.tsx](../app/src/components/TervWorkflowShell.test.tsx) | 13 |
+| [app/src/components/ToothPickerPopover.test.tsx](../app/src/components/ToothPickerPopover.test.tsx) | 5 |
+| [app/src/components/TorzsadatDiffDialog.test.tsx](../app/src/components/TorzsadatDiffDialog.test.tsx) | 9 |
+| [app/src/components/useDirtyDraft.test.ts](../app/src/components/useDirtyDraft.test.ts) | 4 |
+| [app/src/components/useListStateMemory.test.tsx](../app/src/components/useListStateMemory.test.tsx) | 6 |
+| [app/src/components/useMentesJelzo.test.tsx](../app/src/components/useMentesJelzo.test.tsx) | 8 |
+| [app/src/design/toothChartSvg.test.ts](../app/src/design/toothChartSvg.test.ts) | 19 |
+| [app/src/domain/arElgepeles.test.ts](../app/src/domain/arElgepeles.test.ts) | 15 |
+| [app/src/domain/arKoveti.test.ts](../app/src/domain/arKoveti.test.ts) | 19 |
+| [app/src/domain/arlistaSzures.test.ts](../app/src/domain/arlistaSzures.test.ts) | 9 |
+| [app/src/domain/beallitasok.test.ts](../app/src/domain/beallitasok.test.ts) | 2 |
+| [app/src/domain/blankPlan.test.ts](../app/src/domain/blankPlan.test.ts) | 9 |
+| [app/src/domain/date.test.ts](../app/src/domain/date.test.ts) | 16 |
+| [app/src/domain/fazisSorrend.test.ts](../app/src/domain/fazisSorrend.test.ts) | 8 |
+| [app/src/domain/kitoltetlen.test.ts](../app/src/domain/kitoltetlen.test.ts) | 30 |
+| [app/src/domain/leirasHossz.test.ts](../app/src/domain/leirasHossz.test.ts) | 3 |
+| [app/src/domain/markdownSections.test.ts](../app/src/domain/markdownSections.test.ts) | 7 |
+| [app/src/domain/masterSnapshotDiff.test.ts](../app/src/domain/masterSnapshotDiff.test.ts) | 19 |
+| [app/src/domain/mennyiseg.test.ts](../app/src/domain/mennyiseg.test.ts) | 14 |
+| [app/src/domain/money.test.ts](../app/src/domain/money.test.ts) | 24 |
+| [app/src/domain/nemetNev.test.ts](../app/src/domain/nemetNev.test.ts) | 17 |
+| [app/src/domain/nev.test.ts](../app/src/domain/nev.test.ts) | 28 |
+| [app/src/domain/nyelviReview.test.ts](../app/src/domain/nyelviReview.test.ts) | 23 |
+| [app/src/domain/orokoltJelzesek.test.ts](../app/src/domain/orokoltJelzesek.test.ts) | 16 |
+| [app/src/domain/orvosok.test.ts](../app/src/domain/orvosok.test.ts) | 17 |
+| [app/src/domain/paciensAdatok.test.ts](../app/src/domain/paciensAdatok.test.ts) | 9 |
+| [app/src/domain/paciensAktivitas.test.ts](../app/src/domain/paciensAktivitas.test.ts) | 20 |
+| [app/src/domain/paciensDuplikacio.test.ts](../app/src/domain/paciensDuplikacio.test.ts) | 30 |
+| [app/src/domain/paciensKereses.test.ts](../app/src/domain/paciensKereses.test.ts) | 16 |
+| [app/src/domain/paciensKotes.test.ts](../app/src/domain/paciensKotes.test.ts) | 9 |
+| [app/src/domain/paciensTorles.test.ts](../app/src/domain/paciensTorles.test.ts) | 8 |
+| [app/src/domain/paciensValidacio.test.ts](../app/src/domain/paciensValidacio.test.ts) | 7 |
+| [app/src/domain/penznemValtas.test.ts](../app/src/domain/penznemValtas.test.ts) | 23 |
+| [app/src/domain/piszkozat.test.ts](../app/src/domain/piszkozat.test.ts) | 19 |
+| [app/src/domain/planChainData.test.ts](../app/src/domain/planChainData.test.ts) | 9 |
+| [app/src/domain/planCopy.test.ts](../app/src/domain/planCopy.test.ts) | 25 |
+| [app/src/domain/planFolders.test.ts](../app/src/domain/planFolders.test.ts) | 11 |
+| [app/src/domain/planVersionActions.test.ts](../app/src/domain/planVersionActions.test.ts) | 11 |
+| [app/src/domain/priceListIds.test.ts](../app/src/domain/priceListIds.test.ts) | 9 |
+| [app/src/domain/schema.test.ts](../app/src/domain/schema.test.ts) | 3 |
+| [app/src/domain/search.test.ts](../app/src/domain/search.test.ts) | 11 |
+| [app/src/domain/sorElteres.test.ts](../app/src/domain/sorElteres.test.ts) | 13 |
+| [app/src/domain/sorMezok.test.ts](../app/src/domain/sorMezok.test.ts) | 7 |
+| [app/src/domain/teeth.test.ts](../app/src/domain/teeth.test.ts) | 26 |
+| [app/src/domain/templates.test.ts](../app/src/domain/templates.test.ts) | 14 |
+| [app/src/domain/tervCim.test.ts](../app/src/domain/tervCim.test.ts) | 7 |
+| [app/src/domain/tomegesAr.test.ts](../app/src/domain/tomegesAr.test.ts) | 22 |
+| [app/src/domain/toothVisual.test.ts](../app/src/domain/toothVisual.test.ts) | 22 |
+| [app/src/domain/torzsadatBetoltes.test.ts](../app/src/domain/torzsadatBetoltes.test.ts) | 19 |
+| [app/src/domain/totals.test.ts](../app/src/domain/totals.test.ts) | 25 |
+| [app/src/domain/ujVerzioDatum.test.ts](../app/src/domain/ujVerzioDatum.test.ts) | 7 |
+| [app/src/domain/veglegesitesOr.test.ts](../app/src/domain/veglegesitesOr.test.ts) | 55 |
+| [app/src/pages/DemoPage.test.tsx](../app/src/pages/DemoPage.test.tsx) | 9 |
+| [app/src/pages/Home.test.tsx](../app/src/pages/Home.test.tsx) | 13 |
+| [app/src/pages/NewPlanPage.test.tsx](../app/src/pages/NewPlanPage.test.tsx) | 24 |
+| [app/src/pages/PaciensekPage.test.tsx](../app/src/pages/PaciensekPage.test.tsx) | 16 |
+| [app/src/pages/PatientDetailPage.test.tsx](../app/src/pages/PatientDetailPage.test.tsx) | 25 |
+| [app/src/pages/PatientPage.test.tsx](../app/src/pages/PatientPage.test.tsx) | 49 |
+| [app/src/pages/PlanEditorPage.sorok.test.tsx](../app/src/pages/PlanEditorPage.sorok.test.tsx) | 41 |
+| [app/src/pages/PlanEditorPage.test.tsx](../app/src/pages/PlanEditorPage.test.tsx) | 21 |
+| [app/src/pages/PreviewPage.pdfHiba.test.tsx](../app/src/pages/PreviewPage.pdfHiba.test.tsx) | 2 |
+| [app/src/pages/PreviewPage.test.tsx](../app/src/pages/PreviewPage.test.tsx) | 32 |
+| [app/src/pages/PriceListAdminPage.arElgepeles.test.tsx](../app/src/pages/PriceListAdminPage.arElgepeles.test.tsx) | 7 |
+| [app/src/pages/PriceListAdminPage.leiras.test.tsx](../app/src/pages/PriceListAdminPage.leiras.test.tsx) | 2 |
+| [app/src/pages/PriceListAdminPage.test.tsx](../app/src/pages/PriceListAdminPage.test.tsx) | 52 |
+| [app/src/pages/PriceListAdminPage.tomegesAr.test.tsx](../app/src/pages/PriceListAdminPage.tomegesAr.test.tsx) | 8 |
+| [app/src/pages/SettingsPage.test.tsx](../app/src/pages/SettingsPage.test.tsx) | 36 |
+| [app/src/pages/TervReszleteiPage.test.tsx](../app/src/pages/TervReszleteiPage.test.tsx) | 34 |
+| [app/src/pages/demo/AdatkezelesSection.test.tsx](../app/src/pages/demo/AdatkezelesSection.test.tsx) | 4 |
+| [app/src/pages/demo/FileTreeSection.test.tsx](../app/src/pages/demo/FileTreeSection.test.tsx) | 8 |
+| [app/src/pages/demo/OsszesTervSection.test.tsx](../app/src/pages/demo/OsszesTervSection.test.tsx) | 42 |
+| [app/src/pages/paciensek/UjPaciensDialog.test.tsx](../app/src/pages/paciensek/UjPaciensDialog.test.tsx) | 18 |
+| [app/src/pages/planEditor/EgyediVegosszegBlokk.test.tsx](../app/src/pages/planEditor/EgyediVegosszegBlokk.test.tsx) | 6 |
+| [app/src/pages/planEditor/ElolegBlokk.test.tsx](../app/src/pages/planEditor/ElolegBlokk.test.tsx) | 10 |
+| [app/src/pages/planEditor/ItemPicker.test.tsx](../app/src/pages/planEditor/ItemPicker.test.tsx) | 18 |
+| [app/src/pages/planEditor/PlanEditorHeader.test.tsx](../app/src/pages/planEditor/PlanEditorHeader.test.tsx) | 4 |
+| [app/src/pages/planEditor/Summary.test.tsx](../app/src/pages/planEditor/Summary.test.tsx) | 4 |
+| [app/src/pages/previewPage/VeglegesitesChecklist.test.tsx](../app/src/pages/previewPage/VeglegesitesChecklist.test.tsx) | 8 |
+| [app/src/pages/tervReszletei/FazisokBlokk.test.tsx](../app/src/pages/tervReszletei/FazisokBlokk.test.tsx) | 24 |
+| [app/src/pages/tervReszletei/PenzugyiOsszesites.test.tsx](../app/src/pages/tervReszletei/PenzugyiOsszesites.test.tsx) | 11 |
+| [app/src/pdf/TervDocument.test.tsx](../app/src/pdf/TervDocument.test.tsx) | 50 |
+| [app/src/pdf/fonts.test.ts](../app/src/pdf/fonts.test.ts) | 2 |
+| [app/src/pdf/footerLayout.test.ts](../app/src/pdf/footerLayout.test.ts) | 3 |
+| [app/src/pdf/labels.test.ts](../app/src/pdf/labels.test.ts) | 5 |
+| [app/src/pdf/markdownLite.test.ts](../app/src/pdf/markdownLite.test.ts) | 17 |
+| [app/src/pdf/pdfCimLokalizacio.test.ts](../app/src/pdf/pdfCimLokalizacio.test.ts) | 9 |
+| [app/src/state/AppState.test.tsx](../app/src/state/AppState.test.tsx) | 20 |
+| [app/src/state/planIndulas.test.ts](../app/src/state/planIndulas.test.ts) | 6 |
+| [app/src/storage/DemoDraftStorage.test.ts](../app/src/storage/DemoDraftStorage.test.ts) | 16 |
+| [app/src/storage/DemoStorage.test.ts](../app/src/storage/DemoStorage.test.ts) | 47 |
+| [app/src/storage/demoFileTree.test.ts](../app/src/storage/demoFileTree.test.ts) | 9 |
+| [app/src/storage/paths.test.ts](../app/src/storage/paths.test.ts) | 31 |
+| [app/src/storage/seed/plans.test.ts](../app/src/storage/seed/plans.test.ts) | 292 |
+| [app/src/storage/seed/priceList.test.ts](../app/src/storage/seed/priceList.test.ts) | 1 |
+| [app/src/storage/seed/templates.test.ts](../app/src/storage/seed/templates.test.ts) | 10 |
 | **Alkalmazás összesen** | **1870** |
-| [scripts/workflow/workflow.test.mjs](../../scripts/workflow/workflow.test.mjs) | 10 |
+| [scripts/workflow/workflow.test.mjs](../scripts/workflow/workflow.test.mjs) | 10 |
