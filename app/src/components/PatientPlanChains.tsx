@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  AlertDialog,
   Badge,
   Box,
   Button,
@@ -40,6 +41,7 @@ import {
   Pencil1Icon,
 } from '@radix-ui/react-icons';
 import IkonGomb from './IkonGomb';
+import { Field } from './Field';
 import { csokkentettMozgas } from '../design/motion';
 import { t } from '../design/tokens';
 import { formatPiszkozatIdo, formatShortDate } from '../domain/date';
@@ -77,6 +79,12 @@ import { useStorage } from '../storage/StorageContext';
 export const UJ_VERZIO_VAGY_UJ_TERV =
   'Az „Új verzió” ugyanahhoz a tervhez készül; az „Új terv” és a „Másolás új tervbe” önálló, új tervet indít.';
 
+/** A két érvénytelenítés-dialógus közös célpontja -- a `megnevezes` a doki
+ * nyelvén nevezi meg a verziót („<terv címe> — v<n>"), nem mappanévvel. */
+interface ErvDialogAllapot extends VersionRef {
+  megnevezes: string;
+}
+
 export interface PatientPlanChainsProps {
   patient: PatientFolder;
   plans: PlanFolder[];
@@ -109,6 +117,13 @@ export interface PatientPlanChainsProps {
    */
   onLabelSaved: (planDir: string, tervCim: string | null) => void;
   /**
+   * Sikeres érvénytelenítés/visszavonás után -- ugyanaz a szerződés, mint az
+   * `onLabelSaved`-nél: a `versionsByPlan` a HÍVÓ állapota, neki kell az
+   * érintett verzió `ervenytelenites` mezőjét frissítenie. `null` = a
+   * jelölést a doki visszavonta.
+   */
+  onErvenytelenitesValtozott: (planDir: string, versionDir: string, indok: string | null) => void;
+  /**
    * Az EGYETLEN globális, mentetlen piszkozat -- KIZÁRÓLAG akkor
    * átadva, ha ehhez a `patient`-hez tartozik (a hívó már szűrt
    * `sajatDraft()`-tal, `components/useAktivDraft.ts`, 46. tétel). A
@@ -139,6 +154,7 @@ export default function PatientPlanChains({
   header,
   onNavigateToPatientData,
   onLabelSaved,
+  onErvenytelenitesValtozott,
   aktivDraft,
   nyitottLancok,
   onLancValtas,
@@ -175,6 +191,35 @@ export default function PatientPlanChains({
   const [editingLabel, setEditingLabel] = useState<{ planDir: string } | null>(null);
   const [labelDraft, setLabelDraft] = useState('');
   const [labelError, setLabelError] = useState<{ planDir: string; message: string } | null>(null);
+
+  // Érvénytelenítés: két KÜLÖN dialógus, mert a két irány két különböző
+  // kérdést tesz fel. Az érvénytelenítés kötelező szöveges indoklást kér (az
+  // indoklás maga a doki-látható eredmény, üresen nem menthető); a
+  // visszavonás egy sima megerősítés, amihez nincs mit begépelni.
+  const [ervenytelenites, setErvenytelenites] = useState<ErvDialogAllapot | null>(null);
+  const [ervIndok, setErvIndok] = useState('');
+  const [visszavonas, setVisszavonas] = useState<ErvDialogAllapot | null>(null);
+  const [ervHiba, setErvHiba] = useState<(VersionRef & { message: string }) | null>(null);
+
+  async function mentErvenytelenites(ref: VersionRef, indok: string) {
+    setErvHiba(null);
+    try {
+      await storage.savePlanErvenytelenites(patient.dirName, ref.planDir, ref.versionDir, indok);
+      onErvenytelenitesValtozott(ref.planDir, ref.versionDir, indok.trim() || null);
+      setErvenytelenites(null);
+      setVisszavonas(null);
+    } catch (err) {
+      setErvHiba({
+        ...ref,
+        message:
+          err instanceof Error
+            ? `Az érvénytelenítés mentése nem sikerült: ${err.message}`
+            : 'Az érvénytelenítés mentése váratlanul meghiúsult.',
+      });
+      setErvenytelenites(null);
+      setVisszavonas(null);
+    }
+  }
 
   const latestOverall = latestVersionAcrossPlans(plans, (planDir) => versionsByPlan[planDir] ?? []);
 
@@ -498,7 +543,17 @@ export default function PatientPlanChains({
                 <Text
                   size="2"
                   weight="medium"
-                  style={{ fontVariantNumeric: 'tabular-nums', textAlign: 'right', minWidth: '7rem' }}
+                  style={{
+                    fontVariantNumeric: 'tabular-nums',
+                    textAlign: 'right',
+                    minWidth: '7rem',
+                    // A fejléc a LEGFRISSEBB verzió összegét mutatja -- ha az
+                    // érvénytelen, a csukott láncon is ki kell látszania,
+                    // különben egy visszavont ajánlat élőként olvasódna.
+                    ...(legfrissebb?.ervenytelenites
+                      ? { textDecoration: 'line-through', color: t.uiTextMuted }
+                      : {}),
+                  }}
                 >
                   {formatMoney(
                     chainTotal?.fizetendo ?? null,
@@ -566,6 +621,11 @@ export default function PatientPlanChains({
                                 Csak ajánlat
                               </Badge>
                             )}
+                            {v.ervenytelenites && (
+                              <Badge color="red" variant="soft" size="1">
+                                Érvénytelen
+                              </Badge>
+                            )}
                           </Flex>
                           <Flex align="center" gap="4">
                             {/* A verzió végösszege (osszesitok.fizetendo) a saját
@@ -580,6 +640,13 @@ export default function PatientPlanChains({
                                 fontVariantNumeric: 'tabular-nums',
                                 textAlign: 'right',
                                 minWidth: '7rem',
+                                // Az áthúzás a jelvény MELLETT, nem helyette:
+                                // az összeg az, amiért a doki a sort olvassa,
+                                // és a szín önmagában nem hordozhatja a
+                                // jelentést (WCAG).
+                                ...(v.ervenytelenites
+                                  ? { textDecoration: 'line-through', color: t.uiTextMuted }
+                                  : {}),
                               }}
                             >
                               {formatMoney(
@@ -662,10 +729,58 @@ export default function PatientPlanChains({
                                     Ugrás a legfrissebb verzióra
                                   </DropdownMenu.Item>
                                 )}
+                                {/* A menü VÉGÉN, saját elválasztó után -- a
+                                    "Páciens törlése" (PatientDetailPage.tsx)
+                                    mintája: ritka, súlyos akció, nem
+                                    keveredhet a napi Letöltés/Másolás
+                                    sorrendbe. A visszavonás UGYANITT él, hogy
+                                    a doki egy helyen keresse mindkét irányt. */}
+                                <DropdownMenu.Separator />
+                                {v.ervenytelenites ? (
+                                  <DropdownMenu.Item
+                                    onSelect={() =>
+                                      setVisszavonas({
+                                        ...ref,
+                                        megnevezes: `${label} — v${v.verzio}`,
+                                      })
+                                    }
+                                  >
+                                    Érvénytelenítés visszavonása
+                                  </DropdownMenu.Item>
+                                ) : (
+                                  <DropdownMenu.Item
+                                    color="red"
+                                    onSelect={() => {
+                                      setErvIndok('');
+                                      setErvenytelenites({
+                                        ...ref,
+                                        megnevezes: `${label} — v${v.verzio}`,
+                                      });
+                                    }}
+                                  >
+                                    Érvénytelenítés
+                                  </DropdownMenu.Item>
+                                )}
                               </DropdownMenu.Content>
                             </DropdownMenu.Root>
                           </Flex>
                         </Flex>
+                        {/* Az indoklás a jelvény alatt, teljes szélességben --
+                            a jelvény melletti sorba tördelve a hosszabb
+                            szöveg szétnyomná a verziósor két végét. */}
+                        {v.ervenytelenites && (
+                          <Text as="p" size="1" mt="0" mb="2" style={{ color: t.uiTextMuted }}>
+                            Érvénytelenítés indoka: {v.ervenytelenites}
+                          </Text>
+                        )}
+                        {ervHiba?.planDir === plan.dirName && ervHiba.versionDir === v.dirName && (
+                          <Callout.Root color="red" size="1" mb="2">
+                            <Callout.Icon>
+                              <CrossCircledIcon />
+                            </Callout.Icon>
+                            <Callout.Text>{ervHiba.message}</Callout.Text>
+                          </Callout.Root>
+                        )}
                         {akciok.hiba?.planDir === plan.dirName && akciok.hiba.versionDir === v.dirName && (
                           <VerzioAkcioUzenet hiba={akciok.hiba} />
                         )}
@@ -683,6 +798,88 @@ export default function PatientPlanChains({
       })}
 
       <LetoltesEloRegio fajlnev={letoltott?.fajlnev ?? null} />
+
+      {/* NEM a `PlanVersionActionDialog`: az piszkozat-felülírás elleni
+          megerősítő őr, itt viszont szöveges bevitelt kérünk. A `⋯` menü
+          `onCloseAutoFocus` gátja (fent) ehhez a dialógushoz is kell --
+          enélkül a Radix visszavenné a fókuszt a triggerre. */}
+      <AlertDialog.Root
+        open={ervenytelenites !== null}
+        onOpenChange={(nyitva) => {
+          if (!nyitva) setErvenytelenites(null);
+        }}
+      >
+        <AlertDialog.Content maxWidth="480px">
+          <AlertDialog.Title>Verzió érvénytelenítése</AlertDialog.Title>
+          <AlertDialog.Description size="2" mb="3">
+            „{ervenytelenites?.megnevezes}" tévesen kiadottként jelölése. A kiadott PDF és a
+            mentett terv változatlan marad; a jelölés bármikor visszavonható.
+          </AlertDialog.Description>
+          <Field label="Az érvénytelenítés indoka">
+            <TextField.Root
+              id="ervenytelenites-indok"
+              autoFocus
+              value={ervIndok}
+              onChange={(e) => setErvIndok(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && ervIndok.trim() && ervenytelenites) {
+                  void mentErvenytelenites(ervenytelenites, ervIndok);
+                }
+              }}
+              placeholder="Például: rossz árlistával készült"
+            />
+          </Field>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            {/* Szándékosan NEM `AlertDialog.Action`: az minden kattintásra
+                zárná a dialógust, az indoklás kötelezősége viszont a
+                dialóguson belül dől el. */}
+            <Button
+              color="red"
+              disabled={!ervIndok.trim()}
+              onClick={() => {
+                if (ervenytelenites) void mentErvenytelenites(ervenytelenites, ervIndok);
+              }}
+            >
+              Érvénytelenítés
+            </Button>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
+      <AlertDialog.Root
+        open={visszavonas !== null}
+        onOpenChange={(nyitva) => {
+          if (!nyitva) setVisszavonas(null);
+        }}
+      >
+        <AlertDialog.Content maxWidth="440px">
+          <AlertDialog.Title>Érvénytelenítés visszavonása</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            „{visszavonas?.megnevezes}" újra érvényesként jelenik meg, az indoklás törlődik.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Mégse
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                onClick={() => {
+                  if (visszavonas) void mentErvenytelenites(visszavonas, '');
+                }}
+              >
+                Visszavonás
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
 
       <PlanVersionActionDialog akciok={akciok} />
     </Box>

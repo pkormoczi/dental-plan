@@ -77,7 +77,10 @@ function classify(segments: string[]): Classified | null {
     if (rest.length === 2 && rest[1] === 'paciens-adatok.json') {
       return { segments, format: 'json' };
     }
-    if (rest.length === 3 && rest[2] === 'terv-cimke.json') {
+    if (
+      rest.length === 3 &&
+      (rest[2] === 'terv-cimke.json' || rest[2] === 'terv-ervenytelenitesek.json')
+    ) {
       return { segments, format: 'json' };
     }
     if (rest.length === 4 && rest[3] === 'terv.json') {

@@ -17,7 +17,7 @@ import PatientPlanChains, { UJ_VERZIO_VAGY_UJ_TERV } from '../../components/Pati
 import { sajatDraft, useAktivDraft } from '../../components/useAktivDraft';
 import { useListStateMemory } from '../../components/useListStateMemory';
 import { t } from '../../design/tokens';
-import { type PlanChainData, loadPlanChainData } from '../../domain/planChainData';
+import { ervenytelenitessel, type PlanChainData, loadPlanChainData } from '../../domain/planChainData';
 import { norm } from '../../domain/search';
 import type { PatientFolder } from '../../domain/types';
 import { useStorage } from '../../storage/StorageContext';
@@ -197,6 +197,26 @@ export default function OsszesTervSection() {
                       plans: current.plans.map((plan) =>
                         plan.dirName === planDir ? { ...plan, tervCim } : plan,
                       ),
+                    },
+                  };
+                })
+              }
+              onErvenytelenitesValtozott={(planDir, versionDir, indok) =>
+                setChainDataByPatient((prev) => {
+                  const current = prev[p.dirName];
+                  if (!current) return prev;
+                  return {
+                    ...prev,
+                    [p.dirName]: {
+                      ...current,
+                      versionsByPlan: {
+                        ...current.versionsByPlan,
+                        [planDir]: ervenytelenitessel(
+                          current.versionsByPlan[planDir] ?? [],
+                          versionDir,
+                          indok,
+                        ),
+                      },
                     },
                   };
                 })

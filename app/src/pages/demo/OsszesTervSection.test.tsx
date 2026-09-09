@@ -387,7 +387,11 @@ describe('OsszesTervSection', () => {
     await user.click(trigger);
 
     const items = await screen.findAllByRole('menuitem');
-    expect(items.map((el) => el.textContent)).toEqual(['Letöltés', 'Másolás új tervbe']);
+    expect(items.map((el) => el.textContent)).toEqual([
+      'Letöltés',
+      'Másolás új tervbe',
+      'Érvénytelenítés',
+    ]);
   });
 
   // 48. tétel: "Új verzió" kizárólag a lánc legfrissebb verziósorán
@@ -422,6 +426,7 @@ describe('OsszesTervSection', () => {
       'Letöltés',
       'Másolás új tervbe',
       'Ugrás a legfrissebb verzióra',
+      'Érvénytelenítés',
     ]);
   });
 
@@ -1156,6 +1161,139 @@ describe('OsszesTervSection', () => {
       const cardAfter = patientCard('Nagy Éva');
       const dobozAfter = lancDoboz(cardAfter, nagyEvaMultiVersionChain[0].planDir);
       expect(lancToggle(dobozAfter)).toHaveAttribute('aria-expanded', 'true');
+    });
+  });
+
+  // Egy tévesen kiadott, véglegesített verzió jelölése: a `terv.json` és a
+  // mentett PDF változatlan marad, a jelölés lánc-szintű sidecarban él.
+  describe('verzió érvénytelenítése', () => {
+    /** A verzió végösszegének DOM-eleme -- a `formatMoney` kimenetére, laza
+     * szóköz-illesztéssel (lásd a fizetendő-minta a lap többi tesztjében). */
+    function osszegElem(doboz: HTMLElement, plan: Plan): HTMLElement {
+      const szoveg = formatMoney(plan.osszesitok.fizetendo, plan.penznem, plan.nyelv);
+      const minta = szoveg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+      return within(doboz).getAllByText(new RegExp(`^${minta}$`))[0];
+    }
+
+    async function ervenytelenit(
+      user: ReturnType<typeof userEvent.setup>,
+      doboz: HTMLElement,
+      vi: number,
+      indok: string,
+    ) {
+      const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+      await user.click(triggers[vi]);
+      await user.click(await screen.findByRole('menuitem', { name: 'Érvénytelenítés' }));
+      await user.type(await screen.findByRole('textbox', { name: /indoka/ }), indok);
+      await user.click(screen.getByRole('button', { name: 'Érvénytelenítés' }));
+    }
+
+    it('érvénytelenítés után a verziósor jelvényt, áthúzott összeget és indoklást mutat, a terv.json változatlan', async () => {
+      const user = userEvent.setup();
+      const [, v2] = nagyEvaMultiVersionChain;
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const doboz = lancDoboz(patientCard('Nagy Éva'), v2.planDir);
+      await nyissLancot(user, doboz);
+      await ervenytelenit(user, doboz, 0, 'rossz árlistával készült');
+
+      expect(await within(doboz).findByText('Érvénytelen')).toBeInTheDocument();
+      expect(
+        within(doboz).getByText('Érvénytelenítés indoka: rossz árlistával készült'),
+      ).toBeInTheDocument();
+      expect(osszegElem(doboz, v2.plan)).toHaveStyle({ textDecoration: 'line-through' });
+
+      const storage = new DemoStorage();
+      const mentett = await storage.loadPlan({
+        patientDir: v2.patientDir,
+        planDir: v2.planDir,
+        versionDir: v2.versionDir,
+      });
+      expect(mentett).toEqual(v2.plan);
+    });
+
+    it('a legfrissebb verzió érvénytelenítése a csukott lánc-fejléc összegét is áthúzza', async () => {
+      const user = userEvent.setup();
+      const [, v2] = nagyEvaMultiVersionChain;
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const doboz = lancDoboz(patientCard('Nagy Éva'), v2.planDir);
+      await nyissLancot(user, doboz);
+      await ervenytelenit(user, doboz, 0, 'téves kiadás');
+      await within(doboz).findByText('Érvénytelen');
+
+      // A fejléc-összeg CSAK csukott láncon látszik -- ott kell kilátszania,
+      // hogy egy visszavont ajánlat ne olvasódjon élőként.
+      await user.click(lancToggle(doboz));
+      expect(osszegElem(doboz, v2.plan)).toHaveStyle({ textDecoration: 'line-through' });
+    });
+
+    it('indoklás nélkül nem menthető: az Érvénytelenítés gomb tiltott, amíg a mező üres', async () => {
+      const user = userEvent.setup();
+      const [, v2] = nagyEvaMultiVersionChain;
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const doboz = lancDoboz(patientCard('Nagy Éva'), v2.planDir);
+      await nyissLancot(user, doboz);
+      const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+      await user.click(triggers[0]);
+      await user.click(await screen.findByRole('menuitem', { name: 'Érvénytelenítés' }));
+
+      const mezo = await screen.findByRole('textbox', { name: /indoka/ });
+      expect(screen.getByRole('button', { name: 'Érvénytelenítés' })).toBeDisabled();
+      // Csak whitespace sem elég.
+      await user.type(mezo, '   ');
+      expect(screen.getByRole('button', { name: 'Érvénytelenítés' })).toBeDisabled();
+      await user.type(mezo, 'indok');
+      expect(screen.getByRole('button', { name: 'Érvénytelenítés' })).not.toBeDisabled();
+    });
+
+    it('visszavonás után a verziósor és a lánc-fejléc újra jelöletlen', async () => {
+      const user = userEvent.setup();
+      const [, v2] = nagyEvaMultiVersionChain;
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const doboz = lancDoboz(patientCard('Nagy Éva'), v2.planDir);
+      await nyissLancot(user, doboz);
+      await ervenytelenit(user, doboz, 0, 'mégsem ez kellett');
+      await within(doboz).findByText('Érvénytelen');
+
+      const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+      await user.click(triggers[0]);
+      await user.click(await screen.findByRole('menuitem', { name: 'Érvénytelenítés visszavonása' }));
+      await user.click(screen.getByRole('button', { name: 'Visszavonás' }));
+
+      await waitFor(() => expect(within(doboz).queryByText('Érvénytelen')).not.toBeInTheDocument());
+      expect(within(doboz).queryByText(/Érvénytelenítés indoka:/)).not.toBeInTheDocument();
+      expect(osszegElem(doboz, v2.plan)).not.toHaveStyle({ textDecoration: 'line-through' });
+      await user.click(lancToggle(doboz));
+      expect(osszegElem(doboz, v2.plan)).not.toHaveStyle({ textDecoration: 'line-through' });
+    });
+
+    it('érvénytelenített verzión a Letöltés, az Új verzió és a Másolás új tervbe változatlanul elérhető', async () => {
+      const user = userEvent.setup();
+      const [, v2] = nagyEvaMultiVersionChain;
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const doboz = lancDoboz(patientCard('Nagy Éva'), v2.planDir);
+      await nyissLancot(user, doboz);
+      await ervenytelenit(user, doboz, 0, 'téves');
+      await within(doboz).findByText('Érvénytelen');
+
+      expect(within(doboz).getByRole('button', { name: 'Új verzió' })).not.toBeDisabled();
+      const triggers = within(doboz).getAllByRole('button', { name: /további műveletek$/ });
+      await user.click(triggers[0]);
+      const items = await screen.findAllByRole('menuitem');
+      expect(items.map((el) => el.textContent)).toEqual([
+        'Letöltés',
+        'Másolás új tervbe',
+        'Érvénytelenítés visszavonása',
+      ]);
     });
   });
 });

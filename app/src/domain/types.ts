@@ -328,6 +328,19 @@ export interface PlanLabel {
 }
 
 /**
+ * terv-ervenytelenitesek.json -- a `terv-cimke.json` mellett, a terv-mappa
+ * gyökerén: a tévesen kiadott verziók jelölése. Verzió-szintű a döntés, de
+ * LÁNC-szintű a fájl -- egy verziómappán belüli fájl az append-only szabályt
+ * sértené, a `terv.json`-mező pedig egy aláírt dokumentum felülírása lenne.
+ * A `verziok` kulcsa a verziómappa neve, értéke az indoklás; a bejegyzés
+ * hiánya = a verzió érvényes (a visszavonás törli a bejegyzést).
+ */
+export interface PlanInvalidations {
+  schemaVersion: 1;
+  verziok: Record<string, string>;
+}
+
+/**
  * paciens-adatok.json -- egy páciens-mappa ÉLŐ, terv-mentéstől független
  * törzsadata (lásd app/src/storage/CLAUDE.md).
  * Ellentétben a `PatientRecord`-dal és a `PlanLabel`-lel, ez VALÓDI system
@@ -415,6 +428,12 @@ export interface PlanVersion {
   dirName: string;
   isoDate: string;
   verzio: number;
+  /**
+   * Az érvénytelenítés indoka, ha a doki tévesen kiadottnak jelölte ezt a
+   * verziót -- a `PlanInvalidations` sidecarból, a `listVersions`-ben. A mező
+   * hiánya = érvényes verzió; sosem üres string.
+   */
+  ervenytelenites?: string;
 }
 
 export interface PlanRef {

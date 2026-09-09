@@ -27,6 +27,7 @@ import type {
   PatientRecord,
   Plan,
   PlanFolder,
+  PlanInvalidations,
   PlanLabel,
   PlanRef,
   PlanVersion,
@@ -102,6 +103,17 @@ const PATIENT_ROOT_FILES = new Set(['paciens.json', 'paciens-adatok.json']);
 function planLabelKey(patientDir: string, planDir: string): string {
   return `${PATIENTS_PREFIX}${patientDir}/${planDir}/terv-cimke.json`;
 }
+
+function planInvalidationsKey(patientDir: string, planDir: string): string {
+  return `${PATIENTS_PREFIX}${patientDir}/${planDir}/terv-ervenytelenitesek.json`;
+}
+
+/**
+ * A terv-mappa gyökerén élő fájlok neve -- a `listVersions` ezekkel szűri ki
+ * a verziómappák közül, a `PATIENT_ROOT_FILES` párjaként (különben egy új
+ * gyökér-fájl hamis verzióként jelenne meg).
+ */
+const PLAN_ROOT_FILES = new Set(['terv-cimke.json', 'terv-ervenytelenitesek.json']);
 
 function planKey(patientDir: string, planDir: string, versionDir: string): string {
   return `${PATIENTS_PREFIX}${patientDir}/${planDir}/${versionDir}/terv.json`;
@@ -439,14 +451,41 @@ export class DemoStorage implements PlanStorage {
     this.eachKey((key) => {
       if (!key.startsWith(prefix)) return;
       const dir = key.slice(prefix.length).split('/')[0];
-      if (dir && dir !== 'terv-cimke.json') dirs.add(dir);
+      if (dir && !PLAN_ROOT_FILES.has(dir)) dirs.add(dir);
     });
+    const ervenytelenitesek = this.olvasErvenytelenitesek(patientDir, planDir);
     const versions: PlanVersion[] = [];
     for (const dirName of dirs) {
       const parsed = parseVersionDirName(dirName);
-      if (parsed) versions.push({ dirName, ...parsed });
+      if (!parsed) continue;
+      const indok = ervenytelenitesek[dirName];
+      versions.push({ dirName, ...parsed, ...(indok ? { ervenytelenites: indok } : {}) });
     }
     return versions.sort((a, b) => a.verzio - b.verzio);
+  }
+
+  /**
+   * A lánc érvénytelenítés-sidecarja, `{}`-ként ha nincs vagy sérült -- a
+   * `terv-cimke.json` olvasásának mintája (`listPlans`): egy index-fájl
+   * olvashatatlansága nem viheti el az egész lánc listázását, csak a
+   * jelölés marad el. A verziók `terv.json`-ja ettől függetlenül a szigorú,
+   * `assertKnownSchemaVersion`-ös úton (`loadPlan`) töltődik.
+   */
+  private olvasErvenytelenitesek(patientDir: string, planDir: string): Record<string, string> {
+    const raw = localStorage.getItem(planInvalidationsKey(patientDir, planDir));
+    if (raw == null) return {};
+    try {
+      const rec = parseJson<PlanInvalidations>(raw, 'terv-ervenytelenitesek.json');
+      const verziok = rec.verziok;
+      if (!verziok || typeof verziok !== 'object') return {};
+      const tisztitott: Record<string, string> = {};
+      for (const [dirName, indok] of Object.entries(verziok)) {
+        if (typeof indok === 'string' && indok.trim()) tisztitott[dirName] = indok;
+      }
+      return tisztitott;
+    } catch {
+      return {};
+    }
   }
 
   async loadPlan(ref: PlanRef): Promise<Plan> {
@@ -471,6 +510,30 @@ export class DemoStorage implements PlanStorage {
     }
     const label: PlanLabel = { schemaVersion: 1, tervCim: trimmed };
     localStorage.setItem(key, JSON.stringify(label));
+  }
+
+  async savePlanErvenytelenites(
+    patientDir: string,
+    planDir: string,
+    versionDir: string,
+    indok: string,
+  ): Promise<void> {
+    const key = planInvalidationsKey(patientDir, planDir);
+    const verziok = this.olvasErvenytelenitesek(patientDir, planDir);
+    const trimmed = indok.trim();
+    if (trimmed) {
+      verziok[versionDir] = trimmed;
+    } else {
+      delete verziok[versionDir];
+    }
+    if (Object.keys(verziok).length === 0) {
+      // Az utolsó jelölés visszavonása a FÁJLT is elviszi -- egy üres
+      // `verziok` objektum ugyanazt jelentené, csak szemétként a fában.
+      localStorage.removeItem(key);
+      return;
+    }
+    const rec: PlanInvalidations = { schemaVersion: 1, verziok };
+    localStorage.setItem(key, JSON.stringify(rec));
   }
 
   /**

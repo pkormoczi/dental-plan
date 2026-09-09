@@ -37,6 +37,19 @@ export interface PlanStorage {
    * auto-javaslatra, `domain/tervCim.ts`).
    */
   savePlanLabel(patientDir: string, planDir: string, tervCim: string): Promise<void>;
+  /**
+   * Egy verzió „tévesen kiadott" jelölése a terv-ervenytelenitesek.json-ban --
+   * a `savePlanLabel` szerződésével: a fájl a verziómappákon KÍVÜL él, tehát
+   * az append-only szabályt nem sérti, és üres/whitespace `indok` TÖRLI a
+   * bejegyzést (a doki visszavonta a jelölést). A verzió `terv.json`-ja és
+   * mentett PDF-je változatlan marad -- a kiadott bájtsorhoz ez sem nyúl.
+   */
+  savePlanErvenytelenites(
+    patientDir: string,
+    planDir: string,
+    versionDir: string,
+    indok: string,
+  ): Promise<void>;
   loadPriceList(): Promise<PriceList>;
   /**
    * Az implementáció felelős azért, hogy egymást gyorsan követő

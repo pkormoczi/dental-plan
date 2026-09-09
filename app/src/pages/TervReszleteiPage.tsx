@@ -336,6 +336,9 @@ export default function TervReszleteiPage() {
     suffix: versionDir,
   });
   const dob = megjelenitett.szuletesiIdo ? formatShortDate(megjelenitett.szuletesiIdo, 'hu') : null;
+  // A jelölés a `listVersions`-ből jön (lánc-szintű sidecar), amit a betöltő
+  // effekt már lekért -- nincs miatta új storage-hívás.
+  const ervenytelenites = versions.find((v) => v.dirName === versionDir)?.ervenytelenites;
 
   return (
     <Box ref={rootRef} style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -495,10 +498,10 @@ export default function TervReszleteiPage() {
           kijelölések, fogtérkép-navigáció) alapállapotba állítására, hogy a
           tartalom-blokknak ne kelljen külön reset-kódot írnia. */}
       <Box key={`${planDir}/${versionDir}`}>
-        <PenzugyiOsszesites plan={plan} />
+        <PenzugyiOsszesites plan={plan} ervenytelen={ervenytelenites != null} />
         <FazisokBlokk plan={plan} priceList={priceList} />
 
-        <TervMetaadatok plan={plan} tervCim={tervCim} />
+        <TervMetaadatok plan={plan} tervCim={tervCim} ervenytelenites={ervenytelenites} />
         <PaciensPillanatkep
           paciens={plan.paciens}
           masterPaciens={masterPaciens}
@@ -520,7 +523,16 @@ export default function TervReszleteiPage() {
   );
 }
 
-function TervMetaadatok({ plan, tervCim }: { plan: Plan; tervCim: string }) {
+function TervMetaadatok({
+  plan,
+  tervCim,
+  ervenytelenites,
+}: {
+  plan: Plan;
+  tervCim: string;
+  /** Az érvénytelenítés indoka, ha a doki tévesen kiadottnak jelölte a verziót. */
+  ervenytelenites?: string;
+}) {
   return (
     <Section title="A terv adatai">
       <Grid columns={{ initial: '1', sm: '2' }} gap="3">
@@ -541,7 +553,17 @@ function TervMetaadatok({ plan, tervCim }: { plan: Plan; tervCim: string }) {
             Csak ajánlat
           </Badge>
         )}
+        {ervenytelenites && (
+          <Badge color="red" variant="soft" size="1">
+            Érvénytelen
+          </Badge>
+        )}
       </Flex>
+      {ervenytelenites && (
+        <Text as="p" size="1" mt="2" mb="0" style={{ color: t.uiTextMuted }}>
+          Érvénytelenítés indoka: {ervenytelenites}
+        </Text>
+      )}
     </Section>
   );
 }

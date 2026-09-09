@@ -67,7 +67,7 @@ Záró bekezdés a naplóból, szó szerint:
 - Javasolt javítási irány: egy explicit „Érvénytelenítés" művelet a véglegesített terv „további műveletek" menüjében, ami látható, nem törölhető jelölést tesz a tervre (pl. áthúzott összeg, „ÉRVÉNYTELEN" címke), és kizárja az esetleges összesítésekből — a `_v<n+1>` és a „mentett verzió sosem íródik felül" elvek sérelme nélkül.
 - Siker mércéje: egy tévesen kiadott, véglegesített terv egy hivatalos, a rendszer által is felismert állapotba kerül, ami megkülönbözteti egy érvényes tervtől bárhol, ahol az összegek megjelennek.
 - Backlog: `veglegesitett-terv-ervenytelenitese`
-- Döntés: backlog veglegesitett-terv-ervenytelenitese (2026-09-09)
+- Döntés: javítva veglegesitett-terv-ervenytelenitese (2026-09-09)
 
 ### 4. Más páciensek neve, adatai és aktivitása kattintás/keresés nélkül látszik
 

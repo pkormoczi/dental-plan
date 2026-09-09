@@ -37,7 +37,12 @@ import PatientDetailHeader from '../components/PatientDetailHeader';
 import PatientEditorPanel from '../components/PatientEditorPanel';
 import PatientPlanChains from '../components/PatientPlanChains';
 import PlanVersionActionDialog, { usePlanVersionActions } from '../components/PlanVersionActionDialog';
-import { loadPlanChainData, versionDataKey, type PlanChainData } from '../domain/planChainData';
+import {
+  ervenytelenitessel,
+  loadPlanChainData,
+  versionDataKey,
+  type PlanChainData,
+} from '../domain/planChainData';
 import { latestVersionAcrossPlans } from '../domain/planFolders';
 import { megjelenitettTorzsadat } from '../domain/paciensAdatok';
 import { paciensTorlesAkadaly, type TorlesAkadaly } from '../domain/paciensTorles';
@@ -399,6 +404,23 @@ export default function PatientDetailPage() {
                         plans: prev.plans.map((p) =>
                           p.dirName === planDir ? { ...p, tervCim } : p,
                         ),
+                      }
+                    : prev,
+                )
+              }
+              onErvenytelenitesValtozott={(planDir, versionDir, indok) =>
+                setChainData((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        versionsByPlan: {
+                          ...prev.versionsByPlan,
+                          [planDir]: ervenytelenitessel(
+                            prev.versionsByPlan[planDir] ?? [],
+                            versionDir,
+                            indok,
+                          ),
+                        },
                       }
                     : prev,
                 )

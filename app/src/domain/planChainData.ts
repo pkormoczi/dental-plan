@@ -33,6 +33,25 @@ export function versionDataKey(planDir: string, versionDir: string): string {
   return `${planDir}/${versionDir}`;
 }
 
+/**
+ * Egy lánc `versionsByPlan`-listája egy érvénytelenítés-váltás után -- a
+ * `PatientPlanChains` `onErvenytelenitesValtozott` szerződéséhez, hogy a KÉT
+ * hívó (OsszesTervSection, PatientDetailPage) ne írja meg külön-külön.
+ * `null` indok = a doki visszavonta a jelölést, a mező eltűnik.
+ */
+export function ervenytelenitessel(
+  versions: PlanVersion[],
+  versionDir: string,
+  indok: string | null,
+): PlanVersion[] {
+  return versions.map((v) => {
+    if (v.dirName !== versionDir) return v;
+    const tobbi = { ...v };
+    delete tobbi.ervenytelenites;
+    return indok == null ? tobbi : { ...tobbi, ervenytelenites: indok };
+  });
+}
+
 export async function loadPlanChainData(
   storage: PlanStorage,
   patientDir: string,

@@ -161,6 +161,44 @@ describe('TervReszleteiPage', () => {
     expect(screen.queryByText('Csak ajánlat')).not.toBeInTheDocument();
   });
 
+  it('érvénytelenített verzión a jelvénysor "Érvénytelen"-t, alatta az indoklást, a Végösszeg áthúzva jelenik meg', async () => {
+    const seeder = new DemoStorage();
+    await seeder.savePlanErvenytelenites(nagyDir, nagyV2.planDir, nagyV2.versionDir, 'téves ár');
+
+    renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
+    await screen.findByTestId('terv-reszletei-fejlec');
+
+    expect(screen.getByText('Érvénytelen')).toBeInTheDocument();
+    expect(screen.getByText('Érvénytelenítés indoka: téves ár')).toBeInTheDocument();
+    const fizetendoSzoveg = formatMoney(
+      nagyV2.plan.osszesitok.fizetendo,
+      nagyV2.plan.penznem,
+      nagyV2.plan.nyelv,
+    );
+    const minta = fizetendoSzoveg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+    expect(screen.getByText(new RegExp(`^${minta}$`))).toHaveStyle({
+      textDecoration: 'line-through',
+    });
+    // A lezárt dokumentum maga érintetlen: a "Véglegesített" jelvény marad.
+    expect(screen.getByText('Véglegesített')).toBeInTheDocument();
+  });
+
+  it('jelöletlen verzión nincs "Érvénytelen" jelvény és a Végösszeg nincs áthúzva', async () => {
+    renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
+    await screen.findByTestId('terv-reszletei-fejlec');
+
+    expect(screen.queryByText('Érvénytelen')).not.toBeInTheDocument();
+    const fizetendoSzoveg = formatMoney(
+      nagyV2.plan.osszesitok.fizetendo,
+      nagyV2.plan.penznem,
+      nagyV2.plan.nyelv,
+    );
+    const minta = fizetendoSzoveg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+    expect(screen.getByText(new RegExp(`^${minta}$`))).not.toHaveStyle({
+      textDecoration: 'line-through',
+    });
+  });
+
   it('a fázisok blokk (72. tétel) a terv fázisait mutatja, a placeholder-szöveg eltűnt', async () => {
     renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
     await screen.findByTestId('terv-reszletei-fejlec');

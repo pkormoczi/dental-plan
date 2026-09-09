@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DemoStorage } from './DemoStorage';
+import { DemoStorage, PREFIX } from './DemoStorage';
 import type { DemoNode } from './demoFileTree';
 import { VersionConflictError } from './paths';
 import { seedPatients } from './seed/plans';
@@ -202,6 +202,62 @@ describe('DemoStorage', () => {
     await storage.savePlanLabel(ref.patientDir, ref.planDir, '   ');
     plans = await storage.listPlans(ref.patientDir);
     expect(plans[0].tervCim).toBeNull();
+  });
+
+  it('savePlanErvenytelenites jelöli a verziót a listVersions-ben, a terv.json érintetlenül hagyva', async () => {
+    const plan = makeBlankPlan();
+    const ref = await storage.savePlan(plan, new Uint8Array([1]));
+    const elotte = await storage.loadPlan(ref);
+
+    await storage.savePlanErvenytelenites(ref.patientDir, ref.planDir, ref.versionDir, 'rossz árlista');
+
+    const versions = await storage.listVersions(ref.patientDir, ref.planDir);
+    expect(versions).toHaveLength(1);
+    expect(versions[0].ervenytelenites).toBe('rossz árlista');
+    expect(await storage.loadPlan(ref)).toEqual(elotte);
+    expect(await storage.loadPlanPdf(ref)).toEqual(new Uint8Array([1]));
+  });
+
+  it('savePlanErvenytelenites üres indokkal visszavonja a jelölést, és nem hagy sidecart a fában', async () => {
+    const plan = makeBlankPlan();
+    const ref = await storage.savePlan(plan, new Uint8Array([1]));
+    await storage.savePlanErvenytelenites(ref.patientDir, ref.planDir, ref.versionDir, 'téves');
+    const sidecarKulcs = `${PREFIX}paciensek/${ref.patientDir}/${ref.planDir}/terv-ervenytelenitesek.json`;
+    expect(localStorage.getItem(sidecarKulcs)).not.toBeNull();
+
+    await storage.savePlanErvenytelenites(ref.patientDir, ref.planDir, ref.versionDir, '   ');
+
+    const versions = await storage.listVersions(ref.patientDir, ref.planDir);
+    expect(versions[0].ervenytelenites).toBeUndefined();
+    expect(localStorage.getItem(sidecarKulcs)).toBeNull();
+  });
+
+  it('a lánc egy MÁSIK verziójának jelölése az elsőt nem érinti, és a sidecar nem számít verziómappának', async () => {
+    const plan = makeBlankPlan();
+    const ref1 = await storage.savePlan(plan, new Uint8Array([1]));
+    const v1 = await storage.loadPlan(ref1);
+    const ref2 = await storage.savePlan({ ...v1, verzio: 0 }, new Uint8Array([2]));
+
+    await storage.savePlanErvenytelenites(ref1.patientDir, ref1.planDir, ref1.versionDir, 'v1 téves');
+
+    const versions = await storage.listVersions(ref1.patientDir, ref1.planDir);
+    // A sidecar-fájl nem jelenik meg álverzióként a lista végén.
+    expect(versions.map((v) => v.dirName)).toEqual([ref1.versionDir, ref2.versionDir]);
+    expect(versions[0].ervenytelenites).toBe('v1 téves');
+    expect(versions[1].ervenytelenites).toBeUndefined();
+  });
+
+  it('sérült terv-ervenytelenitesek.json esetén a verziók jelölés nélkül, de hiánytalanul listázódnak', async () => {
+    const plan = makeBlankPlan();
+    const ref = await storage.savePlan(plan, new Uint8Array([1]));
+    localStorage.setItem(
+      `${PREFIX}paciensek/${ref.patientDir}/${ref.planDir}/terv-ervenytelenitesek.json`,
+      'not valid json {{{',
+    );
+
+    const versions = await storage.listVersions(ref.patientDir, ref.planDir);
+    expect(versions.map((v) => v.dirName)).toEqual([ref.versionDir]);
+    expect(versions[0].ervenytelenites).toBeUndefined();
   });
 
   it('roundtrips the pdf bytes saved alongside a plan', async () => {

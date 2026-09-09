@@ -16,7 +16,18 @@ import { formatMoney } from '../../domain/money';
 import { elolegOsszegek, osszesitokElter, sorokOsszeg } from '../../domain/totals';
 import type { Plan } from '../../domain/types';
 
-export default function PenzugyiOsszesites({ plan }: { plan: Plan }) {
+export default function PenzugyiOsszesites({
+  plan,
+  ervenytelen = false,
+}: {
+  plan: Plan;
+  /**
+   * A verziót a doki tévesen kiadottként jelölte -- a Végösszeg áthúzva
+   * jelenik meg. A `plan` maga változatlan: a jelölés lánc-szintű sidecarban
+   * él, nem a lezárt `terv.json`-ban.
+   */
+  ervenytelen?: boolean;
+}) {
   const { osszesitok } = plan;
   const penz = (ertek: number) => formatMoney(ertek, plan.penznem, plan.nyelv);
 
@@ -56,7 +67,15 @@ export default function PenzugyiOsszesites({ plan }: { plan: Plan }) {
         <Text size="3" color="gray">
           Végösszeg
         </Text>
-        <Text size="6" weight="bold" style={{ color: t.brand, fontVariantNumeric: 'tabular-nums' }}>
+        <Text
+          size="6"
+          weight="bold"
+          style={{
+            color: ervenytelen ? t.uiTextMuted : t.brand,
+            fontVariantNumeric: 'tabular-nums',
+            ...(ervenytelen ? { textDecoration: 'line-through' } : {}),
+          }}
+        >
           {penz(osszesitok.fizetendo)}
         </Text>
       </Flex>
