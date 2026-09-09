@@ -990,6 +990,55 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
     ).toBeInTheDocument();
   });
 
+  it('az ütközés-üzenetből link vezet az ütköző páciens oldalára, és kimondja, hogy az új terv üresen indul', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const kotott = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    const utkozo = (await seeder.listPatients()).find((p) => p.nev === 'Kovács János');
+    await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
+
+    renderPatient();
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Kovács János');
+
+    const link = await screen.findByRole('link', { name: 'Kovács János' });
+    expect(link).toHaveAttribute('href', `/paciensek/${encodeURIComponent(utkozo!.dirName)}`);
+    expect(
+      screen.getByText(/a „\+ Új terv" üresen indul, a most beírt sorok nem jönnek át/),
+    ).toBeInTheDocument();
+  });
+
+  it('két ütköző páciensnél mindkettőre van link', async () => {
+    const user = userEvent.setup();
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const kotott = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    await seeder.createPatient('Kovács János', { szuletesiIdo: '1999-09-09', telefon: '' });
+    await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
+
+    renderPatient();
+    const nameInput = await screen.findByPlaceholderText('Kovács János');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Kovács János');
+
+    await screen.findByText(/egy MÁSIK, létező páciensre/);
+    expect(screen.getAllByRole('link', { name: 'Kovács János' })).toHaveLength(2);
+  });
+
+  it('ütközés nélkül nincs páciens-link a Terv adatai lapon', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const kotott = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
+    await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
+
+    renderPatient();
+    await screen.findByText(`Páciensmappa: ${kotott.dirName}`);
+
+    expect(screen.queryByRole('link', { name: 'Kovács János' })).toBeNull();
+  });
+
   it('csak HASONLÓ (nem pontos) névre nem figyelmeztet', async () => {
     const user = userEvent.setup();
     const seeder = new DemoStorage();

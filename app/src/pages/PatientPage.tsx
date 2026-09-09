@@ -14,8 +14,8 @@
 // A Kezelőorvos szekció ugyanígy szabadon szerkeszthető, egy mentett
 // láncon is -- itt sosem volt zárolás, ami alól ki kellene venni.
 
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Fragment, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
   Box,
@@ -323,6 +323,18 @@ export default function PatientPage() {
               A beírt név egy MÁSIK, létező páciensre ({utkozok.map((p) => p.nev).join(', ')}) illik
               pontosan — a terv ettől függetlenül a fenti kötött páciensmappába mentődik. A
               véglegesítés blokkolva van, amíg a név nem egyezik a kötött páciens nevével.
+              {/* Guard nélküli linkek: a piszkozat az AppState/DraftStorage-ban marad, az
+                  elnavigálás nem veszít adatot -- a cél-oldali „+ Új terv" saját
+                  piszkozat-őre kér megerősítést. A mondat kimondja, hogy az ott indított
+                  terv üresen kezd: enélkül a doki csak a cél-oldalon szembesülne vele. */}
+              {' Ha ehhez a másik pácienshez akarsz tervet: '}
+              {utkozok.map((p, i) => (
+                <Fragment key={p.dirName}>
+                  {i > 0 && ', '}
+                  <Link to={`/paciensek/${encodeURIComponent(p.dirName)}`}>{p.nev}</Link>
+                </Fragment>
+              ))}
+              {' — ott a „+ Új terv" üresen indul, a most beírt sorok nem jönnek át.'}
             </Callout.Text>
           </Callout.Root>
         )}

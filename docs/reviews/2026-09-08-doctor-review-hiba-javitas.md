@@ -49,7 +49,7 @@ Záró bekezdés a naplóból, szó szerint:
 - Javasolt javítási irány: a piros figyelmeztetés szövege egészüljön ki egy konkrét, kattintható javaslattal (pl. „Ha ezt a tervet Farkas Katalinnak szánod, indíts helyette új tervet az ő oldaláról" — link vagy gomb az érintett páciens oldalára).
 - Siker mércéje: a doki a hibaüzenetből — próbálkozás nélkül — tudja, melyik gombot/oldalt kell használnia a helyes páciensre irányításhoz.
 - Backlog: `masolas-uj-tervbe-hibauzenet-iranyitas`
-- Döntés: backlog masolas-uj-tervbe-nem-alkalmas (2026-09-09)
+- Döntés: javítva masolas-uj-tervbe-nem-alkalmas (2026-09-09)
 
 ### 3. Nincs mód egy tévesen kiadott, véglegesített terv érvénytelenítésére vagy megjelölésére — csak a cím kézi átírásával rögtönzött megoldás létezik
 
