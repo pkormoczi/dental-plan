@@ -13,6 +13,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Egy heading-nyelvtan a review-megállapításokra: a reviews.mjs is ebből képez azonosítót.
+import { FINDING_HEADING, REVIEW_REF } from './workflow/reviewsLib.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -180,12 +182,21 @@ function productHeadingSlugs() {
 }
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const ANCHOR_GRAMMAR = /^(file|symbol|test|product):(\S*?)(?:#(.+))?$/;
+const ANCHOR_GRAMMAR = /^(file|symbol|test|product|review):(\S*?)(?:#(.+))?$/;
+// A review-jelentés azonosítója mappa-független: a gyökér és az archive/ egyenrangú.
+const REVIEW_DIRS = ['docs/reviews', 'docs/reviews/archive'];
 
 function resolveAnchor(raw) {
   const m = ANCHOR_GRAMMAR.exec(raw);
-  if (!m) return `hibás anchor-nyelvtan: "${raw}" (várt: file:<p> | symbol:<p>#<id> | test:<p>#<név> | product:#<slug>)`;
+  if (!m) return `hibás anchor-nyelvtan: "${raw}" (várt: file:<p> | symbol:<p>#<id> | test:<p>#<név> | product:#<slug> | review:<jelentés>#<id>)`;
   const [, type, p, rest] = m;
+  if (type === 'review') {
+    if (!p || !rest) return `review-anchor alakja review:<jelentés-basename>#<megállapítás-id>: "${raw}"`;
+    const rel = REVIEW_DIRS.map((d) => `${d}/${p}.md`).find((f) => existsSync(path.join(ROOT, f)));
+    if (!rel) return `nincs ${p}.md a ${REVIEW_DIRS.join(' / ')} alatt`;
+    const found = read(rel).split('\n').some((l) => FINDING_HEADING.exec(l)?.[1] === rest);
+    return found ? null : `nincs "### ${rest}. …" megállapítás a(z) ${rel} jelentésben`;
+  }
   if (type === 'product') {
     if (p || !rest) return `product-anchor alakja product:#<slug>: "${raw}"`;
     if (!existsSync(path.join(ROOT, PRODUCT))) return `nincs ${PRODUCT}, a product-anchor feloldhatatlan: "${raw}"`;
@@ -222,6 +233,33 @@ function anchor(file, lines) {
   });
 }
 
+function reviewRefs(file, lineNo, text) {
+  for (const m of text.matchAll(REVIEW_REF)) {
+    const problem = resolveAnchor(m[0]);
+    if (problem) hiba(file, lineNo, 'anchor', problem);
+  }
+}
+
+// A jelentések a többi szabályból ki vannak zárva (EXCLUDE_DIRS), de a Döntés:/Feldolgozás:
+// soraik review: hivatkozásai feloldhatók legyenek -- egy rossz duplikátum-cél vagy felülíró
+// jelentés a reviews.mjs-ben csak figyelmeztetés, itt piros.
+function reviewReports() {
+  const out = [];
+  for (const d of REVIEW_DIRS) {
+    const abs = path.join(ROOT, d);
+    if (!statSync(abs, { throwIfNoEntry: false })?.isDirectory()) continue;
+    for (const f of readdirSync(abs)) {
+      if (!f.endsWith('.md')) continue;
+      const rel = `${d}/${f}`;
+      out.push(rel);
+      read(rel).split('\n').forEach((l, i) => {
+        if (/^\s*-?\s*\*{0,2}Döntés\*{0,2}:|^Feldolgozás:/.test(l)) reviewRefs(rel, i + 1, l);
+      });
+    }
+  }
+  return out;
+}
+
 const backlogSlugs = new Map();
 
 function backlogTetel(file, { status, later }, lines, content) {
@@ -248,6 +286,9 @@ function backlogTetel(file, { status, later }, lines, content) {
       continue;
     }
     header[m[1]] = m[2].trim();
+    // A Source: review:<jelentés>#<id> alak a megállapítás-állapot levezetésének forrása (reviews.mjs);
+    // egy elgépelt azonosító csendben "nyitott"-nak mutatná a pontot.
+    if (m[1] === 'Source') reviewRefs(file, i + 1, m[2]);
   }
   const type = header.Type;
   if (!BACKLOG_TYPE.includes(type)) {
@@ -311,6 +352,7 @@ for (const file of files) {
   }
   if (isTestFile(file)) skipOnly(file, lines);
 }
+const reports = reviewReports();
 
 hibak.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
 for (const h of hibak) console.log(`${h.file}:${h.line}  [${h.rule}]  ${h.msg}`);
@@ -318,5 +360,5 @@ for (const h of hibak) console.log(`${h.file}:${h.line}  [${h.rule}]  ${h.msg}`)
 const perRule = {};
 for (const h of hibak) perRule[h.rule] = (perRule[h.rule] ?? 0) + 1;
 const osszegzes = Object.entries(perRule).map(([r, n]) => `${r}: ${n}`).join(', ');
-console.log(`\ndocs-check: ${files.length} fájl átnézve, ${hibak.length} hiba${osszegzes ? ` (${osszegzes})` : ''}`);
+console.log(`\ndocs-check: ${files.length} fájl + ${reports.length} review-jelentés átnézve, ${hibak.length} hiba${osszegzes ? ` (${osszegzes})` : ''}`);
 process.exitCode = hibak.length ? 1 : 0;
