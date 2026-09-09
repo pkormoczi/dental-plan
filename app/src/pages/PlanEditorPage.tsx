@@ -371,9 +371,9 @@ export default function PlanEditorPage() {
 
   return (
     // Szélesebb, mint a többi lap plafonja (900/1100/640/560) -- a Beavatkozás
-    // az egyetlen szélesség nélküli, maradék oszlop; a plusz 280px oda megy
-    // (~524px), hogy egy hosszú (~67 karakteres) tételnév is görgetés nélkül
-    // olvasható legyen.
+    // az egyetlen szélesség nélküli, maradék oszlop; a plusz 280px oda megy,
+    // hogy egy hosszú (~67 karakteres) tételnév is görgetés nélkül olvasható
+    // legyen.
     <Box style={{ maxWidth: 1180, margin: '0 auto' }}>
       <PlanEditorHeader
         patientName={plan.paciens.nev}

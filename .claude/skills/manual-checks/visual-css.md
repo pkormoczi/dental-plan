@@ -248,10 +248,11 @@ fázissal (van legalább egy sor) 1440×900-on ÉS 1280×720-on is (`resize_page
 }
 ```
 
-Elvárt mindkét felbontáson: `beavatkozasOszlopPx` ~524px, `nevmezoPx` ~465px,
-`horizontalOverflow: false`. Egy hosszú tételnév (pl. a seed „Bölcsességfog műtéti
-eljárással (seb. gond., varratszedés)” tétele) a névmező `title`-jében egérrel előhívható,
-csonkolás nélkül.
+Elvárt mindkét felbontáson: `beavatkozasOszlopPx` ≥ 480px, `nevmezoPx` ≥ 420px,
+`horizontalOverflow: false` — alsó küszöb, nem pontos pixel, mert a fix oszlopok összege
+(eltérés-jelvény, Összeg stb.) minden elrendezés-változtatással mozog. Egy hosszú tételnév
+(pl. a seed „Bölcsességfog műtéti eljárással (seb. gond., varratszedés)” tétele) a névmező
+`title`-jében egérrel előhívható, csonkolás nélkül.
 
 ## Háttér és skeleton
 
