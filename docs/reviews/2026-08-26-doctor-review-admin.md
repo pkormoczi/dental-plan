@@ -58,6 +58,7 @@ A doki mindhárom adminfeladatot (árfrissítés, tétel-inaktiválás, új orvo
 - Jelenlegi kerülőút: a Kategóriák panel böngészése, vagy a tétel pontos nevének kitalálása.
 - Javasolt javítási irány: lásd az uj-terv jelentés 1. megállapítását — a kereső terjedjen ki a kategórianévre is, vagy a nulla találatos üzenet ajánlja fel a Kategóriák böngészését.
 - Siker mércéje: egy kategórianévre keresve a doki vagy közvetlen találatot kap, vagy egyértelmű utalást a helyes tételnevekre.
+- Döntés: duplikátum → review:2026-08-25-doctor-review-uj-terv#1 (2026-09-09)
 
 ### 4. Az ár mezők nem jelölik ki a teljes tartalmukat fókuszáláskor, ami véletlen számösszefűzéshez vezethet
 
