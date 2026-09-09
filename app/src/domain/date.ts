@@ -9,9 +9,14 @@
 
 import type { Nyelv } from './types';
 
-/** A mai nap ISO (YYYY-MM-DD) dátuma. */
+/**
+ * A mai nap ISO (YYYY-MM-DD) dátuma, HELYI naptári nap -- nem
+ * `toISOString().slice(0,10)`, ami UTC-napot adna: helyi 00:00 és a UTC-
+ * eltolás közötti sávban ez egy nappal a valós helyi nap elé/mögé csúszna
+ * (pl. a keltezés a "Automatikusan mentve" sorral nem egyezne).
+ */
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localIsoDate(new Date());
 }
 
 /** ISO (YYYY-MM-DD) dátum + N nap, szintén ISO formátumban. */

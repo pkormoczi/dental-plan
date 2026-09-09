@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   addDaysIso,
   formatLongDate,
@@ -11,6 +11,29 @@ import {
 describe('todayIso', () => {
   it('returns an ISO (YYYY-MM-DD) date', () => {
     expect(todayIso()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  describe('a helyi éjfél és a UTC-nap közötti sávban (pl. Europe/Budapest, tél, UTC+1)', () => {
+    const eredetiTz = process.env.TZ;
+
+    beforeEach(() => {
+      // A TZ-t a rendszeridő beállítása ELŐTT kell rögzíteni -- a `new Date(...)`
+      // helyi komponensei az akkor érvényes időzónát olvassák.
+      process.env.TZ = 'Europe/Budapest';
+      vi.useFakeTimers();
+      // Helyi 2026-01-09 00:30 -- ez UTC szerint még 2026-01-08 23:30 (a régi,
+      // `toISOString()`-alapú kód emiatt egy nappal korábbi dátumot adott).
+      vi.setSystemTime(new Date(2026, 0, 9, 0, 30, 0));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      process.env.TZ = eredetiTz;
+    });
+
+    it('a helyi naptári napot adja, nem a UTC-napot', () => {
+      expect(todayIso()).toBe('2026-01-09');
+    });
   });
 });
 

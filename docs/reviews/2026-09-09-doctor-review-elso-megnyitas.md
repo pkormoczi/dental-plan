@@ -153,7 +153,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
 - Siker mércéje: egy 00:30-kor indított terv keltezése a helyi mai nap, és megegyezik az
   „Automatikusan mentve" sor napjával és a mentett mappa nevével.
 - Backlog: `kiadas-datuma-helyi-nap`
-- Döntés: backlog kiadas-datuma-es-az-ervenyesseg (2026-09-09)
+- Döntés: javítva kiadas-datuma-es-az-ervenyesseg (2026-09-09)
 
 ### 3. A terv azonosítója minden előnézet-belépéskor újra generálódik
 
