@@ -418,3 +418,141 @@ test('close branchen: rebase az előrelépett origin/master-re, kapu újra, bran
   assert.equal(r.gateSteps().filter((s) => s === 'build').length, 2);
   assert.match(res.out, /PR/);
 });
+
+// ---- reviews.mjs / reviewsLib.mjs -------------------------------------------------------------
+
+const doctorFinding = (n, sev, extra = '') =>
+  `### ${n}. Cím ${n}\n\n- Súlyosság: **${sev}**\n- Gyakoriság: **ritka**${extra}\n\nSzöveg ${n}.\n\n`;
+
+// Három review-típus egy repóban: doctor (bullet-mezők), arch (sima mezősorok, Status), manual
+// (a súlyosság a ## szekcióból öröklődik).
+function reviewRepo() {
+  const r = repo();
+  r.write(
+    'docs/reviews/2026-01-01-doctor-review-x.md',
+    `# Doctor-review — x\n\n\`\`\`\nDátum: 2026-01-01\n\`\`\`\n\n## 3. Hol akadt el\n\n` +
+      doctorFinding(1, 'Súlyos') + doctorFinding(2, 'Kis') + doctorFinding(3, 'Blokkoló', '\n- Dedup: **ISMÉT** (régi)'),
+  );
+  r.write(
+    'docs/reviews/2026-01-02-arch-react-review.md',
+    '# Arch\n\n## Pass 1\n\n### ARCH-001 — Big file\n\nSeverity: Major\nStatus: NEW\nLocation: `app/src/pages/X.tsx`\n\nEvidence.\n\n' +
+      '### ARCH-002 — Fixed thing\n\nSeverity: Minor\nStatus: **RESOLVED**\n\nok\n',
+  );
+  r.write(
+    'docs/reviews/2026-01-03-manual-checks-pdf.md',
+    '# Manual\n\n## Kritikus\n\n### 1. Font missing\n\nszöveg\n\n## Apró\n\n### 2. Small\n\nszöveg\n',
+  );
+  r.commitPush('review: x');
+  const json = () => {
+    const res = r.run('reviews', ['--json']);
+    assert.equal(res.status, 0, res.err);
+    return JSON.parse(res.out);
+  };
+  const state = (id) => json().findings.find((f) => f.id === id);
+  return { ...r, json, state };
+}
+
+test('reviews --json: három jelentéstípus megállapításai, súlyosság és implicit állapot', (t) => {
+  const r = reviewRepo();
+  t.after(r.cleanup);
+  const { reports, findings, warnings } = r.json();
+  assert.deepEqual(warnings, []);
+  assert.equal(findings.length, 7);
+  const by = Object.fromEntries(findings.map((f) => [f.id, f]));
+  assert.equal(by['2026-01-01-doctor-review-x#1'].state, 'nyitott');
+  assert.equal(by['2026-01-01-doctor-review-x#1'].severity, 'Súlyos');
+  assert.equal(by['2026-01-01-doctor-review-x#2'].state, 'tudomásul véve');
+  assert.equal(by['2026-01-01-doctor-review-x#2'].implicit, true);
+  assert.equal(by['2026-01-01-doctor-review-x#3'].ismet, true);
+  assert.equal(by['2026-01-02-arch-react-review#ARCH-001'].severity, 'Súlyos');
+  assert.deepEqual(by['2026-01-02-arch-react-review#ARCH-001'].files, ['app/src/pages/X.tsx']);
+  assert.equal(by['2026-01-02-arch-react-review#ARCH-002'].state, 'javítva');
+  assert.equal(by['2026-01-03-manual-checks-pdf#1'].severity, 'Blokkoló');
+  assert.equal(by['2026-01-03-manual-checks-pdf#2'].severity, 'Kis');
+  const x = reports.find((p) => p.basename === '2026-01-01-doctor-review-x');
+  assert.equal(x.openThreshold, 2);
+  assert.equal(x.openMinor, 0);
+  assert.equal(x.processed, false);
+});
+
+test('reviews: az állapot az élő tétel Source sorából és a törlő commit tárgyából vezetődik le', (t) => {
+  const r = reviewRepo();
+  t.after(r.cleanup);
+  r.write('backlog/idea/elo.md', '# elo\nType: bug\nSource: review:2026-01-01-doctor-review-x#1\n\nx\n');
+  r.write('backlog/lezart.md', '# lezart\nType: bug\nSource: review:2026-01-01-doctor-review-x#3\nTarget: master\n\n## Goal\nx\n');
+  r.write('backlog/idea/elvetett.md', '# elvetett\nType: bug\nSource: review:2026-01-02-arch-react-review#ARCH-001\n\nx\n');
+  r.write('backlog/idea/konvencio-nelkul.md', '# konvencio-nelkul\nType: bug\nSource: review:2026-01-03-manual-checks-pdf#1\n\nx\n');
+  r.commitPush('backlog: +elo, +lezart, +elvetett, +konvencio-nelkul');
+  g(r.work, 'rm', '-q', 'backlog/lezart.md');
+  g(r.work, 'commit', '-q', '-m', 'lezart: kész a javítás');
+  g(r.work, 'rm', '-q', 'backlog/idea/elvetett.md');
+  g(r.work, 'commit', '-q', '-m', 'backlog: -elvetett');
+  g(r.work, 'rm', '-q', 'backlog/idea/konvencio-nelkul.md');
+  g(r.work, 'commit', '-q', '-m', 'takarítás');
+  const { findings, warnings } = r.json();
+  const by = Object.fromEntries(findings.map((f) => [f.id, f]));
+  assert.equal(by['2026-01-01-doctor-review-x#1'].state, 'backlog');
+  assert.equal(by['2026-01-01-doctor-review-x#1'].evidence, 'elo');
+  assert.equal(by['2026-01-01-doctor-review-x#3'].state, 'javítva');
+  assert.equal(by['2026-01-01-doctor-review-x#3'].evidence, 'lezart');
+  assert.equal(by['2026-01-02-arch-react-review#ARCH-001'].state, 'elvetve');
+  assert.equal(by['2026-01-03-manual-checks-pdf#1'].state, 'elvetve');
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /konvencio-nelkul.*konvenció nélkül/);
+});
+
+test('reviews dontes: egy sor a mezőblokk végére, újraírás felülírja; --check az ellentmondásra piros', (t) => {
+  const r = reviewRepo();
+  t.after(r.cleanup);
+  const rep = 'docs/reviews/2026-01-01-doctor-review-x.md';
+  let res = r.run('reviews', ['dontes', 'review:2026-01-01-doctor-review-x#1', 'elvetve: nem cél (2026-01-05)']);
+  assert.equal(res.status, 0, res.err);
+  res = r.run('reviews', ['dontes', '2026-01-01-doctor-review-x#1', 'tudomásul véve (2026-01-06)']);
+  assert.equal(res.status, 0, res.err);
+  const text = readFileSync(path.join(r.work, rep), 'utf-8');
+  assert.equal((text.match(/^- Döntés:/gm) ?? []).length, 1);
+  assert.match(text, /- Gyakoriság: \*\*ritka\*\*\n- Döntés: tudomásul véve \(2026-01-06\)\n\nSzöveg 1\./);
+  assert.equal(r.state('2026-01-01-doctor-review-x#1').state, 'tudomásul véve');
+  assert.equal(r.state('2026-01-01-doctor-review-x#1').implicit, false);
+  res = r.run('reviews', ['dontes', 'review:2026-01-01-doctor-review-x#9', 'x']);
+  assert.equal(res.status, 1);
+  assert.match(res.err, /nincs "9" megállapítás/);
+  // Élő tétel mellett a Döntés sor ellentmond -- a --check ezt pirosnak veszi, de nem dönt.
+  r.write('backlog/idea/elo.md', '# elo\nType: bug\nSource: review:2026-01-01-doctor-review-x#1\n\nx\n');
+  r.commitPush('backlog: +elo');
+  res = r.run('reviews', ['--check']);
+  assert.equal(res.status, 1);
+  assert.match(res.out, /élő tétel \(elo\) mellett "Döntés: tudomásul véve/);
+  assert.equal(r.state('2026-01-01-doctor-review-x#1').state, 'backlog');
+});
+
+test('reviews feldolgozas: a fejléc-blokkba ír, és a felülírt jelentés nyitott ponttal is feldolgozott', (t) => {
+  const r = reviewRepo();
+  t.after(r.cleanup);
+  let res = r.run('reviews', ['feldolgozas', '2026-01-01-doctor-review-x', 'felülírta review:2026-01-02-arch-react-review']);
+  assert.equal(res.status, 0, res.err);
+  const text = readFileSync(path.join(r.work, 'docs/reviews/2026-01-01-doctor-review-x.md'), 'utf-8');
+  assert.match(text, /Dátum: 2026-01-01\nFeldolgozás: felülírta review:2026-01-02-arch-react-review\n```/);
+  const { reports, warnings } = r.json();
+  assert.deepEqual(warnings, []);
+  assert.equal(reports.find((p) => p.basename === '2026-01-01-doctor-review-x').processed, true);
+  res = r.run('reviews', ['feldolgozas', '2026-01-01-doctor-review-x', 'felülírta review:nincs-ilyen']);
+  assert.equal(res.status, 0, res.err);
+  res = r.run('reviews', ['--check']);
+  assert.equal(res.status, 1);
+  assert.match(res.out, /nincs ilyen jelentés/);
+});
+
+test('reviews: archive/ alatti jelentés nyitott küszöb feletti ponttal figyelmeztetés', (t) => {
+  const r = reviewRepo();
+  t.after(r.cleanup);
+  mkdirSync(path.join(r.work, 'docs/reviews/archive'), { recursive: true });
+  g(r.work, 'mv', 'docs/reviews/2026-01-01-doctor-review-x.md', 'docs/reviews/archive/2026-01-01-doctor-review-x.md');
+  const { reports, warnings } = r.json();
+  assert.equal(reports.find((p) => p.basename === '2026-01-01-doctor-review-x').archived, true);
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /archive\/ alatt, de 2 nyitott/);
+  // Az azonosító mappa-független: a dontes az archívumban is megtalálja.
+  const res = r.run('reviews', ['dontes', 'review:2026-01-01-doctor-review-x#1', 'tudomásul véve']);
+  assert.equal(res.status, 0, res.err);
+});
