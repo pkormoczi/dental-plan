@@ -128,6 +128,46 @@ describe('rangsoroltTetelTalalatok', () => {
     ]);
   });
 
+  it('amíg van másik névtalálat, a visszabontás-tétel nem lehet az első', () => {
+    const talalatok = [
+      tetel('Gyökértömés eltávolítása /csatorna'),
+      tetel('Gyökértömés csatornaszámtól függően'),
+    ];
+    expect(nevek(rangsoroltTetelTalalatok(talalatok, norm('gyokertomes')))).toEqual([
+      'Gyökértömés csatornaszámtól függően',
+      'Gyökértömés eltávolítása /csatorna',
+    ]);
+  });
+
+  it('a büntetés a relevanciát is felülírja: a szó eleji visszabontás-tétel a belső egyezés mögé kerül', () => {
+    const talalatok = [
+      tetel('Korona felvágás eltávolítás /db'),
+      tetel('Zirkonkerámia korona'),
+    ];
+    expect(nevek(rangsoroltTetelTalalatok(talalatok, norm('koron')))).toEqual([
+      'Zirkonkerámia korona',
+      'Korona felvágás eltávolítás /db',
+    ]);
+  });
+
+  it('aki visszabontást gépel, azt kapja: a büntetés néma, a relevancia dönt', () => {
+    const talalatok = [tetel('Fogeltávolítás'), tetel('Korona felvágás eltávolítás /db')];
+    expect(nevek(rangsoroltTetelTalalatok(talalatok, norm('eltavolitas')))).toEqual([
+      'Korona felvágás eltávolítás /db',
+      'Fogeltávolítás',
+    ]);
+  });
+
+  // Az önálló, elsődleges kezelés nem egy pótlás ellentéte -- a kulcsszó ott
+  // összetett szó belsejében áll, nem tokenkezdetként.
+  it('a "Fogeltávolítás" nem kap büntetést, mert a kulcsszó nem külön token', () => {
+    const talalatok = [tetel('Fogeltávolítás'), tetel('Fogkőeltávolítás')];
+    expect(nevek(rangsoroltTetelTalalatok(talalatok, norm('fog')))).toEqual([
+      'Fogeltávolítás',
+      'Fogkőeltávolítás',
+    ]);
+  });
+
   it('azonos rangon és jelölés nélkül a kapott árlista-sorrend marad', () => {
     const talalatok = [tetel('Neodent A'), tetel('Neodent B'), tetel('Neodent C')];
     expect(nevek(rangsoroltTetelTalalatok(talalatok, norm('neodent')))).toEqual([

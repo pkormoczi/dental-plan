@@ -229,6 +229,23 @@ describe('ItemPicker', () => {
 
       expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }), '');
     });
+
+    it('beírás után az azonnali Enter a pótlás-tételt veszi fel, nem az eltávolítást', async () => {
+      const user = userEvent.setup();
+      const { onPick } = renderPicker({
+        available: [
+          tetel('t1', 'Korona felvágás eltávolítás /db'),
+          tetel('t2', 'Zirkonkerámia korona'),
+        ],
+      });
+
+      const input = screen.getByPlaceholderText(/Tétel keresése/);
+      await user.type(input, 'koron');
+      await screen.findByText('Zirkonkerámia korona');
+      await user.keyboard('{Enter}');
+
+      expect(onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 't2' }), '');
+    });
   });
 
   // A névtalálatok mellett a kategórianévre illeszkedő tételek is

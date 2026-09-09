@@ -115,7 +115,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
 - Siker mércéje: a „koron", „gyokertomes", „tomes" keresésre az Enter azt a tételt veszi
   fel, amit a doki a szóval megnevezett; az eltávolító párja megmarad a listában, lejjebb.
 - Backlog: `kereso-talalati-rangsor-eltavolitas`
-- Döntés: backlog kereso-talalati-rangsor-eltavolitas (2026-09-09)
+- Döntés: javítva kereso-talalati-rangsor-eltavolitas (2026-09-09)
 
 ### 2. A kiadás dátuma és az érvényesség egy nappal korábbi éjfél és hajnali 2 között
 

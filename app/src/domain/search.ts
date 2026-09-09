@@ -85,20 +85,53 @@ export function tetelNevRang(nev: LokalizaltSzoveg, nq: string): number {
   return rangok.length ? Math.min(...rangok) : 2;
 }
 
+const ELTAVOLITAS_KULCSSZAVAK = ['eltavolit', 'felvag', 'visszabont'];
+
+/**
+ * Egy KORÁBBI munka visszabontását jelöli-e a szöveg -- azaz olyan tételt,
+ * amit a doki egy pótlást keresve szinte sosem akar felvenni.
+ *
+ * Csak a KÜLÖN tokenként álló kulcsszó számít: a `Fogeltávolítás` és a
+ * `Fogkőeltávolítás` önálló, elsődleges kezelés, nem egy pótlás ellentéte --
+ * ezekben a kulcsszó összetett szó belsejében áll, tokenkezdetként nem.
+ *
+ * A német összetett alak (`Kronenentfernung`) nem tokenizálható, tehát német
+ * néven a jelző sosem fog: vállalt korlát, a doki magyarul gépel.
+ */
+function visszabontasJelleg(szoveg: string | null | undefined): boolean {
+  return norm(szoveg)
+    .split(/\s+/)
+    .some((szo) => ELTAVOLITAS_KULCSSZAVAK.some((kulcs) => szo.startsWith(kulcs)));
+}
+
 /**
  * A MÁR szűrt névtalálatok rangsorolása, a láthatósági limit ELŐTT -- így a
  * limit a rangsorolt sorrendből vág, nem az árlista sorrendjéből.
  *
- * Precedencia: szöveg-relevancia > `gyakori` (előrébb) > `csomag` (hátrébb) >
- * a kapott (árlista-)sorrend. A `gyakori`/`csomag` finomítás, nem felülírás:
- * a bejelentett hiba oka a relevancia hiánya volt, egy gyakori tétel nem
- * kerülhet egy nála relevánsabb találat elé.
+ * Precedencia: visszabontás-büntetés (hátrébb) > szöveg-relevancia >
+ * `gyakori` (előrébb) > `csomag` (hátrébb) > a kapott (árlista-)sorrend. A
+ * `gyakori`/`csomag` finomítás, nem felülírás: egy gyakori tétel nem kerülhet
+ * egy nála relevánsabb találat elé.
+ *
+ * A büntetés a relevancia ELŐTT dönt, mert „koron"-ra az eltávolítás-tétel az
+ * EGYETLEN szó eleji egyezés: egy rang utáni tie-break ott semmit nem
+ * mozdítana. Aki viszont maga gépel visszabontást, azt keresi -- ilyenkor a
+ * büntetés néma, ugyanazzal a token-szabállyal mindkét irányban.
  */
 export function rangsoroltTetelTalalatok(talalatok: Tetel[], nq: string): Tetel[] {
+  const visszabontastKeres = visszabontasJelleg(nq);
   return talalatok
-    .map((tetel, index) => ({ tetel, index, rang: tetelNevRang(tetel.nev, nq) }))
+    .map((tetel, index) => ({
+      tetel,
+      index,
+      rang: tetelNevRang(tetel.nev, nq),
+      buntetes:
+        !visszabontastKeres &&
+        (visszabontasJelleg(tetel.nev.hu) || visszabontasJelleg(tetel.nev.de)),
+    }))
     .sort(
       (a, b) =>
+        Number(a.buntetes) - Number(b.buntetes) ||
         a.rang - b.rang ||
         Number(b.tetel.gyakori) - Number(a.tetel.gyakori) ||
         Number(a.tetel.csomag ?? false) - Number(b.tetel.csomag ?? false) ||

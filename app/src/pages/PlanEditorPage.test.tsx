@@ -47,10 +47,10 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(screen.getByPlaceholderText('pl. 16, 17, 26')).toHaveValue('36');
     await waitFor(() => expect(search).toHaveFocus());
 
-    // A tétel bekerült a fázis soraiba (a dropdown már bezárult, egyetlen
-    // találat) -- a sornév backlog-3 óta szerkeszthető mező, tehát az
-    // értéke `getByDisplayValue`-val ellenőrizhető, nem `getByText`-tel.
-    expect(screen.getByDisplayValue('Gyökértömés csatornaszámtól függően')).toBeInTheDocument();
+    // A tétel bekerült a fázis soraiba -- a sornév szerkeszthető mező, tehát
+    // az értéke `getByDisplayValue`-val ellenőrizhető, nem `getByText`-tel.
+    // Az ArrowDown a rangsor MÁSODIK találatát veszi fel, nem az elsőt.
+    expect(screen.getByDisplayValue('Gyökercsúcsresectio')).toBeInTheDocument();
 
     // Tovább lehet gépelni azonnal -- második tétel hozzáadása ugyanazzal a
     // ciklussal. A "tomes 3" kifejezetten a "3 felszín" változatra illik rá
