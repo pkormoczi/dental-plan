@@ -15,7 +15,7 @@
 // láncon is -- itt sosem volt zárolás, ami alól ki kellene venni.
 
 import { Fragment, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
   Box,
@@ -25,6 +25,7 @@ import {
   Flex,
   Grid,
   Heading,
+  Link as RadixLink,
   Select,
   Text,
   TextField,
@@ -331,7 +332,11 @@ export default function PatientPage() {
               {utkozok.map((p, i) => (
                 <Fragment key={p.dirName}>
                   {i > 0 && ', '}
-                  <Link to={`/paciensek/${encodeURIComponent(p.dirName)}`}>{p.nev}</Link>
+                  <RadixLink asChild>
+                    <RouterLink to={`/paciensek/${encodeURIComponent(p.dirName)}`}>
+                      {p.nev}
+                    </RouterLink>
+                  </RadixLink>
                 </Fragment>
               ))}
               {' — ott a „+ Új terv" üresen indul, a most beírt sorok nem jönnek át.'}
