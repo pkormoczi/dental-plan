@@ -39,7 +39,7 @@ import { invalidFdiTokens, parseTeeth } from '../../domain/teeth';
 import type { FogterkepAllapot } from '../../domain/toothVisual';
 import { sorOsszeg } from '../../domain/totals';
 import type { Kategoria, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
-import { arId, fogId, keresoId, leirasId, mennyisegId, nevId, sorMenuId } from './elemIdk';
+import { arId, arSugoId, fogId, keresoId, leirasId, mennyisegId, nevId, sorMenuId } from './elemIdk';
 import ItemPicker from './ItemPicker';
 
 /** A `Sor` azon mezői, amiket a szerkesztés alatt álló sor élőben felülír. */
@@ -481,6 +481,7 @@ export default function LineRow({
           <Box flexGrow="1">
             <NumberField
               id={arId(pi, li)}
+              aria-describedby={arSugoId(pi)}
               value={line.tenylegesEgysegar}
               penz
               unit={currency}

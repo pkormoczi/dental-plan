@@ -78,6 +78,9 @@ export interface NumberFieldProps {
   textAlign?: CSSProperties['textAlign'];
   style?: CSSProperties;
   'aria-label'?: string;
+  /** Űrlap-módban a képernyőolvasó nem mondja fel az oszlopfejlécet -- a
+      mezőhöz tartozó súgót így kell a mezőre kötni. */
+  'aria-describedby'?: string;
   autoFocus?: boolean;
   id?: string;
   name?: string;

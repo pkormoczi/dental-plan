@@ -1137,6 +1137,16 @@ describe('PlanEditorPage -- százalékos bevitel az Ajánlati ár mezőben', () 
     return priceField;
   }
 
+  it('a fázistábla Ajánlati ár fejlécében ott a százalékos súgó, és a sor ármezője rá hivatkozik', async () => {
+    seedWithStalePriceRow();
+    renderEditor();
+
+    const priceField = (await screen.findByLabelText('Ajánlati egységár')) as HTMLInputElement;
+    const sugoId = priceField.getAttribute('aria-describedby');
+    expect(sugoId).toBeTruthy();
+    expect(document.getElementById(sugoId as string)).toHaveTextContent('% is beírható (pl. -10%)');
+  });
+
   it('"-10%" a referenciaár 90%-ára kerekített egész árat menti, és megjelenik a −10% jelvény', async () => {
     const user = userEvent.setup();
     seedWithStalePriceRow();

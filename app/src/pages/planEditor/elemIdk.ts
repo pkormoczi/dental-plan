@@ -61,6 +61,12 @@ export function arId(pi: number, li: number): string {
   return `ar-${pi}-${li}`;
 }
 
+/** Az Ajánlati ár oszlopfejlécének súgósora -- fázisonként egy, a sorok
+    ármezői `aria-describedby`-val erre hivatkoznak. */
+export function arSugoId(pi: number): string {
+  return `ar-sugo-${pi}`;
+}
+
 /** A sor `⋯` menüjének triggere -- a sor-mozgatás utáni fókusz célpontja. */
 export function sorMenuId(pi: number, li: number): string {
   return `sor-menu-${pi}-${li}`;

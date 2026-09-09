@@ -23,7 +23,7 @@ import { nyelviMismatch } from '../../domain/nyelviReview';
 import { orokoltMegjegyzesu } from '../../domain/orokoltJelzesek';
 import type { Fazis, Kategoria, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
 import type { FogterkepAllapot } from '../../domain/toothVisual';
-import { fazisKeresoId, fazisNevId, fazisPanelId, type FokuszCel } from './elemIdk';
+import { arSugoId, fazisKeresoId, fazisNevId, fazisPanelId, type FokuszCel } from './elemIdk';
 import FazisMegjegyzes from './FazisMegjegyzes';
 import ItemPicker from './ItemPicker';
 import LineRow, { type SorDraftErtekek } from './LineRow';
@@ -332,6 +332,13 @@ export default function PhaseSection({
                   </Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell width="148px" justify="center">
                     Ajánlati ár ({penznemJel})
+                    {/* A mező érti a százalékos alakot, de az ármező sosem
+                        üres, ezért placeholder itt sosem látszana. ASCII
+                        kötőjel: a `szazalekosAr` regexe a jelvény „−" jelét
+                        nem fogadja el, egy másolható súgó némán bukna. */}
+                    <Text as="div" id={arSugoId(pi)} size="1" style={{ color: t.uiTextFaint }}>
+                      % is beírható (pl. -10%)
+                    </Text>
                   </Table.ColumnHeaderCell>
                   {/* A LineRow eltérés-jelvényének (+20%/−60%) fenntartott,
                       keskeny hely -- lásd `LineRow` az Ajánlati ár és az
