@@ -242,8 +242,8 @@ export function computeStates() {
         if (h && h.state !== d.kind && !(d.kind === 'backlog' && h.state === 'javítva')) {
           warnings.push(`${f.id}: a történet szerint ${h.state} (${h.evidence}), a Döntés sor szerint ${d.kind}`);
         }
-        if (d.kind === 'backlog' && h?.state === 'javítva') {
-          state = 'javítva';
+        if (h && (h.state === d.kind || (d.kind === 'backlog' && h.state === 'javítva'))) {
+          state = h.state;
           evidence = h.slug;
         }
       } else if (h) {

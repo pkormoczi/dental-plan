@@ -556,3 +556,62 @@ test('reviews: archive/ alatti jelentés nyitott küszöb feletti ponttal figyel
   const res = r.run('reviews', ['dontes', 'review:2026-01-01-doctor-review-x#1', 'tudomásul véve']);
   assert.equal(res.status, 0, res.err);
 });
+
+test('discard: git rm, "Döntés: elvetve" a forrás-jelentésbe, egy "backlog: -<slug>" commit az originen', (t) => {
+  const r = reviewRepo();
+  t.after(r.cleanup);
+  r.write('backlog/idea/elvet.md', '# elvet\nType: bug\nSource: review:2026-01-01-doctor-review-x#1\n\nx\n');
+  r.commitPush('backlog: +elvet');
+  const before = r.count();
+  let res = r.run('discard', ['elvet']);
+  assert.equal(res.status, 1);
+  assert.match(res.err, /--reason/);
+  res = r.run('discard', ['elvet', '--reason', 'szándékos működés']);
+  assert.equal(res.status, 0, res.err + res.out);
+  assert.equal(existsSync(path.join(r.work, 'backlog/idea/elvet.md')), false);
+  assert.equal(r.count(), before + 1);
+  assert.equal(r.originHead(), g(r.work, 'rev-parse', 'HEAD'));
+  assert.equal(g(r.work, 'log', '-1', '--format=%s'), 'backlog: -elvet');
+  assert.match(g(r.work, 'show', '--name-only', '--format=', 'HEAD'), /docs\/reviews\/2026-01-01-doctor-review-x\.md/);
+  const text = readFileSync(path.join(r.work, 'docs/reviews/2026-01-01-doctor-review-x.md'), 'utf-8');
+  assert.match(text, /- Döntés: elvetve: szándékos működés \(\d{4}-\d{2}-\d{2}\)/);
+  const { findings, warnings } = r.json();
+  assert.deepEqual(warnings, []);
+  assert.equal(findings.find((f) => f.id === '2026-01-01-doctor-review-x#1').state, 'elvetve');
+  // Módosított tételnél megáll, és nem nyúl a jelentéshez.
+  r.write('backlog/idea/masik.md', '# masik\nType: bug\nSource: review:2026-01-01-doctor-review-x#3\n\nx\n');
+  r.commitPush('backlog: +masik');
+  r.write('backlog/idea/masik.md', '# masik\nType: bug\nSource: review:2026-01-01-doctor-review-x#3\n\nmódosítva\n');
+  res = r.run('discard', ['masik', '--reason', 'x']);
+  assert.equal(res.status, 1);
+  assert.match(res.err, /módosított/);
+  assert.equal(g(r.work, 'status', '--porcelain', '--', 'docs/reviews'), '');
+});
+
+test('close: a tétel review: Source sorára "Döntés: javítva <slug>" kerül a jelentésbe és a lezáró commitba', (t) => {
+  const r = reviewRepo();
+  t.after(r.cleanup);
+  const base = g(r.work, 'rev-parse', 'HEAD');
+  r.write('backlog/lezar.md', `# lezar\nType: bug\nSource: review:2026-01-01-doctor-review-x#3; review:2026-01-02-arch-react-review#ARCH-001\nTarget: master\nBaseline: ${base}\n\n## Goal\nx\n`);
+  r.write('backlog/szabad.md', `# szabad\nType: bug\nSource: doctor-review x (2026-01-01), 1. megállapítás\nTarget: master\nBaseline: ${base}\n\n## Goal\nx\n`);
+  r.commitPush('backlog: plan lezar, szabad');
+  let res = r.run('close', ['lezar', '--title', 'Kész']);
+  assert.equal(res.status, 0, res.err + res.out);
+  const shown = g(r.work, 'show', '--name-only', '--format=', 'HEAD');
+  assert.match(shown, /docs\/reviews\/2026-01-01-doctor-review-x\.md/);
+  assert.match(shown, /docs\/reviews\/2026-01-02-arch-react-review\.md/);
+  const doctor = readFileSync(path.join(r.work, 'docs/reviews/2026-01-01-doctor-review-x.md'), 'utf-8');
+  assert.match(doctor, /- Dedup: \*\*ISMÉT\*\* \(régi\)\n- Döntés: javítva lezar \(\d{4}-\d{2}-\d{2}\)\n\nSzöveg 3\./);
+  const arch = readFileSync(path.join(r.work, 'docs/reviews/2026-01-02-arch-react-review.md'), 'utf-8');
+  assert.match(arch, /Location: `app\/src\/pages\/X\.tsx`\n- Döntés: javítva lezar/);
+  let { findings, warnings } = r.json();
+  assert.deepEqual(warnings, []);
+  assert.equal(findings.find((f) => f.id === '2026-01-01-doctor-review-x#3').state, 'javítva');
+  assert.equal(findings.find((f) => f.id === '2026-01-01-doctor-review-x#3').evidence, 'lezar');
+  // Szabad szövegű Source: nincs mit könyvelni, a jelentés érintetlen.
+  res = r.run('close', ['szabad', '--title', 'Kész']);
+  assert.equal(res.status, 0, res.err + res.out);
+  assert.doesNotMatch(g(r.work, 'show', '--name-only', '--format=', 'HEAD'), /docs\/reviews/);
+  ({ findings } = r.json());
+  assert.equal(findings.find((f) => f.id === '2026-01-01-doctor-review-x#1').state, 'nyitott');
+});

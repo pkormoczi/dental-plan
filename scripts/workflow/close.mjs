@@ -9,7 +9,7 @@
 // a tervfájl változása külön commitot érdemel, nem csendes törlést; (3) ha a tervfájl már
 // hiányzik, de van push-olatlan "<slug>: …" commit, nem új commit készül: kapu, majd a hiányzó
 // publikálási lépés.
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import {
@@ -17,10 +17,12 @@ import {
   requireNoRebase, fetchOrigin, ffPull, pushMaster, untrackedFiles, underPaths, closingCommit,
 } from './lib.mjs';
 import { findItem } from './backlogPath.mjs';
+import { setDontes, refsIn, today } from './reviewsLib.mjs';
 
 const HELP = `node scripts/workflow/close.mjs <slug> --title "<cím>" [--body "<1-2 mondat>"] [--trailer "<K: v>"]... [--add <path>]... [--batch]
   masteren: fetch + ff; untracked csak app/ alatt megy be magától; körön kívüli untracked csak
             --add <path>-del névre szólóan (más marad: megáll); build+lint+test+docs-check;
+            a tétel Source: review:<jelentés>#<id> hivatkozásaira "Döntés: javítva <slug> (<dátum>)" a jelentésbe;
             git rm backlog[/later]/<slug>.md (módosított tervfájlnál megáll); követett módosítások + engedett untracked;
             commit "<slug>: <cím>"; push (nem-ff: rebase, kapu újra, push).
   branchen: ugyanaz, majd rebase origin/master-re (base-változásnál kapu újra), push --force-with-lease,
@@ -133,6 +135,14 @@ run(() => {
         `követetlen fájl a megengedett körön kívül (${SWEEP_UNTRACKED.join('/ ')}/, vagy --add-del névre szólóan):\n  ${foreign.join('\n  ')}\n` +
           'Töröld, ignore-old, --add-del nevezd meg, vagy commitold külön (commit-push.mjs), aztán újra.',
       );
+    }
+    // A lezárás könyvelése a forrás-jelentésbe, a kapu ELŐTT (a docs-check a review: anchort is
+    // ellenőrzi). A lezáró commit SHA-ja még nem létezik, ezért a slug a hivatkozás; idempotens,
+    // egy piros kapu utáni újrafutás ugyanazt a sort írja.
+    const src = /^Source:\s*(.+)$/m.exec(readFileSync(path.join(ROOT, item), 'utf-8'));
+    for (const id of refsIn(src?.[1])) {
+      const [basename, localId] = id.split('#');
+      console.log(`Döntés: javítva ${slug} → ${setDontes(basename, localId, `javítva ${slug} (${today()})`)}`);
     }
     // Batchben a docs-check a záró sync.mjs-be tolódik -- redundáns lenne tételenként futni.
     gate(a.batch ? ['build', 'lint', 'test'] : undefined);
