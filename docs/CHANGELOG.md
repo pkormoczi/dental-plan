@@ -2,6 +2,106 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. szeptember 10.
+
+- A Terv adatai lapon és a véglegesítés utáni sikerképernyőn a páciensmappa toldalékos belső neve
+  többé nem látszik — a kötés a páciens nevét és születési dátumát mutatja, a mappa elérési útja
+  pedig alapból el van rejtve, a „Hol van a gépen?” gombbal nyitható meg.
+
+## 2026. szeptember 9.
+
+- A kezelési sorok táblázatában a fejlécek középre igazítva (a Beavatkozás oszlop kivételével), az
+  Összeg jobbra. A „Becsült ár” (≈) kapcsoló visszakerült az Ajánlati ár mező mellé, jól látható,
+  borostyánszín jelzéssel, ha be van kapcsolva; a listaártól való eltérés jelvénye önálló, mindig
+  ugyanott lévő helyre került.
+- Javítottuk, hogy a Kiadás dátuma és az Érvényes eddig mező éjfél környékén ne csússzon egy nappal
+  korábbra.
+- A kezelés-kereső találati sorrendje mostantól nem hozza előre az „eltávolítás”/„felvágás”/
+  „visszabontás” szót tartalmazó tételt, ha nem ez volt a keresett kezelés — például
+  „gyökértömés”-re így a valódi tömés kerül elsőnek.
+- A véglegesítés előtti ellenőrzőlista mostantól jelzi (nem blokkoló figyelmeztetéssel) a 8-nál
+  nagyobb darabszámú sorokat, névvel és darabszámmal együtt — egy elgépelt darabszám így nem marad
+  észrevétlen.
+- Az Ajánlati ár oszlop fejlécében mostantól egy rövid súgó jelzi, hogy a mezőbe százalék is
+  beírható (pl. „-10%”).
+- A Született mező alatt mostantól a hónap nevével kiírt, magyar alakú dátum áll, hogy a natív
+  dátummező amerikai sorrendje ne legyen félreérthető.
+- Ha a beírt név egy másik, létező páciensre illik pontosan, a figyelmeztetés mostantól linket ad
+  az illető páciens oldalára, és kimondja, hogy az ott indított új terv üresen kezd — a már beírt
+  sorok nem kerülnek át.
+- Javítottuk, hogy egy vadonatúj terv azonosítója az Előnézet és a Kezelések lap közötti oda-vissza
+  lépkedés, illetve egy oldalfrissítés után is ugyanaz maradjon — így a papíron, a letöltött fájl
+  nevében és a mentett mappában mindig ugyanaz a szám szerepel.
+- Bevezettük a verzió érvénytelenítését: egy tévesen kiadott, véglegesített terv indoklással
+  megjelölhető érvénytelenként, a verziólistán és a Terv részletei oldalon is jól látható jelzéssel
+  és áthúzott összeggel — a jelölés bármikor visszavonható, a kiadott nyomtatvány és a mentett terv
+  nem változik.
+
+## 2026. szeptember 8.
+
+- A fázisok alap-elnevezése mostantól „N. fázis” (németül „N. Phase”), a fázisnév mező nyitott
+  fázisnál „Fázis neve” címkét kap, és egy új ⋯ menüből egy sor a fázison belül feljebb vagy
+  lejjebb mozgatható.
+- Az összecsukott fázisok állapota mostantól megmarad az Előnézetre lépés és a visszalépés között
+  is; két vagy több fázisnál a Mindösszesen fölött fázisonkénti részösszeg is látszik.
+- Javítottuk, hogy a hosszú kezelés- és fázisnevek ne vágódjanak le a szerkesztőben — a mező most a
+  rendelkezésre álló teljes helyet megkapja.
+- A tétel-keresőbe gépelt érvényes fogszám mostantól automatikusan a sor Fog mezőjébe kerül, a
+  darabszám pedig ehhez igazodik.
+- Egy kezelés felvétele után a fókusz mostantól a sor Fog mezőjébe ugrik, onnan az Enter viszi
+  vissza a keresőbe — így a következő kezelés megállás nélkül gépelhető.
+- Javítottuk, hogy a nyomtatványon minden szöveg — sortörés esetén is — ugyanazt a betűtípust
+  használja.
+- A kezelési terv szerkesztő lapja szélesebb lett, hogy a Beavatkozás oszlopban a hosszabb
+  kezelésnevek is görgetés nélkül olvashatók legyenek.
+- A pénzösszeg-mezők mostantól kizárólag egész számot fogadnak el, betöltéskor és mentéskor
+  egyaránt.
+- Az ezres tagolás (pl. 9 000 Ft) mostantól már négyjegyű összegeknél is megjelenik, forintban és
+  euróban egyaránt.
+- Az előleg jelölőnégyzet felirata mostantól „Előleg feltüntetése a nyomtatványon” — a régi szöveg
+  tévesen fogtechnikai munkához kötötte.
+- A Fázis összesen és a Mindösszesen mostantól már gépelés közben, azonnal frissül, nem csak a
+  mező elhagyása után.
+- Az Ajánlati ár mezőbe mostantól százalék is beírható (pl. „-10%” vagy „+10%”) — a program a
+  listaárhoz képest kerekített összegre számolja át.
+- A véglegesítés előtti ellenőrzőlista figyelmeztetései mostantól pontosan megnevezik, mi hiányzik
+  (pl. mely nyomtatvány-szakasz vagy páciensadat) és hol pótolható.
+- Az Előnézet első megnyitásakor a Letöltés gomb helyén mostantól „Nyomtatvány készül…” felirat
+  áll, amíg az első nyomtatvány el nem készül.
+- A lépés elhagyásakor felugró ablakok szövege egyszerűbb, laikus nyelvre váltott, és a „törzsadat”
+  szó helyett mindenhol „a páciens adatlapja” szerepel; a páciens adatlapjára mentés egyetlen
+  kattintással megy.
+- A páciens adatlapja és a terv adatai közti összevetés mostantól különbséget tesz a valódi eltérés
+  és a csak az egyik helyen kitöltött mező között — az utóbbi egyetlen gombbal, megerősítő ablak
+  nélkül pótolható, mindkét irányban.
+- A dátummezők alatt mostantól mindenhol olvasható, magyar alakú dátum áll, és a tervek listájának
+  verziósorai is formázott dátumot mutatnak a nyers dátumkód helyett.
+- Egy vadonatúj terv Kiadás dátuma mostantól átírható (pl. ha a terv papíron korábban készült), és
+  a program figyelmeztet, ha a dátum a jövőbe esik; egy korábbi terv új verziójánál a dátum
+  továbbra is a mai napra rögzül, magyarázattal.
+- A Pénznem és a terv-cím mezők melletti magyarázó szövegek egyszerűbb, közérthetőbb megfogalmazást
+  kaptak.
+- A Terv adatai lapon az Enter billentyű mostantól sorban a következő mezőre visz (Terv címe → Név
+  → Született → TAJ → Lakcím → Telefon → E-mail → Tovább gomb); egy már mentett tervnél az Enter
+  előbb elmenti a beírt terv-címet.
+- A páciens-kötés jelzése és a véglegesítés utáni sikerképernyő mostantól a páciens nevét és a
+  terv címét mutatja elsődlegesen, nem a belső mappakódot.
+- A magyarázat, hogy mi a különbség az „Új verzió” és az „Új terv” között, mostantól a páciens
+  saját terv-lapján is megjelenik, nem csak az Összes terv listán.
+- A piszkozat automatikus mentését jelző szöveg mostantól mindhárom helyen (szerkesztő fejléce,
+  Kezdőlap piszkozat-kártyája, páciens terv-listája) egységesen „Automatikusan mentve” formában
+  jelenik meg.
+- Letöltés után a program mostantól a gomb mellett kiírja a letöltött fájl nevét, mind az öt
+  letöltési ponton.
+- Javítottuk, hogy az „Új terv indítása” oldal üres keresőjében ne legyen tévesen kiemelve az első
+  sor, és az Enter ne induljon el vele véletlenül.
+- Az „Új páciens” ablakban az Enter mostantól sorban a következő mezőre visz (Név → Született →
+  Telefon → Mentés gomb), a mentéshez egy második Enter kell a gombon; sikeres felvétel után
+  mindkét célképernyő „<Név> felvéve” üzenettel fogad.
+- A fogtérképen egy kezelt fogra kattintva a program mostantól a hozzá tartozó sorra ugrik
+  (ismételt kattintásra a következőre), nem vesz fel új sort.
+- A felirat nélküli ikon-gombok mostantól egérrel fölé állva elmagyarázó buboréksúgót mutatnak.
+
 ## 2026. szeptember 7.
 
 - A véglegesítés előtti előnézetben látható nyomtatvány már azt az azonosítót és verziószámot
