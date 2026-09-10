@@ -77,6 +77,7 @@ export default function PreviewPage() {
   const [sablonFallback, setSablonFallback] = useState(false);
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [mappaNyitva, setMappaNyitva] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   // A sikerállapotot a `?mentve=1` URL-jelző adja, nem komponens-state -- csak
   // így hagy a véglegesítés VALÓDI history-bejegyzést, amire a böngésző Vissza
@@ -114,6 +115,7 @@ export default function PreviewPage() {
   // A véglegesítés-gomb accessible description-je -- a magyarázó sor `<label>`-je
   // elrabolná a gomb accessible name-jét (lásd components/Field.tsx FieldGroup).
   const visszavonhatatlansagId = useId();
+  const mappaId = useId();
 
   // backlog-40 (6. döntés): a páciens törzsadata INFO-
   // szintű, nem blokkoló jelzésként jelenik meg, ha eltér a terv `paciens`
@@ -560,20 +562,37 @@ export default function PreviewPage() {
         <Text as="p" size="4" style={{ color: t.ok }} mb="2">
           A terv elmentve ✓
         </Text>
-        {/* Először a doki nyelvén: KI, MI, HÁNYADIK. A mappaútvonal alatta,
-            megnevezve marad -- a Fájlkezelőben erre keres rá. A "Mappa:"
-            felirat és az útvonal külön elemben áll. */}
+        {/* Először a doki nyelvén: KI, MI, HÁNYADIK. A mappaútvonal (toldalékos
+            belső kódok) alapból rejtve: a doki a Fájlkezelőben névre keres, a
+            nyers útvonal pedig a papírra kerülés gyanúját keltette; a Drive-
+            tükrözés miatt egy kattintásra mégis elérhető. A "Mappa:" felirat és
+            az útvonal külön elemben áll. */}
         <Text as="p" size="3" mb="1">
           {`${plan.paciens.nev} · ${tervCim} · ${parseVersionDirName(savedRef.versionDir)?.verzio ?? '—'}. verzió`}
         </Text>
-        <Flex justify="center" gap="1" wrap="wrap" mb="5">
-          <Text size="2" color="gray">
-            Mappa:
-          </Text>
-          <Text size="2" color="gray" style={{ fontFamily: t.mono }}>
-            {savedRef.patientDir} / {savedRef.planDir} / {savedRef.versionDir}
-          </Text>
-        </Flex>
+        <Box mb="5">
+          <Button
+            type="button"
+            size="1"
+            variant="ghost"
+            color="gray"
+            aria-expanded={mappaNyitva}
+            aria-controls={mappaId}
+            onClick={() => setMappaNyitva((v) => !v)}
+          >
+            Hol van a gépen?
+          </Button>
+          {mappaNyitva && (
+            <Flex id={mappaId} justify="center" gap="1" wrap="wrap" mt="2">
+              <Text size="2" color="gray">
+                Mappa:
+              </Text>
+              <Text size="2" color="gray" style={{ fontFamily: t.mono }}>
+                {savedRef.patientDir} / {savedRef.planDir} / {savedRef.versionDir}
+              </Text>
+            </Flex>
+          )}
+        </Box>
         {cimkeHiba && (
           <Callout.Root color="amber" mb="5" style={{ textAlign: 'left' }}>
             <Callout.Text>

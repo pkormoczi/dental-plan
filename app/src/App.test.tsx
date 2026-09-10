@@ -73,7 +73,9 @@ describe('Végpontok közötti folyamat', () => {
     expect(await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 })).toBeInTheDocument();
 
     // A patientDir/planDir/versionDir hármas leolvasása a mentés-visszaigazolásból --
-    // a Filerendszer nézet ellenőrzéséhez kell a teszt végén.
+    // a Filerendszer nézet ellenőrzéséhez kell a teszt végén. Az útvonal a
+    // sikerképernyőn alapból rejtett, a gomb nyitja.
+    await user.click(screen.getByRole('button', { name: 'Hol van a gépen?' }));
     const savedRefEl = screen.getByText(/_v1$/);
     const [savedPatientDir, savedPlanDir, savedVersionDir] = (savedRefEl.textContent ?? '').split(' / ');
 
@@ -166,7 +168,8 @@ describe('Végpontok közötti folyamat', () => {
 
     // A mentett terv.json-t a "patientDir / planDir / versionDir" kijelzőből
     // rekonstruált localStorage-kulccsal olvassuk vissza -- ez a
-    // rendszer-of-record, nem a memóriabeli state.
+    // rendszer-of-record, nem a memóriabeli state. Az útvonal alapból rejtett.
+    await user.click(screen.getByRole('button', { name: 'Hol van a gépen?' }));
     const refEl = screen.getByText(/_v1$/);
     const [patientDir, planDir, versionDir] = (refEl.textContent ?? '').split(' / ');
     const raw = localStorage.getItem(`dp:paciensek/${patientDir}/${planDir}/${versionDir}/terv.json`);

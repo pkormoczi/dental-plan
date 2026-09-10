@@ -159,7 +159,7 @@ describe('PreviewPage -- a sikerképernyő PDF-műveletei és a Vissza útja', (
   );
 
   it(
-    'a sikerképernyő a páciens nevét, a terv címét és a verziószámot mondja ki, a mappaútvonal megnevezve alatta marad',
+    'a sikerképernyő a páciens nevét, a terv címét és a verziószámot mondja ki; a mappaútvonal csak a „Hol van a gépen?" gombra jelenik meg',
     async () => {
       const user = userEvent.setup();
       seedAlap();
@@ -170,6 +170,13 @@ describe('PreviewPage -- a sikerképernyő PDF-műveletei és a Vissza útja', (
       // Tétel nélküli kategóriájú terv -- az élő javaslat az
       // ALAPERTELMEZETT_TERV_CIM ("Terv", domain/tervCim.ts).
       expect(screen.getByText('Siker Elek · Terv · 1. verzió')).toBeInTheDocument();
+      expect(screen.queryByText('Mappa:')).toBeNull();
+      expect(screen.queryByText(/_v1$/)).toBeNull();
+
+      const gomb = screen.getByRole('button', { name: 'Hol van a gépen?' });
+      expect(gomb).toHaveAttribute('aria-expanded', 'false');
+      await user.click(gomb);
+      expect(gomb).toHaveAttribute('aria-expanded', 'true');
       expect(screen.getByText('Mappa:')).toBeInTheDocument();
 
       const storage = new DemoStorage();

@@ -937,7 +937,7 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
     window.location.hash = '';
   });
 
-  it('kötött piszkozatnál a páciens NEVE az elsődleges szöveg, a mappanév megnevezve alatta áll', async () => {
+  it('kötött piszkozatnál a páciens neve és születési dátuma látszik, a toldalékos mappanév sehol', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
     const patient = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
@@ -946,12 +946,16 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
     renderPatient();
 
     const cimke = await screen.findByText('A terv ehhez a pácienshez kötve mentődik');
-    // A felirat alatt a NÉV áll önmagában, a mappanév nélkül.
-    expect(cimke.parentElement).toHaveTextContent(`A terv ehhez a pácienshez kötve mentődikTeszt Elek`);
-    expect(screen.getByText(`Páciensmappa: ${patient.dirName}`)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(cimke.parentElement).toHaveTextContent(
+        'A terv ehhez a pácienshez kötve mentődikTeszt Elek (1980.05.05.)',
+      ),
+    );
+    expect(screen.queryByText(/Páciensmappa/)).toBeNull();
+    expect(screen.queryByText(patient.dirName, { exact: false })).toBeNull();
   });
 
-  it('két azonos nevű páciens közül a mappanév mondja meg, melyikhez kötött a terv', async () => {
+  it('két azonos nevű páciens közül a születési dátum mondja meg, melyikhez kötött a terv', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
     const elso = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '1980-05-05', telefon: '' });
@@ -961,8 +965,24 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
 
     renderPatient();
 
-    expect(await screen.findByText(`Páciensmappa: ${masodik.dirName}`)).toBeInTheDocument();
-    expect(screen.queryByText(`Páciensmappa: ${elso.dirName}`)).toBeNull();
+    expect(await screen.findByText('Teszt Elek (1991.01.01.)')).toBeInTheDocument();
+    expect(screen.queryByText('Teszt Elek (1980.05.05.)')).toBeNull();
+    expect(screen.queryByText(masodik.dirName, { exact: false })).toBeNull();
+  });
+
+  it('születési dátum nélküli kötött páciensnél csak a név áll, üres zárójel nélkül', async () => {
+    const seeder = new DemoStorage();
+    await seeder.init();
+    const patient = await seeder.createPatient('Teszt Elek', { szuletesiIdo: '', telefon: '' });
+    await seedDraft(patient.dirName, makePaciens(), patient.paciensId);
+
+    renderPatient();
+
+    const cimke = await screen.findByText('A terv ehhez a pácienshez kötve mentődik');
+    await waitFor(() =>
+      expect(cimke.parentElement).toHaveTextContent('A terv ehhez a pácienshez kötve mentődikTeszt Elek'),
+    );
+    expect(screen.queryByText(/Teszt Elek \(/)).toBeNull();
   });
 
   it('vadonatúj (kötés nélküli) piszkozatnál nem mutatja a kötés-jelzést', async () => {
@@ -1034,7 +1054,7 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
     await seedDraft(kotott.dirName, makePaciens(), kotott.paciensId);
 
     renderPatient();
-    await screen.findByText(`Páciensmappa: ${kotott.dirName}`);
+    await screen.findByText('A terv ehhez a pácienshez kötve mentődik');
 
     expect(screen.queryByRole('link', { name: 'Kovács János' })).toBeNull();
   });

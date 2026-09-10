@@ -449,7 +449,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   `_szaban`/`_87094x` toldalék nélkül — a tényleges útvonal maradhat egy „Részletek" mögött.
 - Siker mércéje: a doki egyetlen aláhúzásos belső kódot sem lát a fő útvonalon.
 - Backlog: a `de3374a` folytatása (meglévő terület)
-- Döntés: backlog belso-kod-feluleten-paciensmappa-szabo (2026-09-10)
+- Döntés: javítva belso-kod-feluleten-paciensmappa-szabo (2026-09-10)
 
 ### 14. A sortörlés visszavonás-sávja ott van, de nem olvasódik ajánlatnak
 

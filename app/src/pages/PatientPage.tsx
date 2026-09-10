@@ -38,7 +38,7 @@ import { felvettNevAllapotbol, PaciensFelvetelJelzo } from '../components/Pacien
 import { usePaciensKotes } from '../components/PaciensKotesContext';
 import Section from '../components/Section';
 import { lefedettseg } from '../domain/coverage';
-import { addDaysIso, formatLongDate, todayIso } from '../domain/date';
+import { addDaysIso, formatLongDate, formatShortDate, todayIso } from '../domain/date';
 import { alapertelmezettPenznem } from '../domain/beallitasok';
 import { leirasKoveti, nevKoveti, nyelvvaltasHatasa, resolveNev } from '../domain/nev';
 import { aktivOrvosok } from '../domain/orvosok';
@@ -126,7 +126,7 @@ export default function PatientPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { kerLepesValtas } = useLepesGuard();
-  const { patientDir: kotottPatientDir, kotott, utkozok } = usePaciensKotes();
+  const { kotott, kotottSzuletesiIdo, utkozok } = usePaciensKotes();
   const paciens = plan.paciens;
   const [pending, setPending] = useState<PendingChange | null>(null);
   // Quick-create utáni „<Név> felvéve” -- csak a kezdőértékhez olvassuk a
@@ -305,13 +305,19 @@ export default function PatientPage() {
             tartalmától függetlenül. */}
         {kotott && (
           <Box mb="3">
-            {/* Elsődlegesen a páciens NEVE; a mappanév megnevezve, halványan
-                marad alatta -- a doki a Fájlkezelőben erre keres, és azonos
-                nevű pácienseknél ez különbözteti meg a kötést. */}
-            <ReadOnlyField label="A terv ehhez a pácienshez kötve mentődik" value={kotott.nev} />
-            <Text as="div" size="1" color="gray" mt="1" style={{ fontFamily: t.mono }}>
-              Páciensmappa: {kotottPatientDir}
-            </Text>
+            {/* A mappanév (toldalékos belső kód) itt szándékosan NEM látszik: a
+                doki a Fájlkezelőben névre keres, a toldalék nem kell hozzá, és a
+                belső kód a papírra kerülés gyanúját keltette. Azonos nevű
+                pácienseknél a törzsadat születési dátuma különbözteti meg a
+                kötést, ahogy a Páciensek lap is teszi. */}
+            <ReadOnlyField
+              label="A terv ehhez a pácienshez kötve mentődik"
+              value={
+                kotottSzuletesiIdo
+                  ? `${kotott.nev} (${formatShortDate(kotottSzuletesiIdo, 'hu')})`
+                  : kotott.nev
+              }
+            />
           </Box>
         )}
 
@@ -322,7 +328,7 @@ export default function PatientPage() {
             </Callout.Icon>
             <Callout.Text>
               A beírt név egy MÁSIK, létező páciensre ({utkozok.map((p) => p.nev).join(', ')}) illik
-              pontosan — a terv ettől függetlenül a fenti kötött páciensmappába mentődik. A
+              pontosan — a terv ettől függetlenül a fenti kötött pácienshez mentődik. A
               véglegesítés blokkolva van, amíg a név nem egyezik a kötött páciens nevével.
               {/* Guard nélküli linkek: a piszkozat az AppState/DraftStorage-ban marad, az
                   elnavigálás nem veszít adatot -- a cél-oldali „+ Új terv" saját
