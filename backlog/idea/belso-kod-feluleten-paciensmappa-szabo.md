@@ -1,6 +1,0 @@
-# belso-kod-feluleten-paciensmappa-szabo
-Type: feature
-Source: review:2026-09-09-doctor-review-elso-megnyitas#13
-Kerdes: Kereste-e már a doki a Fájlkezelőben egy páciens mappáját a mappanév (pl. `Szabó-Anna_szaban`) alapján, vagy mindig az appból nyitja a tervet?
-
-A belso-kodok-helyett-nevek javítás után két helyen még mindig aláhúzásos, hatjegyű toldalékos belső kód áll a doki szeme előtt, minden tervnél: a Terv adatai lapon a „Páciensmappa: Szabó-Anna_szaban" sor a kötött páciens neve alatt, és a mentés utáni sikerképernyőn a „Mappa: Szabó-Anna_szaban / Korona és hídpótlások_87094x / 2026-09-08_v1" sor. A persona nem tudta, mi ez („olyan, mint egy fájlnév"), és attól tartott, hogy a papírra kerül. A kód a két sort szándékosan tartja meg (a doki a Fájlkezelőben erre keresne; azonos nevű pácienseknél ez különbözteti meg a kötést) — ezért a tétel a fenti kérdésen múlik. Ha a mappanévre nincs szükség: a Terv adatai lapon a sor elhagyható (a név fölötte áll), a sikerképernyőn „Szabó Anna / Korona és hídpótlások / 1. verzió" alak marad, az útvonal egy „Részletek" mögé kerül. Siker: a doki a fő útvonalon egyetlen aláhúzásos belső kódot sem lát. Nem scope: a lemezen lévő mappanevek megváltoztatása.
