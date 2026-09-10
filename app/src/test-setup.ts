@@ -1,6 +1,14 @@
 import '@testing-library/jest-dom/vitest';
+import { configure } from '@testing-library/react';
 import { format } from 'node:util';
 import { afterEach, beforeEach } from 'vitest';
+
+// A Testing Library `findBy*`/`waitFor` alapértelmezett 1000 ms-e a teljes
+// készlet terhelése alatt kevés a tárolóból olvasó navigációknak (pl. a
+// „Másolás új tervbe” utáni piszkozat-oldal): magában zöld, a teljes kapuban
+// villódzott. A `testTimeout` 15000 ms-e alatt marad, így a valódi elakadás
+// továbbra is elbukik, csak a lassú gép nem.
+configure({ asyncUtilTimeout: 5000 });
 
 // Whether `globalThis.localStorage` is already defined going into this file
 // is Node-version-dependent (Node 22+ ships an experimental global gated
