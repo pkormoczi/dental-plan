@@ -1,7 +1,7 @@
 // Közös git/npm réteg a workflow-parancsokhoz. Minden parancs a repó gyökeréből fut
 // (`node scripts/workflow/<parancs>.mjs`), a minőségi kapu az app/ alatt.
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -47,18 +47,42 @@ export function npm(script) {
 }
 
 export const docsCheck = () => npm('docs-check');
-// steps: /implement-batch a per-tétel körben a docs-check-et a záró sync.mjs-be tolja
-// (redundáns lenne N-szer futtatni) -- a default a teljes, bizonyító kapu.
-export function gate(steps = ['build', 'lint', 'test', 'docs-check']) {
+export const FULL_GATE = ['build', 'lint', 'test', 'docs-check'];
+export function gate(steps = FULL_GATE) {
   for (const s of steps) npm(s);
 }
+
+// A kapu a publikálandó diff hatása szerint választódik: app-kód a teljes kaput kéri, a
+// workflow-scriptek a saját átmenettesztjeiket, a docs/backlog/skill-szöveg csak docs-checket.
+// Gyökér-szintű fájl (CLAUDE.md, .gitignore, .mcp.json) nem app-bemenet: az app az app/ alatt
+// él, a saját package.json-jával. Ismeretlen hatású path a teljes kaput kapja.
+export const CODE_PATHS = ['app', 'data', 'assets'];
+export const WORKFLOW_PATHS = ['scripts', '.github'];
+const DOCS_PATHS = ['docs', 'backlog', '.claude'];
+export function gateFor(files) {
+  const code = files.some((f) => underPaths(f, CODE_PATHS));
+  const workflow = files.some((f) => underPaths(f, WORKFLOW_PATHS));
+  const docsOnly = files.every((f) => underPaths(f, DOCS_PATHS) || underPaths(f, WORKFLOW_PATHS) || !f.includes('/'));
+  const steps = code || !docsOnly ? [...FULL_GATE] : ['docs-check'];
+  if (workflow) steps.push('test:workflow');
+  return steps;
+}
+export const changedFiles = (range) => git(['diff', '--name-only', range]).out.split('\n').filter(Boolean);
 
 export const head = () => git(['rev-parse', 'HEAD']).out;
 export const currentBranch = () => git(['branch', '--show-current']).out;
 export const unpushed = () => git(['log', 'origin/master..HEAD', '--oneline']).out;
-export const isClean = () => git(['status', '--porcelain']).out === '';
 export const stagedFiles = () => git(['diff', '--cached', '--name-only']).out.split('\n').filter(Boolean);
-export const untrackedFiles = () => git(['ls-files', '--others', '--exclude-standard']).out.split('\n').filter(Boolean);
+// A futásjelző mappája sosem „idegen” untracked fájl, .gitignore nélküli repóban (teszt) sem.
+export const untrackedFiles = () =>
+  git(['ls-files', '--others', '--exclude-standard']).out.split('\n').filter((f) => f && !underPaths(f, ['.workflow']));
+// Követett fájlok staged vagy unstaged módosítása (átnevezésnél mindkét path). A `git()` trimmel,
+// ezért az első sor vezető státusz-szóköze hiányozhat -- a státuszmezőt mintával vágjuk le.
+export const trackedChanges = () =>
+  git(['status', '--porcelain', '--untracked-files=no']).out
+    .split('\n')
+    .filter(Boolean)
+    .flatMap((l) => l.replace(/^[ MADRCU!]{1,2}\s+/, '').split(' -> '));
 
 // Egy path-lista alá tartozik-e a fájl (a path lehet könyvtár is).
 export const underPaths = (file, paths) =>
@@ -67,13 +91,55 @@ export const underPaths = (file, paths) =>
     return file === dir || file.startsWith(`${dir}/`);
   });
 
-// A már létező, push-olatlan lezáró commit egy tételhez -- a close.mjs folytatás-módja ebből
-// tudja, hogy nem új commit kell, hanem a hiányzó publikálási lépés.
+// A már létező, push-olatlan lezáró commit egy tételhez -- a close.mjs ebből tudja, hogy a
+// tétel ebben a futásban már lezárult, nem kell újra commitolni.
 export function closingCommit(slug) {
   const line = git(['log', 'origin/master..HEAD', '--format=%H%x09%s']).out
     .split('\n')
     .find((l) => l.split('\t')[1]?.startsWith(`${slug}: `));
   return line ? line.split('\t')[0] : null;
+}
+
+// Futásjelző: az /implement és a /fix tételenként commitol, de csak a futás végén, egy teljes
+// kapu után pushol. Amíg a jelző létezik, egyetlen parancs sem publikálhat -- a köztes commit
+// nem bizonyított állapot. Untracked és ignore-olt: végrehajtási adat, nem a repó része.
+export const RUN_FILE = '.workflow/run.json';
+const runPath = () => path.join(ROOT, RUN_FILE);
+export const readRun = () => (existsSync(runPath()) ? JSON.parse(readFileSync(runPath(), 'utf-8')) : null);
+export function writeRun(run) {
+  mkdirSync(path.dirname(runPath()), { recursive: true });
+  writeFileSync(runPath(), `${JSON.stringify(run, null, 2)}\n`);
+}
+export const clearRun = () => rmSync(runPath(), { force: true });
+
+// Publikálás előfeltétele: a kapu azt a tartalmat igazolja, ami a commitban van. Követett
+// módosítás mellett (a hívó által épp commitolandó pathokon kívül) nincs push; a kapu bemenetét
+// adó könyvtárakban untracked fájl sem állhat, ha a kapu app-kódot is futtat.
+export function requirePublishable({ allowRun = false, steps = FULL_GATE, except = [] } = {}) {
+  const run = readRun();
+  if (run && !allowRun) {
+    throw new WorkflowError(
+      `futás van folyamatban (${RUN_FILE}: ${run.slugs.join(', ')}) -- amíg tart, csak a \`run.mjs finish\` publikál.\n` +
+        'Állapot: node scripts/workflow/run.mjs status',
+    );
+  }
+  const tracked = trackedChanges().filter((f) => !underPaths(f, except));
+  if (tracked.length) {
+    throw new WorkflowError(
+      `követett módosítás a munkafában -- a kapu nem azt igazolná, ami a commitba kerül:\n  ${tracked.join('\n  ')}\n` +
+        'Commitold (futásban close.mjs, egyébként commit-push.mjs), vagy tedd félre (git stash), aztán újra.',
+    );
+  }
+  if (steps.some((s) => s !== 'docs-check')) {
+    const inputs = [...CODE_PATHS, ...WORKFLOW_PATHS];
+    const stray = untrackedFiles().filter((f) => underPaths(f, inputs) && !underPaths(f, except));
+    if (stray.length) {
+      throw new WorkflowError(
+        `untracked fájl a kapu bemenetében (${inputs.join(', ')}) -- a kapu mást futtatna, mint ami a commitban van:\n  ${stray.join('\n  ')}\n` +
+          'Vidd be a commitba (close.mjs --add), töröld, vagy ignore-old, aztán újra.',
+      );
+    }
+  }
 }
 
 export function requireNoRebase() {
@@ -115,23 +181,24 @@ export function ffPull() {
   console.log('helyi master frissítve az origin/master-re (ff)');
 }
 
-// Sima push; ha az origin közben előrelépett: pull --rebase, majd a kapu ÚJRA (a base
+// Sima push; ha az origin közben előrelépett: fetch + rebase, majd a kapu ÚJRA (a base
 // változott), csak utána push. Konfliktusnál a rebase félben marad, nincs --abort.
-export function pushMaster({ regate }) {
+export function pushMaster({ regate, steps = FULL_GATE, allowRun = false }) {
+  requirePublishable({ allowRun, steps });
   let r = git(['push', 'origin', 'master'], { allowFail: true });
   if (r.status === 0) return { rebased: false };
   if (!/non-fast-forward|fetch first|rejected/i.test(r.err)) {
     throw new WorkflowError(
-      `a push megbukott (hálózat? jogosultság?):\n${r.err}\nHa rendbe jött: node scripts/workflow/sync.mjs`,
+      `a push megbukott (hálózat? jogosultság?):\n${r.err}\nHa rendbe jött: ismételd ugyanezt a parancsot`,
     );
   }
-  console.log('\norigin/master előrelépett -- fetch + rebase origin/master-re (autostash)');
+  console.log('\norigin/master előrelépett -- fetch + rebase origin/master-re');
   git(['fetch', 'origin']);
-  r = git(['rebase', '--autostash', 'origin/master'], { allowFail: true, quiet: false });
+  r = git(['rebase', 'origin/master'], { allowFail: true, quiet: false });
   if (r.status !== 0) {
     throw new WorkflowError(
       'a rebase konfliktusba futott, félben marad (nincs --abort, nincs automatikus feloldás).\n' +
-        `${r.err}\nOldd fel, git rebase --continue, majd: node scripts/workflow/sync.mjs (a kapu újra fut a push előtt)`,
+        `${r.err}\nOldd fel, git rebase --continue, majd ismételd ugyanezt a parancsot (a kapu újra fut a push előtt)`,
     );
   }
   console.log('\ntiszta rebase -- a base változott, a kapu újra fut a push előtt');

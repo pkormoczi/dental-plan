@@ -1,39 +1,41 @@
 // A helyi master és az origin/master összehozása: fetch, ff-merge, és ha van push-olatlan
-// commit (az új modellben csak megbukott vagy félbeszakadt futás maradványa lehet), a TELJES
-// kapu, majd push. Push-olatlan commitra nincs bizonyíték, hogy ellenőrzött -- ezért a kapu
-// nem opcionális. Kiírja a HEAD-et (a /plan Baseline-ja).
+// commit (csak megbukott vagy félbeszakadt futás maradványa lehet), a diff hatása szerinti
+// kapu, majd push. Push-olatlan commitra nincs bizonyíték, hogy ellenőrzött -- ezért a kapu nem
+// opcionális. Futó /implement mellett nem publikál. Kiírja a HEAD-et (a /plan Baseline-ja).
 import {
-  run, parseArgs, requireNoRebase, requireMaster, fetchOrigin, ffPull, unpushed, gate, pushMaster, head,
-  isClean, git, WorkflowError,
+  run, parseArgs, WorkflowError, RUN_FILE, readRun, requireNoRebase, requireMaster, fetchOrigin, ffPull, unpushed,
+  gate, gateFor, changedFiles, pushMaster, requirePublishable, head,
 } from './lib.mjs';
 
-const HELP = `node scripts/workflow/sync.mjs [--require-clean]
+const HELP = `node scripts/workflow/sync.mjs
   git fetch origin; ha nem master: hiba; ff-merge az origin/master-re;
-  ha origin/master..HEAD nem üres: build+lint+test+docs-check, majd git push (nem-ff: rebase, kapu újra, push).
-  Kimenet: a HEAD SHA (a /plan Baseline-ja). Exit 0 = HEAD == origin/master.
-  --require-clean: megáll, ha a munkafa nem tiszta (követett módosítás vagy untracked fájl) --
-                   a batch-utak (/plan-batch, /implement-batch) és az /implement preflightja
-                   ezzel indul, hogy egy ittfelejtett fájl ne csússzon be egy tétel-commitba.`;
+  ha origin/master..HEAD nem üres: a diff szerinti kapu (app-kód: build+lint+test+docs-check; workflow:
+  +test:workflow; csak docs/backlog: docs-check), majd git push (nem-ff: rebase, kapu újra, push).
+  Publikálás csak követett módosítás nélküli fáról. Futásjelző (${RUN_FILE}) mellett megáll.
+  Kimenet: a HEAD SHA (a /plan Baseline-ja). Exit 0 = HEAD == origin/master.`;
 
 run(() => {
-  const a = parseArgs(process.argv.slice(2), { flags: ['require-clean'] });
+  const a = parseArgs(process.argv.slice(2));
   if (a.help) return console.log(HELP);
   requireNoRebase();
   requireMaster();
-  if (a['require-clean'] && !isClean()) {
-    const lines = git(['status', '--porcelain', '--untracked-files=all']).out;
+  const r = readRun();
+  if (r) {
     throw new WorkflowError(
-      `a munkafa nem tiszta -- ez a lépés csak tiszta fáról indul:\n  ${lines.split('\n').join('\n  ')}\n` +
-        'Commitold (commit-push.mjs), töröld, vagy .gitignore, aztán újra.',
+      `futás van folyamatban (${r.slugs.join(', ')}) -- a sync nem mozdítja a baseline-t és nem publikál.\n` +
+        'Fejezd be: node scripts/workflow/run.mjs finish (vagy status / abort).',
     );
   }
   fetchOrigin();
   ffPull();
   const pending = unpushed();
   if (pending) {
-    console.log(`push-olatlan commit a helyi masteren -- a kapu lefut, aztán push:\n${pending}`);
-    gate();
-    const { rebased } = pushMaster({ regate: gate });
+    const steps = gateFor(changedFiles('origin/master..HEAD'));
+    // Olcsó előellenőrzés a drága kapu előtt: eltérő munkafával a kapu mást igazolna.
+    requirePublishable({ steps });
+    console.log(`push-olatlan commit a helyi masteren -- kapu (${steps.join(' → ')}), aztán push:\n${pending}`);
+    gate(steps);
+    const { rebased } = pushMaster({ regate: () => gate(steps), steps });
     console.log(rebased ? 'rebase után push kész' : 'push kész');
   }
   console.log(`HEAD ${head()}`);

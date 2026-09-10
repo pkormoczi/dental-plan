@@ -5,3 +5,5 @@ dist/
 .claude/worktrees/
 # doctor-review futások képernyőképei — átmeneti munkatermék, a jelentés szövege a tartós tartalom
 docs/reviews/screens/
+# workflow futásjelző (scripts/workflow/run.mjs) — végrehajtási adat, nem a repó része
+.workflow/
