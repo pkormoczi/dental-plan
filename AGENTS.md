@@ -21,17 +21,18 @@ Fogorvosi kezelési-terv készítő (Vite + React + TS az `app/` alatt), egy fej
 → product:#adat-es-deployment-korlatok; product:#a-nyomtatvany-szerzodeses-dokumentum
 
 ## Kapu és flow
-Kapu az `app/` alatt: `npm run build`, `lint`, `test`, `docs-check` — mind zöld, allowlist nincs.
-Egy tétel: ötlet (`backlog/idea[/later]/`) → terv (`backlog[/later]/`) → implementáció a
-masteren, commit nélkül → **kézi ellenőrzés a munkafán** → lezárás (tételfájl törlése, commit,
-azonnali push; a master-push Pages-re élesít). Minden állapotváltozás azonnal commit + push.
+Kapu az `app/` alatt: `npm run build`, `lint`, `test`, `docs-check` — mind zöld, allowlist nincs; a
+scriptek a diff hatása szerint futtatják. Ötlet (`backlog/idea[/later]/`) → terv (`backlog[/later]/`;
+`/plan` interjú csak termékkérdésnél) → `/implement <slug>...`: tételenként commit, végén egy kapu és
+egy push (Pages). `/fix "<szöveg>"`: tervfájl nélkül, egy commit. Kézi teszt a Pages-en, nem kapu.
 
-Git-lépések scriptben, a gyökérből (`--help` mindnél):
-- `scripts/workflow/sync.mjs` — fetch, ff-merge; push-olatlan commitnál kapu, majd push; kiírja a HEAD-et.
-- `scripts/workflow/commit-push.mjs -m "…" [--trailer …]… -- <path>…` — csak a path-ok, docs-check, commit, push.
-- `scripts/workflow/drift.mjs <slug> | --all` — a terv `Baseline`-ja óta változott-e app-kód (csak jelez).
-- `scripts/workflow/close.mjs <slug> --title "…"` — teljes kapu, `git rm` tételfájl, commit, push.
-→ file:scripts/workflow/sync.mjs; file:scripts/workflow/commit-push.mjs; file:scripts/workflow/drift.mjs; file:scripts/workflow/close.mjs
+Git-lépések `scripts/workflow/` alatt, a gyökérből (`--help` mindnél):
+- `run.mjs start <slug>... | finish` — futásjelző; a `finish` kapuz és pushol.
+- `close.mjs <slug> --title "…"` — futásban: `git rm` tételfájl, commit; se kapu, se push.
+- `commit-push.mjs -m "…" -- <path>…` — nem app-path: kapu, commit, push.
+- `sync.mjs` — fetch, ff-merge; push-olatlan commitnál kapu, push; kiírja a HEAD-et.
+- `drift.mjs <slug> | --all` — a `Baseline` óta változott-e app- vagy workflow-kód.
+→ file:scripts/workflow/run.mjs; file:scripts/workflow/close.mjs; file:scripts/workflow/commit-push.mjs
 
 Claude Code-ban ugyanez skill (`.claude/skills/*/SKILL.md`); más agent a scripteket hívja és a
 skill-fájl lépéseit követi. Review csak jelent; `Prio`-t doki/fejlesztő mond ki.

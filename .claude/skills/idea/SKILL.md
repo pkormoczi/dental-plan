@@ -1,6 +1,6 @@
 ---
 name: idea
-description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/idea/<slug>.md files (or backlog/idea/later/<slug>.md when the caller explicitly said Prio later; header Type, optional Source, Kerdes and Prio, one paragraph, ≤1500 chars), then commit and push them at once (scripts/workflow/commit-push.mjs) so the item is shared state from the start. Dedups against existing backlog slugs (all four folders), the derived state of review findings (scripts/workflow/reviews.mjs --json) and docs/PRODUCT.md § Nem cél; splits a multi-idea note (feedback list, review report) into separate candidates the user decides on one by one — take up, reject with reason, duplicate of, acknowledged, later — and books every decision as a Döntés: line in the source report (reviews.mjs dontes) in the same commit. Never writes application code, never plans, never decides Prio on its own. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl | review:<jelentés>#<id>].
+description: Capture one or more raw ideas, bugs, chores or doki-tasks as backlog/idea/<slug>.md files (or backlog/idea/later/<slug>.md when the caller explicitly said Prio later; header Type, optional Source, Kerdes and Prio, one paragraph, ≤1500 chars), then commit and push them at once (scripts/workflow/commit-push.mjs) — no approval round. Dedups against existing backlog slugs (all four folders), the derived state of review findings (scripts/workflow/reviews.mjs --json) and docs/PRODUCT.md § Nem cél. A multi-idea source: the caller names the findings to take (review:<jelentés>#<id>,<id>...) and any decision (elvetve/duplikátum/tudomásul véve) in the call; a bare report path yields a candidate list with ready /idea commands, nothing written. Books every stated decision as a Döntés: line in the source report (reviews.mjs dontes) in the same commit. Never writes application code, never plans, never decides Prio on its own. Invoke explicitly with /idea <slug> [szöveg | forrás-fájl | review:<jelentés>#<id>].
 argument-hint: <slug> [szöveg | forrás-fájl | review:<jelentés>#<id>]
 disable-model-invocation: true
 ---
@@ -52,15 +52,17 @@ után **azonnal commitolja és pusholja** — a backlog minden állapotváltozá
    melyik, és állj meg. Ha a felvetés a `docs/PRODUCT.md` Nem cél szerint elvetett irány vagy hard
    invariánst sért, mondd ki — a tétel ettől még felvehető (a doki dönt), de a bekezdés első
    mondata jelezze az ütközést.
-3. **Többötletes forrásnál** sorold fel a különálló jelölteket: javasolt slug, `Type`, egy
-   mondat, és a dedup-/ütközés-jelzés. A felhasználó választ — egyet vagy többet. Egy futás
-   több fájlt is írhat, de csak kiválasztottat. **Review-jelentésnél minden jelölt egy
-   megállapítás (`review:<jelentés>#<id>`), és minden jelöltről döntés születik**, nem csak a
-   felvettekről: `felvesz` (tétel + `Döntés: backlog <slug>`), `elvetve: <indok>`,
-   `duplikátum → review:<id>` (a cél nem lehet maga is duplikátum), `tudomásul véve`, vagy
-   `később` (nincs könyvelés, a pont nyitva marad). A Közepes/Kis pontok döntés nélkül is
-   „tudomásul véve” állapotúak — azokra csak akkor kérdezz, ha a hívó kéri, vagy `ISMÉT`
-   címkéjűek. A döntést a doki vagy a fejlesztő mondja ki, a skill nem találja ki.
+3. **Többötletes forrásnál** a kiválasztás a hívás argumentuma, nem kérdés. Ha a hívó
+   megnevezte a pontokat (`review:<jelentés>#<id>,<id>...`, vagy a feedback-lista soraira
+   mutatva), azokat írod, slugot ötletenként te javasolsz. Ha csak a forrás-fájlt adta,
+   **jelentést adsz és nem írsz**: a különálló jelöltek listája — javasolt slug, `Type`, egy
+   mondat, dedup-/ütközés-jelzés — és jelöltenként egy kész `/idea <slug> review:…#<id>`
+   parancssor. **Review-jelentésnél minden megnevezett jelölt egy megállapítás, és döntés
+   születik róla:** `felvesz` (tétel + `Döntés: backlog <slug>`); a hívó által kimondott
+   `elvetve: <indok>`, `duplikátum → review:<id>` (a cél nem lehet maga is duplikátum) vagy
+   `tudomásul véve` könyvelése. Amit a hívó nem nevezett meg, nyitva marad. A Közepes/Kis
+   pontok döntés nélkül is „tudomásul véve” állapotúak. A döntést a doki vagy a fejlesztő
+   mondja ki a hívásban, a skill nem találja ki és nem kérdez rá.
 4. **`Type`:** `feature` | `bug` (reprodukálható hiba) | `chore` (kód-housekeeping, refactor,
    őr-erősítés) | `doki` (emberi teendő, adatmunka — sosem kerül a gyökérbe). Ha nem egyértelmű,
    kérdezz.
@@ -75,8 +77,8 @@ után **azonnal commitolja és pusholja** — a backlog minden állapotváltozá
 7. **`Prio:`** (`now` | `next` | `later`) csak akkor, ha a doki vagy a fejlesztő a hívásban vagy a
    beszélgetésben kimondta. Ne kérdezz rá, ne javasolj — hiánya azt jelenti, még nincs döntés.
    `later`-nél a fájl helye `backlog/idea/later/<slug>.md`, különben `backlog/idea/<slug>.md`.
-8. **Mutasd meg a teljes fájltartalmat** és a könyvelendő `Döntés:` sorokat, és csak kifejezett
-   jóváhagyás után írj.
+8. **Írd meg a fájlt** — nincs jóváhagyási kör: a dedup és a `Type` eldőlt, a tétel sorsa
+   úgyis a `/plan`-ban dől el. Csak akkor állj meg kérdéssel, ha a `Type` (4.) nem dönthető el.
 9. **Döntések könyvelése** (csak review-forrásnál): minden eldöntött megállapításra
    `node scripts/workflow/reviews.mjs dontes review:<jelentés>#<id> "<érték> (<YYYY-MM-DD>)"` —
    `backlog <slug>` a felvettekre, `elvetve: <indok>`, `duplikátum → review:<id>`, `tudomásul véve`
@@ -106,5 +108,5 @@ részlet a /plan-é vagy a git historyé.
 
 A létrehozott fájl(ok), a dedup-találatok (mit NEM vettél fel és miért), a könyvelt `Döntés:`
 sorok jelentésenként, a commit rövid SHA-ja és hogy fent van az `origin/master`-en. Következő
-lépés: `/plan <slug>` vagy `/plan <slug> --quick` (egyértelmű bug); review-forrásnál `/reviews`
+lépés: `/plan <slug>...` (a skill maga dönti el, kell-e interjú); review-forrásnál `/reviews`
 mutatja, maradt-e nyitott pont.

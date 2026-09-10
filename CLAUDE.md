@@ -58,8 +58,7 @@ redundanciát keress.
 Nincs `.skip`/`.only`. A tesztnév konkrét, megfigyelhető viselkedést ír le, D-szám nélkül.
 
 # Workflow
-`/idea <slug>` → `/plan <slug> [--quick]` → `/implement <slug>` → kézi ellenőrzés → `/finish
-<slug>`; `/backlog`, `/reviews` listáz; `/plan-batch`/`/implement-batch <slug>...` több tételt egy
-pushsal, kapu nélkül tervez/zár. Skillek commitolnak, pusholnak (`scripts/workflow/`); master-push
-→ Pages. `/update-changelog`, `/update-features`: külön, kézi hívás. Review-jelentések sorsa:
-`/reviews`, `backlog/README.md` §6.
+`/idea <slug>` → `/plan <slug>...` (interjú csak termékkérdésnél) → `/implement <slug>...`
+(tételenként commit, a végén egy kapu + push → Pages). `/fix "<szöveg>"`: kis javítás tervfájl
+nélkül, egy commit. Kézi teszt a Pages-en, sosem kapu. Scriptek: `scripts/workflow/` (`run`,
+`close`, `commit-push`, `sync`). `/backlog`, `/reviews` listáz. Részletek: `backlog/README.md`.

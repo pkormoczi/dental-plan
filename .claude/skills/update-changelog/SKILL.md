@@ -1,6 +1,6 @@
 ---
 name: update-changelog
-description: Draft a plain-language, non-technical docs/CHANGELOG.md entry describing a feature or fix that was just implemented and reviewed. Use once per completed feature or fix, at commit time — not per commit, and not for internal-only changes. Never invoked automatically; user must run it explicitly with /update-changelog.
+description: Draft a plain-language, non-technical docs/CHANGELOG.md entry describing a feature or fix. Applied by /implement and /fix at an item's closing step when the change is visible to the doki (they read this file and let the closing commit carry it); run explicitly with /update-changelog to catch up on shipped work. Not per commit, not for internal-only changes.
 disable-model-invocation: true
 ---
 
@@ -14,9 +14,16 @@ to make sense, rewrite it around the term, don't define it.
 
 ## When this runs
 
-Invoked explicitly with `/update-changelog`, once a feature or fix is implemented and reviewed,
-before or alongside the commit. Never per raw commit — a single user-facing feature may span
-several commits; those collapse into ONE entry.
+Two callers, same rules:
+
+- **Inside `/implement` or `/fix`**, at the closing step of an item whose change the doki can
+  see: the caller reads this file directly (not via the Skill tool), writes the entry for that
+  item, and skips Step 5 — the item's closing commit (`close.mjs`) carries `docs/CHANGELOG.md`.
+- **Explicitly with `/update-changelog`**, to catch up on work that shipped without an entry;
+  then Step 5 commits and pushes on its own.
+
+Never per raw commit — a single user-facing feature may span several commits; those collapse
+into ONE entry.
 
 ## Step 1 — Determine scope
 
@@ -111,10 +118,11 @@ day that's already documented). Keep the file's overall header order reverse-chr
 a new date section in its correct chronological position among the existing headers, not always at
 the very top.
 
-## Step 5 — Write and commit
+## Step 5 — Write and commit (explicit call only)
 
 This skill runs end-to-end without pausing for review or approval: write the drafted entry
-directly to `docs/CHANGELOG.md`, then commit and push. If a filtered-out change is borderline,
+directly to `docs/CHANGELOG.md`, then commit and push. Called from `/implement` or `/fix`,
+stop after writing — the closing commit carries the file. If a filtered-out change is borderline,
 mention in your final report that it was left out and why — but don't add a "kihagyva" note
 into the actual changelog file itself.
 

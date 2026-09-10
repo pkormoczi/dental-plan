@@ -25,7 +25,7 @@ Az implementáció az `app/` mappában folyik, két lépésben:
 | Fájl | Mit tartalmaz |
 |---|---|
 | `docs/PRODUCT.md` | Termékcél, napi flow, adat- és jogi korlátok, a nyomtatvány szerződéses szabályai, nem-cél, nyitott kérdések |
-| `CLAUDE.md` | Agent-context: repó-térkép, parancsok, sérthetetlen invariánsok anchorral, workflow (`/idea` → `/plan` → `/implement` → `/finish`) |
+| `CLAUDE.md` | Agent-context: repó-térkép, parancsok, sérthetetlen invariánsok anchorral, workflow (`/idea` → `/plan` → `/implement`, gyors javításra `/fix`) |
 | `app/src/CLAUDE.md` + `app/src/{domain,storage,pdf}/CLAUDE.md` | Felület-rendszer és a modulok mentális modellje, szándékos hiányok, „find before writing” index |
 | `docs/desktop-app-migration-plan.md` | A 2. fázis (Electron + fájlrendszer) terve |
 | `backlog/` | Egy fájl = egy nyitott tétel, slug-névvel: `idea/` az ötlet, a gyökér a tervezett, mindkettő alatt `later/` a `Prio: later` tételeké; a modell a `backlog/CLAUDE.md`-ben, a teljes flow (skillek, őrök, ismert feszültségek) a `backlog/README.md`-ben |

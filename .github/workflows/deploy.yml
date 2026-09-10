@@ -3,8 +3,7 @@ name: Deploy mockup to GitHub Pages
 # A tényleges alkalmazás az app/ almappában van -- lásd CLAUDE.md
 # "Két fázisú build". Ez a workflow csak a mockupot (1. fázis) deployolja.
 
-# PR-en csak a build-job fut (a worktree-ág merge előtti bizonyítéka); élesítés csak
-# master-pushra és kézi indításra.
+# PR-en csak a build-job fut; élesítés csak master-pushra és kézi indításra.
 on:
   push:
     branches: [master]

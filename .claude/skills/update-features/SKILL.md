@@ -1,6 +1,6 @@
 ---
 name: update-features
-description: Rewrite docs/FEATURES.md — the plain-language, screen-by-screen summary of what the app can do — by reviewing the current UI source. Use when asked to refresh/update the feature list. Never invoked automatically; user must run it explicitly with /update-features.
+description: Rewrite docs/FEATURES.md — the plain-language, screen-by-screen summary of what the app can do — by reviewing the current UI source. Applied by /implement and /fix at an item's closing step when a doki-visible capability is added or changed (affected sections only, the closing commit carries it); run explicitly with /update-features for a full snapshot refresh.
 disable-model-invocation: true
 ---
 
@@ -26,8 +26,14 @@ bullets — the previous content is not sacred. Never write dates, "mostantól",
 
 ## When this runs
 
-Invoked explicitly with `/update-features`. Not tied to any other workflow (backlog closure
-may mention it as an optional step, but running it is always a separate, explicit choice).
+Two callers, same rules:
+
+- **Inside `/implement` or `/fix`**, at the closing step of an item that adds a capability or
+  changes an existing one the doki can see: the caller reads this file directly (not via the
+  Skill tool), updates only the affected section(s), and skips Step 6 — the item's closing
+  commit (`close.mjs`) carries `docs/FEATURES.md`.
+- **Explicitly with `/update-features`**, for a full snapshot rewrite; then Step 6 commits and
+  pushes on its own.
 
 ## Step 1 — Scope (a hint, not the source of truth)
 
@@ -116,12 +122,13 @@ The file opens with `# Funkciók` and a one-line explanation, exactly like `docs
 opens with `# Változásnapló` — this line is outside any `##` section, so the parser (and the
 card) ignores it.
 
-## Step 6 — Write and commit
+## Step 6 — Write and commit (explicit call only)
 
 This skill runs end-to-end without pausing for review or approval: write the drafted content
 directly to `docs/FEATURES.md` — this file gets rewritten wholesale, not appended to, so re-read
 the current content in Step 2 carefully before overwriting it, since a bad run can silently
-delete something true. Then commit and push.
+delete something true. Then commit and push. Called from `/implement` or `/fix`, stop after
+writing — the closing commit carries the file.
 
 Commit **only that file** and push it at once — every shared-state change in this repo is
 committed and pushed by the skill that made it:
