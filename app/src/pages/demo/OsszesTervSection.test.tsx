@@ -1306,7 +1306,10 @@ describe('OsszesTervSection', () => {
       await user.keyboard('{Escape}');
 
       await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
-      expect(trigger).toHaveFocus();
+      // A visszafókuszálás requestAnimationFrame-ben fut (fokuszVisszaadas.ts),
+      // a dialógus eltűnése után egy ütemmel -- terhelt CI-runneren szinkron
+      // állítással a <body>-t találná.
+      await waitFor(() => expect(trigger).toHaveFocus());
     });
 
     it('sikeres mentés után a fókusz a "⋯" gombra tér vissza', async () => {
