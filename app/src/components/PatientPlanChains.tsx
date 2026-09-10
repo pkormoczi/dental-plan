@@ -42,6 +42,7 @@ import {
 } from '@radix-ui/react-icons';
 import IkonGomb from './IkonGomb';
 import { Field } from './Field';
+import { fokuszVisszaadasOnClose } from './fokuszVisszaadas';
 import { csokkentettMozgas } from '../design/motion';
 import { t } from '../design/tokens';
 import { formatPiszkozatIdo, formatShortDate } from '../domain/date';
@@ -83,6 +84,14 @@ export const UJ_VERZIO_VAGY_UJ_TERV =
  * nyelvén nevezi meg a verziót („<terv címe> — v<n>"), nem mappanévvel. */
 interface ErvDialogAllapot extends VersionRef {
   megnevezes: string;
+}
+
+/** A verziósor `⋯` triggerének stabil DOM-azonosítója -- a sor `.map`-ben
+ * renderelődik, nincs egyetlen `ref`, ami minden sorra mutatna; a
+ * megerősítő dialógusok ezzel az id-vel találják vissza a triggert
+ * záráskor (`fokuszVisszaadasOnClose`). */
+function verzioMenuId(planDir: string, versionDir: string): string {
+  return `verzio-menu-${planDir}-${versionDir}`;
 }
 
 export interface PatientPlanChainsProps {
@@ -201,6 +210,11 @@ export default function PatientPlanChains({
   const [visszavonas, setVisszavonas] = useState<ErvDialogAllapot | null>(null);
   const [ervHiba, setErvHiba] = useState<(VersionRef & { message: string }) | null>(null);
   const ervIndokRef = useRef<HTMLInputElement>(null);
+  // A dialógusok záráskor ide adják vissza a fókuszt -- a triggerelő `⋯` a
+  // DOM-lekérdezés pillanatában (nyitáskor) rögzül, mert a menüpont maga
+  // (ami az onSelect-et hívja) a menü bezárásával eltűnik a DOM-ból.
+  const ervVisszaFokuszRef = useRef<HTMLElement | null>(null);
+  const visszavonasVisszaFokuszRef = useRef<HTMLElement | null>(null);
 
   async function mentErvenytelenites(ref: VersionRef, indok: string) {
     setErvHiba(null);
@@ -685,6 +699,7 @@ export default function PatientPlanChains({
                                     indul) ütközne -- a képernyőolvasó (és a teszt)
                                     nem tudná megkülönböztetni őket. */}
                                 <IkonGomb
+                                  id={verzioMenuId(plan.dirName, v.dirName)}
                                   size="1"
                                   variant="soft"
                                   color="gray"
@@ -720,7 +735,10 @@ export default function PatientPlanChains({
                                 <DropdownMenu.Separator />
                                 <DropdownMenu.Item
                                   onSelect={() =>
-                                    akciok.inditas({ kind: 'copy', ...ref, historical: !isLegfrissebb })
+                                    akciok.inditas(
+                                      { kind: 'copy', ...ref, historical: !isLegfrissebb },
+                                      document.getElementById(verzioMenuId(ref.planDir, ref.versionDir)),
+                                    )
                                   }
                                 >
                                   Másolás új tervbe
@@ -739,12 +757,15 @@ export default function PatientPlanChains({
                                 <DropdownMenu.Separator />
                                 {v.ervenytelenites ? (
                                   <DropdownMenu.Item
-                                    onSelect={() =>
+                                    onSelect={() => {
+                                      visszavonasVisszaFokuszRef.current = document.getElementById(
+                                        verzioMenuId(ref.planDir, ref.versionDir),
+                                      );
                                       setVisszavonas({
                                         ...ref,
                                         megnevezes: `${label} — v${v.verzio}`,
-                                      })
-                                    }
+                                      });
+                                    }}
                                   >
                                     Érvénytelenítés visszavonása
                                   </DropdownMenu.Item>
@@ -752,6 +773,9 @@ export default function PatientPlanChains({
                                   <DropdownMenu.Item
                                     color="red"
                                     onSelect={() => {
+                                      ervVisszaFokuszRef.current = document.getElementById(
+                                        verzioMenuId(ref.planDir, ref.versionDir),
+                                      );
                                       setErvIndok('');
                                       setErvenytelenites({
                                         ...ref,
@@ -828,6 +852,7 @@ export default function PatientPlanChains({
             e.preventDefault();
             ervIndokRef.current?.focus();
           }}
+          onCloseAutoFocus={fokuszVisszaadasOnClose(ervVisszaFokuszRef)}
         >
           <AlertDialog.Title>Verzió érvénytelenítése</AlertDialog.Title>
           <AlertDialog.Description size="2" mb="3">
@@ -876,7 +901,10 @@ export default function PatientPlanChains({
           if (!nyitva) setVisszavonas(null);
         }}
       >
-        <AlertDialog.Content maxWidth="440px">
+        <AlertDialog.Content
+          maxWidth="440px"
+          onCloseAutoFocus={fokuszVisszaadasOnClose(visszavonasVisszaFokuszRef)}
+        >
           <AlertDialog.Title>Érvénytelenítés visszavonása</AlertDialog.Title>
           <AlertDialog.Description size="2">
             „{visszavonas?.megnevezes}" újra érvényesként jelenik meg, az indoklás törlődik.

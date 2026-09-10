@@ -27,6 +27,7 @@ import { ArrowLeftIcon, CrossCircledIcon, DotsHorizontalIcon } from '@radix-ui/r
 import IkonGomb from '../components/IkonGomb';
 import { sajatDraft, useAktivDraft } from '../components/useAktivDraft';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
+import { fokuszVisszaadasOnClose } from '../components/fokuszVisszaadas';
 import { useListStateMemory } from '../components/useListStateMemory';
 import { useNavGuard } from '../components/NavGuardContext';
 import {
@@ -177,6 +178,10 @@ export default function PatientDetailPage() {
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // A "Páciens törlése" dialógus záráskor ide adja vissza a fókuszt --
+  // egyetlen `⋯` van az oldalon, ezért elég egy stabil `ref` (nem
+  // DOM-lekérdezés, mint a PatientPlanChains.tsx `.map`-elt verziósorainál).
+  const paciensMenuRef = useRef<HTMLButtonElement | null>(null);
 
   // Fire-and-forget, mint az AdatkezelesSection.tsx demó-törlő gombjai: a
   // dialógus a kattintásra azonnal zárul, a hiba a lapon, a header alatt
@@ -295,6 +300,7 @@ export default function PatientDetailPage() {
                   sorbeli akció -- egyetlen példány van az oldalon
                   (a lapon megjelenő EGY páciensre), nem listasorra. */}
               <IkonGomb
+                ref={paciensMenuRef}
                 size="1"
                 variant="soft"
                 color="gray"
@@ -441,7 +447,7 @@ export default function PatientDetailPage() {
       />
 
       <AlertDialog.Root open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialog.Content maxWidth="440px">
+        <AlertDialog.Content maxWidth="440px" onCloseAutoFocus={fokuszVisszaadasOnClose(paciensMenuRef)}>
           <AlertDialog.Title>Páciens törlése</AlertDialog.Title>
           <AlertDialog.Description size="2">
             „{displayedAdatok.nev}” végleges törlése — az adatlapja és az összes hozzá tartozó fájl

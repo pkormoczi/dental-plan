@@ -135,6 +135,10 @@ function renderDetailWithNavBar(patientDir: string, state?: Record<string, unkno
 const nagyDir = seedPatients.find((p) => p.record.nev === 'Nagy Éva')!.patientDir;
 const kovacsDir = seedPatients.find((p) => p.record.nev === 'Kovács János')!.patientDir;
 const tothDir = seedPatients.find((p) => p.record.nev === 'Tóth Zoltán')!.patientDir;
+// Terv nélküli páciens (seed/plans.ts kommentje) -- friss demó adaton az
+// EGYETLEN törölhető páciens, a többinek van véglegesített terve
+// (`paciensTorlesAkadaly`), ami a "Páciens törlése" menüpontot letiltaná.
+const kelemenDir = seedPatients.find((p) => p.record.nev === 'Kelemen Petra')!.patientDir;
 
 describe('PatientDetailPage', () => {
   beforeEach(async () => {
@@ -675,5 +679,22 @@ describe('PatientDetailPage', () => {
     await user.click(screen.getByRole('button', { name: 'Vissza' }));
     await user.click(await screen.findByRole('button', { name: 'Váltás, módosítás elvetésével' }));
     expect(await screen.findByText('Páciensek-próba')).toBeInTheDocument();
+  });
+
+  // Kontrollált (trigger nélküli) AlertDialog -- enélkül a Radix beépített
+  // visszafókuszálása a <body>-ra ejtené a fókuszt záráskor (Radix-forráskódban
+  // igazolt bug, lásd PatientDetailPage.tsx `paciensMenuRef`).
+  it('a "Páciens törlése" dialógus Mégse gombja a fókuszt a "⋯" gombra adja vissza', async () => {
+    const user = userEvent.setup();
+    renderDetail(kelemenDir);
+
+    const trigger = await screen.findByRole('button', { name: /páciens műveletek$/ });
+    await user.click(trigger);
+    await user.click(await screen.findByRole('menuitem', { name: 'Páciens törlése' }));
+
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+
+    await waitFor(() => expect(trigger).toHaveFocus());
   });
 });

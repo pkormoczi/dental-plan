@@ -10,6 +10,7 @@
 
 import { useState, type RefObject } from 'react';
 import { AlertDialog, Button, Flex } from '@radix-ui/themes';
+import { fokuszVisszaadasOnClose } from './fokuszVisszaadas';
 
 /**
  * `request(apply)` dirty állapotban megnyitja a dialógust és eltárolja
@@ -59,7 +60,7 @@ export default function DiscardChangesDialog({
    * ágyazott hívónak kell: Radix-forráskódban igazolt bug, hogy egy
    * kontrollált (trigger nélküli) `AlertDialog` bezárásakor a beépített
    * visszafókuszálás `triggerRef.current` null-ra fut, és a fókusz a
-   * `<body>`-ra esne a mögötte lévő felület alól.
+   * `<body>`-ra esne a mögötte lévő felület alól -- lásd `fokuszVisszaadas.ts`.
    */
   visszaFokuszRef?: RefObject<HTMLElement | null>;
 }) {
@@ -67,14 +68,7 @@ export default function DiscardChangesDialog({
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Content
         maxWidth="440px"
-        onCloseAutoFocus={
-          visszaFokuszRef
-            ? (e) => {
-                e.preventDefault();
-                requestAnimationFrame(() => visszaFokuszRef.current?.focus());
-              }
-            : undefined
-        }
+        onCloseAutoFocus={visszaFokuszRef ? fokuszVisszaadasOnClose(visszaFokuszRef) : undefined}
       >
         <AlertDialog.Title>{title}</AlertDialog.Title>
         <AlertDialog.Description size="2">{description}</AlertDialog.Description>

@@ -346,6 +346,24 @@ describe('OsszesTervSection', () => {
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
   });
 
+  // Kontrollált (trigger nélküli) AlertDialog -- enélkül a Radix beépített
+  // visszafókuszálása a <body>-ra ejtené a fókuszt záráskor (Radix-forráskódban
+  // igazolt bug, lásd PlanVersionActionDialog.tsx `visszaFokuszRef`).
+  it('a piszkozat-őr Mégse gombja a fókuszt az "Új verzió" gombra adja vissza, nem a body-ra', async () => {
+    seedPersistedDraft();
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const ujVerzioBtn = within(card).getByRole('button', { name: 'Új verzió' });
+
+    await user.click(ujVerzioBtn);
+    await user.click(await screen.findByRole('button', { name: 'Mégse' }));
+
+    await waitFor(() => expect(ujVerzioBtn).toHaveFocus());
+  });
+
   // backlog-17: a két belépési pont eltérő szinten él -- páciensenként EGY
   // "Új terv" gomb a névfejlécnél, a verzió-szintű műveletek pedig
   // soronként a saját "⋯" menüjükben.
@@ -597,6 +615,26 @@ describe('OsszesTervSection', () => {
     // ér célba, és a piszkozat-őr megkerülhetővé válik.
     await user.click(await screen.findByRole('button', { name: 'Másolás, piszkozat elvetésével' }));
     expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
+  });
+
+  // A "Másolás új tervbe" a `⋯` MENÜBŐL indul (nem látható gombról, mint az
+  // "Új verzió") -- a menüpont maga eltűnik a menü bezárásával, a
+  // piszkozat-őrnek ezért a triggert (a `⋯` gombot), nem az aktuális
+  // fókuszt kell megjegyeznie záráskor.
+  it('a "Másolás új tervbe" piszkozat-őrének Mégse gombja a fókuszt a "⋯" gombra adja vissza', async () => {
+    seedPersistedDraft();
+    const user = userEvent.setup();
+    renderHistory();
+
+    await screen.findByText('Nagy Éva');
+    const card = patientCard('Nagy Éva');
+    const trigger = within(card).getAllByRole('button', { name: /további műveletek$/ })[0];
+
+    await user.click(trigger);
+    await user.click(await screen.findByRole('menuitem', { name: 'Másolás új tervbe' }));
+    await user.click(await screen.findByRole('button', { name: 'Mégse' }));
+
+    await waitFor(() => expect(trigger).toHaveFocus());
   });
 
   // Piszkozat-felülírás ÉS historical-másolás egyszerre -- a cím a
@@ -1249,6 +1287,43 @@ describe('OsszesTervSection', () => {
       await waitFor(() => expect(mezo).toHaveFocus());
     });
 
+    // Kontrollált (trigger nélküli) AlertDialog -- enélkül a Radix beépített
+    // visszafókuszálása a <body>-ra ejtené a fókuszt záráskor (Radix-forráskódban
+    // igazolt bug, lásd PatientPlanChains.tsx `ervVisszaFokuszRef`).
+    it('Escape a dialógust bezárja, a fókusz a "⋯" gombra tér vissza', async () => {
+      const user = userEvent.setup();
+      const [, v2] = nagyEvaMultiVersionChain;
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const doboz = lancDoboz(patientCard('Nagy Éva'), v2.planDir);
+      await nyissLancot(user, doboz);
+      const trigger = within(doboz).getAllByRole('button', { name: /további műveletek$/ })[0];
+      await user.click(trigger);
+      await user.click(await screen.findByRole('menuitem', { name: 'Érvénytelenítés' }));
+      await screen.findByRole('textbox', { name: /indoka/ });
+
+      await user.keyboard('{Escape}');
+
+      await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+      expect(trigger).toHaveFocus();
+    });
+
+    it('sikeres mentés után a fókusz a "⋯" gombra tér vissza', async () => {
+      const user = userEvent.setup();
+      const [, v2] = nagyEvaMultiVersionChain;
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const doboz = lancDoboz(patientCard('Nagy Éva'), v2.planDir);
+      await nyissLancot(user, doboz);
+      const trigger = within(doboz).getAllByRole('button', { name: /további műveletek$/ })[0];
+      await ervenytelenit(user, doboz, 0, 'rossz árlistával készült');
+
+      await within(doboz).findByText('Érvénytelen');
+      await waitFor(() => expect(trigger).toHaveFocus());
+    });
+
     it('indoklás nélkül nem menthető: az Érvénytelenítés gomb tiltott, amíg a mező üres', async () => {
       const user = userEvent.setup();
       const [, v2] = nagyEvaMultiVersionChain;
@@ -1268,6 +1343,25 @@ describe('OsszesTervSection', () => {
       expect(screen.getByRole('button', { name: 'Érvénytelenítés' })).toBeDisabled();
       await user.type(mezo, 'indok');
       expect(screen.getByRole('button', { name: 'Érvénytelenítés' })).not.toBeDisabled();
+    });
+
+    it('a visszavonás Mégse gombja a fókuszt a "⋯" gombra adja vissza', async () => {
+      const user = userEvent.setup();
+      const [, v2] = nagyEvaMultiVersionChain;
+      renderHistory();
+
+      await screen.findByText('Nagy Éva');
+      const doboz = lancDoboz(patientCard('Nagy Éva'), v2.planDir);
+      await nyissLancot(user, doboz);
+      await ervenytelenit(user, doboz, 0, 'mégsem ez kellett');
+      await within(doboz).findByText('Érvénytelen');
+
+      const trigger = within(doboz).getAllByRole('button', { name: /további műveletek$/ })[0];
+      await user.click(trigger);
+      await user.click(await screen.findByRole('menuitem', { name: 'Érvénytelenítés visszavonása' }));
+      await user.click(screen.getByRole('button', { name: 'Mégse' }));
+
+      await waitFor(() => expect(trigger).toHaveFocus());
     });
 
     it('visszavonás után a verziósor és a lánc-fejléc újra jelöletlen', async () => {

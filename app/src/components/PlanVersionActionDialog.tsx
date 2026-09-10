@@ -9,7 +9,7 @@
 // szöveget/feltételt kapja, nincs második, függetlenül karbantartott
 // másolat.
 
-import { useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertDialog, Button, Callout, Flex } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
@@ -21,6 +21,7 @@ import {
 } from '../domain/planVersionActions';
 import { planMasolatKent } from '../domain/planCopy';
 import { todayIso } from '../domain/date';
+import { fokuszVisszaadasOnClose } from './fokuszVisszaadas';
 import { useAppState } from '../state/AppState';
 import { ujTervForrasPaciensbol } from '../state/planIndulas';
 import { useStorage } from '../storage/StorageContext';
@@ -77,8 +78,14 @@ export interface PlanVersionActions {
   hiba: VerzioAkcioHiba | null;
   /** A hívó SAJÁT (nem megosztott) akciói -- pl. `downloadVersion` -- ugyanide írnak. */
   jelezHiba: (hiba: VerzioAkcioHiba | null) => void;
-  /** Megerősítést kér, ha kell -- egyébként azonnal fut. */
-  inditas: (action: PendingAction) => void;
+  /**
+   * Megerősítést kér, ha kell -- egyébként azonnal fut. `trigger`: a
+   * megerősítő dialógus záráskor ide adja vissza a fókuszt -- csak akkor
+   * kell explicit átadni, ha az akciót egy MENÜPONT indította (a menü
+   * bezárása után a menüpont már nincs a DOM-ban); egy látható gombról
+   * indítva a nyitáskor fókuszált elem (a gomb maga) az alapértelmezés.
+   */
+  inditas: (action: PendingAction, trigger?: HTMLElement | null) => void;
   /**
    * Azonnal dispatch-el, a `kellMegerosites()` megkerülésével -- KIZÁRÓLAG
    * olyan útra, ahol a megerősítés MÁR lefutott (a quick-create dialógus
@@ -93,6 +100,9 @@ export interface PlanVersionActions {
   pending: PendingAction | null;
   zar: () => void;
   megerosit: () => void;
+  /** A dialógus `onCloseAutoFocus`-ának célja -- lásd `inditas()` `trigger`
+   * paraméterét és `fokuszVisszaadas.ts`. */
+  visszaFokuszRef: RefObject<HTMLElement | null>;
 }
 
 export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): PlanVersionActions {
@@ -104,6 +114,7 @@ export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): Plan
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [fut, setFut] = useState<PendingAction | null>(null);
   const [hiba, setHiba] = useState<VerzioAkcioHiba | null>(null);
+  const visszaFokuszRef = useRef<HTMLElement | null>(null);
 
   function resolvePatientDir(action: PendingAction): string | null {
     return action.patientDir ?? opts?.patientDir ?? null;
@@ -211,7 +222,8 @@ export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): Plan
     }
   }
 
-  function inditas(action: PendingAction) {
+  function inditas(action: PendingAction, trigger?: HTMLElement | null) {
+    visszaFokuszRef.current = trigger ?? (document.activeElement as HTMLElement | null);
     if (kellMegerosites(action, vanMentetlenPiszkozat)) {
       setPending(action);
       return;
@@ -231,6 +243,7 @@ export function usePlanVersionActions(opts?: UsePlanVersionActionsOptions): Plan
       if (pending) void runTracked(pending);
       setPending(null);
     },
+    visszaFokuszRef,
   };
 }
 
@@ -240,7 +253,10 @@ export default function PlanVersionActionDialog({ akciok }: { akciok: PlanVersio
 
   return (
     <AlertDialog.Root open={pending !== null} onOpenChange={(open) => !open && akciok.zar()}>
-      <AlertDialog.Content maxWidth="440px">
+      <AlertDialog.Content
+        maxWidth="440px"
+        onCloseAutoFocus={fokuszVisszaadasOnClose(akciok.visszaFokuszRef)}
+      >
         <AlertDialog.Title>
           {pending ? megerositesTartalom(pending, vanMentetlenPiszkozat).title : 'Piszkozat felülírása'}
         </AlertDialog.Title>
