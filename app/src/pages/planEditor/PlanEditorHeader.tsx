@@ -53,21 +53,23 @@ export default function PlanEditorHeader({
             </Text>
           )
         )}
+        {/* Nem az Előnézet mellett: az elsődleges gomb szomszédjaként egy
+            félrekattintás a teljes piszkozatot dobná el. */}
+        <Box mt="1">
+          <IkonGomb
+            type="button"
+            cimke="Piszkozat eldobása — a szerkesztés alatti terv elvetése"
+            ariaLabel="Piszkozat eldobása"
+            variant="ghost"
+            color="gray"
+            size="2"
+            onClick={onDiscard}
+          >
+            <TrashIcon />
+          </IkonGomb>
+        </Box>
       </Box>
-      <Flex gap="3" align="center">
-        <IkonGomb
-          type="button"
-          cimke="Piszkozat eldobása — a szerkesztés alatti terv elvetése"
-          ariaLabel="Piszkozat eldobása"
-          variant="ghost"
-          color="gray"
-          size="2"
-          onClick={onDiscard}
-        >
-          <TrashIcon />
-        </IkonGomb>
-        <Button onClick={onPreview}>Előnézet</Button>
-      </Flex>
+      <Button onClick={onPreview}>Előnézet</Button>
     </Flex>
   );
 }

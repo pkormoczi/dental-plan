@@ -107,6 +107,29 @@ describe('PlanEditorHeader', () => {
     expect(onDiscard).toHaveBeenCalledTimes(1);
   });
 
+  it('a kuka nem az Előnézet gomb mellett, hanem a cím és az állapotsor oszlopában áll', () => {
+    render(
+      <Theme>
+        <PlanEditorHeader
+          patientName="Teszt Elek"
+          statusz="PISZKOZAT"
+          onPreview={() => {}}
+          piszkozatMentve={null}
+          piszkozatHiba={null}
+          piszkozatKonfliktus={false}
+          onDiscard={() => {}}
+        />
+      </Theme>,
+    );
+
+    const elonezet = screen.getByRole('button', { name: 'Előnézet' });
+    const kuka = screen.getByRole('button', { name: 'Piszkozat eldobása' });
+    expect(elonezet.parentElement).not.toBe(kuka.parentElement);
+    const allapotOszlop = screen.getByText(/Teszt Elek/).parentElement;
+    expect(allapotOszlop?.contains(kuka)).toBe(true);
+    expect(allapotOszlop?.contains(elonezet)).toBe(false);
+  });
+
   it('feloldatlan ütközésnél az "Automatikusan mentve" helyett a nem-mentett állapot látszik', () => {
     render(
       <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">

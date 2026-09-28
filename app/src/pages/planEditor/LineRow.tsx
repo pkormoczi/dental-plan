@@ -572,7 +572,7 @@ export default function LineRow({
         </Flex>
       </Table.Cell>
 
-      {/* Önálló, keskeny cella a listaár<->ajánlati ár eltérés-jelvénynek --
+      {/* Önálló cella a "becsült" és a listaár<->ajánlati ár eltérés-jelvénynek --
           korábban a Beavatkozás-mező alatti jelvénysávban lakott, ott viszont
           egy megjelenő "+20%" új sorba tördelte a nevet, és soronként
           máshova tolta a táblát. Itt mindig ugyanaz a hely foglalt, jelvény
@@ -580,11 +580,20 @@ export default function LineRow({
           kapja) adja át érte a helyet. `justify="start"`: a jelvény az
           Ajánlati ár mezőhöz tapadjon, ne a cella közepén lebegjen. */}
       <Table.Cell justify="start">
-        {elteres && (
-          <Badge color={elteres.tipus === 'kedvezmeny' ? 'green' : 'amber'} variant="soft" size="1">
-            {elteres.cimke}
-          </Badge>
-        )}
+        {/* Egymás mellett, nem egymás alatt: tördelve a sűrű táblában a
+            sormagasság ugrálna, és egy becsült sor lehet kedvezményes is. */}
+        <Flex gap="1" align="center" wrap="nowrap">
+          {line.savos && (
+            <Badge color="amber" variant="soft" size="1">
+              becsült
+            </Badge>
+          )}
+          {elteres && (
+            <Badge color={elteres.tipus === 'kedvezmeny' ? 'green' : 'amber'} variant="soft" size="1">
+              {elteres.cimke}
+            </Badge>
+          )}
+        </Flex>
       </Table.Cell>
 
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>

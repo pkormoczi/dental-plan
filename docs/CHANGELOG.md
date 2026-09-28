@@ -2,6 +2,14 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. szeptember 28.
+
+- A kezelési terv szerkesztésekor a becsült árú sorokon mostantól egy „becsült” felirat is
+  látszik, nem kell az egérrel a kis ≈ jel fölé állni, hogy kiderüljön. Ha a sor kedvezményes is,
+  a két jelzés egymás mellett áll.
+- A piszkozatot eldobó kuka elkerült az „Előnézet” gomb mellől: most a lap tetején, a páciens neve
+  és a mentés ideje alatt van, így egy félrekattintás nem dobja el a munkát.
+
 ## 2026. szeptember 10.
 
 - A Terv adatai lapon és a véglegesítés utáni sikerképernyőn a páciensmappa toldalékos belső neve

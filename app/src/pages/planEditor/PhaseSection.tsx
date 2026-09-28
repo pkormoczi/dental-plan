@@ -340,10 +340,10 @@ export default function PhaseSection({
                       % is beírható (pl. -10%)
                     </Text>
                   </Table.ColumnHeaderCell>
-                  {/* A LineRow eltérés-jelvényének (+20%/−60%) fenntartott,
-                      keskeny hely -- lásd `LineRow` az Ajánlati ár és az
+                  {/* A LineRow "becsült" és eltérés-jelvényének (+20%/−60%)
+                      fenntartott hely -- lásd `LineRow` az Ajánlati ár és az
                       Összeg cella közötti, azonos szerepű cellájánál. */}
-                  <Table.ColumnHeaderCell width="40px" />
+                  <Table.ColumnHeaderCell width="104px" />
                   {/* Szűkebb, mint a többi árcella -- itt sosem jelenik meg
                       sáv (Összeg mindig egyetlen szám), és a doki elmondása
                       szerint milliós tételnél sem lesz ennél hosszabb sor. */}

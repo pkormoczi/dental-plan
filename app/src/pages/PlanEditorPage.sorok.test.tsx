@@ -443,6 +443,25 @@ describe('PlanEditorPage -- backlog-4: becsült ár (≈ ikon) kapcsoló', () =>
     await user.click(chip);
     expect(chip).toHaveAttribute('aria-pressed', 'true');
   });
+
+  it('becsült soron hover nélkül látszik a "becsült" jelvény, a kapcsoló levételekor eltűnik', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const search = await screen.findByPlaceholderText(/Tétel keresése/);
+    await user.type(search, 'fogeltavolitas');
+    await user.click(await screen.findByText('Fogeltávolítás'));
+    await waitFor(() => expect(search).toHaveValue(''));
+
+    expect(screen.queryByText('becsült')).not.toBeInTheDocument();
+
+    const chip = screen.getByRole('button', { name: 'Becsült ár' });
+    await user.click(chip);
+    expect(screen.getByText('becsült')).toBeInTheDocument();
+
+    await user.click(chip);
+    expect(screen.queryByText('becsült')).not.toBeInTheDocument();
+  });
 });
 
 describe('PlanEditorPage -- backlog-10: tétel-leírás', () => {
@@ -1156,6 +1175,18 @@ describe('PlanEditorPage -- százalékos bevitel az Ajánlati ár mezőben', () 
 
     expect(priceField.value).toBe('18000');
     expect(await screen.findByText('−10%')).toBeInTheDocument();
+  });
+
+  it('kedvezményes becsült soron a "becsült" és a −10% jelvény egyszerre látszik', async () => {
+    const user = userEvent.setup();
+    seedWithStalePriceRow();
+    renderEditor();
+
+    await arMezo(user, '-10%');
+    await user.click(screen.getByRole('button', { name: 'Becsült ár' }));
+
+    expect(await screen.findByText('−10%')).toBeInTheDocument();
+    expect(screen.getByText('becsült')).toBeInTheDocument();
   });
 
   it('csupasz "10%" ugyanaz, mint a "-10%" -- a kedvezmény a mínuszjel nélküli alapeset', async () => {

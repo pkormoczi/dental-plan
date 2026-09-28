@@ -514,7 +514,7 @@ Súlyosság szerint rendezve, minden lencse együtt.
   szerkesztőben is (István az előnézetben értette meg, mit jelent).
 - Siker mércéje: a doki hover nélkül tudja, mit csinál a fejléc-kuka és a „≈".
 - Backlog: `fejlec-kuka-felirat-es-becsult-ar-szo`
-- Döntés: backlog fejlec-kuka-felirat-es-becsult-ar-szo (2026-09-14)
+- Döntés: javítva fejlec-kuka-felirat-es-becsult-ar-szo (2026-09-28)
 
 ### Rontás-próba: négy vizsgálat, nulla új hiba
 
