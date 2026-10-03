@@ -1,6 +1,6 @@
 // Egy fázis fejléce + sortáblája a terv szerkesztőn -- kiemelve a
 // PlanEditorPage.tsx-ből. Az `UndoRow` szándékosan ebben a fájlban marad
-// (nem önálló fájlban): egy `<Table.Row colSpan={8}>`, ami kizárólag ennek
+// (nem önálló fájlban): egy `<Table.Row colSpan={9}>`, ami kizárólag ennek
 // a komponensnek a táblatörzsében érvényes, önállóan használva félrevezető
 // lenne.
 
@@ -354,6 +354,10 @@ export default function PhaseSection({
             <Table.Root size="1" mb="3">
               <Table.Header>
                 <Table.Row>
+                  {/* Az áthelyező fogantyú oszlopa: egy ikon-gomb, szűkített
+                      cellaszéllel -- a kuka oszlopából felszabadult hely,
+                      a Beavatkozás oszlop nem keskenyedik. */}
+                  <Table.ColumnHeaderCell width="32px" px="1" />
                   <Table.ColumnHeaderCell>Beavatkozás</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell width="132px" justify="center">
                     Fog
@@ -384,8 +388,8 @@ export default function PhaseSection({
                   <Table.ColumnHeaderCell width="92px" justify="end">
                     Összeg ({penznemJel})
                   </Table.ColumnHeaderCell>
-                  {/* Két gomb fér el: az áthelyező fogantyú és a kuka. */}
-                  <Table.ColumnHeaderCell width="72px" />
+                  {/* Csak a kuka: a fogantyú a sor elején, tőle távol. */}
+                  <Table.ColumnHeaderCell width="40px" />
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -509,7 +513,7 @@ function UndoRow({
 }) {
   return (
     <Table.Row style={{ backgroundColor: t.accentWash }}>
-      <Table.Cell colSpan={8}>
+      <Table.Cell colSpan={9}>
         <Flex align="center" justify="between" gap="3">
           <Text size="2" color="gray">
             Sor törölve{nev.trim() ? `: ${nev}` : ''}

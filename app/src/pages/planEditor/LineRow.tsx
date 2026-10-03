@@ -261,6 +261,40 @@ export default function LineRow({
   return (
     <>
     <Table.Row className={fosorOsztaly || undefined} onDragOver={huzasFoSorFelett}>
+      {/* A fogantyú a sor ELEJÉN, a kukától a sor másik végén: rendezgetés
+          közben egy félrekattintás ne töröljön. */}
+      <Table.Cell px="1">
+        {/* Natív HTML5 húzás a fogantyún, nem az egész soron: a mezőkben a
+            szövegkijelölés és a kattintás ne keveredjen a húzással.
+            Kattintásra nem tesz semmit; a billentyűs út a `onKeyDown`. A sor
+            pozíciója az azonosító, nem a neve: két azonos tétel egy fázisban
+            ugyanazt a nevet viselné. Gombról Chrome csak akkor indít húzást,
+            ha a `-webkit-user-drag: element` megvan -- lásd `index.css`. */}
+        <IkonGomb
+          id={fogantyuId(pi, li)}
+          type="button"
+          variant="ghost"
+          color="gray"
+          size="1"
+          draggable
+          aria-pressed={felveve}
+          cimke="Áthelyezés — húzd egérrel, vagy Szóköz, nyilak, Enter"
+          ariaLabel={`${li + 1}. sor — áthelyezés`}
+          style={{ cursor: 'grab' }}
+          onKeyDown={fogantyuBillentyu}
+          onDragStart={(e) => {
+            e.dataTransfer.effectAllowed = 'move';
+            // Firefox adat nélkül nem indítja a húzást.
+            e.dataTransfer.setData('text/plain', line.nevSnapshot);
+            const sor = e.currentTarget.closest('tr');
+            if (sor) e.dataTransfer.setDragImage(sor, 16, sor.offsetHeight / 2);
+            onHuzasKezdet();
+          }}
+          onDragEnd={onHuzasVege}
+        >
+          <DragHandleDots2Icon />
+        </IkonGomb>
+      </Table.Cell>
       <Table.Cell>
         {keresoMod ? (
           <ItemPicker
@@ -657,51 +691,22 @@ export default function LineRow({
       </Table.Cell>
 
       <Table.Cell>
-        <Flex gap="1" align="center">
-          {/* Natív HTML5 húzás a fogantyún, nem az egész soron: a mezőkben
-              a szövegkijelölés és a kattintás ne keveredjen a húzással.
-              Kattintásra nem tesz semmit; a billentyűs út a `onKeyDown`. A
-              sor pozíciója az azonosító, nem a neve: két azonos tétel egy
-              fázisban ugyanazt a nevet viselné. */}
-          <IkonGomb
-            id={fogantyuId(pi, li)}
-            type="button"
-            variant="ghost"
-            color="gray"
-            size="1"
-            draggable
-            aria-pressed={felveve}
-            cimke="Áthelyezés — húzd egérrel, vagy Szóköz, nyilak, Enter"
-            ariaLabel={`${li + 1}. sor — áthelyezés`}
-            style={{ cursor: 'grab' }}
-            onKeyDown={fogantyuBillentyu}
-            onDragStart={(e) => {
-              e.dataTransfer.effectAllowed = 'move';
-              // Firefox adat nélkül nem indítja a húzást.
-              e.dataTransfer.setData('text/plain', line.nevSnapshot);
-              const sor = e.currentTarget.closest('tr');
-              if (sor) e.dataTransfer.setDragImage(sor, 16, sor.offsetHeight / 2);
-              onHuzasKezdet();
-            }}
-            onDragEnd={onHuzasVege}
-          >
-            <DragHandleDots2Icon />
-          </IkonGomb>
-          <IkonGomb
-            type="button"
-            cimke="Sor törlése"
-            variant="ghost"
-            color="gray"
-            size="1"
-            onClick={onRemove}
-          >
-            <TrashIcon />
-          </IkonGomb>
-        </Flex>
+        <IkonGomb
+          type="button"
+          cimke="Sor törlése"
+          variant="ghost"
+          color="gray"
+          size="1"
+          onClick={onRemove}
+        >
+          <TrashIcon />
+        </IkonGomb>
       </Table.Cell>
     </Table.Row>
     {leirasNyitva && (
       <Table.Row className={leirasSorOsztaly || undefined} onDragOver={huzasLeirasSorFelett}>
+        {/* A fogantyú-oszlop alatt üres: a leírás a névmezővel kezdődjön. */}
+        <Table.Cell px="1" />
         <Table.Cell colSpan={8}>
           <TextArea
             id={leirasId(pi, li)}

@@ -271,6 +271,17 @@ button {
 }
 
 /*
+ * Chrome gombról csak `-webkit-user-drag: element` mellett indít natív
+ * húzást; a böngésző ezt a `draggable` elemeknek magától megadja, de a Radix
+ * `.rt-reset` gombokra tett `all: unset`-je `auto`-ra írja vissza, és a húzás
+ * némán el sem indul (2026-10-03-i böngészős mérés: `rt-reset` nélkül
+ * ugyanaz a gomb húzható). jsdom-ban nincs kaszkád, teszt ezt nem látja.
+ */
+.rt-reset[draggable='true'] {
+  -webkit-user-drag: element;
+}
+
+/*
  * Terv-szerkesztő sor-áthelyezés (planEditor/LineRow.tsx, PhaseSection.tsx).
  * Az ejtés-jelző vonal cellánként, `inset` box-shadow-val: a <tr>-re tett
  * keret/árnyék a Radix cellánkénti háttere mögé kerülne, a `border` pedig

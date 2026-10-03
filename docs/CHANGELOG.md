@@ -4,11 +4,12 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 
 ## 2026. október 3.
 
-- A kezelési sorok sorrendje mostantól egérrel, áthúzással rendezhető: a sor végén lévő pöttyös
+- A kezelési sorok sorrendje mostantól egérrel, áthúzással rendezhető: a sor elején lévő pöttyös
   fogantyúnál megfogva a sor áthúzható a fázison belül egy másik helyre, vagy egy másik fázisba —
-  akár egy összecsukott fázis fejlécére is, ilyenkor a fázis végére kerül. A korábbi „⋯” menü a
-  Feljebb/Lejjebb pontokkal megszűnt. Egér nélkül is működik: a fogantyún Szóköz, majd a nyilak,
-  végül Enter (Escape visszavonja).
+  akár egy összecsukott fázis fejlécére is, ilyenkor a fázis végére kerül. A fogantyú szándékosan
+  a sor másik végén van, mint a törlés gombja, hogy rendezgetés közben ne lehessen véletlenül sort
+  törölni. A korábbi „⋯” menü a Feljebb/Lejjebb pontokkal megszűnt. Egér nélkül is működik: a
+  fogantyún Szóköz, majd a nyilak, végül Enter (Escape visszavonja).
 
 ## 2026. szeptember 28.
 
