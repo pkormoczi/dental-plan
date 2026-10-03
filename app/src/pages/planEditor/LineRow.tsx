@@ -1,12 +1,11 @@
 // Egy kezelési sor szerkesztő nézete a terv szerkesztőn -- kiemelve a
 // PlanEditorPage.tsx-ből.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type DragEvent, type KeyboardEvent } from 'react';
 import {
   Badge,
   Box,
   Button,
-  DropdownMenu,
   Flex,
   Table,
   Text,
@@ -15,7 +14,7 @@ import {
 } from '@radix-ui/themes';
 import {
   CheckIcon,
-  DotsHorizontalIcon,
+  DragHandleDots2Icon,
   ResetIcon,
   TrashIcon,
   UpdateIcon,
@@ -39,7 +38,7 @@ import { invalidFdiTokens, parseTeeth } from '../../domain/teeth';
 import type { FogterkepAllapot } from '../../domain/toothVisual';
 import { sorOsszeg } from '../../domain/totals';
 import type { Kategoria, Nyelv, Penznem, Sor, Tetel } from '../../domain/types';
-import { arId, arSugoId, fogId, keresoId, leirasId, mennyisegId, nevId, sorMenuId } from './elemIdk';
+import { arId, arSugoId, fogantyuId, fogId, keresoId, leirasId, mennyisegId, nevId } from './elemIdk';
 import ItemPicker from './ItemPicker';
 
 /** A `Sor` azon mezői, amiket a szerkesztés alatt álló sor élőben felülír. */
@@ -65,8 +64,12 @@ export interface LineRowProps {
   arFrissitesJavaslat: ArFrissites | null;
   /** 65. tétel: a guided review kényszerítve nyitja a leírás-sávot -- lásd lent. */
   forceLeirasOpen: boolean;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
+  /** A fogantyún billentyűvel felvett sor -- lásd `PlanEditorPage` `felvett`. */
+  felveve: boolean;
+  /** Ez a sor van egérrel húzás alatt. */
+  huzott: boolean;
+  /** Hova kerülne a húzott sor, ha most ejtenék: e sor elé, mögé, vagy egyik sem. */
+  ejtesJelzo: 'elotte' | 'utana' | null;
   onPatch: (patch: Partial<Sor>) => void;
   /**
    * Az ÉPPEN GÉPELT (még nem committált) ár/darabszám a szülő felé -- ebből
@@ -77,8 +80,12 @@ export interface LineRowProps {
   onRequestArFrissites: () => void;
   /** A Fog mezőben az Enter -- a hívó viszi a fókuszt a fázis keresőjébe. */
   onFogKesz: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
+  /** A fogantyún lenyomott billentyű; `true`, ha a hívó kezelte. */
+  onFogantyuBillentyu: (key: string) => boolean;
+  onHuzasKezdet: () => void;
+  onHuzasVege: () => void;
+  /** A húzott sor e sor fölött jár: `felso` = a sor felső felén. */
+  onHuzasFelette: (felso: boolean) => void;
   onRemove: () => void;
 }
 
@@ -95,14 +102,17 @@ export default function LineRow({
   tetel,
   arFrissitesJavaslat,
   forceLeirasOpen,
-  canMoveUp,
-  canMoveDown,
+  felveve,
+  huzott,
+  ejtesJelzo,
   onPatch,
   onDraftOsszeg,
   onRequestArFrissites,
   onFogKesz,
-  onMoveUp,
-  onMoveDown,
+  onFogantyuBillentyu,
+  onHuzasKezdet,
+  onHuzasVege,
+  onHuzasFelette,
   onRemove,
 }: LineRowProps) {
   // A fogtérkép-kattintással létrehozott, még meg nem nevezett sor -- ez az
@@ -209,9 +219,48 @@ export default function LineRow({
     nevNyelvMismatch ||
     orokoltKeziAru(line);
 
+  // A „mögé” jelző nyitott leírás-sávnál a sáv alá kerül: vizuálisan az is
+  // a sorhoz tartozik.
+  const fosorOsztaly = [
+    ejtesJelzo === 'elotte' && 'sor-ejtes-elott',
+    ejtesJelzo === 'utana' && !leirasNyitva && 'sor-ejtes-utan',
+    huzott && 'sor-huzott',
+    felveve && 'sor-felveve',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const leirasSorOsztaly = [
+    ejtesJelzo === 'utana' && 'sor-ejtes-utan',
+    huzott && 'sor-huzott',
+    felveve && 'sor-felveve',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  function huzasFoSorFelett(e: DragEvent<HTMLTableRowElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    const r = e.currentTarget.getBoundingClientRect();
+    // Nyitott leírás-sávnál a fősor alsó fele is „elé”: a „mögé” a sáv dolga.
+    onHuzasFelette(leirasNyitva || e.clientY < r.top + r.height / 2);
+  }
+
+  function huzasLeirasSorFelett(e: DragEvent<HTMLTableRowElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    onHuzasFelette(false);
+  }
+
+  function fogantyuBillentyu(e: KeyboardEvent<HTMLButtonElement>) {
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (onFogantyuBillentyu(e.key)) e.preventDefault();
+  }
+
   return (
     <>
-    <Table.Row>
+    <Table.Row className={fosorOsztaly || undefined} onDragOver={huzasFoSorFelett}>
       <Table.Cell>
         {keresoMod ? (
           <ItemPicker
@@ -609,34 +658,35 @@ export default function LineRow({
 
       <Table.Cell>
         <Flex gap="1" align="center">
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              {/* A sor pozíciója az azonosító, nem a neve: két azonos tétel
-                  egy fázisban ugyanazt a nevet viselné. */}
-              <IkonGomb
-                id={sorMenuId(pi, li)}
-                type="button"
-                variant="ghost"
-                color="gray"
-                size="1"
-                cimke="További műveletek — sor mozgatása"
-                ariaLabel={`${li + 1}. sor — további műveletek`}
-              >
-                <DotsHorizontalIcon />
-              </IkonGomb>
-            </DropdownMenu.Trigger>
-            {/* onCloseAutoFocus: mozgatás után a `fokuszCel` viszi a fókuszt a
-                mozgatott sor `⋯` gombjára -- a menü záráskori
-                fókusz-visszavétele ezt halászná el. */}
-            <DropdownMenu.Content size="1" onCloseAutoFocus={(e) => e.preventDefault()}>
-              <DropdownMenu.Item disabled={!canMoveUp} onSelect={onMoveUp}>
-                Feljebb
-              </DropdownMenu.Item>
-              <DropdownMenu.Item disabled={!canMoveDown} onSelect={onMoveDown}>
-                Lejjebb
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
+          {/* Natív HTML5 húzás a fogantyún, nem az egész soron: a mezőkben
+              a szövegkijelölés és a kattintás ne keveredjen a húzással.
+              Kattintásra nem tesz semmit; a billentyűs út a `onKeyDown`. A
+              sor pozíciója az azonosító, nem a neve: két azonos tétel egy
+              fázisban ugyanazt a nevet viselné. */}
+          <IkonGomb
+            id={fogantyuId(pi, li)}
+            type="button"
+            variant="ghost"
+            color="gray"
+            size="1"
+            draggable
+            aria-pressed={felveve}
+            cimke="Áthelyezés — húzd egérrel, vagy Szóköz, nyilak, Enter"
+            ariaLabel={`${li + 1}. sor — áthelyezés`}
+            style={{ cursor: 'grab' }}
+            onKeyDown={fogantyuBillentyu}
+            onDragStart={(e) => {
+              e.dataTransfer.effectAllowed = 'move';
+              // Firefox adat nélkül nem indítja a húzást.
+              e.dataTransfer.setData('text/plain', line.nevSnapshot);
+              const sor = e.currentTarget.closest('tr');
+              if (sor) e.dataTransfer.setDragImage(sor, 16, sor.offsetHeight / 2);
+              onHuzasKezdet();
+            }}
+            onDragEnd={onHuzasVege}
+          >
+            <DragHandleDots2Icon />
+          </IkonGomb>
           <IkonGomb
             type="button"
             cimke="Sor törlése"
@@ -651,7 +701,7 @@ export default function LineRow({
       </Table.Cell>
     </Table.Row>
     {leirasNyitva && (
-      <Table.Row>
+      <Table.Row className={leirasSorOsztaly || undefined} onDragOver={huzasLeirasSorFelett}>
         <Table.Cell colSpan={8}>
           <TextArea
             id={leirasId(pi, li)}

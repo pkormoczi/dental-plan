@@ -62,7 +62,20 @@ export interface PhaseSectionProps {
   /** Az éppen szerkesztett sor még nem committált ár/darabszáma -- lásd `LineRow` `onDraftOsszeg`. */
   onLineDraft: (li: number, draft: SorDraftErtekek | null) => void;
   onRequestArFrissites: (li: number) => void;
-  onMoveLine: (li: number, irany: -1 | 1) => void;
+  /** A fázis billentyűvel felvett sora, ha van -- lásd `PlanEditorPage` `felvett`. */
+  felvettLi: number | null;
+  /** A fázis egérrel húzott sora, ha van. */
+  huzottLi: number | null;
+  /** Bármelyik fázisból folyik-e sor-húzás: csak ekkor fogad ejtést a fázis. */
+  huzasFolyik: boolean;
+  /** Hova kerülne a húzott sor ebben a fázisban (0..sorok.length), vagy `null`. */
+  ejtesIndex: number | null;
+  /** A sor fogantyúján lenyomott billentyű; `true`, ha a hívó kezelte. */
+  onFogantyuBillentyu: (li: number, key: string) => boolean;
+  onHuzasKezdet: (li: number) => void;
+  onHuzasVege: () => void;
+  onEjtesCel: (index: number | null) => void;
+  onEjtes: () => void;
   onRemoveLine: (li: number) => void;
   onRestoreLine: (li: number, sor: Sor) => void;
   onRename: (v: string) => void;
@@ -110,7 +123,15 @@ export default function PhaseSection({
   onPatchLine,
   onLineDraft,
   onRequestArFrissites,
-  onMoveLine,
+  felvettLi,
+  huzottLi,
+  huzasFolyik,
+  ejtesIndex,
+  onFogantyuBillentyu,
+  onHuzasKezdet,
+  onHuzasVege,
+  onEjtesCel,
+  onEjtes,
   onRemoveLine,
   onRestoreLine,
   onRename,
@@ -165,14 +186,6 @@ export default function PhaseSection({
     undoTimerRef.current = setTimeout(() => setPendingUndo(null), 8000);
   }
 
-  // A `sorResetToken` a `removeWithUndo` mintáját követi: a mozgatás után a
-  // sorok indexe eltolódik, index-kulcs mellett a `LineRow` lokális állapota
-  // (keresőmód, leírás-sáv) átvándorolna egy MÁSIK sorra.
-  function moveLine(li: number, irany: -1 | 1) {
-    onMoveLine(li, irany);
-    setSorResetToken((n) => n + 1);
-  }
-
   function undoRemove() {
     if (!pendingUndo) return;
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
@@ -181,8 +194,29 @@ export default function PhaseSection({
     setPendingUndo(null);
   }
 
+  // A fázis egésze ejtőcél, a végére tesz -- így a fejléc (csukva is), az üres
+  // fázis és a kereső környéke is fogad; a sorok `stopPropagation`-nel
+  // pontosítják a helyet.
+  const vegereEjt = ejtesIndex === phase.sorok.length && (!open || phase.sorok.length === 0);
+
   return (
-    <Box>
+    <Box
+      className={vegereEjt ? 'fazis-ejtes-cel' : undefined}
+      onDragOver={(e) => {
+        if (!huzasFolyik) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        onEjtesCel(phase.sorok.length);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) onEjtesCel(null);
+      }}
+      onDrop={(e) => {
+        if (!huzasFolyik) return;
+        e.preventDefault();
+        onEjtes();
+      }}
+    >
       <Flex justify="between" align="center" mb="3" gap="3">
         <Flex align="center" gap="2" flexGrow="1" style={{ minWidth: 0 }}>
           {/* Látható felirat a chevron mellett, és ez az akadálymentes NÉV is
@@ -350,7 +384,7 @@ export default function PhaseSection({
                   <Table.ColumnHeaderCell width="92px" justify="end">
                     Összeg ({penznemJel})
                   </Table.ColumnHeaderCell>
-                  {/* Két gomb fér el: a `⋯` sor-menü és a kuka. */}
+                  {/* Két gomb fér el: az áthelyező fogantyú és a kuka. */}
                   <Table.ColumnHeaderCell width="72px" />
                 </Table.Row>
               </Table.Header>
@@ -377,14 +411,25 @@ export default function PhaseSection({
                       forceLeirasOpen={
                         fokuszCel?.mit === 'leiras' && fokuszCel.pi === pi && fokuszCel.li === li
                       }
-                      canMoveUp={li > 0}
-                      canMoveDown={li < phase.sorok.length - 1}
+                      felveve={felvettLi === li}
+                      huzott={huzottLi === li}
+                      ejtesJelzo={
+                        ejtesIndex === li
+                          ? 'elotte'
+                          : ejtesIndex === phase.sorok.length && li === phase.sorok.length - 1
+                            ? 'utana'
+                            : null
+                      }
                       onPatch={(p) => onPatchLine(li, p)}
                       onDraftOsszeg={(d) => onLineDraft(li, d)}
                       onRequestArFrissites={() => onRequestArFrissites(li)}
                       onFogKesz={onFogKesz}
-                      onMoveUp={() => moveLine(li, -1)}
-                      onMoveDown={() => moveLine(li, 1)}
+                      onFogantyuBillentyu={(key) => onFogantyuBillentyu(li, key)}
+                      onHuzasKezdet={() => onHuzasKezdet(li)}
+                      onHuzasVege={onHuzasVege}
+                      onHuzasFelette={(felso) => {
+                        if (huzasFolyik) onEjtesCel(felso ? li : li + 1);
+                      }}
                       onRemove={() => removeWithUndo(li, l)}
                     />
                   </Fragment>

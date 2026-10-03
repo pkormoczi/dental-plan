@@ -12,7 +12,7 @@
  */
 export type FokuszCel =
   | { mit: 'fogak'; pi: number; li: number }
-  | { mit: 'sorMenu'; pi: number; li: number }
+  | { mit: 'fogantyu'; pi: number; li: number }
   | { mit: 'kereso'; pi: number; li: number }
   | { mit: 'nev'; pi: number; li: number }
   | { mit: 'leiras'; pi: number; li: number }
@@ -67,7 +67,7 @@ export function arSugoId(pi: number): string {
   return `ar-sugo-${pi}`;
 }
 
-/** A sor `⋯` menüjének triggere -- a sor-mozgatás utáni fókusz célpontja. */
-export function sorMenuId(pi: number, li: number): string {
-  return `sor-menu-${pi}-${li}`;
+/** A sor áthelyező fogantyúja -- az áthelyezés utáni fókusz célpontja. */
+export function fogantyuId(pi: number, li: number): string {
+  return `sor-fogantyu-${pi}-${li}`;
 }

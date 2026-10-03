@@ -10,11 +10,11 @@ import {
   fazisKeresoId,
   fazisMegjegyzesId,
   fazisNevId,
+  fogantyuId,
   fogId,
   keresoId,
   leirasId,
   nevId,
-  sorMenuId,
   type FokuszCel,
 } from './elemIdk';
 
@@ -29,20 +29,19 @@ export function useFokuszEffekt(fokuszCel: FokuszCel, setFokuszCel: (cel: Fokusz
     // `ugrasLegfrissebbre` mintája) -- a `fokuszCel`-t csak EZUTÁN nullázzuk,
     // hogy a gyerek addig lássa a kényszerítő propot.
     //
-    // A `sorMenu` ugyanezt az ágat kéri, más okból: a cél a sor-mozgatást
-    // kiváltó `DropdownMenu.Item` `onSelect`-jéből származik, ami még a menü
-    // FocusScope-ja alatt fut -- egy szinkron `.focus()` ide kívülre a trap
-    // visszalökné.
+    // A `fogantyu` ugyanezt az ágat kéri, más okból: az áthelyezés minden
+    // fázist remountol (`fazisResetToken`), és a régi fogantyú elvesztett
+    // fókusza csak a remount után kerülhet az új példányra.
     if (
       fokuszCel.mit === 'leiras' ||
       fokuszCel.mit === 'fazisMegjegyzes' ||
-      fokuszCel.mit === 'sorMenu'
+      fokuszCel.mit === 'fogantyu'
     ) {
       const id =
         fokuszCel.mit === 'leiras'
           ? leirasId(fokuszCel.pi, fokuszCel.li)
-          : fokuszCel.mit === 'sorMenu'
-            ? sorMenuId(fokuszCel.pi, fokuszCel.li)
+          : fokuszCel.mit === 'fogantyu'
+            ? fogantyuId(fokuszCel.pi, fokuszCel.li)
             : fazisMegjegyzesId(fokuszCel.pi);
       requestAnimationFrame(() => {
         const el = document.getElementById(id);

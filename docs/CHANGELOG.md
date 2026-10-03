@@ -2,6 +2,14 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. október 3.
+
+- A kezelési sorok sorrendje mostantól egérrel, áthúzással rendezhető: a sor végén lévő pöttyös
+  fogantyúnál megfogva a sor áthúzható a fázison belül egy másik helyre, vagy egy másik fázisba —
+  akár egy összecsukott fázis fejlécére is, ilyenkor a fázis végére kerül. A korábbi „⋯” menü a
+  Feljebb/Lejjebb pontokkal megszűnt. Egér nélkül is működik: a fogantyún Szóköz, majd a nyilak,
+  végül Enter (Escape visszavonja).
+
 ## 2026. szeptember 28.
 
 - A kezelési terv szerkesztésekor a becsült árú sorokon mostantól egy „becsült” felirat is

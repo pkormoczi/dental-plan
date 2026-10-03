@@ -6,7 +6,17 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Separator, Text } from '@radix-ui/themes';
+import {
+  AlertDialog,
+  Box,
+  Button,
+  Callout,
+  Checkbox,
+  Flex,
+  Separator,
+  Text,
+  VisuallyHidden,
+} from '@radix-ui/themes';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { useNyelviReview } from '../components/NyelviReviewContext';
 import ToothChartPanel from '../components/ToothChartPanel';
@@ -17,7 +27,8 @@ import {
   fazisCsukvaMozgatasUtan,
   fazisCsukvaTorlesUtan,
   fazisokFelcserelve,
-  sorokFelcserelve,
+  sorAthelyezve,
+  type SorHely,
 } from '../domain/fazisSorrend';
 import { kovetettMennyiseg, sorPatchKovetessel } from '../domain/mennyiseg';
 import { formatMoney } from '../domain/money';
@@ -28,7 +39,7 @@ import { buildToothVisualStates } from '../domain/toothVisual';
 import { elteresBontas, fazisOsszeg, sorokOsszeg, tervVegosszeg } from '../domain/totals';
 import type { Plan, Sor, Tetel } from '../domain/types';
 import { useAppState } from '../state/AppState';
-import type { FokuszCel } from './planEditor/elemIdk';
+import { fogantyuId, type FokuszCel } from './planEditor/elemIdk';
 import type { SorDraftErtekek } from './planEditor/LineRow';
 import EgyediVegosszegBlokk from './planEditor/EgyediVegosszegBlokk';
 import ElolegBlokk from './planEditor/ElolegBlokk';
@@ -107,6 +118,29 @@ export default function PlanEditorPage() {
   const ciklusRef = useRef<{ fdi: string; index: number } | null>(null);
 
   useFokuszEffekt(fokuszCel, setFokuszCel);
+
+  // Sor-áthelyezés. Egérrel: a húzott sor és az ejtés várható helye (a cél-
+  // fázisban a kivétel ELŐTTI beszúrási index, 0..sorok.length) -- a szülőben,
+  // mert a húzás fázisokon ível át. Billentyűvel: a fogantyún felvett sor
+  // eredeti és aktuális helye; minden nyíl azonnal áthelyez, Escape az
+  // eredetire tesz vissza.
+  const [huzott, setHuzott] = useState<SorHely | null>(null);
+  const [ejtesCel, setEjtesCel] = useState<{ pi: number; index: number } | null>(null);
+  const [felvett, setFelvett] = useState<{ eredeti: SorHely; aktualis: SorHely } | null>(null);
+  const [athelyezesBejelentes, setAthelyezesBejelentes] = useState('');
+
+  // A felvétel véget ér, ha a fókusz a felvett sor fogantyújáról máshová kerül
+  // (Tab, kattintás) -- a sor ott marad, ahová addig került. Az áthelyezés
+  // remountja alatt a fókusz a body-n áll, az nem `focusin`.
+  useEffect(() => {
+    if (!felvett) return;
+    const id = fogantyuId(felvett.aktualis.pi, felvett.aktualis.li);
+    function onFocusIn(e: FocusEvent) {
+      if ((e.target as HTMLElement | null)?.id !== id) setFelvett(null);
+    }
+    document.addEventListener('focusin', onFocusIn);
+    return () => document.removeEventListener('focusin', onFocusIn);
+  }, [felvett]);
 
   const nyelviReview = useNyelviReview();
 
@@ -199,18 +233,92 @@ export default function PlanEditorPage() {
   }
 
   /**
-   * Sor-sorrendezés EGY fázison belül, a `movePhase()` mintáján. A fókusz a
-   * MOZGATOTT sor `⋯` gombjára megy: a `PhaseSection` remountolja a sorokat
-   * (`sorResetToken`), ami különben elnyelné a fókuszt, és az ismételt
-   * mozgatás egérrel is újranyitást kérne.
+   * Egy sor áthelyezése (egér és billentyű közös útja). Minden fázis
+   * remountol (`fazisResetToken`): két fázis sorindexei tolódhatnak el, és
+   * index-kulcs mellett a `LineRow` lokális állapota (keresőmód, leírás-sáv,
+   * gépelt ár) MÁSIK sorra vándorolna. Ugyanezért az index-kulcsos szülő-
+   * állapot (élő draft, ár-frissítés megerősítő, fogkattintás-ciklus) elesik;
+   * a `PhaseSection` Undo-sávja a remounttal megy. A fókusz a mozgatott sor
+   * fogantyújára kerül.
    */
-  function moveLine(pi: number, li: number, irany: -1 | 1) {
-    const cel = li + irany;
-    if (cel < 0 || cel >= plan.fazisok[pi].sorok.length) return;
+  function athelyez(honnan: SorHely, hova: SorHely) {
+    if (honnan.pi === hova.pi && honnan.li === hova.li) return;
     updatePlan((draft) => {
-      draft.fazisok[pi].sorok = sorokFelcserelve(draft.fazisok[pi].sorok, li, cel);
+      draft.fazisok = sorAthelyezve(draft.fazisok, honnan, hova);
     });
-    setFokuszCel({ mit: 'sorMenu', pi, li: cel });
+    setFazisResetToken((n) => n + 1);
+    setSorDraft(null);
+    setPendingArFrissites(null);
+    ciklusRef.current = null;
+    setFokuszCel({ mit: 'fogantyu', pi: hova.pi, li: hova.li });
+  }
+
+  function huzasVege() {
+    setHuzott(null);
+    setEjtesCel(null);
+  }
+
+  function ejtes() {
+    if (huzott && ejtesCel) {
+      // Fázison belül hátrafelé a kivétel eggyel előrébb tolja a beszúrási helyet.
+      const li =
+        ejtesCel.pi === huzott.pi && ejtesCel.index > huzott.li ? ejtesCel.index - 1 : ejtesCel.index;
+      athelyez(huzott, { pi: ejtesCel.pi, li });
+    }
+    huzasVege();
+  }
+
+  function helyLeiras(hely: SorHely): string {
+    return `${plan.fazisok[hely.pi].megnevezes}, ${hely.li + 1}. hely`;
+  }
+
+  /**
+   * A fogantyú billentyűs útja: Szóköz/Enter felvesz, ↑/↓ léptet (a fázis
+   * szélén át a szomszéd fázisba), Szóköz/Enter letesz, Escape visszatesz.
+   * Csukott fázisba lépve a fázis kinyílik -- különben a fogantyú, és vele
+   * a fókusz, eltűnne. `true`, ha a billentyűt ez kezelte.
+   */
+  function fogantyuBillentyu(pi: number, li: number, key: string): boolean {
+    const nev = plan.fazisok[pi].sorok[li]?.nevSnapshot.trim() || 'Sor';
+    if (!felvett) {
+      if (key !== ' ' && key !== 'Enter') return false;
+      setFelvett({ eredeti: { pi, li }, aktualis: { pi, li } });
+      setAthelyezesBejelentes(
+        `${nev} felvéve, ${helyLeiras({ pi, li })}. Nyilakkal mozgasd, Enter leteszi, Escape visszavonja.`,
+      );
+      return true;
+    }
+    if (key === ' ' || key === 'Enter') {
+      setFelvett(null);
+      setAthelyezesBejelentes(`${nev} letéve, ${helyLeiras({ pi, li })}.`);
+      return true;
+    }
+    if (key === 'Escape') {
+      athelyez({ pi, li }, felvett.eredeti);
+      setFelvett(null);
+      setAthelyezesBejelentes(`Áthelyezés visszavonva, ${nev} az eredeti helyén.`);
+      return true;
+    }
+    if (key !== 'ArrowUp' && key !== 'ArrowDown') return false;
+    let hova: SorHely | null = null;
+    if (key === 'ArrowDown') {
+      if (li < plan.fazisok[pi].sorok.length - 1) hova = { pi, li: li + 1 };
+      else if (pi < plan.fazisok.length - 1) hova = { pi: pi + 1, li: 0 };
+    } else if (li > 0) hova = { pi, li: li - 1 };
+    else if (pi > 0) hova = { pi: pi - 1, li: plan.fazisok[pi - 1].sorok.length };
+    if (!hova) return true;
+    const celPi = hova.pi;
+    if (fazisCsukva.has(celPi)) {
+      setFazisCsukva((prev) => {
+        const next = new Set(prev);
+        next.delete(celPi);
+        return next;
+      });
+    }
+    athelyez({ pi, li }, hova);
+    setFelvett({ eredeti: felvett.eredeti, aktualis: hova });
+    setAthelyezesBejelentes(`${nev}: ${helyLeiras(hova)}.`);
+    return true;
   }
 
   // A teljes piszkozat eldobása (6. döntés) -- a `patientDir`-t a
@@ -375,6 +483,9 @@ export default function PlanEditorPage() {
     // hogy egy hosszú (~57 karakteres) tételnév is görgetés nélkül olvasható
     // legyen.
     <Box style={{ maxWidth: 1180, margin: '0 auto' }}>
+      {/* Lap-szintű, mindig jelen lévő élő régió: a dinamikusan beszúrtat
+          sok képernyőolvasó nem mondja ki (lásd `LetoltesJelzo.tsx`). */}
+      <VisuallyHidden aria-live="polite">{athelyezesBejelentes}</VisuallyHidden>
       <PlanEditorHeader
         patientName={plan.paciens.nev}
         statusz={plan.statusz}
@@ -491,7 +602,28 @@ export default function PlanEditorPage() {
             onLineDraft={(li, draft) => setSorDraft(draft && { pi, li, ...draft })}
             fokuszAtadva={fogszamotKivan}
             onRequestArFrissites={(li) => setPendingArFrissites({ pi, li })}
-            onMoveLine={(li, irany) => moveLine(pi, li, irany)}
+            felvettLi={felvett?.aktualis.pi === pi ? felvett.aktualis.li : null}
+            huzottLi={huzott?.pi === pi ? huzott.li : null}
+            huzasFolyik={huzott != null}
+            ejtesIndex={ejtesCel?.pi === pi ? ejtesCel.index : null}
+            onFogantyuBillentyu={(li, key) => fogantyuBillentyu(pi, li, key)}
+            onHuzasKezdet={(li) => {
+              setFelvett(null);
+              setHuzott({ pi, li });
+            }}
+            onHuzasVege={huzasVege}
+            onEjtesCel={(index) =>
+              setEjtesCel((prev) =>
+                index == null
+                  ? prev?.pi === pi
+                    ? null
+                    : prev
+                  : prev?.pi === pi && prev.index === index
+                    ? prev
+                    : { pi, index },
+              )
+            }
+            onEjtes={ejtes}
             onRemoveLine={(li) =>
               updatePlan((draft) => {
                 draft.fazisok[pi].sorok.splice(li, 1);

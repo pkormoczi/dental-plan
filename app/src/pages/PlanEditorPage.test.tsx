@@ -9,7 +9,7 @@
 // `pages/planEditor/EgyediVegosszegBlokk.test.tsx`).
 
 import { useState } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createBlankPlan } from '../domain/blankPlan';
@@ -737,93 +737,222 @@ describe('PlanEditorPage -- fázisnév: generált alapnév és a mező címkéje
   });
 });
 
-describe('PlanEditorPage -- sor mozgatása fázison belül', () => {
+describe('PlanEditorPage -- sor áthelyezése fogantyúval', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  /** Két sor egy fázisban, a felvétel sorrendjében: Fogeltávolítás, majd Gyökértömés. */
-  async function ketSor(user: ReturnType<typeof userEvent.setup>) {
-    const search = await screen.findByPlaceholderText(/Tétel keresése/);
-    await user.type(search, 'fogeltavolitas');
-    await user.click(await screen.findByText('Fogeltávolítás'));
-    await waitFor(() => expect(search).toHaveValue(''));
-    await user.type(search, 'csatornaszam');
-    await user.click(await screen.findByText('Gyökértömés csatornaszámtól függően'));
-    await waitFor(() => expect(search).toHaveValue(''));
+  async function felvesz(
+    user: ReturnType<typeof userEvent.setup>,
+    kereso: HTMLElement,
+    mit: string,
+    talalat: string,
+  ) {
+    await user.type(kereso, mit);
+    await user.click(await screen.findByText(talalat));
+    await waitFor(() => expect(kereso).toHaveValue(''));
   }
 
-  function sorNevek(): string[] {
-    return screen
-      .getAllByLabelText('Beavatkozás megnevezése')
-      .map((el) => (el as HTMLInputElement).value);
+  /** Három sor az 1. fázisban: Fogeltávolítás, Gyökértömés, Esztétikus tömés. */
+  async function haromSor(user: ReturnType<typeof userEvent.setup>) {
+    const kereso = await screen.findByPlaceholderText(/Tétel keresése/);
+    await felvesz(user, kereso, 'fogeltavolitas', 'Fogeltávolítás');
+    await felvesz(user, kereso, 'csatornaszam', 'Gyökértömés csatornaszámtól függően');
+    await felvesz(user, kereso, 'tomes 3', 'Esztétikus tömés 3 felszín');
   }
 
-  it('a "Lejjebb" eggyel hátrébb viszi a sort, és a mozgatott sor "⋯" gombja kapja a fókuszt', async () => {
-    const user = userEvent.setup();
-    renderEditor();
-    await ketSor(user);
-
-    expect(sorNevek()).toEqual(['Fogeltávolítás', 'Gyökértömés csatornaszámtól függően']);
-
-    await user.click(screen.getByRole('button', { name: '1. sor — további műveletek' }));
-    await user.click(await screen.findByRole('menuitem', { name: 'Lejjebb' }));
-
-    expect(sorNevek()).toEqual(['Gyökértömés csatornaszámtól függően', 'Fogeltávolítás']);
-    // A mozgatott sor a 2. pozícióra került -- a fókusz oda megy, hogy az
-    // ismételt mozgatás ne kérjen újranyitást.
-    await waitFor(() => expect(document.getElementById('sor-menu-0-1')).toHaveFocus());
-  });
-
-  it('az első soron a "Feljebb", az utolsón a "Lejjebb" tiltott', async () => {
-    const user = userEvent.setup();
-    renderEditor();
-    await ketSor(user);
-
-    await user.click(screen.getByRole('button', { name: '1. sor — további műveletek' }));
-    expect(await screen.findByRole('menuitem', { name: 'Feljebb' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    expect(screen.getByRole('menuitem', { name: 'Lejjebb' })).not.toHaveAttribute('aria-disabled');
-    await user.keyboard('{Escape}');
-
-    await user.click(screen.getByRole('button', { name: '2. sor — további műveletek' }));
-    expect(await screen.findByRole('menuitem', { name: 'Lejjebb' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    expect(screen.getByRole('menuitem', { name: 'Feljebb' })).not.toHaveAttribute('aria-disabled');
-  });
-
-  it('a mozgatás nem visz sort másik fázisba', async () => {
-    const user = userEvent.setup();
-    renderEditor();
-    await ketSor(user);
-
+  /** Egy második fázis egyetlen „Fogeltávolítás” sorral. */
+  async function masodikFazis(user: ReturnType<typeof userEvent.setup>) {
     await user.click(screen.getByRole('button', { name: 'Fázis hozzáadása' }));
     const keresok = screen.getAllByPlaceholderText(/Tétel keresése/);
-    await user.type(keresok[1], 'tomes 3');
-    await user.click(await screen.findByText('Esztétikus tömés 3 felszín'));
-    await waitFor(() => expect(keresok[1]).toHaveValue(''));
+    await felvesz(user, keresok[1], 'fogeltavolitas', 'Fogeltávolítás');
+  }
 
-    // A 2. fázis EGYETLEN sora: mindkét irány tiltott, nincs hova mozdulnia.
-    await user.click(screen.getAllByRole('button', { name: '1. sor — további műveletek' })[1]);
-    expect(await screen.findByRole('menuitem', { name: 'Feljebb' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
+  function fazisSorai(): string[][] {
+    return Array.from(document.querySelectorAll('[id^="fazis-panel-"]')).map((panel) =>
+      Array.from(
+        panel.querySelectorAll<HTMLInputElement>('input[aria-label="Beavatkozás megnevezése"]'),
+      ).map((el) => el.value),
     );
-    expect(screen.getByRole('menuitem', { name: 'Lejjebb' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+  }
+
+  function fogantyu(pi: number, li: number): HTMLElement {
+    const el = document.getElementById(`sor-fogantyu-${pi}-${li}`);
+    if (!el) throw new Error(`nincs fogantyú: ${pi}/${li}`);
+    return el;
+  }
+
+  function sorElem(pi: number, li: number): HTMLElement {
+    const tr = fogantyu(pi, li).closest('tr');
+    if (!tr) throw new Error(`nincs sor: ${pi}/${li}`);
+    return tr;
+  }
+
+  // A jsdom-nak nincs `DataTransfer`-e; a fogantyú csak ezeket a tagokat éri el.
+  function adatAtvitel() {
+    return { effectAllowed: '', dropEffect: '', setData: () => {}, setDragImage: () => {} };
+  }
+
+  // `DragEvent` híján a jsdom sima `Event`-et épít, ami eldobja a `clientY`-t;
+  // a nulla méretű téglalap mellett a negatív érték a sor felső fele.
+  function huzasFelsoFelett(el: HTMLElement, dataTransfer: ReturnType<typeof adatAtvitel>) {
+    const ev = createEvent.dragOver(el, { dataTransfer });
+    Object.defineProperty(ev, 'clientY', { value: -1 });
+    fireEvent(el, ev);
+  }
+
+  it('Szóköz, kétszer le, Enter: a sor két hellyel hátrébb kerül, és a fogantyúja fókuszban marad', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await haromSor(user);
+
+    fogantyu(0, 0).focus();
+    await user.keyboard(' ');
+    expect(fogantyu(0, 0)).toHaveAttribute('aria-pressed', 'true');
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => expect(fogantyu(0, 1)).toHaveFocus());
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => expect(fogantyu(0, 2)).toHaveFocus());
+    await user.keyboard('{Enter}');
+
+    expect(fazisSorai()[0]).toEqual([
+      'Gyökértömés csatornaszámtól függően',
+      'Esztétikus tömés 3 felszín',
+      'Fogeltávolítás',
+    ]);
+    expect(fogantyu(0, 2)).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('a fázis utolsó során a lefelé nyíl a következő fázis elejére viszi a sort', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await haromSor(user);
+    await masodikFazis(user);
+
+    fogantyu(0, 2).focus();
+    await user.keyboard(' ');
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => expect(fogantyu(1, 0)).toHaveFocus());
+    await user.keyboard('{Enter}');
+
+    expect(fazisSorai()).toEqual([
+      ['Fogeltávolítás', 'Gyökértömés csatornaszámtól függően'],
+      ['Esztétikus tömés 3 felszín', 'Fogeltávolítás'],
+    ]);
+  });
+
+  it('Escape a felvett sort az eredeti helyére teszi vissza, a fókusz a fogantyúján marad', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await haromSor(user);
+
+    fogantyu(0, 0).focus();
+    await user.keyboard(' ');
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => expect(fogantyu(0, 1)).toHaveFocus());
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => expect(fogantyu(0, 2)).toHaveFocus());
     await user.keyboard('{Escape}');
 
-    expect(sorNevek()).toEqual([
+    await waitFor(() => expect(fogantyu(0, 0)).toHaveFocus());
+    expect(fazisSorai()[0]).toEqual([
       'Fogeltávolítás',
       'Gyökértömés csatornaszámtól függően',
       'Esztétikus tömés 3 felszín',
     ]);
+  });
+
+  it('felvétel nélkül a nyilak nem mozdítják a sort', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await haromSor(user);
+
+    fogantyu(0, 0).focus();
+    await user.keyboard('{ArrowDown}');
+
+    expect(fazisSorai()[0][0]).toBe('Fogeltávolítás');
+  });
+
+  it('egérrel másik fázis sora elé ejtve a sor oda kerül, és a fogantyúja kapja a fókuszt', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await haromSor(user);
+    await masodikFazis(user);
+
+    const dt = adatAtvitel();
+    fireEvent.dragStart(fogantyu(0, 1), { dataTransfer: dt });
+    huzasFelsoFelett(sorElem(1, 0), dt);
+    expect(sorElem(1, 0)).toHaveClass('sor-ejtes-elott');
+    fireEvent.drop(sorElem(1, 0), { dataTransfer: dt });
+
+    expect(fazisSorai()).toEqual([
+      ['Fogeltávolítás', 'Esztétikus tömés 3 felszín'],
+      ['Gyökértömés csatornaszámtól függően', 'Fogeltávolítás'],
+    ]);
+    await waitFor(() => expect(fogantyu(1, 0)).toHaveFocus());
+  });
+
+  it('fázison belül hátrébb ejtve a sor a jelzett két sor közé kerül', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await haromSor(user);
+
+    const dt = adatAtvitel();
+    fireEvent.dragStart(fogantyu(0, 0), { dataTransfer: dt });
+    huzasFelsoFelett(sorElem(0, 2), dt);
+    fireEvent.drop(sorElem(0, 2), { dataTransfer: dt });
+
+    expect(fazisSorai()[0]).toEqual([
+      'Gyökértömés csatornaszámtól függően',
+      'Fogeltávolítás',
+      'Esztétikus tömés 3 felszín',
+    ]);
+  });
+
+  it('csukott fázis fejlécére ejtve a sor a fázis végére kerül, a fázis csukva marad és a tételszáma nő', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await haromSor(user);
+    await masodikFazis(user);
+
+    await user.click(screen.getAllByRole('button', { name: 'Összecsukás' })[1]);
+    expect(screen.getByText(/^1 tétel ·/)).toBeInTheDocument();
+
+    const dt = adatAtvitel();
+    fireEvent.dragStart(fogantyu(0, 0), { dataTransfer: dt });
+    const fejlec = screen.getByRole('button', { name: 'Kinyitás' });
+    fireEvent.dragOver(fejlec, { dataTransfer: dt });
+    fireEvent.drop(fejlec, { dataTransfer: dt });
+
+    expect(await screen.findByText(/^2 tétel ·/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Kinyitás' })).toBeInTheDocument();
+    expect(fazisSorai()).toEqual([['Gyökértömés csatornaszámtól függően', 'Esztétikus tömés 3 felszín']]);
+  });
+
+  it('a sorokon nincs többé „⋯” sor-menü, helyette áthelyező fogantyú van', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await haromSor(user);
+
+    expect(screen.queryByRole('button', { name: /további műveletek/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /Feljebb|Lejjebb/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '1. sor — áthelyezés' })).toBeInTheDocument();
+  });
+
+  it('áthelyezés után a sortörlés Undo-sávja eltűnik', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    await haromSor(user);
+
+    await user.click(screen.getAllByRole('button', { name: 'Sor törlése' })[2]);
+    expect(await screen.findByText(/Sor törölve/)).toBeInTheDocument();
+
+    fogantyu(0, 0).focus();
+    await user.keyboard(' ');
+    await user.keyboard('{ArrowDown}');
+    await waitFor(() => expect(fogantyu(0, 1)).toHaveFocus());
+
+    expect(screen.queryByText(/Sor törölve/)).not.toBeInTheDocument();
   });
 });
 

@@ -1,5 +1,5 @@
 import { fazisNevGeneralt, generaltFazisNev } from './blankPlan';
-import type { Fazis, Sor } from './types';
+import type { Fazis } from './types';
 
 /**
  * Egy fázis felcserélése a `cel` pozícióval -- a `PriceListAdminPage.tsx`
@@ -22,16 +22,26 @@ export function fazisokFelcserelve(fazisok: Fazis[], pi: number, cel: number): F
   return f;
 }
 
+/** Egy sor helye a tervben: fázis-index + sor-index a fázison belül. */
+export interface SorHely {
+  pi: number;
+  li: number;
+}
+
 /**
- * Két sor felcserélése EGY fázison belül -- a `fazisokFelcserelve` mintáján,
- * de névszámozás nélkül: a sornak nincs pozícióból generált mezője. A hívó
- * felelőssége a `cel` tartomány-ellenőrzése (`PlanEditorPage.tsx`
- * `moveLine()`). Új tömböt ad vissza, az eredetit nem mutálja.
+ * Egy sor áthelyezése a tervben, fázison belül vagy fázisok között -- az
+ * egérrel húzás és a fogantyú billentyűs léptetése is ezen megy. A `hova.li`
+ * a sor VÉGSŐ indexe a célfázisban (a kivétel után számolva), a fázisok
+ * hosszára szorítva. A fázis `sorszam`-ja és neve nem mozdul: a sorrend
+ * pusztán a `sorok` tömbök sorrendje. Új tömböket ad vissza, az eredetit nem
+ * mutálja.
  */
-export function sorokFelcserelve(sorok: Sor[], li: number, cel: number): Sor[] {
-  const s = sorok.slice();
-  [s[li], s[cel]] = [s[cel], s[li]];
-  return s;
+export function sorAthelyezve(fazisok: Fazis[], honnan: SorHely, hova: SorHely): Fazis[] {
+  const f = fazisok.map((x) => ({ ...x, sorok: x.sorok.slice() }));
+  const [sor] = f[honnan.pi].sorok.splice(honnan.li, 1);
+  const cel = f[hova.pi].sorok;
+  cel.splice(Math.max(0, Math.min(hova.li, cel.length)), 0, sor);
+  return f;
 }
 
 /**

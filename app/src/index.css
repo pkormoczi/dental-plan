@@ -269,3 +269,29 @@ button {
 .fazisok-blokk .rt-Card {
   overflow: visible;
 }
+
+/*
+ * Terv-szerkesztő sor-áthelyezés (planEditor/LineRow.tsx, PhaseSection.tsx).
+ * Az ejtés-jelző vonal cellánként, `inset` box-shadow-val: a <tr>-re tett
+ * keret/árnyék a Radix cellánkénti háttere mögé kerülne, a `border` pedig
+ * elmozdítaná a sort húzás közben. `--focus-ring` (brown, 4,97:1) a 3:1-es
+ * nem-szöveges küszöb fölött -- az `accent` (2,82:1) alatta van.
+ */
+.sor-ejtes-elott > td {
+  box-shadow: inset 0 2px 0 0 var(--focus-ring);
+}
+.sor-ejtes-utan > td {
+  box-shadow: inset 0 -2px 0 0 var(--focus-ring);
+}
+.sor-huzott > td {
+  opacity: 0.5;
+}
+/* A billentyűvel felvett sor kiemelése -- a pácienslista mintájára a
+   változón át, mert a Radix cellánként festi a hátteret. */
+.sor-felveve {
+  --table-row-background-color: var(--accent-wash);
+}
+.fazis-ejtes-cel {
+  outline: 2px dashed var(--focus-ring);
+  outline-offset: 4px;
+}
