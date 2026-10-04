@@ -253,6 +253,13 @@ export interface Plan {
    */
   leirasokMutatasa?: boolean;
   /**
+   * Nyomtatásra kerüljön-e az „Érintett fogak” ábra. Additív mező,
+   * `schemaVersion` nem emelkedett -- hiányzó mező = `true`: a mező előtti
+   * tervek ábrával nyomtatódtak, és a doki döntése szerint új verziójuk,
+   * másolatuk is így induljon. Vadonatúj terv `false`-szal indul.
+   */
+  fogterkepMutatasa?: boolean;
+  /**
    * A páciens-mappa azonosítója (lásd app/src/storage/CLAUDE.md).
    * Hiányzó/üres = a terv még nincs elmentve, a storage
    * savePlan()-kor tölti ki. NE keverd a `tervId`-vel: egy páciens-mappa

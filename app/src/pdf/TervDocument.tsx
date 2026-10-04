@@ -99,7 +99,10 @@ export function TervDocument({
   const szuletettFormazva = plan.paciens.szuletesiIdo
     ? formatShortDate(plan.paciens.szuletesiIdo, plan.nyelv)
     : '';
-  const showToothChart = toothChartPng != null && (fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0);
+  const showToothChart =
+    (plan.fogterkepMutatasa ?? true) &&
+    toothChartPng != null &&
+    (fogterkep.fogak.size > 0 || fogterkep.tejfogak.length > 0);
   // A sablonszövegben álló {{orvos}}/{{paciens}} helyőrzőket a tényleges
   // terv-adatok váltják fel, mielőtt bekezdésekre/felsorolásra bontanánk.
   // Előleg: a `Plan`-en abszolút összeg él (korábban élőben számolt

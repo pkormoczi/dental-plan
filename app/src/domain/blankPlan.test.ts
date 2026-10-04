@@ -88,4 +88,8 @@ describe('createBlankPlan', () => {
   it('a csakAjanlat alapból false', () => {
     expect(createBlankPlan(settings, priceList).csakAjanlat).toBe(false);
   });
+
+  it('új terven az érintett fogak ábrája alapból nem kerül a nyomtatványra', () => {
+    expect(createBlankPlan(settings, priceList).fogterkepMutatasa).toBe(false);
+  });
 });

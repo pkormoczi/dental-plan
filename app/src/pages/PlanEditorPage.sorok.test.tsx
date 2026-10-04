@@ -537,6 +537,20 @@ describe('PlanEditorPage -- backlog-10: tétel-leírás', () => {
     await user.click(kapcsolo);
     expect(kapcsolo).not.toBeChecked();
   });
+
+  it('az „Érintett fogak” gomb mellett, csukott panelnél is ott az „Ábra a nyomtatványon” kapcsoló: új terven üres, bepipálható', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    const gomb = await screen.findByRole('button', { name: /Érintett fogak/ });
+    expect(gomb).toHaveAttribute('aria-expanded', 'false');
+    const kapcsolo = screen.getByRole('checkbox', { name: 'Ábra a nyomtatványon' });
+    expect(gomb.parentElement).toContainElement(kapcsolo);
+    expect(kapcsolo).not.toBeChecked();
+
+    await user.click(kapcsolo);
+    expect(kapcsolo).toBeChecked();
+  });
 });
 
 describe('PlanEditorPage -- backlog-60: sor-szintű eltérés-jelzés és reset', () => {

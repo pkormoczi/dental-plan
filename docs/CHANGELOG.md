@@ -2,6 +2,13 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. október 4.
+
+- Az „Érintett fogak” ábra mostantól csak akkor kerül a nyomtatott ajánlatra, ha a doki a
+  tervszerkesztőben, az „Érintett fogak” gomb mellett bepipálja az „Ábra a nyomtatványon”
+  jelölőnégyzetet. Új tervnél alapból nincs bepipálva. A korábban készült tervek új verziója és
+  másolata bepipálva indul, így ugyanúgy néz ki, mint amit a páciens már megkapott.
+
 ## 2026. október 3.
 
 - A kezelési sorok sorrendje mostantól egérrel, áthúzással rendezhető: a sor elején lévő pöttyös

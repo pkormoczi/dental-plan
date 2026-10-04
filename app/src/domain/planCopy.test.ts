@@ -197,6 +197,13 @@ describe('planMasolatKent', () => {
     expect(masolat.leirasokMutatasa).toBe(plan.leirasokMutatasa);
   });
 
+  it('a fogtérkép-nyomtatás kapcsolója a másolatra öröklődik, bekapcsolva és kikapcsolva is', () => {
+    for (const ertek of [true, false]) {
+      const masolat = planMasolatKent(makePlan({ fogterkepMutatasa: ertek }), settings, '2026-08-10');
+      expect(masolat.fogterkepMutatasa).toBe(ertek);
+    }
+  });
+
   it('tervId/verzio/statusz nullázódik, a keltezés/ervenyesIg friss', () => {
     const plan = makePlan();
     const masolat = planMasolatKent(plan, settings, '2026-08-10');

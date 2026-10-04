@@ -563,7 +563,16 @@ export default function PlanEditorPage() {
       {/* A beavatkozás lista fölött, alapból csukva -- kattintásra nyílik
           (lásd components/ToothChartPanel.tsx). Korábban az oldal alján,
           mindig nyitva állt; a doki kérésére show-hide módra váltott. */}
-      <ToothChartPanel allapot={fogterkep} onToothClick={onToothClick} />
+      <ToothChartPanel
+        allapot={fogterkep}
+        onToothClick={onToothClick}
+        nyomtatas={plan.fogterkepMutatasa ?? true}
+        onNyomtatasChange={(nyomtatas) =>
+          updatePlan((draft) => {
+            draft.fogterkepMutatasa = nyomtatas;
+          })
+        }
+      />
       <Separator size="4" mb="6" mt="4" />
 
       {plan.fazisok.map((p, pi) => (

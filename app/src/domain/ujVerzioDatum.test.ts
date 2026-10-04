@@ -116,4 +116,14 @@ describe('frissDatummal', () => {
     const friss = frissDatummal(plan, settings, '2026-08-09');
     expect(friss.csakAjanlat).toBe(true);
   });
+
+  it('a fogtérkép-nyomtatás kapcsolója igaz, hamis és hiányzó értékkel is változatlanul öröklődik', () => {
+    for (const ertek of [true, false]) {
+      const friss = frissDatummal(makePlan({ fogterkepMutatasa: ertek }), settings, '2026-08-09');
+      expect(friss.fogterkepMutatasa).toBe(ertek);
+    }
+    // A kapcsoló előtti terv: a hiányzó mező hiányzó marad, ami ábrával nyomtat.
+    const regi = frissDatummal(makePlan(), settings, '2026-08-09');
+    expect(regi).not.toHaveProperty('fogterkepMutatasa');
+  });
 });

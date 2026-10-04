@@ -7,7 +7,7 @@
 // animáció visszajelzési funkció nélkül tilos (app/src/CLAUDE.md).
 
 import { useState } from 'react';
-import { Button, Flex, Text } from '@radix-ui/themes';
+import { Button, Checkbox, Flex, Text } from '@radix-ui/themes';
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import DentalChart from './DentalChart';
 import DentalChartLegend from './DentalChartLegend';
@@ -16,16 +16,27 @@ import type { FogterkepAllapot } from '../domain/toothVisual';
 export interface ToothChartPanelProps {
   allapot: FogterkepAllapot;
   onToothClick: (fdi: string) => void;
+  /** A terv `fogterkepMutatasa` mezője: kerüljön-e az ábra a nyomtatványra. */
+  nyomtatas: boolean;
+  onNyomtatasChange: (nyomtatas: boolean) => void;
 }
 
-export default function ToothChartPanel({ allapot, onToothClick }: ToothChartPanelProps) {
+export default function ToothChartPanel({
+  allapot,
+  onToothClick,
+  nyomtatas,
+  onNyomtatasChange,
+}: ToothChartPanelProps) {
   const [open, setOpen] = useState(false);
   const erintettSzam = allapot.fogak.size + allapot.tejfogak.length;
   const hasFogterkep = erintettSzam > 0;
 
   return (
     <Flex direction="column" gap="2">
-      <Flex align="center" justify="between" gap="3" wrap="wrap">
+      {/* A nyomtatás-kapcsoló a panel fejléc-sorában, a gomb mellett: csukott
+          panelnél is látszik, és a doki az ábrához keresi, nem a többi
+          nyomtatási kapcsoló között. */}
+      <Flex align="center" gap="4" wrap="wrap">
         <Button
           type="button"
           variant="soft"
@@ -37,6 +48,13 @@ export default function ToothChartPanel({ allapot, onToothClick }: ToothChartPan
           {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
           Érintett fogak
         </Button>
+        <Text as="label" size="2" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Checkbox
+            checked={nyomtatas}
+            onCheckedChange={(checked) => onNyomtatasChange(checked === true)}
+          />
+          Ábra a nyomtatványon
+        </Text>
       </Flex>
       {open && (
         <Flex id="fogterkep-panel" direction="column" style={{ maxWidth: 480 }}>

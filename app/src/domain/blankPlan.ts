@@ -94,6 +94,8 @@ export function createBlankPlan(
     // A doki kapcsolója a szerkesztőben -- alapból nincs terv-szintű kedvezmény.
     kedvezmenyOsszeg: null,
     leirasokMutatasa: true,
+    // A doki kapcsolója a szerkesztőben -- alapból nincs ábra a nyomtatványon.
+    fogterkepMutatasa: false,
     // Új terv alapból teljes dokumentum -- a doki kapcsolója az Előnézet lapon.
     csakAjanlat: false,
   };

@@ -835,6 +835,8 @@ describe('TervDocument -- 77. tétel: cím + páciensadatok + fogtérkép', () =
     toothChartPng?: string | null;
     nyelv?: Nyelv;
     szuletesiIdo?: string;
+    /** `null` = a mező hiányzik, mint a kapcsoló előtti terveken. */
+    fogterkepMutatasa?: boolean | null;
   } = {}) {
     const {
       tervCim = '',
@@ -843,8 +845,11 @@ describe('TervDocument -- 77. tétel: cím + páciensadatok + fogtérkép', () =
       toothChartPng = null,
       nyelv = 'hu',
       szuletesiIdo = '1990-01-01',
+      fogterkepMutatasa = true,
     } = opts;
     const plan = buildPlan(false, nyelv, AZONOS_AR);
+    if (fogterkepMutatasa === null) delete plan.fogterkepMutatasa;
+    else plan.fogterkepMutatasa = fogterkepMutatasa;
     plan.paciens.nev = 'Teszt Páciens';
     plan.paciens.szuletesiIdo = szuletesiIdo;
     plan.paciens.lakcim = '1114 Budapest, Móricz Zsigmond körtér 1.';
@@ -921,6 +926,24 @@ describe('TervDocument -- 77. tétel: cím + páciensadatok + fogtérkép', () =
   it('nincs fogszám a tervben: a fogtérkép-blokk kimarad', () => {
     const aBlokk = renderElsoBlokk({ fogak: '', toothChartPng: 'data:image/png;base64,xx' });
     expect(within(aBlokk).queryByText('Érintett fogak')).not.toBeInTheDocument();
+  });
+
+  it('kikapcsolt „Ábra a nyomtatványon” mellett a fogtérkép-blokk kimarad, pedig van fogszám és kép', () => {
+    const aBlokk = renderElsoBlokk({
+      fogak: '11',
+      toothChartPng: 'data:image/png;base64,xx',
+      fogterkepMutatasa: false,
+    });
+    expect(within(aBlokk).queryByText('Érintett fogak')).not.toBeInTheDocument();
+  });
+
+  it('a kapcsoló előtti, mező nélküli terv továbbra is ábrával nyomtatódik', () => {
+    const aBlokk = renderElsoBlokk({
+      fogak: '11',
+      toothChartPng: 'data:image/png;base64,xx',
+      fogterkepMutatasa: null,
+    });
+    expect(within(aBlokk).getByText('Érintett fogak')).toBeInTheDocument();
   });
 
   it('az összesítés az utolsó fázis után áll, teljes szélességben', () => {

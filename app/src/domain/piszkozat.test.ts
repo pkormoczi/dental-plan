@@ -37,6 +37,11 @@ describe('piszkozatTartalmas', () => {
     expect(plan.leirasokMutatasa).toBe(true);
   });
 
+  it('a fogtérkép-nyomtatás kapcsolója egyedül nem teszi tartalmassá a piszkozatot', () => {
+    const plan = createBlankPlan(settings, priceList);
+    expect(piszkozatTartalmas({ ...plan, fogterkepMutatasa: true })).toBe(false);
+  });
+
   it('is NOT affected by the leirasokMutatasa switch alone -- csak megjelenítést vezérel, nem gépelt munka', () => {
     const plan = createBlankPlan(settings, priceList);
     expect(piszkozatTartalmas({ ...plan, leirasokMutatasa: false })).toBe(false);
