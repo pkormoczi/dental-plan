@@ -1,5 +1,5 @@
 # Repo
-`app/` Vite + React + TS — az egyetlen szerkesztett könyvtár · `docs/desktop-app-migration-plan.md` az
+`app/` Vite + React + TS — az egyetlen szerkesztett könyvtár · `docs/desktop-app-migration-plan-final.md` az
 Electron-fázis terve · `backlog/` egy fájl = egy tétel: `idea/` ötlet, gyökér terv, `later/` Prio later ·
 `data/`, `assets/` referencia · `scripts/` checkek.
 

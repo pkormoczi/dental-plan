@@ -44,8 +44,7 @@ készítésére — nem termék, nincs több rendelő. Az Excel-alapú elődöt 
 1. **Mockup** (ez él): GitHub Pages, `localStorage`-alapú tároló, demó adat — valódi páciensadat nem
    kerül bele. Cél: a doki validálja a UX-et.
 2. **Végleges**: Electron + `FileSystemStorage` a `PlanStorage` interfész mögött; más (domain,
-   UI, PDF) változatlan. Egy Chromium mindkét platformon = bájtra azonos PDF. Terv:
-   `docs/desktop-app-migration-plan.md`.
+   UI, PDF) változatlan. Egy Chromium mindkét platformon. Terv: `docs/desktop-app-migration-plan-final.md`.
 
 ## A nyomtatvány szerződéses dokumentum
 
