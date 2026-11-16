@@ -8,6 +8,10 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   fájlba menti az árlistát, a beállításokat és a nyomtatvány-szövegeket. Ezt a fájlt a készülő,
   telepíthető program be tudja majd olvasni, így a demóban elvégzett munka nem vész el. Páciensek
   és tervek nem kerülnek bele.
+- Ha egy terv régebbi verziójából készül új verzió, de közben már egy újabb verzió is elkészült,
+  az Előnézet ellenőrző listája ezt figyelmeztetésként kiírja: megmondja, melyik verzióból indult
+  a munka, melyik a legfrissebb, és hányadik verzióként mentődik majd. A véglegesítést nem
+  akadályozza. Ez főleg akkor fontos, ha a két gépen felváltva dolgozunk.
 
 ## 2026. október 4.
 

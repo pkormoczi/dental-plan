@@ -425,6 +425,7 @@ export default function PreviewPage() {
     aktivOrvosok(settings),
     { sablonFallback, nyilatkozatPlaceholder: nyilatkozatIsPlaceholder, kihagyottSzekciok: kihagyottSablonSzekciok },
     paciensKotes,
+    foglalas?.verzio ?? null,
   );
 
   async function doFinalize() {

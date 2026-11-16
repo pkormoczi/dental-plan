@@ -221,6 +221,51 @@ describe('PreviewPage -- az azonosító előzetes lefoglalása', () => {
   );
 
   it(
+    'a v2-ből nyitott piszkozat mellett, ha a láncnak már v3-a is van, a checklist kimondja, hogy v4-ként mentődik a v3 változásai nélkül',
+    async () => {
+      const { patientDir, storage } = await seedLanc(3);
+      const [chain] = await storage.listPlans(patientDir);
+      const versions = await storage.listVersions(patientDir, chain.dirName);
+      const v2 = await storage.loadPlan({
+        patientDir,
+        planDir: chain.dirName,
+        versionDir: versions[1].dirName,
+      });
+
+      seedDraft({ ...v2, statusz: 'PISZKOZAT' }, patientDir);
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      const gomb = await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+      expect(
+        await screen.findByText(
+          'Ez a terv a v2 verzióból indult, de a láncban azóta v3 is elkészült. ' +
+            'Véglegesítéskor v4-ként mentődik, a v3 változásai nincsenek benne.',
+          {},
+          { timeout: 10000 },
+        ),
+      ).toBeInTheDocument();
+      await waitFor(() => expect(gomb).not.toBeDisabled());
+    },
+    20000,
+  );
+
+  it(
+    'a lánc legfrissebb verziójából nyitott piszkozatnál nincs elavult-alap jelzés',
+    async () => {
+      const { mentett, patientDir } = await seedLanc(2);
+      seedDraft({ ...mentett, statusz: 'PISZKOZAT' }, patientDir);
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+      await waitFor(() => expect(nyomtatvanyPlan().verzio).toBe(3));
+      expect(screen.queryByText(/verzióból indult, de a láncban azóta/)).not.toBeInTheDocument();
+    },
+    20000,
+  );
+
+  it(
     'a szerkesztőbe visszalépve és újra az Előnézetre jőve a papír és a PISZKOZAT-PDF fájlneve ugyanazt az azonosítót viseli',
     async () => {
       localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));

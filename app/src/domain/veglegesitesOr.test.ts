@@ -16,6 +16,9 @@ const NO_SABLON = { sablonFallback: false, nyilatkozatPlaceholder: false, kihagy
 /** A legtöbb teszt a névütközést (94. tétel) nem vizsgálja -- lásd külön describe lent. */
 const NO_NEV_UTKOZES = null;
 
+/** A legtöbb teszt az elavult alapverziót nem vizsgálja -- lásd külön describe lent. */
+const NINCS_FOGLALAS = null;
+
 function paciens(partial: Partial<Paciens> = {}): Paciens {
   return {
     nev: 'Teszt Elek',
@@ -123,7 +126,7 @@ function tetel(csekklista: { tetelek: CsekklistaTetel[] }, id: string): Csekklis
 describe('veglegesitesDiagnozis', () => {
   it('teljesen kitöltött magyar terven üres a csekklista', () => {
     const plan = makePlan([[sor()]]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     expect(diag.tetelek).toEqual([]);
     expect(vanKemenyBlokk(diag)).toBe(false);
@@ -131,7 +134,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('üres páciensnév a "nev-hianyzik" hard tételt adja', () => {
     const plan = makePlan([[sor()]], { paciens: paciens({ nev: '  ' }) });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     expect(tetel(diag, 'nev-hianyzik')?.sulyossag).toBe('hard');
     expect(vanKemenyBlokk(diag)).toBe(true);
@@ -141,7 +144,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('üres ervenyesIg az "ervenyes-ig-hianyzik" hard tételt adja -- üres dátum "Invalid Date"-ként kerülne a szerződésre', () => {
     const plan = makePlan([[sor()]], { ervenyesIg: '   ' });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     expect(tetel(diag, 'ervenyes-ig-hianyzik')?.sulyossag).toBe('hard');
     expect(tetel(diag, 'ervenyes-ig-hianyzik')?.route).toBe('/paciens');
@@ -150,14 +153,14 @@ describe('veglegesitesDiagnozis', () => {
 
   it('nem dátumnak parsolható ervenyesIg ugyanezt a hard tételt adja', () => {
     const plan = makePlan([[sor()]], { ervenyesIg: 'nem-datum' });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     expect(tetel(diag, 'ervenyes-ig-hianyzik')?.sulyossag).toBe('hard');
   });
 
   it('meg nem nevezett sor a "kitoltetlen-sor" hard tételben jelenik meg, a nullaOsszeguSorok puhájában NEM', () => {
     const plan = makePlan([[sor({ tetelId: '', nevSnapshot: '', fogak: '16' })]]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     const t = tetel(diag, 'kitoltetlen-sor');
     expect(t?.sulyossag).toBe('hard');
@@ -169,7 +172,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('üres fázis a "ures-fazis" hard tételt adja', () => {
     const plan = makePlan([[sor()], []]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     const t = tetel(diag, 'ures-fazis');
     expect(t?.sulyossag).toBe('hard');
@@ -178,7 +181,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('hiányzó egyéb páciensadat a "hianyzo-paciensadat" soft tételt adja', () => {
     const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '' }) });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     expect(tetel(diag, 'hianyzo-paciensadat')?.sulyossag).toBe('soft');
   });
 
@@ -186,7 +189,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([[sor()]], {
       paciens: paciens({ szuletesiIdo: '', telefon: '', taj: '' }),
     });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     expect(tetel(diag, 'hianyzo-paciensadat')?.cim).toBe(
       'Nem kötelező, de a nyomtatványon üresen marad: Született, Telefon, TAJ.',
@@ -197,7 +200,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([[sor()]], {
       paciens: paciens({ szuletesiIdo: '', lakcim: '', telefon: '', email: '', taj: '' }),
     });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     expect(tetel(diag, 'hianyzo-paciensadat')?.cim).toBe(
       'Nem kötelező, de a nyomtatványon üresen marad: Született, Lakcím, Telefon, E-mail, TAJ.',
@@ -207,7 +210,7 @@ describe('veglegesitesDiagnozis', () => {
   describe('nemet-nev', () => {
     it('fordítás nélküli tétel érintetlen sorral a "nincsArlistaiNev" csoportba kerül, hard tétel', () => {
       const plan = makePlan([[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás' })]], { nyelv: 'de' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'nemet-nev');
       expect(t?.sulyossag).toBe('hard');
@@ -222,7 +225,7 @@ describe('veglegesitesDiagnozis', () => {
         [[sor({ tetelId: 't1', nevSnapshot: 'Zahnextraktion', nevNyelv: { authoredInLanguage: 'de' } })]],
         { nyelv: 'de' },
       );
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'nemet-nev')).toBeUndefined();
     });
 
@@ -231,7 +234,7 @@ describe('veglegesitesDiagnozis', () => {
         [[sor({ tetelId: '', nevSnapshot: 'Egyedi anyagköltség', nevNyelv: { authoredInLanguage: 'de' } })]],
         { nyelv: 'de' },
       );
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'nemet-nev')).toBeUndefined();
     });
 
@@ -240,7 +243,7 @@ describe('veglegesitesDiagnozis', () => {
         [[sor({ tetelId: 't-csomag', nevSnapshot: 'Kézzel átírt', nevNyelv: { authoredInLanguage: 'hu' } })]],
         { nyelv: 'de' },
       );
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'nemet-nev');
       expect(t?.reszletek).toEqual([
@@ -250,13 +253,13 @@ describe('veglegesitesDiagnozis', () => {
 
     it('törölt tételre mutató sor nem blokkol', () => {
       const plan = makePlan([[sor({ tetelId: 'torolve', nevSnapshot: 'Régi tétel' })]], { nyelv: 'de' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'nemet-nev')).toBeUndefined();
     });
 
     it('magyar terven a check nem fut', () => {
       const plan = makePlan([[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás' })]], { nyelv: 'hu' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'nemet-nev')).toBeUndefined();
     });
   });
@@ -274,7 +277,7 @@ describe('veglegesitesDiagnozis', () => {
         [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', fogak: '16' })]],
         { nyelv: 'de' },
       );
-      const diag = veglegesitesDiagnozis(plan, priceListKategoriaval, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceListKategoriaval, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'nemet-kategoria-nev');
       expect(t?.sulyossag).toBe('hard');
@@ -285,13 +288,13 @@ describe('veglegesitesDiagnozis', () => {
       const plan = makePlan([[sor({ tetelId: '', nevSnapshot: 'Egyedi', nevNyelv: { authoredInLanguage: 'de' } })]], {
         nyelv: 'de',
       });
-      const diag = veglegesitesDiagnozis(plan, priceListKategoriaval, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceListKategoriaval, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'nemet-kategoria-nev')).toBeUndefined();
     });
 
     it('magyar terven a check nem fut', () => {
       const plan = makePlan([[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', fogak: '16' })]]);
-      const diag = veglegesitesDiagnozis(plan, priceListKategoriaval, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceListKategoriaval, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'nemet-kategoria-nev')).toBeUndefined();
     });
   });
@@ -299,7 +302,7 @@ describe('veglegesitesDiagnozis', () => {
   describe('hiányzó fogszám', () => {
     it('jelöletlen tételre hivatkozó, fogszám nélküli sor "hianyzo-fogszam" soft tételt ad', () => {
       const plan = makePlan([[sor({ nevSnapshot: 'Korona', fogak: '' })]]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'hianyzo-fogszam');
       expect(t?.sulyossag).toBe('soft');
@@ -314,7 +317,7 @@ describe('veglegesitesDiagnozis', () => {
         [sor({ nevSnapshot: 'Korona', fogak: '' }), sor({ nevSnapshot: 'Tömés', fogak: '  ' })],
         [sor({ nevSnapshot: 'Híd', fogak: '' })],
       ]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'hianyzo-fogszam');
       expect(t?.szamlalo).toBe(3);
@@ -323,13 +326,13 @@ describe('veglegesitesDiagnozis', () => {
 
     it('a "fogszám nélkül is rendben" jelölt tételre hivatkozó sor NEM ad tételt', () => {
       const plan = makePlan([[sor({ tetelId: 't-fogszam-nelkul', nevSnapshot: 'Konzultáció', fogak: '' })]]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'hianyzo-fogszam')).toBeUndefined();
     });
 
     it('egyedi (tetelId nélküli) sor fogszám nélkül szintén ad tételt', () => {
       const plan = makePlan([[sor({ tetelId: '', nevSnapshot: 'Saját tétel', fogak: '' })]]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'hianyzo-fogszam')?.reszletek).toEqual([
         { cim: 'Érintett sorok', nevek: ['Saját tétel'] },
       ]);
@@ -337,7 +340,7 @@ describe('veglegesitesDiagnozis', () => {
 
     it('szabadszöveges fogak-jegyzet NEM hiány -- a mező jegyzetmező, nem fogszám-parser', () => {
       const plan = makePlan([[sor({ nevSnapshot: 'Korona', fogak: 'felső front' })]]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'hianyzo-fogszam')).toBeUndefined();
     });
 
@@ -345,7 +348,7 @@ describe('veglegesitesDiagnozis', () => {
       const plan = makePlan([
         [sor({ nevSnapshot: 'Korona', fogak: '', listaEgysegar: 0, tenylegesEgysegar: 0 })],
       ]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const ids = diag.tetelek.map((x) => x.id);
       expect(ids.indexOf('hianyzo-fogszam')).toBeLessThan(ids.indexOf('nulla-osszegu-sor'));
@@ -355,13 +358,13 @@ describe('veglegesitesDiagnozis', () => {
   describe('magas-mennyiseg', () => {
     it('8 db-os soron nem ad tételt', () => {
       const plan = makePlan([[sor({ mennyiseg: 8 })]]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'magas-mennyiseg')).toBeUndefined();
     });
 
     it('9 db-os soron puha, nem blokkoló tételt ad a sor nevével és darabszámával, a szerkesztőbe vezetve', () => {
       const plan = makePlan([[sor({ nevSnapshot: 'Gyökértömés', mennyiseg: 36 })]]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'magas-mennyiseg');
       expect(t?.sulyossag).toBe('soft');
@@ -375,7 +378,7 @@ describe('veglegesitesDiagnozis', () => {
       const plan = makePlan([
         [sor({ fogak: '11, 12, 13, 14, 15, 16, 17, 18, 21', mennyiseg: 9, mennyisegKezi: false })],
       ]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'magas-mennyiseg')).toBeUndefined();
     });
 
@@ -384,7 +387,7 @@ describe('veglegesitesDiagnozis', () => {
         [sor({ nevSnapshot: 'Első', mennyiseg: 12 })],
         [sor({ nevSnapshot: 'Második', mennyiseg: 36 })],
       ]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'magas-mennyiseg');
       expect(t?.szamlalo).toBe(2);
@@ -397,7 +400,7 @@ describe('veglegesitesDiagnozis', () => {
     // sorra -- egymás mellett diagnosztikus.
     it('a magas darabszám közvetlenül a hiányzó fogszám UTÁN áll', () => {
       const plan = makePlan([[sor({ nevSnapshot: 'Gyökértömés', fogak: '', mennyiseg: 36 })]]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const ids = diag.tetelek.map((x) => x.id);
       expect(ids.indexOf('magas-mennyiseg')).toBe(ids.indexOf('hianyzo-fogszam') + 1);
@@ -408,7 +411,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([
       [sor({ nevSnapshot: 'Ingyenes kontroll', listaEgysegar: 0, tenylegesEgysegar: 0 })],
     ]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     const t = tetel(diag, 'nulla-osszegu-sor');
     expect(t?.sulyossag).toBe('soft');
@@ -418,17 +421,17 @@ describe('veglegesitesDiagnozis', () => {
   it('hiányzó csomag-leírás a "hianyzo-leiras" soft tételt adja, ha a leírások mutatása be van kapcsolva', () => {
     const plan = makePlan([[sor({ tetelId: 't-csomag', nevSnapshot: 'All-on-4 csomag' })]]);
 
-    const bekapcsolva = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const bekapcsolva = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     expect(tetel(bekapcsolva, 'hianyzo-leiras')?.sulyossag).toBe('soft');
 
     // Kikapcsolt leirasokMutatasa mellett a hiány nem érinti a nyomtatványt.
-    const kikapcsolva = veglegesitesDiagnozis(plan, priceList, false, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const kikapcsolva = veglegesitesDiagnozis(plan, priceList, false, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     expect(tetel(kikapcsolva, 'hianyzo-leiras')).toBeUndefined();
   });
 
   it('backlog-61: elavult árlistai pillanatkép az "ar-elteres" soft tételt adja', () => {
     const plan = makePlan([[sor({ listaEgysegar: 9000, tenylegesEgysegar: 9000 })]]); // priceList t1 mai ára 10000
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     const t = tetel(diag, 'ar-elteres');
     expect(t?.szamlalo).toBe(1);
@@ -437,7 +440,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('backlog-61: kézzel felülírt ajánlati ár is az "ar-elteres" soft tételt adja', () => {
     const plan = makePlan([[sor({ tenylegesEgysegar: 8000 })]]); // listaEgysegar követi, de az ajánlati ár eltér
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     const t = tetel(diag, 'ar-elteres');
     expect(t?.szamlalo).toBe(1);
@@ -448,7 +451,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([
       [sor({ tenylegesEgysegar: 14000, savHatar: { min: 10000, max: 15000 } })],
     ]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     expect(tetel(diag, 'ar-elteres')).toBeUndefined();
   });
 
@@ -456,7 +459,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([
       [sor({ tenylegesEgysegar: 20000, savHatar: { min: 10000, max: 15000 } })],
     ]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     expect(tetel(diag, 'ar-elteres')?.reszletek).toEqual([
       { cim: 'Kézzel felülírt ajánlati ár', nevek: ['Fogeltávolítás'] },
     ]);
@@ -464,7 +467,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('inaktivált tételre hivatkozó sor az "inaktiv-tetel-hivatkozas" soft tételt adja, nem blokkol', () => {
     const plan = makePlan([[sor({ tetelId: 't-inaktiv', nevSnapshot: 'Kivont tétel' })]]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     const t = tetel(diag, 'inaktiv-tetel-hivatkozas');
     expect(t?.sulyossag).toBe('soft');
@@ -475,7 +478,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('aktív tételre hivatkozó sor nem ad "inaktiv-tetel-hivatkozas" tételt', () => {
     const plan = makePlan([[sor()]]); // t1 aktív
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     expect(tetel(diag, 'inaktiv-tetel-hivatkozas')).toBeUndefined();
   });
 
@@ -484,7 +487,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([
       [sor({ tetelId: 't-inaktiv', nevSnapshot: 'Kivont tétel', orokoltInaktivTetel: true })],
     ]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     expect(tetel(diag, 'inaktiv-tetel-hivatkozas')?.sulyossag).toBe('soft');
     const t = tetel(diag, 'inaktiv-tetel-orokolt');
@@ -496,7 +499,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('nem másoláskor inaktivált (marker nélküli) tételre hivatkozó sor NEM ad "inaktiv-tetel-orokolt" tételt', () => {
     const plan = makePlan([[sor({ tetelId: 't-inaktiv', nevSnapshot: 'Kivont tétel' })]]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     expect(tetel(diag, 'inaktiv-tetel-orokolt')).toBeUndefined();
   });
 
@@ -504,7 +507,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([
       [sor({ nevSnapshot: 'Kedvezményes', listaEgysegar: 10000, tenylegesEgysegar: 8000, orokoltKeziAr: true })],
     ]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     const t = tetel(diag, 'orokolt-kezi-ar');
     expect(t?.sulyossag).toBe('info');
@@ -515,7 +518,7 @@ describe('veglegesitesDiagnozis', () => {
 
   it('nem örökölt kézi árú sor NEM ad "orokolt-kezi-ar" tételt', () => {
     const plan = makePlan([[sor({ listaEgysegar: 10000, tenylegesEgysegar: 8000 })]]);
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     expect(tetel(diag, 'orokolt-kezi-ar')).toBeUndefined();
   });
 
@@ -523,7 +526,7 @@ describe('veglegesitesDiagnozis', () => {
     const plan = makePlan([[sor()]]);
     plan.fazisok[0].megjegyzes = 'Régi ütemezés';
     plan.fazisok[0].orokoltMegjegyzes = true;
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     const t = tetel(diag, 'orokolt-fazismegjegyzes');
     expect(t?.sulyossag).toBe('info');
@@ -538,7 +541,7 @@ describe('veglegesitesDiagnozis', () => {
   describe('nyelvi-review (65. tétel)', () => {
     it('kézzel átírt sornév, ami nem a terv nyelvén íródott, a "nyelvi-review" soft tételt adja', () => {
       const plan = makePlan([[sor({ nevNyelv: { authoredInLanguage: 'de' } })]]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'nyelvi-review');
       expect(t?.sulyossag).toBe('soft');
@@ -549,13 +552,13 @@ describe('veglegesitesDiagnozis', () => {
       const plan = makePlan([
         [sor({ nevNyelv: { authoredInLanguage: 'de', reviewedForLanguage: 'hu' } })],
       ]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'nyelvi-review')).toBeUndefined();
     });
 
     it('a "nemet-nev"-től FÜGGETLENÜL él -- egy magyar terven is jelez, ahol a nemet-nev sosem alkalmazható', () => {
       const plan = makePlan([[sor({ nevNyelv: { authoredInLanguage: 'de' } })]], { nyelv: 'hu' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       expect(tetel(diag, 'nemet-nev')).toBeUndefined();
       expect(tetel(diag, 'nyelvi-review')?.sulyossag).toBe('soft');
@@ -567,7 +570,7 @@ describe('veglegesitesDiagnozis', () => {
       [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', listaEgysegar: 0, tenylegesEgysegar: 0 })]],
       { penznem: 'EUR' },
     );
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     const t = tetel(diag, 'araztalan-sor');
     expect(t?.sulyossag).toBe('hard');
@@ -580,7 +583,7 @@ describe('veglegesitesDiagnozis', () => {
       [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', listaEgysegar: 0, tenylegesEgysegar: 12000 })]],
       { penznem: 'EUR' },
     );
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     expect(tetel(diag, 'araztalan-sor')).toBeUndefined();
   });
 
@@ -592,7 +595,7 @@ describe('veglegesitesDiagnozis', () => {
       ],
       { paciens: paciens({ nev: '' }) }, // kemény: nev-hianyzik
     );
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
     expect(tetel(diag, 'nev-hianyzik')).toBeDefined();
     expect(tetel(diag, 'kitoltetlen-sor')).toBeDefined();
@@ -612,6 +615,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { ...NO_SABLON, sablonFallback: true },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       expect(tetel(diag, 'sablon-fallback')?.sulyossag).toBe('soft');
     });
@@ -629,6 +633,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { ...NO_SABLON, sablonFallback: true },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       expect(tetel(diag, 'sablon-fallback')?.route).toBe('/beallitasok?tab=nyomtatvanyok&nyelv=de');
     });
@@ -643,6 +648,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { ...NO_SABLON, nyilatkozatPlaceholder: true },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       expect(tetel(diag, 'nyilatkozat-placeholder')?.sulyossag).toBe('info');
       expect(vanKemenyBlokk(diag)).toBe(false);
@@ -658,6 +664,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { ...NO_SABLON, nyilatkozatPlaceholder: true },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       expect(tetel(diag, 'nyilatkozat-placeholder')?.route).toBe('/beallitasok?tab=nyomtatvanyok&nyelv=hu');
     });
@@ -672,6 +679,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { ...NO_SABLON, nyilatkozatPlaceholder: true },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       expect(tetel(diag, 'nyilatkozat-placeholder')?.route).toBe('/beallitasok?tab=nyomtatvanyok&nyelv=de');
     });
@@ -690,6 +698,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { ...NO_SABLON, kihagyottSzekciok: ['Garancia'] },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       const t = tetel(diag, 'sablon-kihagyott-szekcio');
       expect(t?.sulyossag).toBe('soft');
@@ -714,6 +723,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { ...NO_SABLON, kihagyottSzekciok: ['Fizetési feltételek', 'Garancia'] },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       expect(tetel(diag, 'sablon-kihagyott-szekcio')?.cim).toBe(
         'A Fizetési feltételek és a Garancia szövege nincs kitöltve — a címükkel együtt ' +
@@ -730,6 +740,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { ...NO_SABLON, sablonFallback: true },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       expect(tetel(diag, 'sablon-fallback')?.cim).toBe(
         'A nyomtatvány szövegei nincsenek kitöltve a terv nyelvén — helyettük a magyar szöveg ' +
@@ -746,6 +757,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { ...NO_SABLON, nyilatkozatPlaceholder: true },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       expect(tetel(diag, 'nyilatkozat-placeholder')?.cim).toBe(
         'A Nyilatkozat szövege nincs kitöltve ezen a nyelven — aláírás-oldal nélkül, „Csak ' +
@@ -754,7 +766,7 @@ describe('veglegesitesDiagnozis', () => {
     });
 
     it('kihagyottSzekciok üres esetén nem ad tételt', () => {
-      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'sablon-kihagyott-szekcio')).toBeUndefined();
     });
 
@@ -772,6 +784,7 @@ describe('veglegesitesDiagnozis', () => {
         AKTIV_ORVOSOK,
         { sablonFallback: true, nyilatkozatPlaceholder: false, kihagyottSzekciok: ['Garancia'] },
         NO_NEV_UTKOZES,
+        NINCS_FOGLALAS,
       );
       const puhaIdk = diag.tetelek.filter((t) => t.sulyossag === 'soft').map((t) => t.id);
       expect(puhaIdk).toEqual(['sablon-kihagyott-szekcio', 'sablon-fallback', 'hianyzo-paciensadat']);
@@ -782,14 +795,14 @@ describe('veglegesitesDiagnozis', () => {
   // `masterSnapshotDiff` doc-kommentjét.
   describe('torzsadat-elteres (backlog-40)', () => {
     it('master nélkül nem ad tételt', () => {
-      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, null, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, null, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'torzsadat-elteres')).toBeUndefined();
     });
 
     it('eltérő masternél info tételt ad, nem blokkol', () => {
       const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '+36 20 123 4567' }) });
       const master = paciens({ telefon: '+36 70 999 8888' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'torzsadat-elteres');
       expect(t?.sulyossag).toBe('info');
@@ -800,7 +813,7 @@ describe('veglegesitesDiagnozis', () => {
     it('a csak az adatlapon üres mező (pótlás) NEM ad tételt', () => {
       const plan = makePlan([[sor()]], { paciens: paciens({ telefon: '+36 20 123 4567' }) });
       const master = paciens({ telefon: '' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       expect(tetel(diag, 'torzsadat-elteres')).toBeUndefined();
     });
@@ -810,7 +823,7 @@ describe('veglegesitesDiagnozis', () => {
         paciens: paciens({ telefon: '+36 20 123 4567', email: 'uj@example.hu' }),
       });
       const master = paciens({ telefon: '+36 70 999 8888', email: '' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, master, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
       const t = tetel(diag, 'torzsadat-elteres');
       expect(t?.szamlalo).toBe(1);
@@ -827,13 +840,13 @@ describe('veglegesitesDiagnozis', () => {
     }
 
     it('nincs feloldható kötés (null) esetén nem ad tételt', () => {
-      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, null);
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, null, NINCS_FOGLALAS);
       expect(tetel(diag, 'nev-utkozes')).toBeUndefined();
     });
 
     it('kötött, de ütközés nélküli páciensnél nem ad tételt', () => {
       const kotes: PaciensKotes = { patientDir: 'Teszt-Elek_x', kotott: folder('Teszt Elek'), utkozok: [] };
-      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, kotes);
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, kotes, NINCS_FOGLALAS);
       expect(tetel(diag, 'nev-utkozes')).toBeUndefined();
     });
 
@@ -843,7 +856,7 @@ describe('veglegesitesDiagnozis', () => {
         kotott: folder('Kovács János'),
         utkozok: [folder('Nagy Éva')],
       };
-      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, kotes);
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, kotes, NINCS_FOGLALAS);
       const t = tetel(diag, 'nev-utkozes');
       expect(t?.sulyossag).toBe('hard');
       expect(t?.szamlalo).toBe(1);
@@ -858,19 +871,19 @@ describe('veglegesitesDiagnozis', () => {
   describe('orvos', () => {
     it('üres orvos esetén hard tételt ad, "hianyzik" szöveggel', () => {
       const plan = makePlan([[sor()]], { orvos: '' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'orvos')?.cim).toContain('nincs kezelőorvos');
     });
 
     it('nem aktív orvosnál hard tételt ad', () => {
       const plan = makePlan([[sor()]], { orvos: 'Dr. Törölt' });
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'orvos')?.cim).toContain('Dr. Törölt');
     });
 
     it('aktív orvosnál nem ad tételt', () => {
       const plan = makePlan([[sor()]]);
-      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+      const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'orvos')).toBeUndefined();
     });
   });
@@ -882,7 +895,7 @@ describe('veglegesitesDiagnozis', () => {
       paciens: paciens({ nev: '' }),
       orvos: '',
     });
-    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES);
+    const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
     const hardIdk = diag.tetelek.filter((t) => t.sulyossag === 'hard').map((t) => t.id);
     expect(hardIdk).toEqual(['nev-hianyzik', 'orvos', 'kitoltetlen-sor', 'ures-fazis']);
   });
@@ -894,7 +907,7 @@ describe('veglegesitesDiagnozis', () => {
 describe('eloleg-tullep', () => {
   function tetelEloleg(plan: Plan) {
     return tetel(
-      veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES),
+      veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS),
       'eloleg-tullep',
     );
   }
@@ -920,5 +933,51 @@ describe('eloleg-tullep', () => {
     // képest, nem a nyers sorösszeghez képest lépi túl a határt.
     const plan = makePlan([[sor()]], { elolegOsszeg: 5000, kedvezmenyOsszeg: 6000 });
     expect(tetelEloleg(plan)?.sulyossag).toBe('hard');
+  });
+});
+
+describe('elavult-alapverzio', () => {
+  function diagnozis(plan: Plan, foglaltVerzio: number | null) {
+    return veglegesitesDiagnozis(
+      plan,
+      priceList,
+      true,
+      NO_MASTER,
+      AKTIV_ORVOSOK,
+      NO_SABLON,
+      NO_NEV_UTKOZES,
+      foglaltVerzio,
+    );
+  }
+
+  it('v2-ből indult piszkozat v4-es foglalásnál puha tételt ad a forrás-, a legfrissebb és a mentési sorszámmal', () => {
+    const diag = diagnozis(makePlan([[sor()]], { tervId: 'lanc01', verzio: 2 }), 4);
+    const elavult = tetel(diag, 'elavult-alapverzio');
+    expect(elavult?.sulyossag).toBe('soft');
+    expect(elavult?.cim).toBe(
+      'Ez a terv a v2 verzióból indult, de a láncban azóta v3 is elkészült. ' +
+        'Véglegesítéskor v4-ként mentődik, a v3 változásai nincsenek benne.',
+    );
+  });
+
+  it('a közvetlen folytatásnál (v2-ből v3) nincs tétel', () => {
+    const diag = diagnozis(makePlan([[sor()]], { tervId: 'lanc01', verzio: 2 }), 3);
+    expect(tetel(diag, 'elavult-alapverzio')).toBeUndefined();
+  });
+
+  it('új lánc (üres tervId) és másolat (verzio 0) mellett nincs tétel', () => {
+    expect(tetel(diagnozis(makePlan([[sor()]], { tervId: '', verzio: 0 }), 1), 'elavult-alapverzio')).toBeUndefined();
+    expect(tetel(diagnozis(makePlan([[sor()]], { tervId: 'lanc01', verzio: 0 }), 4), 'elavult-alapverzio')).toBeUndefined();
+  });
+
+  it('feloldatlan foglalásnál nincs tétel', () => {
+    const diag = diagnozis(makePlan([[sor()]], { tervId: 'lanc01', verzio: 2 }), null);
+    expect(tetel(diag, 'elavult-alapverzio')).toBeUndefined();
+  });
+
+  it('a tétel nem tiltja a véglegesítést', () => {
+    const diag = diagnozis(makePlan([[sor()]], { tervId: 'lanc01', verzio: 2 }), 4);
+    expect(tetel(diag, 'elavult-alapverzio')).toBeDefined();
+    expect(vanKemenyBlokk(diag)).toBe(false);
   });
 });

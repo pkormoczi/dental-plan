@@ -146,6 +146,7 @@ export function veglegesitesDiagnozis(
   aktivOrvosNevek: string[],
   sablon: { sablonFallback: boolean; nyilatkozatPlaceholder: boolean; kihagyottSzekciok: string[] },
   nevUtkozes: PaciensKotes | null,
+  foglaltVerzio: number | null,
 ): VeglegesitesCsekklista {
   const tetelek: CsekklistaTetel[] = [];
 
@@ -326,6 +327,21 @@ export function veglegesitesDiagnozis(
         'A nyomtatvány szövegei nincsenek kitöltve a terv nyelvén — helyettük a magyar szöveg ' +
         'kerül a nyomtatványra. Pótlás: Beállítások → Nyomtatvány szövegei.',
       route: nyomtatvanyokRoute(plan.nyelv),
+    });
+  }
+
+  // A betöltött terv.json `verzio`-ja a piszkozat forrásverziója (másolatnál és
+  // új tervnél 0). Ha a lefoglalt sorszám nem a közvetlen folytatás, a láncban
+  // azóta újabb verzió készült -- két gépen ez a jellemző eset. Puha: a doki
+  // tudatosan dönthet úgy, hogy a régebbi alapból ad ki új verziót.
+  if (plan.tervId && plan.verzio > 0 && foglaltVerzio !== null && foglaltVerzio > plan.verzio + 1) {
+    const legfrissebb = foglaltVerzio - 1;
+    tetelek.push({
+      id: 'elavult-alapverzio',
+      sulyossag: 'soft',
+      cim:
+        `Ez a terv a v${plan.verzio} verzióból indult, de a láncban azóta v${legfrissebb} is elkészült. ` +
+        `Véglegesítéskor v${foglaltVerzio}-ként mentődik, a v${legfrissebb} változásai nincsenek benne.`,
     });
   }
 
