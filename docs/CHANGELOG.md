@@ -2,6 +2,13 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. november 16.
+
+- A DEMO oldal Adatkezelés fülén az „Adatok exportálása az asztali alkalmazáshoz” gomb egyetlen
+  fájlba menti az árlistát, a beállításokat és a nyomtatvány-szövegeket. Ezt a fájlt a készülő,
+  telepíthető program be tudja majd olvasni, így a demóban elvégzett munka nem vész el. Páciensek
+  és tervek nem kerülnek bele.
+
 ## 2026. október 4.
 
 - Az „Érintett fogak” ábra mostantól csak akkor kerül a nyomtatott ajánlatra, ha a doki a

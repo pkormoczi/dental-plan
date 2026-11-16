@@ -6,17 +6,20 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AlertDialog, Box, Button, Callout, Card, Flex, Text } from '@radix-ui/themes';
+import { todayIso } from '../../domain/date';
 import { t } from '../../design/tokens';
 import { useAppState } from '../../state/AppState';
+import { adatExportFajlnev, adatExportOsszeallitasa } from '../../storage/adatExport';
 import { useStorage } from '../../storage/StorageContext';
 
 type PendingAction = 'reset' | 'clearAll' | null;
 
 export default function AdatkezelesSection() {
-  const { resetDemoData, clearAll } = useStorage();
+  const { storage, resetDemoData, clearAll } = useStorage();
   const { reloadFromStorage } = useAppState();
   const [justReset, setJustReset] = useState(false);
   const [justCleared, setJustCleared] = useState(false);
+  const [justExported, setJustExported] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
 
@@ -26,10 +29,12 @@ export default function AdatkezelesSection() {
   // state-et.
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exportTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => () => {
       if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
       if (clearTimeoutRef.current) clearTimeout(clearTimeoutRef.current);
+      if (exportTimeoutRef.current) clearTimeout(exportTimeoutRef.current);
     },
     [],
   );
@@ -62,6 +67,28 @@ export default function AdatkezelesSection() {
       clearTimeoutRef.current = setTimeout(() => setJustCleared(false), 2500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'A törlés váratlanul meghiúsult.');
+    }
+  }
+
+  async function performExport() {
+    setError(null);
+    try {
+      const adat = await adatExportOsszeallitasa(storage, new Date());
+      const blob = new Blob([JSON.stringify(adat, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = adatExportFajlnev(todayIso());
+      a.click();
+      URL.revokeObjectURL(url);
+      setJustExported(true);
+      exportTimeoutRef.current = setTimeout(() => setJustExported(false), 2500);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Az exportálás nem sikerült: ${err.message}`
+          : 'Az exportálás váratlanul meghiúsult.',
+      );
     }
   }
 
@@ -125,6 +152,20 @@ export default function AdatkezelesSection() {
         </Text>
         <Button color="red" variant="soft" onClick={() => setPendingAction('clearAll')}>
           {justCleared ? 'Törölve ✓' : 'Minden adat törlése'}
+        </Button>
+      </Card>
+
+      <Card size="2" mb="4">
+        <Text as="p" size="2" weight="bold" mb="2">
+          Átvitel az asztali alkalmazásba
+        </Text>
+        <Text as="p" size="2" color="gray" mt="0">
+          Az árlista, a beállítások és a nyomtatvány-szövegek egyetlen fájlba menthetők, amit a
+          telepíthető asztali alkalmazás be tud majd olvasni. Páciensek és tervek nem kerülnek bele,
+          ahogy a Nyomtatványok fülön még nem mentett szöveg sem.
+        </Text>
+        <Button variant="soft" color="gray" onClick={() => void performExport()}>
+          {justExported ? 'Exportálva ✓' : 'Adatok exportálása az asztali alkalmazáshoz'}
         </Button>
       </Card>
 

@@ -8,7 +8,7 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import AdatkezelesSection from './AdatkezelesSection';
 import { TestProviders } from '../../testUtils';
 
@@ -81,5 +81,46 @@ describe('AdatkezelesSection', () => {
 
     expect(arlistaVerzio()).toBe('modositva-teszt');
     expect(screen.queryByRole('button', { name: 'Visszaállítva ✓' })).not.toBeInTheDocument();
+  });
+
+  it('az export gomb egy JSON-fájlt tölt le az árlistával, a beállításokkal és a sablonokkal, páciensadat nélkül', async () => {
+    let letoltott: Blob | null = null;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((obj) => {
+      letoltott = obj as Blob;
+      return 'blob:export';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    let fajlnev: string | null = null;
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      fajlnev = this.download;
+    });
+    const user = userEvent.setup();
+    renderSection();
+    await waitFor(() => expect(localStorage.getItem('dp:arlista.json')).not.toBeNull());
+
+    await user.click(screen.getByRole('button', { name: 'Adatok exportálása az asztali alkalmazáshoz' }));
+
+    expect(await screen.findByRole('button', { name: 'Exportálva ✓' })).toBeInTheDocument();
+    expect(fajlnev).toMatch(/^kezelesi-terv-export-\d{4}-\d{2}-\d{2}\.json$/);
+    const adat = JSON.parse(await letoltott!.text());
+    expect(adat.formatum).toBe('dental-plan-export');
+    expect(adat.arlista).toEqual(JSON.parse(localStorage.getItem('dp:arlista.json')!));
+    expect(adat.beallitasok).toEqual(JSON.parse(localStorage.getItem('dp:beallitasok.json')!));
+    expect(Object.keys(adat.sablonok)).toContain('nyilatkozat-hu-v1.md');
+    expect(Object.keys(adat)).not.toContain('paciensek');
+    expect(JSON.stringify(adat)).not.toContain('"paciens"');
+  });
+
+  it('sérült árlistánál nem tölt le semmit, és kiírja az exportálás hibáját', async () => {
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:export');
+    const user = userEvent.setup();
+    renderSection();
+    await waitFor(() => expect(localStorage.getItem('dp:arlista.json')).not.toBeNull());
+    localStorage.setItem('dp:arlista.json', 'nem-json');
+
+    await user.click(screen.getByRole('button', { name: 'Adatok exportálása az asztali alkalmazáshoz' }));
+
+    expect(await screen.findByText(/Az exportálás nem sikerült/)).toBeInTheDocument();
+    expect(createObjectURL).not.toHaveBeenCalled();
   });
 });
