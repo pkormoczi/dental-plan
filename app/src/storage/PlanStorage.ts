@@ -1,5 +1,5 @@
 // Ez a réteg választja el a mockupot (DemoStorage, localStorage)
-// a végleges alkalmazástól (FileSystemStorage, showDirectoryPicker()) --
+// a végleges alkalmazástól (FileSystemStorage az Electron main processben) --
 // lásd PRODUCT.md § Két fázis. Ezen a felületen kívül semmi nem
 // tudhat arról, hogy éppen melyik implementáció fut.
 
@@ -22,6 +22,8 @@ export interface PlanStorage {
   listPlans(patientDir: string): Promise<PlanFolder[]>;
   listVersions(patientDir: string, planDir: string): Promise<PlanVersion[]>;
   loadPlan(ref: PlanRef): Promise<Plan>;
+  /** `null`, ha a verziónak nincs mentett PDF-je -- hogy ez hiba-e, a hívó dönti el. */
+  loadPlanPdf(ref: PlanRef): Promise<Uint8Array | null>;
   /**
    * Mindig új verziómappát hoz létre -- soha nem ír felül meglévőt.
    * `ujLancCim` a doki által a véglegesítés előtt megadott egyéni terv-cím --
@@ -65,6 +67,13 @@ export interface PlanStorage {
   /** Lásd a `savePriceList` doc-kommentjét -- ugyanaz a sorosítási szerződés. */
   saveSettings(s: Settings): Promise<void>;
   loadTemplate(name: string): Promise<string>;
+  /** Fájlnevek (`<base>-v<n>.md`), nem base-ek -- a fájlszintű export erre épül. */
+  listTemplates(): Promise<string[]>;
+  /**
+   * A base legmagasabb `-vN.md` fájlja a nevével együtt -- a nevet a hívó a
+   * betöltés forrásaként mutatja. Dob, ha a base-hez nincs fájl.
+   */
+  loadLatestTemplateByBase(base: string): Promise<{ name: string; body: string }>;
   /**
    * Felülírja a base jelenleg legfrissebb -vN.md fájlját (ha még nincs egy
    * sem, -v1.md-t hoz létre), és ennek a fájlnevét adja vissza -- a fájlnév

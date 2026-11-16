@@ -87,7 +87,7 @@ export default function TervReszleteiPage() {
   const planDir = rawPlanDir ?? '';
   const versionDir = rawVersionDir ?? '';
 
-  const { storage, loadPlanPdf, isSeedVersion } = useStorage();
+  const { storage, isSeedVersion } = useStorage();
   const { priceList } = useAppState();
   const navigate = useNavigate();
   const location = useLocation();
@@ -237,7 +237,7 @@ export default function TervReszleteiPage() {
 
   async function megnyitasKulon() {
     akciok.jelezHiba(null);
-    const eredmeny = await openPlanPdfInNewTab({ patientDir, planDir, versionDir }, loadPlanPdf);
+    const eredmeny = await openPlanPdfInNewTab({ patientDir, planDir, versionDir }, (r) => storage.loadPlanPdf(r));
     if (eredmeny.fajta === 'nincs-pdf') {
       akciok.jelezHiba(
         nincsMentettPdfHiba({ planDir, versionDir }, isSeedVersion({ patientDir, planDir, versionDir })),

@@ -680,6 +680,14 @@ export class DemoStorage implements PlanStorage {
     return raw;
   }
 
+  async listTemplates(): Promise<string[]> {
+    const names: string[] = [];
+    this.eachKey((key) => {
+      if (key.startsWith(TEMPLATES_PREFIX)) names.push(key.slice(TEMPLATES_PREFIX.length));
+    });
+    return names.sort();
+  }
+
   /**
    * `name`: alap név kiterjesztés nélkül, pl. "nyilatkozat-hu". Felülírja a
    * base jelenleg legfrissebb -vN.md fájlját (ha még nincs egy sem, -v1.md-t

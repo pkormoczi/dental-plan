@@ -17,7 +17,7 @@ export interface PlanPdfObjectUrlState {
 }
 
 export function usePlanPdfObjectUrl(ref: PlanRef | null): PlanPdfObjectUrlState {
-  const { loadPlanPdf } = useStorage();
+  const { storage } = useStorage();
   const [url, setUrl] = useState<string | null>(null);
   const [toltes, setToltes] = useState(false);
   const [hianyzik, setHianyzik] = useState(false);
@@ -42,7 +42,7 @@ export function usePlanPdfObjectUrl(ref: PlanRef | null): PlanPdfObjectUrlState 
 
     (async () => {
       try {
-        const bytes = await loadPlanPdf({ patientDir, planDir, versionDir });
+        const bytes = await storage.loadPlanPdf({ patientDir, planDir, versionDir });
         if (cancelled) return;
         if (!bytes) {
           setHianyzik(true);
@@ -63,7 +63,7 @@ export function usePlanPdfObjectUrl(ref: PlanRef | null): PlanPdfObjectUrlState 
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [loadPlanPdf, patientDir, planDir, versionDir]);
+  }, [storage, patientDir, planDir, versionDir]);
 
   return { url, toltes, hianyzik, hiba };
 }

@@ -168,7 +168,7 @@ export default function PatientPlanChains({
   nyitottLancok,
   onLancValtas,
 }: PatientPlanChainsProps) {
-  const { storage, loadPlanPdf, isSeedVersion } = useStorage();
+  const { storage, isSeedVersion } = useStorage();
   const { priceList } = useAppState();
   const navigate = useNavigate();
   const akciok = usePlanVersionActions({ patientDir: patient.dirName });
@@ -248,7 +248,7 @@ export default function PatientPlanChains({
     akciok.jelezHiba(null);
     setLetoltott(null);
     try {
-      const bytes = await loadPlanPdf({
+      const bytes = await storage.loadPlanPdf({
         patientDir: patient.dirName,
         planDir: ref.planDir,
         versionDir: ref.versionDir,

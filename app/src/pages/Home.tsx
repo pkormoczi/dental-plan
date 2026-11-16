@@ -35,7 +35,7 @@ import { useStorage } from '../storage/StorageContext';
 import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
 
 export default function Home() {
-  const { storage, loadPlanPdf, isSeedVersion } = useStorage();
+  const { storage, isSeedVersion } = useStorage();
   const {
     plan,
     vanMentetlenPiszkozat,
@@ -219,7 +219,7 @@ export default function Home() {
           patient={imentiRef.patient}
           planRef={imentiRef.ref}
           tervId={imentiRef.tervId}
-          loadPlanPdf={loadPlanPdf}
+          loadPlanPdf={(ref) => storage.loadPlanPdf(ref)}
           demoEredetu={isSeedVersion(imentiRef.ref)}
         />
       )}

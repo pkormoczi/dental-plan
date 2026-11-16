@@ -63,7 +63,7 @@ export default function PreviewPage() {
     piszkozatFoglaltTervId,
     jelezFoglaltTervId,
   } = useAppState();
-  const { storage, loadLatestTemplateByBase, loadPlanPdf, isSeedVersion } = useStorage();
+  const { storage, isSeedVersion } = useStorage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -223,7 +223,7 @@ export default function PreviewPage() {
 
   async function megnyitasKulon(ref: PlanRef) {
     setMentettPdfHiba(null);
-    const eredmeny = await openPlanPdfInNewTab(ref, loadPlanPdf);
+    const eredmeny = await openPlanPdfInNewTab(ref, (r) => storage.loadPlanPdf(r));
     if (eredmeny.fajta === 'nincs-pdf') {
       setMentettPdfHiba(nincsMentettPdfHiba(ref, isSeedVersion(ref)).message);
       return;
@@ -287,19 +287,19 @@ export default function PreviewPage() {
       try {
         const [nyil, fiz, gar] = await Promise.all([
           loadOrFallback(
-            () => loadLatestTemplateByBase(`nyilatkozat-${plan.nyelv}`),
-            () => loadLatestTemplateByBase('nyilatkozat-hu'),
+            () => storage.loadLatestTemplateByBase(`nyilatkozat-${plan.nyelv}`),
+            () => storage.loadLatestTemplateByBase('nyilatkozat-hu'),
           ),
           loadOrFallback(
-            () => loadLatestTemplateByBase(`fizetesi-feltetelek-${plan.nyelv}`),
-            () => loadLatestTemplateByBase('fizetesi-feltetelek-hu'),
+            () => storage.loadLatestTemplateByBase(`fizetesi-feltetelek-${plan.nyelv}`),
+            () => storage.loadLatestTemplateByBase('fizetesi-feltetelek-hu'),
             // Magyar tervnél a fallback maga a magyar szöveg lenne --
             // önmagára visszaesni félrevezető "sablonFallback" jelzést adna.
             plan.nyelv !== 'hu' ? (result) => isPlaceholderTemplate(result.body) : undefined,
           ),
           loadOrFallback(
-            () => loadLatestTemplateByBase(`garancia-${plan.nyelv}`),
-            () => loadLatestTemplateByBase('garancia-hu'),
+            () => storage.loadLatestTemplateByBase(`garancia-${plan.nyelv}`),
+            () => storage.loadLatestTemplateByBase('garancia-hu'),
             // Ugyanaz a minta, mint a fizetési feltételeknél -- a garancia
             // sosem kap kemény zárat, csak HU-visszaesést (a zár egyedül a
             // nyilatkozaté, PRODUCT.md § A nyomtatvány szerződéses dokumentum).
@@ -324,7 +324,7 @@ export default function PreviewPage() {
     return () => {
       cancelled = true;
     };
-  }, [plan.nyelv, loadLatestTemplateByBase]);
+  }, [plan.nyelv, storage]);
 
   useEffect(() => {
     let cancelled = false;

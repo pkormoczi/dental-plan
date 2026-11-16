@@ -268,6 +268,31 @@ describe('DemoStorage', () => {
     expect(loadedBytes).toEqual(bytes);
   });
 
+  it('listTemplates returns every stored template file name in order, without duplicates after a save', async () => {
+    const seeded = await storage.listTemplates();
+    expect(seeded).toEqual([
+      'fizetesi-feltetelek-de-v1.md',
+      'fizetesi-feltetelek-hu-v1.md',
+      'garancia-de-v1.md',
+      'garancia-hu-v1.md',
+      'nyilatkozat-de-v1.md',
+      'nyilatkozat-hu-v1.md',
+    ]);
+
+    await storage.saveTemplate('nyilatkozat-hu', 'átírt szöveg');
+    localStorage.setItem('dp:sablonok/garancia-hu-v2.md', 'v2 szöveg');
+
+    expect(await storage.listTemplates()).toEqual([
+      'fizetesi-feltetelek-de-v1.md',
+      'fizetesi-feltetelek-hu-v1.md',
+      'garancia-de-v1.md',
+      'garancia-hu-v1.md',
+      'garancia-hu-v2.md',
+      'nyilatkozat-de-v1.md',
+      'nyilatkozat-hu-v1.md',
+    ]);
+  });
+
   it('saveTemplate overwrites the current latest file, never creates a new version', async () => {
     const v1Name = await storage.saveTemplate('nyilatkozat-hu', 'v1 szöveg');
     expect(v1Name).toBe('nyilatkozat-hu-v1.md'); // a seed már ír egy v1-et resetDemoData-ban

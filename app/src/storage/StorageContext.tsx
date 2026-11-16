@@ -2,8 +2,8 @@
 // fázisban a DemoStorage -> FileSystemStorage csere egyetlen sort érintsen
 // itt, semmit a képernyőkön (lásd PRODUCT.md § Két fázis).
 //
-// A `resetDemoData`/`clearAll`/`loadPlanPdf`/`listFileTree`/`readRawFile`/
-// `isSeedVersion` NEM a PlanStorage interface része -- ezek csak a mockup
+// A `resetDemoData`/`clearAll`/`listFileTree`/`readRawFile`/`isSeedVersion`
+// NEM a PlanStorage interface része -- ezek csak a mockup
 // kényelmi funkciói (a Filerendszer nézet demó-only vizualizációja is
 // közéjük tartozik), ezért külön mezőként vannak kitéve, nem az
 // interfészen keresztül. A FileSystemStorage-váltáskor ezek a mezők
@@ -31,8 +31,6 @@ export interface StorageContextValue {
   /** P1-9: valódi kiút, ha a doki véletlenül valódi páciensadatot vitt be -- a
    *  "Demó adat visszaállítása" csak újraseedel, ez ténylegesen kiürít. */
   clearAll: () => void;
-  loadPlanPdf: (ref: PlanRef) => Promise<Uint8Array | null>;
-  loadLatestTemplateByBase: (base: string) => Promise<{ name: string; body: string }>;
   /** Filerendszer nézet: a `dp:` kulcsokból épített fa (`storage/demoFileTree.ts`). Szinkron. */
   listFileTree: () => DemoNode[];
   /** Filerendszer nézet: egy fa-csomópont nyers tartalma (`null`, ha ismeretlen/nem `dp:` kulcs). */
@@ -59,8 +57,6 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       ready,
       resetDemoData: () => demo.resetDemoData(),
       clearAll: () => demo.clearAll(),
-      loadPlanPdf: (ref) => demo.loadPlanPdf(ref),
-      loadLatestTemplateByBase: (base) => demo.loadLatestTemplateByBase(base),
       listFileTree: () => demo.listFileTree(),
       readRawFile: (storageKey) => demo.readRawFile(storageKey),
       isSeedVersion: (ref) => demo.isSeedVersion(ref),

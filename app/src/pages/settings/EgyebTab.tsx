@@ -9,7 +9,7 @@
 // mindig választható, nincs hozzá engedélyező kapcsoló) -- a `nyilatkozat-de`
 // sablont emiatt ez a komponens tölti be saját maga, FÜGGETLENÜL a
 // `NyomtatvanyokTab`-tól (nincs megosztott state a két tab között, mindkettő
-// a `useStorage()` `loadLatestTemplateByBase`-jét hívja).
+// a `PlanStorage` `loadLatestTemplateByBase`-ét hívja).
 
 import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -52,7 +52,7 @@ function toDraft(
 
 export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const { settings, saveSettings, priceList } = useAppState();
-  const { loadLatestTemplateByBase } = useStorage();
+  const { storage } = useStorage();
   const { draft, setDraft, dirty, reset } = useDirtyDraft<EgyebDraft>(
     toDraft(settings.ervenyessegNap, settings.alapertelmezettNyelv, alapertelmezettPenznem(settings)),
   );
@@ -75,7 +75,7 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
     let cancelled = false;
     (async () => {
       try {
-        const { name, body } = await loadLatestTemplateByBase('nyilatkozat-de');
+        const { name, body } = await storage.loadLatestTemplateByBase('nyilatkozat-de');
         if (cancelled) return;
         setDeNyilatkozatName(name);
         setDeNyilatkozatKesz(!isPlaceholderTemplate(stripMarkdownHeading(body)));
@@ -87,7 +87,7 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
     return () => {
       cancelled = true;
     };
-  }, [loadLatestTemplateByBase]);
+  }, [storage]);
 
   async function handleSave() {
     setSaveError(null);

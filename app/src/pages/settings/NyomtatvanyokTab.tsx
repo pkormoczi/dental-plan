@@ -101,7 +101,7 @@ export function clearAllTemplateDraftCache(): void {
 }
 
 export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
-  const { storage, loadLatestTemplateByBase } = useStorage();
+  const { storage } = useStorage();
   const [searchParams] = useSearchParams();
 
   // A tárolóból betöltött szöveg base-enként ("igazság") és a jelenleg
@@ -157,7 +157,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
         const draftCache = readTemplateDraftCache();
         const entries = await Promise.all(
           missing.map(async (base) => {
-            const { name, body } = await loadLatestTemplateByBase(base);
+            const { name, body } = await storage.loadLatestTemplateByBase(base);
             const text = stripMarkdownHeading(body);
             // Néma visszaállítás (4. döntés): ha van cache-elt piszkozat
             // ehhez a base-hez, az kerül a piszkozat-oldalra -- a saved
@@ -199,7 +199,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
     return () => {
       cancelled = true;
     };
-  }, [loadLatestTemplateByBase, setTemplateDrafts]);
+  }, [storage, setTemplateDrafts]);
 
   function updateTemplateDraft(key: TemplateSlotKey, value: string) {
     const base = templateBase(key, templateLang);
