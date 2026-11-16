@@ -58,6 +58,7 @@ Nincs.
 dialógus záráskori automatikus fókuszát letiltja, a Páciensek lap pedig nem ad meg fókuszcélt (az Új
 terv lap a most bevezetett `zarasFokuszCel`-lel a keresőt adja). Billentyűvel dolgozva a következő
 Tab a lap elejéről indul. A módosítás előtt is így volt.
+- Döntés: backlog paciensek-uj-paciens-zaras-fokusz (2026-11-16)
 
 ### 2. A szelet `popoverOpen` ellenőrzése a tételkeresőnél mindig hamis
 
