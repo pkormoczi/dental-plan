@@ -61,3 +61,4 @@ előállítani. A komment állítása hamis: a kódból olvasva a kereső mód i
 doki egy egyedi sor nevét kiüríti, és a sor újra megjelenik (lapváltás vagy újratöltés után), vagy
 kívülről érkező piszkozatnál — ezt az utat a menet nem próbálta ki. A szelet-leírás a fogtérképes
 példát használta, azt ez a tétel javította.
+- Döntés: backlog linerow-kereso-mod-komment (2026-11-16)
