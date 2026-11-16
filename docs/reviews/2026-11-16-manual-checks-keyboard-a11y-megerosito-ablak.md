@@ -68,7 +68,7 @@ Radix-elemként jelenik meg: a lista látható, miközben a `[data-radix-popper-
 lekérdezés üres. A ciklus „`popoverOpen === false`” várt eredménye így akkor is teljesül, ha a lista
 nyitva maradt — az ellenőrzés nem bizonyít semmit. A lista nyitottságát a látható opciókon kellene
 mérni.
-- Döntés: backlog manual-checks-keresolista-ellenorzes (2026-11-16)
+- Döntés: javítva manual-checks-keresolista-ellenorzes (2026-11-16)
 
 ### 3. A tételkereső nem jelzi a felolvasó szoftvernek a nyitott találati listát
 

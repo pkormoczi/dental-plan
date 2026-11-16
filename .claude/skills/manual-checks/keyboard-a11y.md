@@ -23,13 +23,19 @@ egyedi sorra lépne, és a kör egyedi sort venne fel a katalógus-tétel helyet
     // a ciklus két megállója a placeholderéről azonosítható: a fázis alatti
     // kereső "Tétel keresése…", a soron belüli Fog mező "pl. 16, 17, 26"
     hol: ph.includes('Tétel') ? 'kereső' : ph.includes('pl. 16') ? 'Fog' : ph,
-    popoverOpen: !!document.querySelector('[data-radix-popper-content-wrapper]'),
+    // A fázis alatti kereső találati listája HELYBEN jelenik meg, a mező utáni
+    // konténerben -- nem lebegő Radix-elem, a `[data-radix-popper-content-wrapper]`
+    // rá mindig üres. Ezért a lista nyitottságát a konténer látható szövege méri,
+    // minden fázis keresőjén (a Fog-megállón a fókusz nem a keresőn van).
+    listaNyitva: [...document.querySelectorAll('input[placeholder^="Tétel keresése"]')].some(
+      (k) => (k.closest('.rt-TextFieldRoot')?.nextElementSibling?.textContent.trim() ?? '') !== '',
+    ),
   };
 }
 ```
 
 Várt minden körben: az 1. ellenőrzésnél `hol === 'Fog'`, a 2.-nál `hol === 'kereső'`,
-`value === ''`, `popoverOpen === false`. Az `isSearch === true` NEM elvárás minden
+`value === ''`, `listaNyitva === false`. Az `isSearch === true` NEM elvárás minden
 körben — a Fog-megállón `hol === 'Fog'` a helyes.
 
 Az 1. ellenőrzés mellé: a felvett sor a katalógus-tétel, nem egyedi sor.
@@ -54,8 +60,8 @@ után rögtön `hol === 'kereső'` — itt nincs Fog-megálló, ez nem hiba.
 `xyz-nincs-ilyen`), ugyanazzal a ciklussal; a fenti sornév-snippet várt eredménye itt
 `nev === <a beírt név>`, `egyedi === true` — az egyedi sor is megáll a Fog mezőn.
 
-**Escape:** kereső megnyitva (van szöveg + popover), `press_key Escape`, utána
-`value === ''`, a popover zárva, a fókusz a keresőn marad.
+**Escape:** kereső megnyitva (van szöveg, `listaNyitva === true`), `press_key Escape`, utána
+`value === ''`, `listaNyitva === false`, a fókusz a keresőn marad.
 
 ## Fogtérkép — egy Tab-stop
 
@@ -153,8 +159,13 @@ sorrend szerinti elnyomás (a narancs eltakarja az inket) megszűnt.
 ## Popover-geometria
 
 A `Table.Root` `ScrollArea`-levágás elleni portál-mód igazolása — `ItemPicker.tsx`
-`floating="portal"`, akkor aktív, ha egy sor `keresoMod`-ban van (pl. a fogtérképről
-kattintással létrehozott, még azonosítatlan sornál). 1280×720-on is:
+`floating="portal"`, akkor aktív, ha egy sor `keresoMod`-ban van (név és tétel nélküli,
+azonosítatlan sornál). Csak ez a soron belüli kereső jelenít meg
+lebegő elemet; a fázis alatti kereső listája helyben van, arra ez a snippet nem alkalmazható.
+Előkészítés, ha a felületen nincs azonosítatlan sor: a demó piszkozat (`dp:piszkozat`) első
+fázisába egy `tetelId: ''`, `nevSnapshot: ''` sort szúrva, teljes újratöltés (`about:blank`, majd
+`#/terv`) után a sor kereső módban indul; a soron belüli keresőbe gépelve nyílik a popover.
+1280×720-on is:
 
 ```js
 () => {
