@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DemoStorage, PREFIX } from './DemoStorage';
+import { DemoStorage } from './DemoStorage';
+import { PREFIX } from './localKeys';
 import type { DemoNode } from './demoFileTree';
 import { VersionConflictError } from './paths';
 import { seedPatients } from './seed/plans';

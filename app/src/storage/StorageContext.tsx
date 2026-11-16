@@ -12,10 +12,12 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { DemoDraftStorage } from './DemoDraftStorage';
+import { DemoTemplateDraftCache } from './DemoTemplateDraftCache';
 import { DemoStorage } from './DemoStorage';
 import type { DemoNode } from './demoFileTree';
 import type { DraftStorage } from './DraftStorage';
 import type { PlanStorage } from './PlanStorage';
+import type { TemplateDraftCache } from './TemplateDraftCache';
 import type { PlanRef } from '../domain/types';
 
 export interface StorageContextValue {
@@ -40,9 +42,11 @@ export interface StorageContextValue {
   /**
    * Lásd app/src/storage/CLAUDE.md: a PlanStorage MELLETTI,
    * testvér-doboz -- nem annak metódusa, mert a végleges alkalmazásban is
-   * külön marad (IndexedDB a FileSystemStorage mellett, nem alatta).
+   * külön marad (a renderer localStorage-ában, a FileSystemStorage mellett).
    */
   drafts: DraftStorage;
+  /** A `drafts` testvére a Nyomtatványok fül sablonszövegeihez -- lásd `TemplateDraftCache.ts`. */
+  templateDraftCache: TemplateDraftCache;
 }
 
 const StorageContext = createContext<StorageContextValue | null>(null);
@@ -61,6 +65,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       readRawFile: (storageKey) => demo.readRawFile(storageKey),
       isSeedVersion: (ref) => demo.isSeedVersion(ref),
       drafts,
+      templateDraftCache: new DemoTemplateDraftCache(),
     };
   }, []);
 

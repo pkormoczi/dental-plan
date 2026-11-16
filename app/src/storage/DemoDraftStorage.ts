@@ -1,6 +1,6 @@
 // Mockup-implementáció a DraftStorage-hoz -- lásd DraftStorage.ts fejléce és
 // app/src/storage/CLAUDE.md. localStorage, a `dp:piszkozat` kulcson,
-// a DemoStorage.ts PREFIX konstansát újrahasznosítva, hogy a "Minden adat
+// a `localKeys.ts` PREFIX konstansát újrahasznosítva, hogy a "Minden adat
 // törlése"/"Demó adat visszaállítása" gomb prefix-seprése (DemoStorage.ts
 // `clearAll()`) a piszkozatot is elsöpörje, külön kód nélkül.
 //
@@ -15,7 +15,7 @@ import { assertPlanShape } from '../domain/validate';
 import type { Plan } from '../domain/types';
 import { DraftConflictError } from './DraftStorage';
 import type { DraftMeta, DraftRecord, DraftStorage, WorkflowRoute } from './DraftStorage';
-import { PREFIX } from './DemoStorage';
+import { PREFIX } from './localKeys';
 import { parseJson } from './json';
 
 const DRAFT_KEY = `${PREFIX}piszkozat`;

@@ -16,8 +16,9 @@ import { Box, Heading, Tabs } from '@radix-ui/themes';
 import DiscardChangesDialog, { useDiscardGuard } from '../components/DiscardChangesDialog';
 import { useNavGuard } from '../components/NavGuardContext';
 import { t } from '../design/tokens';
+import { useStorage } from '../storage/StorageContext';
 import RendeloTab from './settings/RendeloTab';
-import NyomtatvanyokTab, { clearAllTemplateDraftCache } from './settings/NyomtatvanyokTab';
+import NyomtatvanyokTab from './settings/NyomtatvanyokTab';
 import EgyebTab from './settings/EgyebTab';
 
 type SettingsTab = 'rendelo' | 'nyomtatvanyok' | 'egyeb';
@@ -35,6 +36,7 @@ export default function SettingsPage() {
   // lazy state init), nincs param->state szinkron effekt: egy már mountolt lapon
   // a fülváltás kizárólag a lenti dirty-guardon át történhet.
   const [searchParams] = useSearchParams();
+  const { templateDraftCache } = useStorage();
   const [tab, setTab] = useState<SettingsTab>(() => toSettingsTab(searchParams.get('tab') ?? ''));
   const [dirty, setDirty] = useState(false);
   const guard = useDiscardGuard(dirty);
@@ -56,10 +58,10 @@ export default function SettingsPage() {
       // FRISS váltást vonná vissza. A guard.confirm() ezt az apply-t
       // szinkron, a dialógus bezárása (és az auto-fókusz) ELŐTT futtatja.
       visszaFokuszRef.current = null;
-      // A Nyomtatványok tab piszkozat-cache-e (`dp:sablon-piszkozat`) túléli
+      // A Nyomtatványok tab piszkozat-cache-e túléli
       // az unmountot -- elvetéskor explicit törölni kell, különben egy F5 a
       // tab-váltás UTÁN visszahozná a már elvetett szöveget.
-      if (tab === 'nyomtatvanyok') clearAllTemplateDraftCache();
+      if (tab === 'nyomtatvanyok') templateDraftCache.clear();
       setDirty(false);
       setTab(next);
     });

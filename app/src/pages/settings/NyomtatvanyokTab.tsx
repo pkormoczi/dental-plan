@@ -17,8 +17,6 @@ import { useMentesJelzo } from '../../components/useMentesJelzo';
 import type { Nyelv } from '../../domain/types';
 import { t } from '../../design/tokens';
 import { stripMarkdownHeading } from '../../pdf/markdownLite';
-// oxlint-disable-next-line no-restricted-imports -- csak a `dp:` kulcs-prefix kell, hogy a demó „Minden adat törlése" prefix-seprése ezt a cache-t is elvigye (lásd lent)
-import { PREFIX } from '../../storage/DemoStorage';
 import { TEMPLATE_HEADINGS } from '../../storage/seed/templates';
 import { useStorage } from '../../storage/StorageContext';
 
@@ -41,67 +39,8 @@ function toNyelv(value: string | null): Nyelv {
   return value === 'de' ? 'de' : 'hu';
 }
 
-// Ad hoc localStorage-cache a sablonszerkesztő piszkozatához --
-// NEM a `DraftStorage`
-// bővítése (az kizárólag `Plan`-ra típusozott, egyetlen felelősséggel),
-// hanem egy önálló, base-kulcsolt JSON objektum. A
-// `dp:` prefix (`DemoStorage.ts` `PREFIX`-je) miatt a "Minden adat
-// törlése"/"Demó adat visszaállítása" prefix-seprése ezt is elviszi, külön
-// kód nélkül.
-const TEMPLATE_DRAFT_CACHE_KEY = `${PREFIX}sablon-piszkozat`;
-
-function readTemplateDraftCache(): Record<string, string> {
-  try {
-    // oxlint-disable-next-line no-restricted-globals -- tudatos kivétel, lásd a TEMPLATE_DRAFT_CACHE_KEY fölötti kommentet
-    const raw = localStorage.getItem(TEMPLATE_DRAFT_CACHE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeTemplateDraftCache(cache: Record<string, string>): void {
-  try {
-    // oxlint-disable-next-line no-restricted-globals -- tudatos kivétel, lásd a TEMPLATE_DRAFT_CACHE_KEY fölötti kommentet
-    localStorage.setItem(TEMPLATE_DRAFT_CACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Alacsony tét (csak szövegbevitel elvesztésének kockázata, nincs
-    // páciensadat) -- egy kvótahiba itt nem kap külön UI-hibát, a
-    // szerkesztés a komponens state-jében eddig is megmaradt.
-  }
-}
-
-function updateTemplateDraftCache(base: string, value: string): void {
-  const cache = readTemplateDraftCache();
-  cache[base] = value;
-  writeTemplateDraftCache(cache);
-}
-
-function clearTemplateDraftCacheEntry(base: string): void {
-  const cache = readTemplateDraftCache();
-  if (!(base in cache)) return;
-  delete cache[base];
-  writeTemplateDraftCache(cache);
-}
-
-/**
- * A shell (`SettingsPage.tsx`) hívja, amikor a doki egy dirty Nyomtatványok
- * tabról vált el (tab-váltás vagy NavBar-navigáció) -- a piszkozat ekkor
- * ténylegesen elvész (a Radix unmountolja a tab tartalmát), ezért a cache-nek
- * is el kell vesznie, különben egy F5 a tab-váltás UTÁN visszahozná a
- * "már elvetett" szöveget.
- */
-export function clearAllTemplateDraftCache(): void {
-  try {
-    // oxlint-disable-next-line no-restricted-globals -- tudatos kivétel, lásd a TEMPLATE_DRAFT_CACHE_KEY fölötti kommentet
-    localStorage.removeItem(TEMPLATE_DRAFT_CACHE_KEY);
-  } catch {
-    // Lásd writeTemplateDraftCache -- alacsony tét, néma no-op.
-  }
-}
-
 export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
-  const { storage } = useStorage();
+  const { storage, templateDraftCache } = useStorage();
   const [searchParams] = useSearchParams();
 
   // A tárolóból betöltött szöveg base-enként ("igazság") és a jelenleg
@@ -154,7 +93,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
       try {
         // A piszkozat-cache-t egyszer olvassuk be a body elején -- szinkron
         // művelet, nem kell base-enként újraolvasni.
-        const draftCache = readTemplateDraftCache();
+        const draftCache = templateDraftCache.load();
         const entries = await Promise.all(
           missing.map(async (base) => {
             const { name, body } = await storage.loadLatestTemplateByBase(base);
@@ -199,7 +138,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
     return () => {
       cancelled = true;
     };
-  }, [storage, setTemplateDrafts]);
+  }, [storage, templateDraftCache, setTemplateDrafts]);
 
   function updateTemplateDraft(key: TemplateSlotKey, value: string) {
     const base = templateBase(key, templateLang);
@@ -209,7 +148,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
     });
     // Minden leütésre ír, debounce nélkül -- a localStorage-írás szinkron és
     // olcsó, a meglévő piszkozat-minta (DemoDraftStorage) sem debounce-ol.
-    updateTemplateDraftCache(base, value);
+    templateDraftCache.set(base, value);
   }
 
   async function handleSaveTemplates() {
@@ -233,7 +172,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
             nameUpdates[base] = await storage.saveTemplate(base, fullBody);
             textUpdates[base] = text;
             // Törlés kizárólag sikeres mentéskor, base-enként (4. döntés).
-            clearTemplateDraftCacheEntry(base);
+            templateDraftCache.remove(base);
           }
           setTemplateNames((prev) => ({ ...prev, ...nameUpdates }));
           setSavedTemplateTexts((prev) => ({ ...prev, ...textUpdates }));
@@ -257,7 +196,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
       (base) => templateDrafts[base] !== savedTemplateTexts[base],
     );
     resetTemplateDrafts();
-    dirtyBases.forEach(clearTemplateDraftCacheEntry);
+    dirtyBases.forEach((base) => templateDraftCache.remove(base));
   }
 
   return (

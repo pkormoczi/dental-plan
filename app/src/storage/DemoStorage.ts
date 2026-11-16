@@ -8,6 +8,7 @@
 // schemaVersion-t ismeri), és a terv.json PDF-be ágyazása (pdf-lib) is a
 // 2. fázisra marad (lásd PRODUCT.md § Szándékos hiányok és nyitott kérdések).
 
+import { PREFIX } from './localKeys';
 import { javasoltTervCim, megjelenitettTervCim } from '../domain/tervCim';
 import { paciensIndexNev, uresTorzsadat } from '../domain/paciensAdatok';
 import { ervenyesAktivitas, ujAktivitas } from '../domain/paciensAktivitas';
@@ -78,7 +79,6 @@ const DEFAULT_TEMPLATES: Array<[string, string]> = [
  * adat törlése"/"Demó adat visszaállítása" gomb) a piszkozatot is eltünteti,
  * külön kód nélkül. Egy literál duplikálása itt driftelhetne.
  */
-export const PREFIX = 'dp:';
 const PRICE_LIST_KEY = `${PREFIX}arlista.json`;
 const SETTINGS_KEY = `${PREFIX}beallitasok.json`;
 const PATIENTS_PREFIX = `${PREFIX}paciensek/`;

@@ -43,7 +43,7 @@
         ],
         "patterns": [
           {
-            "group": ["**/storage/DemoStorage", "**/storage/DemoDraftStorage"],
+            "group": ["**/storage/DemoStorage", "**/storage/DemoDraftStorage", "**/storage/DemoTemplateDraftCache"],
             "message": "Konkrét tároló-implementációt csak a storage/ importálhat; kívülről a StorageContext (useStorage) az egyetlen út."
           }
         ]
