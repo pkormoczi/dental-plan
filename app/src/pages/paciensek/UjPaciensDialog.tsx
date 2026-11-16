@@ -20,9 +20,10 @@
 // explicit-akció követelményt, és elkerüli a Mentés gomb feliratának
 // villogását gépelés közben.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { AlertDialog, Box, Button, Dialog, Flex, Grid, Text, TextField } from '@radix-ui/themes';
 import DiscardChangesDialog, { useDiscardGuard } from '../../components/DiscardChangesDialog';
+import { fokuszVisszaadasOnClose } from '../../components/fokuszVisszaadas';
 import DuplikacioJavaslatok from './DuplikacioJavaslatok';
 import JeloltSor from './JeloltSor';
 import { Field } from '../../components/Field';
@@ -60,6 +61,13 @@ export interface UjPaciensDialogProps {
    * dialógus nyitva marad, a begépelt adatok nem vesznek el.
    */
   submitError?: string | null;
+  /**
+   * Zárás utáni fókuszcél. A visszaadás a dialógus tényleges eltűnése után fut
+   * (a záró animáció végén), nem a zárás pillanatában: addig a dialógus a
+   * hátteret rejtettnek jelöli, és egy korábbi fókusz oda a Chrome-ban
+   * blokkolt rejtést és „Blocked aria-hidden” figyelmeztetést ad.
+   */
+  zarasFokuszCel?: RefObject<HTMLElement | null>;
 }
 
 type Megerosites =
@@ -86,6 +94,7 @@ export default function UjPaciensDialog({
   onSave,
   onUseExisting,
   submitError,
+  zarasFokuszCel,
 }: UjPaciensDialogProps) {
   const { storage } = useStorage();
   const [nev, setNev] = useState('');
@@ -201,7 +210,10 @@ export default function UjPaciensDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
-      <Dialog.Content maxWidth="440px" onCloseAutoFocus={(e) => e.preventDefault()}>
+      <Dialog.Content
+        maxWidth="440px"
+        onCloseAutoFocus={zarasFokuszCel ? fokuszVisszaadasOnClose(zarasFokuszCel) : (e) => e.preventDefault()}
+      >
         <Dialog.Title>Új páciens</Dialog.Title>
         <Dialog.Description size="2" color="gray">
           A születési dátum és a telefon opcionális — ezek és a többi adat (lakcím, TAJ, kiskorú

@@ -471,6 +471,59 @@ describe('NewPlanPage', () => {
     expect(screen.getByRole('textbox', { name: 'Meglévő páciens keresése' })).toHaveValue('xyz');
   });
 
+  it('a quick-create elvetése után a fókusz a keresőre tér vissza, és csak a dialógus eltűnése után, rejtett háttér nélkül kapja meg', async () => {
+    const user = userEvent.setup();
+    renderNewPlan();
+    const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
+    let fokuszKor: { dialogVan: boolean; rejtettOs: boolean } | null = null;
+    input.addEventListener('focus', () => {
+      fokuszKor = {
+        dialogVan: !!document.querySelector('[role="dialog"]'),
+        rejtettOs: !!input.closest('[aria-hidden="true"]'),
+      };
+    });
+
+    await user.click(screen.getByRole('button', { name: '+ Új páciens' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Teszt Elvetes');
+    await user.keyboard('{Escape}');
+    await user.click(await screen.findByRole('button', { name: 'Bezárás, a begépelt adat elvetésével' }));
+
+    await waitFor(() => expect(input).toHaveFocus());
+    expect(fokuszKor).toEqual({ dialogVan: false, rejtettOs: false });
+  });
+
+  it('a keresőből Enterrel indított új páciensnél a piszkozat-megerősítés megkapja a fókuszt', async () => {
+    seedPersistedDraft();
+    const user = userEvent.setup();
+    renderNewPlan();
+
+    const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
+    await user.type(input, 'Zzz Proba{Enter}');
+
+    const megerosites = await screen.findByRole('alertdialog');
+    await waitFor(() => expect(megerosites).toContainElement(document.activeElement as HTMLElement));
+  });
+
+  it('a quick-create elvetése után azonnal újra indított új páciensnél a megerősítés megkapja a fókuszt', async () => {
+    seedPersistedDraft();
+    const user = userEvent.setup();
+    renderNewPlan();
+    const input = await screen.findByRole('textbox', { name: 'Meglévő páciens keresése' });
+
+    await user.click(screen.getByRole('button', { name: '+ Új páciens' }));
+    await user.click(await screen.findByRole('button', { name: 'Új páciens, piszkozat elvetésével' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Teszt Elvetes');
+    await user.keyboard('{Escape}');
+    await user.click(await screen.findByRole('button', { name: 'Bezárás, a begépelt adat elvetésével' }));
+    await waitFor(() => expect(input).toHaveFocus());
+
+    await user.click(screen.getByRole('button', { name: '+ Új páciens' }));
+    const megerosites = await screen.findByRole('alertdialog');
+    await waitFor(() => expect(megerosites).toContainElement(document.activeElement as HTMLElement));
+  });
+
   it('"+ Új páciens" -- a dialógusban megadott születési dátum és telefon a draftba kerül', async () => {
     const user = userEvent.setup();
     renderNewPlan();

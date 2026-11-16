@@ -136,22 +136,6 @@ export default function NewPlanPage() {
     }
   }
 
-  // Escape/Mégse/kattintás a felugró ablakon kívül -- sikeres létrehozás
-  // nélküli zárás. Az `UjPaciensDialog.tsx` `Dialog.Content`-je (trigger
-  // nélküli, kontrollált `Dialog.Root`) mindig megelőzi a beépített
-  // `onCloseAutoFocus`-t -- a `triggerRef` null, a fókusz különben a
-  // body-ra esne (ugyanaz a Radix-mintájú bug, mint amit az
-  // `UjPaciensDialog.tsx` `AlertDialog.Content` kommentje igazol),
-  // megszakítva a gépel -> nyíl -> Enter ciklust -- ezért itt kézzel
-  // visszaadjuk a keresőmezőnek. A `q` state-hez NEM nyúlunk: a
-  // keresőszöveg megmarad.
-  function handleUjOpenChange(open: boolean) {
-    setUjOpen(open);
-    if (!open) {
-      requestAnimationFrame(() => searchInputRef.current?.focus());
-    }
-  }
-
   // A tételkereső (ItemPicker.tsx:129-159) gépel -> nyíl -> Enter/Esc
   // ciklusának adaptálása -- a listaTetelek + a no-match "Új
   // páciens" pszeudó-opció közös indextartományán ([0, opcioSzam)) mozog.
@@ -322,7 +306,7 @@ export default function NewPlanPage() {
 
       <UjPaciensDialog
         open={ujOpen}
-        onOpenChange={handleUjOpenChange}
+        onOpenChange={setUjOpen}
         patients={patients}
         initialNev={ujNev}
         onSave={(nev, kezdoAdatok) => void createAndStart(nev, kezdoAdatok)}
@@ -331,6 +315,11 @@ export default function NewPlanPage() {
           akciok.futtat({ kind: 'ujTerv', patientDir: p.dirName });
         }}
         submitError={createError}
+        // Sikeres létrehozás nélküli záráskor (Escape/Mégse/kívülre kattintás) a
+        // fókusz a keresőre tér vissza, hogy a gépel -> nyíl -> Enter ciklus ne
+        // szakadjon meg; a `q` keresőszöveg megmarad. Sikeres létrehozásnál a lap
+        // elnavigál, a cél ekkor már nincs a DOM-ban.
+        zarasFokuszCel={searchInputRef}
       />
 
       <PlanVersionActionDialog akciok={akciok} />

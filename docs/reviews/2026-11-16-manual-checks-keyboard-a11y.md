@@ -68,4 +68,4 @@ Repro: a quick-create ablak elvetése után a fókusz a „Meglévő páciens ke
 `#meglevo-paciens-kereso`, `aria-hidden` ős: `#root`). A megnyitás pillanatában a fókusz még a
 háttérben van, amikor a Radix elrejti a gyökeret; felolvasó szoftvernél ez egy pillanatra
 rejtett elemen hagyhatja a fókuszt. Nem a most módosított zárási út; a tétel diffje nem érinti.
-- Döntés: backlog megerosito-ablak-aria-hidden-figyelmeztetes (2026-11-16)
+- Döntés: javítva megerosito-ablak-aria-hidden-figyelmeztetes (2026-11-16)
