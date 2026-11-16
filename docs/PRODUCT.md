@@ -28,14 +28,15 @@ készítésére — nem termék, nincs több rendelő. Az Excel-alapú elődöt 
 
 - A terv tartalma (név, születési idő, lakcím, TAJ, beavatkozások) **GDPR 9. cikk szerinti különleges
   adat**. A fejlesztő semmilyen minőségben nem kerül az adatkezelési láncba.
-- **Páciens- és kezelési adat sosem hagyja el a helyi gépet.** Nincs backend, adatbázis, telemetria,
-  analytics, remote logging, külső AI/API hívás. Gépi őr: CSP az `index.html`-ben (Vite-plugin) és
-  oxlint-tiltás a hálózati globálisokra; ezek nem lazíthatók.
-- A doki egy **gyökérmappát** jelöl ki — ez a teljes rendszerállapot, Google Drive-val tükrözve. A
-  Drive **Tükrözés** módban legyen, nem Streamelésben; append-only írás mellett nem keletkezik
-  `conflicted copy`.
-- Rendelői teendők: Google Workspace (van DPA), nem ingyenes Gmail; a gyökérmappa ne a `Letöltések`
-  (OneDrive-ra szinkronizálhat); BitLocker; a Drive nem backup — negyedévente külső másolat.
+- **Az alkalmazás nem továbbít páciensadatot:** nincs backend, adatbázis, telemetria, analytics, remote
+  logging, külső AI/API hívás. A rendelő által beállított Drive-kliens végzi a felhőszinkront (My Drive,
+  Tükrözés mód, Google Workspace DPA). Gépi őr: CSP (Vite-plugin) és oxlint-tiltás a hálózati
+  globálisokra; nem lazíthatók.
+- A doki egy **gyökérmappát** jelöl ki (My Drive, nem Shared Drive) — ez a teljes rendszerállapot.
+  Egyszerre egy gép dolgozik; gépváltáskor app bezárása → feltöltés kész → a másik gépen letöltés
+  kész → app megnyitása.
+- Rendelői teendők: a gyökérmappa ne a `Letöltések` (OneDrive-ra szinkronizálhat); BitLocker; a
+  Drive nem backup — havonta külső másolat.
 - Windows 260 karakteres útvonalkorlát → rövid mappanevek. A páciensmappa nevében **az ékezetek
   maradnak** (a doki a Fájlkezelőben névre keres); csak a tiltott `/ \ : * ? " < > |` cserélődik.
 
@@ -44,7 +45,7 @@ készítésére — nem termék, nincs több rendelő. Az Excel-alapú elődöt 
 1. **Mockup** (ez él): GitHub Pages, `localStorage`-alapú tároló, demó adat — valódi páciensadat nem
    kerül bele. Cél: a doki validálja a UX-et.
 2. **Végleges**: Electron + `FileSystemStorage` a `PlanStorage` interfész mögött; más (domain,
-   UI, PDF) változatlan. Egy Chromium mindkét platformon. Terv: `docs/desktop-app-migration-plan-final.md`.
+   UI, PDF) változatlan. Terv: `docs/desktop-app-migration-plan-final.md`.
 
 ## A nyomtatvány szerződéses dokumentum
 
@@ -90,7 +91,7 @@ Az aláírt PDF-ből következő szabályok — jogi, nem stíluskérdések:
   (`pdf/labels.ts`) a lektorálás review-artefaktuma.
 - A garancia-szakasz mindkét nyelven placeholder — a doki adja meg a Beállításokban.
 - Az EUR árak egyszeri árfolyam-becslés; véglegesítésük a doki adatmunkája.
-- A `terv.json` PDF-be ágyazása a 2. fázis része, ma nincs.
+- A `terv.json` PDF-be ágyazása nincs, az első asztali kiadásban sem.
 - Cégadatok a lábléchez (adószám, cégjegyzékszám) hiányoznak.
 - `paciens.json` és `terv-cimke.json` csak kereső-index, sosem system of record; a
   `paciens-adatok.json` viszont az a saját mezőire — nincs automatikus szinkron a terv `paciens`

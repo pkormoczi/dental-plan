@@ -15,7 +15,7 @@ Aktuális viselkedés: kód + futó tesztek. Szándék és nem-cél: `docs/PRODU
 nem írhat felül tesztet vagy típust.
 
 # Hard invariants
-- Páciens- és kezelési adat nem hagyja el a gépet: nincs backend, telemetria, analytics, remote
+- Az app nem továbbít páciens- és kezelési adatot: nincs backend, telemetria, analytics, remote
   logging, külső AI/API. Gépi őr: CSP + oxlint. → product:#adat-es-deployment-korlatok
 - Fájlrendszer/tároló csak a `PlanStorage`/`DraftStorage` határon át. → symbol:app/src/storage/PlanStorage.ts#PlanStorage
 - Véglegesített verzió sosem íródik felül, mindig `_v<n+1>`.
