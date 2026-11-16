@@ -5,7 +5,7 @@
 // megmaradó hívási hely). Ez a fájl a lista-specifikus viselkedést fedi:
 // sor tartalma, keresés (név/DOB/telefon), navigáció, state-megőrzés.
 
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -162,6 +162,50 @@ describe('PaciensekPage', () => {
     await verify.init();
     const patients = await verify.listPatients();
     expect(patients.some((p) => p.nev === 'Vadonatúj Elemér')).toBe(true);
+  });
+
+  it('"+ Új páciens" Escape-pel bezárva a fókusz a "+ Új páciens" gombra tér vissza', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Kovács János');
+    const gomb = screen.getByRole('button', { name: '+ Új páciens' });
+    await user.click(gomb);
+    await screen.findByRole('dialog', { name: 'Új páciens' });
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(gomb).toHaveFocus());
+  });
+
+  it('"+ Új páciens" Mégse gombbal bezárva a fókusz a "+ Új páciens" gombra tér vissza', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Kovács János');
+    const gomb = screen.getByRole('button', { name: '+ Új páciens' });
+    await user.click(gomb);
+    const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
+    await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(gomb).toHaveFocus());
+  });
+
+  it('"+ Új páciens" begépelt név elvetésének megerősítése után a fókusz a "+ Új páciens" gombra tér vissza', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Kovács János');
+    const gomb = screen.getByRole('button', { name: '+ Új páciens' });
+    await user.click(gomb);
+    const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
+    await user.type(within(dialog).getByRole('textbox', { name: 'Név *' }), 'Elvetendő Elemér');
+    await user.keyboard('{Escape}');
+    await user.click(await screen.findByRole('button', { name: 'Bezárás, a begépelt adat elvetésével' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(gomb).toHaveFocus());
   });
 
   it('"+ Új páciens" névegyezésnél az "Ezt a pácienst választom" a meglévő páciens részletoldalára navigál', async () => {

@@ -10,7 +10,7 @@
 // szerkesztő (`PatientEditorPanel`) itt nem jelenik meg -- az egyetlen
 // helye a részletoldal `Páciens adatai` tabja.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -43,6 +43,7 @@ export default function PaciensekPage() {
   const { q, setQ } = useListStateMemory('paciensek', !loading);
 
   const [newOpen, setNewOpen] = useState(false);
+  const ujPaciensGombRef = useRef<HTMLButtonElement>(null);
   const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -119,6 +120,7 @@ export default function PaciensekPage() {
           </IkonGomb>
         </Flex>
         <Button
+          ref={ujPaciensGombRef}
           onClick={() => {
             setCreateError(null);
             setNewOpen(true);
@@ -209,6 +211,7 @@ export default function PaciensekPage() {
           navigate(`/paciensek/${encodeURIComponent(p.dirName)}`, { state: { tab: 'adatai' } });
         }}
         submitError={createError}
+        zarasFokuszCel={ujPaciensGombRef}
       />
     </Box>
   );
