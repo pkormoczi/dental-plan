@@ -1,13 +1,13 @@
 name: Deploy mockup to GitHub Pages
 
-# A tényleges alkalmazás az app/ almappában van -- lásd CLAUDE.md
-# "Két fázisú build". Ez a workflow csak a mockupot (1. fázis) deployolja.
+# A tényleges alkalmazás az app/ almappában van. Ez a workflow csak a mockupot
+# (1. fázis) deployolja, és csak a CI (ci.yml) sikeres master-pushos futása
+# után -- így pushonként egyszer fut a teljes ellenőrzés.
 
-# PR-en csak a build-job fut; élesítés csak master-pushra és kézi indításra.
 on:
-  push:
-    branches: [master]
-  pull_request:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [master]
   workflow_dispatch:
 
@@ -22,10 +22,18 @@ concurrency:
 
 jobs:
   build:
+    # PR-ből indult vagy bukott CI-futás után nincs deploy.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # A CI által tesztelt commit, nem a master azóta elmozdult feje.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -38,23 +46,7 @@ jobs:
         working-directory: app
         run: npm ci
 
-      - name: Lint
-        working-directory: app
-        run: npm run lint
-
-      - name: Run tests
-        working-directory: app
-        run: npm test
-
-      - name: Workflow script tests
-        working-directory: app
-        run: npm run test:workflow
-
-      - name: Docs check
-        working-directory: app
-        run: npm run docs-check
-
-      - name: Type-check + build
+      - name: Build
         working-directory: app
         run: npm run build
 
@@ -65,7 +57,6 @@ jobs:
 
   deploy:
     needs: build
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
