@@ -555,6 +555,25 @@ describe('NewPlanPage', () => {
     expect(await screen.findByTestId('draft-oldal')).toBeInTheDocument();
   });
 
+  it('a piszkozat elvetésének megerősítése után a fókusz az Új páciens ablakban marad: a kattintás nélkül gépelt név a Név mezőbe kerül', async () => {
+    seedPersistedDraft();
+    const user = userEvent.setup();
+    renderNewPlan();
+
+    await user.click(await screen.findByRole('button', { name: '+ Új páciens' }));
+    await user.click(await screen.findByRole('button', { name: 'Új páciens, piszkozat elvetésével' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Új páciens' });
+    // A bezárt megerősítő ablak fókusz-visszaadása egy képkockával később fut.
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+
+    expect(dialog).toContainElement(document.activeElement as HTMLElement);
+    await user.keyboard('Teszt Elek');
+
+    expect(within(dialog).getByRole('textbox', { name: 'Név *' })).toHaveValue('Teszt Elek');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
   it('meglévő páciens kiválasztása is megerősítést kér mentetlen piszkozatnál', async () => {
     seedPersistedDraft();
     const user = userEvent.setup();

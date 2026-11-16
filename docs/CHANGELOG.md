@@ -12,6 +12,9 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   az Előnézet ellenőrző listája ezt figyelmeztetésként kiírja: megmondja, melyik verzióból indult
   a munka, melyik a legfrissebb, és hányadik verzióként mentődik majd. A véglegesítést nem
   akadályozza. Ez főleg akkor fontos, ha a két gépen felváltva dolgozunk.
+- Javítottuk: ha az Új terv lapon félbehagyott terv mellett a „+ Új páciens” gombbal indulunk, és
+  jóváhagyjuk a piszkozat elvetését, a felugró ablakban a név rögtön, kattintás nélkül gépelhető.
+  Korábban a gépelés a háttérben lévő gombra mehetett, és egy szóköz újra feldobta a kérdést.
 
 ## 2026. október 4.
 

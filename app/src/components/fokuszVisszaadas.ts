@@ -21,7 +21,20 @@ export function fokuszVisszaadasOnClose(
     // fókusz-visszaadásánál).
     requestAnimationFrame(() => {
       const elem = typeof cel === 'function' ? cel() : cel.current;
-      if (elem?.isConnected) elem.focus();
+      if (!elem?.isConnected || masModalisNyitva(elem)) return;
+      elem.focus();
     });
   };
+}
+
+// Ha a zárással egy lépésben egy MÁSIK modális ablak nyílt (pl. a piszkozat-
+// elvetés megerősítése után az „Új páciens” dialógus), a mögötte lévő célra
+// vitt fókuszt a Radix-csapda nem hozza mindig vissza: a gépelés a háttérbe
+// menne, egy szóköz pedig a háttérgombot nyomná meg. Egymásba ágyazott
+// ablaknál a cél a nyitva maradó külső ablakban van, ott a visszaadás jár.
+function masModalisNyitva(cel: HTMLElement): boolean {
+  const nyitottak = document.querySelectorAll<HTMLElement>(
+    '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+  );
+  return Array.from(nyitottak).some((ablak) => !ablak.contains(cel));
 }
