@@ -8,9 +8,11 @@ protokoll a `SKILL.md`-ben; a szabályok forrása az `app/src/CLAUDE.md` („Ami
 
 `app/src/CLAUDE.md` Amit soha: a tételfelvitel ciklusát eltörni — ez az Excel elleni fő
 előny. A ciklusnak KÖZTES megállója van: a felvett sor `Fog` mezője, ahonnan egy `Enter`
-visz vissza a kiürült keresőbe. 3× egymás után, egér nélkül: `type_text` → `wait_for`
-(tömb!) → `press_key ArrowDown` → `press_key Enter` → **1. ellenőrzés** → `press_key
-Enter` → **2. ellenőrzés**:
+visz vissza a kiürült keresőbe. 3× egymás után, egér nélkül, katalógus-tétellel: `type_text`
+→ `wait_for` (tömb!) → `press_key Enter` → **1. ellenőrzés** → `press_key Enter` → **2.
+ellenőrzés**. Nincs `ArrowDown`: a kereső minden gépeléskor az első találatot emeli ki, az opciók
+végén az „Egyedi tétel felvétele” sor áll — egy `ArrowDown` a második opcióra, egy találatnál az
+egyedi sorra lépne, és a kör egyedi sort venne fel a katalógus-tétel helyett.
 
 ```js
 () => {
@@ -30,12 +32,27 @@ Várt minden körben: az 1. ellenőrzésnél `hol === 'Fog'`, a 2.-nál `hol ===
 `value === ''`, `popoverOpen === false`. Az `isSearch === true` NEM elvárás minden
 körben — a Fog-megállón `hol === 'Fog'` a helyes.
 
+Az 1. ellenőrzés mellé: a felvett sor a katalógus-tétel, nem egyedi sor.
+
+```js
+() => {
+  const nevek = [...document.querySelectorAll('input[aria-label="Beavatkozás megnevezése"]')];
+  const utolso = nevek[nevek.length - 1];
+  const sor = utolso?.closest('tr');
+  return {
+    nev: utolso?.value, // várt: a katalógus teljes neve, nem a begépelt részlet
+    egyedi: !!sor && [...sor.querySelectorAll('*')]
+      .some((e) => !e.children.length && e.textContent.trim() === 'egyedi'), // várt: false
+  };
+}
+```
+
 **Fogszámot nem kívánó tétel** (`fogszamNemKell`, a seedben pl. „CBCT"): egyetlen `Enter`
 után rögtön `hol === 'kereső'` — itt nincs Fog-megálló, ez nem hiba.
 
-**Egyedi sor** (nulla találat → Enter): ugyanaz a ciklus egy nem létező tétel nevével;
-ellenőrizd, hogy létrejött-e egy `egyedi` jelöléssel ellátott sor a beírt névvel — az
-egyedi sor is megáll a Fog mezőn.
+**Egyedi sor** (nulla találat → Enter): külön lépés, egy nem létező tétel nevével (pl.
+`xyz-nincs-ilyen`), ugyanazzal a ciklussal; a fenti sornév-snippet várt eredménye itt
+`nev === <a beírt név>`, `egyedi === true` — az egyedi sor is megáll a Fog mezőn.
 
 **Escape:** kereső megnyitva (van szöveg + popover), `press_key Escape`, utána
 `value === ''`, a popover zárva, a fókusz a keresőn marad.

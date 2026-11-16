@@ -57,7 +57,7 @@ emeli ki, így a leírt `ArrowDown` a következő opcióra, az „Egyedi tétel 
 az `Enter` egyedi sort vesz fel („Fognyaki”, nem „Fognyaki tömés”). A ciklus megállói ettől
 helyesek, de a szelet leírása így nem azt méri, amit állít. Javaslat: a leírásban a katalógus-tétel
 körei `Enter`-rel induljanak, az egyedi sor ellenőrzése maradjon külön lépés.
-- Döntés: backlog manual-checks-keyboard-szelet-leiras (2026-11-16)
+- Döntés: javítva manual-checks-keyboard-szelet-leiras (2026-11-16)
 
 ### 2. „Blocked aria-hidden” Chrome-figyelmeztetés a megerősítő ablak nyitásakor az Új terv lapon
 
