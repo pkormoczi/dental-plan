@@ -1083,3 +1083,44 @@ describe('PlanEditorPage -- backlog-32: piszkozat-mentés jelzés és eldobás',
     await waitFor(() => expect(eldobasGomb).toHaveFocus());
   });
 });
+
+describe('PlanEditorPage -- név és tétel nélküli sor', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('név és tétel nélküli sort tartalmazó piszkozatnál ez a sor a soron belüli tételkeresővel jelenik meg, a megnevezett sor névmezővel', async () => {
+    localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
+    localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
+    const plan = createBlankPlan(seedSettings, seedPriceList);
+    const tetel = seedPriceList.tetelek[0];
+    const ures = {
+      tetelId: '',
+      nevSnapshot: '',
+      savos: false,
+      fogak: '',
+      mennyiseg: 1,
+      listaEgysegar: 0,
+      tenylegesEgysegar: 0,
+      leirasSnapshot: '',
+      mennyisegKezi: false,
+    };
+    plan.fazisok[0].sorok.push({ ...ures, tetelId: tetel.id, nevSnapshot: tetel.nev.hu }, ures);
+    localStorage.setItem(
+      'dp:piszkozat',
+      JSON.stringify({ schemaVersion: 1, mentve: new Date(0).toISOString(), plan }),
+    );
+
+    renderEditor();
+
+    const nevMezok = await screen.findAllByRole('textbox', { name: 'Beavatkozás megnevezése' });
+    expect(nevMezok).toHaveLength(1);
+    expect(nevMezok[0]).toHaveValue(tetel.nev.hu);
+    const sorok = screen.getAllByRole('row');
+    const uresSor = sorok.find((r) => within(r).queryByRole('button', { name: '2. sor — áthelyezés' }));
+    expect(uresSor).toBeDefined();
+    expect(within(uresSor!).getByPlaceholderText(/Tétel keresése/)).toBeInTheDocument();
+    expect(within(uresSor!).queryByRole('textbox', { name: 'Beavatkozás megnevezése' })).not.toBeInTheDocument();
+  });
+});
+

@@ -115,10 +115,11 @@ export default function LineRow({
   onHuzasFelette,
   onRemove,
 }: LineRowProps) {
-  // A fogtérkép-kattintással létrehozott, még meg nem nevezett sor -- ez az
-  // EGYETLEN eset, ami a keresőt mutatja induláskor (backlog-3 1-2.
-  // döntés: a névmező-pontosítás és az egyedi sor felvétele ugyanaz a
-  // mechanizmus, csak azonositatlan sornál indul kereső módban).
+  // Név és tétel nélküli sor a megjelenésekor kereső módban indul, mert névmező
+  // helyett csak így azonosítható. Ilyen sor akkor jelenik meg, ha a doki egy
+  // egyedi sor nevét kiürítette (lent: menet közben a kereső szándékosan nem
+  // ugrik vissza, csak a következő megjelenéskor), vagy a piszkozat kívülről
+  // érkezik. A fogtérkép nem hoz létre sort, csak navigál (PRODUCT.md § Nem cél).
   const azonositatlan = line.tetelId.trim() === '' && line.nevSnapshot.trim() === '';
   const [keresoMod, setKeresoMod] = useState(azonositatlan);
   // CSAK kikapcsolni szabad -- ha a doki utólag kiüríti egy egyedi sor
