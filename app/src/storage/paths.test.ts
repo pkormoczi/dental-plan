@@ -32,6 +32,20 @@ describe('sanitizeNamePart', () => {
   it('falls back to a placeholder for an empty result', () => {
     expect(sanitizeNamePart('   ')).toBe('Nevtelen');
   });
+
+  it('does not leave a trailing space or dot where the 40-character cut lands', () => {
+    const vagottSzokozon = sanitizeNamePart(`${'A'.repeat(39)} Bálint`);
+    expect(vagottSzokozon).toBe('A'.repeat(39));
+
+    const vagottPontokon = sanitizeNamePart(`${'B'.repeat(38)}..utána`);
+    expect(vagottPontokon).toBe('B'.repeat(38));
+    expect(vagottPontokon.length).toBeLessThanOrEqual(40);
+  });
+
+  it('falls back to a placeholder when only dots and spaces remain', () => {
+    expect(sanitizeNamePart(' . . ')).toBe('Nevtelen');
+    expect(sanitizeNamePart('...')).toBe('Nevtelen');
+  });
 });
 
 describe('splitHungarianName', () => {

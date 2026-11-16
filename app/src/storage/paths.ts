@@ -10,9 +10,10 @@ const MAX_NAME_PART_LENGTH = 40; // Windows 260 karakteres útvonalkorlát miatt
 
 export function sanitizeNamePart(raw: string): string {
   let s = raw.trim().replace(FORBIDDEN_CHARS, '-');
-  // Windows: a névnek nem lehet záró pontja vagy szóköze.
-  s = s.replace(/[ .]+$/, '');
   s = s.slice(0, MAX_NAME_PART_LENGTH);
+  // Windows: a névnek nem lehet záró pontja vagy szóköze. A vágás UTÁN, mert
+  // a vágás helyén új záró szóköz vagy pont maradhat.
+  s = s.replace(/[ .]+$/, '');
   return s || 'Nevtelen';
 }
 
