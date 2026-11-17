@@ -16,6 +16,7 @@ export interface FsMuveletek {
   rm: typeof fsp.rm;
   unlink: typeof fsp.unlink;
   stat: typeof fsp.stat;
+  realpath: typeof fsp.realpath;
 }
 
 export interface FsPrimitivekOpciok {
@@ -75,6 +76,31 @@ export class FsPrimitivek implements FajlPrimitivek {
   }
 
   /**
+   * Az útvonal legmélyebb létező őse `realpath` után is a gyökérmappán belül van: egy
+   * symlink vagy junction nem vezethet ki a gyökérből (migrációs terv §3.2).
+   */
+  private async bezart(abs: string): Promise<void> {
+    let gyoker: string;
+    try {
+      gyoker = await this.fs.realpath(this.gyoker);
+    } catch (err) {
+      // Hiányzó gyökér alól nincs mit kivezetni; a művelet maga adja az ENOENT-et.
+      if (errnoKod(err) === 'ENOENT') return;
+      throw ioHiba(err, this.gyoker);
+    }
+    for (let vizsgalt = abs; ; vizsgalt = path.dirname(vizsgalt)) {
+      try {
+        const rel = path.relative(gyoker, await this.fs.realpath(vizsgalt));
+        if (rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) throw new IoError('EACCES', abs);
+        return;
+      } catch (err) {
+        const kod = errnoKod(err);
+        if ((kod !== 'ENOENT' && kod !== 'ENOTDIR') || path.dirname(vizsgalt) === vizsgalt) throw ioHiba(err, abs);
+      }
+    }
+  }
+
+  /**
    * A relatív útvonal a lemezen ténylegesen létező alakra feloldva. A saját nevek NFC-alakúak,
    * de egy Drive-ról érkezett mappa neve NFD is lehet, és az NTFS a kettőt külön névnek látja:
    * ahol a közvetlen alak nem létezik, a szülő listájában NFC-ben egyező nevet keresünk.
@@ -97,13 +123,20 @@ export class FsPrimitivek implements FajlPrimitivek {
     return jelenlegi;
   }
 
+  /** A feloldott és a gyökérbe zárt abszolút útvonal -- minden művelet ezen megy át. */
+  private async celUt(ut: string): Promise<string> {
+    const abs = await this.abs(ut);
+    await this.bezart(abs);
+    return abs;
+  }
+
   async olvasSzoveg(ut: string): Promise<string | null> {
     const bajt = await this.olvasBajt(ut);
     return bajt == null ? null : new TextDecoder().decode(bajt);
   }
 
   async olvasBajt(ut: string): Promise<Uint8Array | null> {
-    const abs = await this.abs(ut);
+    const abs = await this.celUt(ut);
     try {
       return new Uint8Array(await this.ujraprobal(() => this.fs.readFile(abs)));
     } catch (err) {
@@ -122,7 +155,7 @@ export class FsPrimitivek implements FajlPrimitivek {
 
   /** temp fájl → `fsync` → `rename`: hibánál a célfájl korábbi tartalma érintetlen. */
   private async irAtomi(ut: string, adat: Uint8Array): Promise<void> {
-    const cel = await this.abs(ut);
+    const cel = await this.celUt(ut);
     const tmp = `${cel}.tmp-${randomBytes(4).toString('hex')}`;
     try {
       await this.ujraprobal(() => this.fs.mkdir(path.dirname(cel), { recursive: true }));
@@ -141,7 +174,7 @@ export class FsPrimitivek implements FajlPrimitivek {
   }
 
   async torol(ut: string): Promise<void> {
-    const abs = await this.abs(ut);
+    const abs = await this.celUt(ut);
     try {
       await this.ujraprobal(() => this.fs.unlink(abs));
     } catch (err) {
@@ -151,7 +184,7 @@ export class FsPrimitivek implements FajlPrimitivek {
   }
 
   async listaz(ut: string): Promise<string[]> {
-    const abs = await this.abs(ut);
+    const abs = await this.celUt(ut);
     try {
       const nevek = await this.ujraprobal(() => this.fs.readdir(abs));
       return nevek.filter((n) => !REJTETT_NEV.test(n)).map((n) => n.normalize('NFC'));
@@ -163,11 +196,11 @@ export class FsPrimitivek implements FajlPrimitivek {
   }
 
   async letezik(ut: string): Promise<boolean> {
-    return this.letezikAbs(await this.abs(ut));
+    return this.letezikAbs(await this.celUt(ut));
   }
 
   async mappaLetrehoz(ut: string, opciok?: { kizarolagos?: boolean }): Promise<void> {
-    const abs = await this.abs(ut);
+    const abs = await this.celUt(ut);
     try {
       if (!opciok?.kizarolagos) {
         await this.ujraprobal(() => this.fs.mkdir(abs, { recursive: true }));
@@ -182,7 +215,7 @@ export class FsPrimitivek implements FajlPrimitivek {
   }
 
   async torolMappa(ut: string): Promise<void> {
-    const abs = await this.abs(ut);
+    const abs = await this.celUt(ut);
     try {
       await this.ujraprobal(() => this.fs.rm(abs, { recursive: true, force: true }));
     } catch (err) {
@@ -193,8 +226,8 @@ export class FsPrimitivek implements FajlPrimitivek {
   async atnevez(regi: string, uj: string): Promise<void> {
     // POSIX-on egy üres célmappa csendben felülíródna: a cél létezését külön nézzük.
     if (await this.letezik(uj)) throw new MarLetezikError(uj);
-    const honnan = await this.abs(regi);
-    const hova = await this.abs(uj);
+    const honnan = await this.celUt(regi);
+    const hova = await this.celUt(uj);
     try {
       await this.ujraprobal(() => this.fs.rename(honnan, hova));
     } catch (err) {

@@ -30,15 +30,20 @@ export type FutoApp = {
 };
 
 // Minden futás friss, ideiglenes userData-t kap: a teszt sosem a fejlesztő vagy egy telepített
-// app piszkozatán dolgozik (root CLAUDE.md § Böngésző-automatizálás).
-export async function inditas(): Promise<FutoApp> {
+// app piszkozatán dolgozik (root CLAUDE.md § Böngésző-automatizálás). A `gyoker` megadásával az
+// app a fájlrendszeres tárolón fut, abban az ideiglenes mappában.
+export async function inditas(opciok: { gyoker?: string } = {}): Promise<FutoApp> {
   const userData = mkdtempSync(path.join(os.tmpdir(), 'mandoki-fust-'));
   const { exe, args } = inditasiParancs();
   const app = await electron.launch({
     executablePath: exe,
     args,
     cwd: APP_KONYVTAR,
-    env: { ...process.env, DENTAL_PLAN_TESZT_USER_DATA: userData },
+    env: {
+      ...process.env,
+      DENTAL_PLAN_TESZT_USER_DATA: userData,
+      ...(opciok.gyoker ? { DENTAL_PLAN_TESZT_GYOKER: opciok.gyoker } : {}),
+    },
   });
   const page = await app.firstWindow();
   const hibak: string[] = [];

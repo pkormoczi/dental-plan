@@ -129,12 +129,15 @@ export function nextVersionNumber(existingVersionDirNames: string[]): number {
 
 /** Verziómappát soha nem írunk felül: aláírt szerződést nem lehet visszamenőleg átírni. */
 export class VersionConflictError extends Error {
+  readonly dirName: string;
+
   constructor(dirName: string) {
     super(
       `A(z) "${dirName}" verziómappa már létezik. Verziómappát soha nem ` +
         `írunk felül — a verziómappák append-only-k; ez hiba a hívó kódban, nem a felhasználó adatában.`,
     );
     this.name = 'VersionConflictError';
+    this.dirName = dirName;
   }
 }
 

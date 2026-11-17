@@ -14,6 +14,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { DemoDraftStorage } from './DemoDraftStorage';
 import { DemoTemplateDraftCache } from './DemoTemplateDraftCache';
 import { DemoStorage } from './DemoStorage';
+import { ElectronStorage } from './ElectronStorage';
 import type { DemoNode } from './demoFileTree';
 import type { DraftStorage } from './DraftStorage';
 import type { PlanStorage } from './PlanStorage';
@@ -53,9 +54,26 @@ const StorageContext = createContext<StorageContextValue | null>(null);
 
 export function StorageProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StorageContextValue>(() => {
+    const drafts = new DemoDraftStorage();
+    // A piszkozat és a sablon-piszkozat a telepített appban is a renderer localStorage-ában
+    // marad, gépenként (migrációs terv §2); csak a system of record költözik a gyökérmappába.
+    const hid = typeof window === 'undefined' ? undefined : window.mandokiTarolo;
+    if (hid?.aktiv) {
+      const storage = new ElectronStorage(hid);
+      return {
+        storage,
+        ready: storage.init(),
+        resetDemoData: () => {},
+        clearAll: () => {},
+        listFileTree: () => [],
+        readRawFile: () => null,
+        isSeedVersion: () => false,
+        drafts,
+        templateDraftCache: new DemoTemplateDraftCache(),
+      };
+    }
     const demo = new DemoStorage();
     const ready = demo.init();
-    const drafts = new DemoDraftStorage();
     return {
       storage: demo,
       ready,
