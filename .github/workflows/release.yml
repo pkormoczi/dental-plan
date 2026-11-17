@@ -54,7 +54,11 @@ jobs:
         working-directory: app
         run: npm ci
 
+      # A jsdom-készlet architektúra-független: a Windows- és az arm64-runner futtatja. Az
+      # Intel-runner annyira lassú, hogy a 15 s-os teszt-timeoutot rendszeresen túllépi; ott csak
+      # a universal csomag x64-szeletének füst-tesztje a dolga.
       - name: Run tests
+        if: matrix.os != 'macos-26-intel'
         working-directory: app
         run: npm test
 
