@@ -15,8 +15,6 @@
     "oneClick": true,
     "perMachine": false,
     "deleteAppDataOnUninstall": true,
-    "shortcutName": "Mándoki Dental",
-    "uninstallDisplayName": "Mándoki Dental",
     "artifactName": "Mandoki-Dental-Setup-${version}.${ext}"
   },
   "mac": {

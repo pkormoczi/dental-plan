@@ -1,9 +1,8 @@
 // Tartós nevek. Az `app://<hoszt>` origin a renderer `localStorage`-partíciójának kulcsa, a
 // userData-mappa pedig az, ahol ez a partíció a lemezen él: bármelyik átnevezése csendben
-// kiüríti a piszkozatot és a demó-adatot. A megjelenített név ezektől független: Windowson az
-// `electron-builder.json` `shortcutName`/`uninstallDisplayName` („Mándoki Dental”), macOS-en a
-// `package.json` `productName`, ami ékezet nélküli -- nem-ASCII `CFBundleName`-mel az Electron
-// macOS-en indításkor összeomlik.
+// kiüríti a piszkozatot és a demó-adatot. A megjelenített név ezektől független: minden
+// platformon egyedül a `package.json` `productName`, ami ékezet nélküli -- nem-ASCII
+// `CFBundleName`-mel az Electron macOS-en indításkor összeomlik.
 
 export const APP_PROTOKOLL = 'app';
 export const APP_HOSZT = 'mandoki-dental';

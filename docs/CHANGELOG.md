@@ -4,8 +4,8 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
 
 ## 2026. november 17.
 
-- Elkészült a telepíthető program első próbaváltozata Windowsra és Macre, „Mándoki Dental”
-  néven (Macen ékezet nélkül, „Mandoki Dental”). Ugyanazt tudja és ugyanúgy néz ki, mint a demó, de saját ablakban fut, nem böngészőben.
+- Elkészült a telepíthető program első próbaváltozata Windowsra és Macre, „Mandoki Dental”
+  néven, mindkét gépen ugyanígy, ékezet nélkül. Ugyanazt tudja és ugyanúgy néz ki, mint a demó, de saját ablakban fut, nem böngészőben.
   Egyelőre a demóhoz hasonlóan csak az adott gépen tárolja az adatokat, ezért valódi páciensadatot
   még ne írjunk bele. A letöltés mellé csatolt útmutató lépésről lépésre leírja a telepítést, a
   frissítést és az eltávolítást; frissíteni kézzel kell.

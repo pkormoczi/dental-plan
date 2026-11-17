@@ -1,4 +1,4 @@
-# Mándoki Dental — telepítés
+# Mandoki Dental — telepítés
 
 Az alkalmazás telepítőit a GitHub-kiadás (Release) oldala tartalmazza:
 
@@ -20,7 +20,7 @@ változott, azt az alkalmazás Kezdőlapján a Változásnapló mutatja.
    azért jelenik meg, mert az alkalmazás nincs fizetős tanúsítvánnyal aláírva. Kattints a
    **„További információ”** feliratra, majd a megjelenő **futtatás** gombra.
 3. A telepítés rendszergazdai jelszó nélkül, magától lefut. Utána az alkalmazás a Start menüben és
-   az asztalon **Mándoki Dental** néven található.
+   az asztalon **Mandoki Dental** néven található.
 
 ### Frissítés
 
@@ -29,7 +29,7 @@ figyelmeztet.
 
 ### Eltávolítás
 
-Beállítások → Alkalmazások → Telepített alkalmazások → **Mándoki Dental** → Eltávolítás. Az
+Beállítások → Alkalmazások → Telepített alkalmazások → **Mandoki Dental** → Eltávolítás. Az
 eltávolítás az alkalmazás gépen tárolt adatait (a félkész tervet is) törli.
 
 ## Mac
@@ -38,7 +38,6 @@ eltávolítás az alkalmazás gépen tárolt adatait (a félkész tervet is) tö
 
 1. Töltsd le a `Mandoki-Dental-<verzió>-arm64.dmg` fájlt, és nyisd meg.
 2. A megnyíló ablakban húzd a **Mandoki Dental** ikont az **Alkalmazások** (Applications) mappára.
-   Macen a program neve ékezet nélkül szerepel, mert a Mac ékezetes névvel nem tudja elindítani.
 3. Indítsd el az Alkalmazások mappából. A Mac először nem engedi megnyitni, mert az alkalmazás nincs
    az Apple-nél hitelesítve: a figyelmeztetést zárd be (**Kész**, ne „Kidobás”).
 4. Nyisd meg: Rendszerbeállítások → **Adatvédelem és biztonság**. Görgess le a **Biztonság** részig:

@@ -2,7 +2,7 @@
 
 Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyőnként csoportosítva, a fenti navigáció sorrendjében.
 
-Az alkalmazás böngészőben, demóként, és telepíthető programként is fut Windowson és Macen („Mándoki Dental”, Macen ékezet nélkül), mindkét formában ugyanazokkal a képernyőkkel. A programban egy mentett nyomtatvány külön megnyitása saját ablakban jelenik meg.
+Az alkalmazás böngészőben, demóként, és telepíthető programként is fut Windowson és Macen („Mandoki Dental” néven), mindkét formában ugyanazokkal a képernyőkkel. A programban egy mentett nyomtatvány külön megnyitása saját ablakban jelenik meg.
 
 ## Páciensek
 
