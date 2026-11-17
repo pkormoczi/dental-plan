@@ -19,7 +19,7 @@ nem írhat felül tesztet vagy típust.
   logging, külső AI/API. Gépi őr: CSP + oxlint. → product:#adat-es-deployment-korlatok
 - Fájlrendszer/tároló csak a `PlanStorage`/`DraftStorage` határon át. → symbol:app/src/storage/PlanStorage.ts#PlanStorage
 - Véglegesített verzió sosem íródik felül, mindig `_v<n+1>`.
-  → test:app/src/storage/DemoStorage.test.ts#savePlan on an existing tervId appends v2 without touching v1
+  → test:app/src/storage/szerzodesTesztek.ts#savePlan on an existing tervId appends v2 without touching v1
 - Magasabb `schemaVersion` → betöltés megtagadva.
   → test:app/src/domain/schema.test.ts#rejects a newer-than-known version with a readable message
 - Pénz egész, a pénznem alapegységében; nincs automatikus HUF↔EUR.
