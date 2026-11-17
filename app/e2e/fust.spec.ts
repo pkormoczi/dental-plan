@@ -30,7 +30,22 @@ test.describe.serial('Electron füst-teszt', () => {
     await page.getByRole('button', { name: 'Előnézet' }).first().click();
     const iframe = page.locator('iframe[title="Kezelési terv előnézet"]');
     await expect(iframe).toBeVisible({ timeout: 30_000 });
-    const src = await iframe.getAttribute('src');
+
+    // A `usePDF` minden újrarenderelés után új blob-URL-t ad, és a régit visszavonja; a késve
+    // érkező bemenetek (sablonok, foglalás, a canvason készülő fogtérkép-PNG) a „Letöltés”
+    // megjelenése után is indíthatnak újrarenderelést. Egy közben lecserélt URL letöltése
+    // `interrupted` lesz, ezért csak a nyugalmi állapot URL-je jó: látszik a „Letöltés”, és az
+    // iframe URL-je egy ideig nem változik.
+    const letoltes = page.getByRole('link', { name: 'Letöltés' });
+    let src = '';
+    await expect(async () => {
+      await expect(letoltes).toBeVisible();
+      const elotte = await iframe.getAttribute('src');
+      await page.waitForTimeout(1500);
+      await expect(letoltes).toBeVisible();
+      expect(await iframe.getAttribute('src')).toBe(elotte);
+      src = elotte ?? '';
+    }).toPass({ timeout: 30_000 });
     expect(src).toMatch(/^blob:app:\/\/mandoki-dental\//);
 
     // A PDF bájtjait a main process tölti le: a renderer `fetch`-e a blob:-ra maga is
@@ -46,7 +61,7 @@ test.describe.serial('Electron füst-teszt', () => {
           });
           wc.downloadURL(url);
         }),
-      { url: src!, ut: pdfUt },
+      { url: src, ut: pdfUt },
     );
     expect(allapot).toBe('completed');
     const pdf = readFileSync(pdfUt).toString('latin1');
