@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { buildFajlUtvonal, mimeTipus } from './buildKiszolgalas.js';
 import { menuSablon } from './menu.js';
+import { foablakNavigacioEngedett, pdfAblakNavigacioEngedett, sajatOrigin, ujAblakEngedett } from './navigacio.js';
 import { APP_ORIGIN, APP_PROTOKOLL, USER_DATA_MAPPA } from './protocol.js';
 
 const RENDERER_GYOKER = path.join(import.meta.dirname, '..', 'renderer');
@@ -70,19 +71,17 @@ async function kiszolgal(keres: Request): Promise<Response> {
   }
 }
 
+const WEB_BEALLITASOK = {
+  contextIsolation: true,
+  sandbox: true,
+  nodeIntegration: false,
+  // A PDF-előnézet iframe-je és a PDF-ablak a Chromium beépített PDF-nézegetőjét használja.
+  plugins: true,
+  spellcheck: false,
+} as const;
+
 function ablakNyitas(): BrowserWindow {
-  const ablak = new BrowserWindow({
-    show: false,
-    autoHideMenuBar: true,
-    webPreferences: {
-      contextIsolation: true,
-      sandbox: true,
-      nodeIntegration: false,
-      // A PDF-előnézet iframe-je a Chromium beépített PDF-nézegetőjét használja.
-      plugins: true,
-      spellcheck: false,
-    },
-  });
+  const ablak = new BrowserWindow({ show: false, autoHideMenuBar: true, webPreferences: WEB_BEALLITASOK });
   ablak.once('ready-to-show', () => {
     ablak.maximize();
     ablak.show();
@@ -95,16 +94,39 @@ function ablakNyitas(): BrowserWindow {
     const szint = ablak.webContents.getZoomLevel() + (irany === 'in' ? 0.5 : -0.5);
     ablak.webContents.setZoomLevel(Math.min(5, Math.max(-3, szint)));
   });
-  betoltes(ablak);
+  const betoltendo = devSzerver ?? `${APP_ORIGIN}/index.html`;
+  navigacioOr(ablak, sajatOrigin(betoltendo));
+  betoltes(ablak, betoltendo);
   return ablak;
 }
 
-function betoltes(ablak: BrowserWindow): void {
+function navigacioOr(ablak: BrowserWindow, origin: string): void {
+  const wc = ablak.webContents;
+  const tilt = (e: Electron.Event, url: string) => {
+    if (!foablakNavigacioEngedett(url, origin)) e.preventDefault();
+  };
+  wc.on('will-navigate', tilt);
+  wc.on('will-redirect', tilt);
+  wc.setWindowOpenHandler(({ url }) =>
+    ujAblakEngedett(url)
+      ? { action: 'allow', overrideBrowserWindowOptions: { autoHideMenuBar: true, webPreferences: WEB_BEALLITASOK } }
+      : { action: 'deny' },
+  );
+  wc.on('did-create-window', (pdfAblak) => {
+    const pdfTilt = (e: Electron.Event, url: string) => {
+      if (!pdfAblakNavigacioEngedett(url, origin)) e.preventDefault();
+    };
+    pdfAblak.webContents.on('will-navigate', pdfTilt);
+    pdfAblak.webContents.on('will-redirect', pdfTilt);
+    pdfAblak.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  });
+}
+
+function betoltes(ablak: BrowserWindow, url: string): void {
   if (!devSzerver) {
-    void ablak.loadURL(`${APP_ORIGIN}/index.html`);
+    void ablak.loadURL(url);
     return;
   }
-  const url = devSzerver;
   // Az `electron:dev` a Vite-tal párhuzamosan indul, a dev szerver az első betöltéskor még
   // nem feltétlen fogad kérést.
   let probalkozas = 0;

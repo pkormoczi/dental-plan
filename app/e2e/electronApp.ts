@@ -49,7 +49,8 @@ export async function inditas(): Promise<FutoApp> {
     userData,
     hibak,
     leallitas: async () => {
-      await app.close();
+      // A főablak bezárása maga is kilépés; a már leállt appon a close() nem dob.
+      await app.close().catch(() => {});
       rmSync(userData, { recursive: true, force: true });
     },
   };
