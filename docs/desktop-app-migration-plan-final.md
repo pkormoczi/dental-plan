@@ -48,7 +48,7 @@ Ezért a terv három rétegre épül:
 | # | Döntés | Miért |
 |---|---|---|
 | 1 | **Electron**, nem Tauri | Egyetlen, verzióhoz kötött Chromium és V8 fut mindkét platformon, tehát a `@react-pdf/renderer` (saját layout-lánc: Yoga + PDFKit), a beágyazott Noto Sans és a wasm-modul azonos környezetben dolgozik. A PDF szöveges része így platformfüggetlen; a canvasos fogtérkép nem (lásd §12). Tauri alatt két különböző webview-motor futna egy aláírandó dokumentum mögött |
-| 2 | Kézi frissítés, nincs auto-updater, nincs fizetős code signing; **macOS: ad-hoc aláírás + karanténmentesítő `.command` script** | Egy doki, két gép; az évi több száz USD-s tanúsítványköltség nem térül meg. A Windows SmartScreen minden kiadásnál újra figyelmeztet, a macOS-script minden frissítés után újra futtatandó, és első alkalommal jobbklikk → „Megnyitás”-sal indítandó. Ezeket a telepítési útmutató explicit tartalmazza |
+| 2 | Kézi frissítés, nincs auto-updater, nincs fizetős code signing; **macOS: ad-hoc aláírás, első indítás a Rendszerbeállítások → Adatvédelem és biztonság megnyitás-engedélyével, script nélkül** | Egy doki, két gép; az évi több száz USD-s tanúsítványköltség nem térül meg. A Windows SmartScreen minden kiadásnál újra figyelmeztet, a macOS-engedély minden frissítés után egyszer újra kell. macOS 15 óta a jobbklikkes megkerülés nincs, a letöltött `.command` script maga is karanténba kerül és futási jog nélkül érkezik; vésztartalék egy Terminál-sor (`xattr`). Ezeket a telepítési útmutató (`docs/TELEPITES.md`) explicit tartalmazza |
 | 3 | Gyökérmappa a **My Drive** alatti, **Tükrözés** módban szinkronizált mappán belül; egy doki, két gép, **sosem egyidejűleg**; **kimondott gépváltási szabály**; az app a Drive szinkronállapotát **nem** detektálja | Shared Drive-ot a kliens csak streamelni tud, az app helyi fájlokat vár. Nincs megbízható API a szinkronállapotra. A szabály az elsődleges védelem, a 4., 19., 23. és 28. döntés a háló alatta |
 | 4 | Verziómappa-ütközés mentéskor (a `_vN` már létezik) → **kemény blokk** a meglévő verzió adataival; a doki „Mentés a következő sorszámra” vagy „Mégsem”. Induláskor talált **duplikált sorszám** (Drive ` (1)` toldat) → **csak jelez**, nem nevez át | A felülírás-tilalom csendes megkerülése helyett a doki lássa, mi történt. Az átsorszámozás automatizálása több hibalehetőséget hozna, mint amennyit megold; a doki a Fájlkezelőben rendezi |
 | 5 | **Piszkozat gépenként lokális** (renderer `localStorage`, `userData` alatt), sosem szinkronizált, sosem system of record; **a piszkozat a forrásverzióját megjegyzi**, és véglegesítéskor amber jelzést ad, ha azóta újabb verzió készült | Gépváltás csak lezárt munkák között. A leggyakrabban írt fájl nem kerül Drive-ütközés alá. A forrásverzió-ellenőrzés nélkül a következő szabad sorszám kiosztása elfedné, hogy a doki elavult alapból dolgozik |
@@ -444,8 +444,8 @@ vezet, a main buildjét töri el. Egy `package.json`, új scriptek: `electron:de
 ### 9.2 `electron-builder`
 
 - Windows: `nsis`, `x64`, `deleteAppDataOnUninstall: true`, aláíratlan (SmartScreen elfogadott).
-- macOS: `dmg`, `arm64` + `x64`, ad-hoc aláírás, a Release mellé csomagolt `.command` script
-  (`xattr -dr com.apple.quarantine`) és README a 2. döntés szerinti lépésekkel.
+- macOS: `dmg`, csak `arm64` (a doki Macje Apple Silicon), ad-hoc aláírás (`identity: "-"`,
+  `hardenedRuntime: false`), script nélkül; az útmutató a 2. döntés szerinti lépésekkel.
 
 ### 9.3 Workflow-k
 
@@ -546,7 +546,7 @@ az importot.
 
 Csak a 10.2b összes forgatókönyve és a visszaállítás-próba után kerülhet valódi páciensadat a
 gyökérmappába. A telepítési útmutató tartalmazza: Drive-mód és My Drive követelmény, gépváltási
-szabály, macOS-script, SmartScreen, havi ZIP-mentés külső lemezre, visszaállítás lépései.
+szabály, macOS-megnyitásengedély, SmartScreen, havi ZIP-mentés külső lemezre, visszaállítás lépései.
 
 ## 11. Hogyan marad zöld a vitest-készlet
 
