@@ -86,6 +86,44 @@ function seedPriceListWithNoEurPrices() {
   localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
 }
 
+// A kategória-panel és a „+ Új tétel” dialógus viselkedése nem függ a lista hosszától, a teljes
+// seed-tábla újrarenderelése viszont minden interakciónál (gépelésnél billentyűnként) drága:
+// lassú gépen ezek a tesztek a 15 s-os timeoutba ütköztek. Az első három kategória és a
+// legnagyobb id-jű tétel kategóriája marad, kategóriánként az első tétellel, plusz a legnagyobb
+// id-jű tétel -- az id-k így nem folytonosak, a „soron következő id” a legnagyobb utáni, nem a
+// lista hossza szerinti.
+const kisArlista: PriceList = (() => {
+  const legnagyobb = seedPriceList.tetelek.reduce((a, b) => (a.id > b.id ? a : b));
+  const kategoriak = seedPriceList.kategoriak
+    .slice()
+    .sort((a, b) => a.sorrend - b.sorrend)
+    .filter((k, i) => i < 3 || k.id === legnagyobb.kategoriaId);
+  const kategoriaIdk = new Set(kategoriak.map((k) => k.id));
+  const elsok = new Set<string>();
+  const latottKategoriak = new Set<string>();
+  for (const x of seedPriceList.tetelek) {
+    if (kategoriaIdk.has(x.kategoriaId) && !latottKategoriak.has(x.kategoriaId)) {
+      latottKategoriak.add(x.kategoriaId);
+      elsok.add(x.id);
+    }
+  }
+  return {
+    ...seedPriceList,
+    // A seedhez hasonlóan folytonos sorrend: az új kategória a „legnagyobb + 1” helyre kerül.
+    kategoriak: kategoriak.map((k, i) => ({ ...k, sorrend: i + 1 })),
+    tetelek: seedPriceList.tetelek
+      .filter((x) => elsok.has(x.id) || x.id === legnagyobb.id)
+      .map((x) => ({ ...x, ar: { ...x.ar, EUR: null } })),
+  };
+})();
+const KIS_DARAB = kisArlista.tetelek.length;
+
+function seedKisArlista() {
+  localStorage.setItem('dp:arlista.json', JSON.stringify(kisArlista));
+}
+
+const latszikMind = (n: number) => new RegExp(`${n} / ${n} tétel látszik`);
+
 describe('PriceListAdminPage', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -422,8 +460,10 @@ describe('PriceListAdminPage', () => {
   // első kategóriába eső tétel, ahogy a korábbi azonnali-commit viselkedés
   // tette.
   describe('"+ Új tétel" dialógus', () => {
+    beforeEach(seedKisArlista);
+
     async function openUjTetelDialog(user: ReturnType<typeof userEvent.setup>) {
-      await screen.findByText(/118 \/ 118 tétel látszik/);
+      await screen.findByText(latszikMind(KIS_DARAB));
       const buttons = screen.getAllByRole('button', { name: '+ Új tétel' });
       expect(buttons).toHaveLength(2);
       await user.click(buttons[0]);
@@ -460,7 +500,7 @@ describe('PriceListAdminPage', () => {
       await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
 
       expect(within(dialog).getByText('A megnevezés nem lehet üres.')).toBeInTheDocument();
-      expect(readPriceList().tetelek).toHaveLength(118);
+      expect(readPriceList().tetelek).toHaveLength(KIS_DARAB);
     });
 
     it('kategória kiválasztása nélkül a Mentés hibaszöveget mutat, és semmi nem mentődik', async () => {
@@ -472,7 +512,7 @@ describe('PriceListAdminPage', () => {
       await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
 
       expect(within(dialog).getByText('Válassz kategóriát.')).toBeInTheDocument();
-      expect(readPriceList().tetelek).toHaveLength(118);
+      expect(readPriceList().tetelek).toHaveLength(KIS_DARAB);
     });
 
     it('kitöltve a Mentés a kiválasztott kategóriában hozza létre a tételt, inaktívan, és a sor a listában nyílik ki', async () => {
@@ -486,10 +526,10 @@ describe('PriceListAdminPage', () => {
       await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-      expect(await screen.findByText(/119 \/ 119 tétel látszik/)).toBeInTheDocument();
+      expect(await screen.findByText(latszikMind(KIS_DARAB + 1))).toBeInTheDocument();
 
       const pl = readPriceList();
-      expect(pl.tetelek).toHaveLength(119);
+      expect(pl.tetelek).toHaveLength(KIS_DARAB + 1);
       const created = pl.tetelek[pl.tetelek.length - 1];
       expect(created.id).toBe('t119');
       expect(created.nev).toEqual({ hu: 'Teszt új tétel', de: 'Testneues Element' });
@@ -600,7 +640,7 @@ describe('PriceListAdminPage', () => {
       await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'Elvetett piszkozat');
       await user.click(within(dialog).getByRole('button', { name: 'Mégse' }));
 
-      expect(readPriceList().tetelek).toHaveLength(118);
+      expect(readPriceList().tetelek).toHaveLength(KIS_DARAB);
 
       const buttons = screen.getAllByRole('button', { name: '+ Új tétel' });
       await user.click(buttons[0]);
@@ -612,17 +652,18 @@ describe('PriceListAdminPage', () => {
       await pickFirstCategory(user, dialog);
       await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
 
-      expect(await screen.findByText(/119 \/ 119 tétel látszik/)).toBeInTheDocument();
+      expect(await screen.findByText(latszikMind(KIS_DARAB + 1))).toBeInTheDocument();
       const created = readPriceList().tetelek.at(-1)!;
       expect(created.id).toBe('t119');
     });
 
     it('pontosan egyező névnél figyelmeztet, de a Mentés attól még végigmegy', async () => {
       const user = userEvent.setup();
+      const meglevo = kisArlista.tetelek[0].nev.hu;
       renderAdmin();
       const dialog = await openUjTetelDialog(user);
 
-      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), 'CBCT');
+      await user.type(within(dialog).getByLabelText('Megnevezés (magyar) *'), meglevo);
       expect(
         await within(dialog).findByText('Már van ilyen nevű tétel a listában.'),
       ).toBeInTheDocument();
@@ -630,8 +671,8 @@ describe('PriceListAdminPage', () => {
       await pickFirstCategory(user, dialog);
       await user.click(within(dialog).getByRole('button', { name: 'Mentés' }));
 
-      expect(await screen.findByText(/119 \/ 119 tétel látszik/)).toBeInTheDocument();
-      expect(readPriceList().tetelek.filter((x) => x.nev.hu === 'CBCT')).toHaveLength(2);
+      expect(await screen.findByText(latszikMind(KIS_DARAB + 1))).toBeInTheDocument();
+      expect(readPriceList().tetelek.filter((x) => x.nev.hu === meglevo)).toHaveLength(2);
     });
   });
 
@@ -772,12 +813,14 @@ describe('PriceListAdminPage', () => {
   });
 
   describe('Kategóriák panel', () => {
+    beforeEach(seedKisArlista);
+
     function catPanel(): HTMLElement {
       return document.getElementById('kategoriak-panel')!;
     }
 
     async function openCatPanel(user: ReturnType<typeof userEvent.setup>) {
-      await screen.findByText(/118 \/ 118 tétel látszik/);
+      await screen.findByText(latszikMind(KIS_DARAB));
       const toggle = screen.getByRole('button', { name: /Kategóriák/ });
       expect(toggle).toHaveAttribute('aria-expanded', 'false');
       await user.click(toggle);
@@ -1131,7 +1174,7 @@ describe('PriceListAdminPage', () => {
 
       await user.click(within(catPanel()).getByRole('button', { name: '+ Új kategória' }));
 
-      const nameCell = await screen.findByText('CBCT');
+      const nameCell = await screen.findByText(kisArlista.tetelek[0].nev.hu);
       await user.click(nameCell);
       await user.click(screen.getByRole('combobox', { name: 'Kategória' }));
 
