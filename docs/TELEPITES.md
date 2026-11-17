@@ -37,11 +37,12 @@ eltávolítás az alkalmazás gépen tárolt adatait (a félkész tervet is) tö
 ### Telepítés
 
 1. Töltsd le a `Mandoki-Dental-<verzió>-arm64.dmg` fájlt, és nyisd meg.
-2. A megnyíló ablakban húzd a **Mándoki Dental** ikont az **Alkalmazások** (Applications) mappára.
+2. A megnyíló ablakban húzd a **Mandoki Dental** ikont az **Alkalmazások** (Applications) mappára.
+   Macen a program neve ékezet nélkül szerepel, mert a Mac ékezetes névvel nem tudja elindítani.
 3. Indítsd el az Alkalmazások mappából. A Mac először nem engedi megnyitni, mert az alkalmazás nincs
    az Apple-nél hitelesítve: a figyelmeztetést zárd be (**Kész**, ne „Kidobás”).
 4. Nyisd meg: Rendszerbeállítások → **Adatvédelem és biztonság**. Görgess le a **Biztonság** részig:
-   ott áll, hogy a „Mándoki Dental” meg lett akadályozva. Kattints a mellette lévő **megnyitás**
+   ott áll, hogy a „Mandoki Dental” meg lett akadályozva. Kattints a mellette lévő **megnyitás**
    gombra, és erősítsd meg a jelszavaddal vagy Touch ID-val.
 5. Az alkalmazás elindul. Ezután már dupla kattintással nyílik.
 
@@ -51,7 +52,7 @@ A 3–5. lépést **minden frissítés után egyszer** meg kell ismételni.
 másold be az alábbi sort, és nyomj Entert:
 
 ```
-xattr -dr com.apple.quarantine "/Applications/Mándoki Dental.app"
+xattr -dr com.apple.quarantine "/Applications/Mandoki Dental.app"
 ```
 
 ### Frissítés
@@ -61,7 +62,7 @@ Lépj ki az alkalmazásból, nyisd meg az új dmg-t, és húzd az ikont ismét a
 
 ### Eltávolítás
 
-1. Húzd a **Mándoki Dental** alkalmazást az Alkalmazások mappából a Kukába.
+1. Húzd a **Mandoki Dental** alkalmazást az Alkalmazások mappából a Kukába.
 2. A Finderben: Ugrás → Ugrás mappához…, írd be: `~/Library/Application Support/mandoki-dental`, és
    ezt a mappát is töröld. Ebben él az alkalmazás gépen tárolt adata (a félkész terv is), a Mac
    ezt magától nem törli.
