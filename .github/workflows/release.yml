@@ -71,6 +71,15 @@ jobs:
         working-directory: app
         run: npx playwright test -c e2e
 
+      # A Playwright lapállapot-pillanatképe: a runneren bukó teszt oka enélkül nem látszik.
+      - name: Füst-teszt kimenete hibánál
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fust-teszt-${{ matrix.os }}
+          path: app/test-results
+          if-no-files-found: ignore
+
       - name: Telepítő feltöltése
         uses: actions/upload-artifact@v7
         with:

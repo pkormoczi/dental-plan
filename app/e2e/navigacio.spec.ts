@@ -44,7 +44,8 @@ test.describe.serial('Electron navigációs és új-ablak tiltás', () => {
     await page.getByRole('button', { name: 'Előnézet' }).first().click();
     await page.locator('iframe[title="Kezelési terv előnézet"]').waitFor();
     await page.getByRole('button', { name: 'Véglegesítés és mentés' }).click();
-    await expect(page.getByText('A terv elmentve ✓')).toBeVisible();
+    // A mentés a végleges PDF-et újra legenerálja; a macOS-runneren ez az alap 5 s-nál tovább tart.
+    await expect(page.getByText('A terv elmentve ✓')).toBeVisible({ timeout: 30_000 });
     await page.getByRole('button', { name: 'Korábbi tervek' }).click();
     await page.getByRole('button', { name: 'Megnézés' }).first().click();
     await expect(page.getByText('v2', { exact: true }).first()).toBeVisible();
