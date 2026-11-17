@@ -6,11 +6,13 @@ import path from 'node:path';
 export const APP_KONYVTAR = path.resolve(import.meta.dirname, '..');
 
 // A teszt a kicsomagolt csomagot (`electron:package:dir`) indítja, nem a csupasz buildet: az
-// asar-ba csomagolás és a csomagolt protokoll-kiszolgálás hibája csak így jön elő.
+// asar-ba csomagolás és a csomagolt protokoll-kiszolgálás hibája csak így jön elő. macOS-en a
+// `.app` és a bináris is a `productName`-et viseli: egy ottani `executableName` a Finderben
+// látszó csomagnevet is átírná.
 export function inditasiParancs(): { exe: string; args: string[] } {
   const exe =
     process.platform === 'darwin'
-      ? path.join(APP_KONYVTAR, 'release', `mac-${process.arch}`, 'Mándoki Dental.app', 'Contents', 'MacOS', 'mandoki-dental')
+      ? path.join(APP_KONYVTAR, 'release', `mac-${process.arch}`, 'Mándoki Dental.app', 'Contents', 'MacOS', 'Mándoki Dental')
       : path.join(APP_KONYVTAR, 'release', 'win-unpacked', 'mandoki-dental.exe');
   if (!existsSync(exe)) throw new Error(`Nincs kicsomagolt app: ${exe} -- futtasd: npm run test:electron`);
   return { exe, args: [] };
