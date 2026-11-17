@@ -28,3 +28,6 @@ dist-electron
 
 # Playwright füst-teszt kimenete
 test-results
+
+# electron-builder kimenete (telepítők, kicsomagolt app)
+release

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { buildFajlUtvonal, mimeTipus } from './buildKiszolgalas.js';
 import { menuSablon } from './menu.js';
 import { foablakNavigacioEngedett, pdfAblakNavigacioEngedett, sajatOrigin, ujAblakEngedett } from './navigacio.js';
-import { APP_ORIGIN, APP_PROTOKOLL, USER_DATA_MAPPA } from './protocol.js';
+import { APP_ID, APP_ORIGIN, APP_PROTOKOLL, USER_DATA_MAPPA } from './protocol.js';
 
 const RENDERER_GYOKER = path.join(import.meta.dirname, '..', 'renderer');
 
@@ -48,6 +48,7 @@ function inditas(): void {
   app.on('window-all-closed', () => app.quit());
 
   void app.whenReady().then(() => {
+    if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
     // Windowson az Electron a helyesírási szótárat a Google CDN-ről töltené le -- kimenő
     // kapcsolat lenne (PRODUCT.md § Adat- és deployment-korlátok).
     session.defaultSession.setSpellCheckerEnabled(false);

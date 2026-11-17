@@ -1,17 +1,19 @@
 import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
 export const APP_KONYVTAR = path.resolve(import.meta.dirname, '..');
 
-// FUST_TESZT_CSOMAG: a csomagolt app futtatható fájlja; nélküle a production-módú build indul
-// a node_modules Electronjával.
+// A teszt a kicsomagolt csomagot (`electron:package:dir`) indítja, nem a csupasz buildet: az
+// asar-ba csomagolás és a csomagolt protokoll-kiszolgálás hibája csak így jön elő.
 export function inditasiParancs(): { exe: string; args: string[] } {
-  const csomag = process.env.FUST_TESZT_CSOMAG;
-  if (csomag) return { exe: path.resolve(APP_KONYVTAR, csomag), args: [] };
-  return { exe: createRequire(import.meta.url)('electron') as string, args: ['.'] };
+  const exe =
+    process.platform === 'darwin'
+      ? path.join(APP_KONYVTAR, 'release', `mac-${process.arch}`, 'Mándoki Dental.app', 'Contents', 'MacOS', 'mandoki-dental')
+      : path.join(APP_KONYVTAR, 'release', 'win-unpacked', 'mandoki-dental.exe');
+  if (!existsSync(exe)) throw new Error(`Nincs kicsomagolt app: ${exe} -- futtasd: npm run test:electron`);
+  return { exe, args: [] };
 }
 
 export type FutoApp = {

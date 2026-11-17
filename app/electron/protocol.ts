@@ -10,3 +10,8 @@ export const APP_ORIGIN = `${APP_PROTOKOLL}://${APP_HOSZT}`;
 // Egyezik a `package.json` `name`-jével: az NSIS-eltávolító `deleteAppDataOnUninstall`
 // mellett a `$APPDATA\<package name>` mappát törli, ezért a piszkozat csak így tűnik el vele.
 export const USER_DATA_MAPPA = 'mandoki-dental';
+
+// Egyezik az `electron-builder.json` `appId`-jével. Windowson ebből lesz a telepítés
+// eltávolítási kulcsa és a tálcás csoportosítás azonosítója: átnevezése egy második, párhuzamos
+// telepítést hozna létre a régi mellé.
+export const APP_ID = 'hu.drmandoki.kezelesiterv';

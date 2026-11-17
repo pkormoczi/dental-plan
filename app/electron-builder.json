@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/app-builder-lib/scheme.json",
+  "appId": "hu.drmandoki.kezelesiterv",
+  "directories": {
+    "output": "release",
+    "buildResources": "build-resources"
+  },
+  "files": ["dist-electron/**/*", "package.json", "!node_modules/**/*"],
+  "asar": true,
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "executableName": "mandoki-dental"
+  },
+  "nsis": {
+    "oneClick": true,
+    "perMachine": false,
+    "deleteAppDataOnUninstall": true,
+    "artifactName": "Mandoki-Dental-Setup-${version}.${ext}"
+  },
+  "mac": {
+    "target": [{ "target": "dmg", "arch": ["arm64"] }],
+    "identity": "-",
+    "hardenedRuntime": false,
+    "executableName": "mandoki-dental"
+  },
+  "dmg": {
+    "artifactName": "Mandoki-Dental-${version}-${arch}.${ext}"
+  }
+}
