@@ -38,7 +38,7 @@ eltávolítási bejegyzés), ugyanúgy, mint Macen.
 - Egy forrás a telepítői névre: a `productName` — mert így a két platform nem csúszhat szét; nem
   a felülírások átírása ékezet nélküli értékre, mert az két helyen tartaná ugyanazt.
 - Teszt őrzi, hogy a builder-config ne írjon felül megjelenített nevet a `productName`-től
-  eltérően — mert a doki döntése az egységes viselkedés.
+  eltérően — mert a fejlesztő döntése az egységes viselkedés.
 
 ## Verification
 - [ ] tests — a builder-config egyetlen platformon sem ad a `productName`-től eltérő megjelenített
