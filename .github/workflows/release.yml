@@ -35,7 +35,9 @@ jobs:
     needs: master-or
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]
+        # Az Intel-runner ugyanazt a universal csomagot építi, és natívan az x64-szeletét
+        # füst-teszteli -- az arm64-runner a universal binárisból az arm64-et futtatná.
+        os: [windows-latest, macos-latest, macos-26-intel]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -67,6 +69,19 @@ jobs:
         working-directory: app
         run: npm run electron:package
 
+      - name: A mac bináris mindkét architektúrát tartalmazza
+        if: runner.os == 'macOS'
+        working-directory: app
+        run: |
+          archs=$(lipo -archs "release/mac-universal/Mandoki Dental.app/Contents/MacOS/Mandoki Dental")
+          echo "lipo -archs: $archs"
+          for a in x86_64 arm64; do
+            case " $archs " in
+              *" $a "*) ;;
+              *) echo "::error::A universal binárisból hiányzik a(z) $a szelet ($archs)."; exit 1 ;;
+            esac
+          done
+
       - name: Füst-teszt a kicsomagolt csomagon
         working-directory: app
         run: npx playwright test -c e2e
@@ -80,7 +95,9 @@ jobs:
           path: app/test-results
           if-no-files-found: ignore
 
+      # Az Intel-runner dmg-je ugyanazt a fájlnevet viselné: a publikáló merge-multiple-je ütközne.
       - name: Telepítő feltöltése
+        if: matrix.os != 'macos-26-intel'
         uses: actions/upload-artifact@v7
         with:
           name: telepito-${{ matrix.os }}

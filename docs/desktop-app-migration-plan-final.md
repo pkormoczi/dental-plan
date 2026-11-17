@@ -444,8 +444,9 @@ vezet, a main buildjét töri el. Egy `package.json`, új scriptek: `electron:de
 ### 9.2 `electron-builder`
 
 - Windows: `nsis`, `x64`, `deleteAppDataOnUninstall: true`, aláíratlan (SmartScreen elfogadott).
-- macOS: `dmg`, csak `arm64` (a doki Macje Apple Silicon), ad-hoc aláírás (`identity: "-"`,
-  `hardenedRuntime: false`), script nélkül; az útmutató a 2. döntés szerinti lépésekkel.
+- macOS: egy `universal` `dmg` (Apple Silicon és Intel, macOS 13 vagy újabb), ad-hoc aláírás
+  (`identity: "-"`, `hardenedRuntime: false`), script nélkül; az útmutató a 2. döntés szerinti
+  lépésekkel.
 
 ### 9.3 Workflow-k
 
@@ -453,7 +454,8 @@ vezet, a main buildjét töri el. Egy `package.json`, új scriptek: `electron:de
   `test:workflow`, `docs-check`, `build`. **Ez megmarad a demó után is.**
 - **`deploy.yml`**: csak a Pages-deploy lépés marad benne, a `ci.yml`-re várva; a 3. mérföldkőben
   törlődik.
-- **`release.yml`**: `v*` tagre, `windows-latest` + `macos-latest` mátrix, `npm ci`, `npm test`
+- **`release.yml`**: `v*` tagre, `windows-latest` + `macos-latest` mátrix (+ `macos-26-intel`, csak
+  az x64-szelet füst-tesztje, telepítő nélkül), `npm ci`, `npm test`
   (a `FileSystemStorage` tesztek mindkét OS-en), Playwright füst-teszt, `electron:package`, feltöltés
   GitHub Release-be.
 

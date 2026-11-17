@@ -3,7 +3,7 @@
 Az alkalmazás telepítőit a GitHub-kiadás (Release) oldala tartalmazza:
 
 - Windows: `Mandoki-Dental-Setup-<verzió>.exe`
-- Mac (Apple Silicon): `Mandoki-Dental-<verzió>-arm64.dmg`
+- Mac (Apple Silicon és Intel): `Mandoki-Dental-<verzió>-universal.dmg`
 
 Frissítés nincs automatikusan: új változatnál ugyanezeket a lépéseket kell megismételni. Hogy mi
 változott, azt az alkalmazás Kezdőlapján a Változásnapló mutatja.
@@ -34,9 +34,13 @@ eltávolítás az alkalmazás gépen tárolt adatait (a félkész tervet is) tö
 
 ## Mac
 
+Egyetlen Mac-telepítő van: ugyanaz a fájl Apple Silicon (M1, M2…) és Intel processzoros Macen is
+működik. macOS 13 (Ventura) vagy újabb rendszer kell hozzá — hogy melyik van a gépen, az Apple
+menü → **Erről a Macről** ablakban látszik.
+
 ### Telepítés
 
-1. Töltsd le a `Mandoki-Dental-<verzió>-arm64.dmg` fájlt, és nyisd meg.
+1. Töltsd le a `Mandoki-Dental-<verzió>-universal.dmg` fájlt, és nyisd meg.
 2. A megnyíló ablakban húzd a **Mandoki Dental** ikont az **Alkalmazások** (Applications) mappára.
 3. Indítsd el az Alkalmazások mappából. A Mac először nem engedi megnyitni, mert az alkalmazás nincs
    az Apple-nél hitelesítve: a figyelmeztetést zárd be (**Kész**, ne „Kidobás”).

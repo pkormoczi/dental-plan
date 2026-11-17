@@ -18,7 +18,7 @@
     "artifactName": "Mandoki-Dental-Setup-${version}.${ext}"
   },
   "mac": {
-    "target": [{ "target": "dmg", "arch": ["arm64"] }],
+    "target": [{ "target": "dmg", "arch": ["universal"] }],
     "identity": "-",
     "hardenedRuntime": false
   },

@@ -9,6 +9,9 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   Egyelőre a demóhoz hasonlóan csak az adott gépen tárolja az adatokat, ezért valódi páciensadatot
   még ne írjunk bele. A letöltés mellé csatolt útmutató lépésről lépésre leírja a telepítést, a
   frissítést és az eltávolítást; frissíteni kézzel kell.
+- A Mac-telepítő Intel processzoros Macen is működik, nem csak az újabb (M1, M2…) gépeken. Egyetlen
+  Mac-es letöltés van, így nem lehet rossz fájlt választani; macOS 13 (Ventura) vagy újabb rendszer
+  kell hozzá.
 
 ## 2026. november 16.
 
