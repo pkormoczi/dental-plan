@@ -25,3 +25,6 @@ dist-ssr
 
 # Electron-build (renderer + main)
 dist-electron
+
+# Playwright füst-teszt kimenete
+test-results

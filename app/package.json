@@ -16,7 +16,8 @@
     "docs-check": "node ../scripts/docs-check.mjs",
     "electron:build": "vite build --mode electron && tsc -p tsconfig.electron.build.json",
     "electron:dev": "tsc -p tsconfig.electron.build.json && concurrently -k -n vite,electron \"vite --mode electron --port 5173 --strictPort\" \"electron . --dev-server=http://localhost:5173/\"",
-    "electron:start": "npm run electron:build && electron ."
+    "electron:start": "npm run electron:build && electron .",
+    "test:electron": "npm run electron:build && playwright test -c e2e"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.3.0",
@@ -28,6 +29,7 @@
     "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.3",

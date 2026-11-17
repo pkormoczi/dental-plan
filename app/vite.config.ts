@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { configDefaults } from 'vitest/config'
 
 // Content-Security-Policy meta az index.html-be. A `connect-src 'self' data:`
 // a „páciens- és kezelési adat nem hagyhatja el a gépet" szabály gépi alakja:
@@ -69,6 +70,8 @@ export default defineConfig(({ mode }) => ({
     },
     globals: true,
     setupFiles: './src/test-setup.ts',
+    // Az `e2e/` Playwright-specjei a csomagolt Electront hajtják, nem jsdom-ot.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
     // Vitest alapértelmezett 5000ms-je néhány `userEvent.type`-tal sok
     // karaktert begépelő tesztnél (pl. PriceListAdminPage kategória-
     // átnevezés) a GitHub Actions runneren már szűken elfér -- lokálisan

@@ -15,10 +15,14 @@ const devSzerver = app.isPackaged
   : process.argv.find((a) => a.startsWith(DEV_SZERVER_KAPCSOLO))?.slice(DEV_SZERVER_KAPCSOLO.length);
 
 // A csomagolatlan futás (fejlesztés, kézi production-próba) sosem nyúl egy ugyanazon a gépen
-// telepített app piszkozatához. Az egy-példány zár is a userData-ban él, ezért ez előtte áll.
+// telepített app piszkozatához; a füst-teszt (`app/e2e/`) pedig minden futásra friss, ideiglenes
+// mappát ad -- kizárólag erre szolgál ez a változó. Az egy-példány zár is a userData-ban él,
+// ezért ez előtte áll.
+const TESZT_USER_DATA = process.env.DENTAL_PLAN_TESZT_USER_DATA;
 app.setPath(
   'userData',
-  path.join(app.getPath('appData'), app.isPackaged ? USER_DATA_MAPPA : `${USER_DATA_MAPPA}-dev`),
+  TESZT_USER_DATA ??
+    path.join(app.getPath('appData'), app.isPackaged ? USER_DATA_MAPPA : `${USER_DATA_MAPPA}-dev`),
 );
 
 protocol.registerSchemesAsPrivileged([

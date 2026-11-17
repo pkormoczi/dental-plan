@@ -38,7 +38,8 @@ A JSON-kulcsok magyarul vannak és a lemezre írt séma részei — kódban nem 
 # Böngésző-automatizálás — nem tárgyalható
 A chrome-devtools MCP KIZÁRÓLAG izolált módban futhat. TILOS a configba: `--autoConnect`,
 `--browserUrl`, vagy `--user-data-dir` a fejlesztő valós Chrome-profiljára. TILOS futó Chrome-hoz
-csatlakozni vagy remote debuggingot bekapcsolni bármilyen böngészőben. Ha egy feladat valós profilt
+csatlakozni vagy remote debuggingot bekapcsolni bármilyen böngészőben. Kivétel: a `test:electron`
+Playwrightja (saját indítású Electron, ideiglenes userData). Ha egy feladat valós profilt
 igényelne (bejelentkezés, mappa-engedély), ne kerüld meg: jelezd, és javasolj `PlanStorage`
 teszt-implementációt. Kikényszerítés: a követett, verzió-pinnelt `.mcp.json` (`--isolated`). A
 jsdom nem ellenőrizhető rétegét a `/manual-checks` fedi, sosem magától, doki-indítva.
@@ -60,5 +61,5 @@ Nincs `.skip`/`.only`. A tesztnév konkrét, megfigyelhető viselkedést ír le,
 # Workflow
 `/idea <slug>` → `/plan <slug>...` (interjú csak termékkérdésnél) → `/implement <slug>...`
 (tételenként commit, a végén egy kapu + push → Pages). `/fix "<szöveg>"`: kis javítás tervfájl
-nélkül, egy commit. Kézi teszt a Pages-en, sosem kapu. Scriptek: `scripts/workflow/` (`run`,
-`close`, `commit-push`, `sync`). `/backlog`, `/reviews` listáz. Részletek: `backlog/README.md`.
+nélkül, egy commit. Kézi teszt a Pages-en, sosem kapu. Scriptek: `scripts/workflow/`.
+`/backlog`, `/reviews` listáz. Részletek: `backlog/README.md`.
