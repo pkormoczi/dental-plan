@@ -40,3 +40,17 @@ describe('tartós nevek', () => {
     expect(APP_ID).toBe(olvasJson('electron-builder.json').appId);
   });
 });
+
+describe('helyi kicsomagolt build', () => {
+  // Az electron-builder `--dir` kapcsolója cél-architektúra nélkül a gép architektúrájára
+  // csomagol, a builder-config Mac-targetjét figyelmen kívül hagyva: macOS-en így nem lenne
+  // `mac-universal`, amit az e2e indító keres.
+  it('macOS-en ugyanarra az architektúrára készül, mint a kiadott dmg, nem a --dir kapcsolóval', () => {
+    const script: string = olvasJson('package.json').scripts['electron:package:dir'];
+    const kiadott = (olvasJson('electron-builder.json').mac.target as { arch: string[] }[]).flatMap((t) => t.arch);
+    const helyi = [...script.matchAll(/-c\.mac\.target\.arch=(\S+)/g)].map((m) => m[1]);
+    expect(script).not.toMatch(/(^|\s)--dir(\s|$)/);
+    expect(script).toMatch(/-c\.mac\.target\.target=dir(\s|$)/);
+    expect(helyi).toEqual(kiadott);
+  });
+});
