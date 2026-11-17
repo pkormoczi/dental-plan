@@ -48,9 +48,12 @@ function cspPlugin(): Plugin {
 
 // https://vite.dev/config/
 // base: a GitHub Pages URL https://pkormoczi.github.io/dental-plan/ alá épül,
-// tehát minden asset-hivatkozásnak ez alól kell jönnie.
-export default defineConfig({
-  base: '/dental-plan/',
+// tehát minden asset-hivatkozásnak ez alól kell jönnie. Az Electron-build
+// (`--mode electron`) relatív, mert az `app://` protokoll a build gyökeréből
+// szolgál ki; külön mappába ír, hogy a Pages `dist/` sose keveredjen vele.
+export default defineConfig(({ mode }) => ({
+  base: mode === 'electron' ? './' : '/dental-plan/',
+  build: mode === 'electron' ? { outDir: 'dist-electron/renderer', emptyOutDir: true } : undefined,
   plugins: [react(), cspPlugin()],
   server: {
     // A Kezdőlap két kártyája a repo docs/ mappájában lévő CHANGELOG.md-t és
@@ -78,4 +81,4 @@ export default defineConfig({
     // mockot örökölne, és a kapu terheléstől függően villódzna.
     restoreMocks: true,
   },
-})
+}))

@@ -29,9 +29,9 @@ készítésére — nem termék, nincs több rendelő. Az Excel-alapú elődöt 
 - A terv tartalma (név, születési idő, lakcím, TAJ, beavatkozások) **GDPR 9. cikk szerinti különleges
   adat**. A fejlesztő semmilyen minőségben nem kerül az adatkezelési láncba.
 - **Az alkalmazás nem továbbít páciensadatot:** nincs backend, adatbázis, telemetria, analytics, remote
-  logging, külső AI/API hívás. A rendelő által beállított Drive-kliens végzi a felhőszinkront (My Drive,
-  Tükrözés mód, Google Workspace DPA). Gépi őr: CSP (Vite-plugin) és oxlint-tiltás a hálózati
-  globálisokra; nem lazíthatók.
+  logging, külső AI/API. A rendelő által beállított Drive-kliens végzi a felhőszinkront (My Drive,
+  Tükrözés mód, Google Workspace DPA). Gépi őr: CSP és oxlint-tiltás a hálózati
+  globálisokra és a main process moduljaira; nem lazíthatók.
 - A doki egy **gyökérmappát** jelöl ki (My Drive, nem Shared Drive) — ez a teljes rendszerállapot.
   Egyszerre egy gép dolgozik; gépváltáskor app bezárása → feltöltés kész → a másik gépen letöltés
   kész → app megnyitása.

@@ -63,6 +63,35 @@
       "rules": {
         "no-restricted-imports": "off"
       }
+    },
+    {
+      "files": ["electron/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              { "name": "http", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "node:http", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "https", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "node:https", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "http2", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "node:http2", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "net", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "node:net", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "tls", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "node:tls", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "dgram", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              { "name": "node:dgram", "message": "A main process sem megy hálózatra -- páciens- és kezelési adat nem hagyhatja el a gépet." },
+              {
+                "name": "electron",
+                "importNames": ["net", "autoUpdater", "crashReporter"],
+                "message": "A main process sem megy hálózatra (net), nincs auto-update és crash-feltöltés -- páciens- és kezelési adat nem hagyhatja el a gépet."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

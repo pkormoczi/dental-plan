@@ -1,8 +1,10 @@
 {
-  "name": "app",
+  "name": "mandoki-dental",
+  "productName": "Mándoki Dental",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "dist-electron/main/main.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -11,7 +13,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:workflow": "node --test ../scripts/workflow/workflow.test.mjs",
-    "docs-check": "node ../scripts/docs-check.mjs"
+    "docs-check": "node ../scripts/docs-check.mjs",
+    "electron:build": "vite build --mode electron && tsc -p tsconfig.electron.build.json",
+    "electron:dev": "tsc -p tsconfig.electron.build.json && concurrently -k -n vite,electron \"vite --mode electron --port 5173 --strictPort\" \"electron . --dev-server=http://localhost:5173/\"",
+    "electron:start": "npm run electron:build && electron ."
   },
   "dependencies": {
     "@fontsource/roboto": "^5.3.0",
@@ -30,6 +35,8 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "concurrently": "^10.0.7",
+    "electron": "^45.3.3",
     "jsdom": "^30.0.1",
     "oxlint": "^1.75.0",
     "typescript": "~6.0.2",
