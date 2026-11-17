@@ -84,6 +84,12 @@ export const trackedChanges = () =>
     .filter(Boolean)
     .flatMap((l) => l.replace(/^[ MADRCU!]{1,2}\s+/, '').split(' -> '));
 
+// A munkafában stage-eletlen változású követett fájlok, törlés is. Egy már stage-elt változás
+// nincs benne: azt a commit úgyis viszi, egy stage-elt törlést pedig `git add` már nem talál.
+// `-z`: az ékezetes nevek idézés nélkül jönnek.
+export const unstagedTrackedChanges = () =>
+  git(['diff', '--name-only', '-z']).out.split('\0').filter(Boolean);
+
 // Egy path-lista alá tartozik-e a fájl (a path lehet könyvtár is).
 export const underPaths = (file, paths) =>
   paths.some((p) => {

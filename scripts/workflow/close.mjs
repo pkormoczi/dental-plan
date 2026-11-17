@@ -8,15 +8,16 @@
 // névre szólóan mehet be -- a meg nem nevezett idegen követett fájl (pl. egy félig szerkesztett
 // docs) megállít, nem söprődik csendben a tételbe;
 // (4) módosított tervfájl megállít: a terv változása külön commitot érdemel; (5) ha a tételhez
-// már van lezáró commit a futásban, nem commitol újra.
-import { existsSync, readFileSync } from 'node:fs';
+// már van lezáró commit a futásban, nem commitol újra; (6) ha a mutáló szakasz bármelyik lépése
+// megáll, az index, a tételfájl és a jelentések a hívás előtti állapotra állnak vissza.
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   run, parseArgs, WorkflowError, ROOT, RUN_FILE, git, commit, requireNoRebase, requireMaster, readRun, writeRun,
-  untrackedFiles, trackedChanges, underPaths, closingCommit,
+  untrackedFiles, trackedChanges, unstagedTrackedChanges, underPaths, closingCommit,
 } from './lib.mjs';
 import { findItem } from './backlogPath.mjs';
-import { setDontes, refsIn, today } from './reviewsLib.mjs';
+import { setDontes, refsIn, today, reportPath } from './reviewsLib.mjs';
 
 const HELP = `node scripts/workflow/close.mjs <slug> --title "<cím>" [--body "<1-2 mondat>"] [--trailer "<K: v>"]... [--add <path>]... [--fix]
   Futásjelző (${RUN_FILE}) mellett, masteren. Ha a tételnek már van "<slug>: …" commitja a futásban: továbblép.
@@ -102,25 +103,39 @@ run(() => {
     );
   }
 
-  if (item) {
-    // A lezárás könyvelése a forrás-jelentésbe, ugyanabba a commitba. A lezáró SHA még nem
-    // létezik, ezért a slug a hivatkozás; idempotens, egy újrafutás ugyanazt a sort írja.
-    const src = /^Source:\s*(.+)$/m.exec(readFileSync(path.join(ROOT, item), 'utf-8'));
-    for (const id of refsIn(src?.[1])) {
-      const [basename, localId] = id.split('#');
-      console.log(`Döntés: javítva ${slug} → ${setDontes(basename, localId, `javítva ${slug} (${today()})`)}`);
+  // Félbehagyott lezárás után az újrafuttatás nem találná a tételfájlt: a mutáló szakasz
+  // bármelyik hibájánál minden a hívás előtti állapotra áll vissza, és a hiba megy tovább.
+  const indexElotte = git(['write-tree']).out;
+  const jelentesekElotte = new Map();
+  let sha;
+  try {
+    if (item) {
+      // A lezárás könyvelése a forrás-jelentésbe, ugyanabba a commitba. A lezáró SHA még nem
+      // létezik, ezért a slug a hivatkozás; idempotens, egy újrafutás ugyanazt a sort írja.
+      const src = /^Source:\s*(.+)$/m.exec(readFileSync(path.join(ROOT, item), 'utf-8'));
+      for (const id of refsIn(src?.[1])) {
+        const [basename, localId] = id.split('#');
+        const rel = reportPath(basename);
+        if (rel && !jelentesekElotte.has(rel)) jelentesekElotte.set(rel, readFileSync(path.join(ROOT, rel), 'utf-8'));
+        console.log(`Döntés: javítva ${slug} → ${setDontes(basename, localId, `javítva ${slug} (${today()})`)}`);
+      }
     }
+    // A lista a `git rm` ELŐTT készül: a törölt tervfájl pathspec-ként már semmire nem illene.
+    const stageEletlen = unstagedTrackedChanges();
+    if (item) git(['rm', '-q', '--', item]);
+    if (stageEletlen.length) git(['add', '-A', '--', ...stageEletlen]);
+    const sweep = untrackedFiles().filter((f) => underPaths(f, SWEEP_UNTRACKED) || a.add.includes(f));
+    if (sweep.length) git(['add', '--', ...sweep]);
+    const staged = git(['diff', '--cached', '--name-status']).out;
+    if (!staged) throw new WorkflowError('nincs stage-elhető változás -- a tételnek nincs diffje');
+    console.log(`\nstage-elve:\n${staged}`);
+    sha = commit({ subject: `${slug}: ${a.title}`, body: a.body, trailers: a.trailer });
+  } catch (err) {
+    git(['read-tree', indexElotte], { allowFail: true });
+    if (item && !existsSync(path.join(ROOT, item))) git(['checkout', '--', item], { allowFail: true });
+    for (const [rel, tartalom] of jelentesekElotte) writeFileSync(path.join(ROOT, rel), tartalom);
+    throw err;
   }
-  // A követett lista a `git rm` ELŐTT készül: a törölt tervfájl pathspec-ként már semmire nem illene.
-  const tracked = trackedChanges();
-  if (item) git(['rm', '-q', '--', item]);
-  if (tracked.length) git(['add', '-A', '--', ...tracked]);
-  const sweep = untrackedFiles().filter((f) => underPaths(f, SWEEP_UNTRACKED) || a.add.includes(f));
-  if (sweep.length) git(['add', '--', ...sweep]);
-  const staged = git(['diff', '--cached', '--name-status']).out;
-  if (!staged) throw new WorkflowError('nincs stage-elhető változás -- a tételnek nincs diffje');
-  console.log(`\nstage-elve:\n${staged}`);
-  const sha = commit({ subject: `${slug}: ${a.title}`, body: a.body, trailers: a.trailer });
   writeRun({ ...runState, done: [...runState.done, slug] });
   console.log(`\ncommit ${sha.slice(0, 7)} helyben, push nélkül -- a futás végén a run.mjs finish kapuz és pushol`);
 });

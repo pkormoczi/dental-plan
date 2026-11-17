@@ -890,3 +890,49 @@ test('close: a tétel review: Source sorára "Döntés: javítva <slug>" kerül 
   ({ findings } = r.json());
   assert.equal(findings.find((f) => f.id === '2026-01-01-doctor-review-x#1').state, 'nyitott');
 });
+
+test('close a git rm-mel előre stage-elt követett törlést is a lezáró commitba viszi', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x');
+  r.start('x');
+  g(r.work, 'rm', '-q', 'scripts/workflow/s.mjs');
+  r.write('app/src/a.txt', 'b\n');
+  const res = r.run('close', ['x', '--title', 'cím']);
+  assert.equal(res.status, 0, res.err);
+  const shown = g(r.work, 'show', '--name-status', '--format=', 'HEAD').split('\n').sort();
+  assert.deepEqual(shown, ['D\tbacklog/x.md', 'D\tscripts/workflow/s.mjs', 'M\tapp/src/a.txt']);
+  assert.equal(g(r.work, 'status', '--porcelain', '--untracked-files=no'), '');
+});
+
+test('close elbukó commitnál visszaállítja a tételfájlt, az indexet és a jelentést, és az újrafuttatás sikerül', (t) => {
+  const r = reviewRepo();
+  t.after(r.cleanup);
+  const base = g(r.work, 'rev-parse', 'HEAD');
+  r.write('backlog/lezar.md', `# lezar\nType: bug\nSource: review:2026-01-01-doctor-review-x#3\nTarget: master\nBaseline: ${base}\n\n## Goal\nx\n`);
+  r.commitPush('backlog: plan lezar');
+  r.start('lezar');
+  r.write('app/src/a.txt', 'stage-elt\n');
+  g(r.work, 'add', 'app/src/a.txt');
+  r.write('app/src/uj.txt', 'untracked\n');
+  const jelentes = 'docs/reviews/2026-01-01-doctor-review-x.md';
+  const jelentesElotte = readFileSync(path.join(r.work, jelentes), 'utf-8');
+  const indexElotte = g(r.work, 'diff', '--cached', '--name-status');
+  const hook = path.join(r.work, '.git', 'hooks', 'commit-msg');
+  writeFileSync(hook, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+
+  let res = r.run('close', ['lezar', '--title', 'Kész']);
+
+  assert.equal(res.status, 1);
+  assert.equal(existsSync(path.join(r.work, 'backlog/lezar.md')), true);
+  assert.equal(g(r.work, 'ls-files', 'backlog/lezar.md'), 'backlog/lezar.md');
+  assert.equal(g(r.work, 'diff', '--cached', '--name-status'), indexElotte);
+  assert.equal(readFileSync(path.join(r.work, jelentes), 'utf-8'), jelentesElotte);
+  assert.equal(g(r.work, 'ls-files', '--others', '--exclude-standard', 'app/src/uj.txt'), 'app/src/uj.txt');
+
+  rmSync(hook);
+  res = r.run('close', ['lezar', '--title', 'Kész']);
+  assert.equal(res.status, 0, res.err + res.out);
+  assert.equal(g(r.work, 'log', '-1', '--format=%s'), 'lezar: Kész');
+  assert.match(readFileSync(path.join(r.work, jelentes), 'utf-8'), /- Döntés: javítva lezar/);
+});
