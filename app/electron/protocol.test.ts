@@ -12,6 +12,10 @@ describe('tartós nevek', () => {
     expect(USER_DATA_MAPPA).toBe(olvasJson('package.json').name);
   });
 
+  it('a productName ASCII, mert nem-ASCII bundle-névvel a macOS-es app indításkor összeomlik', () => {
+    expect(olvasJson('package.json').productName).toMatch(/^[ -~]+$/);
+  });
+
   it('a main appId-ja egyezik az electron-builder.json appId-jával', () => {
     expect(APP_ID).toBe(olvasJson('electron-builder.json').appId);
   });

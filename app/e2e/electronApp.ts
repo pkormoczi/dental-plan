@@ -12,7 +12,7 @@ export const APP_KONYVTAR = path.resolve(import.meta.dirname, '..');
 export function inditasiParancs(): { exe: string; args: string[] } {
   const exe =
     process.platform === 'darwin'
-      ? path.join(APP_KONYVTAR, 'release', `mac-${process.arch}`, 'Mándoki Dental.app', 'Contents', 'MacOS', 'Mándoki Dental')
+      ? path.join(APP_KONYVTAR, 'release', `mac-${process.arch}`, 'Mandoki Dental.app', 'Contents', 'MacOS', 'Mandoki Dental')
       : path.join(APP_KONYVTAR, 'release', 'win-unpacked', 'mandoki-dental.exe');
   if (!existsSync(exe)) throw new Error(`Nincs kicsomagolt app: ${exe} -- futtasd: npm run test:electron`);
   return { exe, args: [] };
