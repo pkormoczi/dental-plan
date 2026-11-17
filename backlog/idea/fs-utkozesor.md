@@ -1,0 +1,5 @@
+# fs-utkozesor
+Type: feature
+Source: desktop-app-migration-plan-final.md §10.2a
+
+Az `arlista.json`, `beallitasok.json`, `paciens-adatok.json` és a `sablonok/*.md` betöltéskor megjegyzett sha256-át mentés előtt újraolvasás ellenőrzi; ha a fájl közben a másik gépen módosult, a storage nem ír, hanem `FELULIRAS_UTKOZES`-t ad a lemezen lévő tartalommal. A doki választ: „A másik gép változatának betöltése” (az `AppState` a lemezváltozatra áll) vagy „Az én változatom mentése” (a lemezen lévő változat előbb `_utkozesek/<fájl>.<ISO>.<ext>` alá kerül, csak utána íródik felül); a dialógus alatt a mentés függő, a további updater-hívások sorba állnak (`AppState.test.tsx`). Induláskor az `init()` mappalista-vizsgálattal listázza a Drive-ütközéses neveket („ (1)”, „conflicted copy”), az azonos sorszámú verziómappákat, az `_utkozesek/` tartalmát és a 24 óránál régebbi `.tmp-*` maradványokat; ezek egy amber sávban látszanak a Kezdőlapon, „Mappa megnyitása” gombbal, automatikus feloldás nélkül. Az indexfájlok last-write-wins maradnak. Migrációs terv §4.6, §4.7.

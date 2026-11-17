@@ -1,0 +1,5 @@
+# fs-hibafelulet
+Type: feature
+Source: desktop-app-migration-plan-final.md §10.2a
+
+A fájlrendszeri hibák a migrációs terv §5 táblázata szerint egységes, a doki számára érthető felületet kapnak: jogosultsági/foglaltsági, hely-, írásvédettségi és váratlan-tartalom hibák → piros `Callout` a megadott szövegekkel; sérült JSON és magasabb `schemaVersion` a mai üzenettel (utóbbi kiegészítve: valószínűleg a másik gépen újabb az alkalmazás); `VERZIO_UTKOZES` → kemény blokk dialógus („Mented a következő sorszámra, vagy mégsem?”); `TORLES_AKADALY` → piros `Callout`. A ma néma `catch {}` helyek: a `PatientEditorPanel` duplikáció-ellenőrzése halk jelzést, a `PaciensKotesContext` amber, nem blokkoló checklist-tételt kap; a `PreviewPage` best-effort törzsadat-olvasása info-szintű marad. A PDF-akciók a telepített appban két gombra bomlanak: „Megnyitás” (a verziómappa PDF-je, csak teljes verzión) és „Másolás máshová” (mentés-dialógus, a mai fájlnévvel, nem a Letöltések az alapértelmezett mappa). A Pages-demó viselkedése nem változik. Nem tartozik ide: az ütközés-dialógus (`fs-utkozesor`) és a blokkoló képernyő (`gyokermappa-varazslo`). Migrációs terv §5, §5.1, §5.3.

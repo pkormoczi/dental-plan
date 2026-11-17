@@ -1,0 +1,5 @@
+# fs-verzio-manifest
+Type: feature
+Source: desktop-app-migration-plan-final.md §10.2a
+
+Egy verziómappa temp-mappában készül (`terv.json`, PDF, utoljára `manifest.json` sha256-tal és mérettel), és a rename előtt a sorszám újra ellenőrzött; ha közben azonos nevű mappa jelent meg, `VERZIO_UTKOZES` a meglévő verzió adataival (dátum, orvos, végösszeg), a temp eldobva. A `listVersions()` minden verzióhoz `allapot: teljes | hianyos` jelzést ad (manifest, fájlok, méret és hash egyezése; a `hianyzik` lista mondja, mi nem stimmel) — ez a 10.0-ból kimaradt mező, a `DemoStorage` mindig `teljes`-t ad. Hiányos verzió nem nyitható, nem folytatható, nem másolható; a verziósorban „szinkron folyamatban vagy hiányos” jelzés és „Újraellenőrzés” gomb látszik, polling nélkül; a következő sorszám a hiányos mappákat is számolja, sorszám sosem ismétlődik. A `savePlan` a verziómappa után frissíti a `paciens.json` indexet; ennek hibája nem rontja a sikert, csak `INDEX_IRAS_HIBA` figyelmeztetés és halk jelzés. A manifest a mappastruktúra része (`app/src/storage/CLAUDE.md`). Migrációs terv §4.3, §4.5.

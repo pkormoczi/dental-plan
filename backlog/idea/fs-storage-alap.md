@@ -1,0 +1,5 @@
+# fs-storage-alap
+Type: feature
+Source: desktop-app-migration-plan-final.md §10.2a
+
+A `FileSystemStorage` a gyökérmappán dolgozik a `PlanStorage` szerződés szerint (metódusonkénti leképezés): az `init()` osztályoz (üres → struktúra felépítése, a miénk → validálás, hiányos → blokkoló eredmény, idegen → elutasítás), és meglévő mappába nem ír; minden felülírt fájl atomi (`.tmp-*` → `fsync` → `rename`), `EBUSY`/`EPERM`/`EACCES`-re exponenciális újrapróbával; az írások egy sorosított láncon mennek, a `savePlanLabel` és a `saveTemplate` is; a `createPatient` második fájljának hibájánál a mappa visszagörgetődik. Platformközi buktatók: minden fájlnév-összehasonlítás NFC-normalizált, egy új páciensmappa kis-/nagybetű-függetlenül sem ütközhet meglévővel, túl hosszú gyökérútvonalra figyelmeztetés. Új, Node-környezetű tesztkészlet `fs.mkdtemp`-pel (megszakított atomi írás, `EBUSY` majd siker, tartós `EACCES` → `IO`, NFD-nevű mappa, kis-/nagybetű-ütközés). Nem tartozik ide: a verziómappa-manifest (`fs-verzio-manifest`), az ütközésőr (`fs-utkozesor`), a gyökérmappa kiválasztása (`gyokermappa-varazslo`). Migrációs terv §4.1, §4.2, §4.4, §4.8.
