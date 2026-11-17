@@ -373,17 +373,55 @@ test('close --add boldog út: a megnevezett fájl a commitba kerül', (t) => {
   assert.equal(r.originHead(), g(r.work, 'rev-parse', 'HEAD'));
 });
 
-test('close --add nem létező vagy már követett path-ra hibázik', (t) => {
+test('close --add nem létező path-ra és módosítatlan követett path-ra hibázik', (t) => {
   const r = repo();
   t.after(r.cleanup);
   r.plan('x');
   r.start('x');
+  r.write('app/src/a.txt', 'b\n');
+  const before = r.count();
   let res = r.run('close', ['x', '--title', 'cím', '--add', 'docs/reviews/hiányzik.md']);
   assert.equal(res.status, 1);
   assert.match(res.err, /nem létező path/);
-  res = r.run('close', ['x', '--title', 'cím', '--add', 'backlog/x.md']);
+  res = r.run('close', ['x', '--title', 'cím', '--add', 'docs/foreign.md']);
   assert.equal(res.status, 1);
-  assert.match(res.err, /már követett/);
+  assert.match(res.err, /docs\/foreign\.md: követett fájl módosítás nélkül -- nincs mit hozzáadni/);
+  assert.equal(r.count(), before);
+});
+
+test('close --add a megnevezett, körön kívüli követett módosítást a lezáró commitba viszi', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.plan('x');
+  r.start('x');
+  r.write('app/src/a.txt', 'b\n');
+  r.write('docs/foreign.md', 'a tétel módosítása\n');
+  const res = r.run('close', ['x', '--title', 'cím', '--add', 'docs/foreign.md']);
+  assert.equal(res.status, 0, res.err);
+  const shown = g(r.work, 'show', '--name-only', '--format=', 'HEAD').split('\n').sort();
+  assert.deepEqual(shown, ['app/src/a.txt', 'backlog/x.md', 'docs/foreign.md']);
+  assert.equal(g(r.work, 'status', '--porcelain', '--untracked-files=no'), '');
+});
+
+test('close --add mellett egy másik, meg nem nevezett idegen követett módosítás megállít, és semmit nem commitol', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  r.write('docs/other.md', 'másik\n');
+  r.commitPush('docs');
+  r.plan('x');
+  r.start('x');
+  r.write('app/src/a.txt', 'b\n');
+  r.write('docs/foreign.md', 'a tétel módosítása\n');
+  r.write('docs/other.md', 'félig szerkesztett\n');
+  const before = r.count();
+  const res = r.run('close', ['x', '--title', 'cím', '--add', 'docs/foreign.md']);
+  assert.equal(res.status, 1, res.err);
+  assert.match(res.err, /docs\/other\.md/);
+  assert.doesNotMatch(res.err, /docs\/foreign\.md/);
+  assert.equal(r.count(), before);
+  assert.equal(g(r.work, 'diff', '--cached', '--name-only'), '');
+  assert.equal(readFileSync(path.join(r.work, 'docs/other.md'), 'utf-8'), 'félig szerkesztett\n');
+  assert.equal(existsSync(path.join(r.work, 'backlog/x.md')), true);
 });
 
 test('close másodszori hívása lezárt tételre ugyanazzal a --add-dal nem hibázik és nem commitol újra', (t) => {
@@ -421,6 +459,22 @@ test('close --fix: tervfájl nélkül commitol a --body-val, létező slugnál m
   res = r.run('run', ['finish']);
   assert.equal(res.status, 0, res.err);
   assert.equal(r.originHead(), g(r.work, 'rev-parse', 'HEAD'));
+});
+
+test('close --fix --add a staged, körön kívüli követett módosítást is a commitba viszi', (t) => {
+  const r = repo();
+  t.after(r.cleanup);
+  assert.equal(r.run('run', ['start', '--fix', 'gyors']).status, 0);
+  r.write('app/src/a.txt', 'b\n');
+  r.write('docs/foreign.md', 'a javítás része\n');
+  g(r.work, 'add', '--', 'docs/foreign.md');
+  let res = r.run('close', ['gyors', '--fix', '--title', 'cím', '--body', 'Goal: x']);
+  assert.equal(res.status, 1, res.err);
+  assert.match(res.err, /docs\/foreign\.md/);
+  res = r.run('close', ['gyors', '--fix', '--title', 'cím', '--body', 'Goal: x', '--add', 'docs/foreign.md']);
+  assert.equal(res.status, 0, res.err);
+  const shown = g(r.work, 'show', '--name-only', '--format=', 'HEAD').split('\n').sort();
+  assert.deepEqual(shown, ['app/src/a.txt', 'docs/foreign.md']);
 });
 
 // ---- sync.mjs / commit-push.mjs: publikálás futáson kívül ------------------------------------

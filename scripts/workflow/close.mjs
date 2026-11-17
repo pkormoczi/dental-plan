@@ -4,8 +4,9 @@
 //
 // Őrök: (1) csak futásjelző mellett fut, és csak a futás slugjára; (2) untracked fájl csak app/
 // alól kerül a commitba magától (az egyetlen szerkesztett könyvtár), más csak `--add <path>`-del
-// névre szólóan, a többi megállít; (3) követett módosítás csak az ismert körből mehet be --
-// idegen követett fájl (pl. egy félig szerkesztett docs) megállít, nem söprődik a tételbe;
+// névre szólóan, a többi megállít; (3) követett módosítás csak az ismert körből vagy `--add`-del
+// névre szólóan mehet be -- a meg nem nevezett idegen követett fájl (pl. egy félig szerkesztett
+// docs) megállít, nem söprődik csendben a tételbe;
 // (4) módosított tervfájl megállít: a terv változása külön commitot érdemel; (5) ha a tételhez
 // már van lezáró commit a futásban, nem commitol újra.
 import { existsSync, readFileSync } from 'node:fs';
@@ -24,7 +25,8 @@ const HELP = `node scripts/workflow/close.mjs <slug> --title "<cím>" [--body "<
   FEATURES, PRODUCT.md, CLAUDE.md-k, AGENTS.md, a tételfájl, --add pathok).
   A tétel Source: review:<jelentés>#<id> hivatkozásaira "Döntés: javítva <slug> (<dátum>)" a jelentésbe;
   git rm backlog[/later]/<slug>.md; commit "<slug>: <cím>". Nincs kapu, nincs push (run.mjs finish).
-  --add:  ismételhető; egy app/-en kívüli untracked path név szerinti engedélyezése a commitba.
+  --add:  ismételhető; egy app/-en kívüli untracked path, vagy egy ismert körön kívüli, módosított
+          követett fájl név szerinti engedélyezése a commitba (módosítatlan követett fájlra hiba).
   --fix:  /fix-nek: nincs tételfájl (létező slugnál megáll), a --body kötelező (a Goal a commit törzsében).`;
 
 const SWEEP_UNTRACKED = ['app'];
@@ -54,10 +56,13 @@ run(() => {
     console.log(`már lezárva ebben a futásban: ${existing.slice(0, 7)} -- commit nélkül továbblép`);
     return;
   }
+  const changedTracked = trackedChanges();
   for (const p of a.add) {
     if (!existsSync(path.join(ROOT, p))) throw new WorkflowError(`--add ${p}: nem létező path`);
-    if (git(['ls-files', '--error-unmatch', '--', p], { allowFail: true }).status === 0) {
-      throw new WorkflowError(`--add ${p}: már követett fájl, nem kell megnevezni`);
+    const isTracked = git(['ls-files', '--error-unmatch', '--', p], { allowFail: true }).status === 0;
+    // A módosítatlan követett path megnevezése elírást jelez, nem szándékot.
+    if (isTracked && !changedTracked.includes(p)) {
+      throw new WorkflowError(`--add ${p}: követett fájl módosítás nélkül -- nincs mit hozzáadni (elírás?)`);
     }
   }
 
