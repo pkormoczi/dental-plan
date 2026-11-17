@@ -19,7 +19,8 @@ export interface FajlPrimitivek {
   listaz(ut: string): Promise<string[]>;
   /** Fájl vagy mappa létezik-e az útvonalon. */
   letezik(ut: string): Promise<boolean>;
-  mappaLetrehoz(ut: string): Promise<void>;
+  /** `kizarolagos`: létező útvonalra `MarLetezikError` -- így két író nem kaphatja meg ugyanazt a mappát. */
+  mappaLetrehoz(ut: string, opciok?: { kizarolagos?: boolean }): Promise<void>;
   /** A mappa és teljes tartalma törlése; nem létező mappára no-op. */
   torolMappa(ut: string): Promise<void>;
   /** Egy mappa átnevezése; a cél nem létezhet. */
@@ -27,3 +28,13 @@ export interface FajlPrimitivek {
 }
 
 export const utvonal = (...reszek: string[]): string => reszek.filter(Boolean).join('/');
+
+export class MarLetezikError extends Error {
+  readonly utvonal: string;
+
+  constructor(utvonal: string) {
+    super(`A cél már létezik: ${utvonal}`);
+    this.name = 'MarLetezikError';
+    this.utvonal = utvonal;
+  }
+}

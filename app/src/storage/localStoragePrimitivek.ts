@@ -3,7 +3,7 @@
 // demóadat miatt változatlan alakú.
 
 import { PREFIX } from './localKeys';
-import type { FajlPrimitivek } from './fajlPrimitivek';
+import { MarLetezikError, type FajlPrimitivek } from './fajlPrimitivek';
 
 const kulcs = (ut: string) => `${PREFIX}${ut}`;
 
@@ -64,8 +64,9 @@ export const localStoragePrimitivek: FajlPrimitivek = {
     const elotag = kulcs(`${ut}/`);
     return demoKulcsok().some((k) => k.startsWith(elotag));
   },
-  async mappaLetrehoz() {
-    // A kulcs-térben a mappa az első benne írt fájllal jön létre.
+  async mappaLetrehoz(ut, opciok) {
+    // A kulcs-térben a mappa az első benne írt fájllal jön létre; csak a foglaltság számít.
+    if (opciok?.kizarolagos && (await this.letezik(ut))) throw new MarLetezikError(ut);
   },
   async torolMappa(ut) {
     // A záró `/` nélkül egy olyan testvérmappa is törlődne, aminek ez a név az előtagja.
@@ -73,7 +74,7 @@ export const localStoragePrimitivek: FajlPrimitivek = {
     for (const k of demoKulcsok()) if (k.startsWith(elotag)) localStorage.removeItem(k);
   },
   async atnevez(regi, uj) {
-    if (await this.letezik(uj)) throw new Error(`A cél már létezik: ${uj}`);
+    if (await this.letezik(uj)) throw new MarLetezikError(uj);
     const elotag = kulcs(`${regi}/`);
     for (const k of demoKulcsok()) {
       if (!k.startsWith(elotag)) continue;

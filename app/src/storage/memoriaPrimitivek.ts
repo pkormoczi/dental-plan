@@ -1,7 +1,7 @@
 // Memóriás fájlprimitívek: a közös mag szerződéstesztjei ezen is futnak, hogy a mag
 // viselkedése a localStorage-tól függetlenül is igazolt legyen.
 
-import type { FajlPrimitivek } from './fajlPrimitivek';
+import { MarLetezikError, type FajlPrimitivek } from './fajlPrimitivek';
 
 type Bejegyzes = { szoveg: string } | { bajt: Uint8Array };
 
@@ -47,7 +47,8 @@ export class MemoriaPrimitivek implements FajlPrimitivek {
     return (await this.listaz(ut)).length > 0;
   }
 
-  async mappaLetrehoz(ut: string): Promise<void> {
+  async mappaLetrehoz(ut: string, opciok?: { kizarolagos?: boolean }): Promise<void> {
+    if (opciok?.kizarolagos && (await this.letezik(ut))) throw new MarLetezikError(ut);
     this.mappak.add(ut);
   }
 
@@ -58,7 +59,7 @@ export class MemoriaPrimitivek implements FajlPrimitivek {
   }
 
   async atnevez(regi: string, uj: string): Promise<void> {
-    if (await this.letezik(uj)) throw new Error(`A cél már létezik: ${uj}`);
+    if (await this.letezik(uj)) throw new MarLetezikError(uj);
     const elotag = `${regi}/`;
     for (const [p, b] of [...this.fajlok]) {
       if (!p.startsWith(elotag)) continue;

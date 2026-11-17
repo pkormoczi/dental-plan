@@ -26,7 +26,7 @@ import type {
   PriceList,
   Settings,
 } from '../domain/types';
-import { utvonal, type FajlPrimitivek } from './fajlPrimitivek';
+import { MarLetezikError, utvonal, type FajlPrimitivek } from './fajlPrimitivek';
 import { parseJson } from './json';
 import type { PlanStorage } from './PlanStorage';
 import {
@@ -39,6 +39,7 @@ import {
   parsePatientDirName,
   parsePlanDirName,
   parseVersionDirName,
+  VersionConflictError,
 } from './paths';
 import { seedPriceList } from './seed/priceList';
 import { seedSettings } from './seed/settings';
@@ -145,6 +146,21 @@ export class FajlTarolo implements PlanStorage {
   }
 
   async init(): Promise<void> {}
+
+  /**
+   * Új páciensmappa neve friss azonosítóval. NTFS és APFS alapból kis-/nagybetű-érzéketlen, és
+   * egy Drive-ról érkezett név NFD-alakú is lehet: egy csak ezekben eltérő név ugyanabba a
+   * mappába írna, ezért ilyenkor új azonosító kell.
+   */
+  private async ujPaciensMappa(nev: string): Promise<{ paciensId: string; patientDir: string }> {
+    const kulcs = (n: string) => n.normalize('NFC').toLocaleLowerCase('hu');
+    const foglalt = new Set((await this.prim.listaz(PACIENSEK_MAPPA)).map(kulcs));
+    for (;;) {
+      const paciensId = generateId();
+      const patientDir = buildPatientDirName(nev, paciensId);
+      if (!foglalt.has(kulcs(patientDir))) return { paciensId, patientDir };
+    }
+  }
 
   /** A tervmappa-név javaslatához: sérült vagy hiányzó árlista mellett is ad nevet. */
   private async aktualisArlistaVagySeed(): Promise<PriceList> {
@@ -255,16 +271,18 @@ export class FajlTarolo implements PlanStorage {
   }
 
   async savePlanLabel(patientDir: string, planDir: string, tervCim: string): Promise<void> {
-    const ut = cimkeUt(patientDir, planDir);
-    const trimmed = tervCim.trim();
-    if (!trimmed) {
-      // Üres címke = vissza az élő auto-javaslatra (domain/tervCim.ts), nem
-      // egy tárolt üres string.
-      await this.prim.torol(ut);
-      return;
-    }
-    const label: PlanLabel = { schemaVersion: 1, tervCim: trimmed };
-    await this.prim.irSzoveg(ut, JSON.stringify(label));
+    return this.enqueue(async () => {
+      const ut = cimkeUt(patientDir, planDir);
+      const trimmed = tervCim.trim();
+      if (!trimmed) {
+        // Üres címke = vissza az élő auto-javaslatra (domain/tervCim.ts), nem
+        // egy tárolt üres string.
+        await this.prim.torol(ut);
+        return;
+      }
+      const label: PlanLabel = { schemaVersion: 1, tervCim: trimmed };
+      await this.prim.irSzoveg(ut, JSON.stringify(label));
+    });
   }
 
   async savePlanErvenytelenites(
@@ -273,22 +291,24 @@ export class FajlTarolo implements PlanStorage {
     versionDir: string,
     indok: string,
   ): Promise<void> {
-    const ut = ervenytelenitesUt(patientDir, planDir);
-    const verziok = await this.olvasErvenytelenitesek(patientDir, planDir);
-    const trimmed = indok.trim();
-    if (trimmed) {
-      verziok[versionDir] = trimmed;
-    } else {
-      delete verziok[versionDir];
-    }
-    if (Object.keys(verziok).length === 0) {
-      // Az utolsó jelölés visszavonása a FÁJLT is elviszi -- egy üres
-      // `verziok` objektum ugyanazt jelentené, csak szemétként a fában.
-      await this.prim.torol(ut);
-      return;
-    }
-    const rec: PlanInvalidations = { schemaVersion: 1, verziok };
-    await this.prim.irSzoveg(ut, JSON.stringify(rec));
+    return this.enqueue(async () => {
+      const ut = ervenytelenitesUt(patientDir, planDir);
+      const verziok = await this.olvasErvenytelenitesek(patientDir, planDir);
+      const trimmed = indok.trim();
+      if (trimmed) {
+        verziok[versionDir] = trimmed;
+      } else {
+        delete verziok[versionDir];
+      }
+      if (Object.keys(verziok).length === 0) {
+        // Az utolsó jelölés visszavonása a FÁJLT is elviszi -- egy üres
+        // `verziok` objektum ugyanazt jelentené, csak szemétként a fában.
+        await this.prim.torol(ut);
+        return;
+      }
+      const rec: PlanInvalidations = { schemaVersion: 1, verziok };
+      await this.prim.irSzoveg(ut, JSON.stringify(rec));
+    });
   }
 
   /**
@@ -321,8 +341,9 @@ export class FajlTarolo implements PlanStorage {
     let paciensId = plan.paciensId;
     let patientDir = paciensId ? patients.find((p) => p.paciensId === paciensId)?.dirName : undefined;
 
-    if (!paciensId || !patientDir) {
-      paciensId = paciensId || generateId();
+    if (!paciensId) {
+      ({ paciensId, patientDir } = await this.ujPaciensMappa(plan.paciens.nev));
+    } else if (!patientDir) {
       patientDir = buildPatientDirName(plan.paciens.nev, paciensId);
     }
 
@@ -357,8 +378,9 @@ export class FajlTarolo implements PlanStorage {
     assertVersionDirAvailable(existingDirNames, versionDir);
 
     const finalPlan: Plan = { ...plan, schemaVersion: 1, tervId, verzio, paciensId };
+    const verzioMappa = utvonal(tervMappaUt(patientDir, planDir), versionDir);
     const tervFajl = tervUt(patientDir, planDir, versionDir);
-    const pdfFajl = utvonal(tervMappaUt(patientDir, planDir), versionDir, this.opciok.pdfFajlnev);
+    const pdfFajl = utvonal(verzioMappa, this.opciok.pdfFajlnev);
     // paciens.json index -- kereséshez/előtöltéshez, sosem system of record:
     // a most mentett plan.paciens.nev-re frissül, HACSAK nincs lezárt
     // paciens-adatok.json -- akkor az a törzsadat marad az igazság a
@@ -371,18 +393,31 @@ export class FajlTarolo implements PlanStorage {
       utolsoAktivitas: ujAktivitas('terv-veglegesitve'),
     };
 
+    // A listázás óta egy másik gép is létrehozhatta ugyanezt a mappát: a kizárólagos
+    // létrehozás a felülírás-tilalom utolsó őre.
+    try {
+      await this.prim.mappaLetrehoz(verzioMappa, { kizarolagos: true });
+    } catch (err) {
+      if (err instanceof MarLetezikError) throw new VersionConflictError(versionDir);
+      throw err;
+    }
+
     try {
       await this.prim.irSzoveg(tervFajl, JSON.stringify(finalPlan));
       await this.prim.irBajt(pdfFajl, pdf);
       await this.prim.irSzoveg(pacRekordUt(patientDir), JSON.stringify(patientRecord));
     } catch (err) {
-      // A terv- és a PDF-fájl frissen létrehozott ebben a hívásban
-      // (assertVersionDirAvailable fentebb ezt garantálja) -- a rollback
-      // biztonságos, nem törölhet egy korábbi verziót. A paciens.json-t
-      // NEM töröljük: az írása atomi, tehát ha ő hasalt el, korábbi
-      // tartalma (ha volt) változatlan maradt.
-      await this.prim.torol(tervFajl);
-      await this.prim.torol(pdfFajl);
+      // A verziómappát ez a hívás hozta létre kizárólagosan -- a rollback
+      // biztonságos, nem törölhet egy korábbi verziót. A legfelső, ebben a
+      // hívásban született mappa megy: fájlrendszeren egy üresen maradt
+      // páciens-, lánc- vagy verziómappa szellem-bejegyzésként listázódna. Egy
+      // meglévő páciens paciens.json-ját NEM töröljük: az írása atomi, tehát ha
+      // ő hasalt el, korábbi tartalma változatlan maradt.
+      const ujPaciens = !patients.some((p) => p.dirName === patientDir);
+      const ujLanc = !existingPlans.some((p) => p.dirName === planDir);
+      await this.prim.torolMappa(
+        ujPaciens ? pacUt(patientDir) : ujLanc ? tervMappaUt(patientDir, planDir) : verzioMappa,
+      );
       throw new Error(this.opciok.mentesHibaUzenet, { cause: err });
     }
 
@@ -439,11 +474,13 @@ export class FajlTarolo implements PlanStorage {
    * a `terv.json` nem hivatkozik sablonfájlra.
    */
   async saveTemplate(name: string, body: string): Promise<string> {
-    const base = name.replace(/\.md$/, '').replace(/-v\d+$/, '');
-    const latest = await this.latestTemplateFile(base);
-    const fileName = latest ?? `${base}-v1.md`;
-    await this.prim.irSzoveg(sablonUt(fileName), body);
-    return fileName;
+    return this.enqueue(async () => {
+      const base = name.replace(/\.md$/, '').replace(/-v\d+$/, '');
+      const latest = await this.latestTemplateFile(base);
+      const fileName = latest ?? `${base}-v1.md`;
+      await this.prim.irSzoveg(sablonUt(fileName), body);
+      return fileName;
+    });
   }
 
   /**
@@ -519,8 +556,7 @@ export class FajlTarolo implements PlanStorage {
     kezdoAdatok?: Pick<Paciens, 'szuletesiIdo' | 'telefon'>,
   ): Promise<PatientFolder> {
     return this.enqueue(async () => {
-      const paciensId = generateId();
-      const patientDir = buildPatientDirName(nev, paciensId);
+      const { paciensId, patientDir } = await this.ujPaciensMappa(nev);
       const utolsoAktivitas = ujAktivitas('letrehozva');
       const record: PatientRecord = { schemaVersion: 1, paciensId, nev, utolsoAktivitas };
       const data = { ...uresTorzsadat(nev, paciensId), ...kezdoAdatok };
