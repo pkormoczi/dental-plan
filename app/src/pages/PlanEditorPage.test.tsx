@@ -115,7 +115,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     const actualPriceInput = screen.getByDisplayValue('25000');
     await user.clear(actualPriceInput);
     await user.type(actualPriceInput, '20000');
-    // A mező blur-re (nem minden leütésre) commitál a törzsadatba -- P0-4/P1-4.
+    // A mező blur-re (nem minden leütésre) commitál a törzsadatba.
     await user.tab();
 
     // A pontos jel egy speciális mínuszkarakter (U+2212), ezért a
@@ -125,7 +125,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
   });
 
   it('shows a surcharge indicator when the actual price is raised above the list price', async () => {
-    // A fenti kedvezmény-teszt tükre (backlog-12, 4. döntés): a "Tényleges ár"
+    // A fenti kedvezmény-teszt tükre: a "Tényleges ár"
     // mezőnek nincs felső korlátja, a felfelé eltérést a szerkesztő korábban
     // némán elnyelte -- a nyomtatvány viszont mostantól mindkét irányban
     // megmutatja a "Kezelések összege" referenciasort.
@@ -147,7 +147,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(screen.queryByText(/Kedvezmény:/)).not.toBeInTheDocument();
   });
 
-  it('backlog-27: a darabszám automatikusan követi a fogak mezőt, kézi felülbírálásig', async () => {
+  it('a darabszám automatikusan követi a fogak mezőt, kézi felülbírálásig', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -210,7 +210,7 @@ describe('PlanEditorPage -- billentyűzetes tételfelvitel', () => {
     expect(screen.queryByText(/fog van felsorolva/)).not.toBeInTheDocument();
 
     // A darabszám NumberField csak blur/Enterre committál a törzsadatba
-    // (P1-4), de ennek a pusztán UI-visszajelzésnek élőben kell követnie a
+    //, de ennek a pusztán UI-visszajelzésnek élőben kell követnie a
     // gépelést, nem várhat a blurre.
     await user.clear(quantityInput);
     await user.type(quantityInput, '1');
@@ -331,7 +331,7 @@ describe('PlanEditorPage -- friss piszkozat autofókusza', () => {
   });
 });
 
-describe('PlanEditorPage -- backlog-59: új fázis kereső-autofókusza', () => {
+describe('PlanEditorPage -- új fázis kereső-autofókusza', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -424,7 +424,7 @@ describe('PlanEditorPage -- fázisnév után a tételkeresőbe visz a Tab és az
   });
 });
 
-describe('PlanEditorPage -- backlog-18: fázis törlése megerősítéssel', () => {
+describe('PlanEditorPage -- fázis törlése megerősítéssel', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -478,7 +478,7 @@ describe('PlanEditorPage -- backlog-18: fázis törlése megerősítéssel', () 
   });
 });
 
-describe('PlanEditorPage -- backlog-58: fázis összecsukás', () => {
+describe('PlanEditorPage -- fázis összecsukás', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -517,7 +517,7 @@ describe('PlanEditorPage -- backlog-58: fázis összecsukás', () => {
   });
 });
 
-describe('PlanEditorPage -- backlog-58: fázis sorrendezés', () => {
+describe('PlanEditorPage -- fázis sorrendezés', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -967,7 +967,7 @@ describe('PlanEditorPage -- sor áthelyezése fogantyúval', () => {
   });
 });
 
-describe('PlanEditorPage -- backlog-58: sor törlése Undo-val', () => {
+describe('PlanEditorPage -- sor törlése Undo-val', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -1028,7 +1028,7 @@ describe('PlanEditorPage -- backlog-58: sor törlése Undo-val', () => {
   });
 });
 
-describe('PlanEditorPage -- backlog-32: piszkozat-mentés jelzés és eldobás', () => {
+describe('PlanEditorPage -- piszkozat-mentés jelzés és eldobás', () => {
   beforeEach(() => {
     localStorage.clear();
   });

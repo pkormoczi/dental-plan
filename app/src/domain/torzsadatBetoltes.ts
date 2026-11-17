@@ -45,8 +45,8 @@ export interface BetoltottTorzsadat {
 }
 
 /**
- * `megjelenitettTorzsadat()` betöltve, EGY páciensre -- sosem dob (P1-2
- * mintája, `planChainData.ts`): egy sérült `paciens-adatok.json` vagy egy
+ * `megjelenitettTorzsadat()` betöltve, EGY páciensre -- sosem dob
+ * (`planChainData.ts` mintája): egy sérült `paciens-adatok.json` vagy egy
  * olvashatatlan terv-lánc a `hiba` mezőben jelenik meg, nem üríti ki a
  * hívó teljes listáját.
  */
@@ -79,7 +79,7 @@ export async function loadMegjelenitettTorzsadat(
  * `loadMegjelenitettTorzsadat()` TÖBB páciensre, `dirName` szerint
  * kulcsolva -- a duplikáció-detektálás jelölt-körének betöltője.
  * Sosem dob (a `loadMegjelenitettTorzsadat` maga sem dob), egy sérült
- * páciens `hiba` mezőt kap, a többit nem érinti (P1-2 mintája).
+ * páciens `hiba` mezőt kap, a többit nem érinti.
  */
 export async function loadTorzsadatok(
   storage: PlanStorage,
@@ -97,7 +97,7 @@ export async function loadTorzsadatok(
 
 /**
  * A draft-hoz tartozó páciensmappa nevének feloldása a master-összevetéshez
- * (backlog-40). A `piszkozatPatientDir` (`state/AppState.tsx`)
+ *. A `piszkozatPatientDir` (`state/AppState.tsx`)
  * best-effort ismert -- lehet `null` (pl. funkció előtti perzisztált
  * piszkozat). Tartalék: `plan.paciensId` -> `listPatients()` -> `dirName`,
  * ugyanaz a feloldás, mint amit a `DemoStorage.doSavePlan()` is használ
@@ -127,10 +127,10 @@ export interface TervCimkeRef {
 }
 
 /**
- * A `TervCimField` (backlog-51) lánc-mappa- és tárolt-címke-feloldása,
+ * A `TervCimField` lánc-mappa- és tárolt-címke-feloldása,
  * a `feloldPatientDir()` mintáján. Üres `tervId`-nél (vadonatúj, még sosem
  * mentett lánc) `null`-t ad, STORAGE-HÍVÁS NÉLKÜL -- nincs `planDir`, amihez
- * a `terv-cimke.json`-t keresni lehetne. Sosem dob (P1-2 minta): egy
+ * a `terv-cimke.json`-t keresni lehetne. Sosem dob: egy
  * feloldhatatlan `patientDir` vagy egy dobó `listPlans` is `null`-t ad, a
  * hívó ilyenkor a `javasoltTervCim()` élő javaslatára esik vissza.
  */

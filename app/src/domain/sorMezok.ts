@@ -10,7 +10,7 @@ import type { Nyelv, Penznem, Sor, Tetel } from './types';
  * hogy az árazási logika (SAVOS -> min) egy helyen éljen -- lásd
  * `domain/money.ts` `basePrice()` és app/src/domain/CLAUDE.md, ne írd újra.
  *
- * 62. tétel: egy `currency`-ben nem beárazott tétel (`ar[currency] ==
+ * egy `currency`-ben nem beárazott tétel (`ar[currency] ==
  * null`) is felvehető -- a keresőben ma már megjelenik (`available` a
  * PlanEditorPage-en nem szűr pénznemre). Ilyenkor a sor `listaEgysegar`/
  * `tenylegesEgysegar` `0`-n indul, "hiányzó ár" állapotban -- lásd
@@ -53,7 +53,7 @@ export function sorMezokTetelbol(
 }
 
 /**
- * Egy egyedi (árlistán kívüli) sor mezői -- backlog-3: a doki a keresőben
+ * Egy egyedi (árlistán kívüli) sor mezői -- a doki a keresőben
  * begépelt szöveget veszi fel névként, ha egyetlen árlistai tétel sem talál
  * rá (`ItemPicker` `onPickEgyedi`). `tetelId: ''` -- nincs árlistai
  * hivatkozás, tehát nincs értelmezhető listaár sem, ezért

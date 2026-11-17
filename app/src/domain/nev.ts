@@ -38,7 +38,7 @@ export function nevKoveti(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
  * DE terven `nev.de == null`-nál mindig `false`, mert a MEGLÉVŐ,
  * fordítás-hiányt jelző kérdésre (`sorFallback`) válaszol -- ezzel a
  * komparátorral minden fordítatlan, egyébként érintetlen sor hamisan
- * "átírt"-nak látszana. A backlog-60 "kézzel átírt" marker/reset ezt
+ * "átírt"-nak látszana. A "kézzel átírt" marker/reset ezt
  * hívja, HU terven is (`sorFallback` ott korán `null`-t ad).
  */
 export function nevAtirt(sor: Sor, tetel: Tetel, nyelv: Nyelv): boolean {
@@ -61,7 +61,7 @@ export type SorFallbackOk =
  * `null`, ha a sor rendben van (követi az árlistát, vagy hu terven vagyunk).
  *
  * Egyedi (üres `tetelId`-jű) sornál nincs mit a `priceList`-ben megkeresni --
- * ez a sor mindig `'egyedi'`-t ad, amíg van kitöltött neve (backlog-23: nem
+ * ez a sor mindig `'egyedi'`-t ad, amíg van kitöltött neve (nem
  * `'nincsForditas'`, mert nem árlistai fordítás hiányzik, hanem nem
  * ellenőrizhető, milyen nyelven íródott). Üres nevű egyedi sort nem jelez --
  * azt a `kitoltetlenSorok` kemény blokkja úgyis elkapja.
@@ -86,7 +86,7 @@ export function sorFallback(
 /**
  * A `Tetel.leiras` adott nyelvű szövege, hiányzó fordításnál üres string
  * (nincs HU-visszaesés a leírásra), kiemelve, mert a `leirasKoveti`
- * és a `domain/sorMezok.ts` `sorMezokTetelbol` mellett a backlog-60
+ * és a `domain/sorMezok.ts` `sorMezokTetelbol` mellett a
  * leírás-reset a harmadik hívó.
  */
 export function arlistaiLeiras(tetel: Tetel, nyelv: Nyelv): string {

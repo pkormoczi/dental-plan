@@ -75,7 +75,7 @@ export const KATEGORIA_PALETTA: readonly PalettaSzin[] = [
 export const ALAP_KATEGORIA_SZIN = '#adb5bd';
 
 /**
- * Eltévedt hivatkozás tartalék-színe (7. döntés): ha egy sor `tetelId`-je
+ * Eltévedt hivatkozás tartalék-színe: ha egy sor `tetelId`-je
  * nincs a mai árlistában, vagy egy tétel `kategoriaId`-ja nem létező
  * kategóriára mutat. Fix, NEM szerkeszthető, nem jelenik meg a
  * kategória-karbantartó felületen (nem valódi kategória). A `sorrend:
@@ -103,7 +103,7 @@ export function kategoriaVizual(kat: Kategoria): KategoriaVizual {
 
 /**
  * Árlista `kategoriaId` -> vizuális kategória, a JELENLEGI `priceList.kategoriak`
- * alapján. Ismeretlen/hiányzó `kategoriaId`-nál a 7. döntés szerinti fix
+ * alapján. Ismeretlen/hiányzó `kategoriaId`-nál fix
  * tartalék, sosem dob hibát.
  */
 export function vizualKategoriaFor(

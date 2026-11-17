@@ -1,5 +1,6 @@
 // Dokumentációs őr: olcsó, determinisztikus hibákat fog meg, szemantikai
-// igazságot nem bizonyít. Hat szabály: (1) nincs D-szám hivatkozás, (2) nincs
+// igazságot nem bizonyít. Hat szabály: (1) nincs D-szám hivatkozás, az app-kódban régi
+// backlog-, döntés-, tétel- vagy review-azonosító sem, (2) nincs
 // legacy-dokumentumra mutató hivatkozás, (3) az agent-context fájlok budgetje,
 // (4) a context-fájlok path-qualified anchorai feloldhatók, (5) nincs
 // elnémított/kiemelt teszt, (6) a backlog/ tételfájlok fejléce és budgetje --
@@ -22,6 +23,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const SCAN_ROOTS = [
   { dir: 'app/src', ext: ['.ts', '.tsx', '.css', '.md'], recursive: true },
+  { dir: 'app/electron', ext: ['.ts'], recursive: true },
+  { dir: 'app/e2e', ext: ['.ts'], recursive: true },
   { dir: '.claude', ext: ['.md'], recursive: true },
   { dir: 'docs', ext: ['.md'], recursive: false },
   { dir: 'backlog', ext: ['.md'], recursive: true },
@@ -42,6 +45,12 @@ const EXCLUDE_DIRS = [
 const ALLOW_D_TOKENS = new Set([]);
 
 const D_PATTERN = /\bD\d+\b|\bDP-\d+\b/g;
+
+// A régi backlog-számozás, a döntéstáblák és a régi review-k azonosítói: ma sehol nem
+// oldhatók fel. Csak az app-kódra -- a migrációs terv a saját döntéstáblájára, a skillek
+// futásbeli sorszámra jogosan írnak „N. döntés”/„N. tétel”-t.
+const APP_KOD = /^app\/(?:src|electron|e2e)\/.*\.(?:tsx?|css)$/;
+const REGI_AZONOSITO = /\bbacklog-\d+|\b\d+(?:[-/]\d+)?\.(?:\/\d+\.)? (?:döntés|tétel)|\bP[0-3]-\d+\b/g;
 
 const LEGACY_PATTERNS = [
   /docs\/legacy/,
@@ -135,6 +144,16 @@ function dRef(file, lines) {
       if (ALLOW_D_TOKENS.has(m[0])) continue;
       hiba(file, i + 1, 'd-ref',
         `${m[0]} -- a döntéstábla lezárt; írd le a lokális WHY-t, vagy hivatkozz PRODUCT.md / nested CLAUDE.md szakaszra`);
+    }
+  });
+}
+
+function regiAzonosito(file, lines) {
+  if (!APP_KOD.test(file)) return;
+  lines.forEach((text, i) => {
+    for (const m of text.matchAll(REGI_AZONOSITO)) {
+      hiba(file, i + 1, 'regi-azonosito',
+        `"${m[0]}" -- régi backlog-/döntés-/review-azonosító, ma feloldhatatlan; írd le a lokális WHY-t, vagy hivatkozz PRODUCT.md / nested CLAUDE.md szakaszra`);
     }
   });
 }
@@ -340,6 +359,7 @@ for (const file of files) {
   const content = read(file);
   const lines = content.split('\n');
   dRef(file, lines);
+  regiAzonosito(file, lines);
   legacyRef(file, lines);
   budget(file, content);
   // A backlog/README.md nem betöltődő context (nincs budget), de a skill-fájlokra mutató

@@ -83,7 +83,7 @@ describe('buildDemoFileTree', () => {
     expect(flat.some((n) => n.name === 'nincs-dp-prefix.json')).toBe(false);
   });
 
-  // backlog-28: a paciens-adatok.json a paciens.json mellett, a
+  // a paciens-adatok.json a paciens.json mellett, a
   // páciens-mappa gyökerén él -- mindkettőnek látszania kell, egy terv-
   // mappával azonos mélységű, de attól eltérő nevű hasonló alak (pl. egy
   // páciens-mappa alatti, terv-cimke.json-hoz hasonló mélységű, de rossz

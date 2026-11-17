@@ -1,4 +1,4 @@
-// Fogak -> darabszám követés (backlog-27) -- az egységtípus explicit,
+// Fogak -> darabszám követés -- az egységtípus explicit,
 // tételenkénti besorolása szándékosan kimaradt: a `parseTeeth()`
 // mindent-vagy-semmit heurisztikája ugyanezt éri el adminmunka nélkül. A
 // `teeth.ts`-től szándékosan külön modul: az ott lévő függvények tiszta
@@ -48,8 +48,8 @@ export function sorPatchKovetessel(sor: Sor, patch: Partial<Sor>): Partial<Sor> 
   }
   // 2. A doki kézzel írt a Db mezőbe -- a sor leválik. A `'mennyiseg' in patch`
   // (nem érték-összehasonlítás) azért kell, mert egy friss sor `mennyiseg`
-  // alapértéke mindig 1, függetlenül a fogak számától (lásd a tervdokumentum
-  // 3. döntése) -- csak az ÍRÁS-esemény különbözteti meg a kettőt.
+  // alapértéke mindig 1, függetlenül a fogak számától
+  // -- csak az ÍRÁS-esemény különbözteti meg a kettőt.
   if ('mennyiseg' in patch) {
     return { ...patch, mennyisegKezi: true };
   }

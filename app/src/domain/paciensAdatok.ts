@@ -31,8 +31,8 @@ export function torzsadatTervbol(paciens: Paciens, paciensId: string): PatientMa
  * Melyik törzsadat látszik ténylegesen: a lezárt `paciens-adatok.json`, vagy
  * -- ha még nem létezik -- egy élő fallback. A fallback a páciens
  * legutóbb módosított terv-láncának legfrissebb `paciens` pillanatképéből
- * épül (`utolsoTerv`); ha a páciensnek egyetlen terve sincs (6. döntés,
- * backlog-28), a `PatientFolder.nev`-ből induló üres rekordra esik vissza.
+ * épül (`utolsoTerv`); ha a páciensnek egyetlen terve sincs,
+ * a `PatientFolder.nev`-ből induló üres rekordra esik vissza.
  * Ez az EGYETLEN hely, ahol ez a döntés eldől.
  */
 export function megjelenitettTorzsadat(
@@ -46,8 +46,8 @@ export function megjelenitettTorzsadat(
 }
 
 /**
- * A `paciens.json` index `nev`-jének forrása egy terv mentésekor (3.
- * döntés, backlog-28): ha van lezárt törzsadat, az nyer -- a terv
+ * A `paciens.json` index `nev`-jének forrása egy terv mentésekor:
+ * ha van lezárt törzsadat, az nyer -- a terv
  * `paciens.nev`-je NEM írhatja felül némán a törzsadatban rögzített nevet.
  * Domain-függvény, nem inline `??` a storage rétegben, mert a
  * `FileSystemStorage`-nak (2. fázis) ugyanezt a szabályt kell követnie.

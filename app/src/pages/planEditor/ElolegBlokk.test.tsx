@@ -35,7 +35,7 @@ function renderBlokk(grand: number, initial?: number | null) {
   );
 }
 
-// backlog-9: a doki eddig fejben osztotta ki az előleget és kézzel írta
+// a doki eddig fejben osztotta ki az előleget és kézzel írta
 // a papír aljára; az előleg mostantól abszolút összeg, nem százalék.
 describe('az előleg-kapcsoló (abszolút összeg)', () => {
   it('bekapcsoláskor üresen, fókuszáltan jelenik meg, előtöltés nélkül', async () => {

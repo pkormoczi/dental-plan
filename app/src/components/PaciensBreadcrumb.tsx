@@ -1,5 +1,5 @@
 // A `TervWorkflowShell.tsx` breadcrumb-navigációja, kiemelve, hogy a
-// `PaciensKotesProvider`-en BELÜL renderelődjön (94. tétel). A link célja
+// `PaciensKotesProvider`-en BELÜL renderelődjön. A link célja
 // (`href`) változatlanul a piszkozathoz kötött `patientDir` -- a FELIRAT
 // viszont, ha van feloldott kötés, a kötött páciensmappa TÁROLT neve
 // (`PatientFolder.nev`), nem a szabadon szerkeszthető Név mező: enélkül a

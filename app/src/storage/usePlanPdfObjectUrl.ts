@@ -1,6 +1,6 @@
 // A "bájtok -> Blob -> object URL, cleanupban revoke" effekt megosztott
 // otthona -- korábban a `pages/demo/fileTree/FileContentPanel.tsx`-ben élt
-// egyedül, a Terv részletei lap (75. tétel) beágyazott PDF-viewere a
+// egyedül, a Terv részletei lap beágyazott PDF-viewere a
 // második hívó. A dep-lista a REF HÁROM mezőjére megy, nem az objektum-
 // identitására, hogy a hívónak ne kelljen `useMemo`-znia egy inline
 // `{...}`-ot.

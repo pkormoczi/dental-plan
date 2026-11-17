@@ -1,4 +1,4 @@
-// Tömeges árváltoztatás az árlista adminban (backlog-92). Tiszta,
+// Tömeges árváltoztatás az árlista adminban. Tiszta,
 // React/localStorage nélkül tesztelhető mag, a `domain/arKoveti.ts` /
 // `domain/mennyiseg.ts` mintájában -- ez az EGYETLEN hely, ahol a
 // kerekítési létra és a soronkénti állapot-osztályozás eldől, a dialógusba

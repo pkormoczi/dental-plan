@@ -2,12 +2,12 @@
 // szerkesztő ár/mennyiség mezői korábban MINDEN billentyűleütésre azonnal a
 // törzsadatba írtak (`Number(e.target.value) || 0`), debounce/floor nélkül.
 // Ez önmagában több review-találatot okozott:
-//  - P0-4: üres mező commitja némán 0-ra esett
-//  - P0-5: EUR mező centben kért, de semmi sem védte ki az "euróban
+//  - üres mező commitja némán 0-ra esett
+//  - EUR mező centben kért, de semmi sem védte ki az "euróban
 //    gépelek" tévesztést -- lásd `unit="EUR"`
-//  - P1-4: minden leütés azonnal a törzsárlistába írt, törléskor a
+//  - minden leütés azonnal a törzsárlistába írt, törléskor a
 //    pillanatnyi 0 azonnal perzisztálódott
-//  - P0-7 fele: gépelés közben a sor kieshetett egy aktív szűrő alól,
+//  - gépelés közben a sor kieshetett egy aktív szűrő alól,
 //    mert a lista minden leütésre újraszámolt
 
 import { useEffect, useState, type CSSProperties } from 'react';
@@ -70,8 +70,8 @@ export interface NumberFieldProps {
   /**
    * Blur UTÁN hívódik, a `commit()` lefutása után -- kizárólag "a mező most
    * vesztette el a fókuszt" jelzéshez (pl. egy kötelező-mező hiba, ami csak
-   * blur/Enter után jelenhet meg, nem azonnal fókuszáláskor, backlog-64 6.
-   * döntése). NEM helyettesíti az `onCommit`-ot, ami az új értéket adja át.
+   * blur/Enter után jelenhet meg, nem azonnal fókuszáláskor). NEM
+   * helyettesíti az `onCommit`-ot, ami az új értéket adja át.
    */
   onBlur?: () => void;
   placeholder?: string;
@@ -139,7 +139,7 @@ export default function NumberField({
     const parsed = parse(draft);
     if (parsed == null || !Number.isFinite(parsed) || (min != null && parsed < min)) {
       // Üres/érvénytelen/min alatti érték -- SOHA nem esik 0-ra, az utolsó
-      // ismert értékre áll vissza (P0-4). A visszaállás NEM néma (lásd a
+      // ismert értékre áll vissza. A visszaállás NEM néma (lásd a
       // review 6. megállapítását): csak akkor jelez, ha a piszkozat tényleg
       // eltért a visszaállított megjelenítéstől, hogy egy üres -> üres blur
       // (pl. az ElolegBlokk frissen bekapcsolt mezőjén) ne fusson riasztásba.

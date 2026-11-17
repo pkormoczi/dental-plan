@@ -1,6 +1,6 @@
 // A 3 workflow-route emberi felirata -- eredetileg a
 // `TervWorkflowShell.tsx` privát `LEPESEK` tömbje volt (a stepperhez), a
-// 46. tétel (terv-lánc fa aktív-draft blokkja) emelte ide, hogy a
+// terv-lánc fa aktív-draft blokkja emelte ide, hogy a
 // `piszkozatLastRoute` felirata ne másolódjon egy második helyre.
 
 import type { WorkflowRoute } from '../storage/DraftStorage';

@@ -38,7 +38,7 @@ function renderPicker(props: Partial<React.ComponentProps<typeof ItemPicker>> = 
   return { ...utils, onPick };
 }
 
-/** Ugyanaz, mint `renderPicker`, de `onPickEgyedi`-t is bekötve adja vissza -- a backlog-3 tesztekhez. */
+/** Ugyanaz, mint `renderPicker`, de `onPickEgyedi`-t is bekötve adja vissza -- az egyedi-sor tesztekhez. */
 function renderPickerWithEgyedi(props: Partial<React.ComponentProps<typeof ItemPicker>> = {}) {
   const onPickEgyedi = vi.fn();
   const { onPick, ...utils } = renderPicker({ onPickEgyedi, ...props });
@@ -153,7 +153,7 @@ describe('ItemPicker', () => {
     expect(onPick).not.toHaveBeenCalled();
   });
 
-  // backlog-7: a 12-es limit fölötti csonkítás eddig NÉMA volt.
+  // a 12-es limit fölötti csonkítás eddig NÉMA volt.
   describe('találat-csonkítás jelzése', () => {
     // 15 egyező tétel -> 12 látszik, 3 marad le.
     const sok: Tetel[] = Array.from({ length: 15 }, (_, i) => tetel(`s${i}`, `Tömés ${i + 1} felszín`));

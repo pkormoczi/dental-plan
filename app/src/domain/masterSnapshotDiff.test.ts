@@ -1,4 +1,4 @@
-// Páciens master <-> terv-piszkozat mezőszintű összevetése -- backlog-40.
+// Páciens master <-> terv-piszkozat mezőszintű összevetése.
 
 import { describe, expect, it } from 'vitest';
 import {

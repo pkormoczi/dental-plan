@@ -139,7 +139,7 @@ describe('NewPlanPage', () => {
 
   // Adatvezérelt: a várt top-15-öt magából a seedből (`legutobbAktivPaciensek`)
   // számolja ki, nem konkrét neveket hardkódol -- így a demó-készlet
-  // bővítése (backlog-35 utáni, 22 páciensre bővített seed) nem töri meg.
+  // bővítése (22 páciensre bővített seed) nem töri meg.
   it('kezdetben a legutóbbi pácienseket sorolja fel, keresésre szűkíti a találatokat', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
@@ -359,7 +359,7 @@ describe('NewPlanPage', () => {
     expect(screen.getByRole('button', { name: /Kovács János/ })).toBeInTheDocument();
   });
 
-  // backlog-36: a no-match "Új páciens" opció mostantól a quick-create
+  // a no-match "Új páciens" opció mostantól a quick-create
   // dialógust nyitja meg (a begépelt névvel előtöltve), nem navigál
   // egyenesen -- a Mentés hozza létre a valódi Patient-rekordot.
   it('nulla találatnál egy "Új páciens" opció jelenik meg a begépelt névvel, a dialógust előtöltve nyitja', async () => {
@@ -569,7 +569,7 @@ describe('NewPlanPage', () => {
     expect(screen.getByTestId('draft-sorcount')).toHaveTextContent('0');
   });
 
-  // 100. tétel: egy meglévő páciens PUSZTA kiválasztása (törzsadat-előtöltés,
+  // egy meglévő páciens PUSZTA kiválasztása (törzsadat-előtöltés,
   // szerkesztés nélkül) nem minősülhet "mentetlen munkának" -- a Kezdőlap
   // "Piszkozat folytatása" kártyája enélkül minden puszta páciens-átnézésre
   // felvillanna. Kontrasztként lásd a "Másolás új tervbe" tesztjét
@@ -644,7 +644,7 @@ describe('NewPlanPage', () => {
     expect(await screen.findByTestId('draft-nev')).toHaveTextContent('Kovács János');
   });
 
-  // backlog-28: a törzsadat előnyben részesül a legutóbbi terv
+  // a törzsadat előnyben részesül a legutóbbi terv
   // pillanatképéhez képest, ha van lezárt paciens-adatok.json.
   describe('paciens-adatok.json hatása', () => {
     it('lezárt törzsadat esetén onnan tölt elő, nem a legutóbbi terv paciens pillanatképéből', async () => {

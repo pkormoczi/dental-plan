@@ -1,6 +1,6 @@
 // Lista keresőszövegének, scroll-pozíciójának ÉS a lista sorain belüli
 // összecsukható blokkok nyitottságának megőrzése route-váltás után-vissza
-// (a nyitottság a 46. tétel bővítése) -- KIZÁRÓLAG böngésző-"vissza" (POP) navigációnál
+// -- KIZÁRÓLAG böngésző-"vissza" (POP) navigációnál
 // áll vissza; a NavBar linkjéről vagy más PUSH-ról érkező belépés mindig
 // tiszta listát ad. Modul-szintű `Map`-ben tartja az állapotot, NEM
 // böngészőtárban -- a keresőszöveg páciensnév-töredék lehet, ezt a

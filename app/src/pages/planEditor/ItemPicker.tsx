@@ -15,7 +15,7 @@
 //
 // Csak keresés, nincs kategória böngésző. Ékezetfüggetlen.
 //
-// `onPickEgyedi` (backlog-3, opcionális): ha a gépelt szövegre nincs
+// `onPickEgyedi` (opcionális): ha a gépelt szövegre nincs
 // árlistai találat, a találati lista alján megjelenik egy pszeudo-opció
 // ("Egyedi tétel felvétele: ...„...”"), ami a gépel -> nyíl -> Enter
 // ciklusban ugyanúgy elérhető, mint egy valódi találat -- a hívó ilyenkor a
@@ -122,7 +122,7 @@ export default function ItemPicker({
   // LATHATO_TALALAT limit az 1. szintet tölti először, hogy egy
   // kategória-egyezés sosem szorítson ki egy névtalálatot. A levágott
   // találatok száma is kell: eddig a csonkítás NÉMA volt, a doki nem
-  // tudta, hogy pontosítania kellene (backlog-7). A limit maga változatlan.
+  // tudta, hogy pontosítania kellene. A limit maga változatlan.
   // A fogszám-tokenek leválasztása a NYERS szövegről fut, az egyezés-vizsgálat
   // pedig már csak a maradék névrészre -- „18 fogeltávolítás" így megtalálja a
   // Fogeltávolítás tételt. Csupa fogszámnál a bontás az eredeti szöveget adja
@@ -176,7 +176,7 @@ export default function ItemPicker({
   const egyediElerheto = Boolean(onPickEgyedi) && bontas.nevResz.trim() !== '';
   const opcioSzam = valaszthato.length + (egyediElerheto ? 1 : 0);
 
-  // 62. tétel: `available` már nem szűr `currency`-re (egy
+  // `available` már nem szűr `currency`-re (egy
   // beárazatlan tétel is kereshető/felvehető) -- az üres-találat jegyzet
   // ezért itt, nem az `available.length`-ből dönti el, hogy a doki egy
   // olyan pénznemben keres, amiben SEMMI sincs beárazva.
@@ -287,7 +287,7 @@ export default function ItemPicker({
   // Egy közös konténerben: a találatok (ha vannak), különben a "Nincs
   // találat" jegyzet, a végén pedig -- ha a hívó kéri -- az egyedi opció.
   // Így egy nulla-találatos keresés sosem zsákutca: a jegyzet a pszeudo-sor
-  // FÖLÖTT áll, informatív szövegként (backlog-3 3-4. döntés).
+  // FÖLÖTT áll, informatív szövegként.
   const list = q.trim() === '' ? null : (
     <div
       style={{

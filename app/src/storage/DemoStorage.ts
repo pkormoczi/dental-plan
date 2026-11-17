@@ -153,8 +153,8 @@ export class DemoStorage implements PlanStorage {
    * közös láncba fut be -- két egymást gyorsan követő hívás (pl. dupla
    * kattintás, vagy egy admin-mezőn gyors egymás utáni szerkesztés)
    * enélkül egymással versenyezve írna, és fordított sorrendben landolhatna
-   * (`savePlan`-nál ráadásul ugyanazt a verziószámot is kiszámolhatná --
-   * P0-1/P1-5, és egy már meglévő verziómappa íródna felül -- tervet soha
+   * (`savePlan`-nál ráadásul ugyanazt a verziószámot is kiszámolhatná,
+   * és egy már meglévő verziómappa íródna felül -- tervet soha
    * nem írunk felül). A lánc mindig `undefined`-re fut ki, sikeres
    * vagy hibás hívás után is, hogy egy korábbi hiba ne akassza meg a
    * rákövetkező mentéseket. Ma a `localStorage.setItem` szinkron, tehát ez
@@ -546,7 +546,7 @@ export class DemoStorage implements PlanStorage {
    * számolja ki -- a hívó nem adhat meg tetszőlegeset (ez tartja a láncot
    * append-only-ban).
    *
-   * P0-1/P1-5: soros végrehajtás (`savingChain`) + a három `setItem` egy
+   * soros végrehajtás (`savingChain`) + a három `setItem` egy
    * try/catch-ben -- ha bármelyik írás elhasal (pl. kvótahiba), egyik kulcs
    * sem marad félkész állapotban (verziómappát soha nem hagyunk
    * csonkán), és két gyors egymás utáni hívás nem számolhatja ki ugyanazt a
@@ -770,8 +770,8 @@ export class DemoStorage implements PlanStorage {
   }
 
   /**
-   * Vadonatúj, terv nélküli páciens (backlog-28, 6. döntés) -- mindkét
-   * gyökér-fájlt megírja. A `kezdoAdatok` (backlog-36) a quick-create
+   * Vadonatúj, terv nélküli páciens -- mindkét
+   * gyökér-fájlt megírja. A `kezdoAdatok` a quick-create
    * dialógus opcionális szuletesiIdo/telefon mezőit terjeszti az
    * `uresTorzsadat()` alapértékére.
    */
@@ -792,7 +792,7 @@ export class DemoStorage implements PlanStorage {
   }
 
   /**
-   * A teljes páciensmappa törlése (backlog-41) -- egyetlen
+   * A teljes páciensmappa törlése -- egyetlen
    * prefix-seprés, mert a `listPatients()` BÁRMELY, a mappa alatti kulcsból
    * levezeti a páciens létezését (lásd ott): egy részleges törlés
    * dirnév-ből visszafejtett nevű szellem-pácienst hagyna vissza. A záró

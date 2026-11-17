@@ -157,7 +157,7 @@ describe('osszesitokElter', () => {
     expect(osszesitokElter(mentett, fazisok)).toBeNull();
   });
 
-  it('returns the recomputed value when the saved osszesitok does not match (P1-3)', () => {
+  it('returns the recomputed value when the saved osszesitok does not match', () => {
     // Egy kézzel piszkált/sérült fájl, ahol a mentett `fizetendo` nem egyezik
     // az élőben újraszámolt sorokkal.
     const mentett = { kezelesekOsszesen: 25000, kedvezmeny: 0, fizetendo: 25000 };
@@ -173,7 +173,7 @@ describe('osszesitokElter', () => {
   });
 });
 
-describe('tervVegosszeg (backlog-16)', () => {
+describe('tervVegosszeg', () => {
   it('kedvezmény nélkül a sorok nyers összege', () => {
     expect(tervVegosszeg(fazisok)).toBe(20000);
     expect(tervVegosszeg(fazisok, null)).toBe(20000);
@@ -193,7 +193,7 @@ describe('tervVegosszeg (backlog-16)', () => {
   });
 });
 
-describe('computeOsszesitok terv-szintű kedvezménnyel (backlog-16)', () => {
+describe('computeOsszesitok terv-szintű kedvezménnyel', () => {
   it('2. paraméter nélkül a mai (csak sorszintű) viselkedés', () => {
     expect(computeOsszesitok(fazisok)).toEqual({
       kezelesekOsszesen: 25000,
@@ -219,7 +219,7 @@ describe('computeOsszesitok terv-szintű kedvezménnyel (backlog-16)', () => {
   });
 });
 
-describe('osszesitokElter terv-szintű kedvezménnyel (backlog-16)', () => {
+describe('osszesitokElter terv-szintű kedvezménnyel', () => {
   it('nem jelez hamis eltérést egy kedvezményes tervnél', () => {
     const mentett = computeOsszesitok(fazisok, 3000);
     expect(osszesitokElter(mentett, fazisok, 3000)).toBeNull();
@@ -261,7 +261,7 @@ describe('elolegTullepi', () => {
   });
 });
 
-describe('elolegSzazalekbol (91. tétel: százalékos előleg-bevitel)', () => {
+describe('elolegSzazalekbol (százalékos előleg-bevitel)', () => {
   it('pontosan osztható összegnél nem kerekít fölöslegesen', () => {
     expect(elolegSzazalekbol(780000, 30)).toBe(234000);
   });

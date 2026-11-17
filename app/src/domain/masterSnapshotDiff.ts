@@ -1,5 +1,5 @@
 // Páciens master (paciens-adatok.json) <-> terv-piszkozat paciens-
-// blokk mezőszintű összevetése -- backlog-40. Az
+// blokk mezőszintű összevetése. Az
 // invariáns (nincs automatikus szinkron egyik irányban sem) változatlan
 // marad; ez a modul csak az összevetéshez ad tiszta, I/O-mentes építőkövet
 // mindkét irányú, EXPLICIT szinkron-művelethez

@@ -20,8 +20,8 @@ export interface ElolegBlokkProps {
 }
 
 /**
- * Előleg-kapcsoló (backlog-9, abszolút összeg; a 91. tétel a
- * százalékos bevitellel bővítette). A `Summary` ALATT áll, mert az előleg a
+ * Előleg-kapcsoló (abszolút összeg, a
+ * százalékos bevitellel bővítve). A `Summary` ALATT áll, mert az előleg a
  * végösszegből számol -- ez az a pillanat, amikor a doki amúgy is azt nézi.
  *
  * A `Plan` továbbra is egyetlen nullázható mezőt hordoz (`elolegOsszeg`,

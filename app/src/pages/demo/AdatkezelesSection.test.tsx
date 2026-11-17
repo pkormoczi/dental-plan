@@ -2,7 +2,7 @@
 // Home.test.tsx sem fedte a reset/clearAll gombokat, ez nettó új
 // lefedettség. A "Demó adat visszaállítása" tesztje szándékosan a
 // localStorage-ot ellenőrzi közvetlenül a `reloadFromStorage()` hívás
-// regressziós őreként (P0-6, lásd a komponens kommentjét) -- egy
+// regressziós őreként (lásd a komponens kommentjét) -- egy
 // AppStateProvider-en belüli memóriabeli állapot enélkül csendben
 // visszaírná a régi értéket a friss seed fölé.
 
@@ -56,7 +56,7 @@ describe('AdatkezelesSection', () => {
     expect(arlistaVerzio()).toBe('2026-07-01');
   });
 
-  // 88. tétel: statikus tárolás-tájékoztató szöveg, interakció nélkül -- a
+  // statikus tárolás-tájékoztató szöveg, interakció nélkül -- a
   // regex a bevezető mondatra szűkít, mert a lenti Adatvédelem kártya is
   // említi külön a "localStorage" szót.
   it('megjeleníti a localStorage/Google Drive tárolás-tájékoztató szöveget', async () => {

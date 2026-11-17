@@ -1,9 +1,9 @@
-// backlog-30: az egyesített páciens-részletoldal (két tab: Páciens adatai |
+// az egyesített páciens-részletoldal (két tab: Páciens adatai |
 // Kezelési tervek, URL-lel címezhető). A terv-lánc/verzió fa
 // (PatientPlanChains) saját, teljes lefedettséggel rendelkezik a
 // OsszesTervSection.test.tsx-ben. A `Páciens adatai` tab tartalmának
-// (PatientEditorPanel) mezőkészlet/Save-Cancel viselkedése -- a 38. tétel
-// óta, mióta a Pácienslista tiszta navigációs lista, ennek az
+// (PatientEditorPanel) mezőkészlet/Save-Cancel viselkedése -- mióta
+// a Pácienslista tiszta navigációs lista, ennek az
 // egyetlen hívási helye ez az oldal -- itt fedve (mentés → tényleges
 // paciens-adatok.json, átnevezés-duplikáció megerősítés). Ami ezen felül
 // marad, csak az ÚJ, oldal-szintű viselkedés: URL-ből feloldott páciens,
@@ -68,7 +68,7 @@ function seedPersistedDraft(overrides: Partial<Plan> = {}) {
   );
 }
 
-// A verziósor "Megnézés" gombja ide navigál (71. tétel) -- a "Vissza" gomb
+// A verziósor "Megnézés" gombja ide navigál -- a "Vissza" gomb
 // a `navigate(-1)`-es POP-visszatérést szimulálja, ugyanaz a minta, mint az
 // OsszesTervSection.test.tsx `PaciensekProbe`-ja.
 function TervReszleteiProbe() {
@@ -309,7 +309,7 @@ describe('PatientDetailPage', () => {
   });
 
   // A korábbi, oldal-szintű "N terv" burkoló toggle (páciens-szinten) itt
-  // MA IS nincs (a 46. tétel előtt sem volt) -- de a 46. tétel óta a
+  // MA IS nincs (korábban sem volt) -- de a
   // `PatientPlanChains` lánc-SZINTŰ toggle-je EZEN a tabon is érvényes,
   // ugyanazzal az alapértelmezéssel (csak a legfrissebb véglegesített
   // dátumú lánc nyitva), mint a `standalone` Korábbi tervek listán
@@ -346,7 +346,7 @@ describe('PatientDetailPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  // 71. tétel: a Terv részletei lap "Összes verzió" gombja ide, POP-
+  // a Terv részletei lap "Összes verzió" gombja ide, POP-
   // navigációval tér vissza -- a lánc-nyitottságnak (amit a doki a "Tömések"
   // láncon kézzel nyitott ki, mert alapból csukva van) meg kell maradnia.
   it('a Terv részletei lapra navigálva, majd onnan POP-pal visszatérve a lánc-nyitottság visszaáll', async () => {

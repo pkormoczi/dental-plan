@@ -1,4 +1,4 @@
-// Páciens törlésének feltételei (backlog-41). Tiszta függvény,
+// Páciens törlésének feltételei. Tiszta függvény,
 // nincs I/O -- a hívó (`PatientDetailPage.tsx`) adja a MÁR betöltött
 // `PlanChainData`-t (`domain/planChainData.ts`) és a saját aktív draftjának
 // hovatartozását, ugyanúgy, mint pl. a `legutobbAktivPaciensek()`.

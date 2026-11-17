@@ -26,7 +26,7 @@ import type { WorkflowRoute } from '../storage/DraftStorage';
 export function piszkozatTartalmas(plan: Plan): boolean {
   // A PatientPage.tsx szerint a tervId -- nem a statusz -- a jó
   // diszkriminátor a "már mentve volt" jelzésre: egy újranyitott VEGLEGES
-  // terv is védendő, amíg a doki újra véglegesíti (1. döntés).
+  // terv is védendő, amíg a doki újra véglegesíti.
   if (plan.tervId !== '') return true;
 
   const p = plan.paciens;
@@ -46,12 +46,12 @@ export function piszkozatTartalmas(plan: Plan): boolean {
   const vanSor = plan.fazisok.some((f) => f.sorok.length > 0);
   if (vanSor) return true;
 
-  // Az előleg-kapcsoló bekapcsolása tudatos doki-döntés (backlog-9), nem
+  // Az előleg-kapcsoló bekapcsolása tudatos doki-döntés, nem
   // gépi alapérték -- önmagában is védendő tartalom, még üres páciensadat
   // és sorok nélkül is.
   if (plan.elolegOsszeg != null) return true;
 
-  // Ugyanez a terv-szintű kedvezmény kapcsolójára (backlog-16).
+  // Ugyanez a terv-szintű kedvezmény kapcsolójára.
   if (plan.kedvezmenyOsszeg != null) return true;
 
   // A másik pénznemben stashelt egyedi végösszeg/előleg (domain/penznemValtas.ts
@@ -73,7 +73,7 @@ export function piszkozatTartalmas(plan: Plan): boolean {
 /**
  * Hová navigáljon a piszkozat "Megnyitás"/"Folytatás" akciója: a
  * `piszkozatLastRoute` metaadat, ha ismert, egyébként a névkitöltés
- * heurisztikája (a Home.tsx eredeti kifejezése, 46. tétel óta kiemelve --
+ * heurisztikája (a Home.tsx eredeti kifejezése, azóta kiemelve --
  * a Kezdőlap kártyája ÉS a terv-lánc fa aktív-draft blokkja is ezt hívja,
  * ne másolódjon).
  */

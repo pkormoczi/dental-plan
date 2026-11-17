@@ -31,7 +31,7 @@ function makeBlankPlan(overrides: Partial<Plan> = {}): Plan {
   };
 }
 
-// 47. tétel: a nyelv/pénznem-öröklés a `ujTervForrasPaciensbol()`
+// a nyelv/pénznem-öröklés a `ujTervForrasPaciensbol()`
 // mindkét ágán (törzsadat és `paciens` pillanatkép) ugyanabból a forrásból
 // (a páciens legutóbb VÉGLEGESÍTETT terve) történik.
 describe('ujTervForrasPaciensbol -- nyelv/pénznem-öröklés', () => {

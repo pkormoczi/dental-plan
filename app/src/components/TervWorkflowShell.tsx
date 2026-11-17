@@ -1,4 +1,4 @@
-// Terv-workflow héj -- backlog-31 (Terv workflow shell).
+// Terv-workflow héj.
 // A `/paciens`/`/terv`/`/elonezet` közös layout-route-ja (az app első
 // nested route-mintája, react-router `Outlet`): állandó, kattintható
 // breadcrumb (`Páciensek > [páciens neve]`) + szabadon kattintható,
@@ -52,7 +52,7 @@ export default function TervWorkflowShell() {
     }
   }, [pathname, jelezWorkflowLepes, uresElonezet]);
 
-  // backlog-40 (3. döntés): a "Terv adatai" lépés ELŐRE (Kezelések/
+  // a "Terv adatai" lépés ELŐRE (Kezelések/
   // Előnézet felé) elhagyásának ajánlat-jellegű elfogása
   // (components/LepesGuardContext.tsx). A hatókör szűkítése (kizárólag a
   // /paciens lépésről indított előrelépés) NEM itt dől el explicit módon --

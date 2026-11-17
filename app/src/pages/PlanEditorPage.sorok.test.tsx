@@ -123,7 +123,7 @@ describe('PlanEditorPage -- kattintható fogtérkép', () => {
     await user.click(tooth24);
 
     expect(screen.getByDisplayValue('24')).toBeInTheDocument();
-    // backlog-27: a fogtérkép-popover írási útja is a fogak-követésen megy
+    // a fogtérkép-popover írási útja is a fogak-követésen megy
     // át -- egy kijelölt fog a darabszámot is frissíti.
     expect(screen.getByRole('textbox', { name: 'Darabszám' })).toHaveValue('1');
   });
@@ -170,7 +170,7 @@ describe('PlanEditorPage -- nyelv és pénznem', () => {
     expect(screen.getByText('HU')).toBeInTheDocument();
   });
 
-  it('backlog-3b: "átírt" jelvény egy kézzel eltérített, fordítással rendelkező soron -- nem "HU", és a kettő nem keveredik', async () => {
+  it('"átírt" jelvény egy kézzel eltérített, fordítással rendelkező soron -- nem "HU", és a kettő nem keveredik', async () => {
     const user = userEvent.setup();
     seedGermanPlanWithOneTranslatedItem();
     renderEditor();
@@ -214,14 +214,14 @@ describe('PlanEditorPage -- nyelv és pénznem', () => {
     await user.click(screen.getByRole('button', { name: 'Tovább a terv szerkesztőhöz' }));
 
     const search = await screen.findByPlaceholderText(/Tétel keresése/);
-    // 62. tétel óta egy beárazatlan tétel is találat -- ez a jelzés
+    // Egy beárazatlan tétel is találat -- ez a jelzés
     // csak akkor jelenik meg, ha a NÉVegyezés is nulla találatot ad.
     await user.type(search, 'zzznincsilyentetel');
 
     expect(await screen.findByText(/egyetlen aktív tétel sincs beárazva/)).toBeInTheDocument();
   });
 
-  it('62. tétel: egy a terv pénznemében beárazatlan tétel is megtalálható és felvehető, "—" listaárral, 0-ás ajánlati árral', async () => {
+  it('egy a terv pénznemében beárazatlan tétel is megtalálható és felvehető, "—" listaárral, 0-ás ajánlati árral', async () => {
     const user = userEvent.setup();
     seedWithNoEurPrices();
     render(<App />);
@@ -249,7 +249,7 @@ describe('PlanEditorPage -- nyelv és pénznem', () => {
     expect(priceField.value).toBe('0,00');
   });
 
-  it('74. tétel: beárazatlan tételhez kézzel megadott ajánlati ár NEM kap "Felár" jelvényt -- ott nincs referenciaár', async () => {
+  it('beárazatlan tételhez kézzel megadott ajánlati ár NEM kap "Felár" jelvényt -- ott nincs referenciaár', async () => {
     const user = userEvent.setup();
     seedWithNoEurPrices();
     render(<App />);
@@ -277,7 +277,7 @@ describe('PlanEditorPage -- nyelv és pénznem', () => {
     expect(screen.queryByText(/^\+\d/)).not.toBeInTheDocument();
   });
 
-  it('backlog-5: az "Ajánlati ár" mező euróban jelenít meg és fogad be egy EUR pénznemű tervnél, a commit centben történik', async () => {
+  it('az "Ajánlati ár" mező euróban jelenít meg és fogad be egy EUR pénznemű tervnél, a commit centben történik', async () => {
     const user = userEvent.setup();
     seedWithIntactPriceList();
     render(<App />);
@@ -306,7 +306,7 @@ describe('PlanEditorPage -- nyelv és pénznem', () => {
     const priceField = screen.getByLabelText('Ajánlati egységár') as HTMLInputElement;
     expect(priceField.value).toBe('66,00');
 
-    // A mező blur-re commitál (P1-4) -- "35,50" beírva a tárolt értéknek
+    // A mező blur-re commitál -- "35,50" beírva a tárolt értéknek
     // 3550 centnek kell lennie. Javítás előtt a hiányzó unit prop miatt ez
     // a HUF-ágon parseolódott volna ("35.5" -> 36 cent -> "0,36 €").
     await user.clear(priceField);
@@ -317,7 +317,7 @@ describe('PlanEditorPage -- nyelv és pénznem', () => {
   });
 });
 
-describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () => {
+describe('PlanEditorPage -- sornév szerkesztés és egyedi sor', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -373,7 +373,7 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
     expect(screen.queryByText(/−\d+%/)).not.toBeInTheDocument();
   });
 
-  it('backlog-23: egyedi sor német terven csak "egyedi" jelvényt kap, "HU"-t nem', async () => {
+  it('egyedi sor német terven csak "egyedi" jelvényt kap, "HU"-t nem', async () => {
     const user = userEvent.setup();
     seedGermanPlanWithOneTranslatedItem();
     renderEditor();
@@ -390,7 +390,7 @@ describe('PlanEditorPage -- backlog-3: sornév szerkesztés és egyedi sor', () 
   });
 });
 
-describe('PlanEditorPage -- backlog-4: becsült ár (≈ ikon) kapcsoló', () => {
+describe('PlanEditorPage -- becsült ár (≈ ikon) kapcsoló', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -427,7 +427,7 @@ describe('PlanEditorPage -- backlog-4: becsült ár (≈ ikon) kapcsoló', () =>
     expect(chip).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('egyedi soron is megjelenik és átbillenthető a chip -- backlog-3 7. döntése ebben a körben oldódik fel', async () => {
+  it('egyedi soron is megjelenik és átbillenthető a chip', async () => {
     const user = userEvent.setup();
     renderEditor();
 
@@ -464,7 +464,7 @@ describe('PlanEditorPage -- backlog-4: becsült ár (≈ ikon) kapcsoló', () =>
   });
 });
 
-describe('PlanEditorPage -- backlog-10: tétel-leírás', () => {
+describe('PlanEditorPage -- tétel-leírás', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -553,7 +553,7 @@ describe('PlanEditorPage -- backlog-10: tétel-leírás', () => {
   });
 });
 
-describe('PlanEditorPage -- backlog-60: sor-szintű eltérés-jelzés és reset', () => {
+describe('PlanEditorPage -- sor-szintű eltérés-jelzés és reset', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -751,7 +751,7 @@ describe('PlanEditorPage -- backlog-60: sor-szintű eltérés-jelzés és reset'
   });
 });
 
-describe('PlanEditorPage -- 65. tétel: nyelvi review-jelvény', () => {
+describe('PlanEditorPage -- nyelvi review-jelvény', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -843,7 +843,7 @@ describe('PlanEditorPage -- 65. tétel: nyelvi review-jelvény', () => {
   });
 });
 
-describe('PlanEditorPage -- backlog-61: árlista-snapshot és explicit refresh', () => {
+describe('PlanEditorPage -- árlista-snapshot és explicit refresh', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -907,7 +907,7 @@ describe('PlanEditorPage -- backlog-61: árlista-snapshot és explicit refresh',
 
 /**
  * Egy piszkozat, aminek van egy örökölt (másolatból hozott) kézi ajánlati
- * árú sora ÉS egy örökölt fázismegjegyzése -- a 90. tétel
+ * árú sora ÉS egy örökölt fázismegjegyzése -- a
  * (`domain/orokoltJelzesek.ts`) badge- és törlés-teszteihez.
  */
 function seedWithOrokoltJelzesek() {
@@ -933,7 +933,7 @@ function seedWithOrokoltJelzesek() {
   );
 }
 
-describe('PlanEditorPage -- 90. tétel: másolt terv örökölt szakmai-tartalom jelzései', () => {
+describe('PlanEditorPage -- másolt terv örökölt szakmai-tartalom jelzései', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -968,7 +968,7 @@ describe('PlanEditorPage -- 90. tétel: másolt terv örökölt szakmai-tartalom
   });
 });
 
-describe('PlanEditorPage -- 108. tétel: élő Összeg oszlop gépelés közben', () => {
+describe('PlanEditorPage -- élő Összeg oszlop gépelés közben', () => {
   beforeEach(() => {
     localStorage.clear();
     // Az EUR-teszt a teljes App-ot (HashRouter) rendereli -- a

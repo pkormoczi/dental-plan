@@ -1,11 +1,11 @@
-// Páciensek -- backlog-28. tétel: a `terv.json` `paciens` blokkja
+// Páciensek: a `terv.json` `paciens` blokkja
 // tervenkénti pillanatkép, itt viszont a doki a páciens JELENLEG
 // érvényes, terv-mentéstől független adatait tartja (paciens-adatok.json,
 // lásd app/src/storage/CLAUDE.md). Funkcionálisan külön a terv-lánc/verzió fától: az a
 // kezelési előzmény/verziók tartalma, ez a törzsadaté -- mindkettő
 // ugyanoda, a páciens-részletoldalra vezet.
 //
-// A 38. tétel óta ez tiszta NAVIGÁCIÓS lista: a sorok a páciens-
+// Ez tiszta NAVIGÁCIÓS lista: a sorok a páciens-
 // részletoldalra (`PatientDetailPage.tsx`) navigálnak, a törzsadat-
 // szerkesztő (`PatientEditorPanel`) itt nem jelenik meg -- az egyetlen
 // helye a részletoldal `Páciens adatai` tabja.
@@ -54,7 +54,7 @@ export default function PaciensekPage() {
       try {
         const list = await storage.listPatients();
         if (cancelled) return;
-        // loadTorzsadatok (P1-2 mintája) sosem dob -- egy sérült
+        // loadTorzsadatok sosem dob -- egy sérült
         // paciens-adatok.json a sor `hiba` mezőjében jelenik meg, nem
         // bénítja meg a teljes listát.
         const byDir = await loadTorzsadatok(storage, list);

@@ -23,14 +23,14 @@ import type { PlanRef } from '../domain/types';
 export interface StorageContextValue {
   storage: PlanStorage;
   /**
-   * A `DemoStorage.init()` promise-a. P1-1: korábban `void demo.init()`
+   * A `DemoStorage.init()` promise-a. Korábban `void demo.init()`
    * volt -- egy kvótahiba vagy Safari privát mód alatti íráshiba itt
    * csendben elveszett volna. Az AppStateProvider ezt várja meg a
    * betöltés előtt, hogy a hiba a felhasználóig eljusson.
    */
   ready: Promise<void>;
   resetDemoData: () => void;
-  /** P1-9: valódi kiút, ha a doki véletlenül valódi páciensadatot vitt be -- a
+  /** valódi kiút, ha a doki véletlenül valódi páciensadatot vitt be -- a
    *  "Demó adat visszaállítása" csak újraseedel, ez ténylegesen kiürít. */
   clearAll: () => void;
   /** Filerendszer nézet: a `dp:` kulcsokból épített fa (`storage/demoFileTree.ts`). Szinkron. */

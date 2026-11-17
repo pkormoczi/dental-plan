@@ -1,9 +1,9 @@
 // EGY páciens terv-lánc/verzió adatainak 3-lépéses betöltése
 // (listPlans -> listVersions -> loadPlan), amit az OsszesTervSection.tsx
-// (patiensenként) és a PatientDetailPage.tsx (backlog-30) is használ --
+// (patiensenként) és a PatientDetailPage.tsx is használ --
 // ne írd újra egyik hívó oldalon se. Sosem dob: egy sérült lépés
 // `unreadable: true`-t állít, a többi sikeresen betöltött adat mellett
-// (P1-2 mintája) -- a hívó dönti el, hogyan jelzi ezt (⚠ jelvény,
+// -- a hívó dönti el, hogyan jelzi ezt (⚠ jelvény,
 // "—" az összeg helyén stb.).
 
 import type { Nyelv, Penznem, Plan, PlanFolder, PlanVersion } from './types';
@@ -12,7 +12,7 @@ import type { PlanStorage } from '../storage/PlanStorage';
 /**
  * Egy verzió végösszege a saját terv.json-jából -- a pénznem és a nyelv is
  * verziónként jön: a `nyelv` a `formatMoney` ezres/tizedes
- * elválasztójához kell (52. tétel), nem csak megjelenítő metaadat.
+ * elválasztójához kell, nem csak megjelenítő metaadat.
  */
 export interface VersionTotal {
   fizetendo: number;
@@ -107,11 +107,11 @@ export async function loadPlanChainData(
 }
 
 /**
- * EGY lánc "rendezési dátuma" (46. tétel): a legfrissebb VÉGLEGESÍTETT
+ * EGY lánc "rendezési dátuma": a legfrissebb VÉGLEGESÍTETT
  * verziójának `isoDate`-je -- a MÁR betöltött `plansByVersion`-ből, nincs új
  * storage-hívás. `null`, ha a láncnak nincs VEGLEGES verziója (ma nem
  * fordul elő: a `storage.savePlan()` egyetlen hívója a PreviewPage.tsx
- * véglegesítés-ága -- ez a backlog-48 még nem létező PISZKOZAT-státuszú
+ * véglegesítés-ága -- ez a még nem létező PISZKOZAT-státuszú
  * mentett verziójára készül elő). Egy olvashatatlan verzió (nincs a
  * `plansByVersion`-ben) best-effort VEGLEGES-nek számít, hogy egy sérült
  * fájl ne dobja csendben a láncot a rendezés végére.

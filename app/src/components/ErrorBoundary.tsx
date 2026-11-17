@@ -1,4 +1,4 @@
-// P1-1: eddig sehol nem volt Error Boundary -- bármilyen render-időbeli
+// eddig sehol nem volt Error Boundary -- bármilyen render-időbeli
 // kivétel fehér oldalt eredményezett, visszalépési lehetőség nélkül. Két
 // helyen kerül be az App.tsx-be: legkívül (a StorageProvider fölött, hogy a
 // provider-hibákat is elkapja) és a <Routes> köré (hogy egy oldal hibája ne

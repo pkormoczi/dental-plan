@@ -8,7 +8,7 @@
 // mintáját követi (parseJson -> assertKnownSchemaVersion -> assertPlanShape)
 // -- a schemaVersion-szabály a piszkozatra is vonatkozik, egy magasabb sémaverziójú vagy sérült
 // perzisztált piszkozatot a betöltést meg kell tagadni, érthető üzenettel,
-// nem néma eldobással (7. döntés).
+// nem néma eldobással.
 
 import { assertKnownSchemaVersion } from '../domain/schema';
 import { assertPlanShape } from '../domain/validate';
@@ -74,7 +74,7 @@ export class DemoDraftStorage implements DraftStorage {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(rec));
     } catch {
-      // Ez minden tartalmi módosításra lefut (3. döntés, debounce nélkül) --
+      // Ez minden tartalmi módosításra lefut (debounce nélkül) --
       // egy nyers QuotaExceededError minden leütésnél elfogadhatatlan
       // lenne. A doki a szerkesztőben marad, csak a mentés hiúsul meg (lásd
       // PlanEditorPage.tsx hiba-Callout-ja).

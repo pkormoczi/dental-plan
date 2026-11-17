@@ -123,7 +123,7 @@ interface AppStateValue {
    */
   jelezWorkflowLepes: (route: WorkflowRoute) => void;
   /**
-   * backlog-51: a "Terv adatai" lap cím mezőjébe beírt érték, vagy
+   * a "Terv adatai" lap cím mezőjébe beírt érték, vagy
    * `null`, ha még nem nyúltak hozzá (a mező ilyenkor a `TervCimField`
    * saját `mentettLabel`/`javasoltTervCim()` fallback-jét mutatja). Az üres
    * string (a doki kiürítette a mezőt) VALÓS `''`, nem `null` -- lásd
@@ -150,7 +150,7 @@ interface AppStateValue {
   jelezFoglaltTervId: (tervId: string) => void;
   /**
    * A Home "Piszkozat elvetése" gombja hívja egy nem visszaállítható
-   * (sérült/inkompatibilis) perzisztált piszkozatnál (7. döntés) -- addig a
+   * (sérült/inkompatibilis) perzisztált piszkozatnál -- addig a
    * kulcs a helyén marad, a hiba minden indításkor visszatér.
    */
   discardPersistedDraft: () => Promise<void>;
@@ -161,7 +161,7 @@ interface AppStateValue {
    */
   markPlanSaved: (persisted: Plan) => Promise<void>;
   /**
-   * P1-3: "`osszesitok` a fájlból számít igaznak, eltérés esetén
+   * "`osszesitok` a fájlból számít igaznak, eltérés esetén
    * figyelmeztetni kell" (CLAUDE.md) -- ezt eddig semmi nem ellenőrizte. A
    * `loadPlanIntoDraft`-tal betöltött (nem újonnan létrehozott) terv mentett
    * `osszesitok`-ja és az élőben újraszámolt érték közti eltérés, ha van;
@@ -191,7 +191,7 @@ interface AppStateValue {
   /**
    * Igaz, ha az aktuális piszkozat nyelve/pénzneme a `copyPlanIntoDraft`
    * `orokolt` paraméteréből jött (a páciens legutóbb VÉGLEGESÍTETT
-   * tervéből, `ujTervForrasPaciensbol` -- 47. tétel) -- a `PatientPage`
+   * tervéből, `ujTervForrasPaciensbol`) -- a `PatientPage`
    * ebből dönti el, jelezzen-e (csak akkor, ha az örökölt érték eltér a
    * rendelő alapértelmezésétől). A két mező EGYÜTT áll be (a forrás egy
    * pár), de a `nyugtazOrokoltJelzes`-en át KÜLÖN-KÜLÖN tűnik el -- a doki
@@ -214,7 +214,7 @@ interface AppStateValue {
   /** Lásd a `saveSettings` doc-kommentjét -- ugyanaz a szerződés. */
   savePriceList: (updater: (prev: PriceList) => PriceList) => Promise<void>;
   /**
-   * P0-6: "Demó adat visszaállítása" korábban csak a localStorage-ot írta
+   * "Demó adat visszaállítása" korábban csak a localStorage-ot írta
    * felül -- az AppState memóriabeli settings/priceList/plan state-je
    * érintetlen maradt, és a következő mentés csendben visszaírta a régi
    * (elrontott) állapotot a friss seed fölé. Ez a settings/priceList-et
@@ -297,7 +297,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setLoadError(null);
     (async () => {
       try {
-        // P1-1: korábban `void demo.init()` volt a StorageProvider-ben --
+        // korábban `void demo.init()` volt a StorageProvider-ben --
         // ha az init (első seed-írás) kvótahibába vagy Safari privát módba
         // futott, az a hiba sosem jutott el idáig. A `ready` promise-t itt
         // megvárjuk, hogy a hiba a lenti catch-ágban felszínre kerüljön.
@@ -357,7 +357,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [ready, storage, drafts, loadToken, applySettings, applyPriceList]);
 
   // Írási trigger: minden tartalmi plan-változásra azonnal ír, debounce
-  // nélkül (3. döntés) -- a terv-objektum kicsi, egy JSON.stringify +
+  // nélkül -- a terv-objektum kicsi, egy JSON.stringify +
   // localStorage.setItem ezen a méreten elhanyagolható költségű, a debounce
   // itt csak egy felesleges adatvesztési ablakot nyitna összeomláskor. Az
   // érintetlen, üres piszkozatot (`piszkozatTartalmas` false) NEM írja, hogy
@@ -466,7 +466,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         irtPiszkozatRef.current = null;
         piszkozatKiirvaRef.current = false;
         // Explicit törlés -- egy üres tervre az író effekt nem fut le,
-        // tehát a régi kulcs magától bennmaradna (6. döntés). P1-1 tanulsága
+        // tehát a régi kulcs magától bennmaradna. Egy korábbi hiba tanulsága
         // szerint egy `void`-olt promise hibája nyomtalanul elveszne -- ha a
         // törlés elhasal, a hiba a Home hibaállapotában landol.
         drafts.clear().catch((err) => {
@@ -506,7 +506,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setOrokoltPenznem(false);
         // A betöltött terv nem "mentetlen munka", amíg hozzá nem nyúlnak --
         // az első szerkesztés után az író effekt magától felülírja a régi
-        // piszkozatot, külön törlés itt nem kell (6. döntés). UGYANAZT a
+        // piszkozatot, külön törlés itt nem kell. UGYANAZT a
         // `friss` referenciát kapja a `plan` és a `mentettPlan` is -- két
         // külön példány hamis "mentetlen munka" jelzést adna, hiszen a
         // dátumbélyeg és az orvos-fallback is gépi lépés, nem doki-szerkesztés.

@@ -165,7 +165,7 @@ function jeloltRang(j: DuplikaciosJelolt): number {
  * előtt is azonnal látszik, mindkét viszonya `'hianyzik'`-ként -- ez a mai
  * (egysoros `norm()`-egyezésű) viselkedés, nulla késleltetéssel.
  *
- * Ellentmondó adatnál a `nev-hasonlo` jelölt kiesik (1. döntés), a
+ * Ellentmondó adatnál a `nev-hasonlo` jelölt kiesik, a
  * `nev-pontos` jelölt viszont bennmarad, `ellentmondas: true`-val (2.
  * döntés) -- két azonos nevű páciensnél az eltérő DOB/telefon nem tünteti
  * el a figyelmeztetést, csak jelöléssel látja el.

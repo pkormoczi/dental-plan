@@ -10,7 +10,7 @@
 //
 // A fix feliratok forrása a `pdf/labels.ts` (`plan.nyelv` szerint); a
 // pénzösszegek ezres/tizedes elválasztója is `plan.nyelv`-től függ
-// (`domain/money.ts`, 52. tétel) -- a kezelőfelület prózája (NavBar,
+// (`domain/money.ts`) -- a kezelőfelület prózája (NavBar,
 // szerkesztő szövegei) ettől függetlenül végig magyar marad.
 
 import { Document, Page, Text, View } from '@react-pdf/renderer';
@@ -232,7 +232,7 @@ export function TervDocument({
           {eloleg && (
             // Mindkét sor csillagot kap, ha a tervben van becsült árú
             // tétel: mindkettő ugyanabból a becsült Végösszegből számol,
-            // csak az egyiket jelölni félrevezető lenne (backlog-9).
+            // csak az egyiket jelölni félrevezető lenne.
             // `fennmarado === null`: az előleg meghaladja a Végösszeget
             // -- a véglegesítés-őr ezt kemény blokkal megfogja, de a
             // Csak-ajánlat előnézet a blokk előtt is renderel, ezért itt

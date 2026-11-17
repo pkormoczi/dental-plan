@@ -123,7 +123,7 @@ export default function ItemEditor({
   const firstInteractionHandledRef = useRef(false);
 
   /**
-   * P0-2: eddig csak a HUF-ot váltotta -- az EUR ár szerkezetileg
+   * eddig csak a HUF-ot váltotta -- az EUR ár szerkezetileg
    * mindig FIX maradt, tehát egy sávos tétel német (EUR) ajánlatán a doki
    * tudta nélkül eltűnt a `*` jelölés és a sávos lábjegyzet. Mostantól a
    * két pénznem együtt vált, hogy a szerkezetük soha ne csússzon szét. Ha a

@@ -368,7 +368,7 @@ describe('DemoStorage', () => {
     await expect(storage.loadPlan(ref)).rejects.toThrow(/újabb verziójával/);
   });
 
-  // P0-1: sem félkész verziómappa, sem az eredeti hibaüzenet nem juthat el
+  // sem félkész verziómappa, sem az eredeti hibaüzenet nem juthat el
   // formázatlanul a felhasználóig egy sikertelen (pl. kvótahibás) íráskor.
   it('savePlan leaves NEITHER key behind when the second write fails, and surfaces a clear message', async () => {
     const plan = makeBlankPlan();
@@ -396,7 +396,7 @@ describe('DemoStorage', () => {
     expect(keys.some((k) => k.includes('Teszt-Elek'))).toBe(false);
   });
 
-  it('two back-to-back savePlan calls for the SAME already-saved plan never collide on the same version number (P1-5)', async () => {
+  it('two back-to-back savePlan calls for the SAME already-saved plan never collide on the same version number', async () => {
     const plan = makeBlankPlan();
     const ref1 = await storage.savePlan(plan, new Uint8Array([1]));
     const saved = await storage.loadPlan(ref1); // most már van tervId-je
@@ -489,7 +489,7 @@ describe('DemoStorage', () => {
     vi.restoreAllMocks();
   });
 
-  it('surfaces a Hungarian, non-crashing error for corrupted (non-JSON) terv.json (P1-6)', async () => {
+  it('surfaces a Hungarian, non-crashing error for corrupted (non-JSON) terv.json', async () => {
     const plan = makeBlankPlan();
     const ref = await storage.savePlan(plan, new Uint8Array());
     localStorage.setItem(
@@ -499,7 +499,7 @@ describe('DemoStorage', () => {
     await expect(storage.loadPlan(ref)).rejects.toThrow(/nem érvényes JSON/);
   });
 
-  it('rejects a structurally invalid (but syntactically valid) terv.json (P1-6)', async () => {
+  it('rejects a structurally invalid (but syntactically valid) terv.json', async () => {
     const plan = makeBlankPlan();
     const ref = await storage.savePlan(plan, new Uint8Array());
     const key = `dp:paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}/terv.json`;
@@ -511,7 +511,7 @@ describe('DemoStorage', () => {
     await expect(storage.loadPlan(ref)).rejects.toThrow(/szerkezete nem érvényes/);
   });
 
-  // backlog-28: a paciens-adatok.json -- élő, terv-mentéstől független
+  // a paciens-adatok.json -- élő, terv-mentéstől független
   // törzsadat, ellentétben a puszta index-fájlokkal (paciens.json,
   // terv-cimke.json).
   describe('paciens-adatok.json', () => {
@@ -547,7 +547,7 @@ describe('DemoStorage', () => {
       expect(await storage.listPlans(folder.dirName)).toEqual([]);
     });
 
-    // backlog-36: a quick-create dialógus születési dátumot/telefont is
+    // a quick-create dialógus születési dátumot/telefont is
     // felvehet -- egy logikailag atomi lépésben kerül a paciens-adatok.json-ba,
     // nem egy utólagos savePatientData-val (az hamis 'torzsadat-mentve'
     // aktivitást írna egy frissen létrehozott páciensre).
@@ -605,7 +605,7 @@ describe('DemoStorage', () => {
       const record = patients.find((p) => p.dirName === folder.dirName);
       expect(record?.nev).toBe('Törzsadat Neve');
       // A paciens-adatok.json maga is érintetlen -- a terv-mentés soha nem
-      // írja (3. döntés, backlog-28).
+      // írja.
       expect((await storage.loadPatientData(folder.dirName))?.nev).toBe('Törzsadat Neve');
     });
 
@@ -625,7 +625,7 @@ describe('DemoStorage', () => {
       await expect(storage.loadPatientData(folder.dirName)).rejects.toThrow(/újabb verziójával/);
     });
 
-    it('rejects a structurally invalid paciens-adatok.json (P1-6 mintája) -- ez valódi system of record, nem eshet néma fallbackre', async () => {
+    it('rejects a structurally invalid paciens-adatok.json -- ez valódi system of record, nem eshet néma fallbackre', async () => {
       const folder = await storage.createPatient('Sérült Teszt');
       const key = `dp:paciensek/${folder.dirName}/paciens-adatok.json`;
       localStorage.setItem(key, 'not valid json {{{');
@@ -633,7 +633,7 @@ describe('DemoStorage', () => {
     });
   });
 
-  describe('deletePatient (backlog-41)', () => {
+  describe('deletePatient', () => {
     it('törli a páciens minden kulcsát -- paciens.json, paciens-adatok.json, terv-cimke.json, terv.json, pdf', async () => {
       const folder = await storage.createPatient('Törlendő Páciens');
       const plan = makeBlankPlan({ paciensId: folder.paciensId });

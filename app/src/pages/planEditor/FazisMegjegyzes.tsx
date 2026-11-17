@@ -11,11 +11,11 @@ export interface FazisMegjegyzesProps {
   pi: number;
   value: string;
   onChange: (v: string) => void;
-  /** backlog-65 -- a mező nyelvi mismatch-e. */
+  /** A mező nyelvi mismatch-e. */
   nyelvMismatch: boolean;
   authoredNyelv: Nyelv | undefined;
   onReview: () => void;
-  /** 65. tétel: a guided review kényszerítve nyitja a sávot -- lásd `LineRow` `forceLeirasOpen`-jét. */
+  /** a guided review kényszerítve nyitja a sávot -- lásd `LineRow` `forceLeirasOpen`-jét. */
   forceOpen: boolean;
   /** Igaz, ha a megjegyzés egy másolt tervből öröklődött és még nincs szerkesztve -- `domain/orokoltJelzesek.ts` `orokoltMegjegyzesu()`. */
   orokolt: boolean;

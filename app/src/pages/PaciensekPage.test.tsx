@@ -1,4 +1,4 @@
-// 38. tétel: a lista tiszta NAVIGÁCIÓS lista -- a sorok a
+// a lista tiszta NAVIGÁCIÓS lista -- a sorok a
 // páciens-részletoldalra (`/paciensek/:patientDir`) navigálnak, a
 // törzsadat-szerkesztő (`PatientEditorPanel`) mezőkészlet/Save-Cancel
 // viselkedése a `PatientDetailPage.test.tsx`-ben fedett (az egyetlen

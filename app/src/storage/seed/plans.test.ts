@@ -20,7 +20,7 @@ import { seedPriceList } from './priceList';
 // Névre nincs assertion: a nevSnapshot a demóban is lehet pontosabb az
 // árlistainál (t057 "Neodent implantátum" vs. az árlista ékezethibás
 // "implantatum"-a; t074 "Zirkonkerámia korona fogra" vs. a rövidebb
-// "Zirkonkerámia fogra"), és a backlog 3. tétele óta a doki kézzel is
+// "Zirkonkerámia fogra"), és a doki kézzel is
 // szerkesztheti -- a szó szerinti egyezés nem érvényes invariáns.
 
 const tetelById = new Map(seedPriceList.tetelek.map((t) => [t.id, t]));
@@ -108,7 +108,7 @@ describe('seedPlans paciensId-integritás', () => {
   });
 });
 
-// backlog-28: a seedPatientData SZÁNDÉKOSAN csak egy páciensnek
+// a seedPatientData SZÁNDÉKOSAN csak egy páciensnek
 // (Nagy Éva) ad paciens-adatok.json-t -- a demónak mindkét állapotot
 // (rögzített törzsadat vs. élő fallback) mutatnia kell.
 describe('seedPatientData', () => {
@@ -126,10 +126,10 @@ describe('seedPatientData', () => {
   });
 });
 
-// backlog-41: a páciens-törlés csak akkor kipróbálható friss demó
+// a páciens-törlés csak akkor kipróbálható friss demó
 // adaton, ha legalább egy seed páciensnek nincs terv-lánca -- mindenki
 // másnak van (legalább egy) VEGLEGES verziója, ami a törlést blokkolná.
-describe('seedPatients terv nélküli demó páciens (backlog-41)', () => {
+describe('seedPatients terv nélküli demó páciens', () => {
   it('legalább egy seed páciensnek nincs egyetlen terv-lánca sem', () => {
     const patientDirsWithPlans = new Set(seedPlans.map((e) => e.patientDir));
     const tervNelkuli = seedPatients.filter(({ patientDir }) => !patientDirsWithPlans.has(patientDir));
@@ -201,7 +201,7 @@ describe('seedPatients utolsoAktivitas', () => {
   });
 });
 
-// 103. tétel: a `seedVerzio()` az EGYETLEN forrás, amiből a "nincs mentett
+// a `seedVerzio()` az EGYETLEN forrás, amiből a "nincs mentett
 // PDF" oka (demó-készlet vs. valódi hiány) eldönthető.
 describe('seedVerzio', () => {
   it('igaz minden seedPlans-beli hármasra', () => {

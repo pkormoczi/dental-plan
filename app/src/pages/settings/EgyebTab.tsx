@@ -5,7 +5,7 @@
 // leütésenkénti autosave-vel; a tabosítás óta pufferelt draft +
 // explicit Mentés/Mégse.
 //
-// A készültség-blokk feltétel nélkül látszik (52. tétel: a német nyelv
+// A készültség-blokk feltétel nélkül látszik (a német nyelv
 // mindig választható, nincs hozzá engedélyező kapcsoló) -- a `nyilatkozat-de`
 // sablont emiatt ez a komponens tölti be saját maga, FÜGGETLENÜL a
 // `NyomtatvanyokTab`-tól (nincs megosztott state a két tab között, mindkettő

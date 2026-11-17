@@ -38,7 +38,7 @@ export interface PhaseSectionProps {
   frequent: Tetel[];
   tetelekById: Map<string, Tetel>;
   fogterkep: FogterkepAllapot;
-  /** 65. tétel: a guided review kényszerített-nyitás jelzése -- lásd `LineRow`/`FazisMegjegyzes`. */
+  /** a guided review kényszerített-nyitás jelzése -- lásd `LineRow`/`FazisMegjegyzes`. */
   fokuszCel: FokuszCel;
   total: number;
   canDelete: boolean;
@@ -152,7 +152,7 @@ export default function PhaseSection({
   // domain segédfüggvényt.
   const penznemJel = currency === 'EUR' ? '€' : 'Ft';
 
-  // backlog-65 -- lásd `LineRow`
+  // Lásd `LineRow`
   // hasonló konstansait.
   const megnevezesNyelvMismatch = nyelviMismatch(phase.megnevezesNyelv, nyelv);
   const megjegyzesNyelvMismatch = nyelviMismatch(phase.megjegyzesNyelv, nyelv);
@@ -410,7 +410,7 @@ export default function PhaseSection({
                       fallback={sorFallback(l, nyelv, tetelekById)}
                       tetel={tetelekById.get(l.tetelId)}
                       arFrissitesJavaslat={arFrissites(l, currency, tetelekById)}
-                      // 65. tétel: a guided review a leírás-sávot
+                      // a guided review a leírás-sávot
                       // kényszerítve nyitja, ha ez a sor a jelenlegi cél.
                       forceLeirasOpen={
                         fokuszCel?.mit === 'leiras' && fokuszCel.pi === pi && fokuszCel.li === li

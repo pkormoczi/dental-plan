@@ -9,8 +9,8 @@ import { useStorage } from '../storage/StorageContext';
 import type { Plan } from '../domain/types';
 
 // Egy "korábbi tervek listából betöltött" Plan -- eltérő tervId/sorok, hogy a
-// loadPlanIntoDraft/copyPlanIntoDraft közti viselkedéskülönbség (7. döntés,
-// backlog-17) mérhető legyen.
+// loadPlanIntoDraft/copyPlanIntoDraft közti viselkedéskülönbség
+// mérhető legyen.
 function makeLoadedPlan(overrides: Partial<Plan> = {}): Plan {
   return {
     schemaVersion: 1,
@@ -100,7 +100,7 @@ describe('copyPlanIntoDraft', () => {
     expect(screen.getByTestId('diff')).toHaveTextContent('null');
   });
 
-  it('a másolat kiíródik az autosave-en keresztül a dp:piszkozat kulcsra (7. döntés)', async () => {
+  it('a másolat kiíródik az autosave-en keresztül a dp:piszkozat kulcsra', async () => {
     const user = userEvent.setup();
     renderProbe();
 
@@ -125,7 +125,7 @@ describe('copyPlanIntoDraft', () => {
     expect(await screen.findByTestId('dirty')).toHaveTextContent('false');
   });
 
-  // 100. tétel: a puszta törzsadat-előtöltés (kiindulas === 'alapallapot')
+  // a puszta törzsadat-előtöltés (kiindulas === 'alapallapot')
   // a loadPlanIntoDraft mintáját követi -- a Kezdőlap "Piszkozat folytatása"
   // kártyája csak TÉNYLEGES szerkesztés után jelenjen meg, ne egy meglévő
   // páciens puszta kiválasztására.
@@ -161,7 +161,7 @@ describe('copyPlanIntoDraft', () => {
     expect(rec.plan.paciens.nev).toBe('Nagy Éva');
   });
 
-  // 48. tétel: a betöltött piszkozat statusz-a PISZKOZAT-ra áll --
+  // a betöltött piszkozat statusz-a PISZKOZAT-ra áll --
   // enélkül a szerkesztő fejléce hamisan "véglegesítve"-t mutatna, és a
   // letöltés elmaradna a PISZKOZAT- előtagtól, holott a forrás mai naptól
   // nincs elmentve. A tervId (a lánc-hovatartozás jele) ezzel szemben

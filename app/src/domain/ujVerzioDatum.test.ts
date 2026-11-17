@@ -25,7 +25,7 @@ function makePlan(overrides: Partial<Plan> = {}): Plan {
     statusz: 'VEGLEGES',
     nyelv: 'hu',
     penznem: 'HUF',
-    // 30 napos érvényességi ablak a régi tervben -- a 3. döntés szerint ez
+    // 30 napos érvényességi ablak a régi tervben -- ez
     // az ablakhossz NEM számít, az új verzió az aktuális settings.ervenyessegNap-ot kapja.
     keltezes: '2026-06-10',
     ervenyesIg: '2026-07-10',

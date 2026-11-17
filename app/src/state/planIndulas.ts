@@ -1,12 +1,12 @@
 // A "kinek induljon az új terv, a páciens ELÉRHETŐ adataival" közös lépése
-// (backlog-28): a törzsadatot (paciens-adatok.json) preferálja
+//: a törzsadatot (paciens-adatok.json) preferálja
 // forrásként, ha van; egyébként a páciens legutóbb módosított terv-
 // láncának legfrissebb `paciens` pillanatképére esik vissza (a törzsadat
 // bevezetése előtti viselkedés). A OsszesTervSection.tsx páciensszintű "Új terv" gombja és a
 // NewPlanPage.tsx "Meglévő páciens keresése" előtöltése EZT hívja -- nem
 // egymástól függetlenül újraírva --, hogy a két hely ne térjen el egymástól.
 //
-// A nyelv/pénznem-öröklés (47. tétel) is itt dől el, mindkét
+// A nyelv/pénznem-öröklés is itt dől el, mindkét
 // forrásághoz közösen: a páciens legutóbb VÉGLEGESÍTETT terve adja az
 // `OroklottNyelvPenznem`-et, függetlenül attól, hogy a `paciens` blokk
 // maga a törzsadatból vagy egy korábbi terv pillanatképéből jön.
@@ -68,7 +68,7 @@ async function legfrissebbEsOroklesForras(
 }
 
 /**
- * A `plan` mellett az öröklés TÉNYE is (`oroklott`) -- a 47. tétel a néma
+ * A `plan` mellett az öröklés TÉNYE is (`oroklott`) -- az eredeti megoldás a néma
  * öröklésre épült, a 4. megállapítás (2026-09-05 doctor review) szerint ez
  * a doki számára láthatatlan maradt. A hívó (`PatientPage.tsx`) ebből dönti
  * el, jelezzen-e, amikor az örökölt érték eltér a rendelő

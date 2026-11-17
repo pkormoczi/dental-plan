@@ -1,4 +1,4 @@
-// Tömeges árváltoztatás dialógus (backlog-92) -- külön fájlban a
+// Tömeges árváltoztatás dialógus -- külön fájlban a
 // PriceListAdminPage.test.tsx mellett, a PriceListAdminPage.leiras.test.tsx
 // fejléc-kommentjében leírt okból (a fő teszt-fájl már ma is 40+ KB, minden
 // új describe csak tovább lassítaná).
@@ -59,7 +59,7 @@ async function irjSzazalekot(user: ReturnType<typeof userEvent.setup>, dialog: H
   await user.type(mezo, `${ertek}{Enter}`);
 }
 
-describe('PriceListAdminPage -- backlog-92: Tömeges árváltoztatás', () => {
+describe('PriceListAdminPage -- Tömeges árváltoztatás', () => {
   beforeEach(() => {
     localStorage.clear();
     seedPriceListWithNoEurPrices();
@@ -187,7 +187,7 @@ describe('PriceListAdminPage -- backlog-92: Tömeges árváltoztatás', () => {
     expect(within(dialog).getByText('A jelenlegi szűrt lista (2 tétel)')).toBeInTheDocument();
   });
 
-  // 106. tétel: a sor-szintű "Mentve ✓" kizárólag a közvetlen sor-szerkesztést
+  // a sor-szintű "Mentve ✓" kizárólag a közvetlen sor-szerkesztést
   // (patchItem) váltja ki, a Tömeges árváltoztatást nem -- száz egyszerre
   // felvillanó felirat nem visszajelzés, hanem zaj.
   it('a Tömeges árváltoztatás alkalmazása után egyetlen sor sem mutat "Mentve ✓"-t', async () => {

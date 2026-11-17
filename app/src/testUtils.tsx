@@ -17,7 +17,7 @@ import { StorageProvider } from './storage/StorageContext';
 /**
  * `PatientPage.tsx` (`useLepesGuard`) és a `TorzsadatSyncCard.tsx`
  * (`useLepesElhagyas`) csak a `TervWorkflowShell` alatt kap valódi
- * lépés-elhagyási ajánlatot (backlog-40) -- a lapszintű tesztek (amik nem a
+ * lépés-elhagyási ajánlatot -- a lapszintű tesztek (amik nem a
  * teljes `<App/>`-on, hanem közvetlenül `PatientPage`-en keresztül
  * renderelnek) egy néma, mindig-azonnal-továbbengedő értéket kapnak, hogy a
  * Provider hiánya ne dobjon. A tényleges elfogás-logikát a
@@ -55,11 +55,11 @@ export function TestProviders({
                 sablon-szekciója) useNavGuard()-ot hívnak -- Provider nélkül dob. */}
             <NavGuardProvider>
               <TestLepesGuardProvider>
-                {/* 65. tétel: a `PlanEditorPage`/`PreviewPage`
+                {/* a `PlanEditorPage`/`PreviewPage`
                     `useNyelviReview()`-t hív -- Provider nélkül dob, a
                     `TervWorkflowShell` mintáján. */}
                 <NyelviReviewProvider>
-                  {/* 94. tétel: a `PatientPage`/`TorzsadatSyncCard`/
+                  {/* a `PatientPage`/`TorzsadatSyncCard`/
                       `PreviewPage` `usePaciensKotes()`-t hív -- Provider
                       nélkül dob. Ez a valódi, önmagát betöltő provider (nem
                       egy néma teszt-stub, mint a `TestLepesGuardProvider`),

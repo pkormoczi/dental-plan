@@ -69,7 +69,7 @@ describe('legfrissebbVerzio', () => {
     expect(legfrissebbVerzio([])).toBeNull();
   });
 
-  // Ez a 46. tétel bugjavítása: a `versions` tömb a `verzio` szerint
+  // Bugjavítás: a `versions` tömb a `verzio` szerint
   // növekvőn érkezhet -- a LEGRÉGEBBI (index 0) sosem lehet a válasz.
   it('picks the most recent isoDate, not the array position', () => {
     const versions = [version('2026-06-10_v1', '2026-06-10', 1), version('2026-07-22_v2', '2026-07-22', 2)];

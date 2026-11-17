@@ -114,14 +114,14 @@ describe('kitoltetlenSorok', () => {
     expect(kitoltetlenSorok(plan)).toHaveLength(1);
   });
 
-  it('backlog-3: névvel ellátott, tetelId nélküli (egyedi) sor NEM kitöltetlen', () => {
+  it('névvel ellátott, tetelId nélküli (egyedi) sor NEM kitöltetlen', () => {
     const plan = makePlan([
       [sor({ tetelId: '', nevSnapshot: 'Egyedi anyagköltség', listaEgysegar: 0, tenylegesEgysegar: 0 })],
     ]);
     expect(kitoltetlenSorok(plan)).toEqual([]);
   });
 
-  it('backlog-3: meg nem nevezett sor kitöltetlen akkor is, ha van rajta ár', () => {
+  it('meg nem nevezett sor kitöltetlen akkor is, ha van rajta ár', () => {
     const plan = makePlan([
       [sor({ tetelId: '', nevSnapshot: '', listaEgysegar: 5000, tenylegesEgysegar: 5000 })],
     ]);

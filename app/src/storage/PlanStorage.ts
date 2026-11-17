@@ -96,8 +96,8 @@ export interface PlanStorage {
    */
   savePatientData(patientDir: string, data: PatientMasterData): Promise<void>;
   /**
-   * Vadonatúj, terv nélküli páciens felvitele (backlog-28, 6. döntés;
-   * backlog-36 a `kezdoAdatok`-kal bővítette). Generálja a
+   * Vadonatúj, terv nélküli páciens felvitele (a
+   * `kezdoAdatok`-kal bővítve). Generálja a
    * `paciensId`-t és a mappanevet, és mindkét fájlt megírja (`paciens.json`
    * + `paciens-adatok.json`) EGY logikailag atomi lépésben -- nem
    * `createPatient` + utólagos `savePatientData`, mert az utóbbi
@@ -109,7 +109,7 @@ export interface PlanStorage {
     kezdoAdatok?: Pick<Paciens, 'szuletesiIdo' | 'telefon'>,
   ): Promise<PatientFolder>;
   /**
-   * A teljes páciensmappa törlése (backlog-41) -- az interfész ELSŐ
+   * A teljes páciensmappa törlése -- az interfész ELSŐ
    * destruktív metódusa. Az előfeltétel (nincs véglegesített terve, nincs
    * rá mutató aktív draft) NEM ennek a metódusnak a felelőssége, hanem a
    * hívóé, `domain/paciensTorles.ts` `paciensTorlesAkadaly()`-jával

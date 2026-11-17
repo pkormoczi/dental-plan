@@ -157,7 +157,7 @@ export function computeOsszesitok(
 }
 
 /**
- * P1-3: az `osszesitok` a fájlból számít igaznak (CLAUDE.md), de eltérés
+ * az `osszesitok` a fájlból számít igaznak (CLAUDE.md), de eltérés
  * esetén figyelmeztetni kell -- ez a modul csak írásnál (véglegesítéskor)
  * hívta eddig a computeOsszesitok-ot, betöltéskor senki nem hasonlította
  * össze. `null`, ha a mentett és az élőben újraszámolt érték egyezik;

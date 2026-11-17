@@ -96,7 +96,7 @@ describe('Summary', () => {
     expect(screen.getAllByText('30 000 Ft')).toHaveLength(1);
   });
 
-  it('a pénzösszegek a terv nyelvét/pénznemét követik (52. tétel)', () => {
+  it('a pénzösszegek a terv nyelvét/pénznemét követik', () => {
     render(
       <Theme>
         <Summary grand={2500} kedvezmeny={0} felar={0} fazisOsszegek={[]} currency="EUR" nyelv="de" />

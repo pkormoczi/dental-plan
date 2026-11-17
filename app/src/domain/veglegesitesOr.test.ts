@@ -13,7 +13,7 @@ const AKTIV_ORVOSOK = ['Dr. Teszt'];
 /** A legtöbb teszt a sablon-jelzéseket nem vizsgálja. */
 const NO_SABLON = { sablonFallback: false, nyilatkozatPlaceholder: false, kihagyottSzekciok: [] };
 
-/** A legtöbb teszt a névütközést (94. tétel) nem vizsgálja -- lásd külön describe lent. */
+/** A legtöbb teszt a névütközést nem vizsgálja -- lásd külön describe lent. */
 const NO_NEV_UTKOZES = null;
 
 /** A legtöbb teszt az elavult alapverziót nem vizsgálja -- lásd külön describe lent. */
@@ -429,7 +429,7 @@ describe('veglegesitesDiagnozis', () => {
     expect(tetel(kikapcsolva, 'hianyzo-leiras')).toBeUndefined();
   });
 
-  it('backlog-61: elavult árlistai pillanatkép az "ar-elteres" soft tételt adja', () => {
+  it('elavult árlistai pillanatkép az "ar-elteres" soft tételt adja', () => {
     const plan = makePlan([[sor({ listaEgysegar: 9000, tenylegesEgysegar: 9000 })]]); // priceList t1 mai ára 10000
     const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
@@ -438,7 +438,7 @@ describe('veglegesitesDiagnozis', () => {
     expect(t?.reszletek).toEqual([{ cim: 'Elavult árlistai pillanatkép', nevek: ['Fogeltávolítás'] }]);
   });
 
-  it('backlog-61: kézzel felülírt ajánlati ár is az "ar-elteres" soft tételt adja', () => {
+  it('kézzel felülírt ajánlati ár is az "ar-elteres" soft tételt adja', () => {
     const plan = makePlan([[sor({ tenylegesEgysegar: 8000 })]]); // listaEgysegar követi, de az ajánlati ár eltér
     const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
 
@@ -535,10 +535,10 @@ describe('veglegesitesDiagnozis', () => {
     expect(vanKemenyBlokk(diag)).toBe(false);
   });
 
-  // 65. tétel: a doki kézzel írt szövegeinek nyelvi review-ja --
+  // a doki kézzel írt szövegeinek nyelvi review-ja --
   // SZÁNDÉKOSAN külön a "nemet-nev" tételtől (az az ÁRLISTAI fordítás/
   // igazolás hiányát jelzi), lásd `domain/nyelviReview.ts`.
-  describe('nyelvi-review (65. tétel)', () => {
+  describe('nyelvi-review', () => {
     it('kézzel átírt sornév, ami nem a terv nyelvén íródott, a "nyelvi-review" soft tételt adja', () => {
       const plan = makePlan([[sor({ nevNyelv: { authoredInLanguage: 'de' } })]]);
       const diag = veglegesitesDiagnozis(plan, priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
@@ -565,7 +565,7 @@ describe('veglegesitesDiagnozis', () => {
     });
   });
 
-  it('62. tétel: a terv pénznemében beárazatlan, 0 Ft-os sor az "araztalan-sor" hard tételben jelenik meg -- a "nulla-osszegu-sor" puha tétel ettől függetlenül, a 0 összeg miatt szintén jelez', () => {
+  it('a terv pénznemében beárazatlan, 0 Ft-os sor az "araztalan-sor" hard tételben jelenik meg -- a "nulla-osszegu-sor" puha tétel ettől függetlenül, a 0 összeg miatt szintén jelez', () => {
     const plan = makePlan(
       [[sor({ tetelId: 't1', nevSnapshot: 'Fogeltávolítás', listaEgysegar: 0, tenylegesEgysegar: 0 })]],
       { penznem: 'EUR' },
@@ -770,7 +770,7 @@ describe('veglegesitesDiagnozis', () => {
       expect(tetel(diag, 'sablon-kihagyott-szekcio')).toBeUndefined();
     });
 
-    // 101. tétel: a nyomtatvány TARTALMÁT érintő két puha tétel a puha
+    // a nyomtatvány TARTALMÁT érintő két puha tétel a puha
     // csoport ELEJÉN áll, a tisztán adminisztratív tételek (pl.
     // "hianyzo-paciensadat") mögöttük -- a "sablon-kihagyott-szekcio" a
     // "sablon-fallback" elé, mert a teljesen hiányzó tartalom súlyosabb.
@@ -791,9 +791,9 @@ describe('veglegesitesDiagnozis', () => {
     });
   });
 
-  // backlog-40: a master↔snapshot eltérés INFO-szintű tétel -- lásd a
+  // a master↔snapshot eltérés INFO-szintű tétel -- lásd a
   // `masterSnapshotDiff` doc-kommentjét.
-  describe('torzsadat-elteres (backlog-40)', () => {
+  describe('torzsadat-elteres', () => {
     it('master nélkül nem ad tételt', () => {
       const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, null, AKTIV_ORVOSOK, NO_SABLON, NO_NEV_UTKOZES, NINCS_FOGLALAS);
       expect(tetel(diag, 'torzsadat-elteres')).toBeUndefined();
@@ -831,10 +831,10 @@ describe('veglegesitesDiagnozis', () => {
     });
   });
 
-  // 94. tétel: a Név mező egy MÁSIK, létező páciensre illő pontos egyezése
+  // a Név mező egy MÁSIK, létező páciensre illő pontos egyezése
   // KEMÉNY, önálló tétel -- külön a fenti (bármely tervre igaz, mindig
   // info) `torzsadat-elteres`-től.
-  describe('nev-utkozes (94. tétel)', () => {
+  describe('nev-utkozes', () => {
     function folder(nev: string): PatientFolder {
       return { dirName: `${nev.replace(/\s+/g, '-')}_x`, paciensId: `p-${nev}`, nev };
     }
@@ -888,7 +888,7 @@ describe('veglegesitesDiagnozis', () => {
     });
   });
 
-  // 101. tétel: a `hard` csoport belső sorrendje az átrendezés mellett is
+  // a `hard` csoport belső sorrendje az átrendezés mellett is
   // bájtra a mai render marad -- csak a puha csoport élét érinti a rangsor.
   it('a "hard" csoport belső sorrendje több egyidejű hard-hibánál változatlan', () => {
     const plan = makePlan([[sor({ tetelId: '', nevSnapshot: '', fogak: '16' })], []], {

@@ -201,7 +201,7 @@ describe('TervDocument -- font-visszaesés őre', () => {
   });
 });
 
-describe('TervDocument -- backlog-4: kézzel bekapcsolt "becsült ár" csillag a nyomtatványon', () => {
+describe('TervDocument -- kézzel bekapcsolt "becsült ár" csillag a nyomtatványon', () => {
   it('bekapcsolt csillag: "*" az Egységár mellett (nem a névnél), lábjegyzet a táblázat alatt', () => {
     renderDoc(true);
     expect(screen.getByText('Csontpótló anyag')).toBeInTheDocument();
@@ -228,7 +228,7 @@ describe('TervDocument -- backlog-4: kézzel bekapcsolt "becsült ár" csillag a
   });
 });
 
-describe('TervDocument -- 78. tétel: üres Fog cella', () => {
+describe('TervDocument -- üres Fog cella', () => {
   it('üres fogak mező esetén a Fog cella "—"-t mutat', () => {
     renderDoc(false);
     expect(screen.getByText('—')).toBeInTheDocument();
@@ -255,7 +255,7 @@ describe('TervDocument -- 78. tétel: üres Fog cella', () => {
   });
 });
 
-describe('TervDocument -- backlog-12: feltételes összegsor', () => {
+describe('TervDocument -- feltételes összegsor', () => {
   it('nincs eltérés: csak a "Végösszeg" sor jelenik meg, referenciasor nélkül', () => {
     renderDoc(false, 'hu', { lista: 45000, tenyleges: 45000 });
     expect(screen.getByText('Végösszeg')).toBeInTheDocument();
@@ -347,7 +347,7 @@ describe('TervDocument -- a nyomtatvány minden száma levezethető a kinyomtato
   });
 });
 
-describe('TervDocument -- 79. tétel: az Összesítés blokk saját címe', () => {
+describe('TervDocument -- az Összesítés blokk saját címe', () => {
   it('magyar terven az "Összesítés" cím jelenik meg', () => {
     renderDoc(false, 'hu', { lista: 45000, tenyleges: 45000 });
     expect(screen.getByText('Összesítés')).toBeInTheDocument();
@@ -359,10 +359,10 @@ describe('TervDocument -- 79. tétel: az Összesítés blokk saját címe', () =
   });
 });
 
-// 52. tétel: a pénzösszeg ezres/tizedes elválasztója a terv NYELVÉTŐL
+// a pénzösszeg ezres/tizedes elválasztója a terv NYELVÉTŐL
 // függ (formatMoney/formatPrice), nem csak a pénznemétől -- egy német
 // nyelvű, forintos terven a PDF-en is pont az elválasztó, nem szóköz.
-describe('TervDocument -- 52. tétel: nyelvfüggő pénzformátum', () => {
+describe('TervDocument -- nyelvfüggő pénzformátum', () => {
   it('német nyelvű, HUF pénznemű terv: pont ezres elválasztó, nem szóköz', () => {
     renderDoc(false, 'de', { lista: 45000, tenyleges: 45000 });
     // A testing-library normalizálja a nem törhető szóközt (U+00A0) sima
@@ -375,7 +375,7 @@ describe('TervDocument -- 52. tétel: nyelvfüggő pénzformátum', () => {
   });
 });
 
-describe('TervDocument -- backlog-9: előleg-sor', () => {
+describe('TervDocument -- előleg-sor', () => {
   function renderEloleg(elolegOsszeg: number | null, savos = false, nyelv: Nyelv = 'hu') {
     const plan = buildPlan(savos, nyelv, { lista: 45000, tenyleges: 45000 });
     plan.elolegOsszeg = elolegOsszeg;
@@ -452,7 +452,7 @@ describe('TervDocument -- backlog-9: előleg-sor', () => {
   });
 });
 
-describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmény', () => {
+describe('TervDocument -- terv-szintű "kerek végösszeg" kedvezmény', () => {
   function renderKerekVegosszeg(kedvezmenyOsszeg: number | null, elolegOsszeg: number | null = null) {
     // AZONOS_AR: nincs sorszintű eltérés -- a "Kezelések összege" sor
     // megjelenése kizárólag a terv-szintű kedvezménynek tulajdonítható.
@@ -520,7 +520,7 @@ describe('TervDocument -- backlog-16: terv-szintű "kerek végösszeg" kedvezmé
   });
 });
 
-describe('TervDocument -- backlog-10: tétel-leírás a tételsor alatt', () => {
+describe('TervDocument -- tétel-leírás a tételsor alatt', () => {
   function renderWithLeiras(leirasSnapshot: string, leirasokMutatasa?: boolean) {
     const plan = buildPlan(false, 'hu', AZONOS_AR);
     plan.fazisok[0].sorok[0].leirasSnapshot = leirasSnapshot;
@@ -577,7 +577,7 @@ describe('TervDocument -- backlog-10: tétel-leírás a tételsor alatt', () => 
   });
 });
 
-describe('TervDocument -- backlog-13: garancia oldal', () => {
+describe('TervDocument -- garancia oldal', () => {
   function renderWithGarancia(
     opts: {
       nyelv?: Nyelv;
@@ -675,7 +675,7 @@ describe('TervDocument -- backlog-13: garancia oldal', () => {
 // tehát ez a saját nyelvi ÉS a "mindkét nyelven placeholder" esetet is
 // lefedi, nem csak a cross-language HU-visszaesést (ami a PreviewPage.tsx
 // betöltési logikájának hatásköre, itt nem tesztelt).
-describe('TervDocument -- 81. tétel: hiányzó/placeholder szekció kihagyása', () => {
+describe('TervDocument -- hiányzó/placeholder szekció kihagyása', () => {
   function renderPlaceholder(fizetesiFeltetelekMd: string, garanciaMd: string) {
     const plan = buildPlan(false, 'hu', AZONOS_AR);
     return render(
@@ -729,7 +729,7 @@ describe('TervDocument -- 81. tétel: hiányzó/placeholder szekció kihagyása'
   });
 });
 
-describe('TervDocument -- 76. tétel: kompakt fejléc és folytatólagos cím', () => {
+describe('TervDocument -- kompakt fejléc és folytatólagos cím', () => {
   function renderPlan(offerOnly = false) {
     const plan = buildPlan(false, 'hu', AZONOS_AR);
     plan.paciens.nev = 'Teszt Páciens';
@@ -803,7 +803,7 @@ describe('TervDocument -- 76. tétel: kompakt fejléc és folytatólagos cím', 
   });
 });
 
-describe('TervDocument -- 82. tétel: nyilatkozat árva-védelem', () => {
+describe('TervDocument -- nyilatkozat árva-védelem', () => {
   it('a nyilatkozat utolsó bekezdése az aláírásblokkal együtt árva-védett wrapperben van, a korábbiak nem', () => {
     const plan = buildPlan(false, 'hu', AZONOS_AR);
     const { container } = render(
@@ -827,7 +827,7 @@ describe('TervDocument -- 82. tétel: nyilatkozat árva-védelem', () => {
   });
 });
 
-describe('TervDocument -- 77. tétel: cím + páciensadatok + fogtérkép', () => {
+describe('TervDocument -- cím + páciensadatok + fogtérkép', () => {
   function renderElsoBlokk(opts: {
     tervCim?: string;
     taj?: string;

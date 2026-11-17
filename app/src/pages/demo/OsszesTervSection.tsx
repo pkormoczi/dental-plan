@@ -6,7 +6,7 @@
 // pácienshez ne kelljen újragépelni a tételeket. Háromszintű fa (páciens →
 // terv → verzió) -- egy páciensnek több terv-lánca is lehet. A
 // páciensenkénti terv-lánc/verzió fa és a hozzá tartozó akciók
-// (backlog-30 óta) a `components/PatientPlanChains.tsx`-ben élnek -- ez a
+// a `components/PatientPlanChains.tsx`-ben élnek -- ez a
 // szekció csak listáz, szűr és betölt, a renderelést/interakciót átadja neki.
 
 import { useEffect, useState } from 'react';
@@ -22,7 +22,7 @@ import { norm } from '../../domain/search';
 import type { PatientFolder } from '../../domain/types';
 import { useStorage } from '../../storage/StorageContext';
 
-// A lánc-nyitottság memória-kulcsa (46. tétel) -- a `versionDataKey()`
+// A lánc-nyitottság memória-kulcsa -- a `versionDataKey()`
 // mintáján, az `OsszesTervSection` egy lapon SOK páciens fáját rendereli,
 // tehát a `planDir` önmagában nem lenne egyedi a `useListStateMemory`
 // modul-szintű, oldal-szintű `nyitottak` rekordjában.
@@ -76,7 +76,7 @@ export default function OsszesTervSection() {
       setListError(null);
       try {
         const list = await storage.listPatients();
-        // P1-2: egyetlen sérült/inkompatibilis páciens ne bénítsa meg az
+        // egyetlen sérült/inkompatibilis páciens ne bénítsa meg az
         // egész listát -- egy hibázó betöltés ⚠-jelöléssel, üres lánccal
         // jelenik meg, a többi rendben betölt.
         const chainResults = await Promise.allSettled(
@@ -107,7 +107,7 @@ export default function OsszesTervSection() {
 
   const filtered = patients
     .filter((p) => !q.trim() || norm(p.nev).includes(norm(q)))
-    // backlog-28, 6. döntés: egy terv nélküli páciens (csak
+    // egy terv nélküli páciens (csak
     // paciens-adatok.json-nal, a Páciensek képernyőn felvéve) itt NEM
     // jelenik meg -- ez a képernyő a kezelési előzményekről szól, nem a
     // törzsadatról. Egy olvashatatlan tervű páciens változatlanul látszik,

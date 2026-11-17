@@ -40,7 +40,7 @@ beforeEach(() => {
   localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
 });
 
-describe('PriceListAdminPage -- backlog-96: elgépelés-védelem', () => {
+describe('PriceListAdminPage -- elgépelés-védelem', () => {
   it('10x-es HUF ár-ugrás figyelmeztet, a jelzés kis további módosítás után is megmarad', async () => {
     const user = userEvent.setup();
     renderAdmin();
@@ -170,7 +170,7 @@ describe('PriceListAdminPage -- backlog-96: elgépelés-védelem', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     // A CBCT ára a -90%-os csökkentés után is 24 000 Ft alá esett -- a
     // nyitott soron mégsem jelenik meg figyelmeztetés, mert a baseline a
-    // művelet UTÁN újrarögzült a friss értékre (8. döntés).
+    // művelet UTÁN újrarögzült a friss értékre.
     expect(findItem(readPriceList(), 'CBCT').ar.HUF).not.toEqual({ tipus: 'FIX', ertek: 24000 });
     expect(screen.queryByText(/Szokatlanul nagy változás/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Kirívóan magas ár/)).not.toBeInTheDocument();

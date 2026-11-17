@@ -41,10 +41,10 @@ describe('formatMoney', () => {
     expect(formatMoney(0, 'HUF', 'hu')).toBe('0 Ft');
   });
 
-  // 52. tétel / C4: az ezres elválasztó a NYELVTŐL függ (hu-HU szóköz,
+  // Az ezres elválasztó a NYELVTŐL függ (hu-HU szóköz,
   // de-DE pont), a tizedesjegyek száma és a pénznemjel a PÉNZNEMTŐL -- ez a
   // négy kötelező kombináció.
-  describe('nyelv szerinti elválasztó (C4)', () => {
+  describe('nyelv szerinti elválasztó', () => {
     it('HU + HUF: szóköz elválasztó, nincs tizedesjegy', () => {
       expect(formatMoney(1234567, 'HUF', 'hu')).toBe('1 234 567 Ft');
     });

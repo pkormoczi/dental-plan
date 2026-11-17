@@ -181,7 +181,7 @@ describe('torzsadatBetoltes', () => {
       expect(await feloldTervCimke(storage, nagy.dirName, nagy.paciensId, 'nincs-ilyen')).toBeNull();
     });
 
-    it('null-t ad, ha a listPlans dob (P1-2 minta, sosem propagál)', async () => {
+    it('null-t ad, ha a listPlans dob (sosem propagál)', async () => {
       const nagy = (await storage.listPatients()).find((p) => p.nev === 'Nagy Éva')!;
       vi.spyOn(storage, 'listPlans').mockRejectedValueOnce(new Error('sérült lánc'));
       expect(await feloldTervCimke(storage, nagy.dirName, nagy.paciensId, 'b7d2e4')).toBeNull();

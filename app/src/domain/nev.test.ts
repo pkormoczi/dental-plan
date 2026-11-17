@@ -76,7 +76,7 @@ describe('nevKoveti', () => {
   });
 });
 
-describe('nevAtirt (backlog-60)', () => {
+describe('nevAtirt', () => {
   it('hamis, ha a sor a felvételkori (árlistai) nevet viseli', () => {
     expect(nevAtirt(sor({ tetelId: 't1', nevSnapshot: 'Hat DE' }), tetel1, 'de')).toBe(false);
     expect(nevAtirt(sor({ tetelId: 't1', nevSnapshot: 'Van DE' }), tetel1, 'hu')).toBe(false);
@@ -108,7 +108,7 @@ describe('nevAtirt (backlog-60)', () => {
   });
 });
 
-describe('arlistaiLeiras (backlog-60)', () => {
+describe('arlistaiLeiras', () => {
   it('a tétel adott nyelvű leírását adja vissza', () => {
     expect(arlistaiLeiras(tetelLeirassal, 'hu')).toBe('Implantátum\nFelépítmény');
   });
@@ -177,7 +177,7 @@ describe('sorFallback', () => {
     expect(sorFallback(sor({ tetelId: 't1', nevSnapshot: 'Hat DE' }), 'de', tetelById)).toBeNull();
   });
 
-  it('backlog-3b: de terven, ha van fordítás, de a sor mást mond, "elterAzArlistatol"', () => {
+  it('de terven, ha van fordítás, de a sor mást mond, "elterAzArlistatol"', () => {
     expect(
       sorFallback(sor({ tetelId: 't1', nevSnapshot: 'Kézzel átírt szöveg' }), 'de', tetelById),
     ).toBe('elterAzArlistatol');
@@ -187,13 +187,13 @@ describe('sorFallback', () => {
     expect(sorFallback(sor({ tetelId: 'torolve' }), 'de', tetelById)).toBeNull();
   });
 
-  it('backlog-23: egyedi (üres tetelId-jű), kitöltött nevű sor de terven "egyedi"', () => {
+  it('egyedi (üres tetelId-jű), kitöltött nevű sor de terven "egyedi"', () => {
     expect(
       sorFallback(sor({ tetelId: '', nevSnapshot: 'Egyedi tétel' }), 'de', tetelById),
     ).toBe('egyedi');
   });
 
-  it('backlog-3: egyedi, üres nevű sort nem jelez -- azt a kitoltetlenSorok kapja el', () => {
+  it('egyedi, üres nevű sort nem jelez -- azt a kitoltetlenSorok kapja el', () => {
     expect(sorFallback(sor({ tetelId: '', nevSnapshot: '' }), 'de', tetelById)).toBeNull();
   });
 });

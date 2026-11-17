@@ -1,6 +1,6 @@
 // Kompakt páciens-sor a Kezdőlap "Legutóbbi páciensek" listájához --
 // eredetileg a `Home.tsx`
-// helyi `RecentRow`-ja volt, a 38. tétel emelte ide. A Pácienslista
+// helyi `RecentRow`-ja volt, onnan került ide. A Pácienslista
 // (`pages/paciensek/PatientTableRow.tsx`) SZÁNDÉKOSAN külön komponens
 // -- a `children` (aktivitás-szöveg) itt sor alatti tartalom, egy
 // oszlopos táblázat-cellába ez nem ültethető át. Név + DOB + telefon,

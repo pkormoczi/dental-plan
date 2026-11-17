@@ -1,4 +1,4 @@
-// Páciens részletei -- backlog-30 (Páciens detail shell).
+// Páciens részletei (Páciens detail shell).
 // URL-lel címezhető (`/paciensek/:patientDir`), két tabbal: `Páciens
 // adatai` (a törzsadat-szerkesztő, `components/PatientEditorPanel.tsx`) és
 // `Kezelési tervek` (a terv-lánc/verzió fa, `components/PatientPlanChains.tsx`).
@@ -53,7 +53,7 @@ import { useStorage } from '../storage/StorageContext';
 type DetailTab = 'adatai' | 'tervek';
 type EditorMod = 'nezet' | 'szerkesztes';
 
-// A DropdownMenu.Label szövege a törlés akadályára (backlog-41) --
+// A DropdownMenu.Label szövege a törlés akadályára --
 // prezentáció, ezért itt él, nem a domain `paciensTorlesAkadaly()` mellett.
 const AKADALY_SZOVEG: Record<TorlesAkadaly, string> = {
   'veglegesitett-terv': 'Véglegesített terve van',
@@ -79,7 +79,7 @@ export default function PatientDetailPage() {
   const [chainData, setChainData] = useState<PlanChainData | null>(null);
 
   // A hívó (Páciensek/Korábbi tervek kereszt-linkje) jelzi, melyik tabon
-  // nyisson (4. döntés, backlog-30) -- csak a kezdőértékhez olvassuk, a
+  // nyisson -- csak a kezdőértékhez olvassuk, a
   // további tab-váltás innentől kizárólag a `tab` state-en át fut.
   const [tab, setTab] = useState<DetailTab>(
     (location.state as { tab?: DetailTab } | null)?.tab === 'adatai' ? 'adatai' : 'tervek',
@@ -169,8 +169,8 @@ export default function PatientDetailPage() {
   }, [storage, patientDir]);
 
   // Melyik páciensmappához tartozik a doki JELENLEGI, mentetlen piszkozata
-  // (backlog-41, 2. döntés) -- a MEGLÉVŐ `useAktivDraft()` (46. tétel,
-  // a `feloldPatientDir()`-t birtokolja) hívja, ugyanaz a forrás,
+  // -- a MEGLÉVŐ `useAktivDraft()` (a
+  // `feloldPatientDir()`-t birtokolja) hívja, ugyanaz a forrás,
   // amit a "Kezelési tervek" tab aktív-draft blokkja is használ.
   const aktivDraft = useAktivDraft();
   const sajatAktivDraft = sajatDraft(aktivDraft, patientDir);
@@ -186,7 +186,7 @@ export default function PatientDetailPage() {
   // Fire-and-forget, mint az AdatkezelesSection.tsx demó-törlő gombjai: a
   // dialógus a kattintásra azonnal zárul, a hiba a lapon, a header alatt
   // jelenik meg -- nincs toast. Szándékosan NEM megy át a Mentés/Mégse
-  // dirty-őrön (3. döntés): a "Páciens adatai" tabon félbehagyott
+  // dirty-őrön: a "Páciens adatai" tabon félbehagyott
   // szerkesztés tárgytalanná válik, ha magát a pácienst töröljük.
   async function performDelete() {
     setDeleteError(null);
@@ -364,7 +364,7 @@ export default function PatientDetailPage() {
         </Tabs.Content>
 
         <Tabs.Content value="tervek">
-          {/* 46. tétel: egy 0 láncú páciensnek is LEHET aktív, mentetlen
+          {/* egy 0 láncú páciensnek is LEHET aktív, mentetlen
               piszkozata (pl. "+ Új terv" indítva, de még nem véglegesítve)
               -- ilyenkor a draft-blokkot kell mutatni, nem a "nincs terve"
               CTA-t, különben a doki azt hinné, elveszett a félbeszakadt

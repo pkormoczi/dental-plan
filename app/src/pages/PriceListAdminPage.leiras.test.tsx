@@ -43,7 +43,7 @@ function seedPriceListWithNoEurPrices() {
   localStorage.setItem('dp:beallitasok.json', JSON.stringify(seedSettings));
 }
 
-describe('PriceListAdminPage -- backlog-10: leírás és csomag-jelölés', () => {
+describe('PriceListAdminPage -- leírás és csomag-jelölés', () => {
   beforeEach(() => {
     localStorage.clear();
     seedPriceListWithNoEurPrices();
@@ -58,7 +58,7 @@ describe('PriceListAdminPage -- backlog-10: leírás és csomag-jelölés', () =
       const nameCell = await screen.findByText('CBCT');
       await user.click(nameCell);
 
-      // Rövid, de többkarakteres szöveg -- elég a gyors-gépelés (P0-7 minta)
+      // Rövid, de többkarakteres szöveg -- elég a gyors-gépelés
       // igazolásához, nem kell hosszú mondat a teszt lényegéhez.
       const leirasHu = screen.getByLabelText('Leírás (mi van benne?)');
       await user.type(leirasHu, 'Kontraszt');

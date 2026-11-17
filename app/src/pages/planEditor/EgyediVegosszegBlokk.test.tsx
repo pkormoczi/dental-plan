@@ -65,7 +65,7 @@ describe('az egyedi végösszeg kapcsoló', () => {
     expect(screen.queryByText(/Add meg az egyedi végösszeget/)).not.toBeInTheDocument();
   });
 
-  it('a sorok összege fölé írt cél felárat ad, nincs felső korlát (2. döntés)', async () => {
+  it('a sorok összege fölé írt cél felárat ad, nincs felső korlát', async () => {
     const user = userEvent.setup();
     renderBlokk(25000);
 

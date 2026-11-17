@@ -1,4 +1,4 @@
-// Irányított nyelvi review nem-modális sávja -- 65. tétel (a feloldás
+// Irányított nyelvi review nem-modális sávja (a feloldás
 // szabálya: lásd app/src/domain/CLAUDE.md). A `TervWorkflowShell.tsx`-ben mountolva, a
 // `NyelviReviewContext.tsx` `aktiv` jelzésekor jelenik meg. A "még N
 // ellenőrizendő" szám és a következő cél MINDIG a JELENLEGI piszkozatból

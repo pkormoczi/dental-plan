@@ -79,7 +79,7 @@ export default function PlanEditorPage() {
   // `visszaFokuszRef` kommentjét: kontrollált (trigger nélküli) AlertDialog-
   // nál a Radix beépített visszafókuszálása nem fut le.
   const discardVisszaFokuszRef = useRef<HTMLElement | null>(null);
-  // P1-7: index-kulcs helyett -- fázistörléskor a maradék PhaseSection-ok
+  // index-kulcs helyett -- fázistörléskor a maradék PhaseSection-ok
   // pozíciója (pi) eltolódik, és egy sima `key={pi}` React-remount nélkül
   // ugyanazt a DOM-csomópontot (és benne az ItemPicker lokális kereső-
   // állapotát: a gépelt szöveget) tartaná meg egy MÁSIK fázison. A token
@@ -89,7 +89,7 @@ export default function PlanEditorPage() {
   // AlertDialog) -- egy üres fázis újralétrehozása két kattintás, egy
   // 8 sorosé nem.
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
-  // Ár-frissítés megerősítő előnézete (backlog-61) -- a "Hatás a
+  // Ár-frissítés megerősítő előnézete -- a "Hatás a
   // tervre" számításhoz a teljes `plan`-re van szükség, ezért a state itt,
   // a szülőben él, nem a LineRow-ban (a fázistörlés `pendingDeleteIndex`
   // mintája).
@@ -106,9 +106,9 @@ export default function PlanEditorPage() {
   // Hova kell fókuszálni/görgetni renderelés UTÁN -- a `useFokuszEffekt`
   // hook dolgozza fel (lásd `pages/planEditor/useFokuszEffekt.ts`), mert a
   // célelem DOM-ja (most felvett sor, most hozzáadott fázis) csak a
-  // következő renderben létezik. A `fazisKereso` ág (backlog-59) a
+  // következő renderben létezik. A `fazisKereso` ág a
   // fázis alatti keresőnek szól, ezért nincs `li`-je. A `nev`/`fazisNev`
-  // (65. tétel, guided review) mindig a DOM-ban van, amíg a sornak/
+  // (guided review) mindig a DOM-ban van, amíg a sornak/
   // fázisnak van neve -- szinkron fókuszálható, a `leiras`/`fazisMegjegyzes`
   // viszont összecsukható sávban él, lásd `useFokuszEffekt`.
   const [fokuszCel, setFokuszCel] = useState<FokuszCel>(null);
@@ -144,7 +144,7 @@ export default function PlanEditorPage() {
 
   const nyelviReview = useNyelviReview();
 
-  // 65. tétel, 5. döntés: a guided review célja (`ReviewCel`) a
+  // a guided review célja (`ReviewCel`) a
   // VALÓDI szerkesztőmezőkhöz navigál -- a fázis kinyitása + a
   // `fokuszCel` beállítása a MEGLÉVŐ mechanizmust hajtja meg, nem egy
   // duplikált útvonalat.
@@ -163,7 +163,7 @@ export default function PlanEditorPage() {
     else setFokuszCel({ mit: 'leiras', pi: cel.fazisIndex, li: cel.sorIndex ?? 0 });
   }, [nyelviReview.cel]);
 
-  // 62. tétel C5: egy `currency`-ben nem beárazott tétel is
+  // Egy `currency`-ben nem beárazott tétel is
   // kereshető/felvehető marad -- a kereső ma nem szűr pénznemre, csak
   // aktivitásra (lásd `sorMezokTetelbol()`). A gyorsgombok (`frequent`)
   // SZÁNDÉKOSAN a beárazott részhalmazra szorítkoznak: egy kattintásra
@@ -190,7 +190,7 @@ export default function PlanEditorPage() {
     });
   }
 
-  // Az új fázis keresője fókuszt kap és a lap odagördül (backlog-59)
+  // Az új fázis keresője fókuszt kap és a lap odagördül
   // -- a `plan.fazisok.length` a hívás pillanatában (a push ELŐTT) az új
   // fázis leendő indexe. `fazisResetToken` szándékosan NEM bumpol: az
   // minden fázist remountolna, elveszítve a többi kereső begépelt szövegét.
@@ -321,7 +321,7 @@ export default function PlanEditorPage() {
     return true;
   }
 
-  // A teljes piszkozat eldobása (6. döntés) -- a `patientDir`-t a
+  // A teljes piszkozat eldobása -- a `patientDir`-t a
   // `resetPlanDraft()` HÍVÁS ELŐTT kell kiolvasni, mert az nullázza a
   // piszkozat-metaadatot.
   function handleDiscardDraft() {
@@ -452,7 +452,7 @@ export default function PlanEditorPage() {
   // `frissitettDatum`/`loadedOsszesitokDiff` Callout-okról egy már
   // tartalmas (bár még mentetlen) tervnél. Egy UTÓLAG hozzáadott fázis
   // keresője külön úton, az `addPhase()` `fokuszCel`-jén át kap fókuszt
-  // (backlog-59) -- a két eset nem ütközik, mert ez a kifejezés csak
+  // -- a két eset nem ütközik, mert ez a kifejezés csak
   // az 1. fázisra érvényesül (lásd lent, `pi === 0`).
   const ujUresPiszkozat = plan.tervId === '' && plan.fazisok.every((f) => f.sorok.length === 0);
 
@@ -506,7 +506,7 @@ export default function PlanEditorPage() {
           a CLAUDE.md szerint végig magyar marad -- a lentebbi
           `formatMoney`-hívások ezzel szemben a terv nyelvét (`nyelv`)
           követik, mert azok a dokumentum tartalmát tükrözik (1:1 a
-          generált PDF-fel, 52. tétel). */}
+          generált PDF-fel). */}
       {frissitettDatum && (
         <Callout.Root color="gray" mb="4">
           <Callout.Icon>

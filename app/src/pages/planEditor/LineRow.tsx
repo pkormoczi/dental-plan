@@ -60,9 +60,9 @@ export interface LineRowProps {
   /** A sor mögötti árlistai tétel, ha `tetelId`-hez kötött (a `csomag`/leírás/
       név-eltérés/`nincsListaar` forrása); egyedi sornál `undefined`. */
   tetel: Tetel | undefined;
-  /** `null`, ha a sor követi a mai árlistát -- lásd `domain/arKoveti.ts` (backlog-61). */
+  /** `null`, ha a sor követi a mai árlistát -- lásd `domain/arKoveti.ts`. */
   arFrissitesJavaslat: ArFrissites | null;
-  /** 65. tétel: a guided review kényszerítve nyitja a leírás-sávot -- lásd lent. */
+  /** a guided review kényszerítve nyitja a leírás-sávot -- lásd lent. */
   forceLeirasOpen: boolean;
   /** A fogantyún billentyűvel felvett sor -- lásd `PlanEditorPage` `felvett`. */
   felveve: boolean;
@@ -137,7 +137,7 @@ export default function LineRow({
   const rosszTokenek = invalidFdiTokens(line.fogak);
   const invalidFormat = rosszTokenek.length > 0;
   // A darabszám mezőbe gépelt, még nem committált érték -- a NumberField
-  // csak blur/Enterre írja a törzsadatot (P1-4), de ez a figyelmeztetés
+  // csak blur/Enterre írja a törzsadatot, de ez a figyelmeztetés
   // gépelés közben is éljen, ne csak commit után.
   const [mennyisegDraft, setMennyisegDraft] = useState(line.mennyiseg);
   useEffect(() => setMennyisegDraft(line.mennyiseg), [line.mennyiseg]);
@@ -152,7 +152,7 @@ export default function LineRow({
   const visszakapcsolhato = line.mennyisegKezi !== false && teeth.valid;
   const arEltero = !egyedi && line.tenylegesEgysegar !== line.listaEgysegar;
   // true, ha a sor tétele nincs beárazva a terv pénznemében -- lásd
-  // `domain/penznemValtas.ts` `nincsListaar()` (62. tétel).
+  // `domain/penznemValtas.ts` `nincsListaar()`.
   const araHianyzik = nincsListaar(line, tetel, currency);
   // Egyedi sornál és beárazatlan tételnél a 0 listaár HIÁNY, nem "ingyenes
   // lista" -- ha ezt nem jeleznénk a classifiernek, egy kézzel beírt
@@ -176,10 +176,10 @@ export default function LineRow({
     return Math.round(sorReferenciaAr(line) * (1 + ((m[1] === '+' ? 1 : -1) * arany) / 100));
   }
 
-  // backlog-60, 1. döntés: a `sorFallback`-tól FÜGGETLEN, nyelvfüggetlen
+  // a `sorFallback`-tól FÜGGETLEN, nyelvfüggetlen
   // "kézzel átírt" komparátor -- lásd `domain/nev.ts` `nevAtirt()`.
   const nevEltero = tetel != null && nevAtirt(line, tetel, nyelv);
-  // backlog-65: a `sorFallback`-tól SZÁNDÉKOSAN KÜLÖN kérdés -- nem
+  // a `sorFallback`-tól SZÁNDÉKOSAN KÜLÖN kérdés -- nem
   // azt nézi, hogy a szöveg követi-e az árlistát, hanem hogy a doki
   // kézzel írt szövege a JELENLEGI dokumentumnyelven van-e. Magyar terven
   // is működik (szemben a `sorFallback`-kal), és egyedi sornál is ad
@@ -193,17 +193,17 @@ export default function LineRow({
   // nincs auto-collapse kockázat.
   const leirasTartalom = (line.leirasSnapshot ?? '').trim();
   const [leirasNyitva, setLeirasNyitva] = useState(Boolean(leirasTartalom));
-  // 65. tétel: a guided review kényszerítve nyitja a sávot -- CSAK
+  // a guided review kényszerítve nyitja a sávot -- CSAK
   // nyitni szabad innen (a `keresoMod`/`azonositatlan` fenti mintája), a
   // doki utólagos, kézi becsukását ez nem írja felül.
   useEffect(() => {
     if (forceLeirasOpen) setLeirasNyitva(true);
   }, [forceLeirasOpen]);
-  // Korai vizuális jelzés (15. döntés): a trigger maga jelez amber színnel,
+  // Korai vizuális jelzés: a trigger maga jelez amber színnel,
   // hogy ne szaporodjon egy külön jelvény a már amúgy is sűrű jelvénysorban.
   const csomag = tetel?.csomag ?? false;
   const hianyzoCsomagLeiras = csomag && !leirasTartalom;
-  // backlog-60, 4. döntés: reset/marker csak akkor értelmes, ha VAN
+  // reset/marker csak akkor értelmes, ha VAN
   // árlistai leírás -- a leírás nem esik magyarra (app/src/domain/CLAUDE.md), hiányzó fordításnál nincs mire
   // visszaállítani.
   const arlistaLeirasSzoveg = tetel ? arlistaiLeiras(tetel, nyelv) : '';
@@ -357,7 +357,7 @@ export default function LineRow({
                 type="button"
                 size="1"
                 variant="ghost"
-                // A leírás-mismatch (backlog-65) is korai amber jelzést kap a
+                // A leírás-mismatch is korai amber jelzést kap a
                 // triggeren, mint a `hianyzoCsomagLeiras` -- a badge maga csak
                 // nyitott sávban látszik, összecsukva enélkül néma maradna.
                 color={hianyzoCsomagLeiras || leirasNyelvMismatch ? 'amber' : 'gray'}
@@ -395,7 +395,7 @@ export default function LineRow({
                       size="1"
                       cimke="Név visszaállítása az árlistaira"
                       onClick={() =>
-                        // backlog-65, 7. döntés: a reset a nyelvi
+                        // a reset a nyelvi
                         // review-metaadatot is törli -- egy default-following
                         // szövegnek nincs értelme review-státuszt hordoznia.
                         onPatch({ nevSnapshot: resolveNev(tetel.nev, nyelv).szoveg, nevNyelv: null })
@@ -585,7 +585,7 @@ export default function LineRow({
               }}
               onBlur={() => onDraftOsszeg(null)}
               textAlign="right"
-              // 62. tétel: beárazatlan tétel, még kézi ár nélkül -- a
+              // beárazatlan tétel, még kézi ár nélkül -- a
               // kedvezmény-/felár-kiemeléssel azonos slot, csak
               // figyelmeztető színben, hogy ide dönteni kell.
               style={
@@ -682,7 +682,7 @@ export default function LineRow({
 
       <Table.Cell justify="end" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {/* Gépelés közben is követi az ár- és darabszám-mezőt -- a
-            committált Összeg csak commit-on-blur (P1-4) után frissülne,
+            committált Összeg csak commit-on-blur után frissülne,
             ami a doki éppen gépelt számáról adna elavult visszajelzést. */}
         {formatMoney(
           sorOsszeg({ ...line, tenylegesEgysegar: arDraft, mennyiseg: mennyisegDraft }),
@@ -737,7 +737,7 @@ export default function LineRow({
                   size="1"
                   cimke="Leírás visszaállítása az árlistaira"
                   onClick={() =>
-                    // backlog-65, 7. döntés: lásd a névmező reset
+                    // lásd a névmező reset
                     // kommentjét fentebb.
                     onPatch({ leirasSnapshot: arlistaLeirasSzoveg, leirasNyelv: null })
                   }

@@ -15,7 +15,7 @@ export interface PlanVersionLocation {
  * Az összes terv-lánc összes verziója, a `keltezes`-t kódoló `isoDate`
  * szerint csökkenően, holtversenynél a nagyobb `verzio`, majd a `planDir`
  * (`localeCompare('hu')`) szerint -- a `rendezettLancok()` determinizmus-
- * mintája (`planChainData.ts`). A 47. tétel öröklési bejárásának
+ * mintája (`planChainData.ts`). Az öröklési bejárás
  * alapja: onnan indulva csökkenő sorrendben kell megtalálni az első
  * VEGLEGES verziót, nem csak a legfrissebbet.
  */
@@ -53,7 +53,7 @@ export function latestVersionAcrossPlans(
  * láncra szűkített komparátora) -- `null`, ha a láncnak nincs olvasható
  * verziója. A `versions` tömb sorrendjétől független (a `DemoStorage`
  * `verzio` szerint növekvőn ad vissza, de ez nem szerződés) -- a lánc
- * fejlécének (46. tétel) EZ a "legfrissebb verzió" forrása, nem
+ * fejlécének EZ a "legfrissebb verzió" forrása, nem
  * `versions[versions.length - 1]`.
  */
 export function legfrissebbVerzio(versions: PlanVersion[]): PlanVersion | null {

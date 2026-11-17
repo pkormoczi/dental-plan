@@ -1,7 +1,7 @@
-// "Páciens törzsadata" eltérés-jelzés -- backlog-40, a
+// "Páciens törzsadata" eltérés-jelzés, a
 // Terv adatai lap "Páciens adatai" szekciójába ágyazva, a személyes adatok
-// mezői ALATT (backlog-51
-// óta kártyakeret nélkül, lásd lent). A törzsadat invariánsa (nincs automatikus
+// mezői ALATT (kártyakeret
+// nélkül, lásd lent). A törzsadat invariánsa (nincs automatikus
 // szinkron, lásd app/src/storage/CLAUDE.md) változatlan: ez a rész KÉT külön, explicit irányú műveletet ad
 // -- "Frissítés az adatlapról" (master -> draft) és "Az adatlap frissítése
 // a tervből" (draft -> master), soha nem egy közös "Szinkronizálás" gomb
@@ -44,7 +44,7 @@ export default function TorzsadatSyncCard() {
     letrehozasPromptEldontve,
     setLetrehozasPromptEldontve,
   } = useLepesGuard();
-  // 94. tétel: amíg a Név mező egy MÁSIK, létező páciensre illik pontosan,
+  // amíg a Név mező egy MÁSIK, létező páciensre illik pontosan,
   // egyik draft->master írási út sem tilthat el a doki elől -- az "Az adatlap
   // frissítése a tervből" gomb, az "Adatlap létrehozása a terv adataiból"
   // gomb ÉS a lépés-elhagyási prompt draft->master ajánlata is. A master->
@@ -205,13 +205,13 @@ export default function TorzsadatSyncCard() {
     }
   }
 
-  // backlog-40 (3. döntés): a "Terv adatai" lépés ELŐRE elhagyásakor
+  // a "Terv adatai" lépés ELŐRE elhagyásakor
   // (csak amíg ez a kártya mountolva van, lásd LepesGuardContext.tsx fejlécét)
   // vagy a fallback-létrehozás ajánlatát, vagy a diff-promptot nyitja meg --
   // sosem mindkettőt egyszerre, a törzsadat léte dönti el, melyiket.
   const handleLepesElhagyas = useCallback(
     (proceed: () => void): boolean => {
-      // 94. tétel: névütközés esetén egyik draft->master ajánlat sem
+      // névütközés esetén egyik draft->master ajánlat sem
       // kínálható fel -- a lépésváltás akadálytalanul megy tovább, a
       // blokk a véglegesítésnél áll (domain/veglegesitesOr.ts).
       if (nevUtkozes) return false;

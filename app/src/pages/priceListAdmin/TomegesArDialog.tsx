@@ -1,4 +1,4 @@
-// Tömeges árváltoztatás (backlog-92) -- a lap fejlécsorában, a „+ Új tétel"
+// Tömeges árváltoztatás -- a lap fejlécsorában, a „+ Új tétel"
 // gomb mellett elérhető dialógus. Radix Themes `Dialog` (NEM `AlertDialog` --
 // tényleges paraméter- és sorválasztás történik benne), az `UjTetelDialog.tsx`
 // szomszédjaként: onnan a Mentés/Mégse-konvenció és a „minden megnyitáskor
@@ -142,7 +142,7 @@ export default function TomegesArDialog({
     setConfirmOpen(true);
   }
 
-  // A 12. döntés szerint sikertelen mentésnél sincs itteni újrapróbálás --
+  // Sikertelen mentésnél sincs itteni újrapróbálás --
   // mindkét dialógus bezárul, a lap saját `saveError` Callout-ja jelez.
   async function handleConfirm() {
     const idk = new Set(valtozikIdk.filter((id) => !kivett.has(id)));

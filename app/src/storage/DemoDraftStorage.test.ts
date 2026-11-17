@@ -61,7 +61,7 @@ describe('DemoDraftStorage', () => {
     await expect(drafts.load()).resolves.toBeNull();
   });
 
-  it('uses the dp: prefix so DemoStorage.clearAll() sweeps the draft away too (2. döntés)', async () => {
+  it('uses the dp: prefix so DemoStorage.clearAll() sweeps the draft away too', async () => {
     await drafts.save(makeBlankPlan());
     expect(localStorage.getItem('dp:piszkozat')).not.toBeNull();
 
@@ -202,7 +202,7 @@ describe('DemoDraftStorage', () => {
     });
   });
 
-  // backlog-51: a "Terv adatai" cím mező beírt értéke -- ugyanaz a
+  // a "Terv adatai" cím mező beírt értéke -- ugyanaz a
   // puha, UI-workflow metaadat mintázat, mint a patientDir/lastRoute.
   describe('meta (tervCim)', () => {
     it('roundtrips a non-empty tervCim', async () => {

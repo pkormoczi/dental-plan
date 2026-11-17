@@ -1,4 +1,4 @@
-// backlog-29: a DEMO oldal a korábban önálló Filerendszer nézetet és a
+// a DEMO oldal a korábban önálló Filerendszer nézetet és a
 // Kezdőlapról levett Funkciólista/Változásnapló kártyát fogja össze -- a Kezdőlap
 // letisztítása óta, onnan ide költözött két demó-adatkezelő gombbal
 // (Adatkezelés fül) kiegészülve, majd a globális, több-pácienses

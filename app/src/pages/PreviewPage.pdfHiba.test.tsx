@@ -1,4 +1,4 @@
-// 68. tétel: PDF-render hiba esetén a doki ugyanazon a képernyőn marad --
+// PDF-render hiba esetén a doki ugyanazon a képernyőn marad --
 // hibaüzenet + explicit "Újrapróbálás", a Véglegesítés és a Letöltés
 // letiltva, az utolsó sikeres preview beszürkítve (nem eltűnve) látszik.
 // A meglévő PreviewPage.test.tsx mockja statikus (fix loading:false/
@@ -88,7 +88,7 @@ function seedValidDraft() {
   );
 }
 
-describe('PreviewPage -- 68. tétel: PDF-render hiba állapota', () => {
+describe('PreviewPage -- PDF-render hiba állapota', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';

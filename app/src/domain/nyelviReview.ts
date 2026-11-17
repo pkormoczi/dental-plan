@@ -1,4 +1,4 @@
-// Manuális szövegek nyelvi review-ja (65. tétel). A doki szabadon
+// Manuális szövegek nyelvi review-ja. A doki szabadon
 // gépelt szövegei (sornév, sorleírás, fázisnév, fázis-megjegyzés) a
 // nyomtatványra kerülnek -- ez a modul jelzi, ha egy ilyen szöveg nem a
 // dokumentum nyelvén íródott. SZÁNDÉKOSAN KÜLÖN modul a `nev.ts`
@@ -110,7 +110,7 @@ export interface NyelviMismatchTetel {
 /**
  * A tervben lévő, nyelvi mismatch-es kézzel írt szövegek, dokumentum/
  * workflow sorrendben (fázisonként: fázisnév, fázis-megjegyzés, majd
- * soronként: sornév, sorleírás) -- a guided review (5. döntés) ezt a
+ * soronként: sornév, sorleírás) -- a guided review ezt a
  * sorrendet járja be. A `kitoltetlenSorok`/`nullaOsszeguSorok`
  * (`domain/kitoltetlen.ts`) plan-scan mintáját követi.
  */

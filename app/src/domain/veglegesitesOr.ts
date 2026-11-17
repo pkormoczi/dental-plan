@@ -131,7 +131,7 @@ function nyelviReviewReszletek(tetelek: NyelviMismatchTetel[]): CsekklistaReszle
  * MÁR feloldott aktív-orvos listája (`domain/orvosok.ts` `aktivOrvosok()`).
  * `sablon` a hívó sablonbetöltésének eredménye -- ez a modul sosem tölt be
  * sablont, csak a TÉNYt kapja meg, a fenti három paraméter mintáján.
- * `nevUtkozes` (94. tétel, `domain/paciensKotes.ts`) a hívó MÁR feloldott
+ * `nevUtkozes` (`domain/paciensKotes.ts`) a hívó MÁR feloldott
  * páciens-kötése/ütközése, ugyanezen a mintán -- `null`, ha nincs
  * feloldható kötés.
  * Szándékosan kötelező, nem defaultos paraméterek -- egy csendben
@@ -174,7 +174,7 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // 94. tétel: a piszkozathoz kötött páciensmappa MÁS páciens azonosító
+  // a piszkozathoz kötött páciensmappa MÁS páciens azonosító
   // adatai mellé, egy MÁSIK létező páciens nevével mentődne -- GDPR 9.
   // cikk szerinti különleges adatot érintő azonosítási kollízió egy
   // aláírásra kész dokumentumon, ezért KEMÉNY blokk, nem a lenti, ÁLTALÁNOS
@@ -244,7 +244,7 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // KEMÉNY blokk (62. tétel): egy beárazatlan tétel 0 Ft-tal nem
+  // KEMÉNY blokk: egy beárazatlan tétel 0 Ft-tal nem
   // kerülhet aláírandó dokumentumra -- a doki vagy kézi ajánlati árat ad,
   // vagy törli/másik pénznemre vált.
   const araztalanSorokLista = araztalanSorok(plan, priceList);
@@ -357,7 +357,7 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // 65. tétel -- a doki SAJÁT, szabadon gépelt szövegeinek nyelve,
+  // A doki SAJÁT, szabadon gépelt szövegeinek nyelve,
   // SZÁNDÉKOSAN külön a fenti `nemet-nev` tételtől (az az ÁRLISTAI
   // fordítás/igazolás hiányát jelzi).
   const nyelviMismatchekLista = nyelviMismatchek(plan);
@@ -405,7 +405,7 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // PUHA figyelmeztetés (backlog-19) -- névvel ellátott, de 0 összegű sorok.
+  // PUHA figyelmeztetés -- névvel ellátott, de 0 összegű sorok.
   const nullaSorok = nullaOsszeguSorok(plan);
   if (nullaSorok.length > 0) {
     const nullaOsszeg = formatMoney(0, plan.penznem, plan.nyelv);
@@ -434,7 +434,7 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // PUHA figyelmeztetés (backlog-61) -- az árlista-eltérés
+  // PUHA figyelmeztetés -- az árlista-eltérés
   // (kedvezmény/felár vagy elavult pillanatkép) legitim állapot is lehet.
   const arElteresek = arElteroSorok(plan, priceList);
   if (arElteresek.elavult.length + arElteresek.keziAr.length > 0) {
@@ -499,7 +499,7 @@ export function veglegesitesDiagnozis(
     });
   }
 
-  // backlog-40: a páciens törzsadata INFO-szintű, nem blokkoló jelzés -- a
+  // a páciens törzsadata INFO-szintű, nem blokkoló jelzés -- a
   // törzsadat és a terv `paciens` pillanatképe között nincs automatikus
   // szinkron egyik irányban sem, az átvétel mindig explicit doki-akció, a
   // véglegesítés nem kényszeríti ki.

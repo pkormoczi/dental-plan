@@ -56,7 +56,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     window.location.hash = '';
   });
 
-  it('shows the language/currency card without any enabling flag (52. tétel)', async () => {
+  it('shows the language/currency card without any enabling flag', async () => {
     renderPatient();
     expect(await screen.findByText('Dokumentum nyelve')).toBeInTheDocument();
     expect(screen.getByText('Pénznem')).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     ).toBeInTheDocument();
   });
 
-  it('a draft opened via "Új verzió" keeps the card editable (chips, no "nem módosítható" text, 52. tétel)', async () => {
+  it('a draft opened via "Új verzió" keeps the card editable (chips, no "nem módosítható" text)', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -105,7 +105,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     const patientNameEl = await screen.findByText('Kovács János');
     expect(window.location.hash).toBe('#/demo/tervek');
     const card = patientNameEl.closest('[data-patient]') as HTMLElement;
-    // 50. tétel óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
+    // A legfrissebb soron látható gomb, nem "⋯" menüpont.
     await user.click(within(card).getByRole('button', { name: 'Új verzió' }));
     // Kovács János demó tervének két fázisa van, mindkettőnek saját
     // keresője -- findAllBy, nem findBy (ami az egyértelműséget várná el).
@@ -118,7 +118,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
 
     expect(await screen.findByText('Dokumentum nyelve')).toBeInTheDocument();
     expect(screen.getByText('Pénznem')).toBeInTheDocument();
-    // A teljes piszkozat-életciklus alatt szerkeszthető (52. tétel) --
+    // A teljes piszkozat-életciklus alatt szerkeszthető --
     // korábban ez az útvonal volt az EGYETLEN, ahol a mai `locked` igazra
     // értékelődött volna ki egy draftra.
     expect(screen.getByRole('radio', { name: 'Deutsch' })).toBeInTheDocument();
@@ -126,7 +126,7 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
   });
 });
 
-describe('PatientPage -- 62. tétel: pénznemváltás nem törli a sorokat', () => {
+describe('PatientPage -- pénznemváltás nem törli a sorokat', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -192,7 +192,7 @@ describe('PatientPage -- 62. tétel: pénznemváltás nem törli a sorokat', () 
   });
 });
 
-describe('PatientPage -- 89. tétel: egyedi végösszeg/előleg pénznemenkénti állapota', () => {
+describe('PatientPage -- egyedi végösszeg/előleg pénznemenkénti állapota', () => {
   function makePlanNoSorok(overrides: Partial<Plan> = {}): Plan {
     return {
       schemaVersion: 1,
@@ -294,7 +294,7 @@ describe('PatientPage -- 89. tétel: egyedi végösszeg/előleg pénznemenkénti
   });
 });
 
-describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztett neveket', () => {
+describe('PatientPage -- nyelváltás megőrzi a kézzel szerkesztett neveket', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -367,7 +367,7 @@ describe('PatientPage -- backlog-3b: nyelváltás megőrzi a kézzel szerkesztet
   });
 });
 
-describe('PatientPage -- 65. tétel: nyelvváltás önmagában nem módosítja a nyelvi review-metaadatot', () => {
+describe('PatientPage -- nyelvváltás önmagában nem módosítja a nyelvi review-metaadatot', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -413,7 +413,7 @@ describe('PatientPage -- 65. tétel: nyelvváltás önmagában nem módosítja a
   });
 });
 
-describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leírást', () => {
+describe('PatientPage -- nyelváltás szinkronizálja a tétel-leírást', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -498,11 +498,11 @@ describe('PatientPage -- backlog-10: nyelváltás szinkronizálja a tétel-leír
   });
 });
 
-// backlog-40: a "Páciens adatlapja" eltérés-jelzés. A rész csak akkor renderelődik, ha a piszkozat
+// a "Páciens adatlapja" eltérés-jelzés. A rész csak akkor renderelődik, ha a piszkozat
 // patientDir-je ismert -- ezért itt közvetlenül a `dp:piszkozat`
 // kulcsba seedelünk, a TervWorkflowShell.test.tsx `seedActiveDraft`
 // mintáját követve, MIELŐTT a StorageProvider renderelne.
-describe('PatientPage -- backlog-40: páciens adatlapja kártya', () => {
+describe('PatientPage -- páciens adatlapja kártya', () => {
   function makePaciens(overrides: Partial<Paciens> = {}): Paciens {
     return {
       nev: 'Teszt Elek',
@@ -885,8 +885,8 @@ describe('PatientPage -- pótlás: csak az egyik helyen kitöltött mező', () =
   });
 });
 
-// 94. tétel: Másolás új tervbe -- páciens-identitás védőháló.
-describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
+// Másolás új tervbe -- páciens-identitás védőháló.
+describe('PatientPage -- páciens-identitás védőháló', () => {
   function makePaciens(overrides: Partial<Paciens> = {}): Paciens {
     return {
       nev: 'Teszt Elek',
@@ -1126,8 +1126,8 @@ describe('PatientPage -- 94. tétel: páciens-identitás védőháló', () => {
   });
 });
 
-// backlog-51: a lap hat, vizuálisan elkülönített szekcióra tagolódik.
-describe('PatientPage -- backlog-51: hat szekció', () => {
+// a lap hat, vizuálisan elkülönített szekcióra tagolódik.
+describe('PatientPage -- hat szekció', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1281,10 +1281,10 @@ describe('PatientPage -- Kezelőorvos szekció', () => {
   });
 });
 
-// backlog-51: a "Terv címe" mező -- vadonatúj lánchoz a `DraftMeta`-ban
+// a "Terv címe" mező -- vadonatúj lánchoz a `DraftMeta`-ban
 // él és a véglegesítéskor íródik ki (lásd PreviewPage.test.tsx), mentett
 // lánchoz azonnal ír a `storage.savePlanLabel`-lel.
-describe('PatientPage -- backlog-51: terv címe mező', () => {
+describe('PatientPage -- terv címe mező', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1764,7 +1764,7 @@ describe('PatientPage -- a nyelv- és pénznemváltás megerősítő gombja', ()
   }
 
   function seedDraft(fazisok: Fazis[]) {
-    // A `seedDraft` a 89. tétel blokk mintáját követi: árlista/beállítások
+    // A `seedDraft` a fenti `seedDraft` segédek mintáját követi: árlista/beállítások
     // előzetes seedelése nélkül a `DemoStorage.init()` "első futás" ága
     // elsöpörné a piszkozatot, mielőtt a betöltés elérné.
     localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
@@ -1831,7 +1831,7 @@ describe('PatientPage -- a nyelv- és pénznemváltás megerősítő gombja', ()
   });
 });
 
-// A 4. doctor-review-megállapítás (2026-09-05): a 47. tétel öröklése néma
+// A 4. doctor-review-megállapítás (2026-09-05): az öröklés néma
 // volt -- a doki nem látta, hogy egy "+ Új terv" miért adott Deutsch/EUR
 // tervet. A jelzés forrása az `AppState` `orokoltNyelv`/`orokoltPenznem`
 // tranziens mezője, amit a `copyPlanIntoDraft` negyedik paramétere állít.
@@ -1880,8 +1880,8 @@ describe('PatientPage -- örökölt nyelv/pénznem jelzése', () => {
   /**
    * `copyPlanIntoDraft` a valódi API-n át állítja az öröklés-jelzést -- a
    * `dp:piszkozat` seedelése (a fájl többi blokkjának mintája) enélkül nem
-   * elég, mert a jelzés SZÁNDÉKOSAN tranziens, nem perzisztálódik (a plan
-   * 4. döntése). Csak azután fut, hogy az `AppStateProvider` a "Betöltés…"
+   * elég, mert a jelzés SZÁNDÉKOSAN tranziens, nem perzisztálódik.
+   * Csak azután fut, hogy az `AppStateProvider` a "Betöltés…"
    * ágból kilépett -- a `value` addig `null`, a gyerekek (ez a komponens
    * is) nem renderelnek.
    */

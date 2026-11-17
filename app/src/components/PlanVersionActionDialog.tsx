@@ -33,14 +33,14 @@ export interface VerzioAkcioHiba {
   message: string;
   /** Alapértelmezett `'hiba'` (piros) -- a demó-eredetű "nincs mentett PDF" eset
    *  `'info'`-ként (semleges) kap jelzést, hogy ne mosódjon össze egy tényleges
-   *  hibával (103. tétel). */
+   *  hibával. */
   sulyossag?: 'hiba' | 'info';
 }
 
 /**
  * A "nincs mentett PDF" eset megosztott üzenete -- demó-eredetű verziónál
  * (`storage/seed/plans.ts` `seedVerzio()`) információs hangnem, mert ez a
- * demó-készlet elvárt korlátja, nem adathiba (103. tétel).
+ * demó-készlet elvárt korlátja, nem adathiba.
  */
 export function nincsMentettPdfHiba(ref: VersionRef, demoEredetu: boolean): VerzioAkcioHiba {
   return {

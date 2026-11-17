@@ -27,7 +27,7 @@
 //    sorelvalasztora valo. A keret `inset` box-shadow (index.css), tehat KET
 //    szomszedja van: kivul a szulofelulet, belul a kontroll sajat kitoltese
 //    (pl. egy `soft` gomb `accent-a3`/`a4`/`a5` washe) -- ez utobbi a
-//    szigorubb mertek, mert sotetebb, mint a lap hattere (K4).
+//    szigorubb mertek, mert sotetebb, mint a lap hattere.
 //
 // A tokennevek szandekosan szerepalapuak, nem szinnevek -- a korabbi
 // navy/sky nevek egy rebrandnel hazugsagga valtak volna.
@@ -63,7 +63,7 @@ export const t = {
   // #64748B 4.76:1 feheren, de csak 4.34:1 t.page-en -- ez utobbi bukott)
   uiLine: '#E2E8F0', // slate-200 -- CSAK diszito sorelvalasztora (tablasor, kartyaszel)
   uiLineStrong: '#CBD5E1', // slate-300 -- diszito, erosebb hajszalvonal
-  controlBorder: '#64748B', // slate-500, 3:1 folött minden szomszed ellen (K4: a
+  controlBorder: '#64748B', // slate-500, 3:1 folött minden szomszed ellen (a
   // regi #8896AB csak feheren 3.00:1, a tenyleges belso (soft-kitoltes) es
   // kulso (t.page) szomszedok ellen 2-3:1 volt) -- WCAG 1.4.11: minden
   // interaktiv kontroll kerete. Onallo token -- ne vond ossze `uiTextFaint`-tel,

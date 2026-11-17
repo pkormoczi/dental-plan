@@ -199,7 +199,7 @@ function KategoriaPanelBody({
             const sajatTetelek = tetelek.filter((x) => x.kategoriaId === k.id);
             // Aktív ÉS inaktív tétel is számít -- egy `aktiv: false` tétel
             // bármikor visszakapcsolható, tehát egy csak aktív tételek
-            // alapján "üresnek" ítélt kategória valójában nem az (8. döntés).
+            // alapján "üresnek" ítélt kategória valójában nem az.
             const ures = sajatTetelek.length === 0;
             const inaktiv = sajatTetelek.filter((x) => !x.aktiv).length;
 

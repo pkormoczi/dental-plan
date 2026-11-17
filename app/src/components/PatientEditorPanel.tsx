@@ -1,6 +1,6 @@
 // A páciens-törzsadat (paciens-adatok.json) szerkesztő panelje --
-// eredetileg a PaciensekPage.tsx helyi `PatientEditor`-a volt, backlog-30
-// (Páciens detail shell) emelte ide, majd a 38. tétel óta a
+// eredetileg a PaciensekPage.tsx helyi `PatientEditor`-a volt, a Páciens
+// detail shell emelte ide; ma a
 // PatientDetailPage.tsx "Páciens adatai" tabja az EGYETLEN hívási helye --
 // a PaciensekPage.tsx lista azóta tiszta navigációs lista. A
 // `PatientPage.tsx` "Személyes adatok" mezőelrendezését követi (közös

@@ -1,7 +1,7 @@
 // EGY páciens terv-lánc -> verzió fája, a hozzá tartozó akciókkal
 // (Új verzió / Másolás új tervbe / Megnézés / Letöltés / Új terv /
 // terv-címke szerkesztés). Eredetileg az OsszesTervSection.tsx soronkénti
-// (`.map(patients...)`) JSX-e volt -- backlog-30 (Páciens detail shell)
+// (`.map(patients...)`) JSX-e volt -- a Páciens detail shell
 // emelte ide, páciens-paraméteresre alakítva, mert mostantól KÉT hívó
 // használja: az OsszesTervSection.tsx lista (patiensenként egy példány) ÉS a
 // PatientDetailPage.tsx "Kezelési tervek" tabja (egy példány).
@@ -100,7 +100,7 @@ export interface PatientPlanChainsProps {
   versionsByPlan: Record<string, PlanVersion[]>;
   plansByVersion: Record<string, Plan>;
   totalsByVersion: Record<string, VersionTotal>;
-  /** Legalább egy terv-lánc vagy verzió listázása/betöltése hibázott (P1-2). */
+  /** Legalább egy terv-lánc vagy verzió listázása/betöltése hibázott. */
   unreadable: boolean;
   /**
    * A fejlécsor alakja, a hívó felület dönti el -- a komponens nem
@@ -135,13 +135,13 @@ export interface PatientPlanChainsProps {
   /**
    * Az EGYETLEN globális, mentetlen piszkozat -- KIZÁRÓLAG akkor
    * átadva, ha ehhez a `patient`-hez tartozik (a hívó már szűrt
-   * `sajatDraft()`-tal, `components/useAktivDraft.ts`, 46. tétel). A
+   * `sajatDraft()`-tal, `components/useAktivDraft.ts`). A
    * komponens nem ellenőrzi újra a hovatartozást, ugyanaz a doktrína, mint
    * a `plans`/`versionsByPlan` betöltésénél.
    */
   aktivDraft?: AktivDraft | null;
   /**
-   * planDir -> nyitva (46. tétel). Hiányzó kulcs = alapértelmezés
+   * planDir -> nyitva. Hiányzó kulcs = alapértelmezés
    * (csak a legfrissebb lánc, `rendezettLancok()[0]`, nyitva). Ha nincs
    * átadva (PatientDetailPage `embedded`), a komponens a saját, lokális
    * state-jében tartja a nyitottságot; ha VAN (OsszesTervSection `standalone`),
@@ -175,7 +175,7 @@ export default function PatientPlanChains({
 
   const standalone = header === 'standalone';
 
-  // Lánc-szintű összecsukás (46. tétel) -- FELVÁLTJA a
+  // Lánc-szintű összecsukás -- FELVÁLTJA a
   // korábbi, kizárólag `standalone`-ban élő páciens-szintű "N terv"
   // kapcsolót: az most már redundáns lenne a lánc-szintű toggle mellett,
   // mindkét hívón egyformán. Override-map, a régi `expandedOverride ?? false`
@@ -288,7 +288,7 @@ export default function PatientPlanChains({
   }
 
   /**
-   * "Ugrás a legfrissebb verzióra" (50. tétel) -- azonos oldalon
+   * "Ugrás a legfrissebb verzióra" -- azonos oldalon
    * belüli scroll+fókusz a lánc legfrissebb verziósorára, a MEGLÉVŐ
    * `data-plan={plan.dirName}` horgony felhasználásával (a lánc ilyenkor
    * MÁR nyitva van, a horgony a DOM-ban). A `DropdownMenu.Content`-en lent
@@ -349,7 +349,7 @@ export default function PatientPlanChains({
       : (plan.tervCim ?? ALAPERTELMEZETT_TERV_CIM);
   }
 
-  // Az aktív draft blokk kontextus-sora (6. döntés): "Új verzió — <lánc
+  // Az aktív draft blokk kontextus-sora: "Új verzió — <lánc
   // címke>", ha a piszkozat `tervId`-je egy MEGLÉVŐ lánccal egyezik,
   // egyébként "Új terv" (a `tervId` üres -- "Másolás új tervbe"/"Új terv"
   // eredménye).
@@ -388,7 +388,7 @@ export default function PatientPlanChains({
               ⚠ néhány verziója nem olvasható
             </Text>
           )}
-          {/* 46. tétel: a gomb akkor is megjelenik, ha a páciensnek nincs
+          {/* a gomb akkor is megjelenik, ha a páciensnek nincs
               még véglegesített terve, de VAN aktív, mentetlen piszkozata --
               a `planDir`/`versionDir` ilyenkor nem használt (a `ujTerv`
               dispatch a páciens ÉLŐ törzsadatával indít, nem egy konkrét
@@ -408,7 +408,7 @@ export default function PatientPlanChains({
               + Új terv
             </Button>
           )}
-          {/* Kereszt-link a páciens törzsadatára (backlog-28/backlog-30) --
+          {/* Kereszt-link a páciens törzsadatára --
               gray/ghost, hogy a hangsúly az "Új terv" akción maradjon: ez csak
               navigáció, nem terv-létrehozó. */}
           {standalone && (
@@ -469,7 +469,7 @@ export default function PatientPlanChains({
                 a margó "átüt" rajtuk); mb="2" 8px-re nyitja a cím és az
                 első verzió-sor közti rést -- így a cím egyértelműen a
                 verziók fejléceként olvasódik, nem újabb sorként. A lánc-
-                toggle és a végösszeg (46. tétel, 2. döntés) a Flex KÉT
+                toggle és a végösszeg a Flex KÉT
                 VÉGÉN áll -- a végösszeg CSAK csukott állapotban látszik,
                 nyitva redundáns lenne a legfrissebb verziósor azonos
                 értékével. */}
@@ -514,11 +514,11 @@ export default function PatientPlanChains({
                   </>
                 ) : (
                   <>
-                    {/* Lánc-fejléc toggle (46. tétel, 1./8. döntés): sima
+                    {/* Lánc-fejléc toggle: sima
                         `Button` `aria-expanded`/`aria-controls` párral, a
                         MEGLÉVŐ (mai, most törölt page-szintű) toggle
                         mintáján -- NEM fa-widget. A draft-jelző Badge a
-                        gombon BELÜL, saját onClick nélkül (5. döntés: nem
+                        gombon BELÜL, saját onClick nélkül (nem
                         kattintható külön, a kattintás célja a toggle marad;
                         a badge szövege ezért szándékosan a gomb accessible
                         name-ébe folyik). */}
@@ -614,7 +614,7 @@ export default function PatientPlanChains({
                     // láncon, ami a lánc-rendezésben megelőzné a tényleges
                     // legfrissebb verziót.
                     const isLegfrissebb = v.dirName === legfrissebb?.dirName;
-                    // "Legutóbbi" badge (46. tétel, 4. döntés): csak 2+
+                    // "Legutóbbi" badge: csak 2+
                     // verziós láncon -- egyverziós láncon funkciótlan dísz
                     // lenne (visszajelzés nélküli elem, app/src/CLAUDE.md tiltja).
                     const legutobbi = versions.length > 1 && isLegfrissebb;
@@ -670,7 +670,7 @@ export default function PatientPlanChains({
                                 total?.nyelv ?? 'hu',
                               )}
                             </Text>
-                            {/* 50. tétel: a legfrissebb soron két látható gomb --
+                            {/* a legfrissebb soron két látható gomb --
                                 elsődleges "Új verzió", másodlagos "Megnézés"
                                 (legfeljebb két látható gomb egy adatsoron). Egy
                                 historical soron NINCS látható gomb, csak a `⋯` --
@@ -934,8 +934,8 @@ export default function PatientPlanChains({
 }
 
 /**
- * Az aktív, mentetlen piszkozat blokkja a láncok FÖLÖTT (46. tétel, 6.
- * döntés) -- tétel-/fázisszám és előlegösszeg nélkül, üres
+ * Az aktív, mentetlen piszkozat blokkja a láncok FÖLÖTT --
+ * tétel-/fázisszám és előlegösszeg nélkül, üres
  * (sor nélküli) piszkozatnál `osszeg: null`. A `Card` egésze
  * kattintható (a `PatientTableRow.tsx` `closest('a')`-mintájának
  * `closest('button')`-párja, hogy a "Folytatás" gomb kattintása ne

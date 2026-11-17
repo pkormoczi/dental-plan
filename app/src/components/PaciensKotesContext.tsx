@@ -47,7 +47,7 @@ export function PaciensKotesProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     setBetolt(true);
     (async () => {
-      // Sosem dob (P1-2 minta): egy sikertelen listázás/feloldás a védelmet
+      // Sosem dob: egy sikertelen listázás/feloldás a védelmet
       // némán kikapcsolja, nem akasztja meg a workflow-t.
       const dir = await feloldPatientDir(storage, piszkozatPatientDir, plan.paciensId);
       let lista: PatientFolder[] = [];

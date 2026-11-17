@@ -254,7 +254,7 @@ describe('Home -- piszkozat-perzisztencia', () => {
     expect(await screen.findByText('Kezelések-oldal')).toBeInTheDocument();
   });
 
-  // 7. döntés: a Home EGÉSZSÉGES kártyáján az eldobás megerősítést kér
+  // a Home EGÉSZSÉGES kártyáján az eldobás megerősítést kér
   // (ellentétben a fenti, sérült-kártya megerősítés NÉLKÜLI gombjával).
   it('az egészséges kártya "Piszkozat elvetése" gombja megerősítést kér, elfogadás után a kártya eltűnik', async () => {
     seedPersistedDraft(makeDirtyPlan());
@@ -280,7 +280,7 @@ describe('Home -- legutóbbi páciensek', () => {
 
   // Adatvezérelt: a várt sorrendet/tartalmat magából a seedből
   // (`legutobbAktivPaciensek`) számolja ki, nem konkrét neveket hardkódol --
-  // így a demó-készlet bővítése (backlog-35 utáni, 22 páciensre bővített
+  // így a demó-készlet bővítése (22 páciensre bővített
   // seed) nem töri meg.
   it('a friss seeden a limitnek megfelelő recent sort mutat, a legutóbbi aktivitás szerint, aktivitás-címkével', async () => {
     const seeder = new DemoStorage();

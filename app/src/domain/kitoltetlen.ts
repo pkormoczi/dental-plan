@@ -39,7 +39,7 @@ export function kitoltetlenSorok(plan: Plan): KitoltetlenSor[] {
 }
 
 /**
- * PUHA figyelmeztetés (backlog-19): névvel ellátott, de 0 összegű sorok, terv
+ * PUHA figyelmeztetés: névvel ellátott, de 0 összegű sorok, terv
  * sorrendben. A névtelen sorokat a fenti `kitoltetlenSorok` kemény blokkja
  * fedi -- ez itt csak a MEGNEVEZETT, de elgépelés vagy elfelejtett ár miatt
  * 0 Ft-on maradt sorokat kapja el (pl. a gépel->Enter ciklus nulla
@@ -85,7 +85,7 @@ export function fogszamNelkuliSorok(plan: Plan, priceList: PriceList): string[] 
 }
 
 /**
- * KEMÉNY blokk (62. tétel): névvel ellátott sorok, amiknek a tétele
+ * KEMÉNY blokk: névvel ellátott sorok, amiknek a tétele
  * nincs beárazva a terv pénznemében (`nincsListaar()`, domain/penznemValtas.ts),
  * ÉS a doki még nem adott meg kézi ajánlati árat (`tenylegesEgysegar === 0`).
  * Szándékosan KEMÉNY, nem a `nullaOsszeguSorok` puha ágán -- egy ilyen sor

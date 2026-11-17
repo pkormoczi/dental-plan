@@ -50,7 +50,7 @@ export default function NewPlanPage() {
   const akciok = usePlanVersionActions({ onUjPaciens: openQuickCreate });
 
   // A "Vadonatúj páciens"/no-match ág mostantól a quick-create dialóguson át
-  // hoz létre valódi Patient-rekordot MÉG A TERV ELŐTT (backlog-36) --
+  // hoz létre valódi Patient-rekordot MÉG A TERV ELŐTT --
   // korábban `resetPlanDraft()` egyenesen egy üres draftra navigált, rekord
   // nélkül. Az `ujNev` a no-match opció begépelt szövege, a dialógus ezzel
   // előtöltve nyílik.

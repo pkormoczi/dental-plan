@@ -298,7 +298,7 @@ export default function PatientPage() {
           </Text>
         )}
 
-        {/* 94. tétel: a piszkozathoz kötött páciensmappa semleges jelzése --
+        {/* a piszkozathoz kötött páciensmappa semleges jelzése --
             FÜGGETLENÜL attól, ütközik-e a Név mező tartalma valakivel. A
             terv mindig ebbe a mappába, ennek a páciensnek az azonosító
             adatai (telefon/e-mail/lakcím/TAJ) mellé mentődik, a Név mező

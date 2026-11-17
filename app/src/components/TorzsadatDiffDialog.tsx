@@ -1,6 +1,6 @@
 // A páciens-törzsadat (paciens-adatok.json) és a terv-piszkozat
-// paciens-blokkja közötti mezőszintű összevető/szinkronizáló dialógus --
-// backlog-40. Radix Themes `Dialog`, NEM `AlertDialog`: a checkbox-táblázat
+// paciens-blokkja közötti mezőszintű összevető/szinkronizáló dialógus.
+// Radix Themes `Dialog`, NEM `AlertDialog`: a checkbox-táblázat
 // tényleges mezőválasztás, nem puszta megerősítés.
 //
 // HÁROM hívási móddal fut ugyanaz a komponens:
@@ -14,7 +14,7 @@
 //    továbblépését is jelenti -- innen az `onSkip`, ami a `onOpenChange`-
 //    en és a "Mégse" gombon is átveszi a vezérlést, lásd lent.
 //
-// Íráshiba (5. döntés) csak a draft→master irányban fordulhat elő
+// Íráshiba csak a draft→master irányban fordulhat elő
 // (master→draft egy szinkron `setPlan`, sosem dob) -- a dialógus NYITVA
 // marad, "Újra" újrapróbálja UGYANAZT az írást, a másik gomb (skip módban
 // "Folytatás írás nélkül", egyébként "Mégse") a draftot érintetlenül hagyva

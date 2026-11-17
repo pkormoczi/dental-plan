@@ -1,4 +1,4 @@
-// Sor <-> árlista ár-követés (backlog-61). A `mennyiseg.ts` mintáján
+// Sor <-> árlista ár-követés. A `mennyiseg.ts` mintáján
 // önálló, `Sor`-tudatos modul: a `nev.ts` a névfeloldás helye, itt az árra
 // vonatkozó, ugyanolyan szerepű komparátor/diagnosztika/patch-builder él.
 //
@@ -61,8 +61,8 @@ export function arFrissites(
  * Egy elfogadott `ArFrissites` sor-patchké alakítása. A `tenylegesEgysegar`-t
  * is átírja az új listaárra -- a refresh a MANUÁLIS felülírást (kedvezmény
  * vagy felár) törli, visszaáll a default-following állapotba (a
- * tervdokumentum 3. döntése, a mennyiség-⟳ reset-mintáján). Nevet és
- * leírást szándékosan nem érinti -- azok a 60. tétel reset-vezérlőihez
+ * mennyiség-⟳ reset-mintáján). Nevet és
+ * leírást szándékosan nem érinti -- azok a név-/leírás-reset vezérlőihez
  * tartoznak.
  */
 export function arFrissitesPatch(frissites: ArFrissites): Partial<Sor> {
@@ -104,7 +104,7 @@ export function arElteroSorok(plan: Plan, priceList: PriceList): ArElteroSorok {
  * A `plan` sorai közül azok frissítése a MAI árlistára, amik a forrásban
  * mindhárom dimenzióban (ár ÉS név ÉS leírás) követték az árlistát -- a
  * `frissDatummal()` (domain/ujVerzioDatum.ts) mintájú tiszta transzformáció,
- * a "Másolás új tervbe" default-following útjához (49. tétel 2. döntése).
+ * a "Másolás új tervbe" default-following útjához.
  * Minden más sor érintetlen marad. A `plan.arlistaVerzio` a
  * `priceList.arlistaVerzio`-ra áll.
  *

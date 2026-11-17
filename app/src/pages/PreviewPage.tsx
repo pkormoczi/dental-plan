@@ -87,12 +87,12 @@ export default function PreviewPage() {
   const savedRefRef = useRef<PlanRef | null>(null);
   const savedRef = searchParams.get('mentve') === '1' ? savedRefRef.current : null;
   const [mentettPdfHiba, setMentettPdfHiba] = useState<string | null>(null);
-  // backlog-51: a vadonatúj lánc "Terv adatai" lapon beírt címének
+  // a vadonatúj lánc "Terv adatai" lapon beírt címének
   // véglegesítéskori írási hibája -- KÜLÖN a `saveError`-tól, mert ekkor a
   // terv MÁR a lemezen van (lásd doFinalize). Csak a siker-képernyőn
   // jelenik meg, amber színnel, nem piros hibaként.
   const [cimkeHiba, setCimkeHiba] = useState<string | null>(null);
-  // backlog-69: a piszkozat best-effort törlésének (markPlanSaved)
+  // a piszkozat best-effort törlésének (markPlanSaved)
   // hibája -- KÜLÖN a `saveError`-tól, ugyanazon okból, mint a `cimkeHiba`:
   // a terv MÁR a lemezen van, ez legfeljebb egy elmaradt takarítás, nem
   // mentési hiba. Csak a siker-képernyőn jelenik meg, amber színnel.
@@ -108,7 +108,7 @@ export default function PreviewPage() {
   // amíg el nem készül, vagy ha a rajzolás meghiúsul (pl. jsdom teszt) --
   // ilyenkor a TervDocument a fogtérkép-blokkot egyszerűen kihagyja.
   const [toothChartPng, setToothChartPng] = useState<string | null>(null);
-  // P0-1: dupla kattintás elleni in-flight védelem -- a `saving` state
+  // dupla kattintás elleni in-flight védelem -- a `saving` state
   // önmagában nem elég, mert egy második kattintás a state frissülése
   // (render) ELŐTT is megtörténhet.
   const savingRef = useRef(false);
@@ -117,7 +117,7 @@ export default function PreviewPage() {
   const visszavonhatatlansagId = useId();
   const mappaId = useId();
 
-  // backlog-40 (6. döntés): a páciens törzsadata INFO-
+  // a páciens törzsadata INFO-
   // szintű, nem blokkoló jelzésként jelenik meg, ha eltér a terv `paciens`
   // pillanatképétől -- a `patientDirForMaster` a `doFinalize()` mastert
   // ÚJRAOLVasó lépéséhez is kell, nem csak a mount-időbeli
@@ -152,7 +152,7 @@ export default function PreviewPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storage, piszkozatPatientDir, plan.paciensId]);
 
-  // 77. tétel: a PDF-en megjelenő terv-cím -- a `TervCimField.tsx` (Terv
+  // a PDF-en megjelenő terv-cím -- a `TervCimField.tsx` (Terv
   // adatai lap) olvasási láncának mintáján: már mentett lánchoz a tárolt
   // `terv-cimke.json` értéke (`feloldTervCimke`, sosem dob), vadonatúj
   // lánchoz `null` (storage-hívás nélkül, üres `tervId`-nél). A
@@ -273,7 +273,7 @@ export default function PreviewPage() {
         }
         return { ...result, fellback: false };
       } catch (err) {
-        // P1-8 (05-hibakezeles #9): csak a VÁRT "nincs ilyen sablon" hibát
+        // Csak a VÁRT "nincs ilyen sablon" hibát
         // nyeljük el -- minden mást (pl. egy jövőbeli sérült bejegyzés)
         // továbbdobunk, hogy ne tűnjön el némán.
         if (err instanceof Error && err.message.startsWith('Nincs ')) {
@@ -520,7 +520,7 @@ export default function PreviewPage() {
       setMentettPdfHiba(null);
       navigate('/elonezet?mentve=1');
     } catch (err) {
-      // P0-1: korábban nem volt catch itt -- egy kvótahiba vagy a
+      // korábban nem volt catch itt -- egy kvótahiba vagy a
       // localStorage szinkron dobása némán elveszett, a doki egy inaktív
       // gombot látott, a terv pedig nem mentődött (az append-only elvet sértő, csonka
       // állapot nélkül, de a doki tudta nélkül).
@@ -654,7 +654,7 @@ export default function PreviewPage() {
         </Box>
         <Flex gap="3" justify="center" wrap="wrap">
           <Button onClick={startNewPlan}>Új terv indítása</Button>
-          {/* backlog-31: a MOST mentett páciens részletoldalára visz
+          {/* a MOST mentett páciens részletoldalára visz
               (Kezelési tervek tab), nem a globális listára -- a globális,
               több-pácienses áttekintő a DEMO oldal "Összes terv" fülén él
              , másodlagos a napi munkához képest. */}
@@ -670,11 +670,11 @@ export default function PreviewPage() {
     );
   }
 
-  // P0-3: a PDF frissítés alatt (offerOnly váltás, sablonbetöltés stb.) a
+  // a PDF frissítés alatt (offerOnly váltás, sablonbetöltés stb.) a
   // "Letöltés" korábban a MÉG a régi, teljes (nyilatkozat+aláírás oldalas)
   // PDF-et adta, ugyanazzal a fájlnévvel -- utólag megkülönböztethetetlenül.
   const pdfStale = pdfInstance.loading;
-  // P1-8: a `usePDF().error`-t korábban senki nem olvasta -- render-hiba
+  // a `usePDF().error`-t korábban senki nem olvasta -- render-hiba
   // esetén a gomb élőnek látszott, kattintásra némán nem történt semmi.
   const pdfError = pdfInstance.error;
   // A `usePDF()` deklarált típusa `error: string | null`, de a könyvtár

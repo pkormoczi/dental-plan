@@ -1,4 +1,4 @@
-// 101. tétel: a `szamlalo`-jelvény renderelése, KIEMELVE a `veglegesitesOr`
+// a `szamlalo`-jelvény renderelése, KIEMELVE a `veglegesitesOr`
 // tesztjétől -- ott csak a diagnózis adatszerkezete, itt a MEGJELENÍTÉS.
 // A mai integrációs lefedettség (`PreviewPage.test.tsx`) egyik esete sem
 // állít elő két nem üres `reszletek`-bucketet egyszerre, ezért az
@@ -141,7 +141,7 @@ describe('VeglegesitesChecklist -- szamlalo-jelvény', () => {
   });
 });
 
-// 105. tétel: a sikerképernyő az `onNavigate` prop nélkül hívja a
+// a sikerképernyő az `onNavigate` prop nélkül hívja a
 // komponenst -- a piszkozat ekkor már törölve, egy route-gomb ide nem
 // mutathat.
 describe('VeglegesitesChecklist -- onNavigate nélküli, csak-olvasó mód', () => {

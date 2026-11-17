@@ -396,7 +396,7 @@ interface SorTerv {
   nevOverride?: string;
   leirasSnapshot?: string;
   /**
-   * A `nevOverride` nyelvi review-metaadata (65. tétel) --
+   * A `nevOverride` nyelvi review-metaadata --
    * `domain/nyelviReview.ts`. A `sorFallback`-tól ELTÉRŐEN ez akkor is
    * látszik, ha a terv nyelve MAGYAR: a demó ezt mutatja meg (a
    * `sorFallback` `hu` terven mindig `null`-t ad).
@@ -724,7 +724,7 @@ const UJ_PACIENSEK: UjPaciensTerv[] = [
               },
               {
                 megnevezes: '3. kezelés — kontroll',
-                // 65. tétel: a doki tévedésből németül gépelte át a
+                // a doki tévedésből németül gépelte át a
                 // sor nevét egy MAGYAR terven -- ezt a `sorFallback`
                 // sosem jelezné (hu terven mindig `null`-t ad), a nyelvi
                 // review viszont igen.

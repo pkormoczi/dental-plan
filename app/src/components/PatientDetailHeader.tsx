@@ -1,4 +1,4 @@
-// A páciens-részletoldal (backlog-30) sticky, kompakt fejléce:
+// A páciens-részletoldal sticky, kompakt fejléce:
 // név + születési dátum + telefon, görgetéskor a lap tetején marad. Az app
 // ELSŐ `position: sticky` használata -- nincs mit reuse-olni, tiszta új
 // réteg. Az adatforrás a `megjelenitettTorzsadat()` (domain/paciensAdatok.ts)
@@ -15,7 +15,7 @@ export default function PatientDetailHeader({
   actions,
 }: {
   adatok: PatientMasterData;
-  /** Pl. a páciens-törlés `⋯` menüje (backlog-41) -- opcionális, hogy a komponens display-only maradjon a hívó nélkül. */
+  /** Pl. a páciens-törlés `⋯` menüje -- opcionális, hogy a komponens display-only maradjon a hívó nélkül. */
   actions?: ReactNode;
 }) {
   const dob = adatok.szuletesiIdo ? formatShortDate(adatok.szuletesiIdo, 'hu') : null;

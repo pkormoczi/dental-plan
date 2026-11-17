@@ -19,7 +19,7 @@ function renderSettings() {
   );
 }
 
-// 87. tétel: a véglegesítés-őr "nyilatkozat-placeholder" checklist-tétele
+// a véglegesítés-őr "nyilatkozat-placeholder" checklist-tétele
 // (`domain/veglegesitesOr.ts`) `/beallitasok?tab=nyomtatvanyok&nyelv=...`-ra
 // navigál -- a query paraméterek kizárólag a KEZDETI mountot vezérlik.
 function renderSettingsOnTemplatesTab(path = '/beallitasok?tab=nyomtatvanyok') {
@@ -131,7 +131,7 @@ describe('SettingsPage', () => {
       expect(await screen.findByRole('button', { name: 'Mentve ✓' })).toBeInTheDocument();
     });
 
-    // P0-8: korábban a "Mentve ✓" a tényleges mentési eredménytől függetlenül
+    // korábban a "Mentve ✓" a tényleges mentési eredménytől függetlenül
     // jelent meg (`void saveSettings(...)`, nem várt be semmit).
     it('does NOT show "Mentve ✓" when the save fails, and shows the error instead', async () => {
       const user = userEvent.setup();
@@ -441,7 +441,7 @@ describe('SettingsPage', () => {
   });
 
   describe('Egyéb', () => {
-    // 52. tétel: a `nemetEngedelyezve` funkciókapcsoló megszűnt -- a német
+    // a `nemetEngedelyezve` funkciókapcsoló megszűnt -- a német
     // tartalom készültsége blokk és az alapértelmezett nyelv váltó feltétel
     // nélkül, gate/checkbox nélkül látszik.
     it('a "német tartalom készültsége" blokk feltétel nélkül látszik, nincs engedélyező checkbox', async () => {
@@ -494,7 +494,7 @@ describe('SettingsPage', () => {
       expect(screen.getByText('nyilatkozat-hu-v1.md')).toBeInTheDocument();
     });
 
-    // 52. tétel: a tab nyelvváltója feltétel nélkül megjelenik -- a Deutsch
+    // a tab nyelvváltója feltétel nélkül megjelenik -- a Deutsch
     // chip váltás a német (AI-fordítású) szöveget mutatja, a nem mentett HU
     // piszkozat pedig visszaváltáskor megmarad.
     it('switching the tab language to Deutsch shows the DE seed text, HU draft survives switching back', async () => {

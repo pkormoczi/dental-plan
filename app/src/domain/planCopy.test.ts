@@ -113,7 +113,7 @@ describe('planUjPaciensselTervhez', () => {
     expect(uj.paciensId).toBe('pac1');
   });
 
-  // 47. tétel: a nyelv/pénznem-öröklés az `oroklott` paraméteren át
+  // a nyelv/pénznem-öröklés az `oroklott` paraméteren át
   // jut el a createBlankPlan()-be, nem a forrás `plan`-ből.
   it('az oroklott nyelvet/pénznemet veszi át, nem a forrás terv nyelvét/pénznemét', () => {
     const plan = makePlan(); // nyelv: 'de', penznem: 'EUR'
@@ -137,7 +137,7 @@ function makeTorzsadat(overrides: Partial<PatientMasterData> = {}): PatientMaste
   return { schemaVersion: 1, paciensId: 'pacT', ...paciens, ...overrides };
 }
 
-// backlog-28: planUjTorzsadattal a törzsadatból indít -- a
+// planUjTorzsadattal a törzsadatból indít -- a
 // planUjPaciensselTervhez párja, csak más forrásból.
 describe('planUjTorzsadattal', () => {
   it('a törzsadatból épített paciens blokkot és a paciensId-t viszi át, minden más a friss createBlankPlan() alapértéke', () => {
@@ -165,7 +165,7 @@ describe('planUjTorzsadattal', () => {
     expect(adatok.nev).toBe(eredetiNev);
   });
 
-  // 47. tétel: meglévő páciensnél az új lánc a legutóbb véglegesített terv
+  // meglévő páciensnél az új lánc a legutóbb véglegesített terv
   // nyelvét/pénznemét örökli, ne váltson csendben vissza a globális defaultra.
   it('az oroklott nyelvet/pénznemet veszi át', () => {
     const adatok = makeTorzsadat();
@@ -353,8 +353,7 @@ describe('planMasolatKent', () => {
   });
 });
 
-// backlog-61: a 49. tétel 2. döntésének (VÁRAKOZÓ) végrehajtása --
-// a `priceList` paraméter a default-following sorokat az aktuális
+// A `priceList` paraméter a default-following sorokat az aktuális
 // árlistára frissíti (`domain/arKoveti.ts` `frissArlistaval()`).
 describe('planMasolatKent — priceList paraméterrel', () => {
   const ujPriceList: PriceList = {

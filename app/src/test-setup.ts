@@ -76,7 +76,7 @@ Object.defineProperty(globalThis, 'ResizeObserver', {
 });
 
 // jsdom nem implementálja a `URL.createObjectURL`/`revokeObjectURL`-t -- a
-// Terv részletei lap beágyazott PDF-viewere (75. tétel) minden renderen
+// Terv részletei lap beágyazott PDF-viewere minden renderen
 // hívja a `usePlanPdfObjectUrl`-on át, tehát mindig telepített csonk kell.
 // Az egyes tesztek `vi.fn()`-nel felül tudják írni, ha a hívásokat magukat
 // kell vizsgálniuk.

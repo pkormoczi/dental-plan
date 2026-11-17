@@ -1,4 +1,4 @@
-// backlog-31: a terv-workflow héj (breadcrumb + stepper). A három
+// a terv-workflow héj (breadcrumb + stepper). A három
 // workflow-oldal saját tartalmát a PatientPage.test.tsx/
 // PlanEditorPage.test.tsx/PreviewPage.test.tsx már lefedi -- ez a fájl csak
 // az ÚJ, közös héjat teszteli (probe-route-okkal a `/terv`/`/elonezet`
@@ -59,7 +59,7 @@ async function seedActiveDraft(meta: { patientDir?: string; lastRoute?: string }
   );
 }
 
-// backlog-40: a lépés-elhagyási törzsadat-prompthoz egy piszkozat, aminek a
+// a lépés-elhagyási törzsadat-prompthoz egy piszkozat, aminek a
 // paciens blokkja/paciensId-ja explicit adott -- a `dp:piszkozat` kulcsba
 // írva, MIELŐTT a StorageProvider renderelne (lásd `seedActiveDraft` fenti
 // kommentjét).
@@ -217,7 +217,7 @@ describe('TervWorkflowShell', () => {
     expect(link).toHaveAttribute('href', '/paciensek/Teszt-Piroska_abc123');
   });
 
-  // 94. tétel: a Név mező szerkesztése ELŐTT rögzített kötés a breadcrumb
+  // a Név mező szerkesztése ELŐTT rögzített kötés a breadcrumb
   // felirata -- a link célja és felirata így garantáltan ugyanaz a rekord,
   // akkor is, ha a doki a Név mezőt egy másik páciens nevére írja át.
   it('a Név mező átírása után is a kötött páciens tárolt nevét mutatja', async () => {
@@ -265,12 +265,12 @@ describe('TervWorkflowShell', () => {
   });
 });
 
-// backlog-40 (3. döntés): a "Terv adatai" lépés ELŐRE elhagyásának
+// a "Terv adatai" lépés ELŐRE elhagyásának
 // ajánlat-jellegű elfogása -- kizárólag VALÓDI ütközésnél (mindkét oldalon
 // van érték, és eltér, lásd `domain/masterSnapshotDiff.ts` `valodiUtkozesek`),
 // és kizárólag a stepper Kezelések/Előnézet linkjein + a PatientPage "Tovább"
 // gombján, sosem a NavBar-on.
-describe('TervWorkflowShell -- backlog-40: lépés-elhagyási törzsadat-prompt', () => {
+describe('TervWorkflowShell -- lépés-elhagyási törzsadat-prompt', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -368,7 +368,7 @@ describe('TervWorkflowShell -- backlog-40: lépés-elhagyási törzsadat-prompt'
     expect(screen.queryByText('Kezelések-oldal')).toBeNull();
   });
 
-  // backlog-114: a törzsadat-hiány ág (a diff-ág testvére) ugyanezt a
+  // a törzsadat-hiány ág (a diff-ág testvére) ugyanezt a
   // "diffenként/eldöntésenként egyszer" memóriát kapja -- a Kovács János
   // demó-seed páciensnek nincs önálló törzsadata (fallback ág).
   async function seedKovacsNoMasterDraft() {

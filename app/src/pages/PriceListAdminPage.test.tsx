@@ -23,7 +23,7 @@ function renderAdmin() {
   );
 }
 
-// A 99. tétel óta az "Aktív"/"Gyakori tétel" aria-label a tételnévvel és az
+// Az "Aktív"/"Gyakori tétel" aria-label a tételnévvel és az
 // aktuális állapottal bővült (`<név> aktiválása`/`<név> inaktiválása` stb.) --
 // ez a két helper állapot-agnosztikusan találja meg ugyanazt a gombot, hogy a
 // tesztek ne törjenek el egy állapotváltáson (pl. inaktiválás utáni
@@ -152,13 +152,13 @@ describe('PriceListAdminPage', () => {
     await user.click(nameCell);
 
     // Nincs még EUR ára -- előbb hozzá kell adni (a mező euróban kér
-    // bevitelt, a tárolás centben történik -- P0-5).
+    // bevitelt, a tárolás centben történik).
     await user.click(screen.getByRole('button', { name: '+ EUR ár hozzáadása' }));
 
     const eurInput = screen.getByLabelText('EUR ár (€)');
     await user.clear(eurInput);
     await user.type(eurInput, '5000');
-    // A mező blur-re (nem minden leütésre) commitál -- P1-4/P0-7.
+    // A mező blur-re (nem minden leütésre) commitál.
     await user.tab();
 
     expect(await screen.findByText(/117 tételnél hiányzik az EUR ár/)).toBeInTheDocument();
@@ -168,7 +168,7 @@ describe('PriceListAdminPage', () => {
     expect(cbct.ar.EUR).toEqual({ tipus: 'FIX', ertek: 500000 });
   });
 
-  it('the EUR price field never lets a keystroke persist a truncated cent value under the "Nincs EUR ár" filter (P0-7)', async () => {
+  it('the EUR price field never lets a keystroke persist a truncated cent value under the "Nincs EUR ár" filter', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -237,7 +237,7 @@ describe('PriceListAdminPage', () => {
     expect(findItem(readPriceList(), 'CBCT').aktiv).toBe(true);
   });
 
-  it('the "Aktív" button label names the item and states the action, not the state (99. tétel)', async () => {
+  it('the "Aktív" button label names the item and states the action, not the state', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -252,7 +252,7 @@ describe('PriceListAdminPage', () => {
     expect(within(rowDiv).getByLabelText('CBCT aktiválása')).toBeInTheDocument();
   });
 
-  it('the "Gyakori tétel" button label names the item and states the action, not the state (99. tétel)', async () => {
+  it('the "Gyakori tétel" button label names the item and states the action, not the state', async () => {
     renderAdmin();
     const nameCell = await screen.findByText('CBCT');
     const rowDiv = nameCell.parentElement!;
@@ -264,7 +264,7 @@ describe('PriceListAdminPage', () => {
     expect(await within(rowDiv).findByLabelText('CBCT gyakori jelölés törlése')).toBeInTheDocument();
   });
 
-  it('two different rows have distinguishable "Aktív" labels, each carrying its own item name (99. tétel)', async () => {
+  it('two different rows have distinguishable "Aktív" labels, each carrying its own item name', async () => {
     renderAdmin();
 
     const aRow = (await screen.findByText('CBCT')).parentElement!;
@@ -351,7 +351,7 @@ describe('PriceListAdminPage', () => {
     expect(await screen.findByText(/118 \/ 118 tétel látszik/)).toBeInTheDocument();
   });
 
-  it('the "Fix → sávos" toggle converts BOTH the HUF and EUR price together (P0-2)', async () => {
+  it('the "Fix → sávos" toggle converts BOTH the HUF and EUR price together', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -676,7 +676,7 @@ describe('PriceListAdminPage', () => {
     });
   });
 
-  // backlog-7: az admin szűrője eddig CSAK a magyar néven illesztett, a
+  // az admin szűrője eddig CSAK a magyar néven illesztett, a
   // szerkesztő tétel-keresője viszont mindkét nyelven -- egy csak németül
   // megtalálható tétel itt egyáltalán nem jött elő.
   it('a keresés a német néven is talál (a sor továbbra is a magyar nevet mutatja)', async () => {
@@ -724,7 +724,7 @@ describe('PriceListAdminPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('backlog-21: bármelyik szerkesztés a mai napra állítja az arlistaVerziót (a lábléc audit-adatának forrása)', async () => {
+  it('bármelyik szerkesztés a mai napra állítja az arlistaVerziót (a lábléc audit-adatának forrása)', async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -737,7 +737,7 @@ describe('PriceListAdminPage', () => {
     expect(await screen.findByText(`verzió ${ma}`)).toBeInTheDocument();
   });
 
-  describe('Mentés-visszajelzés a soron (106. tétel)', () => {
+  describe('Mentés-visszajelzés a soron', () => {
     it('a nyitott sor egy mezőjének írása után a SOR (nem az ItemEditor) mutatja a "Mentve ✓"-t', async () => {
       renderAdmin();
 
@@ -1069,7 +1069,7 @@ describe('PriceListAdminPage', () => {
       expect(within(createdRow).getByText('nincs DE név')).toBeInTheDocument();
     });
 
-    it('a törlés gomb tiltva marad akkor is, ha egy kategória MINDEN tétele inaktív (8. döntés)', async () => {
+    it('a törlés gomb tiltva marad akkor is, ha egy kategória MINDEN tétele inaktív', async () => {
       const user = userEvent.setup();
       renderAdmin();
       await openCatPanel(user);

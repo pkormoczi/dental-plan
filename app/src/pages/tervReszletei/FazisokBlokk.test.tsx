@@ -263,10 +263,10 @@ describe('FazisokBlokk', () => {
   });
 });
 
-// 74. tétel: a `domain/sorElteres.ts` classifier semleges (gray) jelvénye a
+// a `domain/sorElteres.ts` classifier semleges (gray) jelvénye a
 // lezárt terven -- NEM a szerkesztő zöld/amber jelvénye (PlanEditorPage.test.tsx
 // fedi azt).
-describe('FazisokBlokk -- sor-szintű ár-eltérés jelvény (74. tétel)', () => {
+describe('FazisokBlokk -- sor-szintű ár-eltérés jelvény', () => {
   it('felárazott sor semleges "+N%" jelvényt kap', () => {
     renderFazisok([
       makeFazis({ sorok: [makeSor({ listaEgysegar: 10000, tenylegesEgysegar: 12000 })] }),

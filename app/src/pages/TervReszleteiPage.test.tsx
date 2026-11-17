@@ -1,4 +1,4 @@
-// A 71. tétel (Terv részletei, véglegesített verzió) alaptesztje. A `PatientDetailPage.test.tsx` saját
+// A Terv részletei (véglegesített verzió) alaptesztje. A `PatientDetailPage.test.tsx` saját
 // provider-stack + `MemoryRouter initialEntries` + probe-route mintáját
 // követi, valódi `DemoStorage`-zal.
 
@@ -200,7 +200,7 @@ describe('TervReszleteiPage', () => {
     });
   });
 
-  it('a fázisok blokk (72. tétel) a terv fázisait mutatja, a placeholder-szöveg eltűnt', async () => {
+  it('a fázisok blokk a terv fázisait mutatja, a placeholder-szöveg eltűnt', async () => {
     renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
     await screen.findByTestId('terv-reszletei-fejlec');
 
@@ -212,7 +212,7 @@ describe('TervReszleteiPage', () => {
     expect(screen.getByText('Fognyaki tömés')).toBeInTheDocument();
   });
 
-  it('74. tétel: a pénzügyi összesítés a MENTETT fizetendőt mutatja, a placeholder-szöveg eltűnt', async () => {
+  it('a pénzügyi összesítés a MENTETT fizetendőt mutatja, a placeholder-szöveg eltűnt', async () => {
     renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
     await screen.findByTestId('terv-reszletei-fejlec');
 
@@ -463,7 +463,7 @@ describe('TervReszleteiPage', () => {
     expect(screen.getByRole('button', { name: 'Megjelenítés' })).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('verzióváltás után a fogtérkép-panel újra csukva, üres kijelöléssel indul (key-alapú remount, 73. tétel)', async () => {
+  it('verzióváltás után a fogtérkép-panel újra csukva, üres kijelöléssel indul (key-alapú remount)', async () => {
     const user = userEvent.setup();
     renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
     await user.click(await screen.findByRole('button', { name: /Érintett fogak/ }));
@@ -513,7 +513,7 @@ describe('TervReszleteiPage', () => {
 
     const user = userEvent.setup();
     renderReszletek(reszleteiUrl(ref.patientDir, ref.planDir, ref.versionDir));
-    // A beágyazott viewer (75. tétel) a lap betöltésekor MAGA is hív egy
+    // A beágyazott viewer a lap betöltésekor MAGA is hív egy
     // `createObjectURL`-t -- ezt be kell várni és törölni a callOrder-ből,
     // különben versenyhelyzet dönti el, hogy a viewer saját hívása a
     // kattintás előtt vagy után fut le.
@@ -527,8 +527,8 @@ describe('TervReszleteiPage', () => {
     expect(callOrder).toEqual(['open', 'createObjectURL']);
   });
 
-  it('103. tétel: demó-eredetű, PDF nélküli verzión a "Megnyitás külön" letiltott', async () => {
-    // A seed-verziókhoz nincs mentett PDF -- a beágyazott viewer (75. tétel)
+  it('demó-eredetű, PDF nélküli verzión a "Megnyitás külön" letiltott', async () => {
+    // A seed-verziókhoz nincs mentett PDF -- a beágyazott viewer
     // ezt a demó-magyarázó szöveggel jelzi, a "Megnyitás külön" pedig
     // letiltott (mint a "Letöltés"), tehát az onClick-ágon lévő korábbi
     // hibaüzenet UI-ból nem érhető el.
@@ -538,7 +538,7 @@ describe('TervReszleteiPage', () => {
     expect(screen.getByRole('button', { name: 'Megnyitás külön' })).toBeDisabled();
   });
 
-  it('75. tétel: mentett PDF-fel rendelkező verzión a beágyazott viewer az object URL-re mutat', async () => {
+  it('mentett PDF-fel rendelkező verzión a beágyazott viewer az object URL-re mutat', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
     const ref = await seeder.savePlan(makePlan(), new Uint8Array([1, 2, 3]));
@@ -548,7 +548,7 @@ describe('TervReszleteiPage', () => {
     expect(iframe).toHaveAttribute('src', expect.stringMatching(/^blob:/));
   });
 
-  it('75. tétel: PDF nélküli verzión a viewer helyén üzenet, DE a fejléc/fázisok/összesítés továbbra is látszik', async () => {
+  it('PDF nélküli verzión a viewer helyén üzenet, DE a fejléc/fázisok/összesítés továbbra is látszik', async () => {
     renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
     // A PDF-slot `toltes` ága SEM a calloutot, SEM az iframe-et nem rendereli,
     // és a betöltés a fejléc megjelenése után indul -- a fejlécre várva a
@@ -561,7 +561,7 @@ describe('TervReszleteiPage', () => {
     expect(screen.getByText('1. kezelés — fogkő és tömés')).toBeInTheDocument();
   });
 
-  it('103. tétel: valódi (nem seed) hiányzó PDF-nél a figyelmeztető szöveg jelenik meg, letiltott gombokkal', async () => {
+  it('valódi (nem seed) hiányzó PDF-nél a figyelmeztető szöveg jelenik meg, letiltott gombokkal', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
     const ref = await seeder.savePlan(makePlan(), new Uint8Array([1, 2, 3]));
@@ -574,7 +574,7 @@ describe('TervReszleteiPage', () => {
     expect(screen.getByRole('button', { name: 'Letöltés' })).toBeDisabled();
   });
 
-  it('103. tétel: betöltési hibánál a "Megnyitás külön" kattintható marad, nem a hiányzó ág fut', async () => {
+  it('betöltési hibánál a "Megnyitás külön" kattintható marad, nem a hiányzó ág fut', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
     const ref = await seeder.savePlan(makePlan(), new Uint8Array([1, 2, 3]));
@@ -589,7 +589,7 @@ describe('TervReszleteiPage', () => {
     expect(screen.getByRole('button', { name: 'Megnyitás külön' })).toBeEnabled();
   });
 
-  it('75. tétel: a "Letöltés" link a meglévő fájlnév-konvenció szerinti download attribútumot kapja', async () => {
+  it('a "Letöltés" link a meglévő fájlnév-konvenció szerinti download attribútumot kapja', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
     const ref = await seeder.savePlan(makePlan(), new Uint8Array([1, 2, 3]));
@@ -605,7 +605,7 @@ describe('TervReszleteiPage', () => {
     );
   });
 
-  it('75. tétel: verzióváltáskor a korábbi verzió object URL-je felszabadul', async () => {
+  it('verzióváltáskor a korábbi verzió object URL-je felszabadul', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
     const refV1 = await seeder.savePlan(makePlan(), new Uint8Array([1]));

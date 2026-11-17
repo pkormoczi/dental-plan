@@ -1,5 +1,4 @@
-// A páciens master <-> terv-piszkozat mezőszintű összevető dialógus --
-// backlog-40.
+// A páciens master <-> terv-piszkozat mezőszintű összevető dialógus.
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

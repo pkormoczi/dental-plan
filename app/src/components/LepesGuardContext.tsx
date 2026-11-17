@@ -1,4 +1,4 @@
-// Terv-workflow "lépés elhagyása" ajánlat -- backlog-40 (3. döntés).
+// Terv-workflow "lépés elhagyása" ajánlat.
 // KÜLÖN mechanizmus a `NavGuardContext`-től: az "van
 // nem mentett módosítás -> elvetnéd?" boolean nem illik ide, a terv-draft
 // autosave-el -- itt egy AJÁNLAT hangzik el (frissítenéd a
@@ -33,7 +33,7 @@ export type LepesHandler = (proceed: () => void) => boolean;
 export interface LepesGuardValue {
   kerLepesValtas: (proceed: () => void) => void;
   regisztralLepesHandler: (handler: LepesHandler | null) => void;
-  /** A legutóbb elutasított diff azonosítója (backlog-40, `domain/masterSnapshotDiff.ts` `diffAzonosito`) -- `null`, ha nincs ilyen. */
+  /** A legutóbb elutasított diff azonosítója (`domain/masterSnapshotDiff.ts` `diffAzonosito`) -- `null`, ha nincs ilyen. */
   elutasitottDiffId: string | null;
   setElutasitottDiffId: (id: string | null) => void;
   /** Igaz, ha a doki már döntött (kihagyta vagy létrehozta) a törzsadat-hiány ág "Törzsadat létrehozása" ajánlatáról ezen a piszkozaton -- ellentétben az `elutasitottDiffId`-vel nincs megkülönböztetendő tartalma, a törzsadat-hiány bináris állapot. */

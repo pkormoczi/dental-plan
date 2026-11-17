@@ -49,7 +49,7 @@ export interface VeglegesitesChecklistProps {
   csekklista: VeglegesitesCsekklista;
   /**
    * Elhagyva egyetlen tétel route-gombja sem jelenik meg -- a sikerképernyő
-   * (105. tétel) ezt a csak-olvasó módot használja: a piszkozat ekkor már
+   * ezt a csak-olvasó módot használja: a piszkozat ekkor már
    * törölve van, egy "Vissza a szerkesztőbe" gomb nem a most mentett
    * verzióba, hanem egy üres piszkozatba vinne.
    */
@@ -121,7 +121,7 @@ export function VeglegesitesChecklist({
                   {ROUTE_GOMB_FELIRAT[tetel.route]}
                 </Button>
               )}
-              {/* 65. tétel: a guided review indítása -- a session-t a
+              {/* a guided review indítása -- a session-t a
                   `NyelviReviewContext` tartja, a `NyelviReviewBar.tsx` viszi
                   a szerkesztőbe a dokit. */}
               {tetel.id === 'nyelvi-review' && nyelviReviewAction && (

@@ -98,7 +98,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
           missing.map(async (base) => {
             const { name, body } = await storage.loadLatestTemplateByBase(base);
             const text = stripMarkdownHeading(body);
-            // Néma visszaállítás (4. döntés): ha van cache-elt piszkozat
+            // Néma visszaállítás: ha van cache-elt piszkozat
             // ehhez a base-hez, az kerül a piszkozat-oldalra -- a saved
             // oldal marad a ténylegesen tárolt szöveg, hogy a meglévő "Nem
             // mentett módosítás" felirat (useDirtyDraft dirty-je)
@@ -152,7 +152,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
   }
 
   async function handleSaveTemplates() {
-    // 5. döntés: dupla-kattintás elleni zár, lásd a `templateSavingRef` fenti
+    // dupla-kattintás elleni zár, lásd a `templateSavingRef` fenti
     // kommentjét -- a `disabled` prop önmagában nem elég.
     if (templateSavingRef.current) return;
     templateSavingRef.current = true;
@@ -171,7 +171,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
             const fullBody = `# ${heading}\n\n${text.trim()}\n`;
             nameUpdates[base] = await storage.saveTemplate(base, fullBody);
             textUpdates[base] = text;
-            // Törlés kizárólag sikeres mentéskor, base-enként (4. döntés).
+            // Törlés kizárólag sikeres mentéskor, base-enként.
             templateDraftCache.remove(base);
           }
           setTemplateNames((prev) => ({ ...prev, ...nameUpdates }));

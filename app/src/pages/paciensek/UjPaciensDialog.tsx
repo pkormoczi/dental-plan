@@ -1,5 +1,4 @@
-// Új páciens felvitele terv nélkül (backlog-28, 6. döntés; backlog-36
-// -- mindkét belépési pontot ez a közös dialógus szolgálja:
+// Új páciens felvitele terv nélkül (mindkét belépési pontot ez a közös dialógus szolgálja:
 // `PaciensekPage.tsx` "+ Új páciens" ÉS a `NewPlanPage.tsx` "+ Új páciens"/
 // no-match ága). `priceListAdmin/UjTetelDialog.tsx` mintája: csak
 // a kötelező névre kérdez kötelezően, a többi (elérhetőség, TAJ, kiskorú

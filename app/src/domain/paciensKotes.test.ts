@@ -1,4 +1,4 @@
-// 94. tétel: Másolás új tervbe -- páciens-identitás védőháló.
+// Másolás új tervbe -- páciens-identitás védőháló.
 
 import { describe, expect, it } from 'vitest';
 import { paciensKotes } from './paciensKotes';

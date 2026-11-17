@@ -1,4 +1,4 @@
-// Futásidejű alak-/típusvalidáció a JSON betöltési határokon (P1-6).
+// Futásidejű alak-/típusvalidáció a JSON betöltési határokon.
 //
 // Eddig az EGYETLEN futásidejű ellenőrzés a `schemaVersion` felső korlátja
 // volt (schema.ts) -- egy sérült/kézzel piszkált terv.json/arlista.json/

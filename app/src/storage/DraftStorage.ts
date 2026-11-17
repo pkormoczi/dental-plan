@@ -23,7 +23,7 @@ export interface DraftMeta {
   /** Az utolsó workflow-route, amit a doki meglátogatott ezzel a piszkozattal. */
   lastRoute?: WorkflowRoute;
   /**
-   * A "Terv adatai" lap cím mezőjébe beírt érték (backlog-51) -- NEM a
+   * A "Terv adatai" lap cím mezőjébe beírt érték -- NEM a
    * terv tartalma, a cím a `terv-cimke.json`-ban él, ez csak a beírt
    * érték túlélje a `/paciens` -> `/terv` -> `/elonezet` navigációt. Az üres
    * string VALÓDI érték (a doki kiürítette a mezőt); `undefined` azt

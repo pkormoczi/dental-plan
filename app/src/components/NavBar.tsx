@@ -7,7 +7,7 @@ import logoUrl from '../assets/logo.png';
 
 // Végleges öt tételes fő navigáció -- ez a forrásigazság az IA-ra. A
 // korábban itt élt négy átmeneti workflow-link (Páciens/Terv
-// szerkesztő/Előnézet/Korábbi tervek) a terv-workflow héj (backlog-31)
+// szerkesztő/Előnézet/Korábbi tervek) a terv-workflow héj
 // elkészültével megszűnt --
 // a szerepüket a `TervWorkflowShell` breadcrumb+stepperje vette át.
 const FO_LINKS: Array<{ to: string; label: string }> = [

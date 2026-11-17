@@ -48,7 +48,7 @@ describe('NumberField', () => {
     expect(onCommit).toHaveBeenCalledWith(250);
   });
 
-  it('P0-4: an emptied field reverts to the last known value instead of committing 0', async () => {
+  it('an emptied field reverts to the last known value instead of committing 0', async () => {
     const user = userEvent.setup();
     const onCommit = vi.fn();
     render(<NumberField value={100} penz={false} onCommit={onCommit} />);
@@ -90,7 +90,7 @@ describe('NumberField', () => {
     expect(onCommit).not.toHaveBeenCalled();
   });
 
-  it('P0-5: unit="EUR" displays euros but commits cents', async () => {
+  it('unit="EUR" displays euros but commits cents', async () => {
     const user = userEvent.setup();
     const onCommit = vi.fn();
     render(<NumberField value={82500} onCommit={onCommit} penz unit="EUR" />);

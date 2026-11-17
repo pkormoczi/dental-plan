@@ -1,4 +1,4 @@
-// DEMO oldal -- backlog-29 (C1 feloldás): a
+// DEMO oldal: a
 // fejlesztési/demonstrációs felület egy top-level menüpont alá gyűjtve,
 // elkülönítve az üzleti workflow-tól -- ide költözött a korábban önálló
 // Filerendszer nézet és a Kezdőlapról levett Funkciólista/Változásnapló

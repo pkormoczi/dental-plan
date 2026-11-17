@@ -76,7 +76,7 @@ export function savosHatarForditott(ar: Ar | null | undefined): boolean {
 
 /**
  * Az EUR ár admin-mezőit euróban (nem centben) jelenítjük meg -- a
- * P0-5 találat pont az volt, hogy a doki centet gépel euró helyett.
+ * korábbi hiba pont az volt, hogy a doki centet gépel euró helyett.
  * `parseEuroInput`/`formatCentForInput` a `NumberField` `unit="EUR"`
  * módjának a fordítópárja: a tárolás VÁLTOZATLANUL cent marad
  * (lásd app/src/domain/CLAUDE.md), csak a beviteli mező mértékegysége más.

@@ -60,7 +60,7 @@ describe('legfrissebbVeglegesVerzio', () => {
     expect(legfrissebbVeglegesVerzio('a', versions, plansByVersion)).toEqual(version('v2', '2026-08-01', 2));
   });
 
-  // P1-2 mintája: egy sérült/olvashatatlan verzió (nincs a plansByVersion-ben)
+  // Egy sérült/olvashatatlan verzió (nincs a plansByVersion-ben)
   // best-effort VEGLEGES-nek számít, nem dobja csendben ki a láncot.
   it('treats an unreadable version (missing from plansByVersion) as best-effort VEGLEGES', () => {
     const versions = [version('v1', '2026-08-01', 1)];

@@ -2,7 +2,7 @@
 // prezentációs (nincs storage-/router-/AppState-függősége), ezért önállóan
 // renderelhető `<Theme>` alatt, primitív propokkal. A tényleges autosave-
 // időzítést és a piszkozat-eldobás storage-huzalozását a
-// `PlanEditorPage.test.tsx` "backlog-32: piszkozat-mentés jelzés és
+// `PlanEditorPage.test.tsx` "piszkozat-mentés jelzés és
 // eldobás" leírása fedi teljes lapon át.
 
 import { render, screen } from '@testing-library/react';

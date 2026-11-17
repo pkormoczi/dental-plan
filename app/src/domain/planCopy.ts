@@ -36,7 +36,7 @@ export function planUjPaciensselTervhez(
 }
 
 /**
- * "Új terv" (páciensszintű), a lezárt páciens-adatok.json-ból (backlog-28)
+ * "Új terv" (páciensszintű), a lezárt páciens-adatok.json-ból
  * -- a `planUjPaciensselTervhez` párja, de a forrás nem egy korábbi
  * `Plan.paciens` pillanatkép, hanem az élő törzsadat. A hívó dönti el,
  * melyiket használja (`domain/paciensAdatok.ts` `megjelenitettTorzsadat`
@@ -72,7 +72,7 @@ export function planUjTorzsadattal(
  * mentett terv fájl-igazsága, nem a most keletkező piszkozaté.
  *
  * Az opcionális `priceList` -- ha a hívó átadja -- a `frissArlistaval()`-t
- * (domain/arKoveti.ts, backlog-61) futtatja a fázisokon: azok a
+ * (domain/arKoveti.ts) futtatja a fázisokon: azok a
  * sorok, amik a forrásban PONTOSAN követték az akkori árlistát (ár ÉS név
  * ÉS leírás egyaránt), az AKTUÁLIS árlistára frissülnek, a kézzel felülírt
  * sorok érintetlenek maradnak; a másolat `arlistaVerzio`-ja ilyenkor az

@@ -47,7 +47,7 @@ describe('createBlankPlan', () => {
     expect(plan.penznem).toBe('HUF');
   });
 
-  // 47. tétel: egy meglévő páciens legutóbb véglegesített tervéből
+  // egy meglévő páciens legutóbb véglegesített tervéből
   // örökölt nyelv/pénznem felülírja a globális alapértéket.
   it('örökölt nyelv/pénznem érvényesül a globális alapérték helyett', () => {
     const plan = createBlankPlan(settings, priceList, { nyelv: 'de', penznem: 'EUR' });

@@ -53,7 +53,7 @@ export function seedWithNoEurPrices() {
 /**
  * ÉRINTETLEN árlista -- a `seedWithNoEurPrices`-tól eltérően itt minden
  * tételnek megvan az EUR ára, hogy egy EUR pénznemű terv szerkesztőjében
- * ténylegesen fel lehessen venni beárazott tételt (backlog-5).
+ * ténylegesen fel lehessen venni beárazott tételt.
  */
 export function seedWithIntactPriceList() {
   localStorage.setItem('dp:arlista.json', JSON.stringify(seedPriceList));
@@ -62,7 +62,7 @@ export function seedWithIntactPriceList() {
 
 /**
  * Egy piszkozat, aminek van egy "Fogeltávolítás" (t041, mai HUF ára 25000)
- * sora, elavult listaárral (20000) -- a backlog-61 ár-frissítés tesztjeihez.
+ * sora, elavult listaárral (20000) -- az ár-frissítés tesztjeihez.
  * Az érintetlen árlista/beállítás mellé, a DraftStorage `dp:piszkozat`
  * rekord-alakjában (DemoDraftStorage.ts `save()` mintája), MIELŐTT a
  * StorageProvider renderelne.

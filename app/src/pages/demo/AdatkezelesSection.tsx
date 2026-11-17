@@ -44,7 +44,7 @@ export default function AdatkezelesSection() {
     setError(null);
     try {
       resetDemoData();
-      // P0-6: korábban itt állt meg a reset -- a localStorage frissült, de
+      // korábban itt állt meg a reset -- a localStorage frissült, de
       // az AppState memóriabeli settings/priceList/plan state-je nem, így a
       // következő mentés csendben visszaírta a régi állapotot a friss seed
       // fölé. A "Visszaállítva ✓" csak akkor jelenik meg, ha ez is lefutott.

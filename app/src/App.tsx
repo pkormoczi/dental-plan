@@ -33,10 +33,10 @@ export default function App() {
 
     // `accentColor="brown"` ellenére a `solid` Button és a Select kiemelt sora
     // majdnem fekete (`ink`): a barna step-9 fehér felirattal 3,53:1 volt, az
-    // accent-aliast `index.css` írja felül (K2) -- ne itt keresd.
+    // accent-aliast `index.css` írja felül -- ne itt keresd.
     <Theme accentColor="brown" grayColor="slate" radius="small" scaling="95%">
       {/* Legkívül -- ez a StorageProvider/AppStateProvider betöltési hibáit is
-          elkapja (P1-1), nem csak a lapok render-idejű kivételeit. */}
+          elkapja, nem csak a lapok render-idejű kivételeit. */}
       <ErrorBoundary>
         <StorageProvider>
           <AppStateProvider>
@@ -56,7 +56,7 @@ export default function App() {
                       <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/uj-terv" element={<NewPlanPage />} />
-                        {/* Terv-workflow héj (backlog-31) -- az app első
+                        {/* Terv-workflow héj -- az app első
                             layout-route-ja: a breadcrumb+stepper a három lépés
                             köré épül, az Outlet rendereli a tényleges oldalt. */}
                         <Route element={<TervWorkflowShell />}>

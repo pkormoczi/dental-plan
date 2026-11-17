@@ -310,10 +310,10 @@ describe('PreviewPage -- hiányzó/nem aktív kezelőorvos kemény blokk', () =>
   );
 });
 
-// 94. tétel: Másolás új tervbe -- páciens-identitás védőháló. A beírt Név
+// Másolás új tervbe -- páciens-identitás védőháló. A beírt Név
 // egy MÁSIK, létező páciensre pontosan illő egyezése KEMÉNY blokk -- külön
 // az ÁLTALÁNOS, info-szintű `torzsadat-elteres` tételtől.
-describe('PreviewPage -- 94. tétel: névütközés kemény blokkja', () => {
+describe('PreviewPage -- névütközés kemény blokkja', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -422,9 +422,9 @@ describe('PreviewPage -- 94. tétel: névütközés kemény blokkja', () => {
   );
 });
 
-// 62. tétel: egy a terv pénznemében beárazatlan, kézi árat sem kapott
+// egy a terv pénznemében beárazatlan, kézi árat sem kapott
 // sor KEMÉNY blokk -- lásd domain/kitoltetlen.ts `araztalanSorok()`.
-describe('PreviewPage -- 62. tétel: beárazatlan sor kemény véglegesítés-blokkja', () => {
+describe('PreviewPage -- beárazatlan sor kemény véglegesítés-blokkja', () => {
   function seedWithNoEurPriceItem() {
     const custom = {
       ...seedPriceList,
@@ -549,7 +549,7 @@ describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => 
       await waitFor(() => expect(search).toHaveValue(''));
 
       // A piszkozat itt már perzisztálva van -- az író effekt debounce
-      // nélkül fut (3. döntés).
+      // nélkül fut.
       await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
 
       await user.click(screen.getByRole('button', { name: 'Előnézet' }));
@@ -568,12 +568,12 @@ describe('PreviewPage -- piszkozat törlése sikeres véglegesítéskor', () => 
   );
 });
 
-// backlog-69: a tartós mentés (savePlan+loadPlan) és a piszkozat
+// a tartós mentés (savePlan+loadPlan) és a piszkozat
 // best-effort takarítása (markPlanSaved -> drafts.clear()) két külön
 // hibazóna -- egy sikeres mentés utáni takarítás-hiba a doki szemszögéből
 // SOHA nem "A mentés nem sikerült", legfeljebb egy halk amber jelzés a
 // siker-képernyőn (lásd PreviewPage.tsx doFinalize()).
-describe('PreviewPage -- backlog-69: piszkozat-törlés hibája nem hiúsítja meg a mentést', () => {
+describe('PreviewPage -- piszkozat-törlés hibája nem hiúsítja meg a mentést', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -660,11 +660,11 @@ describe('PreviewPage -- backlog-69: piszkozat-törlés hibája nem hiúsítja m
   );
 });
 
-// backlog-51: a "Terv adatai" lap cím mezőjének (`TervCimField`) két
+// a "Terv adatai" lap cím mezőjének (`TervCimField`) két
 // írási útvonala -- vadonatúj lánchoz a `doFinalize()` írja ki a
 // `DraftMeta.tervCim`-et, mentett lánchoz ez a második `savePlanLabel` hívás
 // SOSEM fut (a cím már korábban, a lapon íródott).
-describe('PreviewPage -- backlog-51: terv címe véglegesítéskor', () => {
+describe('PreviewPage -- terv címe véglegesítéskor', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1055,7 +1055,7 @@ describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
         await screen.findByText(/A Nyilatkozat szövege nincs kitöltve ezen a nyelven/),
       ).toBeInTheDocument();
       // Mindkét seed DE sablon placeholder -- a fizetési feltételek a
-      // meglévő sárga fallback-Callouton át is jelez (2. döntés).
+      // meglévő sárga fallback-Callouton át is jelez.
       expect(
         screen.getByText(/A nyomtatvány szövegei nincsenek kitöltve a terv nyelvén/),
       ).toBeInTheDocument();
@@ -1063,7 +1063,7 @@ describe('PreviewPage -- nyilatkozat placeholder kemény zár', () => {
     20000,
   );
 
-  // 87. tétel -- a doki egyszerűen kiürítette a nyilatkozat szövegét
+  // A doki egyszerűen kiürítette a nyilatkozat szövegét
   // (a szerkesztő mentéskor mindig kiírja a "# Cím" sort, tehát a törzs
   // sosem csupasz üres string, csak a címsor levágása UTÁN az).
   it(
@@ -1166,7 +1166,7 @@ describe('PreviewPage -- csak a fizetési feltételek placeholder', () => {
   );
 });
 
-// 113. tétel: a "sablon nem érhető el a megfelelő nyelven" (HU-visszaesés)
+// a "sablon nem érhető el a megfelelő nyelven" (HU-visszaesés)
 // jelzés csak akkor jár, ha a magyar tartalék ténylegesen a nyomtatványra
 // kerül -- a mai seeddel a Garancia mindkét nyelven placeholder
 // (storage/seed/templates.ts), tehát a szakasz a "kimaradó szakasz" tétellel
@@ -1226,7 +1226,7 @@ function seedWithCsomagItem() {
 
 // Hiányzó tétel-leírás: PUHA megerősítő lépés, nem kemény
 // blokk -- a doki tudatosan átugorhatja és véglegesíthet leírás nélkül is.
-describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lépés', () => {
+describe('PreviewPage -- hiányzó csomag-leírás megerősítő lépés', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1309,13 +1309,13 @@ describe('PreviewPage -- backlog-10: hiányzó csomag-leírás megerősítő lé
   );
 });
 
-// backlog-19: névvel ellátott, de 0 Ft-os sor -- PUHA csekklista-tétel
+// névvel ellátott, de 0 Ft-os sor -- PUHA csekklista-tétel
 //, a gomb megnyomása előtt is látszik, de nem blokkol (a 0 ár lehet
 // szándékos, pl. ingyenes kontroll). A gépel->0 találat->Enter úton felvett egyedi sor
-// ("Érzéstelenítés", ugyanaz a minta, mint PlanEditorPage.test.tsx backlog-3
+// ("Érzéstelenítés", ugyanaz a minta, mint PlanEditorPage.test.tsx egyedi-sor
 // tesztje) 0 Ft kezdőértékkel jön létre -- ez a fantomsor-eset, amit a tétel
 // megfog.
-describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () => {
+describe('PreviewPage -- 0 Ft-os sorok megerősítő lépése', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1410,10 +1410,10 @@ describe('PreviewPage -- backlog-19: 0 Ft-os sorok megerősítő lépése', () =
   );
 });
 
-// backlog-40 (6. döntés): a páciens törzsadata és a terv
+// a páciens törzsadata és a terv
 // `paciens` pillanatképe közötti eltérés INFO-szintű, nem blokkoló sorként
 // jelenik meg -- a véglegesítés önmagában nem kényszerít szinkronizálást.
-describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
+describe('PreviewPage -- páciens törzsadata info-sáv', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1504,11 +1504,11 @@ describe('PreviewPage -- backlog-40: páciens törzsadata info-sáv', () => {
   );
 });
 
-// 105. tétel: a sikerképernyő a GOMBNYOMÁSKORI puha/info figyelmeztetéseket
+// a sikerképernyő a GOMBNYOMÁSKORI puha/info figyelmeztetéseket
 // sorolja fel -- a lista a mai (mentés előtti) csekklista `soft`+`info`
 // tételeivel egyezik meg, de gombok nélkül, mert a piszkozat ekkor már
 // törölve van.
-describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
+describe('PreviewPage -- sikerképernyő visszatekintés', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1592,7 +1592,7 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
     'figyelmeztetés nélküli terv sikerképernyőjén nincs bevezető sor és nincs üres-állapot szöveg sem',
     async () => {
       const user = userEvent.setup();
-      // A garancia HU seed-szövege ma is placeholder (24. tétel, adattisztítás
+      // A garancia HU seed-szövege ma is placeholder (adattisztítás
       // alatt) -- egy valódi szöveg kell, különben a "kimaradó szakasz" puha
       // tétel a minden más szempontból tiszta tervnél is fennállna.
       // Egy üres localStorage-nál a DemoStorage.init() a teljes seedet
@@ -1665,7 +1665,7 @@ describe('PreviewPage -- 105. tétel: sikerképernyő visszatekintés', () => {
   );
 });
 
-// backlog-20: a lényegi sanitizálás/előtag-logika a
+// a lényegi sanitizálás/előtag-logika a
 // storage/paths.test.ts `buildDownloadFileName`-jét fedi -- itt csak azt,
 // hogy a "Letöltés" link ténylegesen az ő kimenetét használja.
 describe('PreviewPage -- letöltési fájlnév', () => {
@@ -1751,7 +1751,7 @@ describe('PreviewPage -- letöltési fájlnév', () => {
 // A "Csak ajánlat" a `Plan.csakAjanlat` mezője, nem helyi React
 // state -- navigáció oda-vissza megőrzi, és a mentett terv.json is
 // tükrözi a ténylegesen kiadott PDF-et.
-describe('PreviewPage -- backlog-70: "Csak ajánlat" mező perzisztencia és véglegesített érték', () => {
+describe('PreviewPage -- "Csak ajánlat" mező perzisztencia és véglegesített érték', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1893,10 +1893,10 @@ describe('PreviewPage -- backlog-70: "Csak ajánlat" mező perzisztencia és vé
   );
 });
 
-// backlog-61: a puha "price-drift" lépés a lánc ötödik, utolsó tagja --
+// a puha "price-drift" lépés a lánc ötödik, utolsó tagja --
 // itt egyedül fut le, mert a páciensadat teljes, a terv magyar (nincs
 // de-fallback-names), a sor nem 0 összegű és nem csomagtétel.
-describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés', () => {
+describe('PreviewPage -- árlista-eltérés véglegesítési lépés', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -1951,13 +1951,13 @@ describe('PreviewPage -- backlog-61: árlista-eltérés véglegesítési lépés
   );
 });
 
-// 65. tétel + német tételnév: a "nyelvi-review" PUHA tétel és a "nemet-nev"
+// Nyelvi review + német tételnév: a "nyelvi-review" PUHA tétel és a "nemet-nev"
 // KEMÉNY tétel egyszerre fut le (a sornév kézzel átírva, ami MIND az
 // árlistai-fordítás-hiányt, MIND a nyelvi review-t alkalmazhatóvá teszi) --
 // és a "Nyelv ellenőrizve" akció mindkettőt egyszerre oldja fel, mert a
 // német-név hard blokk predikátuma (`nemetNeveIgazolt()`) is a `nevNyelv`
 // review-metaadaton áll.
-describe('PreviewPage -- 65. tétel: nyelvi review és a német tételnév kemény blokk', () => {
+describe('PreviewPage -- nyelvi review és a német tételnév kemény blokk', () => {
   beforeEach(() => {
     localStorage.clear();
     window.location.hash = '';
@@ -2020,7 +2020,7 @@ describe('PreviewPage -- 65. tétel: nyelvi review és a német tételnév kemé
       ).toBeInTheDocument();
       expect(finalizeBtn).toBeDisabled();
 
-      // 65. tétel: a SAJÁT, ettől független PUHA tétel -- ugyanarra a
+      // a SAJÁT, ettől független PUHA tétel -- ugyanarra a
       // sorra, más okból.
       expect(
         screen.getByText(/1 kézzel írt szöveg nem biztos, hogy a dokumentum nyelvén helyes/),

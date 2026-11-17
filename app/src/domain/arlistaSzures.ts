@@ -4,12 +4,12 @@ import type { Tetel } from './types';
 export type FilterKey = 'all' | 'noeur' | 'range' | 'off' | 'fav';
 
 // Mindkét nyelven keres, ugyanaz a szabály, mint a szerkesztő
-// tétel-keresőjében (backlog-7): egy csak németül elgépelt/elnevezett
+// tétel-keresőjében: egy csak németül elgépelt/elnevezett
 // tétel eddig itt egyáltalán nem volt megtalálható. Külön a
 // `tetelMegtartando()`-tól (lásd lent) -- a Tömeges árváltoztatás dialógus
 // "jelenlegi szűrt lista" köre EZT a predikátumot használja, a nyitott sor
 // kivétele NÉLKÜL: az a kivétel a szerkesztés közbeni eltűnés ellen véd,
-// egy tömeges művelet körét viszont hamisan tágítaná (backlog-92).
+// egy tömeges művelet körét viszont hamisan tágítaná.
 export function tetelIlleszkedik(
   x: Tetel,
   q: string,
@@ -25,7 +25,7 @@ export function tetelIlleszkedik(
 }
 
 /**
- * P0-7: a nyitott sort MINDIG megtartjuk, akkor is, ha egy időközbeni
+ * a nyitott sort MINDIG megtartjuk, akkor is, ha egy időközbeni
  * szerkesztés (pl. az első EUR-számjegy begépelése a "Nincs EUR ár" szűrő
  * alatt) kiejtené a szűrőből -- enélkül a sor (és vele az `ItemEditor`)
  * eltűnt a doki keze alól, mielőtt végigírta volna a számot. A blur-re

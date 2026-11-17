@@ -1,4 +1,4 @@
-// Irányított nyelvi review -- 65. tétel (a feloldás szabálya: lásd
+// Irányított nyelvi review (a feloldás szabálya: lásd
 // app/src/domain/CLAUDE.md). Tranziens SESSION-állapot (nem
 // perzisztált), a `TervWorkflowShell.tsx`-ben mountolva -- ez a
 // `/paciens`-`/terv`-`/elonezet` egyetlen közös őse, hogy a session

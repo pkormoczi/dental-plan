@@ -89,8 +89,8 @@ describe('Végpontok közötti folyamat', () => {
     expect(screen.getByText(/^v1 ·/)).toBeInTheDocument();
 
     // Új verzió -> a korábban felvitt tétel már ott van -- ezért nem kell
-    // újragépelni (ez a "Korábbi tervek" fő létjogosultsága). 50. tétel
-    // óta a legfrissebb soron látható gomb, nem "⋯" menüpont.
+    // újragépelni (ez a "Korábbi tervek" fő létjogosultsága). A legfrissebb
+    // soron látható gomb, nem "⋯" menüpont.
     await user.click(screen.getByRole('button', { name: 'Új verzió' }));
     await screen.findByPlaceholderText(/Tétel keresése/);
     expect(screen.getByDisplayValue('Fogeltávolítás')).toBeInTheDocument();
@@ -202,7 +202,7 @@ describe('Végpontok közötti folyamat', () => {
     await user.keyboard('{Enter}');
     await waitFor(() => expect(search).toHaveValue(''));
 
-    // Az író effekt debounce nélkül fut (3. döntés) -- megvárjuk, hogy a
+    // Az író effekt debounce nélkül fut -- megvárjuk, hogy a
     // piszkozat ténylegesen a localStorage-ban landoljon, mielőtt
     // "frissítünk".
     await waitFor(() => expect(localStorage.getItem('dp:piszkozat')).not.toBeNull());
@@ -212,9 +212,9 @@ describe('Végpontok közötti folyamat', () => {
 
     render(<App />);
 
-    // Csendes, memóriabeli restore (4. döntés) -- a Kezdőlapon a "Piszkozat
+    // Csendes, memóriabeli restore -- a Kezdőlapon a "Piszkozat
     // folytatása" kártya a belépési pont, a páciensnévvel. A quick-create
-    // (backlog-36) miatt a páciens EKKORRA már valódi rekord is --
+    // miatt a páciens EKKORRA már valódi rekord is --
     // "Piszkozat Ilona" ezért a "Legutóbbi páciensek" listában is szerepel,
     // a kártyára kell szűkíteni.
     expect(await screen.findByText('Piszkozat folytatása')).toBeInTheDocument();
@@ -243,14 +243,14 @@ describe('Végpontok közötti folyamat', () => {
     const card = nagyEva.closest('[data-patient]') as HTMLElement;
     // A "Tömések" lánc (v1 2026-06-10, v2 2026-07-22) NEM a legfrissebb
     // véglegesített dátumú lánc a "Fogkőeltávolítás" (2026-08-01) mellett
-    // (46. tétel) -- alapból csukva nyílik, ki kell bontani a
+    // -- alapból csukva nyílik, ki kell bontani a
     // verziósorok eléréséhez.
     const tomesekCim = within(card).getByText(/^Tömések ·/);
     const doboz = tomesekCim.closest('[data-plan]') as HTMLElement;
     await user.click(doboz.querySelector('[aria-expanded="false"]') as HTMLElement);
     // A legfrissebb verzió (v2, 2026-07-22) a lánc verziósorai közül az
     // ELSŐ (fordítva rendezve, legfrissebb elöl) -- lásd PatientPlanChains.tsx
-    // `.slice().reverse()`. 50. tétel óta a legfrissebb soron látható
+    // `.slice().reverse()`. A legfrissebb soron látható
     // gomb, nem "⋯" menüpont.
     await user.click(within(doboz).getByRole('button', { name: 'Új verzió' }));
 
@@ -258,7 +258,7 @@ describe('Végpontok közötti folyamat', () => {
     // korona), tehát két ItemPicker-keresőmező is renderel -- itt csak azt
     // ellenőrizzük, hogy a szerkesztő betöltött. A 22 páciensre bővített
     // demó-készlet miatt a `/tervek` lista eagerly tölt be minden
-    // pácienst, a 46. tétel lánc-nyitása pedig egy plusz kattintás/render
+    // pácienst, a lánc-nyitás pedig egy plusz kattintás/render
     // kört told be előtte -- ezért az alapértelmezett 1000ms-nél lassabb is
     // lehet erősen terhelt teljes-készlet futásnál (PatientPage.test.tsx
     // mintája).
@@ -275,7 +275,7 @@ describe('Végpontok közötti folyamat', () => {
     expect(screen.getByText('Nagy Éva · piszkozat')).toBeInTheDocument();
   }, 20000);
 
-  // 71. tétel: a Terv részletei route az App.tsx valódi route-táblájában is
+  // a Terv részletei route az App.tsx valódi route-táblájában is
   // feloldódik, nem csak a saját, izolált tesztjében (TervReszleteiPage.test.tsx).
   it('a Terv részletei route közvetlen URL-ről feloldódik az App valódi route-tábláján', async () => {
     const seeder = new DemoStorage();

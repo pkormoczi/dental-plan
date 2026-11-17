@@ -88,7 +88,7 @@ export default function PriceListAdminPage() {
   // egy kategóriaváltás a Select-en belül marad, nem szabad elrabolnia a
   // fókuszt onnan.
   const [atmozgatottTetelId, setAtmozgatottTetelId] = useState<string | null>(null);
-  // P0-8-hoz hasonlóan (SettingsPage) -- a `savePriceList` korábban `void`-olva
+  // A SettingsPage-hez hasonlóan -- a `savePriceList` korábban `void`-olva
   // volt, egy sikertelen mentés (pl. kvótahiba) némán elveszett.
   const [saveError, setSaveError] = useState<string | null>(null);
   // A "Mentve ✓" sor-szintű jelzése -- csak a `patchItem()`
@@ -194,7 +194,7 @@ export default function PriceListAdminPage() {
 
   /**
    * Csak akkor törölhető, ha SEM aktív, SEM inaktív tétel nem hivatkozik rá
-   * (8. döntés) -- egy `aktiv: false` tétel bármikor visszakapcsolható az
+   * -- egy `aktiv: false` tétel bármikor visszakapcsolható az
    * "Aktív" szem ikonnal, tehát egy csak aktív tételek alapján "üresnek"
    * ítélt kategória valójában nem az. Valódi törlés (nincs `aktiv` mező a
    * `Kategoria` típuson) -- semmi más nem hivatkozik rá tartalmilag.
@@ -360,8 +360,7 @@ export default function PriceListAdminPage() {
 
   // `null`, ha nincs aktív keresés/szűrő -- ilyenkor a Tömeges árváltoztatás
   // dialógus "jelenlegi szűrt lista" köre szó szerint azonos lenne a "Teljes
-  // árlista" körrel, ezért az az opció ott nem is jelenik meg (backlog-92,
-  // 2. döntés).
+  // árlista" körrel, ezért az az opció ott nem is jelenik meg.
   const szurtAktiv = q.trim() !== '' || filter !== 'all';
   const szurtTetelek = useMemo(
     () =>
