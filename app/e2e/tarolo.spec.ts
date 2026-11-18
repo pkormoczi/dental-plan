@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { configIr, inditas, ujUserData } from './electronApp.js';
@@ -20,10 +20,11 @@ test.describe.serial('Electron fájlrendszeres tároló', () => {
 
   test('első indításkor a varázsló az üres mappába adatmappát épít; a páciens újraindítás után, varázsló nélkül is látszik', async () => {
     const gyoker = ujMappa('mandoki-gyoker-');
+    const mentesCel = path.join(ujMappa('mandoki-kulso-lemez-'), 'mandoki-dental-mentes.zip');
     const userData = ujUserData();
     ideiglenes.push(userData);
 
-    let futo = await inditas({ userData, mappaValasztas: gyoker });
+    let futo = await inditas({ userData, mappaValasztas: gyoker, mentesCel });
     try {
       await expect(futo.page.getByRole('heading', { name: 'Válaszd ki az adatmappát' })).toBeVisible();
       expect(readdirSync(gyoker)).toEqual([]);
@@ -33,6 +34,7 @@ test.describe.serial('Electron fájlrendszeres tároló', () => {
 
       await expect(futo.page.getByText('Legutóbbi páciensek')).toBeVisible();
       await expect(futo.page.getByText('PRÓBAÜZEM')).toBeVisible();
+      await expect(futo.page.getByText(/Még nem készült biztonsági mentés/)).toBeVisible();
       expect(readdirSync(gyoker).sort()).toEqual(['arlista.json', 'beallitasok.json', 'paciensek', 'sablonok']);
       expect(JSON.parse(readFileSync(path.join(userData, 'config.json'), 'utf8'))).toMatchObject({ gyokerMappa: gyoker });
 
@@ -42,6 +44,13 @@ test.describe.serial('Electron fájlrendszeres tároló', () => {
       await futo.page.getByRole('button', { name: 'Mentés' }).click();
       await expect.poll(() => readdirSync(path.join(gyoker, 'paciensek'))).toHaveLength(1);
       expect(readdirSync(path.join(gyoker, 'paciensek'))[0]).toMatch(/^Próba-Páciens_[a-z0-9]{6}$/);
+
+      await futo.page.getByRole('link', { name: 'Beállítások' }).click();
+      await futo.page.getByRole('tab', { name: /Adattárolás/ }).click();
+      await futo.page.getByRole('button', { name: 'Biztonsági mentés ZIP-be' }).click();
+      await expect(futo.page.getByText('mandoki-dental-mentes.zip', { exact: true })).toBeVisible();
+      expect(statSync(mentesCel).size).toBeGreaterThan(0);
+      await expect(futo.page.getByText(/Utolsó mentés: .* \(ezen a gépen\)/)).toBeVisible();
 
       // Írás után a bezárás a záró képernyőn át megy.
       const kilepett = futo.app.waitForEvent('close');

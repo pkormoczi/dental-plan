@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { ADATMAPPA_ALLAPOT_CSATORNA, ZARAS_CSATORNA } from '../src/storage/taroloIpc';
 import { Adatmappa } from './adatmappa.js';
+import { mentesKezelok } from './biztonsagiMentes.js';
 import { buildFajlUtvonal, mimeTipus } from './buildKiszolgalas.js';
 import { PDF_FAJLNEV } from './fileSystemStorage.js';
 import {
@@ -42,6 +43,7 @@ const TESZT_USER_DATA = process.env.DENTAL_PLAN_TESZT_USER_DATA;
 // tesztben pedig a natív mappaválasztó helyett a teszt adja a választott mappát.
 const TESZT_DEMO = TESZT_USER_DATA != null && process.env.DENTAL_PLAN_TESZT_DEMO === '1';
 const TESZT_MAPPAVALASZTAS = TESZT_USER_DATA != null ? process.env.DENTAL_PLAN_TESZT_MAPPAVALASZTAS : undefined;
+const TESZT_MENTES_CEL = TESZT_USER_DATA != null ? process.env.DENTAL_PLAN_TESZT_MENTES_CEL : undefined;
 
 app.setPath(
   'userData',
@@ -90,6 +92,13 @@ function inditas(): void {
     bezar: () => foablak?.close(),
   });
   const irasTortent = () => zaras.irasTortent();
+  // A Letöltések OneDrive-ra szinkronizálhat, a gyökérmappa a Drive-é: az alapmappa a
+  // Dokumentumok (PRODUCT.md § Adat- és deployment-korlátok).
+  const helyetValaszt = async (nev: string, szuro: Electron.FileFilter): Promise<string | null> => {
+    const opciok = { defaultPath: path.join(app.getPath('documents'), nev), filters: [szuro] };
+    const valasz = foablak ? await dialog.showSaveDialog(foablak, opciok) : await dialog.showSaveDialog(opciok);
+    return valasz.canceled || !valasz.filePath ? null : valasz.filePath;
+  };
   ipcMain.on(ADATMAPPA_ALLAPOT_CSATORNA, (e) => {
     e.returnValue = adatmappa && kuldoEngedett(e) ? adatmappa.allapot : null;
   });
@@ -118,18 +127,24 @@ function inditas(): void {
     };
     pdfKezelok(ipcMain, pdfTarolo, prim, PDF_FAJLNEV, kuldoEngedett, {
       megnyit: (abs) => shell.openPath(abs),
-      // A Letöltések OneDrive-ra szinkronizálhat, a gyökérmappa a Drive-é: az alapmappa a
-      // Dokumentumok (PRODUCT.md § Adat- és deployment-korlátok).
-      helyetValaszt: async (nev) => {
-        const opciok = {
-          defaultPath: path.join(app.getPath('documents'), nev),
-          filters: [{ name: 'PDF', extensions: ['pdf'] }],
-        };
-        const valasz = foablak ? await dialog.showSaveDialog(foablak, opciok) : await dialog.showSaveDialog(opciok);
-        return valasz.canceled || !valasz.filePath ? null : valasz.filePath;
-      },
+      helyetValaszt: (nev) => helyetValaszt(nev, { name: 'PDF', extensions: ['pdf'] }),
       ir: (ut, bajtok) => writeFile(ut, bajtok),
     }, naplozo);
+    mentesKezelok(
+      ipcMain,
+      {
+        gyoker: () => adatmappa.tarolo?.gyoker ?? null,
+        gepId: () => adatmappa.gepId,
+        olvas: (rel) => aktivPrim().olvasSzoveg(rel),
+        ir: (rel, tartalom) => aktivPrim().irSzoveg(rel, tartalom),
+      },
+      kuldoEngedett,
+      {
+        helyetValaszt: async (nev) => TESZT_MENTES_CEL ?? helyetValaszt(nev, { name: 'ZIP', extensions: ['zip'] }),
+      },
+      irasTortent,
+      naplozo,
+    );
   }
 
   app.on('second-instance', () => {

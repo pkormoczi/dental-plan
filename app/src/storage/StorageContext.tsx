@@ -20,6 +20,7 @@ import {
   type AdatmappaAllapot,
   type IpcEredmeny,
   type MappaVizsgalat,
+  type MentesAllapot,
   type PdfForras,
   type TaroloHid,
 } from './taroloIpc';
@@ -78,6 +79,14 @@ export interface StorageContextValue {
   adattarolas: Adattarolas | null;
   /** A kilépési emlékeztető (záró képernyő); a demóban `null`. */
   zaras: Zaras | null;
+  /** Biztonsági mentés ZIP-be (migrációs terv §6.5); a demóban `null`. */
+  biztonsagiMentes: BiztonsagiMentes | null;
+}
+
+export interface BiztonsagiMentes {
+  allapot: () => Promise<MentesAllapot>;
+  /** Natív mentés-dialógussal; a mentett fájl neve, vagy `null`, ha a doki bezárta. */
+  keszit: () => Promise<string | null>;
 }
 
 export interface Adattarolas {
@@ -162,6 +171,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         megmutat: null,
         pdfMuveletek: null,
         naploMegmutat: null,
+        biztonsagiMentes: null,
         ...telepitettKepessegek(hid, hid.adatmappa),
       };
     }
@@ -196,6 +206,10 @@ export function StorageProvider({ children }: { children: ReactNode }) {
           const eredmeny = await hid.naploMegmutat();
           if (!eredmeny.ok) throw storageHibaBolHiba(eredmeny.hiba);
         },
+        biztonsagiMentes: {
+          allapot: () => kibont(hid.mentesAllapot()),
+          keszit: () => kibont(hid.mentesKeszit()),
+        },
         ...telepitettKepessegek(hid, hid.adatmappa),
       };
     }
@@ -216,6 +230,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       naploMegmutat: null,
       adattarolas: null,
       zaras: null,
+      biztonsagiMentes: null,
     };
   }, []);
 

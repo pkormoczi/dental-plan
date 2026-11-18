@@ -40,11 +40,11 @@ export function configIr(userData: string, gyokerMappa: string): void {
 
 // Minden futás ideiglenes userData-t kap: a teszt sosem a fejlesztő vagy egy telepített app
 // piszkozatán és beállításán dolgozik (root CLAUDE.md § Böngésző-automatizálás). `demo`: a héj
-// tesztjei a demó-tárolón, adatmappa nélkül futnak. `mappaValasztas`: a natív mappaválasztó
-// helyett ezt a mappát kapja az app. Egy átadott `userData` (újraindításhoz) a leállításkor
-// megmarad, a hívó takarít.
+// tesztjei a demó-tárolón, adatmappa nélkül futnak. `mappaValasztas` és `mentesCel`: a natív
+// mappaválasztó és mentés-dialógus helyett ezt kapja az app. Egy átadott `userData`
+// (újraindításhoz) a leállításkor megmarad, a hívó takarít.
 export async function inditas(
-  opciok: { demo?: boolean; mappaValasztas?: string; userData?: string } = {},
+  opciok: { demo?: boolean; mappaValasztas?: string; mentesCel?: string; userData?: string } = {},
 ): Promise<FutoApp> {
   const sajatUserData = opciok.userData == null;
   const userData = opciok.userData ?? ujUserData();
@@ -58,6 +58,7 @@ export async function inditas(
       DENTAL_PLAN_TESZT_USER_DATA: userData,
       ...(opciok.demo ? { DENTAL_PLAN_TESZT_DEMO: '1' } : {}),
       ...(opciok.mappaValasztas ? { DENTAL_PLAN_TESZT_MAPPAVALASZTAS: opciok.mappaValasztas } : {}),
+      ...(opciok.mentesCel ? { DENTAL_PLAN_TESZT_MENTES_CEL: opciok.mentesCel } : {}),
     },
   });
   const page = await app.firstWindow();

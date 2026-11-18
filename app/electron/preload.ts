@@ -12,6 +12,8 @@ import {
   ALAPSABLONOK_POTOL_CSATORNA,
   KILEPES_CSATORNA,
   MEGMUTAT_CSATORNA,
+  MENTES_ALLAPOT_CSATORNA,
+  MENTES_KESZIT_CSATORNA,
   NAPLO_MEGMUTAT_CSATORNA,
   PDF_MASOL_CSATORNA,
   PDF_MEGNYIT_CSATORNA,
@@ -40,6 +42,8 @@ const hid: TaroloHid = {
   adatmappaHasznal: (letrehoz) => ipcRenderer.invoke(ADATMAPPA_HASZNAL_CSATORNA, letrehoz),
   adatmappaMegnyit: () => ipcRenderer.invoke(ADATMAPPA_MEGNYIT_CSATORNA),
   alapsablonokPotol: () => ipcRenderer.invoke(ALAPSABLONOK_POTOL_CSATORNA),
+  mentesAllapot: () => ipcRenderer.invoke(MENTES_ALLAPOT_CSATORNA),
+  mentesKeszit: () => ipcRenderer.invoke(MENTES_KESZIT_CSATORNA),
   zarasra: (fn) => {
     // Az eseményobjektum nem jut át a rendererbe: a `sender` a teljes webContents volna.
     const figyelo = () => fn();

@@ -57,6 +57,9 @@ export const ADATMAPPA_POTOL_CSATORNA = 'adatmappa:potol';
 export const ADATMAPPA_HASZNAL_CSATORNA = 'adatmappa:hasznal';
 export const ADATMAPPA_MEGNYIT_CSATORNA = 'adatmappa:megnyit';
 export const ALAPSABLONOK_POTOL_CSATORNA = 'adatmappa:alapsablonok';
+/** Biztonsági mentés ZIP-be natív mentés-dialógussal (migrációs terv §6.5). */
+export const MENTES_KESZIT_CSATORNA = 'mentes:keszit';
+export const MENTES_ALLAPOT_CSATORNA = 'mentes:allapot';
 /** Main → renderer: a bezárás előtt a záró képernyő (migrációs terv §6.4). */
 export const ZARAS_CSATORNA = 'app:zaras';
 export const KILEPES_CSATORNA = 'app:kilepes';
@@ -84,6 +87,13 @@ export interface MappaVizsgalat {
   errno?: IoErrno;
   /** A Windows 260 karakteres útvonalkorlátjához közeli gyökér. */
   hosszuUtvonal: boolean;
+}
+
+/** Az utolsó biztonsági mentés; a gépazonosító a mainben marad, a renderer csak az egyezést kapja. */
+export interface MentesAllapot {
+  /** ISO időbélyeg, vagy `null`, ha még nem készült (vagy az index olvashatatlan). */
+  utolso: string | null;
+  ezenAGepen: boolean;
 }
 
 /** A telepített app adatmappája; `nincs` = még nem választott (első indítás). */
@@ -138,6 +148,9 @@ export interface TaroloHid {
   adatmappaMegnyit(): Promise<IpcEredmeny<void>>;
   /** A beírt alapsablonok neve. */
   alapsablonokPotol(): Promise<IpcEredmeny<string[]>>;
+  mentesAllapot(): Promise<IpcEredmeny<MentesAllapot>>;
+  /** A célt a main kérdezi meg a dokitól; a mentett fájl neve, vagy `null`, ha bezárta. */
+  mentesKeszit(): Promise<IpcEredmeny<string | null>>;
   /** A main a bezárás előtt a záró képernyőt kéri; a visszaadott függvény leiratkozik. */
   zarasra(fn: () => void): () => void;
   kilepes(): Promise<IpcEredmeny<void>>;

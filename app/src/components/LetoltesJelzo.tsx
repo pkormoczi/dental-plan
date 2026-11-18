@@ -15,8 +15,11 @@ import { useCallback, useState } from 'react';
 import { Text, VisuallyHidden } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 
-/** A telepített appban a fájl nem letöltődik, hanem a doki által választott helyre másolódik. */
-export type LetoltesFelirat = 'Letöltve' | 'Másolva';
+/**
+ * A telepített appban a fájl nem letöltődik, hanem a doki által választott helyre másolódik; a
+ * biztonsági mentés oda készül.
+ */
+export type LetoltesFelirat = 'Letöltve' | 'Másolva' | 'Elmentve';
 
 export interface LetoltesJelzoAllapot {
   /** A legutóbb letöltött fájl neve, vagy `null`, ha még nem volt letöltés. */

@@ -32,6 +32,8 @@ function hidAmi(valasz: Awaited<ReturnType<TaroloHid['hiv']>>, hivasok: unknown[
     adatmappaHasznal: async () => ({ ok: false, hiba: { kod: 'EGYEB', uzenet: 'nem hívott' } }),
     adatmappaMegnyit: async () => ({ ok: true, ertek: undefined }),
     alapsablonokPotol: async () => ({ ok: true, ertek: [] }),
+    mentesAllapot: async () => ({ ok: true, ertek: { utolso: null, ezenAGepen: false } }),
+    mentesKeszit: async () => ({ ok: true, ertek: null }),
     zarasra: () => () => {},
     kilepes: async () => ({ ok: true, ertek: undefined }),
   };

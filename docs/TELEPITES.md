@@ -98,3 +98,23 @@ Egyszerre mindig csak az egyik gépen dolgozz. Gépváltáskor:
 4. Csak ezután nyisd meg ott az alkalmazást.
 
 Ha a munkamenetben mentettél, az alkalmazás bezáráskor erre röviden emlékeztet.
+
+## Biztonsági mentés és visszaállítás
+
+A Google Drive nem biztonsági mentés: ha egy fájl elromlik vagy törlődik, a Drive a hibát is
+átviszi a másik gépre. Ezért **havonta** készíts mentést: Beállítások → **Adattárolás** →
+**Biztonsági mentés ZIP-be**. Az alkalmazás az egész adatmappát egyetlen ZIP-fájlba menti; ha 30
+napnál régebbi az utolsó mentés, a Kezdőlap emlékeztet.
+
+> **A mentésben páciensadat van.** Csak titkosított külső lemezre tedd (Windowson BitLocker To Go,
+> Macen titkosított lemez). Az adatmappába nem menthető: ott nem lenne független másolat.
+
+Visszaállítás:
+
+1. Hozz létre egy új, üres mappát. Ha a visszaállított adatokkal mindkét gépen dolgozni fogsz,
+   a Google Drive „Saját meghajtó” részén legyen.
+2. Bontsd ki bele a ZIP-et (Windowson jobb kattintás → **Összes kibontása**, Macen dupla kattintás,
+   majd a kibontott tartalmat másold a mappába).
+3. Az alkalmazásban: Beállítások → **Adattárolás** → **Mappa váltása**, vagy ha az alkalmazás
+   induláskor nem éri el a régi mappát, **Másik mappa kiválasztása**. Válaszd ki a kibontott mappát.
+4. Az alkalmazás felismeri az adatmappát, és megnyitja.

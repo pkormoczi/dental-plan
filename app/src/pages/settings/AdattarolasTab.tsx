@@ -5,15 +5,18 @@
 import { useMemo, useState } from 'react';
 import { Box, Button, Callout, Code, Flex, Text } from '@radix-ui/themes';
 import { GEPVALTAS_BEVEZETO, GEPVALTASI_SZABALY } from '../../components/adatmappaSzovegek';
+import { LetoltesJelzo } from '../../components/LetoltesJelzo';
 import Section from '../../components/Section';
+import { useBiztonsagiMentes } from '../../components/useBiztonsagiMentes';
 import { useMappaValtas } from '../../components/useMappaValtas';
+import { formatLongDate, localIsoDate } from '../../domain/date';
 import { useAppState } from '../../state/AppState';
-import { useStorage, type Adattarolas } from '../../storage/StorageContext';
+import { useStorage, type Adattarolas, type BiztonsagiMentes } from '../../storage/StorageContext';
 
 const hibaSzoveg = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 export default function AdattarolasTab({ adattarolas }: { adattarolas: Adattarolas }) {
-  const { naploMegmutat, drafts } = useStorage();
+  const { naploMegmutat, drafts, biztonsagiMentes } = useStorage();
   const { vanMentetlenPiszkozat, resetPlanDraft } = useAppState();
   const [hiba, setHiba] = useState<string | null>(null);
   const [sablonEredmeny, setSablonEredmeny] = useState<string | null>(null);
@@ -89,6 +92,8 @@ export default function AdattarolasTab({ adattarolas }: { adattarolas: Adattarol
         )}
       </Section>
 
+      {biztonsagiMentes && <MentesSzekcio mentes={biztonsagiMentes} />}
+
       <Section title="Gépváltás">
         <Text as="p" size="2" mb="2">
           {GEPVALTAS_BEVEZETO} Gépváltáskor:
@@ -136,5 +141,40 @@ export default function AdattarolasTab({ adattarolas }: { adattarolas: Adattarol
 
       {dialogusok}
     </Box>
+  );
+}
+
+function MentesSzekcio({ mentes }: { mentes: BiztonsagiMentes }) {
+  const { allapot, folyamatban, hiba, mentettNev, ment } = useBiztonsagiMentes(mentes);
+  return (
+    <Section title="Biztonsági mentés">
+      <Text as="p" size="2" mb="3">
+        A teljes adatmappáról egyetlen ZIP-fájl készül. A Google Drive nem biztonsági mentés: havonta
+        készíts egyet. Visszaállításkor a ZIP-et egy üres mappába kell kibontani, majd azt a mappát
+        kiválasztani.
+      </Text>
+      <Callout.Root color="amber" mb="3">
+        <Callout.Text>
+          A mentésben páciensadat van: csak titkosított külső lemezre tedd (Windowson BitLocker To Go,
+          Macen titkosított lemez).
+        </Callout.Text>
+      </Callout.Root>
+      {allapot && (
+        <Text as="p" size="2" mb="3">
+          {allapot.utolso
+            ? `Utolsó mentés: ${formatLongDate(localIsoDate(new Date(allapot.utolso)), 'hu')} (${allapot.ezenAGepen ? 'ezen a gépen' : 'a másik gépen'})`
+            : 'Még nem készült biztonsági mentés.'}
+        </Text>
+      )}
+      <Button variant="soft" disabled={folyamatban} onClick={() => void ment()}>
+        {folyamatban ? 'Mentés folyamatban…' : 'Biztonsági mentés ZIP-be'}
+      </Button>
+      <LetoltesJelzo fajlnev={mentettNev} felirat="Elmentve" />
+      {hiba && (
+        <Callout.Root color="red" mt="3" role="alert">
+          <Callout.Text>{hiba}</Callout.Text>
+        </Callout.Root>
+      )}
+    </Section>
   );
 }

@@ -24,7 +24,7 @@ const GYOKEREN_KIVUL = '[gyökéren kívül]';
 // ezek Drive-ütközéses és félbemaradt-írásos változatai.
 const TEMP_UTOTAG = String.raw`(\.tmp-[0-9a-f]+)?`;
 const UTKOZES_UTOTAG = String.raw`( \(\d+\)| conflicted copy)?`;
-const GYOKER_NEV = new RegExp(String.raw`^((arlista|beallitasok)${UTKOZES_UTOTAG}\.json${TEMP_UTOTAG}|sablonok|paciensek|_utkozesek)$`);
+const GYOKER_NEV = new RegExp(String.raw`^((arlista|beallitasok|biztonsagi-mentes)${UTKOZES_UTOTAG}\.json${TEMP_UTOTAG}|sablonok|paciensek|_utkozesek)$`);
 const SABLON_NEV = new RegExp(String.raw`^[a-z-]+-v\d+${UTKOZES_UTOTAG}\.md${TEMP_UTOTAG}$`);
 const PACIENS_FAJL = new RegExp(String.raw`^paciens(-adatok)?${UTKOZES_UTOTAG}\.json${TEMP_UTOTAG}$`);
 const LANC_ELEM = new RegExp(

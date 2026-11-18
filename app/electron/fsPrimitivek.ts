@@ -32,6 +32,9 @@ const UJRAPROBA_MS = [100, 200, 400, 800, 1600];
 // vagy sablon, a listázásban nem jelenhet meg.
 const REJTETT_NEV = /^\.|^desktop\.ini$|^thumbs\.db$|\.tmp-[0-9a-f]+$/i;
 
+/** Rendszer- és szinkron-szemét vagy félbemaradt saját írás -- sem a listában, sem a mentésben nincs helye. */
+export const rejtettNev = (nev: string): boolean => REJTETT_NEV.test(nev);
+
 const errnoKod = (err: unknown) => (err as NodeJS.ErrnoException | null)?.code;
 
 function ioHiba(err: unknown, utvonal: string): IoError {

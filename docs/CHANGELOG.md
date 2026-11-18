@@ -20,6 +20,12 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   árlista), a hibaképernyőn az „Újrapróbálás” mellett „Mappa megnyitása” és „Másik mappa
   kiválasztása” gomb is van, így innen is meg lehet nézni az adatmappát, vagy át lehet váltani
   egy másikra. Ha van félkész terv, a váltás előtt itt is rákérdez.
+- A telepíthető programban a Beállítások Adattárolás fülén biztonsági mentés készíthető: az egész
+  adatmappa egyetlen ZIP-fájlba kerül, amit csak titkosított külső lemezre szabad tenni; az
+  adatmappába nem menthető. A fül mutatja az utolsó mentés napját és azt, hogy ezen vagy a másik
+  gépen készült. Ha 30 napnál régebbi az utolsó mentés, vagy még nem volt, a Kezdőlap sárga
+  emlékeztetővel szól, „Biztonsági mentés most” gombbal; az „Elrejtés” csak a program bezárásáig
+  tünteti el. A visszaállítás lépéseit a telepítési útmutató írja le.
 
 ## 2026. november 17.
 

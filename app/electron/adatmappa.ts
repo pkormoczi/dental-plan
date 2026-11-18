@@ -46,7 +46,7 @@ export interface AdatmappaOpciok {
 export class Adatmappa {
   private readonly o: AdatmappaOpciok;
   private readonly fs: ConfigFs;
-  private gepId = '';
+  private gepId_ = '';
   private allapotErtek: AdatmappaAllapot = { allapot: 'nincs' };
   private aktivPrim: FsPrimitivek | null = null;
   private aktivTarolo: FileSystemStorage | null = null;
@@ -75,9 +75,14 @@ export class Adatmappa {
     return this.aktivPrim;
   }
 
+  /** A configból, vagy az első indításkor generált; a renderer nem kapja meg. */
+  get gepId(): string {
+    return this.gepId_;
+  }
+
   async indul(): Promise<AdatmappaAllapot> {
     const config = await this.configOlvas();
-    this.gepId = config.gepId;
+    this.gepId_ = config.gepId;
     if (!config.gyokerMappa) return this.allapotErtek;
     this.jelolt = config.gyokerMappa;
     const v = await this.vizsgal(config.gyokerMappa);
@@ -117,7 +122,7 @@ export class Adatmappa {
       v = await this.vizsgal(ut);
     }
     if (v.allapot !== 'rendben') return v;
-    await this.configIr({ schemaVersion: CONFIG_SEMA, gyokerMappa: ut, gepId: this.gepId });
+    await this.configIr({ schemaVersion: CONFIG_SEMA, gyokerMappa: ut, gepId: this.gepId_ });
     this.aktival(ut);
     this.allapotErtek = v;
     return v;
@@ -133,12 +138,12 @@ export class Adatmappa {
   }
 
   private vizsgalo(gyoker: string): FileSystemStorage {
-    return new FileSystemStorage(this.nyitPrim(gyoker), { gepId: this.gepId });
+    return new FileSystemStorage(this.nyitPrim(gyoker), { gepId: this.gepId_ });
   }
 
   private aktival(gyoker: string): void {
     this.aktivPrim = this.nyitPrim(gyoker);
-    this.aktivTarolo = new FileSystemStorage(this.aktivPrim, { gepId: this.gepId });
+    this.aktivTarolo = new FileSystemStorage(this.aktivPrim, { gepId: this.gepId_ });
     this.o.aktivalva?.(gyoker);
   }
 

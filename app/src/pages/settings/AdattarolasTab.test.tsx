@@ -10,19 +10,25 @@ import App from '../../App';
 import { GEPVALTASI_SZABALY } from '../../components/adatmappaSzovegek';
 import type { Plan } from '../../domain/types';
 import { DemoStorage } from '../../storage/DemoStorage';
-import type { Adattarolas } from '../../storage/StorageContext';
+import type { Adattarolas, BiztonsagiMentes } from '../../storage/StorageContext';
 import type { AdatmappaAllapot, MappaAllapot, MappaVizsgalat } from '../../storage/taroloIpc';
 
 const kepesseg = vi.hoisted(() => ({
   adattarolas: null as Adattarolas | null,
   naploMegmutat: null as (() => Promise<void>) | null,
+  biztonsagiMentes: null as BiztonsagiMentes | null,
 }));
 
 vi.mock('../../storage/StorageContext', async (eredeti) => {
   const m = await eredeti<typeof import('../../storage/StorageContext')>();
   return {
     ...m,
-    useStorage: () => ({ ...m.useStorage(), adattarolas: kepesseg.adattarolas, naploMegmutat: kepesseg.naploMegmutat }),
+    useStorage: () => ({
+      ...m.useStorage(),
+      adattarolas: kepesseg.adattarolas,
+      naploMegmutat: kepesseg.naploMegmutat,
+      biztonsagiMentes: kepesseg.biztonsagiMentes,
+    }),
   };
 });
 
@@ -119,6 +125,7 @@ beforeEach(() => {
   window.location.hash = '';
   kepesseg.adattarolas = null;
   kepesseg.naploMegmutat = null;
+  kepesseg.biztonsagiMentes = null;
 });
 
 describe('Beállítások → Adattárolás a telepített appban', () => {
@@ -140,6 +147,32 @@ describe('Beállítások → Adattárolás a telepített appban', () => {
 
     await user.click(screen.getByRole('button', { name: 'Napló megnyitása' }));
     expect(naplo).toHaveBeenCalledOnce();
+  });
+
+  it('a Biztonsági mentés szekció a dátumot, a gépet és a titkosított lemez szövegét mutatja; a gomb ment, és a fájlnevet jelzi', async () => {
+    const user = userEvent.setup();
+    hamisAdattarolas(null);
+    let utolso = new Date(2026, 9, 20, 9, 0).toISOString();
+    let ezenAGepen = false;
+    const mentes = {
+      allapot: vi.fn(async () => ({ utolso, ezenAGepen })),
+      keszit: vi.fn(async () => {
+        utolso = new Date(2026, 10, 18, 9, 0).toISOString();
+        ezenAGepen = true;
+        return 'mandoki-dental-mentes-2026-11-18.zip';
+      }),
+    };
+    kepesseg.biztonsagiMentes = mentes;
+    await adattarolasFul();
+
+    expect(await screen.findByText('Utolsó mentés: 2026. október 20. (a másik gépen)')).toBeInTheDocument();
+    expect(screen.getByText(/csak titkosított külső lemezre tedd/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Biztonsági mentés ZIP-be' }));
+
+    expect(await screen.findByText('Utolsó mentés: 2026. november 18. (ezen a gépen)')).toBeInTheDocument();
+    expect(screen.getByText('mandoki-dental-mentes-2026-11-18.zip')).toBeInTheDocument();
+    expect(mentes.keszit).toHaveBeenCalledOnce();
   });
 
   it('félkész terv nélkül a meglévő adatmappára kérdés nélkül vált, és újratölt', async () => {

@@ -34,6 +34,7 @@ import { openPlanPdfInNewTab } from '../storage/openPlanPdfInNewTab';
 import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
 import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
+import MentesEmlekezteto from '../components/MentesEmlekezteto';
 import UtkozesSav from '../components/UtkozesSav';
 
 export default function Home() {
@@ -169,6 +170,7 @@ export default function Home() {
       </Text>
 
       <UtkozesSav />
+      <MentesEmlekezteto />
 
       {error && (
         <Callout.Root color="red" mb="4">

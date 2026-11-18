@@ -69,7 +69,8 @@ export function formatPiszkozatIdo(iso: string): string {
   return `${datum} ${ido}`;
 }
 
-function localIsoDate(d: Date): string {
+/** Egy időpont HELYI naptári napja ISO (YYYY-MM-DD) alakban -- lásd `todayIso`. */
+export function localIsoDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const nap = String(d.getDate()).padStart(2, '0');
@@ -78,6 +79,11 @@ function localIsoDate(d: Date): string {
 
 function localMidnight(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+/** Hány helyi naptári nap telt el `akkor` és `most` között (tegnap = 1, a nap órájától függetlenül). */
+export function naptariNapKulonbseg(akkor: Date, most: Date): number {
+  return Math.round((localMidnight(most) - localMidnight(akkor)) / 86_400_000);
 }
 
 /**
@@ -98,7 +104,7 @@ export function formatRelativIdo(iso: string, most: Date): string {
   if (eltelt < 60_000) return 'az imént';
   if (eltelt < 3_600_000) return `${Math.floor(eltelt / 60_000)} perce`;
   if (eltelt < 86_400_000) return `${Math.floor(eltelt / 3_600_000)} órája`;
-  const napkulonbseg = Math.round((localMidnight(most) - localMidnight(akkor)) / 86_400_000);
+  const napkulonbseg = naptariNapKulonbseg(akkor, most);
   if (napkulonbseg === 1) return 'tegnap';
   if (napkulonbseg <= 6) return `${napkulonbseg} napja`;
   return formatShortDate(localIsoDate(akkor), 'hu');
