@@ -78,6 +78,8 @@ interface VerzioManifest {
   schemaVersion: number;
   mentesId: string;
   keszult: string;
+  /** Melyik gép írta -- csak diagnosztika, a teljesség-ellenőrzés nem használja. */
+  gepId?: string;
   fajlok: Record<string, { sha256: string; meret: number }>;
 }
 
@@ -128,11 +130,17 @@ export async function alapKeszletetIr(prim: FajlPrimitivek): Promise<void> {
   for (const [name, body] of DEFAULT_TEMPLATES) await prim.irSzoveg(sablonUt(name), body);
 }
 
-async function ujManifest(tervJson: string, pdfFajlnev: string, pdf: Uint8Array): Promise<VerzioManifest> {
+async function ujManifest(
+  tervJson: string,
+  pdfFajlnev: string,
+  pdf: Uint8Array,
+  gepId: string | undefined,
+): Promise<VerzioManifest> {
   return {
     schemaVersion: MANIFEST_SEMA,
     mentesId: globalThis.crypto.randomUUID(),
     keszult: new Date().toISOString(),
+    ...(gepId ? { gepId } : {}),
     fajlok: {
       [TERV_FAJL]: { sha256: await sha256Hex(tervJson), meret: new TextEncoder().encode(tervJson).length },
       [pdfFajlnev]: { sha256: await sha256Hex(pdf), meret: pdf.length },
@@ -157,6 +165,8 @@ export interface FajlTaroloOpciok {
    * A demóban egyik sincs, ott egy gép ír.
    */
   utkozesOr?: boolean;
+  /** A gépenkénti azonosító a manifestbe (migrációs terv §6.1); a demóban nincs. */
+  gepId?: string;
 }
 
 export class FajlTarolo implements PlanStorage {
@@ -574,7 +584,7 @@ export class FajlTarolo implements PlanStorage {
       await this.prim.irSzoveg(utvonal(irasMappa, TERV_FAJL), tervJson);
       await this.prim.irBajt(utvonal(irasMappa, this.opciok.pdfFajlnev), pdf);
       if (manifesttel) {
-        const manifest = await ujManifest(tervJson, this.opciok.pdfFajlnev, pdf);
+        const manifest = await ujManifest(tervJson, this.opciok.pdfFajlnev, pdf, this.opciok.gepId);
         await this.prim.irSzoveg(utvonal(irasMappa, MANIFEST_FAJL), JSON.stringify(manifest));
         await this.sorszamMegSzabadOr(lancMappa, verzio);
         try {
@@ -727,6 +737,23 @@ export class FajlTarolo implements PlanStorage {
     const body = (await this.prim.olvasSzoveg(sablonUt(latest)))!;
     await this.megjegyez(sablonUt(latest), body);
     return { name: latest, body };
+  }
+
+  /**
+   * Azokra az alapsablonokra, amelyeknek egy verziója sincs, a beépített `-v1` kerül; a meglévő
+   * verziókhoz nem nyúl. A beírt fájlok nevét adja.
+   */
+  async alapsablonokatPotol(): Promise<string[]> {
+    return this.enqueue(async () => {
+      const irt: string[] = [];
+      for (const [name, body] of DEFAULT_TEMPLATES) {
+        if (await this.latestTemplateFile(name.replace(/-v\d+\.md$/, ''))) continue;
+        await this.prim.irSzoveg(sablonUt(name), body);
+        await this.megjegyez(sablonUt(name), body);
+        irt.push(name);
+      }
+      return irt;
+    });
   }
 
   private async latestTemplateFile(base: string): Promise<string | null> {

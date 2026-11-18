@@ -1,12 +1,22 @@
 // A `PlanStorage` a valódi gyökérmappán: a közös mag (`FajlTarolo`) fs-primitíveken
 // (migrációs terv §4).
 
-import { alapKeszletetIr, FajlTarolo, PACIENSEK_MAPPA } from '../src/storage/fajlTarolo';
+import {
+  ARLISTA_FAJL,
+  BEALLITASOK_FAJL,
+  DEFAULT_TEMPLATES,
+  FajlTarolo,
+  PACIENSEK_MAPPA,
+  SABLONOK_MAPPA,
+} from '../src/storage/fajlTarolo';
+import { utvonal } from '../src/storage/fajlPrimitivek';
+import { seedPriceList } from '../src/storage/seed/priceList';
+import { seedSettings } from '../src/storage/seed/settings';
 import { HianyosMappaError, IdegenMappaError, IoError } from '../src/storage/taroloHibak';
 import type { FsPrimitivek } from './fsPrimitivek';
 
 /** A gyökér akkor a miénk, ha mind a négy megvan; ha csak egy része, hiányos. */
-const SAJAT_ELEMEK = ['arlista.json', 'beallitasok.json', PACIENSEK_MAPPA, 'sablonok'];
+const SAJAT_ELEMEK = [ARLISTA_FAJL, BEALLITASOK_FAJL, PACIENSEK_MAPPA, SABLONOK_MAPPA];
 
 // Windowson a teljes útvonal 260 karakterig biztos; a mappanév-részek már korlátozottak, de egy
 // mélyen fekvő gyökér a mélyebb verziómappákat a korlát fölé tolhatja.
@@ -27,12 +37,13 @@ export interface GyokerOsztaly {
 export class FileSystemStorage extends FajlTarolo {
   readonly gyoker: string;
 
-  constructor(prim: FsPrimitivek) {
+  constructor(prim: FsPrimitivek, opciok: { gepId?: string } = {}) {
     super(prim, {
       pdfFajlnev: PDF_FAJLNEV,
       mentesHibaUzenet: 'A tervet nem sikerült elmenteni. Semmi nem íródott félkészen.',
       verzioManifest: true,
       utkozesOr: true,
+      gepId: opciok.gepId,
     });
     this.gyoker = prim.gyoker;
   }
@@ -53,20 +64,45 @@ export class FileSystemStorage extends FajlTarolo {
   }
 
   /**
-   * Üres gyökérbe az alapkészlet kerül (demó-páciens nélkül); a miénket csak validálja. Hiányos
-   * vagy idegen mappába nem ír: a hiány félbemaradt szinkron is lehet, a pótlás csak explicit
-   * akcióra történhet.
+   * A miénket validálja, máshova nem ír -- üresbe sem: egy korábban kiválasztott, de most üres
+   * gyökér a Drive még le nem töltött állapota is lehet (migrációs terv §6.4). Új adatmappa csak
+   * az `adatmappatLetrehoz`-zal, a hiány pótlása csak az `alapfajlokatPotol`-lal keletkezik.
    */
   override async init(): Promise<void> {
     const { allapot, hianyzik } = await this.osztalyoz();
     if (allapot === 'idegen') throw new IdegenMappaError();
+    if (allapot === 'ures') throw new HianyosMappaError(SAJAT_ELEMEK);
     if (allapot === 'hianyos') throw new HianyosMappaError(hianyzik);
-    if (allapot === 'ures') {
-      await alapKeszletetIr(this.prim);
-      await this.prim.mappaLetrehoz(PACIENSEK_MAPPA);
-      return;
-    }
     await this.loadPriceList();
     await this.loadSettings();
+  }
+
+  /** Üres gyökérbe az alapkészlet (demó-páciens nélkül); nem üres mappába nem ír. */
+  async adatmappatLetrehoz(): Promise<void> {
+    const { allapot } = await this.osztalyoz();
+    if (allapot !== 'ures') throw new IdegenMappaError();
+    await this.hianyzotIr();
+  }
+
+  /**
+   * Hiányos gyökérben csak a hiányzó saját elemeket írja meg, a meglévőkhöz nem nyúl. A hívó
+   * dönti el, hogy a hiány nem félbemaradt szinkron.
+   */
+  async alapfajlokatPotol(): Promise<void> {
+    const { allapot, hianyzik } = await this.osztalyoz();
+    if (allapot === 'idegen' || allapot === 'ures') throw new IdegenMappaError();
+    if (hianyzik.length) await this.hianyzotIr();
+  }
+
+  // Elemenként a létezés közvetlenül írás előtt: a listázás óta a Drive is lehozhatta.
+  private async hianyzotIr(): Promise<void> {
+    if (!(await this.prim.letezik(ARLISTA_FAJL))) await this.prim.irSzoveg(ARLISTA_FAJL, JSON.stringify(seedPriceList));
+    if (!(await this.prim.letezik(BEALLITASOK_FAJL))) {
+      await this.prim.irSzoveg(BEALLITASOK_FAJL, JSON.stringify(seedSettings));
+    }
+    if (!(await this.prim.letezik(SABLONOK_MAPPA))) {
+      for (const [name, body] of DEFAULT_TEMPLATES) await this.prim.irSzoveg(utvonal(SABLONOK_MAPPA, name), body);
+    }
+    if (!(await this.prim.letezik(PACIENSEK_MAPPA))) await this.prim.mappaLetrehoz(PACIENSEK_MAPPA);
   }
 }

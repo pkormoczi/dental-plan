@@ -1,11 +1,13 @@
 import { lazy, Suspense } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Box, Flex, Skeleton, Theme } from '@radix-ui/themes';
+import AdatmappaKapu from './components/AdatmappaKapu';
 import DemoBanner from './components/DemoBanner';
 import ErrorBoundary from './components/ErrorBoundary';
 import NavBar from './components/NavBar';
 import { NavGuardProvider } from './components/NavGuardContext';
 import TervWorkflowShell from './components/TervWorkflowShell';
+import ZaroKepernyo from './components/ZaroKepernyo';
 import { t } from './design/tokens';
 import DemoPage from './pages/DemoPage';
 import Home from './pages/Home';
@@ -39,63 +41,68 @@ export default function App() {
           elkapja, nem csak a lapok render-idejű kivételeit. */}
       <ErrorBoundary>
         <StorageProvider>
-          <AppStateProvider>
-            {/* NavBar-t ÉS a route-olt lapokat is le kell fednie -- a
-                Mentés/Mégse-őrrel védett felületek (PatientDetailPage,
-                SettingsPage) a NavBar-ral megosztott "van piszkozat" jelzőt
-                ezen keresztül érik el. */}
-            <NavGuardProvider>
-              <HashRouter>
-                <div style={{ minHeight: '100vh', background: t.page }}>
-                  <DemoBanner />
-                  <NavBar />
-                  <main style={{ padding: 24, fontFamily: t.font, color: t.text }}>
-                    {/* Külön boundary a Routes körül: egy oldal hibája ne vigye
-                        el a NavBart is -- a doki így el tud navigálni máshova. */}
-                    <ErrorBoundary title="Hiba történt ezen az oldalon">
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/uj-terv" element={<NewPlanPage />} />
-                        {/* Terv-workflow héj -- az app első
-                            layout-route-ja: a breadcrumb+stepper a három lépés
-                            köré épül, az Outlet rendereli a tényleges oldalt. */}
-                        <Route element={<TervWorkflowShell />}>
-                          <Route path="/paciens" element={<PatientPage />} />
-                          <Route path="/terv" element={<PlanEditorPage />} />
+          <ZaroKepernyo />
+          {/* A telepített appban az adatmappa a teljes rendszerállapot: amíg nem a miénk, az
+              AppState be sem töltődik. */}
+          <AdatmappaKapu>
+            <AppStateProvider>
+              {/* NavBar-t ÉS a route-olt lapokat is le kell fednie -- a
+                  Mentés/Mégse-őrrel védett felületek (PatientDetailPage,
+                  SettingsPage) a NavBar-ral megosztott "van piszkozat" jelzőt
+                  ezen keresztül érik el. */}
+              <NavGuardProvider>
+                <HashRouter>
+                  <div style={{ minHeight: '100vh', background: t.page }}>
+                    <DemoBanner />
+                    <NavBar />
+                    <main style={{ padding: 24, fontFamily: t.font, color: t.text }}>
+                      {/* Külön boundary a Routes körül: egy oldal hibája ne vigye
+                          el a NavBart is -- a doki így el tud navigálni máshova. */}
+                      <ErrorBoundary title="Hiba történt ezen az oldalon">
+                        <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/uj-terv" element={<NewPlanPage />} />
+                          {/* Terv-workflow héj -- az app első
+                              layout-route-ja: a breadcrumb+stepper a három lépés
+                              köré épül, az Outlet rendereli a tényleges oldalt. */}
+                          <Route element={<TervWorkflowShell />}>
+                            <Route path="/paciens" element={<PatientPage />} />
+                            <Route path="/terv" element={<PlanEditorPage />} />
+                            <Route
+                              path="/elonezet"
+                              element={
+                                <Suspense fallback={<PreviewLoading />}>
+                                  <PreviewPage />
+                                </Suspense>
+                              }
+                            />
+                          </Route>
+                          {/* A globális, több-pácienses terv-lista a DEMO oldal
+                              "Összes terv" fülére költözött -- a régi, könyvjelzett
+                              `/tervek` URL ne haljon meg némán. */}
+                          <Route path="/tervek" element={<Navigate to="/demo/tervek" replace />} />
+                          <Route path="/paciensek" element={<PaciensekPage />} />
+                          <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
+                          {/* Egy véglegesített verzió read-only nézete -- lapos
+                              testvér-route, NEM a TervWorkflowShell alatt: az a
+                              PISZKOZAT workflow 3 lépéséé, egy immutable verzió
+                              nem workflow-lépés. */}
                           <Route
-                            path="/elonezet"
-                            element={
-                              <Suspense fallback={<PreviewLoading />}>
-                                <PreviewPage />
-                              </Suspense>
-                            }
+                            path="/paciensek/:patientDir/tervek/:planDir/:versionDir"
+                            element={<TervReszleteiPage />}
                           />
-                        </Route>
-                        {/* A globális, több-pácienses terv-lista a DEMO oldal
-                            "Összes terv" fülére költözött -- a régi, könyvjelzett
-                            `/tervek` URL ne haljon meg némán. */}
-                        <Route path="/tervek" element={<Navigate to="/demo/tervek" replace />} />
-                        <Route path="/paciensek" element={<PaciensekPage />} />
-                        <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
-                        {/* Egy véglegesített verzió read-only nézete -- lapos
-                            testvér-route, NEM a TervWorkflowShell alatt: az a
-                            PISZKOZAT workflow 3 lépéséé, egy immutable verzió
-                            nem workflow-lépés. */}
-                        <Route
-                          path="/paciensek/:patientDir/tervek/:planDir/:versionDir"
-                          element={<TervReszleteiPage />}
-                        />
-                        <Route path="/arlista" element={<PriceListAdminPage />} />
-                        <Route path="/beallitasok" element={<SettingsPage />} />
-                        <Route path="/demo" element={<DemoPage />} />
-                        <Route path="/demo/:tab" element={<DemoPage />} />
-                      </Routes>
-                    </ErrorBoundary>
-                  </main>
-                </div>
-              </HashRouter>
-            </NavGuardProvider>
-          </AppStateProvider>
+                          <Route path="/arlista" element={<PriceListAdminPage />} />
+                          <Route path="/beallitasok" element={<SettingsPage />} />
+                          <Route path="/demo" element={<DemoPage />} />
+                          <Route path="/demo/:tab" element={<DemoPage />} />
+                        </Routes>
+                      </ErrorBoundary>
+                    </main>
+                  </div>
+                </HashRouter>
+              </NavGuardProvider>
+            </AppStateProvider>
+          </AdatmappaKapu>
         </StorageProvider>
       </ErrorBoundary>
     </Theme>

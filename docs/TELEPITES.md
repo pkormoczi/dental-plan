@@ -8,8 +8,8 @@ Az alkalmazás telepítőit a GitHub-kiadás (Release) oldala tartalmazza:
 Frissítés nincs automatikusan: új változatnál ugyanezeket a lépéseket kell megismételni. Hogy mi
 változott, azt az alkalmazás Kezdőlapján a Változásnapló mutatja.
 
-> **Ez a változat még a demó tárolóját használja.** Csak kitalált páciensekkel próbáld ki, valódi
-> páciensadatot ne írj bele.
+> **Próbaüzem.** Az alkalmazás már a kiválasztott adatmappába ír, de az éles indulásig csak
+> kitalált páciensekkel dolgozz, valódi páciensadatot ne írj bele.
 
 ## Windows
 
@@ -69,3 +69,32 @@ Lépj ki az alkalmazásból, nyisd meg az új dmg-t, és húzd az ikont ismét a
 2. A Finderben: Ugrás → Ugrás mappához…, írd be: `~/Library/Application Support/mandoki-dental`, és
    ezt a mappát is töröld. Ebben él az alkalmazás gépen tárolt adata (a félkész terv is), a Mac
    ezt magától nem törli.
+
+## Első indítás: az adatmappa kiválasztása
+
+Az alkalmazás minden adatot — az árlistát, a beállításokat, a nyomtatvány-szövegeket és a páciensek
+terveit — egy általad kiválasztott mappába ír, ezt a mappát a Google Drive viszi át a másik gépedre.
+Első indításkor az alkalmazás ezt a mappát kéri.
+
+- A mappa a Google Drive **„Saját meghajtó”** (My Drive) részén legyen, **„Fájlok tükrözése”**
+  módban szinkronizálva — ne megosztott meghajtón (Shared Drive).
+- Ne a Letöltések mappát válaszd: az a OneDrive-ra is szinkronizálhat.
+- **Az első gépen** hozz létre egy új, üres mappát (például `Mandoki Dental adatok`), és azt válaszd:
+  az alkalmazás felépíti benne az adatmappát.
+- **A második gépen** várd meg, hogy a Google Drive letöltse ezt a mappát, és ugyanezt válaszd ki. Ha a
+  mappa még üresnek látszik, ne hozz létre benne új adatmappát: várd meg a letöltést.
+
+A kiválasztott mappa később a Beállítások → **Adattárolás** fülön látszik és cserélhető. Ha induláskor
+a mappa nem érhető el (például a Drive még nem indult el), az alkalmazás ezt kiírja: várd meg a
+Drive-ot, majd **Újrapróba**. Az adatmappához az alkalmazás eltávolítása nem nyúl.
+
+## Gépváltás
+
+Egyszerre mindig csak az egyik gépen dolgozz. Gépváltáskor:
+
+1. Zárd be az alkalmazást ezen a gépen.
+2. Várd meg, hogy a Google Drive ikonja jelezze: a feltöltés befejeződött.
+3. A másik gépen várd meg, hogy a Google Drive letöltse a változásokat.
+4. Csak ezután nyisd meg ott az alkalmazást.
+
+Ha a munkamenetben mentettél, az alkalmazás bezáráskor erre röviden emlékeztet.

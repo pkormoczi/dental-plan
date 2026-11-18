@@ -8,7 +8,7 @@ test.describe.serial('Electron füst-teszt', () => {
   let futo: FutoApp;
 
   test.beforeAll(async () => {
-    futo = await inditas();
+    futo = await inditas({ demo: true });
   });
 
   test.afterAll(async () => {

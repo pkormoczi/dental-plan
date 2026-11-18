@@ -5,6 +5,13 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { uresTorzsadat } from '../src/domain/paciensAdatok';
 import { makeBlankPlan } from '../src/storage/szerzodesTesztek';
 import {
+  ADATMAPPA_HASZNAL_CSATORNA,
+  ADATMAPPA_MEGNYIT_CSATORNA,
+  ADATMAPPA_POTOL_CSATORNA,
+  ADATMAPPA_UJRA_CSATORNA,
+  ADATMAPPA_VALASZT_CSATORNA,
+  ALAPSABLONOK_POTOL_CSATORNA,
+  KILEPES_CSATORNA,
   MEGMUTAT_CSATORNA,
   PDF_MASOL_CSATORNA,
   PDF_MEGNYIT_CSATORNA,
@@ -14,7 +21,17 @@ import {
 import { PDF_FAJLNEV } from './fileSystemStorage';
 import { FileSystemStorage } from './fileSystemStorage';
 import { FsPrimitivek } from './fsPrimitivek';
-import { kuldoEllenor, megmutatKezelo, pdfKezelok, taroloHivas, taroloKezelok, type KuldoEsemeny } from './ipcKezelok';
+import {
+  adatmappaKezelok,
+  kilepesKezelo,
+  kuldoEllenor,
+  megmutatKezelo,
+  pdfKezelok,
+  taroloHivas,
+  taroloKezelok,
+  type AdatmappaMuveletek,
+  type KuldoEsemeny,
+} from './ipcKezelok';
 import { PDF_MAX_BAJT } from './ipcValidate';
 
 const ORIGIN = 'app://mandoki-dental';
@@ -55,7 +72,7 @@ describe('taroloHivas', () => {
   beforeEach(async () => {
     gyoker = await ujMappa();
     tarolo = new FileSystemStorage(new FsPrimitivek(gyoker, { kesleltet: async () => {} }));
-    await tarolo.init();
+    await tarolo.adatmappatLetrehoz();
   });
 
   it('a saját főablakból érkező hívást kiszolgálja', async () => {
@@ -139,9 +156,134 @@ describe('taroloHivas', () => {
 describe('taroloKezelok', () => {
   it('minden PlanStorage-metódushoz pontosan egy storage:<metódus> csatornát regisztrál', () => {
     const csatornak: string[] = [];
-    taroloKezelok({ handle: (c) => void csatornak.push(c) }, {} as never, kuldoEngedett);
+    taroloKezelok({ handle: (c) => void csatornak.push(c) }, () => null, kuldoEngedett);
 
     expect(csatornak).toEqual(TAROLO_METODUSOK.map((m) => `storage:${m}`));
+  });
+
+  type Kezelo = (e: KuldoEsemeny, ...args: unknown[]) => Promise<unknown>;
+  async function regisztralt(tarolo: FileSystemStorage | null) {
+    const kezelok = new Map<string, Kezelo>();
+    let irasok = 0;
+    taroloKezelok({ handle: (c, k) => void kezelok.set(c, k) }, () => tarolo, kuldoEngedett, undefined, () => irasok++);
+    const hiv = (metodus: string, args: unknown[], e: KuldoEsemeny = sajat) =>
+      kezelok.get(`storage:${metodus}`)!(e, ...args) as Promise<IpcEredmeny<unknown>>;
+    return { hiv, irasok: () => irasok };
+  }
+
+  it('sikeres írás után jelez a zárás-őrnek; olvasás, elutasított küldő és sikertelen hívás után nem', async () => {
+    const tarolo = new FileSystemStorage(new FsPrimitivek(await ujMappa(), { kesleltet: async () => {} }));
+    await tarolo.adatmappatLetrehoz();
+    const { hiv, irasok } = await regisztralt(tarolo);
+    const pl = await tarolo.loadPriceList();
+
+    await hiv('loadPriceList', []);
+    await hiv('savePriceList', [pl], { senderFrame: { url: `${ORIGIN}/index.html` } });
+    await hiv('savePatientData', ['nem-letezo', {}]);
+    expect(irasok()).toBe(0);
+
+    expect((await hiv('savePriceList', [pl])).ok).toBe(true);
+    expect(irasok()).toBe(1);
+  });
+
+  it('adatmappa nélkül minden hívás hibát ad', async () => {
+    const { hiv } = await regisztralt(null);
+
+    expect(await hiv('listPatients', [])).toMatchObject({ ok: false, hiba: { kod: 'EGYEB', uzenet: 'Nincs megnyitott adatmappa.' } });
+  });
+});
+
+describe('adatmappaKezelok', () => {
+  const idegen: KuldoEsemeny = { senderFrame: { url: `${ORIGIN}/index.html` } };
+  type Kezelo = (e: KuldoEsemeny, ...args: unknown[]) => Promise<unknown>;
+
+  function regisztralt(tarolo: AdatmappaMuveletek['tarolo'] = null) {
+    const kezelok = new Map<string, Kezelo>();
+    const hivasok: string[] = [];
+    const megnyitott: string[] = [];
+    let irasok = 0;
+    const v = { ut: '/adat', allapot: 'rendben' as const, hianyzik: [], hosszuUtvonal: false };
+    const adatmappa: AdatmappaMuveletek = {
+      valaszt: async () => (hivasok.push('valaszt'), v),
+      ujraellenoriz: async () => (hivasok.push('ujra'), v),
+      potol: async () => (hivasok.push('potol'), v),
+      hasznal: async (letrehoz) => (hivasok.push(`hasznal:${letrehoz}`), v),
+      tarolo,
+    };
+    adatmappaKezelok(
+      { handle: (c, k) => void kezelok.set(c, k) },
+      adatmappa,
+      kuldoEngedett,
+      { mappatMegnyit: async (abs) => (megnyitott.push(abs), '') },
+      () => irasok++,
+    );
+    const hiv = (csatorna: string, args: unknown[] = [], e: KuldoEsemeny = sajat) =>
+      kezelok.get(csatorna)!(e, ...args) as Promise<IpcEredmeny<unknown>>;
+    return { hiv, hivasok, megnyitott, irasok: () => irasok, csatornak: [...kezelok.keys()] };
+  }
+
+  it('minden csatorna idegen küldőt elutasít, és semmit nem hív', async () => {
+    const { hiv, hivasok, csatornak } = regisztralt({ gyoker: '/adat', alapsablonokatPotol: async () => ['x'] });
+
+    for (const c of csatornak) {
+      expect(await hiv(c, [true], idegen)).toMatchObject({ ok: false, hiba: { kod: 'TILTOTT_KULDO' } });
+    }
+    expect(csatornak.sort()).toEqual(
+      [
+        ADATMAPPA_VALASZT_CSATORNA,
+        ADATMAPPA_UJRA_CSATORNA,
+        ADATMAPPA_POTOL_CSATORNA,
+        ADATMAPPA_HASZNAL_CSATORNA,
+        ADATMAPPA_MEGNYIT_CSATORNA,
+        ALAPSABLONOK_POTOL_CSATORNA,
+      ].sort(),
+    );
+    expect(hivasok).toEqual([]);
+  });
+
+  it('a használat csak logikai jelzőt fogad, és csak a létrehozás jelez írást', async () => {
+    const { hiv, hivasok, irasok } = regisztralt();
+
+    expect(await hiv(ADATMAPPA_HASZNAL_CSATORNA, ['igen'])).toMatchObject({ ok: false, hiba: { kod: 'ERVENYTELEN_PARAMETER' } });
+    await hiv(ADATMAPPA_HASZNAL_CSATORNA, [false]);
+    expect(irasok()).toBe(0);
+    await hiv(ADATMAPPA_HASZNAL_CSATORNA, [true]);
+
+    expect(hivasok).toEqual(['hasznal:false', 'hasznal:true']);
+    expect(irasok()).toBe(1);
+  });
+
+  it('a „Mappa megnyitása” az aktív adatmappát nyitja; adatmappa nélkül hibát ad', async () => {
+    const aktiv = regisztralt({ gyoker: '/adat', alapsablonokatPotol: async () => [] });
+    expect((await aktiv.hiv(ADATMAPPA_MEGNYIT_CSATORNA)).ok).toBe(true);
+    expect(aktiv.megnyitott).toEqual(['/adat']);
+
+    const nincs = regisztralt(null);
+    expect(await nincs.hiv(ADATMAPPA_MEGNYIT_CSATORNA)).toMatchObject({ ok: false });
+    expect(nincs.megnyitott).toEqual([]);
+  });
+
+  it('az alapsablon-pótlás csak akkor jelez írást, ha tényleg írt', async () => {
+    const semmi = regisztralt({ gyoker: '/adat', alapsablonokatPotol: async () => [] });
+    expect(await semmi.hiv(ALAPSABLONOK_POTOL_CSATORNA)).toEqual({ ok: true, ertek: [] });
+    expect(semmi.irasok()).toBe(0);
+
+    const irt = regisztralt({ gyoker: '/adat', alapsablonokatPotol: async () => ['garancia-hu-v1.md'] });
+    expect(await irt.hiv(ALAPSABLONOK_POTOL_CSATORNA)).toEqual({ ok: true, ertek: ['garancia-hu-v1.md'] });
+    expect(irt.irasok()).toBe(1);
+  });
+});
+
+describe('kilepesKezelo', () => {
+  it('idegen küldőre nem lép ki, a sajátra igen', async () => {
+    let kezelo: ((e: KuldoEsemeny) => Promise<unknown>) | null = null;
+    let kilepesek = 0;
+    kilepesKezelo({ handle: (c, k) => void (c === KILEPES_CSATORNA && (kezelo = k)) }, kuldoEngedett, () => kilepesek++);
+
+    expect(await kezelo!({ senderFrame: { url: `${ORIGIN}/index.html` } })).toMatchObject({ ok: false, hiba: { kod: 'TILTOTT_KULDO' } });
+    expect(kilepesek).toBe(0);
+    expect(await kezelo!(sajat)).toEqual({ ok: true, ertek: undefined });
+    expect(kilepesek).toBe(1);
   });
 });
 
@@ -194,7 +336,7 @@ describe('pdfKezelok („Megnyitás”, „Másolás máshová”)', () => {
     const gyoker = await ujMappa();
     const prim = new FsPrimitivek(gyoker, { kesleltet: async () => {} });
     const tarolo = new FileSystemStorage(prim);
-    await tarolo.init();
+    await tarolo.adatmappatLetrehoz();
     const ref = await tarolo.savePlan(makeBlankPlan(), new Uint8Array([37, 80, 68, 70]));
     const megnyitott: string[] = [];
     const javasolt: string[] = [];

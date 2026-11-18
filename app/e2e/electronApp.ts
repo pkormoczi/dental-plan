@@ -1,5 +1,5 @@
 import { _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -29,11 +29,25 @@ export type FutoApp = {
   leallitas: () => Promise<void>;
 };
 
-// Minden futás friss, ideiglenes userData-t kap: a teszt sosem a fejlesztő vagy egy telepített
-// app piszkozatán dolgozik (root CLAUDE.md § Böngésző-automatizálás). A `gyoker` megadásával az
-// app a fájlrendszeres tárolón fut, abban az ideiglenes mappában.
-export async function inditas(opciok: { gyoker?: string } = {}): Promise<FutoApp> {
-  const userData = mkdtempSync(path.join(os.tmpdir(), 'mandoki-fust-'));
+export function ujUserData(): string {
+  return mkdtempSync(path.join(os.tmpdir(), 'mandoki-fust-'));
+}
+
+/** Egy korábbi futás configja: az app ezzel a mappával indul, varázsló nélkül. */
+export function configIr(userData: string, gyokerMappa: string): void {
+  writeFileSync(path.join(userData, 'config.json'), JSON.stringify({ schemaVersion: 1, gyokerMappa, gepId: 'e2e' }));
+}
+
+// Minden futás ideiglenes userData-t kap: a teszt sosem a fejlesztő vagy egy telepített app
+// piszkozatán és beállításán dolgozik (root CLAUDE.md § Böngésző-automatizálás). `demo`: a héj
+// tesztjei a demó-tárolón, adatmappa nélkül futnak. `mappaValasztas`: a natív mappaválasztó
+// helyett ezt a mappát kapja az app. Egy átadott `userData` (újraindításhoz) a leállításkor
+// megmarad, a hívó takarít.
+export async function inditas(
+  opciok: { demo?: boolean; mappaValasztas?: string; userData?: string } = {},
+): Promise<FutoApp> {
+  const sajatUserData = opciok.userData == null;
+  const userData = opciok.userData ?? ujUserData();
   const { exe, args } = inditasiParancs();
   const app = await electron.launch({
     executablePath: exe,
@@ -42,7 +56,8 @@ export async function inditas(opciok: { gyoker?: string } = {}): Promise<FutoApp
     env: {
       ...process.env,
       DENTAL_PLAN_TESZT_USER_DATA: userData,
-      ...(opciok.gyoker ? { DENTAL_PLAN_TESZT_GYOKER: opciok.gyoker } : {}),
+      ...(opciok.demo ? { DENTAL_PLAN_TESZT_DEMO: '1' } : {}),
+      ...(opciok.mappaValasztas ? { DENTAL_PLAN_TESZT_MAPPAVALASZTAS: opciok.mappaValasztas } : {}),
     },
   });
   const page = await app.firstWindow();
@@ -62,7 +77,7 @@ export async function inditas(opciok: { gyoker?: string } = {}): Promise<FutoApp
     leallitas: async () => {
       // A főablak bezárása maga is kilépés; a már leállt appon a close() nem dob.
       await app.close().catch(() => {});
-      rmSync(userData, { recursive: true, force: true });
+      if (sajatUserData) rmSync(userData, { recursive: true, force: true });
     },
   };
 }

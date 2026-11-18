@@ -95,7 +95,7 @@ describe('naplózás az IPC-határon', () => {
   async function kornyezet(fs?: FsMuveletek) {
     const gyoker = await ujMappa();
     const tarolo = new FileSystemStorage(new FsPrimitivek(gyoker, { fs, kesleltet: async () => {} }));
-    await tarolo.init();
+    await tarolo.adatmappatLetrehoz();
     const naplo = new Naplo(path.join(await ujMappa(), 'naplo'));
     const naplozo = gyokerNaplozo(naplo, gyoker);
     const hiv = (metodus: Parameters<typeof taroloHivas>[2], args: unknown[]) =>
@@ -161,7 +161,7 @@ describe('naplózás az IPC-határon', () => {
   it('ha a naplózó maga hibázik, az IPC-eredmény ugyanaz marad', async () => {
     const gyoker = await ujMappa();
     const tarolo = new FileSystemStorage(new FsPrimitivek(gyoker, { kesleltet: async () => {} }));
-    await tarolo.init();
+    await tarolo.adatmappatLetrehoz();
     const pl = await tarolo.loadPriceList();
     await fsp.writeFile(path.join(gyoker, 'arlista.json'), '{}');
 

@@ -3,13 +3,21 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 import {
-  AKTIV_CSATORNA,
+  ADATMAPPA_ALLAPOT_CSATORNA,
+  ADATMAPPA_HASZNAL_CSATORNA,
+  ADATMAPPA_MEGNYIT_CSATORNA,
+  ADATMAPPA_POTOL_CSATORNA,
+  ADATMAPPA_UJRA_CSATORNA,
+  ADATMAPPA_VALASZT_CSATORNA,
+  ALAPSABLONOK_POTOL_CSATORNA,
+  KILEPES_CSATORNA,
   MEGMUTAT_CSATORNA,
   NAPLO_MEGMUTAT_CSATORNA,
   PDF_MASOL_CSATORNA,
   PDF_MEGNYIT_CSATORNA,
   TAROLO_METODUSOK,
   taroloCsatorna,
+  ZARAS_CSATORNA,
   type TaroloHid,
 } from '../src/storage/taroloIpc';
 
@@ -17,7 +25,7 @@ const engedett = new Set<string>(TAROLO_METODUSOK);
 
 const hid: TaroloHid = {
   // Szinkron, mert a renderer a tárolót az első renderkor választja ki.
-  aktiv: ipcRenderer.sendSync(AKTIV_CSATORNA) === true,
+  adatmappa: ipcRenderer.sendSync(ADATMAPPA_ALLAPOT_CSATORNA) ?? null,
   hiv: (metodus, ...args) =>
     engedett.has(metodus)
       ? ipcRenderer.invoke(taroloCsatorna(metodus), ...args)
@@ -26,6 +34,19 @@ const hid: TaroloHid = {
   pdfMegnyit: (ref) => ipcRenderer.invoke(PDF_MEGNYIT_CSATORNA, ref),
   pdfMasol: (forras, javasoltNev) => ipcRenderer.invoke(PDF_MASOL_CSATORNA, forras, javasoltNev),
   naploMegmutat: () => ipcRenderer.invoke(NAPLO_MEGMUTAT_CSATORNA),
+  adatmappaValaszt: () => ipcRenderer.invoke(ADATMAPPA_VALASZT_CSATORNA),
+  adatmappaUjra: () => ipcRenderer.invoke(ADATMAPPA_UJRA_CSATORNA),
+  adatmappaPotol: () => ipcRenderer.invoke(ADATMAPPA_POTOL_CSATORNA),
+  adatmappaHasznal: (letrehoz) => ipcRenderer.invoke(ADATMAPPA_HASZNAL_CSATORNA, letrehoz),
+  adatmappaMegnyit: () => ipcRenderer.invoke(ADATMAPPA_MEGNYIT_CSATORNA),
+  alapsablonokPotol: () => ipcRenderer.invoke(ALAPSABLONOK_POTOL_CSATORNA),
+  zarasra: (fn) => {
+    // Az eseményobjektum nem jut át a rendererbe: a `sender` a teljes webContents volna.
+    const figyelo = () => fn();
+    ipcRenderer.on(ZARAS_CSATORNA, figyelo);
+    return () => void ipcRenderer.off(ZARAS_CSATORNA, figyelo);
+  },
+  kilepes: () => ipcRenderer.invoke(KILEPES_CSATORNA),
 };
 
 contextBridge.exposeInMainWorld('mandokiTarolo', hid);

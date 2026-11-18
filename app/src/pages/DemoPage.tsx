@@ -12,21 +12,27 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ChangelogCard from '../components/ChangelogCard';
 import FeatureOverviewCard from '../components/FeatureOverviewCard';
 import { t } from '../design/tokens';
+import { useStorage } from '../storage/StorageContext';
 import AdatkezelesSection from './demo/AdatkezelesSection';
 import FileTreeSection from './demo/FileTreeSection';
 import OsszesTervSection from './demo/OsszesTervSection';
 
 const FULEK = ['funkciok', 'tervek', 'filerendszer', 'valtozasnaplo', 'adatkezeles'] as const;
 type Ful = (typeof FULEK)[number];
+// A telepített appban a tároló a valódi adatmappa: a localStorage-fa és a demó-adat kezelése
+// ott nem működne; helyette a Fájlkezelő és a Beállítások Adattárolás füle.
+const CSAK_DEMO: ReadonlySet<Ful> = new Set(['filerendszer', 'adatkezeles']);
 
-function ervenyesFul(tab: string | undefined): Ful {
-  return (FULEK as readonly string[]).includes(tab ?? '') ? (tab as Ful) : 'funkciok';
+function ervenyesFul(tab: string | undefined, telepitett: boolean): Ful {
+  const ful = (FULEK as readonly string[]).includes(tab ?? '') ? (tab as Ful) : 'funkciok';
+  return telepitett && CSAK_DEMO.has(ful) ? 'funkciok' : ful;
 }
 
 export default function DemoPage() {
   const { tab } = useParams<{ tab?: string }>();
   const navigate = useNavigate();
-  const aktivFul = ervenyesFul(tab);
+  const telepitett = useStorage().adattarolas != null;
+  const aktivFul = ervenyesFul(tab, telepitett);
 
   return (
     <Box style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -45,9 +51,9 @@ export default function DemoPage() {
         <Tabs.List mb="4">
           <Tabs.Trigger value="funkciok">Funkciók</Tabs.Trigger>
           <Tabs.Trigger value="tervek">Összes terv</Tabs.Trigger>
-          <Tabs.Trigger value="filerendszer">Filerendszer</Tabs.Trigger>
+          {!telepitett && <Tabs.Trigger value="filerendszer">Filerendszer</Tabs.Trigger>}
           <Tabs.Trigger value="valtozasnaplo">Változásnapló</Tabs.Trigger>
-          <Tabs.Trigger value="adatkezeles">Adatkezelés</Tabs.Trigger>
+          {!telepitett && <Tabs.Trigger value="adatkezeles">Adatkezelés</Tabs.Trigger>}
         </Tabs.List>
 
         <Tabs.Content value="funkciok">
@@ -60,9 +66,11 @@ export default function DemoPage() {
           <OsszesTervSection />
         </Tabs.Content>
 
-        <Tabs.Content value="filerendszer">
-          <FileTreeSection />
-        </Tabs.Content>
+        {!telepitett && (
+          <Tabs.Content value="filerendszer">
+            <FileTreeSection />
+          </Tabs.Content>
+        )}
 
         <Tabs.Content value="valtozasnaplo">
           <Box style={{ maxWidth: 760 }}>
@@ -70,11 +78,13 @@ export default function DemoPage() {
           </Box>
         </Tabs.Content>
 
-        <Tabs.Content value="adatkezeles">
-          <Box style={{ maxWidth: 760 }}>
-            <AdatkezelesSection />
-          </Box>
-        </Tabs.Content>
+        {!telepitett && (
+          <Tabs.Content value="adatkezeles">
+            <Box style={{ maxWidth: 760 }}>
+              <AdatkezelesSection />
+            </Box>
+          </Tabs.Content>
+        )}
       </Tabs.Root>
     </Box>
   );

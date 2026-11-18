@@ -15,7 +15,14 @@ import { DemoDraftStorage } from './DemoDraftStorage';
 import { DemoTemplateDraftCache } from './DemoTemplateDraftCache';
 import { DemoStorage } from './DemoStorage';
 import { ElectronStorage } from './ElectronStorage';
-import { storageHibaBolHiba, type PdfForras } from './taroloIpc';
+import {
+  storageHibaBolHiba,
+  type AdatmappaAllapot,
+  type IpcEredmeny,
+  type MappaVizsgalat,
+  type PdfForras,
+  type TaroloHid,
+} from './taroloIpc';
 import type { DemoNode } from './demoFileTree';
 import type { DraftStorage } from './DraftStorage';
 import type { PlanStorage } from './PlanStorage';
@@ -64,6 +71,64 @@ export interface StorageContextValue {
    * nincs napló, ott `null`.
    */
   naploMegmutat: (() => Promise<void>) | null;
+  /**
+   * A telepített app adatmappája: varázsló, blokkoló képernyő, Adattárolás fül (migrációs terv
+   * §6.2–§6.4); a demóban nincs adatmappa, ott `null`.
+   */
+  adattarolas: Adattarolas | null;
+  /** A kilépési emlékeztető (záró képernyő); a demóban `null`. */
+  zaras: Zaras | null;
+}
+
+export interface Adattarolas {
+  /** Az adatmappa állapota az alkalmazás betöltésekor. */
+  allapot: AdatmappaAllapot;
+  /** Natív mappaválasztó; `null`, ha a doki bezárta. */
+  valaszt: () => Promise<MappaVizsgalat | null>;
+  ujraellenoriz: () => Promise<AdatmappaAllapot>;
+  /** Hiányos vizsgált mappában a hiányzó alapfájlok. */
+  potol: () => Promise<MappaVizsgalat>;
+  /** `rendben`-nél átvált; üresbe csak `letrehoz`-zal épít. */
+  hasznal: (letrehoz: boolean) => Promise<MappaVizsgalat>;
+  megnyit: () => Promise<void>;
+  /** A beírt alapsablonok neve. */
+  alapsablonokatPotol: () => Promise<string[]>;
+  /** Váltás után: a memóriabeli állapot a régi mappáé, ezért teljes újratöltés a Kezdőlapra. */
+  ujratolt: () => void;
+}
+
+export interface Zaras {
+  /** A main a bezárás előtt jelez; a visszaadott függvény leiratkozik. */
+  figyel: (fn: () => void) => () => void;
+  kilep: () => Promise<void>;
+}
+
+async function kibont<T>(hivas: Promise<IpcEredmeny<T>>): Promise<T> {
+  const eredmeny = await hivas;
+  if (!eredmeny.ok) throw storageHibaBolHiba(eredmeny.hiba);
+  return eredmeny.ertek;
+}
+
+function telepitettKepessegek(hid: TaroloHid, allapot: AdatmappaAllapot): Pick<StorageContextValue, 'adattarolas' | 'zaras'> {
+  return {
+    adattarolas: {
+      allapot,
+      valaszt: () => kibont(hid.adatmappaValaszt()),
+      ujraellenoriz: () => kibont(hid.adatmappaUjra()),
+      potol: () => kibont(hid.adatmappaPotol()),
+      hasznal: (letrehoz) => kibont(hid.adatmappaHasznal(letrehoz)),
+      megnyit: () => kibont(hid.adatmappaMegnyit()),
+      alapsablonokatPotol: () => kibont(hid.alapsablonokPotol()),
+      ujratolt: () => {
+        window.location.hash = '#/';
+        window.location.reload();
+      },
+    },
+    zaras: {
+      figyel: (fn) => hid.zarasra(fn),
+      kilep: () => kibont(hid.kilepes()),
+    },
+  };
 }
 
 export interface PdfMuveletek {
@@ -81,7 +146,26 @@ export function StorageProvider({ children }: { children: ReactNode }) {
     // A piszkozat és a sablon-piszkozat a telepített appban is a renderer localStorage-ában
     // marad, gépenként (migrációs terv §2); csak a system of record költözik a gyökérmappába.
     const hid = typeof window === 'undefined' ? undefined : window.mandokiTarolo;
-    if (hid?.aktiv) {
+    if (hid?.adatmappa && hid.adatmappa.allapot !== 'rendben') {
+      // Adatmappa nélkül a tároló nem hívható: előtte a varázsló vagy a blokkoló képernyő áll,
+      // az AppState be sem töltődik.
+      return {
+        storage: new ElectronStorage(hid),
+        ready: new Promise<void>(() => {}),
+        resetDemoData: () => {},
+        clearAll: () => {},
+        listFileTree: () => [],
+        readRawFile: () => null,
+        isSeedVersion: () => false,
+        drafts,
+        templateDraftCache: new DemoTemplateDraftCache(),
+        megmutat: null,
+        pdfMuveletek: null,
+        naploMegmutat: null,
+        ...telepitettKepessegek(hid, hid.adatmappa),
+      };
+    }
+    if (hid?.adatmappa) {
       const storage = new ElectronStorage(hid);
       return {
         storage,
@@ -112,6 +196,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
           const eredmeny = await hid.naploMegmutat();
           if (!eredmeny.ok) throw storageHibaBolHiba(eredmeny.hiba);
         },
+        ...telepitettKepessegek(hid, hid.adatmappa),
       };
     }
     const demo = new DemoStorage();
@@ -129,6 +214,8 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       megmutat: null,
       pdfMuveletek: null,
       naploMegmutat: null,
+      adattarolas: null,
+      zaras: null,
     };
   }, []);
 

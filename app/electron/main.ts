@@ -2,12 +2,21 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, session, shell } f
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { AKTIV_CSATORNA } from '../src/storage/taroloIpc';
+import { ADATMAPPA_ALLAPOT_CSATORNA, ZARAS_CSATORNA } from '../src/storage/taroloIpc';
+import { Adatmappa } from './adatmappa.js';
 import { buildFajlUtvonal, mimeTipus } from './buildKiszolgalas.js';
-import { FileSystemStorage, PDF_FAJLNEV } from './fileSystemStorage.js';
-import { FsPrimitivek } from './fsPrimitivek.js';
-import { kuldoEllenor, megmutatKezelo, naploKezelo, pdfKezelok, taroloKezelok } from './ipcKezelok.js';
-import { gyokerNaplozo, Naplo } from './naplo.js';
+import { PDF_FAJLNEV } from './fileSystemStorage.js';
+import {
+  adatmappaKezelok,
+  kilepesKezelo,
+  kuldoEllenor,
+  megmutatKezelo,
+  naploKezelo,
+  pdfKezelok,
+  taroloKezelok,
+} from './ipcKezelok.js';
+import { gyokerNaplozo, Naplo, type Naplozo } from './naplo.js';
+import { zarasOr, type ZarasOr } from './zaras.js';
 import { menuSablon } from './menu.js';
 import { foablakNavigacioEngedett, pdfAblakNavigacioEngedett, sajatOrigin, ujAblakEngedett } from './navigacio.js';
 import { APP_ID, APP_ORIGIN, APP_PROTOKOLL, USER_DATA_MAPPA } from './protocol.js';
@@ -28,9 +37,11 @@ const betoltendo = devSzerver ?? `${APP_ORIGIN}/index.html`;
 // mappát ad -- kizárólag erre szolgál ez a változó. Az egy-példány zár is a userData-ban él,
 // ezért ez előtte áll.
 const TESZT_USER_DATA = process.env.DENTAL_PLAN_TESZT_USER_DATA;
-// A gyökérmappa kiválasztásáig a valódi fájlrendszeres tároló csak a tesztekben fut: a doki
-// telepített appja addig a renderer demó-tárolóján marad.
-const TESZT_GYOKER = process.env.DENTAL_PLAN_TESZT_GYOKER;
+// Csak ideiglenes userData mellett, hogy egy telepített app beállításához ne érjen: a héj
+// tesztjei (CSP, PDF, navigáció) a demó-tárolón, adatmappa nélkül futnak, a fájlrendszeres
+// tesztben pedig a natív mappaválasztó helyett a teszt adja a választott mappát.
+const TESZT_DEMO = TESZT_USER_DATA != null && process.env.DENTAL_PLAN_TESZT_DEMO === '1';
+const TESZT_MAPPAVALASZTAS = TESZT_USER_DATA != null ? process.env.DENTAL_PLAN_TESZT_MAPPAVALASZTAS : undefined;
 
 app.setPath(
   'userData',
@@ -50,30 +61,62 @@ if (!app.requestSingleInstanceLock()) {
 
 function inditas(): void {
   let foablak: BrowserWindow | null = null;
-  const prim = TESZT_GYOKER ? new FsPrimitivek(TESZT_GYOKER) : null;
-  const tarolo = prim ? new FileSystemStorage(prim) : null;
-  // Helyi diagnosztikai napló a `userData` alatt; csak a fájlrendszeres tároló ír bele.
+  // Helyi diagnosztikai napló a `userData` alatt; csak a fájlrendszeres tároló ír bele, mindig
+  // az aktuális adatmappához redaktálva.
   const naplo = new Naplo(path.join(app.getPath('userData'), 'naplo'));
-  const naplozo = TESZT_GYOKER ? gyokerNaplozo(naplo, TESZT_GYOKER) : undefined;
-  if (TESZT_GYOKER) {
-    void naplo.fejlec({ verzio: app.getVersion(), os: `${process.platform} ${os.release()}`, gyoker: TESZT_GYOKER });
-  }
+  let gyokerNaplo: Naplozo | undefined;
+  const naplozo: Naplozo = (muvelet, err, ut) => gyokerNaplo?.(muvelet, err, ut);
+  const adatmappa = TESZT_DEMO
+    ? null
+    : new Adatmappa({
+        userData: app.getPath('userData'),
+        mappatValaszt: async () => {
+          if (TESZT_MAPPAVALASZTAS) return TESZT_MAPPAVALASZTAS;
+          const opciok: Electron.OpenDialogOptions = {
+            title: 'Adatmappa kiválasztása',
+            properties: ['openDirectory', 'createDirectory'],
+          };
+          const valasz = foablak ? await dialog.showOpenDialog(foablak, opciok) : await dialog.showOpenDialog(opciok);
+          return valasz.canceled ? null : (valasz.filePaths[0] ?? null);
+        },
+        aktivalva: (gyoker) => {
+          gyokerNaplo = gyokerNaplozo(naplo, gyoker);
+          void naplo.fejlec({ verzio: app.getVersion(), os: `${process.platform} ${os.release()}`, gyoker });
+        },
+      });
   const kuldoEngedett = kuldoEllenor(() => foablak, sajatOrigin(betoltendo));
-  ipcMain.on(AKTIV_CSATORNA, (e) => {
-    e.returnValue = tarolo != null && kuldoEngedett(e);
+  const zaras = zarasOr({
+    kepernyotKer: () => foablak?.webContents.send(ZARAS_CSATORNA),
+    bezar: () => foablak?.close(),
   });
-  if (tarolo) {
-    taroloKezelok(ipcMain, tarolo, kuldoEngedett, naplozo);
+  const irasTortent = () => zaras.irasTortent();
+  ipcMain.on(ADATMAPPA_ALLAPOT_CSATORNA, (e) => {
+    e.returnValue = adatmappa && kuldoEngedett(e) ? adatmappa.allapot : null;
+  });
+  kilepesKezelo(ipcMain, kuldoEngedett, () => zaras.kilep());
+  if (adatmappa) {
+    const aktivPrim = () => {
+      if (!adatmappa.prim) throw new Error('Nincs megnyitott adatmappa.');
+      return adatmappa.prim;
+    };
+    const prim = { abszolut: async (ut: string) => aktivPrim().abszolut(ut) };
+    taroloKezelok(ipcMain, () => adatmappa.tarolo, kuldoEngedett, naplozo, irasTortent);
+    // Csak a gyökér maga nyílik meg (`openPath`): mappa, nem futtatható fájl.
+    adatmappaKezelok(ipcMain, adatmappa, kuldoEngedett, { mappatMegnyit: (abs) => shell.openPath(abs) }, irasTortent);
     naploKezelo(ipcMain, kuldoEngedett, async () => {
       await mkdir(naplo.mappa, { recursive: true });
       const vanFajl = await stat(naplo.fajl).then(() => true, () => false);
       shell.showItemInFolder(vanFajl ? naplo.fajl : naplo.mappa);
     });
-  }
-  // Csak kijelölés a fájlkezelőben: megnyitás vagy futtatás (`openPath`, `openExternal`) nincs.
-  if (prim) megmutatKezelo(ipcMain, prim, kuldoEngedett, (abs) => shell.showItemInFolder(abs), naplozo);
-  if (tarolo && prim) {
-    pdfKezelok(ipcMain, tarolo, prim, PDF_FAJLNEV, kuldoEngedett, {
+    // Csak kijelölés a fájlkezelőben: megnyitás vagy futtatás (`openPath`, `openExternal`) nincs.
+    megmutatKezelo(ipcMain, prim, kuldoEngedett, (abs) => shell.showItemInFolder(abs), naplozo);
+    const pdfTarolo = {
+      loadPlanPdf: async (ref: Parameters<NonNullable<typeof adatmappa.tarolo>['loadPlanPdf']>[0]) => {
+        if (!adatmappa.tarolo) throw new Error('Nincs megnyitott adatmappa.');
+        return adatmappa.tarolo.loadPlanPdf(ref);
+      },
+    };
+    pdfKezelok(ipcMain, pdfTarolo, prim, PDF_FAJLNEV, kuldoEngedett, {
       megnyit: (abs) => shell.openPath(abs),
       // A Letöltések OneDrive-ra szinkronizálhat, a gyökérmappa a Drive-é: az alapmappa a
       // Dokumentumok (PRODUCT.md § Adat- és deployment-korlátok).
@@ -97,7 +140,7 @@ function inditas(): void {
 
   app.on('window-all-closed', () => app.quit());
 
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
     if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
     // Windowson az Electron a helyesírási szótárat a Google CDN-ről töltené le -- kimenő
     // kapcsolat lenne (PRODUCT.md § Adat- és deployment-korlátok).
@@ -106,7 +149,9 @@ function inditas(): void {
     Menu.setApplicationMenu(
       Menu.buildFromTemplate(menuSablon({ platform: process.platform, appNev: app.name, fejlesztoi: !app.isPackaged })),
     );
-    foablak = ablakNyitas();
+    // A renderer a preloadban, szinkron kérdezi az állapotot: az ablak csak a vizsgálat után nyílik.
+    await adatmappa?.indul().catch(() => {});
+    foablak = ablakNyitas(zaras);
   });
 }
 
@@ -131,7 +176,7 @@ const WEB_BEALLITASOK = {
   spellcheck: false,
 } as const;
 
-function ablakNyitas(): BrowserWindow {
+function ablakNyitas(zaras: ZarasOr): BrowserWindow {
   // A preload csak a főablakba kerül; a PDF-ablak a tárolót nem éri el.
   const ablak = new BrowserWindow({
     show: false,
@@ -141,6 +186,9 @@ function ablakNyitas(): BrowserWindow {
   ablak.once('ready-to-show', () => {
     ablak.maximize();
     ablak.show();
+  });
+  ablak.on('close', (e) => {
+    if (!zaras.bezarhato()) e.preventDefault();
   });
   // A főablak bezárása macOS-en is kilépés: a gépváltási szabály egyértelmű „app bezárva”
   // állapotot kér (PRODUCT.md § Adat- és deployment-korlátok).

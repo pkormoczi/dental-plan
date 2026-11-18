@@ -74,6 +74,13 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
   });
 
+  it('a demóban nincs Adattárolás fül, és a ?tab=adattarolas sem nyit meg ilyet', async () => {
+    renderSettingsOnTemplatesTab('/beallitasok?tab=adattarolas');
+    await screen.findByText('Beállítások');
+    expect(screen.queryByRole('tab', { name: /Adattárolás/ })).toBeNull();
+    expect(screen.getByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
+  });
+
   it('?tab=nyomtatvanyok belépési ponton a Nyomtatványok tab aktív', async () => {
     renderSettingsOnTemplatesTab();
     await screen.findByText('Beállítások');

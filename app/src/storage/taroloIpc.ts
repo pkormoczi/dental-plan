@@ -48,8 +48,18 @@ export const TAROLO_METODUSOK = [
 export type TaroloMetodus = (typeof TAROLO_METODUSOK)[number];
 
 export const taroloCsatorna = (metodus: TaroloMetodus) => `storage:${metodus}`;
-/** Szinkron lekérdezés a preload betöltésekor: fut-e a main-oldali tároló. */
-export const AKTIV_CSATORNA = 'storage:aktiv';
+/** Szinkron lekérdezés a preload betöltésekor: az adatmappa állapota, vagy `null` a demó-tárolón. */
+export const ADATMAPPA_ALLAPOT_CSATORNA = 'adatmappa:allapot';
+/** Natív mappaválasztó; a választott mappát a main jegyzi meg, a renderer útvonalat nem küld. */
+export const ADATMAPPA_VALASZT_CSATORNA = 'adatmappa:valaszt';
+export const ADATMAPPA_UJRA_CSATORNA = 'adatmappa:ujra';
+export const ADATMAPPA_POTOL_CSATORNA = 'adatmappa:potol';
+export const ADATMAPPA_HASZNAL_CSATORNA = 'adatmappa:hasznal';
+export const ADATMAPPA_MEGNYIT_CSATORNA = 'adatmappa:megnyit';
+export const ALAPSABLONOK_POTOL_CSATORNA = 'adatmappa:alapsablonok';
+/** Main → renderer: a bezárás előtt a záró képernyő (migrációs terv §6.4). */
+export const ZARAS_CSATORNA = 'app:zaras';
+export const KILEPES_CSATORNA = 'app:kilepes';
 /** Egy gyökérmappán belüli elem megmutatása a rendszer fájlkezelőjében. */
 export const MEGMUTAT_CSATORNA = 'shell:megmutat';
 /** Egy mentett verzió PDF-je a rendszer PDF-olvasójában. */
@@ -58,6 +68,26 @@ export const PDF_MEGNYIT_CSATORNA = 'pdf:megnyit';
 export const PDF_MASOL_CSATORNA = 'pdf:masol';
 /** A diagnosztikai napló mappája a rendszer fájlkezelőjében (migrációs terv §5.2). */
 export const NAPLO_MEGMUTAT_CSATORNA = 'naplo:megmutat';
+
+/**
+ * Egy mappa vizsgálata, írás nélkül: `rendben` a miénk, `ures`-be új adatmappa építhető,
+ * `hianyos`-ból hiányzik egy saját elem, `idegen` más tartalmú, `elerhetetlen` nem olvasható.
+ */
+export type MappaAllapot = 'rendben' | 'ures' | 'hianyos' | 'idegen' | 'elerhetetlen';
+
+export interface MappaVizsgalat {
+  ut: string;
+  allapot: MappaAllapot;
+  /** `hianyos`-nál a hiányzó saját elemek. */
+  hianyzik: string[];
+  /** `elerhetetlen`-nél a hiba fajtája. */
+  errno?: IoErrno;
+  /** A Windows 260 karakteres útvonalkorlátjához közeli gyökér. */
+  hosszuUtvonal: boolean;
+}
+
+/** A telepített app adatmappája; `nincs` = még nem választott (első indítás). */
+export type AdatmappaAllapot = { allapot: 'nincs' } | MappaVizsgalat;
 
 /** A „Másolás máshová” forrása: egy mentett verzió, vagy a még nem mentett piszkozat bájtjai. */
 export type PdfForras = { ref: PlanRef } | { bajtok: Uint8Array };
@@ -85,7 +115,8 @@ export type IpcEredmeny<T> = { ok: true; ertek: T } | { ok: false; hiba: Storage
 
 /** A preload által a rendererbe tett híd. */
 export interface TaroloHid {
-  aktiv: boolean;
+  /** Az adatmappa állapota a renderer betöltésekor; `null`, ha a renderer a demó-tárolón fut. */
+  adatmappa: AdatmappaAllapot | null;
   hiv(metodus: TaroloMetodus, ...args: unknown[]): Promise<IpcEredmeny<unknown>>;
   /** A gyökérhez relatív útvonalú elem kijelölve a rendszer fájlkezelőjében. */
   megmutat(relUtvonal: string): Promise<IpcEredmeny<void>>;
@@ -93,6 +124,23 @@ export interface TaroloHid {
   /** A célt a main kérdezi meg a dokitól; a választott fájl neve, vagy `null`, ha bezárta. */
   pdfMasol(forras: PdfForras, javasoltNev: string): Promise<IpcEredmeny<string | null>>;
   naploMegmutat(): Promise<IpcEredmeny<void>>;
+  /** `null`, ha a doki bezárta a dialógust. */
+  adatmappaValaszt(): Promise<IpcEredmeny<MappaVizsgalat | null>>;
+  /** A vizsgált (induláskor a beállított) mappa újbóli vizsgálata, írás nélkül. */
+  adatmappaUjra(): Promise<IpcEredmeny<AdatmappaAllapot>>;
+  /** Hiányos vizsgált mappában a hiányzó alapfájlok; a meglévőkhöz nem nyúl. */
+  adatmappaPotol(): Promise<IpcEredmeny<MappaVizsgalat>>;
+  /**
+   * A vizsgált mappa lesz az adatmappa, ha `rendben`; üresbe csak `letrehoz`-zal épül új. Más
+   * állapotnál nem vált, a vizsgálatot adja.
+   */
+  adatmappaHasznal(letrehoz: boolean): Promise<IpcEredmeny<MappaVizsgalat>>;
+  adatmappaMegnyit(): Promise<IpcEredmeny<void>>;
+  /** A beírt alapsablonok neve. */
+  alapsablonokPotol(): Promise<IpcEredmeny<string[]>>;
+  /** A main a bezárás előtt a záró képernyőt kéri; a visszaadott függvény leiratkozik. */
+  zarasra(fn: () => void): () => void;
+  kilepes(): Promise<IpcEredmeny<void>>;
 }
 
 declare global {

@@ -20,12 +20,14 @@ import { useStorage } from '../storage/StorageContext';
 import RendeloTab from './settings/RendeloTab';
 import NyomtatvanyokTab from './settings/NyomtatvanyokTab';
 import EgyebTab from './settings/EgyebTab';
+import AdattarolasTab from './settings/AdattarolasTab';
 
-type SettingsTab = 'rendelo' | 'nyomtatvanyok' | 'egyeb';
+type SettingsTab = 'rendelo' | 'nyomtatvanyok' | 'egyeb' | 'adattarolas';
 
-function toSettingsTab(value: string): SettingsTab {
+function toSettingsTab(value: string, vanAdattarolas: boolean): SettingsTab {
   if (value === 'nyomtatvanyok') return 'nyomtatvanyok';
   if (value === 'egyeb') return 'egyeb';
+  if (value === 'adattarolas' && vanAdattarolas) return 'adattarolas';
   return 'rendelo';
 }
 
@@ -36,8 +38,8 @@ export default function SettingsPage() {
   // lazy state init), nincs param->state szinkron effekt: egy már mountolt lapon
   // a fülváltás kizárólag a lenti dirty-guardon át történhet.
   const [searchParams] = useSearchParams();
-  const { templateDraftCache } = useStorage();
-  const [tab, setTab] = useState<SettingsTab>(() => toSettingsTab(searchParams.get('tab') ?? ''));
+  const { templateDraftCache, adattarolas } = useStorage();
+  const [tab, setTab] = useState<SettingsTab>(() => toSettingsTab(searchParams.get('tab') ?? '', adattarolas != null));
   const [dirty, setDirty] = useState(false);
   const guard = useDiscardGuard(dirty);
   // Ugyanez a dirty jelző a NavBar-navigációt is védi.
@@ -73,11 +75,12 @@ export default function SettingsPage() {
         Beállítások
       </Heading>
 
-      <Tabs.Root value={tab} onValueChange={(v) => requestTab(toSettingsTab(v))}>
+      <Tabs.Root value={tab} onValueChange={(v) => requestTab(toSettingsTab(v, adattarolas != null))}>
         <Tabs.List mb="4">
           <Tabs.Trigger value="rendelo">Rendelő adatai</Tabs.Trigger>
           <Tabs.Trigger value="nyomtatvanyok">Nyomtatványok</Tabs.Trigger>
           <Tabs.Trigger value="egyeb">Egyéb</Tabs.Trigger>
+          {adattarolas && <Tabs.Trigger value="adattarolas">Adattárolás</Tabs.Trigger>}
         </Tabs.List>
 
         <Tabs.Content value="rendelo">
@@ -91,6 +94,12 @@ export default function SettingsPage() {
         <Tabs.Content value="egyeb">
           <EgyebTab onDirtyChange={setDirty} />
         </Tabs.Content>
+
+        {adattarolas && (
+          <Tabs.Content value="adattarolas">
+            <AdattarolasTab adattarolas={adattarolas} />
+          </Tabs.Content>
+        )}
       </Tabs.Root>
 
       <DiscardChangesDialog

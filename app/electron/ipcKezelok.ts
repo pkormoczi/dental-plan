@@ -3,16 +3,31 @@
 
 import path from 'node:path';
 import type { PlanStorage } from '../src/storage/PlanStorage';
-import { IoError, ioErrno, TiltottKuldoError, TorlesAkadalyError } from '../src/storage/taroloHibak';
 import {
+  ErvenytelenParameterError,
+  IoError,
+  ioErrno,
+  TiltottKuldoError,
+  TorlesAkadalyError,
+} from '../src/storage/taroloHibak';
+import {
+  ADATMAPPA_HASZNAL_CSATORNA,
+  ADATMAPPA_MEGNYIT_CSATORNA,
+  ADATMAPPA_POTOL_CSATORNA,
+  ADATMAPPA_UJRA_CSATORNA,
+  ADATMAPPA_VALASZT_CSATORNA,
+  ALAPSABLONOK_POTOL_CSATORNA,
   hibaBolStorageHiba,
+  KILEPES_CSATORNA,
   MEGMUTAT_CSATORNA,
   NAPLO_MEGMUTAT_CSATORNA,
   PDF_MASOL_CSATORNA,
   PDF_MEGNYIT_CSATORNA,
   TAROLO_METODUSOK,
   taroloCsatorna,
+  type AdatmappaAllapot,
   type IpcEredmeny,
+  type MappaVizsgalat,
   type TaroloMetodus,
 } from '../src/storage/taroloIpc';
 import { ervenyesArgumentumok, gyokerRelativUtvonal, pdfFajlnev, pdfForras, planRef } from './ipcValidate';
@@ -111,14 +126,38 @@ export async function taroloHivas(
   }
 }
 
+/** A gyökérmappába író metódusok: sikerük után a kilépés a Drive-feltöltésre emlékeztet. */
+export const IRO_METODUSOK: ReadonlySet<TaroloMetodus> = new Set([
+  'savePlan',
+  'savePlanLabel',
+  'savePlanErvenytelenites',
+  'savePriceList',
+  'saveSettings',
+  'saveTemplate',
+  'savePatientData',
+  'createPatient',
+  'deletePatient',
+]);
+
+/**
+ * A tároló az aktuális adatmappáé: mappaváltáskor cserélődik, a csatornák egyszer regisztráltak.
+ * Adatmappa nélkül (varázsló, blokkoló képernyő) minden hívás hibát ad.
+ */
 export function taroloKezelok(
   ipc: IpcRegisztralo,
-  tarolo: PlanStorage,
+  tarolo: () => PlanStorage | null,
   kuldoEngedett: (e: KuldoEsemeny) => boolean,
   naplozo?: Naplozo,
+  irasTortent?: () => void,
 ): void {
   for (const metodus of TAROLO_METODUSOK) {
-    ipc.handle(taroloCsatorna(metodus), (e, ...args) => taroloHivas(tarolo, kuldoEngedett, metodus, e, args, naplozo));
+    ipc.handle(taroloCsatorna(metodus), async (e, ...args) => {
+      const aktiv = tarolo();
+      if (!aktiv) return { ok: false, hiba: hibaBolStorageHiba(new Error('Nincs megnyitott adatmappa.')) };
+      const eredmeny = await taroloHivas(aktiv, kuldoEngedett, metodus, e, args, naplozo);
+      if (eredmeny.ok && IRO_METODUSOK.has(metodus)) irasTortent?.();
+      return eredmeny;
+    });
   }
 }
 
@@ -237,4 +276,84 @@ export function pdfKezelok(
       return path.basename(cel);
     }),
   );
+}
+
+/** Az adatmappa main-oldali kezelője, ahogy a csatornák látják. */
+export interface AdatmappaMuveletek {
+  valaszt(): Promise<MappaVizsgalat | null>;
+  ujraellenoriz(): Promise<AdatmappaAllapot>;
+  potol(): Promise<MappaVizsgalat>;
+  hasznal(letrehoz: boolean): Promise<MappaVizsgalat>;
+  readonly tarolo: { gyoker: string; alapsablonokatPotol(): Promise<string[]> } | null;
+}
+
+/**
+ * A varázsló, a blokkoló képernyő és az Adattárolás fül csatornái. A renderer útvonalat sosem
+ * küld: a mappát a doki a natív dialógusban választja, a main jegyzi meg.
+ */
+export function adatmappaKezelok(
+  ipc: IpcRegisztralo,
+  adatmappa: AdatmappaMuveletek,
+  kuldoEngedett: (e: KuldoEsemeny) => boolean,
+  rendszer: { mappatMegnyit(abszolut: string): Promise<string> },
+  irasTortent: () => void,
+): void {
+  const kezel =
+    <T>(fn: (...args: unknown[]) => Promise<T>) =>
+    async (e: KuldoEsemeny, ...args: unknown[]): Promise<IpcEredmeny<T>> => {
+      try {
+        if (!kuldoEngedett(e)) throw new TiltottKuldoError();
+        return { ok: true, ertek: await fn(...args) };
+      } catch (err) {
+        return { ok: false, hiba: hibaBolStorageHiba(err) };
+      }
+    };
+  const aktivTarolo = () => {
+    if (!adatmappa.tarolo) throw new Error('Nincs megnyitott adatmappa.');
+    return adatmappa.tarolo;
+  };
+
+  ipc.handle(ADATMAPPA_VALASZT_CSATORNA, kezel(() => adatmappa.valaszt()));
+  ipc.handle(ADATMAPPA_UJRA_CSATORNA, kezel(() => adatmappa.ujraellenoriz()));
+  ipc.handle(
+    ADATMAPPA_POTOL_CSATORNA,
+    kezel(async () => {
+      const v = await adatmappa.potol();
+      irasTortent();
+      return v;
+    }),
+  );
+  ipc.handle(
+    ADATMAPPA_HASZNAL_CSATORNA,
+    kezel(async (letrehoz) => {
+      if (typeof letrehoz !== 'boolean') throw new ErvenytelenParameterError('letrehoz');
+      const v = await adatmappa.hasznal(letrehoz);
+      if (letrehoz) irasTortent();
+      return v;
+    }),
+  );
+  ipc.handle(
+    ADATMAPPA_MEGNYIT_CSATORNA,
+    kezel(async () => {
+      const hiba = await rendszer.mappatMegnyit(aktivTarolo().gyoker);
+      if (hiba) throw new Error(`A mappa nem nyitható meg: ${hiba}`);
+    }),
+  );
+  ipc.handle(
+    ALAPSABLONOK_POTOL_CSATORNA,
+    kezel(async () => {
+      const irt = await aktivTarolo().alapsablonokatPotol();
+      if (irt.length) irasTortent();
+      return irt;
+    }),
+  );
+}
+
+/** A záró képernyő vége: a renderer jelzi, hogy a főablak bezárható. */
+export function kilepesKezelo(ipc: IpcRegisztralo, kuldoEngedett: (e: KuldoEsemeny) => boolean, kilep: () => void): void {
+  ipc.handle(KILEPES_CSATORNA, async (e): Promise<IpcEredmeny<void>> => {
+    if (!kuldoEngedett(e)) return { ok: false, hiba: hibaBolStorageHiba(new TiltottKuldoError()) };
+    kilep();
+    return { ok: true, ertek: undefined };
+  });
 }

@@ -2,6 +2,21 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. november 18.
+
+- A telepíthető program mostantól egy kiválasztott adatmappába ír, amit a Google Drive visz át a
+  másik gépre. Első indításkor kéri ezt a mappát (a Drive „Saját meghajtó” részén, „Fájlok
+  tükrözése” módban): az első gépen egy üres mappában új adatmappát hoz létre, a második gépen
+  ugyanezt a mappát kell kiválasztani, miután a Drive letöltötte. Ha induláskor a mappa nem érhető
+  el, üres vagy hiányos, a program nem mutat üres pácienslistát, hanem kiírja, mi a gond, és
+  „Újrapróba” gombot ad. A Beállítások új Adattárolás fülén a mappa megnyitható és cserélhető, ott
+  olvasható a gépváltás szabálya, és onnan pótolhatók a hiányzó nyomtatvány-szövegek. Bezáráskor,
+  ha mentés történt, a program röviden emlékeztet: a másik gépen csak a Drive-feltöltés után
+  folytassuk. A mentett tervek „Megnyitás” gombbal a gép PDF-olvasójában nyílnak, „Másolás
+  máshová” gombbal pedig tetszőleges helyre menthetők. A két gép közti ütközést (például ugyanaz a
+  sorszám két gépen) a program jelzi, és magától semmit nem töröl. A felső sáv most „Próbaüzem”:
+  az éles indulásig továbbra is csak kitalált páciensadattal dolgozzunk.
+
 ## 2026. november 17.
 
 - Elkészült a telepíthető program első próbaváltozata Windowsra és Macre, „Mandoki Dental”

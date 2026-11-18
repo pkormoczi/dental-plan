@@ -49,7 +49,7 @@ describe('FileSystemStorage szerződés', () => {
     const gyoker = await ujGyoker();
     const prim = new FsPrimitivek(gyoker, { kesleltet: azonnal });
     const storage = new FileSystemStorage(prim);
-    await storage.init();
+    await storage.adatmappatLetrehoz();
     return {
       storage,
       nyersOlvas: (ut) => fsp.readFile(path.join(gyoker, ...ut.split('/')), 'utf8').catch(() => null),
@@ -139,16 +139,79 @@ describe('FsPrimitivek atomi írás és újrapróba', () => {
 });
 
 describe('FileSystemStorage init', () => {
-  it('üres gyökeret az alapkészlettel épít fel, demó-páciens nélkül', async () => {
+  it('üres gyökérbe az init nem ír, hiányos mappaként utasítja el', async () => {
     const gyoker = await ujGyoker();
     const storage = new FileSystemStorage(new FsPrimitivek(gyoker));
 
+    const hiba = await storage.init().catch((e: unknown) => e);
+
+    expect(hiba).toBeInstanceOf(HianyosMappaError);
+    expect(await fsp.readdir(gyoker)).toEqual([]);
+  });
+
+  it('az „Új adatmappa létrehozása” üres gyökeret az alapkészlettel épít fel, demó-páciens nélkül', async () => {
+    const gyoker = await ujGyoker();
+    const storage = new FileSystemStorage(new FsPrimitivek(gyoker));
+
+    await storage.adatmappatLetrehoz();
     await storage.init();
 
     expect((await fsp.readdir(gyoker)).sort()).toEqual(['arlista.json', 'beallitasok.json', 'paciensek', 'sablonok']);
     expect(await fsp.readdir(path.join(gyoker, 'sablonok'))).toHaveLength(6);
     expect(await fsp.readdir(path.join(gyoker, 'paciensek'))).toEqual([]);
     expect(await storage.listPatients()).toEqual([]);
+  });
+
+  it('az „Új adatmappa létrehozása” nem üres mappába nem ír', async () => {
+    const gyoker = await ujGyoker();
+    await nyersIr(gyoker, 'Dokumentum.docx', 'x');
+    const storage = new FileSystemStorage(new FsPrimitivek(gyoker));
+
+    await expect(storage.adatmappatLetrehoz()).rejects.toBeInstanceOf(IdegenMappaError);
+
+    expect(await fsp.readdir(gyoker)).toEqual(['Dokumentum.docx']);
+  });
+
+  it('a „Hiányzó alapfájlok létrehozása” csak a hiányzót írja, a meglévő árlistát és pácienst nem írja felül', async () => {
+    const gyoker = await ujGyoker();
+    await nyersIr(gyoker, 'arlista.json', '{"sajat":true}');
+    await nyersIr(gyoker, 'paciensek/Kis-Bela_abc123/paciens.json', '{"meglevo":true}');
+    const storage = new FileSystemStorage(new FsPrimitivek(gyoker));
+
+    await storage.alapfajlokatPotol();
+
+    expect((await fsp.readdir(gyoker)).sort()).toEqual(['arlista.json', 'beallitasok.json', 'paciensek', 'sablonok']);
+    expect(await fsp.readFile(path.join(gyoker, 'arlista.json'), 'utf8')).toBe('{"sajat":true}');
+    expect(await fsp.readFile(path.join(gyoker, 'paciensek', 'Kis-Bela_abc123', 'paciens.json'), 'utf8')).toBe('{"meglevo":true}');
+    expect(await fsp.readdir(path.join(gyoker, 'sablonok'))).toHaveLength(6);
+    expect((await storage.osztalyoz()).allapot).toBe('mienk');
+  });
+
+  it('a „Hiányzó alapfájlok létrehozása” idegen és üres mappába nem ír', async () => {
+    const idegen = await ujGyoker();
+    await nyersIr(idegen, 'Dokumentum.docx', 'x');
+    const ures = await ujGyoker();
+
+    await expect(new FileSystemStorage(new FsPrimitivek(idegen)).alapfajlokatPotol()).rejects.toBeInstanceOf(IdegenMappaError);
+    await expect(new FileSystemStorage(new FsPrimitivek(ures)).alapfajlokatPotol()).rejects.toBeInstanceOf(IdegenMappaError);
+
+    expect(await fsp.readdir(idegen)).toEqual(['Dokumentum.docx']);
+    expect(await fsp.readdir(ures)).toEqual([]);
+  });
+
+  it('a „Hiányzó alapsablonok pótlása” csak a verzió nélküli alapra ír -v1-et, a meglévő verziókhoz nem nyúl', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    await fsp.rm(path.join(gyoker, 'sablonok', 'garancia-hu-v1.md'));
+    await fsp.rm(path.join(gyoker, 'sablonok', 'nyilatkozat-de-v1.md'));
+    await nyersIr(gyoker, 'sablonok/nyilatkozat-de-v3.md', 'saját német nyilatkozat');
+
+    const potolt = await storage.alapsablonokatPotol();
+
+    expect(potolt).toEqual(['garancia-hu-v1.md']);
+    expect(await fsp.readFile(path.join(gyoker, 'sablonok', 'nyilatkozat-de-v3.md'), 'utf8')).toBe('saját német nyilatkozat');
+    expect(await fsp.readdir(path.join(gyoker, 'sablonok'))).not.toContain('nyilatkozat-de-v1.md');
+    expect((await storage.loadLatestTemplateByBase('garancia-hu')).name).toBe('garancia-hu-v1.md');
+    expect(await storage.alapsablonokatPotol()).toEqual([]);
   });
 
   it('a rendszer-szemét (.DS_Store, desktop.ini) nem teszi idegenné az üres gyökeret', async () => {
@@ -197,7 +260,7 @@ describe('FileSystemStorage init', () => {
 
   it('a miénk gyökérben egy újabb schemaVersion-ű árlistát nem tölt be', async () => {
     const gyoker = await ujGyoker();
-    await new FileSystemStorage(new FsPrimitivek(gyoker)).init();
+    await new FileSystemStorage(new FsPrimitivek(gyoker)).adatmappatLetrehoz();
     const arlista = JSON.parse(await fsp.readFile(path.join(gyoker, 'arlista.json'), 'utf8'));
     await nyersIr(gyoker, 'arlista.json', JSON.stringify({ ...arlista, schemaVersion: 2 }));
 
@@ -217,7 +280,7 @@ describe('FileSystemStorage platformközi buktatók', () => {
   it('NFD-nevű páciensmappa beolvasható, NFC-ben látszik, és a mentés ugyanabba a mappába ír', async () => {
     const gyoker = await ujGyoker();
     const storage = new FileSystemStorage(new FsPrimitivek(gyoker));
-    await storage.init();
+    await storage.adatmappatLetrehoz();
     const nfc = 'Kovács-Éva_abc123';
     const nfd = nfc.normalize('NFD');
     expect(nfd).not.toBe(nfc);
@@ -236,7 +299,7 @@ describe('FileSystemStorage platformközi buktatók', () => {
   it('createPatient nem kap olyan mappanevet, ami csak kis-/nagybetűben tér el egy meglévőtől', async () => {
     const gyoker = await ujGyoker();
     const storage = new FileSystemStorage(new FsPrimitivek(gyoker));
-    await storage.init();
+    await storage.adatmappatLetrehoz();
     const utkozo = buildPatientDirName('Kis Béla', 'abc123').toLocaleLowerCase('hu');
     await nyersIr(gyoker, `paciensek/${utkozo}/paciens.json`, '{"meglevo":true}');
     vi.mocked(generateId).mockReturnValueOnce('abc123').mockReturnValueOnce('zzz999');
@@ -259,7 +322,7 @@ const verzioUt = (gyoker: string, ref: { patientDir: string; planDir: string; ve
 async function ujTarolo(fs?: FsMuveletek): Promise<{ gyoker: string; storage: FileSystemStorage }> {
   const gyoker = await ujGyoker();
   const storage = new FileSystemStorage(new FsPrimitivek(gyoker, { fs, kesleltet: azonnal }));
-  await storage.init();
+  await storage.adatmappatLetrehoz();
   return { gyoker, storage };
 }
 
@@ -291,6 +354,7 @@ describe('FileSystemStorage verzió-teljesség', () => {
     const terv = await fsp.readFile(verzioUt(gyoker, ref, 'terv.json'));
     expect(manifest.schemaVersion).toBe(1);
     expect(manifest.mentesId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(manifest).not.toHaveProperty('gepId');
     expect(manifest.fajlok['terv.json']).toEqual({ sha256: await sha256Hex(new Uint8Array(terv)), meret: terv.length });
     expect(manifest.fajlok['kezelesi-terv.pdf']).toEqual({ sha256: await sha256Hex(pdf), meret: 4 });
     expect(await lancTartalma(gyoker, ref)).toEqual(['2026-08-05_v1']);

@@ -17,7 +17,7 @@ import { hibaBolStorageHiba, storageHibaBolHiba, type StorageHiba, type TaroloHi
 
 function hidAmi(valasz: Awaited<ReturnType<TaroloHid['hiv']>>, hivasok: unknown[][] = []): TaroloHid {
   return {
-    aktiv: true,
+    adatmappa: { ut: 'C:/Mandoki', allapot: 'rendben', hianyzik: [], hosszuUtvonal: false },
     hiv: async (...args) => {
       hivasok.push(args);
       return valasz;
@@ -26,6 +26,14 @@ function hidAmi(valasz: Awaited<ReturnType<TaroloHid['hiv']>>, hivasok: unknown[
     pdfMegnyit: async () => ({ ok: true, ertek: undefined }),
     pdfMasol: async () => ({ ok: true, ertek: null }),
     naploMegmutat: async () => ({ ok: true, ertek: undefined }),
+    adatmappaValaszt: async () => ({ ok: true, ertek: null }),
+    adatmappaUjra: async () => ({ ok: true, ertek: { allapot: 'nincs' } }),
+    adatmappaPotol: async () => ({ ok: false, hiba: { kod: 'EGYEB', uzenet: 'nem hívott' } }),
+    adatmappaHasznal: async () => ({ ok: false, hiba: { kod: 'EGYEB', uzenet: 'nem hívott' } }),
+    adatmappaMegnyit: async () => ({ ok: true, ertek: undefined }),
+    alapsablonokPotol: async () => ({ ok: true, ertek: [] }),
+    zarasra: () => () => {},
+    kilepes: async () => ({ ok: true, ertek: undefined }),
   };
 }
 

@@ -2,7 +2,7 @@
 
 Ez az összefoglaló bemutatja, mire használható az alkalmazás — képernyőnként csoportosítva, a fenti navigáció sorrendjében.
 
-Az alkalmazás böngészőben, demóként, és telepíthető programként is fut Windowson és Macen („Mandoki Dental” néven), mindkét formában ugyanazokkal a képernyőkkel. A programban egy mentett nyomtatvány külön megnyitása saját ablakban jelenik meg.
+Az alkalmazás böngészőben, demóként, és telepíthető programként is fut Windowson és Macen („Mandoki Dental” néven), mindkét formában ugyanazokkal a képernyőkkel. A böngészős demó az adatokat a böngészőben tartja; a telepíthető program egy kiválasztott adatmappába ír, amit a Google Drive visz át a másik gépre. Első indításkor a program ezt a mappát kéri: egy üres mappában új adatmappát hoz létre (előtte figyelmeztet, hogy a második gépen a meglévőt kell választani), a meglévőt pedig megnyitja. Ha induláskor a mappa nem érhető el, üres vagy hiányos, a program üres pácienslista helyett ezt kiírja, „Újrapróba” és „Másik mappa kiválasztása” gombbal; hiányos mappánál megerősítés után a hiányzó alapfájlok is létrehozhatók. Bezáráskor, ha mentés történt, rövid emlékeztető kéri, hogy a másik gépen csak a Drive-feltöltés után folytassuk. A programban a mentett nyomtatvány „Megnyitás” gombbal a gép PDF-olvasójában nyílik, „Másolás máshová” gombbal tetszőleges helyre menthető, és a felső sáv próbaüzemet jelez: az éles indulásig csak kitalált páciensadattal.
 
 ## Páciensek
 
@@ -68,14 +68,15 @@ Az alkalmazás böngészőben, demóként, és telepíthető programként is fut
 
 ## Beállítások
 
-- Három fülre osztva: Rendelő adatai, Nyomtatványok és Egyéb — mindegyiken önálló Mentés/Mégse gombpár védi a még nem mentett módosítást, és a program figyelmeztet, ha mentés nélkül váltana lapot vagy navigálna el.
+- Három fülre osztva: Rendelő adatai, Nyomtatványok és Egyéb (a telepíthető programban negyedikként Adattárolás) — mindegyiken önálló Mentés/Mégse gombpár védi a még nem mentett módosítást, és a program figyelmeztet, ha mentés nélkül váltana lapot vagy navigálna el.
 - Rendelő adatai: a rendelő adatai a nyomtatvány fejlécéhez/lábléchez, és az orvosok listája — soronként aktiválható/inaktiválható, nyilakkal sorrendezhető, törölhető, és kijelölhető köztük egy alapértelmezett, aki minden új tervre automatikusan rákerül. Ha az alapértelmezett orvos inaktívvá válik vagy törlődik, a program azonnal megkéri a dokit, hogy válasszon másikat; ha egyetlen aktív orvos sem marad, figyelmeztet, hogy az új tervek véglegesítése emiatt blokkolva lesz.
 - Nyomtatványok: a nyilatkozat, a fizetési feltételek és a garancia szövegének szerkesztése, nyelvenként külön (magyar és német) — a szöveg félkövérrel is kiemelhető, pontokba szedett vagy számozott lista is írható benne, a nyilatkozatban pedig egy helyőrzővel beilleszthető a kezelőorvos neve, amit a program a nyomtatvány készítésekor cserél be. Mentéskor a program felülírja a jelenlegi szöveget; egy már véglegesített terv a saját, akkor mentett szövegével marad, függetlenül attól, mi változik utólag itt.
+- Adattárolás (csak a telepíthető programban): az adatmappa helye, „Mappa megnyitása” a gép fájlkezelőjében, „Mappa váltása” (ha van félkész terv, a program előbb rákérdez, mert a váltással elvész), a két gép közti váltás szabálya lépésenként, a hiányzó nyomtatvány-szövegek pótlása a beépített alapszöveggel (a meglévőkhöz nem nyúl), és a program hibanaplójának megnyitása — a napló páciensnevet nem tartalmaz, és csak az adott gépen van.
 - Egyéb: az ajánlat érvényességi ideje, az alapértelmezett nyelv és pénznem új tervekhez, és annak áttekintése, mennyi tartalom (tételnevek, euró árak, nyilatkozat) áll már készen németül — a hiányzó euró árakhoz egy link egyenesen az árlista megfelelő szűrőjéhez visz.
 
 ## DEMO
 
-- Fejlesztési/demonstrációs felület, elkülönítve az üzleti munkától, öt füllel: Funkciók, Összes terv, Filerendszer, Változásnapló, Adatkezelés.
+- Fejlesztési/demonstrációs felület, elkülönítve az üzleti munkától, öt füllel: Funkciók, Összes terv, Filerendszer, Változásnapló, Adatkezelés. A telepíthető programban a Filerendszer és az Adatkezelés fül nincs: ott a valódi adatmappa a gép fájlkezelőjében nézhető meg.
 - A Funkciók fül ez az összefoglaló, a Változásnapló fül a program eddigi változásainak naplója.
 - Az Összes terv fül minden páciens minden kezelési tervét egy helyen mutatja, kereshetően — a napi munkára a páciens saját részletoldalának „Kezelési tervek” füle való, ez a fül a teljes állomány áttekintésére szolgál.
 - A Filerendszer fül böngészhető mappa- és fájlszerkezetet mutat: hová, milyen néven kerülnek majd a mentett kezelési tervek, az árlista és a nyomtatvány-szövegei a végleges programban. Egy fájlra kattintva megnézhető a tényleges tartalma is — egy már elmentett tervnél akár a ténylegesen elkészült nyomtatvány is megnyitható innen, új lapon. A beépített demó-adatból származó terveknél nincs mentett nyomtatvány; ezt a program külön kiírja ott is, ahol a letöltés vagy a megnyitás indulna.

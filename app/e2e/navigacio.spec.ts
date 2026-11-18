@@ -6,7 +6,7 @@ test.describe.serial('Electron navigációs és új-ablak tiltás', () => {
   let pdfOldal: Page;
 
   test.beforeAll(async () => {
-    futo = await inditas();
+    futo = await inditas({ demo: true });
   });
 
   test.afterAll(async () => {
