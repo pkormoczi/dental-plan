@@ -59,6 +59,11 @@ export interface StorageContextValue {
    * böngésző letöltése marad (migrációs terv §5.3).
    */
   pdfMuveletek: PdfMuveletek | null;
+  /**
+   * A diagnosztikai napló mappája a rendszer fájlkezelőjében („Napló megnyitása”); a demóban
+   * nincs napló, ott `null`.
+   */
+  naploMegmutat: (() => Promise<void>) | null;
 }
 
 export interface PdfMuveletek {
@@ -103,6 +108,10 @@ export function StorageProvider({ children }: { children: ReactNode }) {
             return eredmeny.ertek;
           },
         },
+        naploMegmutat: async () => {
+          const eredmeny = await hid.naploMegmutat();
+          if (!eredmeny.ok) throw storageHibaBolHiba(eredmeny.hiba);
+        },
       };
     }
     const demo = new DemoStorage();
@@ -119,6 +128,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       templateDraftCache: new DemoTemplateDraftCache(),
       megmutat: null,
       pdfMuveletek: null,
+      naploMegmutat: null,
     };
   }, []);
 

@@ -25,6 +25,7 @@ function hidAmi(valasz: Awaited<ReturnType<TaroloHid['hiv']>>, hivasok: unknown[
     megmutat: async () => ({ ok: true, ertek: undefined }),
     pdfMegnyit: async () => ({ ok: true, ertek: undefined }),
     pdfMasol: async () => ({ ok: true, ertek: null }),
+    naploMegmutat: async () => ({ ok: true, ertek: undefined }),
   };
 }
 

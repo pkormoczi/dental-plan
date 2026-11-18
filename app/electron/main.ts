@@ -1,11 +1,13 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, session, shell } from 'electron';
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { AKTIV_CSATORNA } from '../src/storage/taroloIpc';
 import { buildFajlUtvonal, mimeTipus } from './buildKiszolgalas.js';
 import { FileSystemStorage, PDF_FAJLNEV } from './fileSystemStorage.js';
 import { FsPrimitivek } from './fsPrimitivek.js';
-import { kuldoEllenor, megmutatKezelo, pdfKezelok, taroloKezelok } from './ipcKezelok.js';
+import { kuldoEllenor, megmutatKezelo, naploKezelo, pdfKezelok, taroloKezelok } from './ipcKezelok.js';
+import { gyokerNaplozo, Naplo } from './naplo.js';
 import { menuSablon } from './menu.js';
 import { foablakNavigacioEngedett, pdfAblakNavigacioEngedett, sajatOrigin, ujAblakEngedett } from './navigacio.js';
 import { APP_ID, APP_ORIGIN, APP_PROTOKOLL, USER_DATA_MAPPA } from './protocol.js';
@@ -50,13 +52,26 @@ function inditas(): void {
   let foablak: BrowserWindow | null = null;
   const prim = TESZT_GYOKER ? new FsPrimitivek(TESZT_GYOKER) : null;
   const tarolo = prim ? new FileSystemStorage(prim) : null;
+  // Helyi diagnosztikai napló a `userData` alatt; csak a fájlrendszeres tároló ír bele.
+  const naplo = new Naplo(path.join(app.getPath('userData'), 'naplo'));
+  const naplozo = TESZT_GYOKER ? gyokerNaplozo(naplo, TESZT_GYOKER) : undefined;
+  if (TESZT_GYOKER) {
+    void naplo.fejlec({ verzio: app.getVersion(), os: `${process.platform} ${os.release()}`, gyoker: TESZT_GYOKER });
+  }
   const kuldoEngedett = kuldoEllenor(() => foablak, sajatOrigin(betoltendo));
   ipcMain.on(AKTIV_CSATORNA, (e) => {
     e.returnValue = tarolo != null && kuldoEngedett(e);
   });
-  if (tarolo) taroloKezelok(ipcMain, tarolo, kuldoEngedett);
+  if (tarolo) {
+    taroloKezelok(ipcMain, tarolo, kuldoEngedett, naplozo);
+    naploKezelo(ipcMain, kuldoEngedett, async () => {
+      await mkdir(naplo.mappa, { recursive: true });
+      const vanFajl = await stat(naplo.fajl).then(() => true, () => false);
+      shell.showItemInFolder(vanFajl ? naplo.fajl : naplo.mappa);
+    });
+  }
   // Csak kijelölés a fájlkezelőben: megnyitás vagy futtatás (`openPath`, `openExternal`) nincs.
-  if (prim) megmutatKezelo(ipcMain, prim, kuldoEngedett, (abs) => shell.showItemInFolder(abs));
+  if (prim) megmutatKezelo(ipcMain, prim, kuldoEngedett, (abs) => shell.showItemInFolder(abs), naplozo);
   if (tarolo && prim) {
     pdfKezelok(ipcMain, tarolo, prim, PDF_FAJLNEV, kuldoEngedett, {
       megnyit: (abs) => shell.openPath(abs),
@@ -71,7 +86,7 @@ function inditas(): void {
         return valasz.canceled || !valasz.filePath ? null : valasz.filePath;
       },
       ir: (ut, bajtok) => writeFile(ut, bajtok),
-    });
+    }, naplozo);
   }
 
   app.on('second-instance', () => {

@@ -35,7 +35,8 @@ const REJTETT_NEV = /^\.|^desktop\.ini$|^thumbs\.db$|\.tmp-[0-9a-f]+$/i;
 const errnoKod = (err: unknown) => (err as NodeJS.ErrnoException | null)?.code;
 
 function ioHiba(err: unknown, utvonal: string): IoError {
-  return err instanceof IoError ? err : new IoError(ioErrno(errnoKod(err)), utvonal);
+  if (err instanceof IoError) return err;
+  return new IoError(ioErrno(errnoKod(err)), utvonal, (err as NodeJS.ErrnoException | null)?.syscall);
 }
 
 export class FsPrimitivek implements FajlPrimitivek {

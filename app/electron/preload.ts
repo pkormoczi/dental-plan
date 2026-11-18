@@ -5,6 +5,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import {
   AKTIV_CSATORNA,
   MEGMUTAT_CSATORNA,
+  NAPLO_MEGMUTAT_CSATORNA,
   PDF_MASOL_CSATORNA,
   PDF_MEGNYIT_CSATORNA,
   TAROLO_METODUSOK,
@@ -24,6 +25,7 @@ const hid: TaroloHid = {
   megmutat: (relUtvonal) => ipcRenderer.invoke(MEGMUTAT_CSATORNA, relUtvonal),
   pdfMegnyit: (ref) => ipcRenderer.invoke(PDF_MEGNYIT_CSATORNA, ref),
   pdfMasol: (forras, javasoltNev) => ipcRenderer.invoke(PDF_MASOL_CSATORNA, forras, javasoltNev),
+  naploMegmutat: () => ipcRenderer.invoke(NAPLO_MEGMUTAT_CSATORNA),
 };
 
 contextBridge.exposeInMainWorld('mandokiTarolo', hid);

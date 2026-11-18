@@ -7,6 +7,7 @@ import { IoError, ioErrno, TiltottKuldoError, TorlesAkadalyError } from '../src/
 import {
   hibaBolStorageHiba,
   MEGMUTAT_CSATORNA,
+  NAPLO_MEGMUTAT_CSATORNA,
   PDF_MASOL_CSATORNA,
   PDF_MEGNYIT_CSATORNA,
   TAROLO_METODUSOK,
@@ -15,6 +16,7 @@ import {
   type TaroloMetodus,
 } from '../src/storage/taroloIpc';
 import { ervenyesArgumentumok, gyokerRelativUtvonal, pdfFajlnev, pdfForras, planRef } from './ipcValidate';
+import type { Naplozo } from './naplo';
 import { sajatOrigin } from './navigacio';
 
 export interface KuldoEsemeny {
@@ -55,20 +57,56 @@ async function torlesElott(tarolo: PlanStorage, patientDir: string): Promise<voi
   }
 }
 
+/** A napló saját hibája sosem írhatja felül a hívás eredményét. */
+function naploz(naplozo: Naplozo | undefined, muvelet: string, err: unknown, hivasUtvonal?: string): void {
+  try {
+    naplozo?.(muvelet, err, hivasUtvonal);
+  } catch {
+    // lásd a függvény kommentjét
+  }
+}
+
+/** A hívás saját, gyökérhez relatív útja a már ellenőrzött paraméterekből -- a hibának nem mindig van sajátja. */
+function hivasUtvonal(metodus: TaroloMetodus, args: unknown[]): string | undefined {
+  const [a, b, c] = args;
+  switch (metodus) {
+    case 'loadPlan':
+    case 'loadPlanPdf': {
+      const ref = a as { patientDir: string; planDir: string; versionDir: string };
+      return `paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}`;
+    }
+    case 'listPlans':
+    case 'loadPatientData':
+    case 'savePatientData':
+    case 'deletePatient':
+      return `paciensek/${String(a)}`;
+    case 'listVersions':
+    case 'savePlanLabel':
+      return `paciensek/${String(a)}/${String(b)}`;
+    case 'savePlanErvenytelenites':
+      return `paciensek/${String(a)}/${String(b)}/${String(c)}`;
+    default:
+      return undefined;
+  }
+}
+
 export async function taroloHivas(
   tarolo: PlanStorage,
   kuldoEngedett: (e: KuldoEsemeny) => boolean,
   metodus: TaroloMetodus,
   e: KuldoEsemeny,
   args: unknown[],
+  naplozo?: Naplozo,
 ): Promise<IpcEredmeny<unknown>> {
+  let ervenyes: unknown[] | null = null;
   try {
     if (!kuldoEngedett(e)) throw new TiltottKuldoError();
-    const ervenyes = ervenyesArgumentumok(metodus, args);
+    ervenyes = ervenyesArgumentumok(metodus, args);
     if (metodus === 'deletePatient') await torlesElott(tarolo, ervenyes[0] as string);
     const fn = tarolo[metodus] as (...a: unknown[]) => Promise<unknown>;
     return { ok: true, ertek: await fn.apply(tarolo, ervenyes) };
   } catch (err) {
+    naploz(naplozo, metodus, err, ervenyes ? hivasUtvonal(metodus, ervenyes) : undefined);
     return { ok: false, hiba: hibaBolStorageHiba(err) };
   }
 }
@@ -77,9 +115,10 @@ export function taroloKezelok(
   ipc: IpcRegisztralo,
   tarolo: PlanStorage,
   kuldoEngedett: (e: KuldoEsemeny) => boolean,
+  naplozo?: Naplozo,
 ): void {
   for (const metodus of TAROLO_METODUSOK) {
-    ipc.handle(taroloCsatorna(metodus), (e, ...args) => taroloHivas(tarolo, kuldoEngedett, metodus, e, args));
+    ipc.handle(taroloCsatorna(metodus), (e, ...args) => taroloHivas(tarolo, kuldoEngedett, metodus, e, args, naplozo));
   }
 }
 
@@ -92,11 +131,30 @@ export function megmutatKezelo(
   prim: { abszolut(ut: string): Promise<string> },
   kuldoEngedett: (e: KuldoEsemeny) => boolean,
   megmutat: (abszolut: string) => void,
+  naplozo?: Naplozo,
 ): void {
   ipc.handle(MEGMUTAT_CSATORNA, async (e, relUtvonal): Promise<IpcEredmeny<void>> => {
     try {
       if (!kuldoEngedett(e)) throw new TiltottKuldoError();
       megmutat(await prim.abszolut(gyokerRelativUtvonal(relUtvonal)));
+      return { ok: true, ertek: undefined };
+    } catch (err) {
+      naploz(naplozo, MEGMUTAT_CSATORNA, err);
+      return { ok: false, hiba: hibaBolStorageHiba(err) };
+    }
+  });
+}
+
+/** A diagnosztikai napló mappája a rendszer fájlkezelőjében -- a „Napló megnyitása” csatornája. */
+export function naploKezelo(
+  ipc: IpcRegisztralo,
+  kuldoEngedett: (e: KuldoEsemeny) => boolean,
+  megmutat: () => Promise<void>,
+): void {
+  ipc.handle(NAPLO_MEGMUTAT_CSATORNA, async (e): Promise<IpcEredmeny<void>> => {
+    try {
+      if (!kuldoEngedett(e)) throw new TiltottKuldoError();
+      await megmutat();
       return { ok: true, ertek: undefined };
     } catch (err) {
       return { ok: false, hiba: hibaBolStorageHiba(err) };
@@ -126,28 +184,38 @@ export function pdfKezelok(
   pdfNev: string,
   kuldoEngedett: (e: KuldoEsemeny) => boolean,
   rendszer: PdfRendszer,
+  naplozo?: Naplozo,
 ): void {
   const mentettPdf = async (ref: ReturnType<typeof planRef>): Promise<Uint8Array> => {
     const bajtok = await tarolo.loadPlanPdf(ref);
     if (!bajtok) throw new Error('Ehhez a verzióhoz nincs mentett PDF.');
     return bajtok;
   };
-  const kezel = <T>(fn: (...args: unknown[]) => Promise<T>) =>
+  const verzioUt = (ref: ReturnType<typeof planRef>) => `paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}`;
+  const kezel = <T>(csatorna: string, fn: (...args: unknown[]) => Promise<T>) =>
     async (e: KuldoEsemeny, ...args: unknown[]): Promise<IpcEredmeny<T>> => {
       try {
         if (!kuldoEngedett(e)) throw new TiltottKuldoError();
         return { ok: true, ertek: await fn(...args) };
       } catch (err) {
+        let ut: string | undefined;
+        try {
+          const forras = csatorna === PDF_MEGNYIT_CSATORNA ? { ref: planRef(args[0]) } : pdfForras(args[0]);
+          ut = 'ref' in forras ? verzioUt(forras.ref) : undefined;
+        } catch {
+          ut = undefined;
+        }
+        naploz(naplozo, csatorna, err, ut);
         return { ok: false, hiba: hibaBolStorageHiba(err) };
       }
     };
 
   ipc.handle(
     PDF_MEGNYIT_CSATORNA,
-    kezel(async (x) => {
+    kezel(PDF_MEGNYIT_CSATORNA, async (x) => {
       const ref = planRef(x);
       await mentettPdf(ref);
-      const abs = await prim.abszolut(`paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}/${pdfNev}`);
+      const abs = await prim.abszolut(`${verzioUt(ref)}/${pdfNev}`);
       const hiba = await rendszer.megnyit(abs);
       if (hiba) throw new Error(`A PDF nem nyitható meg: ${hiba}`);
     }),
@@ -155,7 +223,7 @@ export function pdfKezelok(
 
   ipc.handle(
     PDF_MASOL_CSATORNA,
-    kezel(async (x, nev): Promise<string | null> => {
+    kezel(PDF_MASOL_CSATORNA, async (x, nev): Promise<string | null> => {
       const forras = pdfForras(x);
       const javasolt = pdfFajlnev(nev);
       const bajtok = 'ref' in forras ? await mentettPdf(forras.ref) : forras.bajtok;

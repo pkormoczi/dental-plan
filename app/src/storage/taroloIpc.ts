@@ -56,6 +56,8 @@ export const MEGMUTAT_CSATORNA = 'shell:megmutat';
 export const PDF_MEGNYIT_CSATORNA = 'pdf:megnyit';
 /** PDF kimásolása natív mentés-dialógussal (migrációs terv §5.3). */
 export const PDF_MASOL_CSATORNA = 'pdf:masol';
+/** A diagnosztikai napló mappája a rendszer fájlkezelőjében (migrációs terv §5.2). */
+export const NAPLO_MEGMUTAT_CSATORNA = 'naplo:megmutat';
 
 /** A „Másolás máshová” forrása: egy mentett verzió, vagy a még nem mentett piszkozat bájtjai. */
 export type PdfForras = { ref: PlanRef } | { bajtok: Uint8Array };
@@ -90,6 +92,7 @@ export interface TaroloHid {
   pdfMegnyit(ref: PlanRef): Promise<IpcEredmeny<void>>;
   /** A célt a main kérdezi meg a dokitól; a választott fájl neve, vagy `null`, ha bezárta. */
   pdfMasol(forras: PdfForras, javasoltNev: string): Promise<IpcEredmeny<string | null>>;
+  naploMegmutat(): Promise<IpcEredmeny<void>>;
 }
 
 declare global {

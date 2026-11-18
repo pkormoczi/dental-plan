@@ -39,12 +39,15 @@ export class IoError extends Error {
   readonly kod = 'IO';
   readonly errno: IoErrno;
   readonly utvonal: string;
+  /** A hibát adó rendszerhívás (pl. `open`, `rename`) -- a diagnosztikai naplónak. */
+  readonly syscall?: string;
 
-  constructor(errno: IoErrno, utvonal: string) {
+  constructor(errno: IoErrno, utvonal: string, syscall?: string) {
     super(ioUzenet(errno, utvonal));
     this.name = 'IoError';
     this.errno = errno;
     this.utvonal = utvonal;
+    if (syscall) this.syscall = syscall;
   }
 }
 
