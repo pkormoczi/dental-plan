@@ -292,6 +292,19 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
     expect(ref.figyelmeztetes).toBeUndefined();
   });
 
+  it('listPatients és listPlans csak a saját <név>_<id6> mappákat adja: ütközéses, temp és idegen név kimarad', async () => {
+    const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
+    await k.nyersIr(`paciensek/${ref.patientDir} (1)/paciens.json`, JSON.stringify({ schemaVersion: 1, paciensId: 'x', nev: 'x' }));
+    await k.nyersIr('paciensek/Idegen mappa/jegyzet.txt', 'x');
+    await k.nyersIr(`paciensek/${ref.patientDir}/paciens-adatok (1).json`, '{}');
+    await k.nyersIr(`paciensek/${ref.patientDir}/Regi tervek/jegyzet.txt`, 'x');
+
+    const paciensek = (await storage.listPatients()).map((p) => p.dirName);
+    expect(paciensek).toContain(ref.patientDir);
+    expect(paciensek.filter((d) => d.endsWith(' (1)') || d === 'Idegen mappa')).toEqual([]);
+    expect((await storage.listPlans(ref.patientDir)).map((p) => p.dirName)).toEqual([ref.planDir]);
+  });
+
   it('roundtrips the pdf bytes saved alongside a plan', async () => {
     const plan = makeBlankPlan();
     const bytes = new Uint8Array([10, 20, 30, 255]);
@@ -658,7 +671,8 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
     // string-előtag illeszkedne.
     it('egy MÁSIK páciens nem sérül, akinek a mappaneve a töröltnek karakter-előtagja', async () => {
       const rovid = await storage.createPatient('Kis Béla');
-      const hosszabbDir = `${rovid.dirName}-Junior`;
+      // Érvényes, `_<id6>` végű név, aminek a törölt mappa neve karakter-előtagja.
+      const hosszabbDir = `${rovid.dirName}-Junior_zzzzzz`;
       await k.nyersIr(
         `paciensek/${hosszabbDir}/paciens.json`,
         JSON.stringify({ schemaVersion: 1, paciensId: 'zzzzzz', nev: 'Kis Béla Junior' }),

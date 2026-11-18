@@ -13,7 +13,7 @@ import type {
   PriceList,
   Settings,
 } from '../domain/types';
-import type { FelulirasOpciok, MentettVerzio, PlanStorage } from './PlanStorage';
+import type { FelulirasOpciok, MentettVerzio, PlanStorage, UtkozesTetel } from './PlanStorage';
 import { storageHibaBolHiba, type TaroloHid, type TaroloMetodus } from './taroloIpc';
 
 export class ElectronStorage implements PlanStorage {
@@ -91,5 +91,8 @@ export class ElectronStorage implements PlanStorage {
   }
   deletePatient(patientDir: string): Promise<void> {
     return this.hiv('deletePatient', patientDir);
+  }
+  listUtkozesek(): Promise<UtkozesTetel[]> {
+    return this.hiv('listUtkozesek');
   }
 }

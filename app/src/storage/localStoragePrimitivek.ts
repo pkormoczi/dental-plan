@@ -64,6 +64,9 @@ export const localStoragePrimitivek: FajlPrimitivek = {
     }
     return [...nevek];
   },
+  async modositva() {
+    return null;
+  },
   async letezik(ut) {
     if (localStorage.getItem(kulcs(ut)) != null) return true;
     const elotag = kulcs(`${ut}/`);

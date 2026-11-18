@@ -5,12 +5,13 @@ import type { PlanStorage } from '../src/storage/PlanStorage';
 import { TiltottKuldoError, TorlesAkadalyError } from '../src/storage/taroloHibak';
 import {
   hibaBolStorageHiba,
+  MEGMUTAT_CSATORNA,
   TAROLO_METODUSOK,
   taroloCsatorna,
   type IpcEredmeny,
   type TaroloMetodus,
 } from '../src/storage/taroloIpc';
-import { ervenyesArgumentumok } from './ipcValidate';
+import { ervenyesArgumentumok, gyokerRelativUtvonal } from './ipcValidate';
 import { sajatOrigin } from './navigacio';
 
 export interface KuldoEsemeny {
@@ -77,4 +78,25 @@ export function taroloKezelok(
   for (const metodus of TAROLO_METODUSOK) {
     ipc.handle(taroloCsatorna(metodus), (e, ...args) => taroloHivas(tarolo, kuldoEngedett, metodus, e, args));
   }
+}
+
+/**
+ * A „Mappa megnyitása” csatornája: csak a főablakból, csak a gyökérmappán belüli elemre. A
+ * renderer útvonalat ad, nem abszolút utat -- a feloldás és a gyökérbe zárás a main dolga.
+ */
+export function megmutatKezelo(
+  ipc: IpcRegisztralo,
+  prim: { abszolut(ut: string): Promise<string> },
+  kuldoEngedett: (e: KuldoEsemeny) => boolean,
+  megmutat: (abszolut: string) => void,
+): void {
+  ipc.handle(MEGMUTAT_CSATORNA, async (e, relUtvonal): Promise<IpcEredmeny<void>> => {
+    try {
+      if (!kuldoEngedett(e)) throw new TiltottKuldoError();
+      megmutat(await prim.abszolut(gyokerRelativUtvonal(relUtvonal)));
+      return { ok: true, ertek: undefined };
+    } catch (err) {
+      return { ok: false, hiba: hibaBolStorageHiba(err) };
+    }
+  });
 }

@@ -46,6 +46,10 @@ export class MemoriaPrimitivek implements FajlPrimitivek {
     return [...nevek];
   }
 
+  async modositva(): Promise<number | null> {
+    return null;
+  }
+
   async letezik(ut: string): Promise<boolean> {
     if (this.fajlok.has(ut) || this.mappak.has(ut)) return true;
     return (await this.listaz(ut)).length > 0;

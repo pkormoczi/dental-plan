@@ -22,6 +22,7 @@ function hidAmi(valasz: Awaited<ReturnType<TaroloHid['hiv']>>, hivasok: unknown[
       hivasok.push(args);
       return valasz;
     },
+    megmutat: async () => ({ ok: true, ertek: undefined }),
   };
 }
 

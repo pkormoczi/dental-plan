@@ -591,3 +591,74 @@ describe('FileSystemStorage ütközésőr', () => {
     expect((hiba as FelulirasUtkozesError).lemezenLevo).toBeNull();
   });
 });
+
+describe('FileSystemStorage induláskori ütközés-vizsgálat', () => {
+  const NAP_MS = 24 * 60 * 60 * 1000;
+
+  async function regi(gyoker: string, ut: string) {
+    const ido = new Date(Date.now() - 2 * NAP_MS);
+    await fsp.utimes(path.join(gyoker, ...ut.split('/')), ido, ido);
+  }
+
+  async function mindenBejegyzes(gyoker: string): Promise<string[]> {
+    const b = await fsp.readdir(gyoker, { recursive: true, withFileTypes: true });
+    return b.map((d) => path.relative(gyoker, path.join(d.parentPath, d.name)).split(path.sep).join('/')).sort();
+  }
+
+  it('a Drive-ütközéses neveket, az azonos sorszámú verziókat, az _utkozesek/ tartalmát és a régi temp-maradványokat listázza, és semmihez nem nyúl', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const pac = buildPatientDirName('Kovács János', 'abc123');
+    const lanc = `paciensek/${pac}/Tomes_def456`;
+    await nyersIr(gyoker, `paciensek/${pac}/paciens.json`, '{}');
+    await nyersIr(gyoker, `paciensek/${pac}/paciens-adatok (1).json`, '{}');
+    await nyersIr(gyoker, `paciensek/${pac} (1)/paciens.json`, '{}');
+    await nyersIr(gyoker, 'arlista (1).json', '{}');
+    await nyersIr(gyoker, 'sablonok/garancia-hu-v1 conflicted copy.md', 'x');
+    await nyersIr(gyoker, '_utkozesek/arlista.2026-11-18T10-00-00.000Z.json', '{}');
+    await nyersIr(gyoker, `${lanc}/2026-09-04_v2/terv.json`, '{}');
+    await nyersIr(gyoker, `${lanc}/2026-09-05_v3/terv.json`, '{}');
+    await nyersIr(gyoker, `${lanc}/2026-09-06_v3/terv.json`, '{}');
+    await nyersIr(gyoker, `${lanc}/2026-09-05_v3 (1)/terv.json`, '{}');
+    await nyersIr(gyoker, `${lanc}/.tmp-2026-09-07_v4-aaa111/terv.json`, '{}');
+    await nyersIr(gyoker, `${lanc}/.tmp-2026-09-08_v4-bbb222/terv.json`, '{}');
+    await nyersIr(gyoker, `paciensek/${pac}/paciens.json.tmp-0a1b2c3d`, '{}');
+    await regi(gyoker, `${lanc}/.tmp-2026-09-07_v4-aaa111`);
+    await regi(gyoker, `paciensek/${pac}/paciens.json.tmp-0a1b2c3d`);
+    const elotte = await mindenBejegyzes(gyoker);
+
+    const tetelek = await storage.listUtkozesek();
+
+    expect([...tetelek].sort((a, b) => a.utvonal.localeCompare(b.utvonal))).toEqual(
+      [
+        { utvonal: 'arlista (1).json', fajta: 'drive-utkozes' },
+        { utvonal: 'sablonok/garancia-hu-v1 conflicted copy.md', fajta: 'drive-utkozes' },
+        { utvonal: '_utkozesek/arlista.2026-11-18T10-00-00.000Z.json', fajta: 'utkozes-mentes' },
+        { utvonal: `paciensek/${pac} (1)`, fajta: 'drive-utkozes' },
+        { utvonal: `paciensek/${pac}/paciens-adatok (1).json`, fajta: 'drive-utkozes' },
+        { utvonal: `paciensek/${pac}/paciens.json.tmp-0a1b2c3d`, fajta: 'felbemaradt-mentes' },
+        { utvonal: `${lanc}/.tmp-2026-09-07_v4-aaa111`, fajta: 'felbemaradt-mentes' },
+        { utvonal: `${lanc}/2026-09-05_v3 (1)`, fajta: 'drive-utkozes' },
+        { utvonal: `${lanc}/2026-09-05_v3`, fajta: 'azonos-sorszam' },
+        { utvonal: `${lanc}/2026-09-06_v3`, fajta: 'azonos-sorszam' },
+      ].sort((a, b) => a.utvonal.localeCompare(b.utvonal)),
+    );
+    expect(await mindenBejegyzes(gyoker)).toEqual(elotte);
+  });
+
+  it('rendezett gyökérben üres listát ad', async () => {
+    const { storage } = await ujTarolo();
+    await storage.createPatient('Rendes Páciens');
+
+    expect(await storage.listUtkozesek()).toEqual([]);
+  });
+
+  it('a listák csak az app saját mappáit mutatják: a Drive-ütközéses páciens- és fájlnév nem ál-páciens, nem ál-terv', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const p = await storage.createPatient('Kovács János');
+    await nyersIr(gyoker, `paciensek/${p.dirName} (1)/paciens.json`, JSON.stringify({ schemaVersion: 1, paciensId: p.paciensId, nev: 'Kovács János' }));
+    await nyersIr(gyoker, `paciensek/${p.dirName}/paciens-adatok (1).json`, '{}');
+
+    expect((await storage.listPatients()).map((x) => x.dirName)).toEqual([p.dirName]);
+    expect(await storage.listPlans(p.dirName)).toEqual([]);
+  });
+});

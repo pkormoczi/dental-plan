@@ -1,11 +1,11 @@
-import { app, BrowserWindow, ipcMain, Menu, protocol, session } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, protocol, session, shell } from 'electron';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { AKTIV_CSATORNA } from '../src/storage/taroloIpc';
 import { buildFajlUtvonal, mimeTipus } from './buildKiszolgalas.js';
 import { FileSystemStorage } from './fileSystemStorage.js';
 import { FsPrimitivek } from './fsPrimitivek.js';
-import { kuldoEllenor, taroloKezelok } from './ipcKezelok.js';
+import { kuldoEllenor, megmutatKezelo, taroloKezelok } from './ipcKezelok.js';
 import { menuSablon } from './menu.js';
 import { foablakNavigacioEngedett, pdfAblakNavigacioEngedett, sajatOrigin, ujAblakEngedett } from './navigacio.js';
 import { APP_ID, APP_ORIGIN, APP_PROTOKOLL, USER_DATA_MAPPA } from './protocol.js';
@@ -48,12 +48,15 @@ if (!app.requestSingleInstanceLock()) {
 
 function inditas(): void {
   let foablak: BrowserWindow | null = null;
-  const tarolo = TESZT_GYOKER ? new FileSystemStorage(new FsPrimitivek(TESZT_GYOKER)) : null;
+  const prim = TESZT_GYOKER ? new FsPrimitivek(TESZT_GYOKER) : null;
+  const tarolo = prim ? new FileSystemStorage(prim) : null;
   const kuldoEngedett = kuldoEllenor(() => foablak, sajatOrigin(betoltendo));
   ipcMain.on(AKTIV_CSATORNA, (e) => {
     e.returnValue = tarolo != null && kuldoEngedett(e);
   });
   if (tarolo) taroloKezelok(ipcMain, tarolo, kuldoEngedett);
+  // Csak kijelölés a fájlkezelőben: megnyitás vagy futtatás (`openPath`, `openExternal`) nincs.
+  if (prim) megmutatKezelo(ipcMain, prim, kuldoEngedett, (abs) => shell.showItemInFolder(abs));
 
   app.on('second-instance', () => {
     if (!foablak) return;

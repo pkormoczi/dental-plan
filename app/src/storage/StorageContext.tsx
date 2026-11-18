@@ -15,6 +15,7 @@ import { DemoDraftStorage } from './DemoDraftStorage';
 import { DemoTemplateDraftCache } from './DemoTemplateDraftCache';
 import { DemoStorage } from './DemoStorage';
 import { ElectronStorage } from './ElectronStorage';
+import { storageHibaBolHiba } from './taroloIpc';
 import type { DemoNode } from './demoFileTree';
 import type { DraftStorage } from './DraftStorage';
 import type { PlanStorage } from './PlanStorage';
@@ -48,6 +49,11 @@ export interface StorageContextValue {
   drafts: DraftStorage;
   /** A `drafts` testvére a Nyomtatványok fül sablonszövegeihez -- lásd `TemplateDraftCache.ts`. */
   templateDraftCache: TemplateDraftCache;
+  /**
+   * Egy gyökérmappán belüli elem kijelölve a rendszer fájlkezelőjében („Mappa megnyitása”); a
+   * demóban nincs gyökérmappa, ott `null`.
+   */
+  megmutat: ((relUtvonal: string) => Promise<void>) | null;
 }
 
 const StorageContext = createContext<StorageContextValue | null>(null);
@@ -70,6 +76,10 @@ export function StorageProvider({ children }: { children: ReactNode }) {
         isSeedVersion: () => false,
         drafts,
         templateDraftCache: new DemoTemplateDraftCache(),
+        megmutat: async (relUtvonal) => {
+          const eredmeny = await hid.megmutat(relUtvonal);
+          if (!eredmeny.ok) throw storageHibaBolHiba(eredmeny.hiba);
+        },
       };
     }
     const demo = new DemoStorage();
@@ -84,6 +94,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       isSeedVersion: (ref) => demo.isSeedVersion(ref),
       drafts,
       templateDraftCache: new DemoTemplateDraftCache(),
+      megmutat: null,
     };
   }, []);
 

@@ -34,6 +34,18 @@ export interface FelulirasOpciok {
   felulir?: boolean;
 }
 
+/**
+ * Amit a Drive-szinkron vagy egy félbemaradt mentés a gyökérmappában hagyott (migrációs terv
+ * §4.7). Az app egyiket sem oldja fel: a doki a Fájlkezelőben rendez.
+ */
+export type UtkozesFajta = 'drive-utkozes' | 'azonos-sorszam' | 'utkozes-mentes' | 'felbemaradt-mentes';
+
+export interface UtkozesTetel {
+  /** A gyökérhez relatív útvonal, `/` elválasztóval. */
+  utvonal: string;
+  fajta: UtkozesFajta;
+}
+
 export interface PlanStorage {
   init(): Promise<void>;
   listPatients(): Promise<PatientFolder[]>;
@@ -138,4 +150,10 @@ export interface PlanStorage {
    * `null`-jával, ami egy VÁRT, gyakori állapot).
    */
   deletePatient(patientDir: string): Promise<void>;
+  /**
+   * A gyökérmappa mappalista-vizsgálata (nem Drive-API): Drive-ütközéses nevek, azonos
+   * sorszámú verziómappák, az `_utkozesek/` tartalma és a 24 óránál régebbi temp-maradványok.
+   * Csak olvas; a demóban üres.
+   */
+  listUtkozesek(): Promise<UtkozesTetel[]>;
 }

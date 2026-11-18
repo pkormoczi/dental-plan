@@ -28,7 +28,7 @@ import type {
 } from '../domain/types';
 import { MarLetezikError, utvonal, type FajlPrimitivek } from './fajlPrimitivek';
 import { parseJson } from './json';
-import type { FelulirasOpciok, MentettVerzio, PlanStorage } from './PlanStorage';
+import type { FelulirasOpciok, MentettVerzio, PlanStorage, UtkozesTetel } from './PlanStorage';
 import { sha256Hex } from './sha256';
 import { FelulirasUtkozesError, HianyosVerzioError } from './taroloHibak';
 import {
@@ -63,6 +63,13 @@ export const SABLONOK_MAPPA = 'sablonok';
 export const MANIFEST_FAJL = 'manifest.json';
 /** Az ütközésben felülírt változatok helye; az app nem törli, a doki takarít. */
 export const UTKOZESEK_MAPPA = '_utkozesek';
+
+// A Drive-kliens ütközéskor mindkét változatot megtartja: „név (1).kit”, „conflicted copy”,
+// „[Conflict]” alakban, fájlon és mappán egyaránt.
+const DRIVE_UTKOZES_RE = / \(\d+\)(\.[^.]+)?$|conflicted copy|conflict/i;
+// A saját félbemaradt írások: a verzió temp-mappája és az atomi írás temp-fájlja.
+const TEMP_NEV_RE = /^\.tmp-|\.tmp-[0-9a-f]+$/;
+const FELBEMARADT_KOR_MS = 24 * 60 * 60 * 1000;
 const TERV_FAJL = 'terv.json';
 const MANIFEST_SEMA = 1;
 
@@ -146,7 +153,8 @@ export interface FajlTaroloOpciok {
   verzioManifest?: boolean;
   /**
    * Ütközésőr a felülírt system-of-record fájlokon: betöltéskor a tartalom hash-e megjegyezve,
-   * mentés előtt újraolvasva (migrációs terv §4.6). A demóban nincs, ott egy gép ír.
+   * mentés előtt újraolvasva (migrációs terv §4.6), és az induláskori ütközés-vizsgálat (§4.7).
+   * A demóban egyik sincs, ott egy gép ír.
    */
   utkozesOr?: boolean;
 }
@@ -264,7 +272,9 @@ export class FajlTarolo implements PlanStorage {
   }
 
   async listPatients(): Promise<PatientFolder[]> {
-    const dirs = await this.prim.listaz(PACIENSEK_MAPPA);
+    // Csak az app saját `<név>_<id6>` mappái: egy Drive-ütközéses másolat vagy rendszerfájl nem
+    // lehet ál-páciens -- azokat az ütközés-vizsgálat mutatja (`listUtkozesek`).
+    const dirs = (await this.prim.listaz(PACIENSEK_MAPPA)).filter((d) => parsePatientDirName(d));
     return Promise.all(
       dirs.map(async (dirName) => {
         const raw = await this.prim.olvasSzoveg(pacRekordUt(dirName));
@@ -292,7 +302,9 @@ export class FajlTarolo implements PlanStorage {
   }
 
   async listPlans(patientDir: string): Promise<PlanFolder[]> {
-    const dirs = (await this.prim.listaz(pacUt(patientDir))).filter((d) => !PATIENT_ROOT_FILES.has(d));
+    const dirs = (await this.prim.listaz(pacUt(patientDir))).filter(
+      (d) => !PATIENT_ROOT_FILES.has(d) && parsePlanDirName(d),
+    );
     return Promise.all(
       dirs.map(async (dirName) => {
         const parsed = parsePlanDirName(dirName);
@@ -785,6 +797,53 @@ export class FajlTarolo implements PlanStorage {
       await this.megjegyez(pacAdatUt(patientDir), JSON.stringify(data));
       return { dirName: patientDir, paciensId, nev, utolsoAktivitas };
     });
+  }
+
+  async listUtkozesek(): Promise<UtkozesTetel[]> {
+    if (!this.opciok.utkozesOr) return [];
+    const tetelek: UtkozesTetel[] = [];
+    const hatar = Date.now() - FELBEMARADT_KOR_MS;
+    // Egy mappa gyerekei közül feljegyzi az ütközéses és a régi temp-neveket, és a rendben
+    // lévőket adja vissza a továbbhaladáshoz -- egy ütközéses másolat belsejébe nem megyünk.
+    const bejar = async (mappa: string): Promise<string[]> => {
+      const rendben: string[] = [];
+      for (const nev of await this.prim.listaz(mappa, { rejtettekkel: true })) {
+        const ut = utvonal(mappa, nev);
+        if (TEMP_NEV_RE.test(nev)) {
+          const ido = await this.prim.modositva(ut);
+          if (ido != null && ido < hatar) tetelek.push({ utvonal: ut, fajta: 'felbemaradt-mentes' });
+        } else if (DRIVE_UTKOZES_RE.test(nev)) {
+          tetelek.push({ utvonal: ut, fajta: 'drive-utkozes' });
+        } else if (!nev.startsWith('.')) {
+          rendben.push(nev);
+        }
+      }
+      return rendben;
+    };
+
+    const gyoker = await bejar('');
+    await bejar(SABLONOK_MAPPA);
+    if (gyoker.includes(UTKOZESEK_MAPPA)) {
+      for (const nev of await this.prim.listaz(UTKOZESEK_MAPPA)) {
+        tetelek.push({ utvonal: utvonal(UTKOZESEK_MAPPA, nev), fajta: 'utkozes-mentes' });
+      }
+    }
+    for (const paciens of await bejar(PACIENSEK_MAPPA)) {
+      for (const lanc of await bejar(pacUt(paciens))) {
+        const lancMappa = tervMappaUt(paciens, lanc);
+        // A két gép eltérő napon is kiadhatja ugyanazt a `_vN`-t: a sorszám számít, nem a név.
+        const sorszamSzerint = new Map<number, string[]>();
+        for (const nev of await bejar(lancMappa)) {
+          const verzio = parseVersionDirName(nev)?.verzio;
+          if (verzio != null) sorszamSzerint.set(verzio, [...(sorszamSzerint.get(verzio) ?? []), nev]);
+        }
+        for (const nevek of sorszamSzerint.values()) {
+          if (nevek.length < 2) continue;
+          for (const nev of nevek.sort()) tetelek.push({ utvonal: utvonal(lancMappa, nev), fajta: 'azonos-sorszam' });
+        }
+      }
+    }
+    return tetelek;
   }
 
   /**

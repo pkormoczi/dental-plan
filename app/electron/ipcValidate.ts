@@ -91,6 +91,13 @@ function felulirasOpciok(x: unknown) {
   return felulir === undefined ? {} : { felulir };
 }
 
+/** Gyökérhez relatív útvonal: `/`-sel tagolt, elemenként `egyElem`-szabályú, abszolút út és `..` nélkül. */
+export function gyokerRelativUtvonal(x: unknown): string {
+  if (typeof x !== 'string' || !x || x.length > 1000) throw hiba('útvonal');
+  for (const elem of x.split('/')) egyElem(elem, 'útvonal');
+  return x;
+}
+
 function nincsArgumentum(args: unknown[]): unknown[] {
   if (args.length) throw hiba('fölösleges paraméter');
   return [];
@@ -104,6 +111,7 @@ export function ervenyesArgumentumok(metodus: TaroloMetodus, args: unknown[]): u
     case 'loadPriceList':
     case 'loadSettings':
     case 'listTemplates':
+    case 'listUtkozesek':
       return nincsArgumentum(args);
     case 'listPlans':
     case 'loadPatientData':

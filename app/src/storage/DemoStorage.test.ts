@@ -329,4 +329,13 @@ describe('paths re-export sanity', () => {
 
     expect((await storage.loadPriceList()).arlistaVerzio).toBe('sajat');
   });
+
+  it('a demóban nincs ütközés-vizsgálat: egy ütközéses nevű kulcs mellett is üres a lista', async () => {
+    localStorage.clear();
+    const storage = new DemoStorage();
+    await storage.init();
+    localStorage.setItem(`${PREFIX}arlista (1).json`, '{}');
+
+    expect(await storage.listUtkozesek()).toEqual([]);
+  });
 });

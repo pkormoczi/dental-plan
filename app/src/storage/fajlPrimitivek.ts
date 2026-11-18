@@ -17,8 +17,13 @@ export interface FajlPrimitivek {
   irBajt(ut: string, tartalom: Uint8Array): Promise<void>;
   /** Egy fájl törlése; nem létező fájlra no-op. */
   torol(ut: string): Promise<void>;
-  /** A mappa közvetlen gyerekeinek neve (fájl és mappa); nem létező mappára üres lista. */
-  listaz(ut: string): Promise<string[]>;
+  /**
+   * A mappa közvetlen gyerekeinek neve (fájl és mappa); nem létező mappára üres lista. A
+   * rendszer-szemetet és a saját temp-neveket elrejtheti; `rejtettekkel`-lel mindet adja.
+   */
+  listaz(ut: string, opciok?: { rejtettekkel?: boolean }): Promise<string[]>;
+  /** Az utolsó módosítás ideje (ms); `null`, ha nem létezik, vagy a tároló nem követi. */
+  modositva(ut: string): Promise<number | null>;
   /** Fájl vagy mappa létezik-e az útvonalon. */
   letezik(ut: string): Promise<boolean>;
   /** `kizarolagos`: létező útvonalra `MarLetezikError` -- így két író nem kaphatja meg ugyanazt a mappát. */

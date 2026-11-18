@@ -4,10 +4,10 @@ import path from 'node:path';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { uresTorzsadat } from '../src/domain/paciensAdatok';
 import { makeBlankPlan } from '../src/storage/szerzodesTesztek';
-import { TAROLO_METODUSOK, type IpcEredmeny } from '../src/storage/taroloIpc';
+import { MEGMUTAT_CSATORNA, TAROLO_METODUSOK, type IpcEredmeny } from '../src/storage/taroloIpc';
 import { FileSystemStorage } from './fileSystemStorage';
 import { FsPrimitivek } from './fsPrimitivek';
-import { kuldoEllenor, taroloHivas, taroloKezelok, type KuldoEsemeny } from './ipcKezelok';
+import { kuldoEllenor, megmutatKezelo, taroloHivas, taroloKezelok, type KuldoEsemeny } from './ipcKezelok';
 import { PDF_MAX_BAJT } from './ipcValidate';
 
 const ORIGIN = 'app://mandoki-dental';
@@ -135,5 +135,49 @@ describe('taroloKezelok', () => {
     taroloKezelok({ handle: (c) => void csatornak.push(c) }, {} as never, kuldoEngedett);
 
     expect(csatornak).toEqual(TAROLO_METODUSOK.map((m) => `storage:${m}`));
+  });
+});
+
+describe('megmutatKezelo („Mappa megnyitása”)', () => {
+  async function csatorna() {
+    const gyoker = await ujMappa();
+    const prim = new FsPrimitivek(gyoker, { kesleltet: async () => {} });
+    const mutatott: string[] = [];
+    let kezelo: ((e: KuldoEsemeny, ...args: unknown[]) => Promise<unknown>) | null = null;
+    megmutatKezelo(
+      { handle: (nev, k) => void (nev === MEGMUTAT_CSATORNA && (kezelo = k)) },
+      prim,
+      kuldoEngedett,
+      (abs) => mutatott.push(abs),
+    );
+    const hiv = (ut: unknown, e: KuldoEsemeny = sajat) => kezelo!(e, ut) as Promise<IpcEredmeny<void>>;
+    return { gyoker, mutatott, hiv };
+  }
+  const kod = (r: IpcEredmeny<void>) => (r.ok ? 'OK' : r.hiba.kod);
+
+  it('a gyökéren belüli elemet a gyökérhez feloldva mutatja meg', async () => {
+    const { gyoker, mutatott, hiv } = await csatorna();
+    await fsp.mkdir(path.join(gyoker, '_utkozesek'));
+    await fsp.writeFile(path.join(gyoker, '_utkozesek', 'a.json'), '{}');
+
+    expect(kod(await hiv('_utkozesek/a.json'))).toBe('OK');
+    expect(mutatott).toEqual([path.join(gyoker, '_utkozesek', 'a.json')]);
+  });
+
+  it.each([['../kint.txt'], ['_utkozesek/../../kint.txt'], ['/etc/passwd'], [''], [42]])(
+    'a(z) %o útvonalat elutasítja, és nem mutat semmit',
+    async (ut) => {
+      const { mutatott, hiv } = await csatorna();
+
+      expect(kod(await hiv(ut))).toBe('ERVENYTELEN_PARAMETER');
+      expect(mutatott).toEqual([]);
+    },
+  );
+
+  it('idegen küldőtől nem fogad el hívást', async () => {
+    const { mutatott, hiv } = await csatorna();
+
+    expect(kod(await hiv('arlista.json', { senderFrame: { url: `${ORIGIN}/index.html` } }))).toBe('TILTOTT_KULDO');
+    expect(mutatott).toEqual([]);
   });
 });

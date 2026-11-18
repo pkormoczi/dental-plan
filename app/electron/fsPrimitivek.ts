@@ -193,11 +193,11 @@ export class FsPrimitivek implements FajlPrimitivek {
     }
   }
 
-  async listaz(ut: string): Promise<string[]> {
+  async listaz(ut: string, opciok?: { rejtettekkel?: boolean }): Promise<string[]> {
     const abs = await this.celUt(ut);
     try {
       const nevek = await this.ujraprobal(() => this.fs.readdir(abs));
-      return nevek.filter((n) => !REJTETT_NEV.test(n)).map((n) => n.normalize('NFC'));
+      return nevek.filter((n) => opciok?.rejtettekkel || !REJTETT_NEV.test(n)).map((n) => n.normalize('NFC'));
     } catch (err) {
       const kod = errnoKod(err);
       if (kod === 'ENOENT' || kod === 'ENOTDIR') return [];
@@ -207,6 +207,21 @@ export class FsPrimitivek implements FajlPrimitivek {
 
   async letezik(ut: string): Promise<boolean> {
     return this.letezikAbs(await this.celUt(ut));
+  }
+
+  async modositva(ut: string): Promise<number | null> {
+    const abs = await this.celUt(ut);
+    try {
+      return (await this.ujraprobal(() => this.fs.stat(abs))).mtimeMs;
+    } catch (err) {
+      if (errnoKod(err) === 'ENOENT') return null;
+      throw ioHiba(err, abs);
+    }
+  }
+
+  /** A gyökérhez relatív útvonal a lemezen, a gyökérbe zárva -- a rendszer fájlkezelőjének. */
+  async abszolut(ut: string): Promise<string> {
+    return this.celUt(ut);
   }
 
   async mappaLetrehoz(ut: string, opciok?: { kizarolagos?: boolean }): Promise<void> {

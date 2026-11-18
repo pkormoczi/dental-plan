@@ -41,6 +41,7 @@ export const TAROLO_METODUSOK = [
   'savePatientData',
   'createPatient',
   'deletePatient',
+  'listUtkozesek',
 ] as const satisfies readonly (keyof PlanStorage)[];
 
 export type TaroloMetodus = (typeof TAROLO_METODUSOK)[number];
@@ -48,6 +49,8 @@ export type TaroloMetodus = (typeof TAROLO_METODUSOK)[number];
 export const taroloCsatorna = (metodus: TaroloMetodus) => `storage:${metodus}`;
 /** Szinkron lekérdezés a preload betöltésekor: fut-e a main-oldali tároló. */
 export const AKTIV_CSATORNA = 'storage:aktiv';
+/** Egy gyökérmappán belüli elem megmutatása a rendszer fájlkezelőjében. */
+export const MEGMUTAT_CSATORNA = 'shell:megmutat';
 
 export type StorageHiba =
   | {
@@ -74,6 +77,8 @@ export type IpcEredmeny<T> = { ok: true; ertek: T } | { ok: false; hiba: Storage
 export interface TaroloHid {
   aktiv: boolean;
   hiv(metodus: TaroloMetodus, ...args: unknown[]): Promise<IpcEredmeny<unknown>>;
+  /** A gyökérhez relatív útvonalú elem kijelölve a rendszer fájlkezelőjében. */
+  megmutat(relUtvonal: string): Promise<IpcEredmeny<void>>;
 }
 
 declare global {

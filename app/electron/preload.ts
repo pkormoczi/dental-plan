@@ -2,7 +2,13 @@
 // Electron-API nem jut át (migrációs terv §3.2).
 
 import { contextBridge, ipcRenderer } from 'electron';
-import { AKTIV_CSATORNA, TAROLO_METODUSOK, taroloCsatorna, type TaroloHid } from '../src/storage/taroloIpc';
+import {
+  AKTIV_CSATORNA,
+  MEGMUTAT_CSATORNA,
+  TAROLO_METODUSOK,
+  taroloCsatorna,
+  type TaroloHid,
+} from '../src/storage/taroloIpc';
 
 const engedett = new Set<string>(TAROLO_METODUSOK);
 
@@ -13,6 +19,7 @@ const hid: TaroloHid = {
     engedett.has(metodus)
       ? ipcRenderer.invoke(taroloCsatorna(metodus), ...args)
       : Promise.reject(new Error(`Ismeretlen tároló-metódus: ${String(metodus)}`)),
+  megmutat: (relUtvonal) => ipcRenderer.invoke(MEGMUTAT_CSATORNA, relUtvonal),
 };
 
 contextBridge.exposeInMainWorld('mandokiTarolo', hid);

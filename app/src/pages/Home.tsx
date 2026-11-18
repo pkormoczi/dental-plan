@@ -33,6 +33,7 @@ import { openPlanPdfInNewTab } from '../storage/openPlanPdfInNewTab';
 import { buildDownloadFileName } from '../storage/paths';
 import { useStorage } from '../storage/StorageContext';
 import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
+import UtkozesSav from '../components/UtkozesSav';
 
 export default function Home() {
   const { storage, isSeedVersion } = useStorage();
@@ -165,6 +166,8 @@ export default function Home() {
       <Text as="p" size="2" color="gray" mb="5">
         Mándoki Dental — demó verzió a UX validálásához.
       </Text>
+
+      <UtkozesSav />
 
       {error && (
         <Callout.Root color="red" mb="4">
