@@ -399,6 +399,7 @@ export default function PatientDetailPage() {
               totalsByVersion={chainData?.totalsByVersion ?? {}}
               unreadable={chainData?.unreadable ?? false}
               header="embedded"
+              onUjraellenorzes={async () => setChainData(await loadPlanChainData(storage, patientDir))}
               aktivDraft={sajatAktivDraft}
               nyitottLancok={nyitottLancok}
               onLancValtas={setLancNyitva}

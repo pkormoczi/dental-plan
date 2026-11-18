@@ -4,7 +4,7 @@
 // és a renderer is importálja.
 
 import { CURRENT_SCHEMA_VERSION, SchemaVersionError } from '../domain/schema';
-import { VersionConflictError } from './paths';
+import { VersionConflictError, type LetezoVerzio } from './paths';
 import type { PlanStorage } from './PlanStorage';
 import {
   ErvenytelenParameterError,
@@ -53,8 +53,8 @@ export type StorageHiba =
   | {
       kod: 'VERZIO_UTKOZES';
       versionDir: string;
-      /** A meglévő verzió adatai; a manifest érkezéséig `null`. */
-      letezo: { datum: string; orvos: string; vegosszeg: number } | null;
+      /** A meglévő verzió adatai; hiányos meglévő verziónál `null`. */
+      letezo: LetezoVerzio | null;
     }
   | { kod: 'FELULIRAS_UTKOZES'; fajl: string; lemezenLevo: unknown; mentettMasolat: string }
   | { kod: 'TORLES_AKADALY'; ok: string }
@@ -84,7 +84,7 @@ declare global {
 
 /** Main oldal: egy elkapott hibából a szerializálható hibaeredmény. */
 export function hibaBolStorageHiba(err: unknown): StorageHiba {
-  if (err instanceof VersionConflictError) return { kod: 'VERZIO_UTKOZES', versionDir: err.dirName, letezo: null };
+  if (err instanceof VersionConflictError) return { kod: 'VERZIO_UTKOZES', versionDir: err.dirName, letezo: err.letezo };
   if (err instanceof FelulirasUtkozesError) {
     return { kod: 'FELULIRAS_UTKOZES', fajl: err.fajl, lemezenLevo: err.lemezenLevo, mentettMasolat: err.mentettMasolat };
   }
@@ -106,7 +106,7 @@ export function hibaBolStorageHiba(err: unknown): StorageHiba {
 export function storageHibaBolHiba(h: StorageHiba): Error {
   switch (h.kod) {
     case 'VERZIO_UTKOZES':
-      return new VersionConflictError(h.versionDir);
+      return new VersionConflictError(h.versionDir, h.letezo);
     case 'FELULIRAS_UTKOZES':
       return new FelulirasUtkozesError(h.fajl, h.lemezenLevo, h.mentettMasolat);
     case 'TORLES_AKADALY':

@@ -180,6 +180,10 @@ export default function OsszesTervSection() {
               totalsByVersion={data.totalsByVersion}
               unreadable={data.unreadable}
               header="standalone"
+              onUjraellenorzes={async () => {
+                const friss = await loadPlanChainData(storage, p.dirName);
+                setChainDataByPatient((prev) => ({ ...prev, [p.dirName]: friss }));
+              }}
               aktivDraft={sajatDraft(aktivDraft, p.dirName)}
               nyitottLancok={lancokEhhezAPacienshez(nyitottak, p.dirName)}
               onLancValtas={(planDir, nyitva) => setNyitott(lancMemoriaKulcs(p.dirName, planDir), nyitva)}

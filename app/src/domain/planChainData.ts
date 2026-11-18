@@ -75,8 +75,12 @@ export async function loadPlanChainData(
     else unreadable = true;
   });
 
+  // A hiányos verzió nem olvashatatlan, csak még nem érkezett meg: a sora maga jelzi, ezért
+  // be sem töltjük, és nem számít bele az `unreadable` figyelmeztetésbe.
   const versionRefs = plans.flatMap((plan) =>
-    (versionsByPlan[plan.dirName] ?? []).map((v) => ({ planDir: plan.dirName, versionDir: v.dirName })),
+    (versionsByPlan[plan.dirName] ?? [])
+      .filter((v) => v.allapot !== 'hianyos')
+      .map((v) => ({ planDir: plan.dirName, versionDir: v.dirName })),
   );
   const planResults = await Promise.allSettled(
     versionRefs.map((ref) =>

@@ -9,6 +9,8 @@ export interface FajlPrimitivek {
   olvasSzoveg(ut: string): Promise<string | null>;
   /** `null`, ha a fájl nem létezik. */
   olvasBajt(ut: string): Promise<Uint8Array | null>;
+  /** A fájl mérete bájtban, beolvasás nélkül; `null`, ha nem létezik. */
+  meret(ut: string): Promise<number | null>;
   /** Atomi felülírás: hibánál a fájl korábbi tartalma érintetlen. A szülőmappát létrehozza. */
   irSzoveg(ut: string, tartalom: string): Promise<void>;
   /** Mint az `irSzoveg`, bájtokra. */

@@ -13,7 +13,7 @@ import type {
   PriceList,
   Settings,
 } from '../domain/types';
-import type { PlanStorage } from './PlanStorage';
+import type { MentettVerzio, PlanStorage } from './PlanStorage';
 import { storageHibaBolHiba, type TaroloHid, type TaroloMetodus } from './taroloIpc';
 
 export class ElectronStorage implements PlanStorage {
@@ -47,7 +47,7 @@ export class ElectronStorage implements PlanStorage {
   loadPlanPdf(ref: PlanRef): Promise<Uint8Array | null> {
     return this.hiv('loadPlanPdf', ref);
   }
-  savePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<PlanRef> {
+  savePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<MentettVerzio> {
     return this.hiv('savePlan', plan, pdf, ujLancCim);
   }
   savePlanLabel(patientDir: string, planDir: string, tervCim: string): Promise<void> {

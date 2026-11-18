@@ -7,7 +7,7 @@ function planFolder(dirName: string): PlanFolder {
 }
 
 function version(dirName: string, isoDate: string, verzio: number): PlanVersion {
-  return { dirName, isoDate, verzio };
+  return { dirName, isoDate, verzio, allapot: 'teljes' };
 }
 
 function minimalPlan(statusz: TervStatusz): Plan {

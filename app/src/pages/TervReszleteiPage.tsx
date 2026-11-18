@@ -12,6 +12,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CrossCircledIcon,
+  ExclamationTriangleIcon,
 } from '@radix-ui/react-icons';
 import Section from '../components/Section';
 import { ReadOnlyField } from '../components/Field';
@@ -69,6 +70,7 @@ type Allapot =
   | { fajta: 'hiba'; uzenet: string }
   | { fajta: 'nincs'; mit: 'paciens' | 'terv' | 'verzio' }
   | { fajta: 'nem-vegleges' }
+  | { fajta: 'hianyos'; hianyzik: string[] }
   | { fajta: 'kesz'; adat: Reszletek };
 
 const NINCS_UZENET: Record<'paciens' | 'terv' | 'verzio', string> = {
@@ -94,6 +96,8 @@ export default function TervReszleteiPage() {
   const akciok = usePlanVersionActions({ patientDir });
 
   const [allapot, setAllapot] = useState<Allapot>({ fajta: 'toltes' });
+  // Az „Újraellenőrzés” ezt lépteti: a betöltés újrafut, polling nincs.
+  const [ellenorzes, setEllenorzes] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -125,8 +129,13 @@ export default function TervReszleteiPage() {
         }
         const versions = await storage.listVersions(patientDir, planDir);
         if (cancelled) return;
-        if (!versions.some((v) => v.dirName === versionDir)) {
+        const verzio = versions.find((v) => v.dirName === versionDir);
+        if (!verzio) {
           setAllapot({ fajta: 'nincs', mit: 'verzio' });
+          return;
+        }
+        if (verzio.allapot === 'hianyos') {
+          setAllapot({ fajta: 'hianyos', hianyzik: verzio.hianyzik ?? [] });
           return;
         }
         // `listPlans`/`listVersions` mappákat sorol fel, nem dob egy sérült
@@ -188,7 +197,7 @@ export default function TervReszleteiPage() {
     return () => {
       cancelled = true;
     };
-  }, [storage, patientDir, planDir, versionDir]);
+  }, [storage, patientDir, planDir, versionDir, ellenorzes]);
 
   // A verzióváltás UI-ja `{ replace: true }`-vel navigál (lásd lent) -- a
   // láncon belüli lépegetés oldalirányú mozgás EGY nézeten belül, nem új
@@ -293,6 +302,25 @@ export default function TervReszleteiPage() {
           </Callout.Icon>
           <Callout.Text>{NINCS_UZENET[allapot.mit]}</Callout.Text>
         </Callout.Root>
+      </Box>
+    );
+  }
+
+  if (allapot.fajta === 'hianyos') {
+    return (
+      <Box style={{ maxWidth: 900, margin: '0 auto' }}>
+        {osszesVerzioGomb}
+        <Callout.Root color="amber">
+          <Callout.Icon>
+            <ExclamationTriangleIcon />
+          </Callout.Icon>
+          <Callout.Text>
+            Ez a verzió még nem teljes (hiányzik: {allapot.hianyzik.join(', ')}). Ha a Drive szinkronizál, várj.
+          </Callout.Text>
+        </Callout.Root>
+        <Button type="button" size="1" variant="soft" color="gray" mt="3" onClick={() => setEllenorzes((n) => n + 1)}>
+          Újraellenőrzés
+        </Button>
       </Box>
     );
   }

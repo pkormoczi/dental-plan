@@ -133,6 +133,12 @@ export interface PatientPlanChainsProps {
    */
   onErvenytelenitesValtozott: (planDir: string, versionDir: string, indok: string | null) => void;
   /**
+   * Egy hiányos (még szinkronizálódó) verzió „Újraellenőrzés” gombja -- a lánc-adat a HÍVÓ
+   * állapota, ő tölti újra; a komponens csak jelzi, hogy kérik. Polling nincs: a doki dönti
+   * el, mikor néz rá újra.
+   */
+  onUjraellenorzes: () => Promise<void>;
+  /**
    * Az EGYETLEN globális, mentetlen piszkozat -- KIZÁRÓLAG akkor
    * átadva, ha ehhez a `patient`-hez tartozik (a hívó már szűrt
    * `sajatDraft()`-tal, `components/useAktivDraft.ts`). A
@@ -164,6 +170,7 @@ export default function PatientPlanChains({
   onNavigateToPatientData,
   onLabelSaved,
   onErvenytelenitesValtozott,
+  onUjraellenorzes,
   aktivDraft,
   nyitottLancok,
   onLancValtas,
@@ -194,6 +201,16 @@ export default function PatientPlanChains({
       onLancValtas(planDir, kovetkezo);
     } else {
       setHelyiNyitas((prev) => ({ ...prev, [planDir]: kovetkezo }));
+    }
+  }
+
+  const [ujraellenorzesFut, setUjraellenorzesFut] = useState(false);
+  async function ujraellenoriz() {
+    setUjraellenorzesFut(true);
+    try {
+      await onUjraellenorzes();
+    } finally {
+      setUjraellenorzesFut(false);
     }
   }
 
@@ -614,6 +631,9 @@ export default function PatientPlanChains({
                     // láncon, ami a lánc-rendezésben megelőzné a tényleges
                     // legfrissebb verziót.
                     const isLegfrissebb = v.dirName === legfrissebb?.dirName;
+                    // A még szinkronizálódó verzió sem nyitható, sem másolható; amíg a lánc
+                    // legfrissebbje ilyen, „Új verzió” sincs, mert elavult alapból indulna.
+                    const hianyos = v.allapot === 'hianyos';
                     // "Legutóbbi" badge: csak 2+
                     // verziós láncon -- egyverziós láncon funkciótlan dísz
                     // lenne (visszajelzés nélküli elem, app/src/CLAUDE.md tiltja).
@@ -639,6 +659,11 @@ export default function PatientPlanChains({
                             {v.ervenytelenites && (
                               <Badge color="red" variant="soft" size="1">
                                 Érvénytelen
+                              </Badge>
+                            )}
+                            {hianyos && (
+                              <Badge color="amber" variant="soft" size="1">
+                                Szinkron folyamatban vagy hiányos
                               </Badge>
                             )}
                           </Flex>
@@ -676,7 +701,18 @@ export default function PatientPlanChains({
                                 historical soron NINCS látható gomb, csak a `⋯` --
                                 onnan induló módosítás helyes útja a "Másolás új
                                 tervbe". */}
-                            {isLegfrissebb && (
+                            {hianyos && (
+                              <Button
+                                size="1"
+                                variant="soft"
+                                color="gray"
+                                disabled={ujraellenorzesFut}
+                                onClick={() => void ujraellenoriz()}
+                              >
+                                Újraellenőrzés
+                              </Button>
+                            )}
+                            {isLegfrissebb && !hianyos && (
                               <Flex align="center" gap="2">
                                 <Button size="1" onClick={() => akciok.inditas({ kind: 'open', ...ref })}>
                                   Új verzió
@@ -691,105 +727,113 @@ export default function PatientPlanChains({
                                 </Button>
                               </Flex>
                             )}
-                            <DropdownMenu.Root>
-                              <DropdownMenu.Trigger>
-                                {/* Az aria-label a terv-címkével ÉS a verziószámmal
-                                    képzett: csupasz "v1 — további műveletek" két
-                                    különböző terv-lánc esetén (mindkettő saját v1-gyel
-                                    indul) ütközne -- a képernyőolvasó (és a teszt)
-                                    nem tudná megkülönböztetni őket. */}
-                                <IkonGomb
-                                  id={verzioMenuId(plan.dirName, v.dirName)}
-                                  size="1"
-                                  variant="soft"
-                                  color="gray"
-                                  cimke="További műveletek ezzel a verzióval"
-                                  ariaLabel={`${label} — v${v.verzio} — további műveletek`}
-                                >
-                                  <DotsHorizontalIcon />
-                                </IkonGomb>
-                              </DropdownMenu.Trigger>
-                              {/* onCloseAutoFocus: a menü záráskor visszavenné a
-                                  fókuszt a triggerre, és ezzel elhalászná azt a
-                                  piszkozat-őr AlertDialog-ja elől, ami ugyanabban a
-                                  tickben nyílik (akciok.inditas), VAGY a "Ugrás a
-                                  legfrissebb verzióra" görgetés utáni saját
-                                  fókuszkezelést venné el (ugrasLegfrissebbre). Ne
-                                  cseréld setTimeout-os késleltetésre. */}
-                              <DropdownMenu.Content size="1" onCloseAutoFocus={(e) => e.preventDefault()}>
-                                {/* Megnézés a legfrissebb soron már látható gombként
-                                    létezik (fent) -- itt csak historical soron
-                                    jelenik meg, hogy ne duplikálódjon. Az "Új verzió"
-                                    SOHA nem menüpont többé, csak látható gomb a
-                                    legfrissebb soron. */}
-                                {!isLegfrissebb && (
-                                  <DropdownMenu.Item
-                                    onSelect={() => navigate(tervReszleteiUtvonal(patient.dirName, ref))}
+                            {!hianyos && (
+                              <DropdownMenu.Root>
+                                <DropdownMenu.Trigger>
+                                  {/* Az aria-label a terv-címkével ÉS a verziószámmal
+                                      képzett: csupasz "v1 — további műveletek" két
+                                      különböző terv-lánc esetén (mindkettő saját v1-gyel
+                                      indul) ütközne -- a képernyőolvasó (és a teszt)
+                                      nem tudná megkülönböztetni őket. */}
+                                  <IkonGomb
+                                    id={verzioMenuId(plan.dirName, v.dirName)}
+                                    size="1"
+                                    variant="soft"
+                                    color="gray"
+                                    cimke="További műveletek ezzel a verzióval"
+                                    ariaLabel={`${label} — v${v.verzio} — további műveletek`}
                                   >
-                                    Megnézés
+                                    <DotsHorizontalIcon />
+                                  </IkonGomb>
+                                </DropdownMenu.Trigger>
+                                {/* onCloseAutoFocus: a menü záráskor visszavenné a
+                                    fókuszt a triggerre, és ezzel elhalászná azt a
+                                    piszkozat-őr AlertDialog-ja elől, ami ugyanabban a
+                                    tickben nyílik (akciok.inditas), VAGY a "Ugrás a
+                                    legfrissebb verzióra" görgetés utáni saját
+                                    fókuszkezelést venné el (ugrasLegfrissebbre). Ne
+                                    cseréld setTimeout-os késleltetésre. */}
+                                <DropdownMenu.Content size="1" onCloseAutoFocus={(e) => e.preventDefault()}>
+                                  {/* Megnézés a legfrissebb soron már látható gombként
+                                      létezik (fent) -- itt csak historical soron
+                                      jelenik meg, hogy ne duplikálódjon. Az "Új verzió"
+                                      SOHA nem menüpont többé, csak látható gomb a
+                                      legfrissebb soron. */}
+                                  {!isLegfrissebb && (
+                                    <DropdownMenu.Item
+                                      onSelect={() => navigate(tervReszleteiUtvonal(patient.dirName, ref))}
+                                    >
+                                      Megnézés
+                                    </DropdownMenu.Item>
+                                  )}
+                                  <DropdownMenu.Item onSelect={() => downloadVersion(ref, plan.tervId)}>
+                                    Letöltés
                                   </DropdownMenu.Item>
-                                )}
-                                <DropdownMenu.Item onSelect={() => downloadVersion(ref, plan.tervId)}>
-                                  Letöltés
-                                </DropdownMenu.Item>
-                                <DropdownMenu.Separator />
-                                <DropdownMenu.Item
-                                  onSelect={() =>
-                                    akciok.inditas(
-                                      { kind: 'copy', ...ref, historical: !isLegfrissebb },
-                                      document.getElementById(verzioMenuId(ref.planDir, ref.versionDir)),
-                                    )
-                                  }
-                                >
-                                  Másolás új tervbe
-                                </DropdownMenu.Item>
-                                {!isLegfrissebb && (
-                                  <DropdownMenu.Item onSelect={() => ugrasLegfrissebbre(plan.dirName)}>
-                                    Ugrás a legfrissebb verzióra
-                                  </DropdownMenu.Item>
-                                )}
-                                {/* A menü VÉGÉN, saját elválasztó után -- a
-                                    "Páciens törlése" (PatientDetailPage.tsx)
-                                    mintája: ritka, súlyos akció, nem
-                                    keveredhet a napi Letöltés/Másolás
-                                    sorrendbe. A visszavonás UGYANITT él, hogy
-                                    a doki egy helyen keresse mindkét irányt. */}
-                                <DropdownMenu.Separator />
-                                {v.ervenytelenites ? (
+                                  <DropdownMenu.Separator />
                                   <DropdownMenu.Item
-                                    onSelect={() => {
-                                      visszavonasVisszaFokuszRef.current = document.getElementById(
-                                        verzioMenuId(ref.planDir, ref.versionDir),
-                                      );
-                                      setVisszavonas({
-                                        ...ref,
-                                        megnevezes: `${label} — v${v.verzio}`,
-                                      });
-                                    }}
+                                    onSelect={() =>
+                                      akciok.inditas(
+                                        { kind: 'copy', ...ref, historical: !isLegfrissebb },
+                                        document.getElementById(verzioMenuId(ref.planDir, ref.versionDir)),
+                                      )
+                                    }
                                   >
-                                    Érvénytelenítés visszavonása
+                                    Másolás új tervbe
                                   </DropdownMenu.Item>
-                                ) : (
-                                  <DropdownMenu.Item
-                                    color="red"
-                                    onSelect={() => {
-                                      ervVisszaFokuszRef.current = document.getElementById(
-                                        verzioMenuId(ref.planDir, ref.versionDir),
-                                      );
-                                      setErvIndok('');
-                                      setErvenytelenites({
-                                        ...ref,
-                                        megnevezes: `${label} — v${v.verzio}`,
-                                      });
-                                    }}
-                                  >
-                                    Érvénytelenítés
-                                  </DropdownMenu.Item>
-                                )}
-                              </DropdownMenu.Content>
-                            </DropdownMenu.Root>
+                                  {!isLegfrissebb && (
+                                    <DropdownMenu.Item onSelect={() => ugrasLegfrissebbre(plan.dirName)}>
+                                      Ugrás a legfrissebb verzióra
+                                    </DropdownMenu.Item>
+                                  )}
+                                  {/* A menü VÉGÉN, saját elválasztó után -- a
+                                      "Páciens törlése" (PatientDetailPage.tsx)
+                                      mintája: ritka, súlyos akció, nem
+                                      keveredhet a napi Letöltés/Másolás
+                                      sorrendbe. A visszavonás UGYANITT él, hogy
+                                      a doki egy helyen keresse mindkét irányt. */}
+                                  <DropdownMenu.Separator />
+                                  {v.ervenytelenites ? (
+                                    <DropdownMenu.Item
+                                      onSelect={() => {
+                                        visszavonasVisszaFokuszRef.current = document.getElementById(
+                                          verzioMenuId(ref.planDir, ref.versionDir),
+                                        );
+                                        setVisszavonas({
+                                          ...ref,
+                                          megnevezes: `${label} — v${v.verzio}`,
+                                        });
+                                      }}
+                                    >
+                                      Érvénytelenítés visszavonása
+                                    </DropdownMenu.Item>
+                                  ) : (
+                                    <DropdownMenu.Item
+                                      color="red"
+                                      onSelect={() => {
+                                        ervVisszaFokuszRef.current = document.getElementById(
+                                          verzioMenuId(ref.planDir, ref.versionDir),
+                                        );
+                                        setErvIndok('');
+                                        setErvenytelenites({
+                                          ...ref,
+                                          megnevezes: `${label} — v${v.verzio}`,
+                                        });
+                                      }}
+                                    >
+                                      Érvénytelenítés
+                                    </DropdownMenu.Item>
+                                  )}
+                                </DropdownMenu.Content>
+                              </DropdownMenu.Root>
+                            )}
                           </Flex>
                         </Flex>
+                        {hianyos && (
+                          <Text as="p" size="1" mt="0" mb="2" style={{ color: t.uiTextMuted }}>
+                            Ez a verzió még nem teljes (hiányzik: {(v.hianyzik ?? []).join(', ')}). Ha a
+                            Drive szinkronizál, várj.
+                          </Text>
+                        )}
                         {/* Az indoklás a jelvény alatt, teljes szélességben --
                             a jelvény melletti sorba tördelve a hosszabb
                             szöveg szétnyomná a verziósor két végét. */}

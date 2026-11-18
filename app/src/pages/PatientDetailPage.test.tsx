@@ -697,4 +697,78 @@ describe('PatientDetailPage', () => {
 
     await waitFor(() => expect(trigger).toHaveFocus());
   });
+
+  describe('hiányos (még szinkronizálódó) verzió a Kezelési tervek tabon', () => {
+    const nagyLancok = new Map<string, typeof seedPlans>();
+    for (const e of seedPlans.filter((e) => e.patientDir === nagyDir)) {
+      nagyLancok.set(e.planDir, [...(nagyLancok.get(e.planDir) ?? []), e]);
+    }
+    const [lanc, lancVerziok] = [...nagyLancok].find(([, v]) => v.length > 1)!;
+    const legfrissebb = [...lancVerziok].sort((a, b) => b.plan.verzio - a.plan.verzio)[0];
+
+    function legfrissebbHianyos() {
+      const eredeti = DemoStorage.prototype.listVersions;
+      let hianyos = true;
+      vi.spyOn(DemoStorage.prototype, 'listVersions').mockImplementation(async function (
+        this: DemoStorage,
+        patientDir: string,
+        planDir: string,
+      ) {
+        const versions = await eredeti.call(this, patientDir, planDir);
+        return versions.map((v) =>
+          hianyos && v.dirName === legfrissebb.versionDir
+            ? { ...v, allapot: 'hianyos' as const, hianyzik: ['kezelesi-terv.pdf'] }
+            : v,
+        );
+      });
+      return () => {
+        hianyos = false;
+      };
+    }
+
+    async function lancNyitva(user: ReturnType<typeof userEvent.setup>): Promise<HTMLElement> {
+      const toggle = await waitFor(() => {
+        const el = document.getElementById(`lanc-toggle-${lanc}`);
+        if (!el) throw new Error('a lánc még nem jelent meg');
+        return el;
+      });
+      if (toggle.getAttribute('aria-expanded') === 'false') await user.click(toggle);
+      return document.querySelector<HTMLElement>(`[data-plan="${lanc}"]`)!;
+    }
+
+    it('a hiányos sor jelvényt, a hiányzó fájlt és Újraellenőrzést mutat, ⋯ menü nélkül, és a láncon nincs Új verzió', async () => {
+      legfrissebbHianyos();
+      const user = userEvent.setup();
+      renderDetail(nagyDir);
+
+      const lancDoboz = await lancNyitva(user);
+
+      expect(within(lancDoboz).getByText('Szinkron folyamatban vagy hiányos')).toBeInTheDocument();
+      expect(
+        within(lancDoboz).getByText('Ez a verzió még nem teljes (hiányzik: kezelesi-terv.pdf). Ha a Drive szinkronizál, várj.'),
+      ).toBeInTheDocument();
+      expect(within(lancDoboz).getByRole('button', { name: 'Újraellenőrzés' })).toBeInTheDocument();
+      expect(within(lancDoboz).queryByRole('button', { name: 'Új verzió' })).toBeNull();
+      expect(within(lancDoboz).queryByRole('button', { name: 'Megnézés' })).toBeNull();
+      expect(within(lancDoboz).queryByRole('button', { name: new RegExp(`v${legfrissebb.plan.verzio} — további műveletek`) })).toBeNull();
+      // A régebbi verzió ⋯ menüje megmarad (Letöltés, Másolás új tervbe).
+      expect(within(lancDoboz).getAllByRole('button', { name: /további műveletek/ }).length).toBeGreaterThan(0);
+      // A hiányos verzió nem „nem olvasható”: a saját sora jelzi.
+      expect(screen.queryByText('⚠ néhány verziója nem olvasható')).toBeNull();
+    });
+
+    it('Újraellenőrzés után a közben teljessé vált verzió soron a szokásos Új verzió és Megnézés gomb jelenik meg', async () => {
+      const megerkezett = legfrissebbHianyos();
+      const user = userEvent.setup();
+      renderDetail(nagyDir);
+      const lancDoboz = await lancNyitva(user);
+
+      megerkezett();
+      await user.click(within(lancDoboz).getByRole('button', { name: 'Újraellenőrzés' }));
+
+      expect(await within(lancDoboz).findByRole('button', { name: 'Új verzió' })).toBeInTheDocument();
+      expect(within(lancDoboz).getByRole('button', { name: 'Megnézés' })).toBeInTheDocument();
+      expect(within(lancDoboz).queryByText('Szinkron folyamatban vagy hiányos')).toBeNull();
+    });
+  });
 });

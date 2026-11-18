@@ -28,7 +28,9 @@ import type {
 } from '../domain/types';
 import { MarLetezikError, utvonal, type FajlPrimitivek } from './fajlPrimitivek';
 import { parseJson } from './json';
-import type { PlanStorage } from './PlanStorage';
+import type { MentettVerzio, PlanStorage } from './PlanStorage';
+import { sha256Hex } from './sha256';
+import { HianyosVerzioError } from './taroloHibak';
 import {
   assertVersionDirAvailable,
   buildPatientDirName,
@@ -40,6 +42,7 @@ import {
   parsePlanDirName,
   parseVersionDirName,
   VersionConflictError,
+  type LetezoVerzio,
 } from './paths';
 import { seedPriceList } from './seed/priceList';
 import { seedSettings } from './seed/settings';
@@ -56,6 +59,17 @@ export const ARLISTA_FAJL = 'arlista.json';
 export const BEALLITASOK_FAJL = 'beallitasok.json';
 export const PACIENSEK_MAPPA = 'paciensek';
 export const SABLONOK_MAPPA = 'sablonok';
+export const MANIFEST_FAJL = 'manifest.json';
+const TERV_FAJL = 'terv.json';
+const MANIFEST_SEMA = 1;
+
+/** A verziómappa utoljára írt fájlja: amíg nincs meg és nem egyezik, a verzió hiányos. */
+interface VerzioManifest {
+  schemaVersion: number;
+  mentesId: string;
+  keszult: string;
+  fajlok: Record<string, { sha256: string; meret: number }>;
+}
 
 /** Alapértelmezett sablonfájlok: egy friss gyökérbe ezek kerülnek. */
 export const DEFAULT_TEMPLATES: Array<[string, string]> = [
@@ -90,7 +104,7 @@ const cimkeUt = (patientDir: string, planDir: string) =>
 const ervenytelenitesUt = (patientDir: string, planDir: string) =>
   utvonal(tervMappaUt(patientDir, planDir), 'terv-ervenytelenitesek.json');
 const tervUt = (patientDir: string, planDir: string, versionDir: string) =>
-  utvonal(tervMappaUt(patientDir, planDir), versionDir, 'terv.json');
+  utvonal(tervMappaUt(patientDir, planDir), versionDir, TERV_FAJL);
 const sablonUt = (fileName: string) => utvonal(SABLONOK_MAPPA, fileName);
 
 function escapeRegExp(s: string): string {
@@ -104,11 +118,29 @@ export async function alapKeszletetIr(prim: FajlPrimitivek): Promise<void> {
   for (const [name, body] of DEFAULT_TEMPLATES) await prim.irSzoveg(sablonUt(name), body);
 }
 
+async function ujManifest(tervJson: string, pdfFajlnev: string, pdf: Uint8Array): Promise<VerzioManifest> {
+  return {
+    schemaVersion: MANIFEST_SEMA,
+    mentesId: globalThis.crypto.randomUUID(),
+    keszult: new Date().toISOString(),
+    fajlok: {
+      [TERV_FAJL]: { sha256: await sha256Hex(tervJson), meret: new TextEncoder().encode(tervJson).length },
+      [pdfFajlnev]: { sha256: await sha256Hex(pdf), meret: pdf.length },
+    },
+  };
+}
+
 export interface FajlTaroloOpciok {
   /** A verziómappa PDF-fájljának neve. */
   pdfFajlnev: string;
   /** A sikertelen `savePlan` üzenete -- a tároló-specifikus teendővel. */
   mentesHibaUzenet: string;
+  /**
+   * Verziómappa manifesttel és teljesség-ellenőrzéssel. A két gép között szinkronizált
+   * gyökérmappán kell, ahol a JSON és a PDF nem egyszerre érkezik (migrációs terv §4.3); a
+   * demóban nincs, ott minden verzió teljes.
+   */
+  verzioManifest?: boolean;
 }
 
 export class FajlTarolo implements PlanStorage {
@@ -134,6 +166,13 @@ export class FajlTarolo implements PlanStorage {
    * is okozhatna, nem csak fordított sorrendet.
    */
   private savingChain: Promise<unknown> = Promise.resolve();
+
+  /**
+   * A már teljesnek látott verziómappák, a manifest szövegével és a fájlméretekkel kulcsolva.
+   * A verziómappa append-only, így egy teljes verzió nem romlik el; enélkül minden lánc-nézés
+   * minden PDF-et újra hash-elne. Hiányos verzió sosem kerül ide: az mindig újraellenőrződik.
+   */
+  private readonly teljesVerziok = new Map<string, string>();
 
   /** A `savingChain`-re fűz egy írást -- lásd a mező doc-kommentjét. */
   protected enqueue<T>(run: () => Promise<T>): Promise<T> {
@@ -225,14 +264,66 @@ export class FajlTarolo implements PlanStorage {
       (d) => !PLAN_ROOT_FILES.has(d),
     );
     const ervenytelenitesek = await this.olvasErvenytelenitesek(patientDir, planDir);
-    const versions: PlanVersion[] = [];
-    for (const dirName of dirs) {
-      const parsed = parseVersionDirName(dirName);
-      if (!parsed) continue;
-      const indok = ervenytelenitesek[dirName];
-      versions.push({ dirName, ...parsed, ...(indok ? { ervenytelenites: indok } : {}) });
+    const versions = await Promise.all(
+      dirs.map(async (dirName): Promise<PlanVersion | null> => {
+        const parsed = parseVersionDirName(dirName);
+        if (!parsed) return null;
+        const indok = ervenytelenitesek[dirName];
+        const hianyzik = await this.verzioHianyai(utvonal(tervMappaUt(patientDir, planDir), dirName));
+        return {
+          dirName,
+          ...parsed,
+          ...(indok ? { ervenytelenites: indok } : {}),
+          allapot: hianyzik.length ? 'hianyos' : 'teljes',
+          ...(hianyzik.length ? { hianyzik } : {}),
+        };
+      }),
+    );
+    return versions.filter((v): v is PlanVersion => v !== null).sort((a, b) => a.verzio - b.verzio);
+  }
+
+  /**
+   * Mi hiányzik ahhoz, hogy a verzió teljes JSON+PDF-pár legyen; üres lista = teljes. A
+   * manifest nélküli tárolón mindig üres.
+   */
+  private async verzioHianyai(verzioMappa: string): Promise<string[]> {
+    if (!this.opciok.verzioManifest) return [];
+    const fajlnevek = [TERV_FAJL, this.opciok.pdfFajlnev];
+    const raw = await this.prim.olvasSzoveg(utvonal(verzioMappa, MANIFEST_FAJL));
+    const meretek = await Promise.all(fajlnevek.map((nev) => this.prim.meret(utvonal(verzioMappa, nev))));
+    const hianyzoFajlok = fajlnevek.filter((_, i) => meretek[i] == null);
+    if (raw == null) return [MANIFEST_FAJL, ...hianyzoFajlok];
+    let manifest: VerzioManifest;
+    try {
+      manifest = parseJson<VerzioManifest>(raw, MANIFEST_FAJL);
+    } catch {
+      return [`${MANIFEST_FAJL}: sérült`, ...hianyzoFajlok];
     }
-    return versions.sort((a, b) => a.verzio - b.verzio);
+    // Egy újabb appverzió manifestjét ez a verzió nem tudja igazolni -- a magasabb
+    // schemaVersion itt is megtagadott betöltést jelent.
+    if (typeof manifest.schemaVersion !== 'number' || manifest.schemaVersion > MANIFEST_SEMA) {
+      return [`${MANIFEST_FAJL}: ismeretlen formátum`];
+    }
+    const kulcs = [raw, ...meretek].join('|');
+    if (this.teljesVerziok.get(verzioMappa) === kulcs) return [];
+    const hianyzik: string[] = [];
+    for (const [i, nev] of fajlnevek.entries()) {
+      const elvart = manifest.fajlok?.[nev];
+      if (meretek[i] == null) {
+        hianyzik.push(nev);
+        continue;
+      }
+      const bajt = elvart && elvart.meret === meretek[i] ? await this.prim.olvasBajt(utvonal(verzioMappa, nev)) : null;
+      if (!bajt || (await sha256Hex(bajt)) !== elvart?.sha256) hianyzik.push(`${nev}: eltérő tartalom`);
+    }
+    if (hianyzik.length === 0) this.teljesVerziok.set(verzioMappa, kulcs);
+    return hianyzik;
+  }
+
+  /** Hiányos verzióra dob: annak tartalma még nem a végleges, nem nyitható meg. */
+  private async teljesVerzioOr(ref: PlanRef): Promise<void> {
+    const hianyzik = await this.verzioHianyai(utvonal(tervMappaUt(ref.patientDir, ref.planDir), ref.versionDir));
+    if (hianyzik.length) throw new HianyosVerzioError(ref.versionDir, hianyzik);
   }
 
   /**
@@ -260,10 +351,11 @@ export class FajlTarolo implements PlanStorage {
   }
 
   async loadPlan(ref: PlanRef): Promise<Plan> {
+    const nincs = () => new Error(`Nincs terv itt: ${ref.patientDir}/${ref.planDir}/${ref.versionDir}`);
+    if (!(await this.prim.letezik(utvonal(tervMappaUt(ref.patientDir, ref.planDir), ref.versionDir)))) throw nincs();
+    await this.teljesVerzioOr(ref);
     const raw = await this.prim.olvasSzoveg(tervUt(ref.patientDir, ref.planDir, ref.versionDir));
-    if (raw == null) {
-      throw new Error(`Nincs terv itt: ${ref.patientDir}/${ref.planDir}/${ref.versionDir}`);
-    }
+    if (raw == null) throw nincs();
     const plan = parseJson<Plan>(raw, 'terv.json');
     assertKnownSchemaVersion(plan, 'terv.json');
     assertPlanShape(plan, 'terv.json');
@@ -327,11 +419,11 @@ export class FajlTarolo implements PlanStorage {
    * csonkán), és két gyors egymás utáni hívás nem számolhatja ki ugyanazt a
    * verziószámot.
    */
-  async savePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<PlanRef> {
+  async savePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<MentettVerzio> {
     return this.enqueue(() => this.doSavePlan(plan, pdf, ujLancCim));
   }
 
-  private async doSavePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<PlanRef> {
+  private async doSavePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<MentettVerzio> {
     // Írás előtt is validálunk, nem csak betöltéskor: ez a hívás adja ki a
     // véglegesített, append-only verziómappát -- egy tört pénzértékkel ide
     // beírt terv.json később csak betöltési hibaként derülne ki, amikor már
@@ -360,8 +452,9 @@ export class FajlTarolo implements PlanStorage {
       );
     }
 
-    const existingVersions = await this.listVersions(patientDir, planDir);
-    const existingDirNames = existingVersions.map((v) => v.dirName);
+    const lancMappa = tervMappaUt(patientDir, planDir);
+    // Csak a nevek kellenek: a hiányos verzió is foglalja a sorszámát, a teljesség itt közömbös.
+    const existingDirNames = (await this.prim.listaz(lancMappa)).filter((d) => parseVersionDirName(d));
     const verzio = nextVersionNumber(existingDirNames);
     // A kiosztás autoritása itt marad, de egy nem nulla `plan.verzio` a hívó
     // ELŐZETES foglalása (az előnézet a PDF-be már beleírta ezt a számot).
@@ -378,9 +471,13 @@ export class FajlTarolo implements PlanStorage {
     assertVersionDirAvailable(existingDirNames, versionDir);
 
     const finalPlan: Plan = { ...plan, schemaVersion: 1, tervId, verzio, paciensId };
-    const verzioMappa = utvonal(tervMappaUt(patientDir, planDir), versionDir);
-    const tervFajl = tervUt(patientDir, planDir, versionDir);
-    const pdfFajl = utvonal(verzioMappa, this.opciok.pdfFajlnev);
+    const tervJson = JSON.stringify(finalPlan);
+    const verzioMappa = utvonal(lancMappa, versionDir);
+    const manifesttel = this.opciok.verzioManifest === true;
+    // Manifesttel a verzió egy átnevezéssel, készen jelenik meg: a `.`-tal kezdődő temp-mappát
+    // sem a listázás, sem a sorszámozás nem látja, és a másik gépre is csak a kész mappa jut át
+    // (migrációs terv §4.3).
+    const irasMappa = manifesttel ? utvonal(lancMappa, `.tmp-${versionDir}-${generateId()}`) : verzioMappa;
     // paciens.json index -- kereséshez/előtöltéshez, sosem system of record:
     // a most mentett plan.paciens.nev-re frissül, HACSAK nincs lezárt
     // paciens-adatok.json -- akkor az a törzsadat marad az igazság a
@@ -392,42 +489,102 @@ export class FajlTarolo implements PlanStorage {
       nev: paciensIndexNev(existingPatientData, plan.paciens.nev),
       utolsoAktivitas: ujAktivitas('terv-veglegesitve'),
     };
+    const ujPaciens = !patients.some((p) => p.dirName === patientDir);
+    const ujLanc = !existingPlans.some((p) => p.dirName === planDir);
 
     // A listázás óta egy másik gép is létrehozhatta ugyanezt a mappát: a kizárólagos
     // létrehozás a felülírás-tilalom utolsó őre.
     try {
-      await this.prim.mappaLetrehoz(verzioMappa, { kizarolagos: true });
+      await this.prim.mappaLetrehoz(irasMappa, { kizarolagos: true });
     } catch (err) {
-      if (err instanceof MarLetezikError) throw new VersionConflictError(versionDir);
+      if (err instanceof MarLetezikError && !manifesttel) {
+        throw new VersionConflictError(versionDir, await this.letezoVerzio(lancMappa, versionDir));
+      }
       throw err;
     }
 
     try {
-      await this.prim.irSzoveg(tervFajl, JSON.stringify(finalPlan));
-      await this.prim.irBajt(pdfFajl, pdf);
-      await this.prim.irSzoveg(pacRekordUt(patientDir), JSON.stringify(patientRecord));
+      await this.prim.irSzoveg(utvonal(irasMappa, TERV_FAJL), tervJson);
+      await this.prim.irBajt(utvonal(irasMappa, this.opciok.pdfFajlnev), pdf);
+      if (manifesttel) {
+        const manifest = await ujManifest(tervJson, this.opciok.pdfFajlnev, pdf);
+        await this.prim.irSzoveg(utvonal(irasMappa, MANIFEST_FAJL), JSON.stringify(manifest));
+        await this.sorszamMegSzabadOr(lancMappa, verzio);
+        try {
+          await this.prim.atnevez(irasMappa, verzioMappa);
+        } catch (err) {
+          if (err instanceof MarLetezikError) {
+            throw new VersionConflictError(versionDir, await this.letezoVerzio(lancMappa, versionDir));
+          }
+          throw err;
+        }
+      }
     } catch (err) {
-      // A verziómappát ez a hívás hozta létre kizárólagosan -- a rollback
-      // biztonságos, nem törölhet egy korábbi verziót. A legfelső, ebben a
-      // hívásban született mappa megy: fájlrendszeren egy üresen maradt
-      // páciens-, lánc- vagy verziómappa szellem-bejegyzésként listázódna. Egy
-      // meglévő páciens paciens.json-ját NEM töröljük: az írása atomi, tehát ha
-      // ő hasalt el, korábbi tartalma változatlan maradt.
-      const ujPaciens = !patients.some((p) => p.dirName === patientDir);
-      const ujLanc = !existingPlans.some((p) => p.dirName === planDir);
-      await this.prim.torolMappa(
-        ujPaciens ? pacUt(patientDir) : ujLanc ? tervMappaUt(patientDir, planDir) : verzioMappa,
-      );
+      await this.visszagorget(irasMappa, ujLanc ? lancMappa : null, ujPaciens ? pacUt(patientDir) : null);
+      if (err instanceof VersionConflictError) throw err;
       throw new Error(this.opciok.mentesHibaUzenet, { cause: err });
     }
 
+    // A verzió itt már teljesen a lemezen van: az index hibája nem teheti sikertelenné a
+    // mentést, mert egy újrapróba duplikált verziót szülne (migrációs terv §4.5).
+    try {
+      await this.prim.irSzoveg(pacRekordUt(patientDir), JSON.stringify(patientRecord));
+    } catch {
+      return { patientDir, planDir, versionDir, figyelmeztetes: 'INDEX_IRAS_HIBA' };
+    }
     return { patientDir, planDir, versionDir };
   }
 
+  /**
+   * Az átnevezés előtt friss listázással: ha közben megjelent egy ugyanilyen vagy nagyobb
+   * sorszám, dob. A sorszám számít, nem a név -- a másik gép más dátummal ugyanazt a `_vN`-t
+   * adhatja.
+   */
+  private async sorszamMegSzabadOr(lancMappa: string, verzio: number): Promise<void> {
+    let utkozo: { dirName: string; verzio: number } | null = null;
+    for (const dirName of await this.prim.listaz(lancMappa)) {
+      const parsed = parseVersionDirName(dirName);
+      if (parsed && parsed.verzio >= verzio && (!utkozo || parsed.verzio < utkozo.verzio)) {
+        utkozo = { dirName, verzio: parsed.verzio };
+      }
+    }
+    if (utkozo) throw new VersionConflictError(utkozo.dirName, await this.letezoVerzio(lancMappa, utkozo.dirName));
+  }
+
+  /** Az ütköző verzió adatai a doki döntéséhez; hiányos vagy olvashatatlan verziónál `null`. */
+  private async letezoVerzio(lancMappa: string, versionDir: string): Promise<LetezoVerzio | null> {
+    const mappa = utvonal(lancMappa, versionDir);
+    try {
+      if ((await this.verzioHianyai(mappa)).length) return null;
+      const raw = await this.prim.olvasSzoveg(utvonal(mappa, TERV_FAJL));
+      if (raw == null) return null;
+      const plan = parseJson<Plan>(raw, TERV_FAJL);
+      return { datum: plan.keltezes, orvos: plan.orvos, vegosszeg: plan.osszesitok.fizetendo, penznem: plan.penznem };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * A hívás saját írásmappája mindig megy. Az e hívásban született lánc- és páciensmappa csak
+   * üresen: közben a másik gép is írhatott beléjük, és egy ottani verzió nem veszhet el.
+   */
+  private async visszagorget(
+    irasMappa: string,
+    ujLancMappa: string | null,
+    ujPaciensMappa: string | null,
+  ): Promise<void> {
+    await this.prim.torolMappa(irasMappa);
+    for (const mappa of [ujLancMappa, ujPaciensMappa]) {
+      if (mappa && (await this.prim.listaz(mappa)).length === 0) await this.prim.torolMappa(mappa);
+    }
+  }
+
   async loadPlanPdf(ref: PlanRef): Promise<Uint8Array | null> {
-    return this.prim.olvasBajt(
-      utvonal(tervMappaUt(ref.patientDir, ref.planDir), ref.versionDir, this.opciok.pdfFajlnev),
-    );
+    const verzioMappa = utvonal(tervMappaUt(ref.patientDir, ref.planDir), ref.versionDir);
+    if (!(await this.prim.letezik(verzioMappa))) return null;
+    await this.teljesVerzioOr(ref);
+    return this.prim.olvasBajt(utvonal(verzioMappa, this.opciok.pdfFajlnev));
   }
 
   async loadPriceList(): Promise<PriceList> {

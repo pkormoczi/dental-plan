@@ -40,6 +40,11 @@ export const localStoragePrimitivek: FajlPrimitivek = {
     const raw = localStorage.getItem(kulcs(ut));
     return raw == null ? null : base64ToUint8(raw);
   },
+  async meret(ut) {
+    // A demóban a méret csak a szerződés teljessége miatt kell; a kis kulcsoknál a dekódolás olcsó.
+    const raw = localStorage.getItem(kulcs(ut));
+    return raw == null ? null : new TextEncoder().encode(raw).length;
+  },
   async irSzoveg(ut, tartalom) {
     localStorage.setItem(kulcs(ut), tartalom);
   },

@@ -209,4 +209,38 @@ describe('PreviewPage -- a sikerképernyő PDF-műveletei és a Vissza útja', (
     },
     30000,
   );
+
+  it(
+    'ha a páciens-index nem frissült, a sikerképernyő halk sorban jelzi, a mentés ettől sikeres',
+    async () => {
+      const eredeti = DemoStorage.prototype.savePlan;
+      vi.spyOn(DemoStorage.prototype, 'savePlan').mockImplementation(async function (this: DemoStorage, ...args) {
+        return { ...(await eredeti.apply(this, args)), figyelmeztetes: 'INDEX_IRAS_HIBA' as const };
+      });
+      const user = userEvent.setup();
+      seedAlap();
+      render(<App />);
+      window.location.hash = '#/elonezet';
+      await veglegesit(user);
+
+      expect(
+        screen.getByText('A terv elmentődött; a páciens a listákban a következő mentésig a korábbi adatokkal szerepelhet.'),
+      ).toBeInTheDocument();
+    },
+    30000,
+  );
+
+  it(
+    'figyelmeztetés nélküli mentésnél nincs index-sor a sikerképernyőn',
+    async () => {
+      const user = userEvent.setup();
+      seedAlap();
+      render(<App />);
+      window.location.hash = '#/elonezet';
+      await veglegesit(user);
+
+      expect(screen.queryByText(/a páciens a listákban a következő mentésig/)).toBeNull();
+    },
+    30000,
+  );
 });

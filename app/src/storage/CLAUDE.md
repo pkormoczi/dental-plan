@@ -5,9 +5,9 @@
   → symbol:app/src/storage/paths.ts#buildPatientDirName
 - Mappanévben az ékezetek maradnak, csak tiltott karakter cserélődik; rövid nevek.
   → product:#adat-es-deployment-korlatok
-- Verziómappa append-only: `savePlan` mindig `_v<n+1>`.
+- Verziómappa append-only (`_v<n+1>`); csak teljes JSON+PDF-pár (`manifest.json`) nyitható.
   → test:app/src/storage/szerzodesTesztek.ts#savePlan on an existing tervId appends v2 without touching v1;
-  symbol:app/src/storage/paths.ts#assertVersionDirAvailable
+  symbol:app/src/storage/fajlTarolo.ts#MANIFEST_FAJL
 - Magasabb `schemaVersion` → betöltés megtagadva, minden JSON-ra.
   → test:app/src/storage/szerzodesTesztek.ts#rejects loading a paciens-adatok.json with a newer-than-known schemaVersion
 - `paciens.json`, `terv-cimke.json` csak index, sosem írja felül a `terv.json` `paciens` blokkját;

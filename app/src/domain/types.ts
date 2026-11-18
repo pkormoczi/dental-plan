@@ -441,6 +441,14 @@ export interface PlanVersion {
    * hiánya = érvényes verzió; sosem üres string.
    */
   ervenytelenites?: string;
+  /**
+   * `teljes`: a terv JSON+PDF-párja hiánytalanul a lemezen van. A `hianyos` verzió (pl. a
+   * másik gépről még szinkronizálódik) nem nyitható, nem folytatható, nem másolható, de a
+   * sorszámát foglalja (migrációs terv §4.3).
+   */
+  allapot: 'teljes' | 'hianyos';
+  /** `hianyos`-nál, mi nem stimmel -- a doki elé kerülő, fájlnévvel kezdődő tételek. */
+  hianyzik?: string[];
 }
 
 export interface PlanRef {

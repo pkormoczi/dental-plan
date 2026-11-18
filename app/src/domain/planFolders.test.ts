@@ -6,8 +6,13 @@ function plan(dirName: string, tervId = dirName): PlanFolder {
   return { dirName, tervId, tervCim: null };
 }
 
-function version(dirName: string, isoDate: string, verzio: number): PlanVersion {
-  return { dirName, isoDate, verzio };
+function version(
+  dirName: string,
+  isoDate: string,
+  verzio: number,
+  allapot: PlanVersion['allapot'] = 'teljes',
+): PlanVersion {
+  return { dirName, isoDate, verzio, allapot };
 }
 
 describe('latestVersionAcrossPlans', () => {
@@ -33,6 +38,16 @@ describe('latestVersionAcrossPlans', () => {
     const versionsFor = () => [version('v1', '2026-08-01', 1), version('v2', '2026-08-01', 2)];
     const result = latestVersionAcrossPlans(plans, versionsFor);
     expect(result?.version).toEqual(version('v2', '2026-08-01', 2));
+  });
+
+  it('a még szinkronizálódó (hiányos) legfrissebb verziót átugorja, a legfrissebb teljeset adja', () => {
+    const plans = [plan('a')];
+    const versionsFor = () => [version('v1', '2026-08-01', 1), version('v2', '2026-08-09', 2, 'hianyos')];
+    expect(latestVersionAcrossPlans(plans, versionsFor)?.version.dirName).toBe('v1');
+  });
+
+  it('null-t ad, ha a páciensnek csak hiányos verziója van', () => {
+    expect(latestVersionAcrossPlans([plan('a')], () => [version('v1', '2026-08-01', 1, 'hianyos')])).toBeNull();
   });
 });
 

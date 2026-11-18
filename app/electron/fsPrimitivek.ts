@@ -145,6 +145,16 @@ export class FsPrimitivek implements FajlPrimitivek {
     }
   }
 
+  async meret(ut: string): Promise<number | null> {
+    const abs = await this.celUt(ut);
+    try {
+      return (await this.ujraprobal(() => this.fs.stat(abs))).size;
+    } catch (err) {
+      if (errnoKod(err) === 'ENOENT') return null;
+      throw ioHiba(err, abs);
+    }
+  }
+
   async irSzoveg(ut: string, tartalom: string): Promise<void> {
     await this.irAtomi(ut, new TextEncoder().encode(tartalom));
   }
@@ -231,6 +241,9 @@ export class FsPrimitivek implements FajlPrimitivek {
     try {
       await this.ujraprobal(() => this.fs.rename(honnan, hova));
     } catch (err) {
+      // A fenti ellenőrzés és az átnevezés között egy szinkronizált mappa is megjelenhet; az OS
+      // ezt platformonként más errno-val jelzi (EEXIST, ENOTEMPTY, Windowson EPERM).
+      if (await this.letezikAbs(hova)) throw new MarLetezikError(uj);
       throw ioHiba(err, hova);
     }
   }

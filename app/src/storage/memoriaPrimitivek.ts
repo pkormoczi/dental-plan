@@ -21,6 +21,10 @@ export class MemoriaPrimitivek implements FajlPrimitivek {
     return 'bajt' in b ? new Uint8Array(b.bajt) : new TextEncoder().encode(b.szoveg);
   }
 
+  async meret(ut: string): Promise<number | null> {
+    return (await this.olvasBajt(ut))?.length ?? null;
+  }
+
   async irSzoveg(ut: string, tartalom: string): Promise<void> {
     this.fajlok.set(ut, { szoveg: tartalom });
   }

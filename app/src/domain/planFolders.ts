@@ -37,15 +37,16 @@ export function verziokFrissessegSzerint(
 }
 
 /**
- * Az összes terv-lánc összes verziója közül a legfrissebb (a `keltezes`-t
+ * Az összes terv-lánc összes TELJES verziója közül a legfrissebb (a `keltezes`-t
  * kódoló `isoDate` szerint, holtversenynél a nagyobb `verzio` szerint) --
- * `null`, ha a páciensnek még egyetlen olvasható verziója sincs.
+ * `null`, ha a páciensnek még egyetlen olvasható verziója sincs. A hiányos
+ * verzió (még szinkronizálódik) nem tölthető be, ezért nem lehet ennek forrása.
  */
 export function latestVersionAcrossPlans(
   plans: PlanFolder[],
   versionsFor: (planDir: string) => PlanVersion[],
 ): PlanVersionLocation | null {
-  return verziokFrissessegSzerint(plans, versionsFor)[0] ?? null;
+  return verziokFrissessegSzerint(plans, versionsFor).find((l) => l.version.allapot === 'teljes') ?? null;
 }
 
 /**

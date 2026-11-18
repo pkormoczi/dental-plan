@@ -6,6 +6,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Plan } from '../domain/types';
 import type { PlanStorage } from './PlanStorage';
+import { sha256Hex } from './sha256';
 
 export interface SzerzodesKornyezet {
   storage: PlanStorage;
@@ -58,6 +59,24 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
     k = await keszit();
     storage = k.storage;
   });
+
+  /**
+   * Egy mentett verziófájl cseréje úgy, ahogy egy másik gép teljes verzióként hozná létre:
+   * manifestes tárolón a manifest is az új tartalomra áll, különben a verzió hiányosnak látszana,
+   * és a teszt a teljesség-őrt mérné a vizsgált betöltési hiba helyett.
+   */
+  async function verzioFajlotCserel(ut: string, tartalom: string): Promise<void> {
+    await k.nyersIr(ut, tartalom);
+    const manifestUt = ut.replace(/[^/]+$/, 'manifest.json');
+    const raw = await k.nyersOlvas(manifestUt);
+    if (raw == null) return;
+    const manifest = JSON.parse(raw);
+    manifest.fajlok[ut.slice(ut.lastIndexOf('/') + 1)] = {
+      sha256: await sha256Hex(tartalom),
+      meret: new TextEncoder().encode(tartalom).length,
+    };
+    await k.nyersIr(manifestUt, JSON.stringify(manifest));
+  }
 
   it('savePlan creates a new patient folder with v1 for a fresh plan', async () => {
     const plan = makeBlankPlan();
@@ -244,6 +263,35 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
     expect(versions[0].ervenytelenites).toBeUndefined();
   });
 
+  it('a mentett verzió a listVersions-ben teljes állapotú, hiányzó-lista nélkül', async () => {
+    const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1, 2, 3]));
+
+    const [v] = await storage.listVersions(ref.patientDir, ref.planDir);
+
+    expect(v.allapot).toBe('teljes');
+    expect(v.hianyzik).toBeUndefined();
+  });
+
+  it('a paciens.json index írásának hibája nem teszi sikertelenné a mentést: figyelmeztetés, a verzió teljes és betölthető', async () => {
+    const figyeloLe = k.irasFigyelo((ut) => {
+      if (ut.endsWith('/paciens.json')) throw new Error('EACCES');
+    });
+
+    const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1, 2, 3]));
+
+    figyeloLe();
+    expect(ref.figyelmeztetes).toBe('INDEX_IRAS_HIBA');
+    const [v] = await storage.listVersions(ref.patientDir, ref.planDir);
+    expect(v.allapot).toBe('teljes');
+    expect((await storage.loadPlan(ref)).verzio).toBe(1);
+    expect(await storage.loadPlanPdf(ref)).toEqual(new Uint8Array([1, 2, 3]));
+  });
+
+  it('sikeres mentés nem ad figyelmeztetést', async () => {
+    const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
+    expect(ref.figyelmeztetes).toBeUndefined();
+  });
+
   it('roundtrips the pdf bytes saved alongside a plan', async () => {
     const plan = makeBlankPlan();
     const bytes = new Uint8Array([10, 20, 30, 255]);
@@ -315,7 +363,7 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
     const key = `paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}/terv.json`;
     const raw = JSON.parse((await k.nyersOlvas(key))!);
     raw.schemaVersion = 2;
-    await k.nyersIr(key, JSON.stringify(raw));
+    await verzioFajlotCserel(key, JSON.stringify(raw));
     await expect(storage.loadPlan(ref)).rejects.toThrow(/újabb verziójával/);
   });
 
@@ -438,7 +486,7 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
   it('surfaces a Hungarian, non-crashing error for corrupted (non-JSON) terv.json', async () => {
     const plan = makeBlankPlan();
     const ref = await storage.savePlan(plan, new Uint8Array());
-    await k.nyersIr(
+    await verzioFajlotCserel(
       `paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}/terv.json`,
       '{ "schemaVersion": 1, not valid json',
     );
@@ -453,7 +501,7 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
     // `mennyiseg` egy string -- a régi kódban ez csendben 0-ra esett volna
     // egy szorzásban, sehol nem futott le rajta típusellenőrzés.
     raw.fazisok = [{ sorszam: 1, megnevezes: 'x', megjegyzes: '', sorok: [{ mennyiseg: 'sok' }] }];
-    await k.nyersIr(key, JSON.stringify(raw));
+    await verzioFajlotCserel(key, JSON.stringify(raw));
     await expect(storage.loadPlan(ref)).rejects.toThrow(/szerkezete nem érvényes/);
   });
 

@@ -97,6 +97,8 @@ export default function PreviewPage() {
   // a terv MÁR a lemezen van, ez legfeljebb egy elmaradt takarítás, nem
   // mentési hiba. Csak a siker-képernyőn jelenik meg, amber színnel.
   const [piszkozatTorlesHiba, setPiszkozatTorlesHiba] = useState<string | null>(null);
+  // A `paciens.json` index elmaradt frissítése -- a verzió teljes, ezért csak halk sor.
+  const [indexHiba, setIndexHiba] = useState(false);
   // A sikerképernyőn megjelenő, GOMBNYOMÁSKORI puha/info figyelmeztetés-lista
   // -- befagyasztott pillanatkép, nem a mai renderben újraszámolt `csekklista`,
   // mert a `doFinalize()` a mentés közben újraolvassa a páciens törzsadatát,
@@ -451,6 +453,7 @@ export default function PreviewPage() {
     setSaveError(null);
     setCimkeHiba(null);
     setPiszkozatTorlesHiba(null);
+    setIndexHiba(false);
     try {
       // A mastert véglegesítéskor újraolvassuk -- csak az info-sáv
       // frissítéséhez (a `finalPlan.paciens` ettől függetlenül a
@@ -480,6 +483,7 @@ export default function PreviewPage() {
       };
       const bytes = new Uint8Array(await pdfInstance.blob.arrayBuffer());
       const ref = await storage.savePlan(finalPlan, bytes, ujLancCim || undefined);
+      setIndexHiba(ref.figyelmeztetes === 'INDEX_IRAS_HIBA');
       const persisted = await storage.loadPlan(ref); // tervId/verzio a storage tölti ki
       if (ujLancCim) {
         // KÜLÖN try/catch, NEM a közös hibazónában: a terv ekkor MÁR a
@@ -594,6 +598,12 @@ export default function PreviewPage() {
             </Flex>
           )}
         </Box>
+        {indexHiba && (
+          <Text as="p" size="2" color="gray" mb="5">
+            A terv elmentődött; a páciens a listákban a következő mentésig a korábbi adatokkal
+            szerepelhet.
+          </Text>
+        )}
         {cimkeHiba && (
           <Callout.Root color="amber" mb="5" style={{ textAlign: 'left' }}>
             <Callout.Text>

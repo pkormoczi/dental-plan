@@ -15,6 +15,15 @@ import type {
   Settings,
 } from '../domain/types';
 
+/**
+ * A `savePlan` eredménye. Az `INDEX_IRAS_HIBA` nem hiba: a verzió teljesen a lemezen van, csak a
+ * `paciens.json` keresőindex maradt a régin -- egy újrapróba duplikált verziót szülne
+ * (migrációs terv §4.5).
+ */
+export interface MentettVerzio extends PlanRef {
+  figyelmeztetes?: 'INDEX_IRAS_HIBA';
+}
+
 export interface PlanStorage {
   init(): Promise<void>;
   listPatients(): Promise<PatientFolder[]>;
@@ -32,7 +41,7 @@ export interface PlanStorage {
    * cím > automatikus javaslat); egy már létező lánc újabb verziójánál
    * hatástalan, a `planDir` a lánc létrehozásakor örökre fix marad.
    */
-  savePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<PlanRef>;
+  savePlan(plan: Plan, pdf: Uint8Array, ujLancCim?: string): Promise<MentettVerzio>;
   /**
    * A terv-cimke.json-t írja/törli -- a verziómappákon KÍVÜL él, az append-only
    * szabály rá nem vonatkozik. Üres/whitespace `tervCim` törli a fájlt (vissza az élő

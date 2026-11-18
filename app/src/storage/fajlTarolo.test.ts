@@ -3,13 +3,14 @@ import { alapKeszletetIr, FajlTarolo } from './fajlTarolo';
 import { MemoriaPrimitivek } from './memoriaPrimitivek';
 import { taroloSzerzodesTesztek } from './szerzodesTesztek';
 
-describe('FajlTarolo memóriás primitíveken', () => {
+describe('FajlTarolo memóriás primitíveken, verzió-manifesttel', () => {
   taroloSzerzodesTesztek(async () => {
     const prim = new MemoriaPrimitivek();
     await alapKeszletetIr(prim);
     const storage = new FajlTarolo(prim, {
       pdfFajlnev: 'kezelesi-terv.pdf',
       mentesHibaUzenet: 'A tervet nem sikerült elmenteni.',
+      verzioManifest: true,
     });
     return {
       storage,

@@ -26,7 +26,16 @@ function hidAmi(valasz: Awaited<ReturnType<TaroloHid['hiv']>>, hivasok: unknown[
 }
 
 const esetek: Array<[StorageHiba, new (...args: never[]) => Error, Record<string, unknown>]> = [
-  [{ kod: 'VERZIO_UTKOZES', versionDir: '2026-08-05_v2', letezo: null }, VersionConflictError, { dirName: '2026-08-05_v2' }],
+  [{ kod: 'VERZIO_UTKOZES', versionDir: '2026-08-05_v2', letezo: null }, VersionConflictError, { dirName: '2026-08-05_v2', letezo: null }],
+  [
+    {
+      kod: 'VERZIO_UTKOZES',
+      versionDir: '2026-08-05_v2',
+      letezo: { datum: '2026-08-05', orvos: 'Dr. Másik', vegosszeg: 120000, penznem: 'HUF' },
+    },
+    VersionConflictError,
+    { dirName: '2026-08-05_v2', letezo: { datum: '2026-08-05', orvos: 'Dr. Másik', vegosszeg: 120000, penznem: 'HUF' } },
+  ],
   [
     { kod: 'FELULIRAS_UTKOZES', fajl: 'arlista.json', lemezenLevo: { x: 1 }, mentettMasolat: '_utkozesek/a.json' },
     FelulirasUtkozesError,

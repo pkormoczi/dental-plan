@@ -2,6 +2,9 @@
 // implementáció (DemoStorage, majd FileSystemStorage) ugyanezt használja.
 // Lásd app/src/storage/CLAUDE.md.
 
+import { formatShortDate } from '../domain/date';
+import type { Penznem } from '../domain/types';
+
 // Tiltott karakterek Windows fájlnévben, plusz a záró pont/szóköz.
 // Az ékezeteket SZÁNDÉKOSAN nem transzliteráljuk -- a doki a Fájlkezelőben
 // keres rájuk névre.
@@ -127,17 +130,37 @@ export function nextVersionNumber(existingVersionDirNames: string[]): number {
   return versions.length ? Math.max(...versions) + 1 : 1;
 }
 
-/** Verziómappát soha nem írunk felül: aláírt szerződést nem lehet visszamenőleg átírni. */
+/** A már meglévő, ütköző verzió adatai a doki döntéséhez; csak teljes verzióból olvashatók. */
+export interface LetezoVerzio {
+  datum: string;
+  orvos: string;
+  vegosszeg: number;
+  penznem: Penznem;
+}
+
+/**
+ * Verziómappát soha nem írunk felül: aláírt szerződést nem lehet visszamenőleg átírni. Ugyanaz
+ * a sorszám a másik gépen is kiosztható, ha a Drive még nem hozta át az ottani mentést
+ * (migrációs terv §1.1) -- ez tehát nem kódhiba, hanem a doki elé kerülő helyzet.
+ */
 export class VersionConflictError extends Error {
   readonly dirName: string;
+  readonly letezo: LetezoVerzio | null;
 
-  constructor(dirName: string) {
+  constructor(dirName: string, letezo: LetezoVerzio | null = null) {
+    const verzio = parseVersionDirName(dirName)?.verzio;
+    const sorszam = verzio ? `v${verzio}` : dirName;
     super(
-      `A(z) "${dirName}" verziómappa már létezik. Verziómappát soha nem ` +
-        `írunk felül — a verziómappák append-only-k; ez hiba a hívó kódban, nem a felhasználó adatában.`,
+      (letezo
+        ? `Ez a terv időközben egy másik gépen is mentődött ${sorszam} sorszámmal ` +
+          `(${formatShortDate(letezo.datum, 'hu')}, ${letezo.orvos}).`
+        : `Ez a terv időközben egy másik gépen is mentődött ${sorszam} sorszámmal, ` +
+          'de az a verzió még nem érkezett meg teljesen.') +
+        ' A terv nem mentődött -- lépj vissza az Előnézetre, hogy friss verziószámmal készüljön el a PDF.',
     );
     this.name = 'VersionConflictError';
     this.dirName = dirName;
+    this.letezo = letezo;
   }
 }
 

@@ -684,4 +684,49 @@ describe('TervReszleteiPage', () => {
 
     await waitFor(() => expect(screen.queryByText(/^Letöltve:/)).toBeNull());
   });
+
+  describe('hiányos (még szinkronizálódó) verzió', () => {
+    function hianyosLesz(versionDir: string) {
+      const eredeti = DemoStorage.prototype.listVersions;
+      let hianyos = true;
+      vi.spyOn(DemoStorage.prototype, 'listVersions').mockImplementation(async function (
+        this: DemoStorage,
+        patientDir: string,
+        planDir: string,
+      ) {
+        const versions = await eredeti.call(this, patientDir, planDir);
+        return versions.map((v) =>
+          hianyos && v.dirName === versionDir ? { ...v, allapot: 'hianyos' as const, hianyzik: ['kezelesi-terv.pdf'] } : v,
+        );
+      });
+      return () => {
+        hianyos = false;
+      };
+    }
+
+    it('hiányos verzión a terv nem nyílik meg: a hiányzó fájl neve és az Újraellenőrzés látszik', async () => {
+      hianyosLesz(nagyV2.versionDir);
+
+      renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
+
+      expect(
+        await screen.findByText('Ez a verzió még nem teljes (hiányzik: kezelesi-terv.pdf). Ha a Drive szinkronizál, várj.'),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Újraellenőrzés' })).toBeInTheDocument();
+      expect(screen.queryByTestId('terv-reszletei-fejlec')).toBeNull();
+    });
+
+    it('az Újraellenőrzés a közben teljessé vált verziót megnyitja', async () => {
+      const megerkezett = hianyosLesz(nagyV2.versionDir);
+      const user = userEvent.setup();
+      renderReszletek(reszleteiUrl(nagyDir, nagyV2.planDir, nagyV2.versionDir));
+      await screen.findByRole('button', { name: 'Újraellenőrzés' });
+
+      megerkezett();
+      await user.click(screen.getByRole('button', { name: 'Újraellenőrzés' }));
+
+      expect(await screen.findByTestId('terv-reszletei-fejlec')).toBeInTheDocument();
+      expect(screen.queryByText(/Ez a verzió még nem teljes/)).toBeNull();
+    });
+  });
 });

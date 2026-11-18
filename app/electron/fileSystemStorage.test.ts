@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { buildPatientDirName, generateId, VersionConflictError } from '../src/storage/paths';
-import { HianyosMappaError, IdegenMappaError, IoError } from '../src/storage/taroloHibak';
+import { sha256Hex } from '../src/storage/sha256';
+import { HianyosMappaError, HianyosVerzioError, IdegenMappaError, IoError } from '../src/storage/taroloHibak';
 import { makeBlankPlan, taroloSzerzodesTesztek, type SzerzodesKornyezet } from '../src/storage/szerzodesTesztek';
 import { FileSystemStorage } from './fileSystemStorage';
 import { FsPrimitivek, type FsMuveletek } from './fsPrimitivek';
@@ -244,34 +245,211 @@ describe('FileSystemStorage platformközi buktatók', () => {
     expect(folder.dirName).toBe(buildPatientDirName('Kis Béla', 'zzz999'));
     expect(await fsp.readFile(path.join(gyoker, 'paciensek', utkozo, 'paciens.json'), 'utf8')).toBe('{"meglevo":true}');
   });
+});
 
-  it('ha a verziómappa a listázás után jelenik meg, VersionConflictError, és a meglévő érintetlen', async () => {
-    const gyoker = await ujGyoker();
+/** A verziómappák egy láncon belül, a nyers fájlrendszerből -- a rejtett temp-mappákkal együtt. */
+async function lancTartalma(gyoker: string, ref: { patientDir: string; planDir: string }): Promise<string[]> {
+  return (await fsp.readdir(path.join(gyoker, 'paciensek', ref.patientDir, ref.planDir))).sort();
+}
+
+const verzioUt = (gyoker: string, ref: { patientDir: string; planDir: string; versionDir: string }, fajl: string) =>
+  path.join(gyoker, 'paciensek', ref.patientDir, ref.planDir, ref.versionDir, fajl);
+
+async function ujTarolo(fs?: FsMuveletek): Promise<{ gyoker: string; storage: FileSystemStorage }> {
+  const gyoker = await ujGyoker();
+  const storage = new FileSystemStorage(new FsPrimitivek(gyoker, { fs, kesleltet: azonnal }));
+  await storage.init();
+  return { gyoker, storage };
+}
+
+/** Egy `open`, ami a temp-írás előtt meghívja `fn`-t a célfájl útvonalával. */
+function openFigyelo(fn: (cel: string) => Promise<void>): FsMuveletek {
+  return {
+    ...fsp,
+    open: (async (...args: Parameters<typeof fsp.open>) => {
+      await fn(String(args[0]));
+      return fsp.open(...args);
+    }) as typeof fsp.open,
+  };
+}
+
+describe('FileSystemStorage verzió-teljesség', () => {
+  it('a manifest a két fájl sha256-át és méretét rögzíti, és utoljára íródik', async () => {
+    const irasok: string[] = [];
+    const { gyoker, storage } = await ujTarolo(
+      openFigyelo(async (cel) => {
+        if (cel.includes(`${path.sep}.tmp-`)) irasok.push(path.basename(cel).replace(/\.tmp-[0-9a-f]+$/, ''));
+      }),
+    );
+    const pdf = new Uint8Array([7, 8, 9, 10]);
+
+    const ref = await storage.savePlan(makeBlankPlan(), pdf);
+
+    expect(irasok).toEqual(['terv.json', 'kezelesi-terv.pdf', 'manifest.json']);
+    const manifest = JSON.parse(await fsp.readFile(verzioUt(gyoker, ref, 'manifest.json'), 'utf8'));
+    const terv = await fsp.readFile(verzioUt(gyoker, ref, 'terv.json'));
+    expect(manifest.schemaVersion).toBe(1);
+    expect(manifest.mentesId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(manifest.fajlok['terv.json']).toEqual({ sha256: await sha256Hex(new Uint8Array(terv)), meret: terv.length });
+    expect(manifest.fajlok['kezelesi-terv.pdf']).toEqual({ sha256: await sha256Hex(pdf), meret: 4 });
+    expect(await lancTartalma(gyoker, ref)).toEqual(['2026-08-05_v1']);
+  });
+
+  it('manifest nélküli verzió hiányos: sem a terv, sem a PDF nem tölthető be, és a sorszámát a következő mentés nem kapja meg', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
+    const v1 = await storage.loadPlan(ref);
+    await fsp.rm(verzioUt(gyoker, ref, 'manifest.json'));
+
+    const [v] = await storage.listVersions(ref.patientDir, ref.planDir);
+
+    expect(v).toMatchObject({ allapot: 'hianyos', hianyzik: ['manifest.json'] });
+    await expect(storage.loadPlan(ref)).rejects.toBeInstanceOf(HianyosVerzioError);
+    await expect(storage.loadPlanPdf(ref)).rejects.toBeInstanceOf(HianyosVerzioError);
+    const ref2 = await storage.savePlan({ ...v1, verzio: 0, keltezes: '2026-08-19' }, new Uint8Array([2]));
+    expect(ref2.versionDir).toBe('2026-08-19_v2');
+  });
+
+  it('a még meg nem érkezett PDF-ű verzió hiányos, a hiányzó fájl nevével', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
+    await fsp.rm(verzioUt(gyoker, ref, 'kezelesi-terv.pdf'));
+
+    const [v] = await storage.listVersions(ref.patientDir, ref.planDir);
+
+    expect(v).toMatchObject({ allapot: 'hianyos', hianyzik: ['kezelesi-terv.pdf'] });
+  });
+
+  it('azonos méretű, de eltérő tartalmú PDF-nél a verzió hiányos', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1, 2, 3]));
+    await fsp.writeFile(verzioUt(gyoker, ref, 'kezelesi-terv.pdf'), new Uint8Array([3, 2, 1]));
+
+    const [v] = await storage.listVersions(ref.patientDir, ref.planDir);
+
+    expect(v).toMatchObject({ allapot: 'hianyos', hianyzik: ['kezelesi-terv.pdf: eltérő tartalom'] });
+  });
+
+  it('újraellenőrzéskor a közben megérkezett fájllal a hiányos verzió teljessé válik', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1, 2, 3]));
+    const pdfUt = verzioUt(gyoker, ref, 'kezelesi-terv.pdf');
+    await fsp.rm(pdfUt);
+    expect((await storage.listVersions(ref.patientDir, ref.planDir))[0].allapot).toBe('hianyos');
+
+    await fsp.writeFile(pdfUt, new Uint8Array([1, 2, 3]));
+
+    expect((await storage.listVersions(ref.patientDir, ref.planDir))[0].allapot).toBe('teljes');
+    expect(await storage.loadPlanPdf(ref)).toEqual(new Uint8Array([1, 2, 3]));
+  });
+
+  it('ha az átnevezés előtt a másik gépen ugyanez a sorszám más dátummal elkészült, VERZIO_UTKOZES a meglévő adataival, a temp eldobva', async () => {
+    let masik: (() => Promise<void>) | null = null;
+    const { gyoker, storage } = await ujTarolo(
+      openFigyelo(async (cel) => {
+        if (masik && path.basename(cel).startsWith('manifest.json.tmp-')) {
+          const fut = masik;
+          masik = null;
+          await fut();
+        }
+      }),
+    );
+    const ref1 = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
+    const v1 = await storage.loadPlan(ref1);
+    const masikGep = new FileSystemStorage(new FsPrimitivek(gyoker, { kesleltet: azonnal }));
+    masik = async () => {
+      await masikGep.savePlan({ ...v1, verzio: 0, keltezes: '2026-08-18', orvos: 'Dr. Másik Gép' }, new Uint8Array([9]));
+    };
+
+    const hiba = await storage
+      .savePlan({ ...v1, verzio: 0, keltezes: '2026-08-19' }, new Uint8Array([2]))
+      .catch((e: unknown) => e);
+
+    expect(hiba).toBeInstanceOf(VersionConflictError);
+    expect((hiba as VersionConflictError).dirName).toBe('2026-08-18_v2');
+    expect((hiba as VersionConflictError).letezo).toEqual({
+      datum: '2026-08-18',
+      orvos: 'Dr. Másik Gép',
+      vegosszeg: 0,
+      penznem: 'HUF',
+    });
+    expect((hiba as Error).message).toMatch(/v2 sorszámmal \(2026\.08\.18\., Dr\. Másik Gép\)/);
+    expect(await lancTartalma(gyoker, ref1)).toEqual(['2026-08-05_v1', '2026-08-18_v2']);
+    expect(
+      (await storage.loadPlan({ ...ref1, versionDir: '2026-08-18_v2' })).orvos,
+    ).toBe('Dr. Másik Gép');
+  });
+
+  it('ha a verziómappa pont az átnevezés pillanatában jelenik meg, VersionConflictError, és a meglévő érintetlen', async () => {
     let elfog = false;
     let masikTerv = '';
     const fs: FsMuveletek = {
       ...fsp,
-      mkdir: (async (cel: string, opciok?: Parameters<typeof fsp.mkdir>[1]) => {
-        if (elfog && !opciok && cel.endsWith('_v2')) {
-          // Egy másik gép közben ugyanezt a sorszámot mentette.
-          await fsp.mkdir(cel);
-          masikTerv = path.join(cel, 'terv.json');
+      rename: (async (honnan: string, hova: string) => {
+        if (elfog && String(honnan).includes(`${path.sep}.tmp-`) && String(hova).endsWith('_v2')) {
+          elfog = false;
+          await fsp.mkdir(hova);
+          masikTerv = path.join(String(hova), 'terv.json');
           await fsp.writeFile(masikTerv, 'MASIK');
         }
-        return fsp.mkdir(cel, opciok);
-      }) as typeof fsp.mkdir,
+        return fsp.rename(honnan, hova);
+      }) as typeof fsp.rename,
     };
-    const storage = new FileSystemStorage(new FsPrimitivek(gyoker, { fs, kesleltet: azonnal }));
-    await storage.init();
+    const { gyoker, storage } = await ujTarolo(fs);
     const ref1 = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
     const v1 = await storage.loadPlan(ref1);
 
     elfog = true;
-    await expect(
-      storage.savePlan({ ...v1, verzio: 0, keltezes: '2026-08-19' }, new Uint8Array([2])),
-    ).rejects.toBeInstanceOf(VersionConflictError);
+    const hiba = await storage
+      .savePlan({ ...v1, verzio: 0, keltezes: '2026-08-19' }, new Uint8Array([2]))
+      .catch((e: unknown) => e);
 
+    expect(hiba).toBeInstanceOf(VersionConflictError);
+    expect((hiba as VersionConflictError).letezo).toBeNull();
     expect(await fsp.readFile(masikTerv, 'utf8')).toBe('MASIK');
+    expect(await lancTartalma(gyoker, ref1)).toEqual(['2026-08-05_v1', '2026-08-19_v2']);
     expect((await storage.loadPlan(ref1)).verzio).toBe(1);
+  });
+
+  it('egy elszáradt .tmp-* mappa nem listázódik verzióként, és nem foglal sorszámot', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const ref = await storage.savePlan(makeBlankPlan(), new Uint8Array([1]));
+    const v1 = await storage.loadPlan(ref);
+    await nyersIr(gyoker, `paciensek/${ref.patientDir}/${ref.planDir}/.tmp-2026-08-06_v2-abc123/terv.json`, '{}');
+
+    expect((await storage.listVersions(ref.patientDir, ref.planDir)).map((v) => v.dirName)).toEqual(['2026-08-05_v1']);
+    const ref2 = await storage.savePlan({ ...v1, verzio: 0, keltezes: '2026-08-19' }, new Uint8Array([2]));
+    expect(ref2.versionDir).toBe('2026-08-19_v2');
+  });
+
+  it('ha a manifest írása elhasal, sem a temp, sem az új páciens mappája nem marad meg', async () => {
+    const { gyoker, storage } = await ujTarolo(
+      openFigyelo(async (cel) => {
+        if (path.basename(cel).startsWith('manifest.json.tmp-')) throw errnoHiba('EIO');
+      }),
+    );
+
+    await expect(storage.savePlan(makeBlankPlan(), new Uint8Array([1]))).rejects.toThrow(/nem sikerült elmenteni/);
+
+    expect(await fsp.readdir(path.join(gyoker, 'paciensek'))).toEqual([]);
+  });
+
+  it('a visszagörgetés nem törli az új lánc mappáját, ha közben a másik gép verziója került bele', async () => {
+    let masikVerzio = '';
+    const { storage } = await ujTarolo(
+      openFigyelo(async (cel) => {
+        if (!path.basename(cel).startsWith('manifest.json.tmp-')) return;
+        const lanc = path.dirname(path.dirname(cel));
+        masikVerzio = path.join(lanc, '2026-08-04_v1', 'terv.json');
+        await fsp.mkdir(path.dirname(masikVerzio));
+        await fsp.writeFile(masikVerzio, 'MASIK');
+        throw errnoHiba('EIO');
+      }),
+    );
+
+    await expect(storage.savePlan(makeBlankPlan(), new Uint8Array([1]))).rejects.toThrow(/nem sikerült elmenteni/);
+
+    expect(await fsp.readFile(masikVerzio, 'utf8')).toBe('MASIK');
+    expect(await fsp.readdir(path.dirname(path.dirname(masikVerzio)))).toEqual(['2026-08-04_v1']);
   });
 });
