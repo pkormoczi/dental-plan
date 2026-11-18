@@ -16,6 +16,10 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   máshová” gombbal pedig tetszőleges helyre menthetők. A két gép közti ütközést (például ugyanaz a
   sorszám két gépen) a program jelzi, és magától semmit nem töröl. A felső sáv most „Próbaüzem”:
   az éles indulásig továbbra is csak kitalált páciensadattal dolgozzunk.
+- Ha a telepíthető program indításkor nem tudja betölteni az adatokat (például sérült az
+  árlista), a hibaképernyőn az „Újrapróbálás” mellett „Mappa megnyitása” és „Másik mappa
+  kiválasztása” gomb is van, így innen is meg lehet nézni az adatmappát, vagy át lehet váltani
+  egy másikra. Ha van félkész terv, a váltás előtt itt is rákérdez.
 
 ## 2026. november 17.
 

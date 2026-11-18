@@ -17,7 +17,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Box, Button, Flex, Text } from '@radix-ui/themes';
+import { Box, Text } from '@radix-ui/themes';
 import { createBlankPlan, type OroklottNyelvPenznem } from '../domain/blankPlan';
 import { ujVerzioOrvosa, type OrvosFallback } from '../domain/orvosok';
 import { piszkozatTartalmas } from '../domain/piszkozat';
@@ -27,6 +27,7 @@ import { todayIso } from '../domain/date';
 import type { Osszesitok, Plan, PriceList, Settings } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
 import { DraftConflictError } from '../storage/DraftStorage';
+import BetoltesiHibaKepernyo from '../components/BetoltesiHibaKepernyo';
 import FelulirasUtkozesDialog from '../components/FelulirasUtkozesDialog';
 import {
   ARLISTA_UTKOZES_CIM,
@@ -35,7 +36,6 @@ import {
 } from '../components/useFelulirasUtkozes';
 import { felulirasSor } from './felulirasSor';
 import type { DraftMeta, DraftRecord, WorkflowRoute } from '../storage/DraftStorage';
-import { t } from '../design/tokens';
 
 interface AppStateValue {
   settings: Settings;
@@ -693,19 +693,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   ]);
 
   if (loadError) {
-    return (
-      <Box style={{ maxWidth: 480, margin: '60px auto', textAlign: 'center', padding: 24 }}>
-        <Text as="p" size="3" weight="bold" mb="2" style={{ color: t.danger }}>
-          Nem sikerült betölteni az adatokat
-        </Text>
-        <Text as="p" size="2" color="gray" mb="4">
-          {loadError.message}
-        </Text>
-        <Flex justify="center">
-          <Button onClick={() => setLoadToken((n) => n + 1)}>Újrapróbálás</Button>
-        </Flex>
-      </Box>
-    );
+    return <BetoltesiHibaKepernyo hiba={loadError} onUjra={() => setLoadToken((n) => n + 1)} />;
   }
 
   if (!value) {

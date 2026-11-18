@@ -2,13 +2,11 @@
 // mappaváltás, a gépváltási szabály, a hiányzó alapsablonok explicit pótlása és a napló. Nincs
 // mentendő draftja, ezért a lap dirty-guardját nem érinti.
 
-import { useCallback, useRef, useState } from 'react';
-import { Box, Button, Callout, Code, Dialog, Flex, Text, VisuallyHidden } from '@radix-ui/themes';
-import AdatmappaPanel from '../../components/AdatmappaPanel';
+import { useMemo, useState } from 'react';
+import { Box, Button, Callout, Code, Flex, Text } from '@radix-ui/themes';
 import { GEPVALTAS_BEVEZETO, GEPVALTASI_SZABALY } from '../../components/adatmappaSzovegek';
-import DiscardChangesDialog from '../../components/DiscardChangesDialog';
 import Section from '../../components/Section';
-import { useAdatmappaValasztas } from '../../components/useAdatmappaValasztas';
+import { useMappaValtas } from '../../components/useMappaValtas';
 import { useAppState } from '../../state/AppState';
 import { useStorage, type Adattarolas } from '../../storage/StorageContext';
 
@@ -20,27 +18,17 @@ export default function AdattarolasTab({ adattarolas }: { adattarolas: Adattarol
   const [hiba, setHiba] = useState<string | null>(null);
   const [sablonEredmeny, setSablonEredmeny] = useState<string | null>(null);
   const [sablonFolyamatban, setSablonFolyamatban] = useState(false);
-  const piszkozatValasz = useRef<((ok: boolean) => void) | null>(null);
-  const [piszkozatKerdes, setPiszkozatKerdes] = useState(false);
-
-  // A félkész terv a régi mappa páciensére mutathat: a váltás csak a doki igenje után, a
-  // terv elvetésével mehet.
-  const valtasElott = useCallback(async () => {
-    if (!vanMentetlenPiszkozat) return true;
-    const ok = await new Promise<boolean>((resolve) => {
-      piszkozatValasz.current = resolve;
-      setPiszkozatKerdes(true);
-    });
-    piszkozatValasz.current = null;
-    setPiszkozatKerdes(false);
-    if (ok) {
-      resetPlanDraft();
-      await drafts.clear();
-    }
-    return ok;
-  }, [vanMentetlenPiszkozat, resetPlanDraft, drafts]);
-
-  const valasztas = useAdatmappaValasztas(adattarolas, { kezdo: null, valtasElott });
+  const felkesz = useMemo(
+    () => ({
+      van: async () => vanMentetlenPiszkozat,
+      elvet: async () => {
+        resetPlanDraft();
+        await drafts.clear();
+      },
+    }),
+    [vanMentetlenPiszkozat, resetPlanDraft, drafts],
+  );
+  const { valasztas, dialogusok } = useMappaValtas(adattarolas, felkesz);
   const aktualis = adattarolas.allapot.allapot === 'nincs' ? null : adattarolas.allapot;
 
   const muvelet = async (fn: () => Promise<void>) => {
@@ -146,23 +134,7 @@ export default function AdattarolasTab({ adattarolas }: { adattarolas: Adattarol
         </Section>
       )}
 
-      <Dialog.Root open={valasztas.mutatott != null} onOpenChange={(open) => !open && valasztas.alaphelyzet()}>
-        <Dialog.Content maxWidth="560px" aria-describedby={undefined}>
-          <VisuallyHidden>
-            <Dialog.Title>Mappa váltása</Dialog.Title>
-          </VisuallyHidden>
-          <AdatmappaPanel valasztas={valasztas} onMegse={valasztas.alaphelyzet} />
-        </Dialog.Content>
-      </Dialog.Root>
-
-      <DiscardChangesDialog
-        open={piszkozatKerdes}
-        onOpenChange={(open) => !open && piszkozatValasz.current?.(false)}
-        onConfirm={() => piszkozatValasz.current?.(true)}
-        title="Félkész terv"
-        description="Van egy félkész terved. Mappaváltáskor elvész, mert a jelenlegi mappa egy páciensére mutathat. Biztosan váltasz?"
-        confirmLabel="Váltás, a félkész terv elvetésével"
-      />
+      {dialogusok}
     </Box>
   );
 }
