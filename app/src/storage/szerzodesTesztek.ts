@@ -311,6 +311,9 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
       'nyilatkozat-hu-v1.md',
     ]);
 
+    // A mentés előtti betöltés a valódi hívó sorrendje (Nyomtatványok fül); ütközésőrös tárolón
+    // egy betöltetlen, létező fájlra mentés ütközés lenne.
+    await storage.loadLatestTemplateByBase('nyilatkozat-hu');
     await storage.saveTemplate('nyilatkozat-hu', 'átírt szöveg');
     await k.nyersIr('sablonok/garancia-hu-v2.md', 'v2 szöveg');
 
@@ -326,6 +329,7 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
   });
 
   it('saveTemplate overwrites the current latest file, never creates a new version', async () => {
+    await storage.loadLatestTemplateByBase('nyilatkozat-hu');
     const v1Name = await storage.saveTemplate('nyilatkozat-hu', 'v1 szöveg');
     expect(v1Name).toBe('nyilatkozat-hu-v1.md'); // a seed már ír egy v1-et resetDemoData-ban
 

@@ -37,9 +37,9 @@ const esetek: Array<[StorageHiba, new (...args: never[]) => Error, Record<string
     { dirName: '2026-08-05_v2', letezo: { datum: '2026-08-05', orvos: 'Dr. Másik', vegosszeg: 120000, penznem: 'HUF' } },
   ],
   [
-    { kod: 'FELULIRAS_UTKOZES', fajl: 'arlista.json', lemezenLevo: { x: 1 }, mentettMasolat: '_utkozesek/a.json' },
+    { kod: 'FELULIRAS_UTKOZES', fajl: 'arlista.json', lemezenLevo: { x: 1 } },
     FelulirasUtkozesError,
-    { fajl: 'arlista.json', lemezenLevo: { x: 1 }, mentettMasolat: '_utkozesek/a.json' },
+    { fajl: 'arlista.json', lemezenLevo: { x: 1 } },
   ],
   [{ kod: 'TORLES_AKADALY', ok: 'veglegesitett-terv' }, TorlesAkadalyError, { ok: 'veglegesitett-terv' }],
   [{ kod: 'IO', errno: 'ENOSPC', utvonal: 'C:/adat/arlista.json' }, IoError, { errno: 'ENOSPC', utvonal: 'C:/adat/arlista.json' }],

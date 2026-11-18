@@ -56,7 +56,7 @@ export type StorageHiba =
       /** A meglévő verzió adatai; hiányos meglévő verziónál `null`. */
       letezo: LetezoVerzio | null;
     }
-  | { kod: 'FELULIRAS_UTKOZES'; fajl: string; lemezenLevo: unknown; mentettMasolat: string }
+  | { kod: 'FELULIRAS_UTKOZES'; fajl: string; lemezenLevo: unknown }
   | { kod: 'TORLES_AKADALY'; ok: string }
   | { kod: 'IO'; errno: IoErrno; utvonal: string }
   | { kod: 'SERULT_JSON'; fajl: string; uzenet: string }
@@ -86,7 +86,7 @@ declare global {
 export function hibaBolStorageHiba(err: unknown): StorageHiba {
   if (err instanceof VersionConflictError) return { kod: 'VERZIO_UTKOZES', versionDir: err.dirName, letezo: err.letezo };
   if (err instanceof FelulirasUtkozesError) {
-    return { kod: 'FELULIRAS_UTKOZES', fajl: err.fajl, lemezenLevo: err.lemezenLevo, mentettMasolat: err.mentettMasolat };
+    return { kod: 'FELULIRAS_UTKOZES', fajl: err.fajl, lemezenLevo: err.lemezenLevo };
   }
   if (err instanceof TorlesAkadalyError) return { kod: 'TORLES_AKADALY', ok: err.ok };
   if (err instanceof IoError) return { kod: 'IO', errno: err.errno, utvonal: err.utvonal };
@@ -108,7 +108,7 @@ export function storageHibaBolHiba(h: StorageHiba): Error {
     case 'VERZIO_UTKOZES':
       return new VersionConflictError(h.versionDir, h.letezo);
     case 'FELULIRAS_UTKOZES':
-      return new FelulirasUtkozesError(h.fajl, h.lemezenLevo, h.mentettMasolat);
+      return new FelulirasUtkozesError(h.fajl, h.lemezenLevo);
     case 'TORLES_AKADALY':
       return new TorlesAkadalyError(h.ok);
     case 'IO':

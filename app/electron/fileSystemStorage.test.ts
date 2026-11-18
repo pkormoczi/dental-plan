@@ -4,7 +4,8 @@ import path from 'node:path';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { buildPatientDirName, generateId, VersionConflictError } from '../src/storage/paths';
 import { sha256Hex } from '../src/storage/sha256';
-import { HianyosMappaError, HianyosVerzioError, IdegenMappaError, IoError } from '../src/storage/taroloHibak';
+import { FelulirasUtkozesError, HianyosMappaError, HianyosVerzioError, IdegenMappaError, IoError } from '../src/storage/taroloHibak';
+import { uresTorzsadat } from '../src/domain/paciensAdatok';
 import { makeBlankPlan, taroloSzerzodesTesztek, type SzerzodesKornyezet } from '../src/storage/szerzodesTesztek';
 import { FileSystemStorage } from './fileSystemStorage';
 import { FsPrimitivek, type FsMuveletek } from './fsPrimitivek';
@@ -451,5 +452,142 @@ describe('FileSystemStorage verzió-teljesség', () => {
 
     expect(await fsp.readFile(masikVerzio, 'utf8')).toBe('MASIK');
     expect(await fsp.readdir(path.dirname(path.dirname(masikVerzio)))).toEqual(['2026-08-04_v1']);
+  });
+});
+
+describe('FileSystemStorage ütközésőr', () => {
+  interface Fajta {
+    nev: string;
+    /** Előkészít, betölt, és visszaadja a fájl gyökérhez relatív útját és a mentést. */
+    elokeszit: (storage: FileSystemStorage) => Promise<{ ut: string; ment: (felulir?: boolean) => Promise<unknown> }>;
+    /** A másik gép változata nyersen. */
+    masik: (eredeti: string) => string;
+    /** A `lemezenLevo` elvárt, felismerhető része. */
+    lemezen: (l: unknown) => void;
+  }
+
+  const fajtak: Fajta[] = [
+    {
+      nev: 'árlista',
+      elokeszit: async (storage) => {
+        const pl = await storage.loadPriceList();
+        return { ut: 'arlista.json', ment: (felulir) => storage.savePriceList({ ...pl, arlistaVerzio: 'sajat' }, { felulir }) };
+      },
+      masik: (eredeti) => JSON.stringify({ ...JSON.parse(eredeti), arlistaVerzio: 'masik' }),
+      lemezen: (l) => expect((l as { arlistaVerzio: string }).arlistaVerzio).toBe('masik'),
+    },
+    {
+      nev: 'beállítások',
+      elokeszit: async (storage) => {
+        const s = await storage.loadSettings();
+        return { ut: 'beallitasok.json', ment: (felulir) => storage.saveSettings({ ...s, ervenyessegNap: 11 }, { felulir }) };
+      },
+      masik: (eredeti) => JSON.stringify({ ...JSON.parse(eredeti), ervenyessegNap: 99 }),
+      lemezen: (l) => expect((l as { ervenyessegNap: number }).ervenyessegNap).toBe(99),
+    },
+    {
+      nev: 'törzsadat',
+      elokeszit: async (storage) => {
+        const p = await storage.createPatient('Ütköző Ödön');
+        const adat = (await storage.loadPatientData(p.dirName))!;
+        return {
+          ut: `paciensek/${p.dirName}/paciens-adatok.json`,
+          ment: (felulir) => storage.savePatientData(p.dirName, { ...adat, telefon: 'sajat' }, { felulir }),
+        };
+      },
+      masik: (eredeti) => JSON.stringify({ ...JSON.parse(eredeti), telefon: 'masik' }),
+      lemezen: (l) => expect((l as { telefon: string }).telefon).toBe('masik'),
+    },
+    {
+      nev: 'sablon',
+      elokeszit: async (storage) => {
+        await storage.loadLatestTemplateByBase('garancia-hu');
+        return { ut: 'sablonok/garancia-hu-v1.md', ment: (felulir) => storage.saveTemplate('garancia-hu', 'SAJAT', { felulir }) };
+      },
+      masik: () => 'MASIK',
+      lemezen: (l) => expect(l).toBe('MASIK'),
+    },
+  ];
+
+  const nyersOlvas = (gyoker: string, ut: string) => fsp.readFile(path.join(gyoker, ...ut.split('/')), 'utf8');
+
+  it.each(fajtak)('$nev: a betöltés óta a másik gépen módosult fájlra a mentés nem ír, FELULIRAS_UTKOZES a lemezen lévővel', async (f) => {
+    const { gyoker, storage } = await ujTarolo();
+    const { ut, ment } = await f.elokeszit(storage);
+    const masik = f.masik(await nyersOlvas(gyoker, ut));
+    await nyersIr(gyoker, ut, masik);
+
+    const hiba = await ment().catch((e: unknown) => e);
+
+    expect(hiba).toBeInstanceOf(FelulirasUtkozesError);
+    expect((hiba as FelulirasUtkozesError).fajl).toBe(ut);
+    f.lemezen((hiba as FelulirasUtkozesError).lemezenLevo);
+    expect(await nyersOlvas(gyoker, ut)).toBe(masik);
+    await expect(fsp.readdir(path.join(gyoker, '_utkozesek'))).rejects.toThrow();
+  });
+
+  it.each(fajtak)('$nev: felülírás-jelzővel a másik gép változata az _utkozesek/ alá kerül, a saját a helyére', async (f) => {
+    const { gyoker, storage } = await ujTarolo();
+    const { ut, ment } = await f.elokeszit(storage);
+    const masik = f.masik(await nyersOlvas(gyoker, ut));
+    await nyersIr(gyoker, ut, masik);
+
+    await ment(true);
+
+    const mentesek = await fsp.readdir(path.join(gyoker, '_utkozesek'));
+    expect(mentesek).toHaveLength(1);
+    expect(await nyersOlvas(gyoker, `_utkozesek/${mentesek[0]}`)).toBe(masik);
+    expect(await nyersOlvas(gyoker, ut)).not.toBe(masik);
+    expect(mentesek[0]).not.toContain(':');
+  });
+
+  it.each(fajtak)('$nev: a saját sikeres mentése után a következő mentés nem ütközik', async (f) => {
+    const { gyoker, storage } = await ujTarolo();
+    const { ment } = await f.elokeszit(storage);
+
+    await ment();
+    await ment();
+
+    await expect(fsp.readdir(path.join(gyoker, '_utkozesek'))).rejects.toThrow();
+  });
+
+  it('a törzsadat másolata a páciensmappa nevével előtagolva, a gyökér _utkozesek/ mappájába kerül', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const p = await storage.createPatient('Ütköző Ödön');
+    const adat = (await storage.loadPatientData(p.dirName))!;
+    await nyersIr(gyoker, `paciensek/${p.dirName}/paciens-adatok.json`, JSON.stringify({ ...adat, telefon: 'masik' }));
+
+    await storage.savePatientData(p.dirName, adat, { felulir: true });
+
+    const [mentes] = await fsp.readdir(path.join(gyoker, '_utkozesek'));
+    expect(mentes.startsWith(`${p.dirName}.paciens-adatok.`)).toBe(true);
+    expect(mentes.endsWith('.json')).toBe(true);
+    expect(await fsp.readdir(path.join(gyoker, 'paciensek', p.dirName))).toEqual(['paciens-adatok.json', 'paciens.json']);
+  });
+
+  it('egy ebben a futásban nem látott, de a lemezen létező törzsadatra a mentés ütközés; nem létezőre szabad írás', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const vanDir = buildPatientDirName('Masik Gep', 'abc123');
+    await nyersIr(gyoker, `paciensek/${vanDir}/paciens.json`, JSON.stringify({ schemaVersion: 1, paciensId: 'abc123', nev: 'Masik Gep' }));
+    await nyersIr(gyoker, `paciensek/${vanDir}/paciens-adatok.json`, JSON.stringify(uresTorzsadat('Masik Gep', 'abc123')));
+    const nincsDir = buildPatientDirName('Uj Elek', 'def456');
+    await nyersIr(gyoker, `paciensek/${nincsDir}/paciens.json`, JSON.stringify({ schemaVersion: 1, paciensId: 'def456', nev: 'Uj Elek' }));
+
+    await expect(storage.savePatientData(vanDir, uresTorzsadat('Masik Gep', 'abc123'))).rejects.toBeInstanceOf(
+      FelulirasUtkozesError,
+    );
+    await storage.savePatientData(nincsDir, uresTorzsadat('Uj Elek', 'def456'));
+    expect(JSON.parse(await nyersOlvas(gyoker, `paciensek/${nincsDir}/paciens-adatok.json`)).nev).toBe('Uj Elek');
+  });
+
+  it('nem értelmezhető lemezváltozatnál is ütközés jön, a lemezen lévő tartalom helyén null', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    const pl = await storage.loadPriceList();
+    await nyersIr(gyoker, 'arlista.json', '{ sérült');
+
+    const hiba = await storage.savePriceList(pl).catch((e: unknown) => e);
+
+    expect(hiba).toBeInstanceOf(FelulirasUtkozesError);
+    expect((hiba as FelulirasUtkozesError).lemezenLevo).toBeNull();
   });
 });

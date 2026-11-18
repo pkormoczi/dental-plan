@@ -30,11 +30,12 @@ import Section from '../../components/Section';
 import { alapertelmezettPenznem } from '../../domain/beallitasok';
 import { lefedettseg } from '../../domain/coverage';
 import { isPlaceholderTemplate } from '../../domain/templates';
-import type { Nyelv, Penznem } from '../../domain/types';
+import type { Nyelv, Penznem, Settings } from '../../domain/types';
 import { t } from '../../design/tokens';
 import { stripMarkdownHeading } from '../../pdf/markdownLite';
 import { useStorage } from '../../storage/StorageContext';
 import { useAppState } from '../../state/AppState';
+import { NemMentveUtkozesMiattError } from '../../state/felulirasSor';
 
 interface EgyebDraft {
   ervenyessegNap: number;
@@ -94,6 +95,11 @@ export default function EgyebTab({ onDirtyChange }: { onDirtyChange: (dirty: boo
     try {
       await jelzo.futtat(() => saveSettings((prev) => ({ ...prev, ...draft })));
     } catch (err) {
+      // A másik gép betöltött változata az aktív: az űrlap sem mutathatja tovább az eldobott módosítást.
+      if (err instanceof NemMentveUtkozesMiattError && err.kimenet === 'betoltes') {
+        const s = err.betoltott as Settings;
+        setDraft(toDraft(s.ervenyessegNap, s.alapertelmezettNyelv, alapertelmezettPenznem(s)));
+      }
       setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
     }
   }

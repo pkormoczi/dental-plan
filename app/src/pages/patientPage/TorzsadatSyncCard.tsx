@@ -32,6 +32,9 @@ import { feloldPatientDir } from '../../domain/torzsadatBetoltes';
 import type { Paciens, PatientMasterData } from '../../domain/types';
 import { useAppState } from '../../state/AppState';
 import { useStorage } from '../../storage/StorageContext';
+import FelulirasUtkozesDialog from '../../components/FelulirasUtkozesDialog';
+import { torzsadatUtkozesCim, useFelulirasUtkozes } from '../../components/useFelulirasUtkozes';
+import { NemMentveUtkozesMiattError } from '../../state/felulirasSor';
 
 type ManualDialog = 'master-to-draft' | 'draft-to-master' | null;
 
@@ -114,6 +117,26 @@ export default function TorzsadatSyncCard() {
     setPlan((prev) => ({ ...prev, paciens: next }));
   }
 
+  // Ütközésnél a doki dönt; ha nem a saját változata mentődött, a hívó lépés hibával megáll, így
+  // a piszkozat a sikertelen adatlap-írás után sem változik.
+  const utkozes = useFelulirasUtkozes();
+  const { ment: utkozessel } = utkozes;
+  const mentTorzsadat = useCallback(
+    async (dir: string, toSave: PatientMasterData) => {
+      const eredmeny = await utkozessel(
+        (felulir) => storage.savePatientData(dir, toSave, felulir ? { felulir } : undefined),
+        torzsadatUtkozesCim(toSave.nev),
+      );
+      if (eredmeny.kimenet === 'mentve') {
+        setTorzsadat(toSave);
+        return;
+      }
+      if (eredmeny.kimenet === 'betoltes') setTorzsadat(await storage.loadPatientData(dir));
+      throw new NemMentveUtkozesMiattError(eredmeny.kimenet);
+    },
+    [storage, utkozessel],
+  );
+
   const writeMaster = useCallback(
     async (next: Paciens) => {
       if (!patientDir) throw new Error('Ismeretlen páciensmappa.');
@@ -122,19 +145,17 @@ export default function TorzsadatSyncCard() {
         paciensId: torzsadat?.paciensId ?? paciensId ?? '',
         ...next,
       };
-      await storage.savePatientData(patientDir, toSave);
-      setTorzsadat(toSave);
+      await mentTorzsadat(patientDir, toSave);
     },
-    [storage, patientDir, torzsadat, paciensId],
+    [mentTorzsadat, patientDir, torzsadat, paciensId],
   );
 
   const createMasterFromDraft = useCallback(async () => {
     if (!patientDir) throw new Error('Ismeretlen páciensmappa.');
     if (!paciensId) throw new Error('Ismeretlen páciensazonosító.');
     const toSave = torzsadatTervbol(plan.paciens, paciensId);
-    await storage.savePatientData(patientDir, toSave);
-    setTorzsadat(toSave);
-  }, [storage, patientDir, paciensId, plan.paciens]);
+    await mentTorzsadat(patientDir, toSave);
+  }, [mentTorzsadat, patientDir, paciensId, plan.paciens]);
 
   // Egy lépésben, dialógus nélkül: amelyik oldal üres, a másikról veszi az
   // értéket. Az írás megy előre -- ha az adatlap írása hibázik, a piszkozat
@@ -420,6 +441,7 @@ export default function TorzsadatSyncCard() {
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
+      <FelulirasUtkozesDialog {...utkozes.dialogus} />
     </Box>
   );
 }

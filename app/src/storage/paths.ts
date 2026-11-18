@@ -174,6 +174,21 @@ export function assertVersionDirAvailable(
 }
 
 /**
+ * Az ütközésben felülírt, a gyökér `_utkozesek/` mappájába mentett változat neve:
+ * `<fájl>.<időbélyeg>.<kiterjesztés>`, páciens-fájlnál a páciensmappa nevével előtagolva -- egy
+ * páciensmappán belüli almappa terv-láncként listázódna, és az azonos nevű `paciens-adatok.json`-ok
+ * különben összekeverednének. Az időbélyegből a kettőspont kimarad: Windows-fájlnévben tiltott.
+ */
+export function buildUtkozesMasolatNev(relUtvonal: string, most: Date): string {
+  const reszek = relUtvonal.split('/');
+  const fajl = reszek[reszek.length - 1];
+  const elotag = reszek[0] === 'paciensek' && reszek.length > 2 ? `${reszek[1]}.` : '';
+  const pont = fajl.lastIndexOf('.');
+  const [tozs, kiterjesztes] = pont > 0 ? [fajl.slice(0, pont), fajl.slice(pont)] : [fajl, ''];
+  return `${elotag}${tozs}.${most.toISOString().replace(/:/g, '-')}${kiterjesztes}`;
+}
+
+/**
  * Letöltött PDF fájlneve -- `[PISZKOZAT-]kezelesi-terv-<névrész>-<tervId>
  * [-<suffix>].pdf`. Primitív paraméterekkel, `Plan` típus nélkül -- a `paths.ts`
  * a domain-rétegtől függetlenül marad, az `isDraft` eldöntése (mi számít

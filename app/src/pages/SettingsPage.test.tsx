@@ -8,6 +8,8 @@ import NavBar from '../components/NavBar';
 import { NavGuardProvider } from '../components/NavGuardContext';
 import { AppStateProvider } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
+import { DemoStorage } from '../storage/DemoStorage';
+import { FelulirasUtkozesError } from '../storage/taroloHibak';
 import { TestProviders } from '../testUtils';
 import { duplikaltIdk, mezokIdVagyNameNelkul } from '../testQueries';
 
@@ -722,5 +724,96 @@ describe('SettingsPage', () => {
 
       expect(await screen.findByText('Kezdőlap-próba')).toBeInTheDocument();
     });
+  });
+});
+
+describe('Nyomtatványok: felülírás-ütközés mentéskor', () => {
+  const MASIK = 'A másik gépen írt szöveg.';
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  /** Az első, felülírás-jelző nélküli sablonmentés előtt a másik gép átírja ugyanazt a fájlt. */
+  function masikGepAtirja() {
+    const eredeti = DemoStorage.prototype.saveTemplate;
+    let utkozott = false;
+    return vi.spyOn(DemoStorage.prototype, 'saveTemplate').mockImplementation(async function (
+      this: DemoStorage,
+      ...args: Parameters<DemoStorage['saveTemplate']>
+    ) {
+      if (!args[2]?.felulir && !utkozott) {
+        utkozott = true;
+        const { name } = await this.loadLatestTemplateByBase(args[0]);
+        localStorage.setItem(`dp:sablonok/${name}`, `# Nyilatkozat\n\n${MASIK}\n`);
+        throw new FelulirasUtkozesError(`sablonok/${name}`, MASIK);
+      }
+      return eredeti.apply(this, args);
+    });
+  }
+
+  async function nyilatkozatotMent(user: ReturnType<typeof userEvent.setup>, szoveg: string) {
+    renderSettingsOnTemplatesTab();
+    const mezo = (await screen.findByLabelText('Nyilatkozat')) as HTMLTextAreaElement;
+    fireEvent.change(mezo, { target: { value: szoveg } });
+    await user.click(screen.getByRole('button', { name: 'Szöveg mentése' }));
+    await screen.findByText('A(z) „Nyilatkozat” szöveg időközben a másik gépen módosult.');
+    return mezo;
+  }
+
+  it('„A másik gép változatának betöltése”: a mező a lemezen lévő szövegre áll, a saját nem mentődik', async () => {
+    const spy = masikGepAtirja();
+    const user = userEvent.setup();
+    await nyilatkozatotMent(user, 'Saját szöveg.');
+
+    await user.click(screen.getByRole('button', { name: 'A másik gép változatának betöltése' }));
+
+    await waitFor(() => expect(screen.getByLabelText('Nyilatkozat')).toHaveValue(MASIK));
+    expect(await screen.findByText(/A másik gép változata betöltődött/)).toBeInTheDocument();
+    expect(spy).toHaveBeenCalledOnce();
+    expect(screen.queryByText('Nem mentett módosítás')).toBeNull();
+  });
+
+  it('„Az én változatom mentése”: felülírás-jelzővel a saját szöveg kerül a fájlba', async () => {
+    const spy = masikGepAtirja();
+    const user = userEvent.setup();
+    await nyilatkozatotMent(user, 'Saját szöveg.');
+
+    await user.click(screen.getByRole('button', { name: 'Az én változatom mentése' }));
+
+    await waitFor(() => expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v1.md')).toContain('Saját szöveg.'));
+    expect(spy).toHaveBeenLastCalledWith('nyilatkozat-hu', expect.stringContaining('Saját szöveg.'), { felulir: true });
+    expect(screen.queryByText(/A szöveg mentése nem sikerült/)).toBeNull();
+  });
+
+  it('Escape = Mégsem: a begépelt szöveg az űrlapon marad „Nem mentve” jelzéssel, a fájl nem íródik', async () => {
+    const spy = masikGepAtirja();
+    const user = userEvent.setup();
+    await nyilatkozatotMent(user, 'Saját szöveg.');
+
+    await user.keyboard('{Escape}');
+
+    expect(await screen.findByText(/Nem mentve: a fájl időközben a másik gépen módosult/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Nyilatkozat')).toHaveValue('Saját szöveg.');
+    expect(localStorage.getItem('dp:sablonok/nyilatkozat-hu-v1.md')).toContain(MASIK);
+    expect(spy).toHaveBeenCalledOnce();
+  });
+
+  it('Mégsem után a többi, szintén módosított sablon sem mentődik', async () => {
+    const spy = masikGepAtirja();
+    const user = userEvent.setup();
+    renderSettingsOnTemplatesTab();
+    const garanciaElotte = localStorage.getItem('dp:sablonok/garancia-hu-v1.md');
+    fireEvent.change(await screen.findByLabelText('Nyilatkozat'), { target: { value: 'Saját nyilatkozat.' } });
+    fireEvent.change(screen.getByLabelText('Garancia'), { target: { value: 'Saját garancia.' } });
+    await user.click(screen.getByRole('button', { name: 'Szöveg mentése' }));
+    await screen.findByText(/időközben a másik gépen módosult/);
+
+    await user.keyboard('{Escape}');
+
+    await screen.findByText(/Nem mentve: a fájl időközben a másik gépen módosult/);
+    expect(spy).toHaveBeenCalledOnce();
+    expect(localStorage.getItem('dp:sablonok/garancia-hu-v1.md')).toBe(garanciaElotte);
+    expect(screen.getByLabelText('Garancia')).toHaveValue('Saját garancia.');
   });
 });

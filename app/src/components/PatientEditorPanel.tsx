@@ -41,6 +41,9 @@ import type { DuplikaciosJelolt } from '../domain/paciensDuplikacio';
 import { emailHiba, szuletesiIdoHiba } from '../domain/paciensValidacio';
 import type { Paciens, PatientFolder, PatientMasterData, Plan } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
+import { NemMentveUtkozesMiattError } from '../state/felulirasSor';
+import FelulirasUtkozesDialog from './FelulirasUtkozesDialog';
+import { torzsadatUtkozesCim, useFelulirasUtkozes } from './useFelulirasUtkozes';
 
 type Mod = 'nezet' | 'szerkesztes';
 
@@ -66,6 +69,7 @@ export default function PatientEditorPanel({
   onSaved: (saved: PatientMasterData) => void;
 }) {
   const { storage } = useStorage();
+  const utkozes = useFelulirasUtkozes();
   const isLocked = adatok != null;
   const displayed = useMemo(
     () => megjelenitettTorzsadat(adatok, fallbackPlan ?? null, patient),
@@ -125,8 +129,18 @@ export default function PatientEditorPanel({
     setSaveError(null);
     try {
       const toSave: PatientMasterData = { ...draft, schemaVersion: 1, paciensId: patient.paciensId };
-      await storage.savePatientData(patient.dirName, toSave);
-      onSaved(toSave);
+      const eredmeny = await utkozes.ment(
+        (felulir) => storage.savePatientData(patient.dirName, toSave, felulir ? { felulir } : undefined),
+        torzsadatUtkozesCim(patient.nev),
+      );
+      if (eredmeny.kimenet === 'megsem') {
+        setSaveError(new NemMentveUtkozesMiattError('megsem').message);
+        return;
+      }
+      const mentett = eredmeny.kimenet === 'mentve' ? toSave : await storage.loadPatientData(patient.dirName);
+      if (!mentett) throw new NemMentveUtkozesMiattError('betoltes');
+      onSaved(mentett);
+      setDraft(mentett);
       setMegprobaltMenteni(false);
       setMod('nezet');
     } catch (err) {
@@ -405,6 +419,7 @@ export default function PatientEditorPanel({
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
+      <FelulirasUtkozesDialog {...utkozes.dialogus} />
     </Box>
   );
 }

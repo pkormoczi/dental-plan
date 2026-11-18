@@ -23,6 +23,7 @@ import { resetListStateMemoryForTests } from '../components/useListStateMemory';
 import { AppStateProvider, useAppState } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
+import { FelulirasUtkozesError } from '../storage/taroloHibak';
 import { seedPatients, seedPlans } from '../storage/seed/plans';
 import type { Plan } from '../domain/types';
 
@@ -769,6 +770,74 @@ describe('PatientDetailPage', () => {
       expect(await within(lancDoboz).findByRole('button', { name: 'Új verzió' })).toBeInTheDocument();
       expect(within(lancDoboz).getByRole('button', { name: 'Megnézés' })).toBeInTheDocument();
       expect(within(lancDoboz).queryByText('Szinkron folyamatban vagy hiányos')).toBeNull();
+    });
+  });
+
+  describe('törzsadat mentése felülírás-ütközésnél', () => {
+    const adatKulcs = () => `dp:paciensek/${nagyDir}/paciens-adatok.json`;
+
+    /** Az első, felülírás-jelző nélküli mentés előtt a másik gép átírja a telefonszámot. */
+    function masikGepAtirja() {
+      const eredeti = DemoStorage.prototype.savePatientData;
+      let utkozott = false;
+      return vi.spyOn(DemoStorage.prototype, 'savePatientData').mockImplementation(async function (
+        this: DemoStorage,
+        ...args: Parameters<DemoStorage['savePatientData']>
+      ) {
+        if (!args[2]?.felulir && !utkozott) {
+          utkozott = true;
+          const masik = { ...JSON.parse(localStorage.getItem(adatKulcs())!), telefon: '+36 1 999 9999' };
+          localStorage.setItem(adatKulcs(), JSON.stringify(masik));
+          throw new FelulirasUtkozesError(`paciensek/${nagyDir}/paciens-adatok.json`, masik);
+        }
+        return eredeti.apply(this, args);
+      });
+    }
+
+    async function telefontMent(user: ReturnType<typeof userEvent.setup>) {
+      renderDetail(nagyDir, { tab: 'adatai' });
+      await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+      fireEvent.change(await screen.findByLabelText('Telefon'), { target: { value: '+36 30 111 2222' } });
+      await user.click(screen.getByRole('button', { name: 'Mentés' }));
+      await screen.findByText('Nagy Éva törzsadata időközben a másik gépen módosult.');
+    }
+
+    it('„A másik gép változatának betöltése”: az adatlap a lemezen lévő adatot mutatja, a saját nem mentődik', async () => {
+      const spy = masikGepAtirja();
+      const user = userEvent.setup();
+      await telefontMent(user);
+
+      await user.click(screen.getByRole('button', { name: 'A másik gép változatának betöltése' }));
+
+      expect(await screen.findByText('+36 1 999 9999')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Szerkesztés' })).toBeInTheDocument();
+      expect(JSON.parse(localStorage.getItem(adatKulcs())!).telefon).toBe('+36 1 999 9999');
+      expect(spy).toHaveBeenCalledOnce();
+    });
+
+    it('„Az én változatom mentése”: felülírás-jelzővel a saját adat mentődik', async () => {
+      const spy = masikGepAtirja();
+      const user = userEvent.setup();
+      await telefontMent(user);
+
+      await user.click(screen.getByRole('button', { name: 'Az én változatom mentése' }));
+
+      expect(await screen.findByText('+36 30 111 2222')).toBeInTheDocument();
+      expect(JSON.parse(localStorage.getItem(adatKulcs())!).telefon).toBe('+36 30 111 2222');
+      expect(spy).toHaveBeenLastCalledWith(nagyDir, expect.objectContaining({ telefon: '+36 30 111 2222' }), { felulir: true });
+    });
+
+    it('Escape = Mégsem: a szerkesztés és a begépelt érték marad „Nem mentve” jelzéssel, semmi nem íródik', async () => {
+      const spy = masikGepAtirja();
+      const user = userEvent.setup();
+      await telefontMent(user);
+
+      await user.keyboard('{Escape}');
+
+      expect(await screen.findByText(/Nem mentve: a fájl időközben a másik gépen módosult/)).toBeInTheDocument();
+      expect(screen.getByLabelText('Telefon')).toHaveValue('+36 30 111 2222');
+      expect(JSON.parse(localStorage.getItem(adatKulcs())!).telefon).toBe('+36 1 999 9999');
+      expect(spy).toHaveBeenCalledOnce();
     });
   });
 });

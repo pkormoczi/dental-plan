@@ -1,10 +1,13 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppState } from './AppState';
 import { planMasolatKent } from '../domain/planCopy';
 import { TestProviders } from '../testUtils';
 import { DemoDraftStorage } from '../storage/DemoDraftStorage';
+import { DemoStorage } from '../storage/DemoStorage';
+import { FelulirasUtkozesError } from '../storage/taroloHibak';
 import { useStorage } from '../storage/StorageContext';
 import type { Plan } from '../domain/types';
 
@@ -831,5 +834,121 @@ describe('piszkozat-ütközés két fül között', () => {
       expect(rec.plan.paciens.nev).toBe('Első Fül Tovább');
     });
     expect(screen.getByTestId('konfliktus')).toHaveTextContent('nincs');
+  });
+});
+
+describe('AppState saveSettings felülírás-ütközésnél', () => {
+  const MASIK = 'Másik Gép Rendelő';
+
+  function UtkozesProbe() {
+    const { settings, saveSettings } = useAppState();
+    const [hiba, setHiba] = useState('');
+    const ment = (updater: Parameters<typeof saveSettings>[0]) => {
+      setHiba('');
+      saveSettings(updater).catch((e: unknown) => setHiba(e instanceof Error ? e.message : String(e)));
+    };
+    return (
+      <div>
+        <div data-testid="rendelo-nev">{settings.rendelo.nev}</div>
+        <div data-testid="napok">{settings.ervenyessegNap}</div>
+        <div data-testid="hiba">{hiba}</div>
+        <button onClick={() => ment((p) => ({ ...p, rendelo: { ...p.rendelo, nev: 'Saját Rendelő' } }))}>ment-nev</button>
+        <button onClick={() => ment((p) => ({ ...p, ervenyessegNap: 77 }))}>ment-napok</button>
+      </div>
+    );
+  }
+
+  /** Az első, felülírás-jelző nélküli mentés előtt a másik gép átírja a beállítások nevét. */
+  function masikGepAtirja() {
+    const eredeti = DemoStorage.prototype.saveSettings;
+    let utkozott = false;
+    return vi.spyOn(DemoStorage.prototype, 'saveSettings').mockImplementation(async function (
+      this: DemoStorage,
+      ...args: Parameters<DemoStorage['saveSettings']>
+    ) {
+      if (!args[1]?.felulir && !utkozott) {
+        utkozott = true;
+        const lemez = JSON.parse(localStorage.getItem('dp:beallitasok.json')!);
+        const masik = { ...lemez, rendelo: { ...lemez.rendelo, nev: MASIK } };
+        localStorage.setItem('dp:beallitasok.json', JSON.stringify(masik));
+        throw new FelulirasUtkozesError('beallitasok.json', masik);
+      }
+      return eredeti.apply(this, args);
+    });
+  }
+
+  const lemezen = () => JSON.parse(localStorage.getItem('dp:beallitasok.json')!);
+
+  async function utkozesig(user: ReturnType<typeof userEvent.setup>) {
+    render(
+      <TestProviders>
+        <UtkozesProbe />
+      </TestProviders>,
+    );
+    const eredetiNev = (await screen.findByTestId('rendelo-nev')).textContent;
+    await user.click(screen.getByRole('button', { name: 'ment-nev' }));
+    await screen.findByText('A beállítások időközben a másik gépen módosultak.');
+    return eredetiNev;
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('„A másik gép változatának betöltése”: a memória a lemezváltozatra áll, a saját módosítás nem mentődik', async () => {
+    const spy = masikGepAtirja();
+    const user = userEvent.setup();
+    await utkozesig(user);
+
+    await user.click(screen.getByRole('button', { name: 'A másik gép változatának betöltése' }));
+
+    await waitFor(() => expect(screen.getByTestId('rendelo-nev')).toHaveTextContent(MASIK));
+    expect(screen.getByTestId('hiba')).toHaveTextContent('A másik gép változata betöltődött');
+    expect(lemezen().rendelo.nev).toBe(MASIK);
+    expect(spy).toHaveBeenCalledOnce();
+  });
+
+  it('„Az én változatom mentése”: felülírás-jelzővel mentődik, a memória és a lemez a saját változat', async () => {
+    const spy = masikGepAtirja();
+    const user = userEvent.setup();
+    await utkozesig(user);
+
+    await user.click(screen.getByRole('button', { name: 'Az én változatom mentése' }));
+
+    await waitFor(() => expect(lemezen().rendelo.nev).toBe('Saját Rendelő'));
+    expect(screen.getByTestId('rendelo-nev')).toHaveTextContent('Saját Rendelő');
+    expect(screen.getByTestId('hiba')).toHaveTextContent('');
+    expect(spy).toHaveBeenLastCalledWith(expect.objectContaining({ rendelo: expect.objectContaining({ nev: 'Saját Rendelő' }) }), { felulir: true });
+  });
+
+  it('Escape = Mégsem: a memória a legutóbb mentett értékre áll vissza, és semmi nem íródik', async () => {
+    const spy = masikGepAtirja();
+    const user = userEvent.setup();
+    const eredetiNev = await utkozesig(user);
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(screen.getByTestId('rendelo-nev')).toHaveTextContent(eredetiNev!));
+    expect(screen.getByTestId('hiba')).toHaveTextContent('Nem mentve');
+    expect(lemezen().rendelo.nev).toBe(MASIK);
+    expect(spy).toHaveBeenCalledOnce();
+    expect(screen.queryByText('A beállítások időközben a másik gépen módosultak.')).toBeNull();
+  });
+
+  it('a dialógus alatt indított mentés a döntés után, a betöltött változatra épülve mentődik', async () => {
+    masikGepAtirja();
+    const user = userEvent.setup();
+    await utkozesig(user);
+
+    // A modális dialógus mögötti gombot a böngésző nem engedné kattintani; egy, a dialógus
+    // nyitása előtti tickben indult mentést szimulál.
+    fireEvent.click(screen.getByRole('button', { name: 'ment-napok', hidden: true }));
+    expect(screen.getByTestId('napok')).not.toHaveTextContent('77');
+    await user.click(screen.getByRole('button', { name: 'A másik gép változatának betöltése' }));
+
+    await waitFor(() => expect(lemezen().ervenyessegNap).toBe(77));
+    expect(lemezen().rendelo.nev).toBe(MASIK);
+    expect(screen.getByTestId('napok')).toHaveTextContent('77');
+    expect(screen.getByTestId('rendelo-nev')).toHaveTextContent(MASIK);
   });
 });

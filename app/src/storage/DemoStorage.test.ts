@@ -317,4 +317,16 @@ describe('paths re-export sanity', () => {
   it('VersionConflictError is the class thrown internally on a collision', () => {
     expect(VersionConflictError.name).toBe('VersionConflictError');
   });
+
+  it('a demóban nincs ütközésőr: a betöltés óta kívülről átírt árlistára a mentés gond nélkül felülír', async () => {
+    localStorage.clear();
+    const storage = new DemoStorage();
+    await storage.init();
+    const pl = await storage.loadPriceList();
+    localStorage.setItem(`${PREFIX}arlista.json`, JSON.stringify({ ...pl, arlistaVerzio: 'masik' }));
+
+    await storage.savePriceList({ ...pl, arlistaVerzio: 'sajat' });
+
+    expect((await storage.loadPriceList()).arlistaVerzio).toBe('sajat');
+  });
 });

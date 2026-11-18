@@ -13,7 +13,7 @@ import type {
   PriceList,
   Settings,
 } from '../domain/types';
-import type { MentettVerzio, PlanStorage } from './PlanStorage';
+import type { FelulirasOpciok, MentettVerzio, PlanStorage } from './PlanStorage';
 import { storageHibaBolHiba, type TaroloHid, type TaroloMetodus } from './taroloIpc';
 
 export class ElectronStorage implements PlanStorage {
@@ -59,14 +59,14 @@ export class ElectronStorage implements PlanStorage {
   loadPriceList(): Promise<PriceList> {
     return this.hiv('loadPriceList');
   }
-  savePriceList(pl: PriceList): Promise<void> {
-    return this.hiv('savePriceList', pl);
+  savePriceList(pl: PriceList, opciok?: FelulirasOpciok): Promise<void> {
+    return this.hiv('savePriceList', pl, opciok);
   }
   loadSettings(): Promise<Settings> {
     return this.hiv('loadSettings');
   }
-  saveSettings(s: Settings): Promise<void> {
-    return this.hiv('saveSettings', s);
+  saveSettings(s: Settings, opciok?: FelulirasOpciok): Promise<void> {
+    return this.hiv('saveSettings', s, opciok);
   }
   loadTemplate(name: string): Promise<string> {
     return this.hiv('loadTemplate', name);
@@ -77,14 +77,14 @@ export class ElectronStorage implements PlanStorage {
   loadLatestTemplateByBase(base: string): Promise<{ name: string; body: string }> {
     return this.hiv('loadLatestTemplateByBase', base);
   }
-  saveTemplate(name: string, body: string): Promise<string> {
-    return this.hiv('saveTemplate', name, body);
+  saveTemplate(name: string, body: string, opciok?: FelulirasOpciok): Promise<string> {
+    return this.hiv('saveTemplate', name, body, opciok);
   }
   loadPatientData(patientDir: string): Promise<PatientMasterData | null> {
     return this.hiv('loadPatientData', patientDir);
   }
-  savePatientData(patientDir: string, data: PatientMasterData): Promise<void> {
-    return this.hiv('savePatientData', patientDir, data);
+  savePatientData(patientDir: string, data: PatientMasterData, opciok?: FelulirasOpciok): Promise<void> {
+    return this.hiv('savePatientData', patientDir, data, opciok);
   }
   createPatient(nev: string, kezdoAdatok?: Pick<Paciens, 'szuletesiIdo' | 'telefon'>): Promise<PatientFolder> {
     return this.hiv('createPatient', nev, kezdoAdatok);

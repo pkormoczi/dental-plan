@@ -24,6 +24,16 @@ export interface MentettVerzio extends PlanRef {
   figyelmeztetes?: 'INDEX_IRAS_HIBA';
 }
 
+/**
+ * A felülírt system-of-record fájlok (árlista, beállítások, törzsadat, sablon) mentésének
+ * opciója. `felulir`: a doki az ütközés-dialógusban a saját változatát választotta -- a lemezen
+ * lévő változat előbb az `_utkozesek/` mappába kerül, csak utána íródik felül (migrációs terv
+ * §4.6). Nélküle a betöltés óta megváltozott fájlra `FelulirasUtkozesError` jön, írás nélkül.
+ */
+export interface FelulirasOpciok {
+  felulir?: boolean;
+}
+
 export interface PlanStorage {
   init(): Promise<void>;
   listPatients(): Promise<PatientFolder[]>;
@@ -71,10 +81,10 @@ export interface PlanStorage {
    * át -- lásd ott a `savePriceList`/`saveSettings` context-metódus
    * doc-kommentjét.
    */
-  savePriceList(pl: PriceList): Promise<void>;
+  savePriceList(pl: PriceList, opciok?: FelulirasOpciok): Promise<void>;
   loadSettings(): Promise<Settings>;
   /** Lásd a `savePriceList` doc-kommentjét -- ugyanaz a sorosítási szerződés. */
-  saveSettings(s: Settings): Promise<void>;
+  saveSettings(s: Settings, opciok?: FelulirasOpciok): Promise<void>;
   loadTemplate(name: string): Promise<string>;
   /** Fájlnevek (`<base>-v<n>.md`), nem base-ek -- a fájlszintű export erre épül. */
   listTemplates(): Promise<string[]>;
@@ -89,7 +99,7 @@ export interface PlanStorage {
    * innentől állandó, a korábbi szövegváltozatnak nincs másik forrása, mint
    * egy már véglegesített terv mentett PDF-je.
    */
-  saveTemplate(name: string, body: string): Promise<string>;
+  saveTemplate(name: string, body: string, opciok?: FelulirasOpciok): Promise<string>;
   /**
    * A paciens-adatok.json -- `null`, ha még nem létezik (a hívó ekkor
    * élő fallbackre esik vissza, `domain/paciensAdatok.ts`
@@ -103,7 +113,7 @@ export interface PlanStorage {
    * frissíti (`domain/paciensAdatok.ts` `paciensIndexNev`), különben a
    * páciens-listákban a régi név látszana a következő terv-mentésig.
    */
-  savePatientData(patientDir: string, data: PatientMasterData): Promise<void>;
+  savePatientData(patientDir: string, data: PatientMasterData, opciok?: FelulirasOpciok): Promise<void>;
   /**
    * Vadonatúj, terv nélküli páciens felvitele (a
    * `kezdoAdatok`-kal bővítve). Generálja a

@@ -33,6 +33,7 @@ import { useMentesJelzo } from '../../components/useMentesJelzo';
 import { alapertelmezettOrvosNeve } from '../../domain/orvosok';
 import type { Rendelo, Settings } from '../../domain/types';
 import { useAppState } from '../../state/AppState';
+import { NemMentveUtkozesMiattError } from '../../state/felulirasSor';
 
 interface OrvosSor {
   nev: string;
@@ -192,6 +193,10 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
       );
       setMegprobaltMenteni(false);
     } catch (err) {
+      // A másik gép betöltött változata az aktív: az űrlap sem mutathatja tovább az eldobott módosítást.
+      if (err instanceof NemMentveUtkozesMiattError && err.kimenet === 'betoltes') {
+        setDraft(toDraft(err.betoltott as Settings));
+      }
       setSaveError(err instanceof Error ? err.message : 'A mentés váratlanul meghiúsult.');
     }
   }

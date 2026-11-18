@@ -27,6 +27,13 @@ import { todayIso } from '../domain/date';
 import type { Osszesitok, Plan, PriceList, Settings } from '../domain/types';
 import { useStorage } from '../storage/StorageContext';
 import { DraftConflictError } from '../storage/DraftStorage';
+import FelulirasUtkozesDialog from '../components/FelulirasUtkozesDialog';
+import {
+  ARLISTA_UTKOZES_CIM,
+  BEALLITASOK_UTKOZES_CIM,
+  useFelulirasUtkozes,
+} from '../components/useFelulirasUtkozes';
+import { felulirasSor } from './felulirasSor';
 import type { DraftMeta, DraftRecord, WorkflowRoute } from '../storage/DraftStorage';
 import { t } from '../design/tokens';
 
@@ -205,10 +212,13 @@ interface AppStateValue {
    * KIZÁRÓLAG updatert fogad, sosem kész objektumot -- a hívó a
    * JELENLEGI (a legutóbbi mentés óta esetleg már megváltozott) állapotra
    * épít, nem egy render-idejű closure-re zárt régi értékre. Az updater
-   * PONTOSAN EGYSZER, SZINKRON fut le, még az írás előtt (lásd lent a
+   * LEGFELJEBB EGYSZER fut le, még az írás előtt, és szinkron (lásd lent a
    * `settingsRef`/`applySettings` kommentjét) -- ez szerződés: pl. egy
    * azonosító-számítást az updateren BELÜL kell elvégezni, különben
-   * két gyors egymás utáni hívás ugyanazt az id-t generálná.
+   * két gyors egymás utáni hívás ugyanazt az id-t generálná. Kivétel egy
+   * függő felülírás-ütközés: alatta az updater a doki döntése után fut, a
+   * „Mégsem” után pedig sehogy (`state/felulirasSor.ts`). Ütközés miatt el
+   * nem mentett módosításnál `NemMentveUtkozesMiattError` jön.
    */
   saveSettings: (updater: (prev: Settings) => Settings) => Promise<void>;
   /** Lásd a `saveSettings` doc-kommentjét -- ugyanaz a szerződés. */
@@ -292,6 +302,33 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setPriceList(pl);
   }, []);
 
+  // A két felülírt fájl mentési sora az ütközésőr mellett; a dialógust ez a Provider rendereli,
+  // így bármelyik lapról induló mentésnél felugrik.
+  const utkozes = useFelulirasUtkozes();
+  const { kerdez } = utkozes;
+  const beallitasSor = useMemo(
+    () =>
+      felulirasSor<Settings>({
+        aktualis: () => settingsRef.current!,
+        alkalmaz: applySettings,
+        ment: (s, felulir) => storage.saveSettings(s, felulir ? { felulir } : undefined),
+        betolt: () => storage.loadSettings(),
+        kerdez: () => kerdez(BEALLITASOK_UTKOZES_CIM),
+      }),
+    [storage, applySettings, kerdez],
+  );
+  const arlistaSor = useMemo(
+    () =>
+      felulirasSor<PriceList>({
+        aktualis: () => priceListRef.current!,
+        alkalmaz: applyPriceList,
+        ment: (pl, felulir) => storage.savePriceList(pl, felulir ? { felulir } : undefined),
+        betolt: () => storage.loadPriceList(),
+        kerdez: () => kerdez(ARLISTA_UTKOZES_CIM),
+      }),
+    [storage, applyPriceList, kerdez],
+  );
+
   useEffect(() => {
     let cancelled = false;
     setLoadError(null);
@@ -306,6 +343,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         applySettings(s);
         applyPriceList(pl);
+        beallitasSor.mentettnekJelol(s);
+        arlistaSor.mentettnekJelol(pl);
 
         // Csendes, memóriabeli restore -- a láthatóságot a Home "Piszkozat
         // folytatása" kártyája adja, itt nincs semmilyen felhasználó felé
@@ -354,7 +393,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     // adat) -- a `loadToken` a kézi "Újrapróbálás" triggere egy sikertelen
     // betöltés után.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, storage, drafts, loadToken, applySettings, applyPriceList]);
+  }, [ready, storage, drafts, loadToken, applySettings, applyPriceList, beallitasSor, arlistaSor]);
 
   // Írási trigger: minden tartalmi plan-változásra azonnal ír, debounce
   // nélkül -- a terv-objektum kicsi, egy JSON.stringify +
@@ -421,6 +460,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const [s, pl] = await Promise.all([storage.loadSettings(), storage.loadPriceList()]);
     applySettings(s);
     applyPriceList(pl);
+    beallitasSor.mentettnekJelol(s);
+    arlistaSor.mentettnekJelol(pl);
     setPlanState(createBlankPlan(s, pl));
     setLoadedOsszesitokDiff(null);
     setFrissitettDatum(null);
@@ -437,7 +478,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setFazisCsukva(new Set());
     irtPiszkozatRef.current = null;
     piszkozatKiirvaRef.current = false;
-  }, [storage, applySettings, applyPriceList]);
+  }, [storage, applySettings, applyPriceList, beallitasSor, arlistaSor]);
 
   const value = useMemo<AppStateValue | null>(() => {
     if (!settings || !priceList || !plan) return null;
@@ -617,22 +658,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       },
       // Optimista -- a memóriabeli állapot (ref + state) a mentés
       // ELŐTT frissül, hogy egy második, ugyanabban a tickben induló hívás
-      // updatere már ezt lássa. Hibára SZÁNDÉKOSAN nem gördül vissza: a
-      // begépelt érték a képernyőn marad (a hibasáv emellett jelenik meg,
-      // lásd SettingsPage/PriceListAdminPage `saveError`), és egy esetleges
-      // A-hiba utáni sikeres B mentés a következő körben úgyis magával viszi
-      // A tartalmát is -- a visszaállítás pont ezt a kumulált szerkesztést
-      // dobná el.
-      saveSettings: async (updater) => {
-        const next = updater(settingsRef.current ?? settings);
-        applySettings(next);
-        await storage.saveSettings(next);
-      },
-      savePriceList: async (updater) => {
-        const next = updater(priceListRef.current ?? priceList);
-        applyPriceList(next);
-        await storage.savePriceList(next);
-      },
+      // updatere már ezt lássa. Egyszerű írási hibára SZÁNDÉKOSAN nem gördül
+      // vissza: a begépelt érték a képernyőn marad (a hibasáv emellett
+      // jelenik meg, lásd SettingsPage/PriceListAdminPage `saveError`), és egy
+      // esetleges A-hiba utáni sikeres B mentés a következő körben úgyis
+      // magával viszi A tartalmát is. Felülírás-ütközésnél viszont a doki
+      // dönt, és a nem mentett változat nem maradhat aktív
+      // (`state/felulirasSor.ts`).
+      saveSettings: (updater) => beallitasSor.frissit(updater),
+      savePriceList: (updater) => arlistaSor.frissit(updater),
       reloadFromStorage,
       fazisCsukva,
       setFazisCsukva,
@@ -652,11 +686,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     orvosFallback,
     orokoltNyelv,
     orokoltPenznem,
-    storage,
     drafts,
     reloadFromStorage,
-    applySettings,
-    applyPriceList,
+    beallitasSor,
+    arlistaSor,
   ]);
 
   if (loadError) {
@@ -685,7 +718,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
+  return (
+    <AppStateContext.Provider value={value}>
+      {children}
+      <FelulirasUtkozesDialog {...utkozes.dialogus} />
+    </AppStateContext.Provider>
+  );
 }
 
 export function useAppState(): AppStateValue {

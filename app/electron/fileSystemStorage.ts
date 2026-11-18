@@ -29,6 +29,7 @@ export class FileSystemStorage extends FajlTarolo {
       pdfFajlnev: 'kezelesi-terv.pdf',
       mentesHibaUzenet: 'A tervet nem sikerült elmenteni. Semmi nem íródott félkészen.',
       verzioManifest: true,
+      utkozesOr: true,
     });
     this.gyoker = prim.gyoker;
   }

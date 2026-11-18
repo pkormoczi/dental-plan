@@ -19,6 +19,9 @@ import { t } from '../../design/tokens';
 import { stripMarkdownHeading } from '../../pdf/markdownLite';
 import { TEMPLATE_HEADINGS } from '../../storage/seed/templates';
 import { useStorage } from '../../storage/StorageContext';
+import FelulirasUtkozesDialog from '../../components/FelulirasUtkozesDialog';
+import { sablonUtkozesCim, useFelulirasUtkozes } from '../../components/useFelulirasUtkozes';
+import { NemMentveUtkozesMiattError } from '../../state/felulirasSor';
 
 type TemplateSlotKey = 'nyilatkozat' | 'fizetesi-feltetelek' | 'garancia';
 
@@ -67,6 +70,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [templateLoadError, setTemplateLoadError] = useState<string | null>(null);
   const templateJelzo = useMentesJelzo();
+  const utkozes = useFelulirasUtkozes();
   const [templateSaveError, setTemplateSaveError] = useState<string | null>(null);
   // Melyik alapneveket töltöttük már be -- egy újramountolásnál a már
   // betöltött (és esetleg szerkesztett) base-eket nem kérjük le újra, a
@@ -165,17 +169,41 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
         if (dirtyBases.length > 0) {
           const nameUpdates: Record<string, string> = {};
           const textUpdates: Record<string, string> = {};
+          // A másik gép változatára visszaállt bázisok: ott a piszkozat is a lemezváltozat lesz.
+          const betoltottUpdates: Record<string, string> = {};
+          let megszakitva = false;
           for (const base of dirtyBases) {
             const heading = TEMPLATE_HEADINGS[base as keyof typeof TEMPLATE_HEADINGS] ?? base;
             const text = templateDrafts[base];
             const fullBody = `# ${heading}\n\n${text.trim()}\n`;
-            nameUpdates[base] = await storage.saveTemplate(base, fullBody);
-            textUpdates[base] = text;
-            // Törlés kizárólag sikeres mentéskor, base-enként.
+            const eredmeny = await utkozes.ment(
+              (felulir) => storage.saveTemplate(base, fullBody, felulir ? { felulir } : undefined),
+              sablonUtkozesCim(heading),
+            );
+            // A „Mégsem” a hátralévő bázisokat sem menti: a doki most nem dönt, semmi nem íródik tovább.
+            if (eredmeny.kimenet === 'megsem') {
+              megszakitva = true;
+              break;
+            }
+            if (eredmeny.kimenet === 'betoltes') {
+              const { name, body } = await storage.loadLatestTemplateByBase(base);
+              nameUpdates[base] = name;
+              textUpdates[base] = stripMarkdownHeading(body);
+              betoltottUpdates[base] = textUpdates[base];
+            } else {
+              nameUpdates[base] = eredmeny.ertek;
+              textUpdates[base] = text;
+            }
+            // Törlés kizárólag lezárt bázisnál: a mentett vagy a betöltött szöveg a tárolt igazság.
             templateDraftCache.remove(base);
           }
           setTemplateNames((prev) => ({ ...prev, ...nameUpdates }));
           setSavedTemplateTexts((prev) => ({ ...prev, ...textUpdates }));
+          if (Object.keys(betoltottUpdates).length > 0) {
+            setTemplateDrafts((prev) => ({ ...prev, ...betoltottUpdates }));
+          }
+          if (megszakitva) throw new NemMentveUtkozesMiattError('megsem');
+          if (Object.keys(betoltottUpdates).length > 0) throw new NemMentveUtkozesMiattError('betoltes');
         }
       });
     } catch (err) {
@@ -306,6 +334,7 @@ export default function NyomtatvanyokTab({ onDirtyChange }: { onDirtyChange: (di
         confirmLabel="Elvetés"
         visszaFokuszRef={cancelVisszaFokuszRef}
       />
+      <FelulirasUtkozesDialog {...utkozes.dialogus} />
     </>
   );
 }

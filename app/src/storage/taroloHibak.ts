@@ -53,18 +53,19 @@ export class SerultJsonError extends Error {
   }
 }
 
-/** A fájl a betöltés óta a lemezen megváltozott (migrációs terv §4.6). */
+/**
+ * A fájl a betöltés óta a lemezen megváltozott (migrációs terv §4.6); semmi nem íródott. A
+ * `lemezenLevo` a most a lemezen lévő tartalom értelmezve, `null`, ha nem értelmezhető.
+ */
 export class FelulirasUtkozesError extends Error {
   readonly fajl: string;
   readonly lemezenLevo: unknown;
-  readonly mentettMasolat: string;
 
-  constructor(fajl: string, lemezenLevo: unknown, mentettMasolat: string) {
+  constructor(fajl: string, lemezenLevo: unknown) {
     super(`A(z) ${fajl} időközben a másik gépen módosult.`);
     this.name = 'FelulirasUtkozesError';
     this.fajl = fajl;
     this.lemezenLevo = lemezenLevo;
-    this.mentettMasolat = mentettMasolat;
   }
 }
 

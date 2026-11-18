@@ -83,6 +83,14 @@ function kezdoAdatok(x: unknown) {
   };
 }
 
+function felulirasOpciok(x: unknown) {
+  if (x === undefined) return undefined;
+  if (!x || typeof x !== 'object') throw hiba('felülírás-opció');
+  const felulir = (x as Record<string, unknown>).felulir;
+  if (felulir !== undefined && typeof felulir !== 'boolean') throw hiba('felülírás-opció');
+  return felulir === undefined ? {} : { felulir };
+}
+
 function nincsArgumentum(args: unknown[]): unknown[] {
   if (args.length) throw hiba('fölösleges paraméter');
   return [];
@@ -117,16 +125,20 @@ export function ervenyesArgumentumok(metodus: TaroloMetodus, args: unknown[]): u
     case 'savePlanErvenytelenites':
       return [patientDir(args[0]), planDir(args[1]), versionDir(args[2]), szoveg(args[3], 'indok', 2000)];
     case 'savePriceList':
-      return [alak(assertPriceListShape, args[0], 'árlista')];
+      return [alak(assertPriceListShape, args[0], 'árlista'), felulirasOpciok(args[1])];
     case 'saveSettings':
-      return [alak(assertSettingsShape, args[0], 'beállítások')];
+      return [alak(assertSettingsShape, args[0], 'beállítások'), felulirasOpciok(args[1])];
     case 'loadTemplate':
     case 'loadLatestTemplateByBase':
       return [sablonNev(args[0])];
     case 'saveTemplate':
-      return [sablonNev(args[0]), szoveg(args[1], 'sablonszöveg')];
+      return [sablonNev(args[0]), szoveg(args[1], 'sablonszöveg'), felulirasOpciok(args[2])];
     case 'savePatientData':
-      return [patientDir(args[0]), alak(assertPatientMasterDataShape, args[1], 'törzsadat')];
+      return [
+        patientDir(args[0]),
+        alak(assertPatientMasterDataShape, args[1], 'törzsadat'),
+        felulirasOpciok(args[2]),
+      ];
     case 'createPatient': {
       const nev = szoveg(args[0], 'név', 200);
       if (!nev.trim()) throw hiba('név');

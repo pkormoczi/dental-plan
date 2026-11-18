@@ -101,6 +101,15 @@ describe('taroloHivas', () => {
     expect(await paciensMappak()).toEqual([]);
   });
 
+  it('a nem logikai felülírás-jelzőt elutasítja, és a fájlt nem írja', async () => {
+    const pl = await tarolo.loadPriceList();
+
+    const r = await hiv('savePriceList', [{ ...pl, arlistaVerzio: 'uj' }, { felulir: 'igen' }]);
+
+    expect(hibaKod(r)).toBe('ERVENYTELEN_PARAMETER');
+    expect((await tarolo.loadPriceList()).arlistaVerzio).toBe(pl.arlistaVerzio);
+  });
+
   it('a törlés előtt újraellenőriz: frissen érkezett tervvel nem töröl', async () => {
     const folder = await tarolo.createPatient('Törlendő Páciens');
     // A renderer még terv nélkül látta; közben a másik gépről megérkezett egy verzió.

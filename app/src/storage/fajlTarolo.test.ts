@@ -3,7 +3,7 @@ import { alapKeszletetIr, FajlTarolo } from './fajlTarolo';
 import { MemoriaPrimitivek } from './memoriaPrimitivek';
 import { taroloSzerzodesTesztek } from './szerzodesTesztek';
 
-describe('FajlTarolo memóriás primitíveken, verzió-manifesttel', () => {
+describe('FajlTarolo memóriás primitíveken, verzió-manifesttel és ütközésőrrel', () => {
   taroloSzerzodesTesztek(async () => {
     const prim = new MemoriaPrimitivek();
     await alapKeszletetIr(prim);
@@ -11,6 +11,7 @@ describe('FajlTarolo memóriás primitíveken, verzió-manifesttel', () => {
       pdfFajlnev: 'kezelesi-terv.pdf',
       mentesHibaUzenet: 'A tervet nem sikerült elmenteni.',
       verzioManifest: true,
+      utkozesOr: true,
     });
     return {
       storage,

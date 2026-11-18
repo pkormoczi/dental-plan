@@ -28,13 +28,14 @@ import type {
 } from '../domain/types';
 import { MarLetezikError, utvonal, type FajlPrimitivek } from './fajlPrimitivek';
 import { parseJson } from './json';
-import type { MentettVerzio, PlanStorage } from './PlanStorage';
+import type { FelulirasOpciok, MentettVerzio, PlanStorage } from './PlanStorage';
 import { sha256Hex } from './sha256';
-import { HianyosVerzioError } from './taroloHibak';
+import { FelulirasUtkozesError, HianyosVerzioError } from './taroloHibak';
 import {
   assertVersionDirAvailable,
   buildPatientDirName,
   buildPlanDirName,
+  buildUtkozesMasolatNev,
   buildVersionDirName,
   generateId,
   nextVersionNumber,
@@ -60,6 +61,8 @@ export const BEALLITASOK_FAJL = 'beallitasok.json';
 export const PACIENSEK_MAPPA = 'paciensek';
 export const SABLONOK_MAPPA = 'sablonok';
 export const MANIFEST_FAJL = 'manifest.json';
+/** Az ütközésben felülírt változatok helye; az app nem törli, a doki takarít. */
+export const UTKOZESEK_MAPPA = '_utkozesek';
 const TERV_FAJL = 'terv.json';
 const MANIFEST_SEMA = 1;
 
@@ -141,6 +144,11 @@ export interface FajlTaroloOpciok {
    * demóban nincs, ott minden verzió teljes.
    */
   verzioManifest?: boolean;
+  /**
+   * Ütközésőr a felülírt system-of-record fájlokon: betöltéskor a tartalom hash-e megjegyezve,
+   * mentés előtt újraolvasva (migrációs terv §4.6). A demóban nincs, ott egy gép ír.
+   */
+  utkozesOr?: boolean;
 }
 
 export class FajlTarolo implements PlanStorage {
@@ -173,6 +181,49 @@ export class FajlTarolo implements PlanStorage {
    * minden PDF-et újra hash-elne. Hiányos verzió sosem kerül ide: az mindig újraellenőrződik.
    */
   private readonly teljesVerziok = new Map<string, string>();
+
+  /**
+   * Fájlonként a tartalom hash-e, ahogy ez a példány utoljára látta (betöltötte vagy írta). Nem
+   * `mtime`: a Drive a módosítási időt nem őrzi megbízhatóan, a tartalmat igen.
+   */
+  private readonly ismertHash = new Map<string, string>();
+
+  private async megjegyez(ut: string, tartalom: string): Promise<void> {
+    if (this.opciok.utkozesOr) this.ismertHash.set(ut, await sha256Hex(tartalom));
+  }
+
+  /**
+   * Írás előtt: ha a fájl azóta a lemezen megváltozott, dob, és semmi nem íródik -- `felulir`-nál
+   * a lemezen lévőt előbb az `_utkozesek/` alá menti. Egy általunk még nem látott, de létező fájl
+   * is ütközés: a másik gép közben létrehozhatta.
+   */
+  private async utkozesOr(ut: string, opciok: FelulirasOpciok | undefined, ertelmez: (raw: string) => unknown): Promise<void> {
+    if (!this.opciok.utkozesOr) return;
+    const raw = await this.prim.olvasSzoveg(ut);
+    if (raw == null || this.ismertHash.get(ut) === (await sha256Hex(raw))) return;
+    if (!opciok?.felulir) {
+      let lemezenLevo: unknown = null;
+      try {
+        lemezenLevo = ertelmez(raw);
+      } catch {
+        lemezenLevo = null;
+      }
+      throw new FelulirasUtkozesError(ut, lemezenLevo);
+    }
+    await this.prim.irSzoveg(utvonal(UTKOZESEK_MAPPA, buildUtkozesMasolatNev(ut, new Date())), raw);
+  }
+
+  /** Ütközésőrrel ír, és a frissen írt tartalmat jegyzi meg ismertként. */
+  private async orzottIr(
+    ut: string,
+    tartalom: string,
+    opciok: FelulirasOpciok | undefined,
+    ertelmez: (raw: string) => unknown,
+  ): Promise<void> {
+    await this.utkozesOr(ut, opciok, ertelmez);
+    await this.prim.irSzoveg(ut, tartalom);
+    await this.megjegyez(ut, tartalom);
+  }
 
   /** A `savingChain`-re fűz egy írást -- lásd a mező doc-kommentjét. */
   protected enqueue<T>(run: () => Promise<T>): Promise<T> {
@@ -590,32 +641,39 @@ export class FajlTarolo implements PlanStorage {
   async loadPriceList(): Promise<PriceList> {
     const raw = await this.prim.olvasSzoveg(ARLISTA_FAJL);
     if (raw == null) throw new Error('Az árlista még nincs inicializálva.');
+    await this.megjegyez(ARLISTA_FAJL, raw);
     const priceList = parseJson<PriceList>(raw, ARLISTA_FAJL);
     assertKnownSchemaVersion(priceList, ARLISTA_FAJL);
     assertPriceListShape(priceList, ARLISTA_FAJL);
     return priceList;
   }
 
-  async savePriceList(pl: PriceList): Promise<void> {
-    return this.enqueue(() => this.prim.irSzoveg(ARLISTA_FAJL, JSON.stringify(pl)));
+  async savePriceList(pl: PriceList, opciok?: FelulirasOpciok): Promise<void> {
+    return this.enqueue(() =>
+      this.orzottIr(ARLISTA_FAJL, JSON.stringify(pl), opciok, (raw) => parseJson<PriceList>(raw, ARLISTA_FAJL)),
+    );
   }
 
   async loadSettings(): Promise<Settings> {
     const raw = await this.prim.olvasSzoveg(BEALLITASOK_FAJL);
     if (raw == null) throw new Error('A beállítások még nincsenek inicializálva.');
+    await this.megjegyez(BEALLITASOK_FAJL, raw);
     const settings = parseJson<Settings>(raw, BEALLITASOK_FAJL);
     assertKnownSchemaVersion(settings, BEALLITASOK_FAJL);
     assertSettingsShape(settings, BEALLITASOK_FAJL);
     return settings;
   }
 
-  async saveSettings(s: Settings): Promise<void> {
-    return this.enqueue(() => this.prim.irSzoveg(BEALLITASOK_FAJL, JSON.stringify(s)));
+  async saveSettings(s: Settings, opciok?: FelulirasOpciok): Promise<void> {
+    return this.enqueue(() =>
+      this.orzottIr(BEALLITASOK_FAJL, JSON.stringify(s), opciok, (raw) => parseJson<Settings>(raw, BEALLITASOK_FAJL)),
+    );
   }
 
   async loadTemplate(name: string): Promise<string> {
     const raw = await this.prim.olvasSzoveg(sablonUt(name));
     if (raw == null) throw new Error(`Nincs ilyen sablon: ${name}`);
+    await this.megjegyez(sablonUt(name), raw);
     return raw;
   }
 
@@ -630,12 +688,12 @@ export class FajlTarolo implements PlanStorage {
    * korábbi szövegváltozatok egyetlen igazsága a véglegesítéskor mentett PDF,
    * a `terv.json` nem hivatkozik sablonfájlra.
    */
-  async saveTemplate(name: string, body: string): Promise<string> {
+  async saveTemplate(name: string, body: string, opciok?: FelulirasOpciok): Promise<string> {
     return this.enqueue(async () => {
       const base = name.replace(/\.md$/, '').replace(/-v\d+$/, '');
       const latest = await this.latestTemplateFile(base);
       const fileName = latest ?? `${base}-v1.md`;
-      await this.prim.irSzoveg(sablonUt(fileName), body);
+      await this.orzottIr(sablonUt(fileName), body, opciok, (raw) => raw);
       return fileName;
     });
   }
@@ -650,7 +708,9 @@ export class FajlTarolo implements PlanStorage {
   async loadLatestTemplateByBase(base: string): Promise<{ name: string; body: string }> {
     const latest = await this.latestTemplateFile(base);
     if (!latest) throw new Error(`Nincs "${base}" kezdetű sablon.`);
-    return { name: latest, body: (await this.prim.olvasSzoveg(sablonUt(latest)))! };
+    const body = (await this.prim.olvasSzoveg(sablonUt(latest)))!;
+    await this.megjegyez(sablonUt(latest), body);
+    return { name: latest, body };
   }
 
   private async latestTemplateFile(base: string): Promise<string | null> {
@@ -678,6 +738,7 @@ export class FajlTarolo implements PlanStorage {
   async loadPatientData(patientDir: string): Promise<PatientMasterData | null> {
     const raw = await this.prim.olvasSzoveg(pacAdatUt(patientDir));
     if (raw == null) return null;
+    await this.megjegyez(pacAdatUt(patientDir), raw);
     const data = parseJson<PatientMasterData>(raw, 'paciens-adatok.json');
     assertKnownSchemaVersion(data, 'paciens-adatok.json');
     assertPatientMasterDataShape(data, 'paciens-adatok.json');
@@ -689,9 +750,11 @@ export class FajlTarolo implements PlanStorage {
    * Páciensek/Korábbi tervek listákban a régi név látszana a következő
    * terv-mentésig.
    */
-  async savePatientData(patientDir: string, data: PatientMasterData): Promise<void> {
+  async savePatientData(patientDir: string, data: PatientMasterData, opciok?: FelulirasOpciok): Promise<void> {
     return this.enqueue(async () => {
-      await this.prim.irSzoveg(pacAdatUt(patientDir), JSON.stringify(data));
+      await this.orzottIr(pacAdatUt(patientDir), JSON.stringify(data), opciok, (raw) =>
+        parseJson<PatientMasterData>(raw, 'paciens-adatok.json'),
+      );
       const record: PatientRecord = {
         schemaVersion: 1,
         paciensId: data.paciensId,
@@ -719,6 +782,7 @@ export class FajlTarolo implements PlanStorage {
       const data = { ...uresTorzsadat(nev, paciensId), ...kezdoAdatok };
       await this.prim.irSzoveg(pacRekordUt(patientDir), JSON.stringify(record));
       await this.prim.irSzoveg(pacAdatUt(patientDir), JSON.stringify(data));
+      await this.megjegyez(pacAdatUt(patientDir), JSON.stringify(data));
       return { dirName: patientDir, paciensId, nev, utolsoAktivitas };
     });
   }
