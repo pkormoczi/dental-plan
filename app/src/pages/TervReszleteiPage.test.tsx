@@ -254,11 +254,11 @@ describe('TervReszleteiPage', () => {
   it('eltérő törzsadatnál a diff-tábla mindkét értéket mutatja, szinkron-gomb nélkül', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
-    const plan = makePlan({ paciensId: 'teszt-diff' });
+    const plan = makePlan({ paciensId: 'tdiff1' });
     const ref = await seeder.savePlan(plan, new Uint8Array([1]));
     const master: PatientMasterData = {
       schemaVersion: 1,
-      paciensId: 'teszt-diff',
+      paciensId: 'tdiff1',
       ...plan.paciens,
       telefon: '+36 99 000 0000',
     };
@@ -280,12 +280,12 @@ describe('TervReszleteiPage', () => {
   it('az adatlapon azóta KITÖLTÖTT (a pillanatképben üres) mező nem számít "azóta módosult"-nak', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
-    const plan = makePlan({ paciensId: 'teszt-potlas' });
+    const plan = makePlan({ paciensId: 'tpotl1' });
     plan.paciens = { ...plan.paciens, email: '' };
     const ref = await seeder.savePlan(plan, new Uint8Array([1]));
     await seeder.savePatientData(ref.patientDir, {
       schemaVersion: 1,
-      paciensId: 'teszt-potlas',
+      paciensId: 'tpotl1',
       ...plan.paciens,
       email: 'azota@example.hu',
     });
@@ -301,11 +301,11 @@ describe('TervReszleteiPage', () => {
   it('egyező törzsadatnál nincs eltérés-jelző badge és nincs diff-tábla', async () => {
     const seeder = new DemoStorage();
     await seeder.init();
-    const plan = makePlan({ paciensId: 'teszt-egyezo' });
+    const plan = makePlan({ paciensId: 'tegyz1' });
     const ref = await seeder.savePlan(plan, new Uint8Array([1]));
     await seeder.savePatientData(ref.patientDir, {
       schemaVersion: 1,
-      paciensId: 'teszt-egyezo',
+      paciensId: 'tegyz1',
       ...plan.paciens,
     });
 
