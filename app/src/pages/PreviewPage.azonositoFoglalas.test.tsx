@@ -11,6 +11,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import { DemoStorage } from '../storage/DemoStorage';
+import { VersionConflictError } from '../storage/paths';
 import { seedPriceList } from '../storage/seed/priceList';
 import { seedSettings } from '../storage/seed/settings';
 import type { Plan } from '../domain/types';
@@ -348,4 +349,92 @@ describe('PreviewPage -- az azonosító előzetes lefoglalása', () => {
     },
     20000,
   );
+
+  describe('sorszám-ütközés véglegesítéskor', () => {
+    /** Egy v1-ből nyitott piszkozat az Előnézeten, v2-es foglalással; közben a másik gép elmenti a v2-t. */
+    async function utkozesig(user: ReturnType<typeof userEvent.setup>) {
+      const { mentett, patientDir } = await seedLanc(1);
+      seedDraft({ ...mentett, statusz: 'PISZKOZAT' }, patientDir);
+      render(<App />);
+      window.location.hash = '#/elonezet';
+      const gomb = await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+      await waitFor(() => expect(nyomtatvanyPlan().verzio).toBe(2));
+      const masikGep = new DemoStorage();
+      await masikGep.savePlan(
+        { ...mentett, verzio: 0, keltezes: '2026-08-06', orvos: 'Dr. Másik Gép' },
+        new Uint8Array([9]),
+      );
+      await waitFor(() => expect(gomb).not.toBeDisabled());
+      await user.click(gomb);
+      await screen.findByText('Ez a terv időközben a másik gépen mentődött', {}, { timeout: 10000 });
+      return { mentett, patientDir };
+    }
+
+    async function lancVerziok(patientDir: string) {
+      const storage = new DemoStorage();
+      const [chain] = await storage.listPlans(patientDir);
+      const versions = await storage.listVersions(patientDir, chain.dirName);
+      return { storage, chain, versions };
+    }
+
+    it(
+      'a dialógus megnevezi a másik gépen mentett verziót, és a „Mentés v3-ként” a következő sorszámmal, új PDF-fel ment',
+      async () => {
+        const user = userEvent.setup();
+        const { mentett, patientDir } = await utkozesig(user);
+
+        expect(screen.getByText(/^v2 · 2026\.08\.06\. · Dr\. Másik Gép$/)).toBeInTheDocument();
+        expect(screen.getByText(/^Végösszeg:/)).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: 'Mentés v3-ként' }));
+        await screen.findByText('A terv elmentve ✓', {}, { timeout: 10000 });
+
+        const { storage, chain, versions } = await lancVerziok(patientDir);
+        expect(versions.map((v) => v.verzio)).toEqual([1, 2, 3]);
+        const v3 = await storage.loadPlan({ patientDir, planDir: chain.dirName, versionDir: versions[2].dirName });
+        expect(v3.verzio).toBe(3);
+        expect(v3.orvos).toBe(mentett.orvos);
+      },
+      30000,
+    );
+
+    it(
+      'Mégsem után semmi nem mentődik, és a doki az Előnézeten marad',
+      async () => {
+        const user = userEvent.setup();
+        const { patientDir } = await utkozesig(user);
+
+        await user.click(screen.getByRole('button', { name: 'Mégsem' }));
+
+        await waitFor(() => expect(screen.queryByText('Ez a terv időközben a másik gépen mentődött')).toBeNull());
+        expect(screen.getByRole('button', { name: /Véglegesítés és mentés/ })).toBeInTheDocument();
+        expect(screen.queryByText('A terv elmentve ✓')).toBeNull();
+        expect((await lancVerziok(patientDir)).versions.map((v) => v.verzio)).toEqual([1, 2]);
+      },
+      30000,
+    );
+
+    it(
+      'ha a másik gép verziója még nem érkezett meg teljesen, a dialógus ezt mondja ki az adatai helyett',
+      async () => {
+        const user = userEvent.setup();
+        const { mentett, patientDir } = await seedLanc(1);
+        seedDraft({ ...mentett, statusz: 'PISZKOZAT' }, patientDir);
+        vi.spyOn(DemoStorage.prototype, 'savePlan').mockRejectedValueOnce(
+          new VersionConflictError('2026-08-06_v2', null),
+        );
+        render(<App />);
+        window.location.hash = '#/elonezet';
+        const gomb = await screen.findByRole('button', { name: /Véglegesítés és mentés/ }, { timeout: 10000 });
+        await waitFor(() => expect(gomb).not.toBeDisabled());
+
+        await user.click(gomb);
+
+        expect(
+          await screen.findByText('v2 — ez a verzió még nem érkezett meg teljesen erre a gépre.', {}, { timeout: 10000 }),
+        ).toBeInTheDocument();
+        expect(screen.queryByText(/^Végösszeg:/)).toBeNull();
+      },
+      30000,
+    );
+  });
 });

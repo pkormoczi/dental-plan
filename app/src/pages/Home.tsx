@@ -14,6 +14,7 @@ import {
 } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
 import { LetoltesJelzo, useLetoltesJelzo } from '../components/LetoltesJelzo';
+import TelepitettPdfGombok from '../components/TelepitettPdfGombok';
 import PatientListRow from '../components/PatientListRow';
 import { t } from '../design/tokens';
 import { formatPiszkozatIdo } from '../domain/date';
@@ -316,6 +317,7 @@ function ImentVeglegesitveKartya({
   demoEredetu: boolean;
 }) {
   const pdf = usePlanPdfObjectUrl(planRef);
+  const { pdfMuveletek } = useStorage();
   const [hiba, setHiba] = useState<string | null>(null);
   const letoltesJelzo = useLetoltesJelzo();
   const fajlnev = buildDownloadFileName(patient.nev, {
@@ -348,31 +350,42 @@ function ImentVeglegesitveKartya({
         </Callout.Root>
       )}
       <Flex gap="3" wrap="wrap">
-        <Button
-          variant="soft"
-          color="gray"
-          disabled={pdf.hianyzik}
-          onClick={() => void megnyitasKulon()}
-        >
-          Megnyitás külön
-        </Button>
-        {pdf.url ? (
-          <Button asChild variant="soft" color="gray">
-            <a
-              href={pdf.url}
-              download={fajlnev}
-              onClick={() => letoltesJelzo.jelezLetoltes(fajlnev)}
-            >
-              Letöltés
-            </a>
-          </Button>
+        {pdfMuveletek ? (
+          <TelepitettPdfGombok
+            forras={{ ref: planRef }}
+            javasoltNev={fajlnev}
+            onHiba={setHiba}
+            onMasolva={(nev) => letoltesJelzo.jelezLetoltes(nev, 'Másolva')}
+          />
         ) : (
-          <Button variant="soft" color="gray" disabled>
-            Letöltés
-          </Button>
+          <>
+            <Button
+              variant="soft"
+              color="gray"
+              disabled={pdf.hianyzik}
+              onClick={() => void megnyitasKulon()}
+            >
+              Megnyitás külön
+            </Button>
+            {pdf.url ? (
+              <Button asChild variant="soft" color="gray">
+                <a
+                  href={pdf.url}
+                  download={fajlnev}
+                  onClick={() => letoltesJelzo.jelezLetoltes(fajlnev)}
+                >
+                  Letöltés
+                </a>
+              </Button>
+            ) : (
+              <Button variant="soft" color="gray" disabled>
+                Letöltés
+              </Button>
+            )}
+          </>
         )}
       </Flex>
-      <LetoltesJelzo fajlnev={letoltesJelzo.fajlnev} />
+      <LetoltesJelzo fajlnev={letoltesJelzo.fajlnev} felirat={letoltesJelzo.felirat} />
     </Card>
   );
 }

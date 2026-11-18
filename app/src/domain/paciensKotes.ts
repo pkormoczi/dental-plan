@@ -19,6 +19,8 @@ export interface PaciensKotes {
   kotott: PatientFolder | null;
   /** A beírt névre PONTOSAN illeszkedő, a kötött páciensTŐL KÜLÖNBÖZŐ páciensek. */
   utkozok: PatientFolder[];
+  /** A pácienslista nem volt olvasható: az ütközés-ellenőrzés nem futott le, nem „nincs ütközés”. */
+  listaNemOlvashato?: true;
 }
 
 /**
@@ -30,11 +32,12 @@ export interface PaciensKotes {
  * láncnál hiányozhat, ilyenkor a `dirName`-szűrés az egyetlen védelem.
  */
 export function paciensKotes(
-  patients: PatientFolder[],
+  patients: PatientFolder[] | null,
   patientDir: string | null,
   nev: string,
   paciensId?: string,
 ): PaciensKotes {
+  if (patients === null) return { patientDir, kotott: null, utkozok: [], listaNemOlvashato: true };
   const kotott = patientDir ? (patients.find((p) => p.dirName === patientDir) ?? null) : null;
   if (!patientDir) return { patientDir: null, kotott: null, utkozok: [] };
 

@@ -5,6 +5,7 @@
 
 import { CURRENT_SCHEMA_VERSION, SchemaVersionError } from '../domain/schema';
 import { VersionConflictError, type LetezoVerzio } from './paths';
+import type { PlanRef } from '../domain/types';
 import type { PlanStorage } from './PlanStorage';
 import {
   ErvenytelenParameterError,
@@ -51,6 +52,13 @@ export const taroloCsatorna = (metodus: TaroloMetodus) => `storage:${metodus}`;
 export const AKTIV_CSATORNA = 'storage:aktiv';
 /** Egy gyökérmappán belüli elem megmutatása a rendszer fájlkezelőjében. */
 export const MEGMUTAT_CSATORNA = 'shell:megmutat';
+/** Egy mentett verzió PDF-je a rendszer PDF-olvasójában. */
+export const PDF_MEGNYIT_CSATORNA = 'pdf:megnyit';
+/** PDF kimásolása natív mentés-dialógussal (migrációs terv §5.3). */
+export const PDF_MASOL_CSATORNA = 'pdf:masol';
+
+/** A „Másolás máshová” forrása: egy mentett verzió, vagy a még nem mentett piszkozat bájtjai. */
+export type PdfForras = { ref: PlanRef } | { bajtok: Uint8Array };
 
 export type StorageHiba =
   | {
@@ -79,6 +87,9 @@ export interface TaroloHid {
   hiv(metodus: TaroloMetodus, ...args: unknown[]): Promise<IpcEredmeny<unknown>>;
   /** A gyökérhez relatív útvonalú elem kijelölve a rendszer fájlkezelőjében. */
   megmutat(relUtvonal: string): Promise<IpcEredmeny<void>>;
+  pdfMegnyit(ref: PlanRef): Promise<IpcEredmeny<void>>;
+  /** A célt a main kérdezi meg a dokitól; a választott fájl neve, vagy `null`, ha bezárta. */
+  pdfMasol(forras: PdfForras, javasoltNev: string): Promise<IpcEredmeny<string | null>>;
 }
 
 declare global {
@@ -120,8 +131,13 @@ export function storageHibaBolHiba(h: StorageHiba): Error {
       return new IoError(h.errno, h.utvonal);
     case 'SERULT_JSON':
       return new SerultJsonError(h.fajl, h.uzenet);
-    case 'SEMA_VERZIO':
-      return new SchemaVersionError(h.fajl, h.talalt);
+    case 'SEMA_VERZIO': {
+      // A telepített appban egy újabb sémájú fájl szinte mindig a másik gép frissebb appjától
+      // jön (kézi frissítés, migrációs terv §12); a demóban nincs másik gép, ott ez nem kell.
+      const hiba = new SchemaVersionError(h.fajl, h.talalt);
+      hiba.message += ' Valószínűleg a másik gépen újabb az alkalmazás.';
+      return hiba;
+    }
     case 'HIANYOS_VERZIO':
       return new HianyosVerzioError(h.versionDir, h.hianyzik);
     case 'HIANYOS_MAPPA':

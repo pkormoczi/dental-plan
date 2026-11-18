@@ -12,6 +12,9 @@ const SAJAT_ELEMEK = ['arlista.json', 'beallitasok.json', PACIENSEK_MAPPA, 'sabl
 // mélyen fekvő gyökér a mélyebb verziómappákat a korlát fölé tolhatja.
 const HOSSZU_GYOKER = 120;
 
+/** A verziómappa PDF-jének neve -- a „Megnyitás” is ezt a fájlt adja a rendszer olvasójának. */
+export const PDF_FAJLNEV = 'kezelesi-terv.pdf';
+
 export type GyokerAllapot = 'ures' | 'mienk' | 'hianyos' | 'idegen';
 
 export interface GyokerOsztaly {
@@ -26,7 +29,7 @@ export class FileSystemStorage extends FajlTarolo {
 
   constructor(prim: FsPrimitivek) {
     super(prim, {
-      pdfFajlnev: 'kezelesi-terv.pdf',
+      pdfFajlnev: PDF_FAJLNEV,
       mentesHibaUzenet: 'A tervet nem sikerült elmenteni. Semmi nem íródott félkészen.',
       verzioManifest: true,
       utkozesOr: true,

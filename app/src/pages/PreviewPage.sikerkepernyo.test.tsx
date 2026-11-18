@@ -243,4 +243,21 @@ describe('PreviewPage -- a sikerképernyő PDF-műveletei és a Vissza útja', (
     },
     30000,
   );
+
+  it(
+    'nem olvasható pácienslistánál a csekklistán amber tétel jelzi, hogy a névütközés-ellenőrzés nem futott le, és a véglegesítés nem tiltott',
+    async () => {
+      vi.spyOn(DemoStorage.prototype, 'listPatients').mockRejectedValue(new Error('EACCES'));
+      seedAlap();
+      render(<App />);
+      window.location.hash = '#/elonezet';
+
+      expect(
+        await screen.findByText(/A pácienslista most nem olvasható, ezért a névütközés-ellenőrzés nem futott le/, {}, { timeout: 10000 }),
+      ).toBeInTheDocument();
+      const gomb = screen.getByRole('button', { name: /Véglegesítés és mentés/ });
+      await waitFor(() => expect(gomb).not.toBeDisabled());
+    },
+    30000,
+  );
 });

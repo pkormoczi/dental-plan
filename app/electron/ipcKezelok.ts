@@ -1,17 +1,20 @@
 // A tároló IPC-csatornái a main oldalon (migrációs terv §3.2–§3.3): minden hívás előbb a
 // küldőt, majd a paramétereket ellenőrzi, és kivétel helyett hibaeredményt ad vissza.
 
+import path from 'node:path';
 import type { PlanStorage } from '../src/storage/PlanStorage';
-import { TiltottKuldoError, TorlesAkadalyError } from '../src/storage/taroloHibak';
+import { IoError, ioErrno, TiltottKuldoError, TorlesAkadalyError } from '../src/storage/taroloHibak';
 import {
   hibaBolStorageHiba,
   MEGMUTAT_CSATORNA,
+  PDF_MASOL_CSATORNA,
+  PDF_MEGNYIT_CSATORNA,
   TAROLO_METODUSOK,
   taroloCsatorna,
   type IpcEredmeny,
   type TaroloMetodus,
 } from '../src/storage/taroloIpc';
-import { ervenyesArgumentumok, gyokerRelativUtvonal } from './ipcValidate';
+import { ervenyesArgumentumok, gyokerRelativUtvonal, pdfFajlnev, pdfForras, planRef } from './ipcValidate';
 import { sajatOrigin } from './navigacio';
 
 export interface KuldoEsemeny {
@@ -99,4 +102,71 @@ export function megmutatKezelo(
       return { ok: false, hiba: hibaBolStorageHiba(err) };
     }
   });
+}
+
+/** Az operációs rendszer felé eső PDF-műveletek -- a tesztben cserélhetők. */
+export interface PdfRendszer {
+  /** A rendszer PDF-olvasója; sikernél üres szöveg, hibánál a hiba szövege (`shell.openPath`). */
+  megnyit(abszolut: string): Promise<string>;
+  /** Natív mentés-dialógus a javasolt névvel; a választott út, vagy `null`, ha a doki bezárta. */
+  helyetValaszt(javasoltNev: string): Promise<string | null>;
+  ir(ut: string, bajtok: Uint8Array): Promise<void>;
+}
+
+/**
+ * „Megnyitás” és „Másolás máshová” (migrációs terv §5.3). A renderer verzió-hivatkozást vagy
+ * bájtokat ad, célútvonalat soha: a hova-t a doki a natív dialógusban választja, így egy
+ * kompromittált renderer sem írhat tetszőleges helyre. A verzió PDF-jét a tároló adja, ezért
+ * hiányos verzió sem nem nyílik, sem nem másolódik.
+ */
+export function pdfKezelok(
+  ipc: IpcRegisztralo,
+  tarolo: Pick<PlanStorage, 'loadPlanPdf'>,
+  prim: { abszolut(ut: string): Promise<string> },
+  pdfNev: string,
+  kuldoEngedett: (e: KuldoEsemeny) => boolean,
+  rendszer: PdfRendszer,
+): void {
+  const mentettPdf = async (ref: ReturnType<typeof planRef>): Promise<Uint8Array> => {
+    const bajtok = await tarolo.loadPlanPdf(ref);
+    if (!bajtok) throw new Error('Ehhez a verzióhoz nincs mentett PDF.');
+    return bajtok;
+  };
+  const kezel = <T>(fn: (...args: unknown[]) => Promise<T>) =>
+    async (e: KuldoEsemeny, ...args: unknown[]): Promise<IpcEredmeny<T>> => {
+      try {
+        if (!kuldoEngedett(e)) throw new TiltottKuldoError();
+        return { ok: true, ertek: await fn(...args) };
+      } catch (err) {
+        return { ok: false, hiba: hibaBolStorageHiba(err) };
+      }
+    };
+
+  ipc.handle(
+    PDF_MEGNYIT_CSATORNA,
+    kezel(async (x) => {
+      const ref = planRef(x);
+      await mentettPdf(ref);
+      const abs = await prim.abszolut(`paciensek/${ref.patientDir}/${ref.planDir}/${ref.versionDir}/${pdfNev}`);
+      const hiba = await rendszer.megnyit(abs);
+      if (hiba) throw new Error(`A PDF nem nyitható meg: ${hiba}`);
+    }),
+  );
+
+  ipc.handle(
+    PDF_MASOL_CSATORNA,
+    kezel(async (x, nev): Promise<string | null> => {
+      const forras = pdfForras(x);
+      const javasolt = pdfFajlnev(nev);
+      const bajtok = 'ref' in forras ? await mentettPdf(forras.ref) : forras.bajtok;
+      const cel = await rendszer.helyetValaszt(javasolt);
+      if (!cel) return null;
+      try {
+        await rendszer.ir(cel, bajtok);
+      } catch (err) {
+        throw new IoError(ioErrno((err as NodeJS.ErrnoException | null)?.code), cel);
+      }
+      return path.basename(cel);
+    }),
+  );
 }

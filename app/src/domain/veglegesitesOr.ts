@@ -190,6 +190,16 @@ export function veglegesitesDiagnozis(
     });
   }
 
+  // A védőháló kiegészítő védelem: egy átmeneti olvasási hiba nem teheti használhatatlanná a
+  // véglegesítést, de a doki tudja, hogy most nem futott le.
+  if (nevUtkozes?.listaNemOlvashato) {
+    tetelek.push({
+      id: 'paciens-lista-nem-olvashato',
+      sulyossag: 'soft',
+      cim: 'A pácienslista most nem olvasható, ezért a névütközés-ellenőrzés nem futott le. A mentés ettől lehetséges.',
+    });
+  }
+
   const orvosProblema = szamitOrvosProblema(plan.orvos, aktivOrvosNevek);
   if (orvosProblema) {
     tetelek.push({

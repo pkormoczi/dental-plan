@@ -17,6 +17,7 @@ import {
 import Section from '../components/Section';
 import { ReadOnlyField } from '../components/Field';
 import { LetoltesJelzo, useLetoltesJelzo } from '../components/LetoltesJelzo';
+import TelepitettPdfGombok from '../components/TelepitettPdfGombok';
 import PlanVersionActionDialog, {
   nincsMentettPdfHiba,
   usePlanVersionActions,
@@ -89,7 +90,7 @@ export default function TervReszleteiPage() {
   const planDir = rawPlanDir ?? '';
   const versionDir = rawVersionDir ?? '';
 
-  const { storage, isSeedVersion } = useStorage();
+  const { storage, isSeedVersion, pdfMuveletek } = useStorage();
   const { priceList } = useAppState();
   const navigate = useNavigate();
   const location = useLocation();
@@ -444,29 +445,41 @@ export default function TervReszleteiPage() {
               </Button>
             )
           )}
-          <Button
-            size="1"
-            variant="soft"
-            color="gray"
-            disabled={pdfState.hianyzik}
-            onClick={() => void megnyitasKulon()}
-          >
-            Megnyitás külön
-          </Button>
-          {pdfState.url ? (
-            <Button asChild size="1" variant="soft" color="gray">
-              <a
-                href={pdfState.url}
-                download={letoltesFajlnev}
-                onClick={() => letoltesJelzo.jelezLetoltes(letoltesFajlnev)}
-              >
-                Letöltés
-              </a>
-            </Button>
+          {pdfMuveletek ? (
+            <TelepitettPdfGombok
+              forras={{ ref: { patientDir, planDir, versionDir } }}
+              javasoltNev={letoltesFajlnev}
+              size="1"
+              onHiba={(message) => akciok.jelezHiba(message ? { planDir, versionDir, message } : null)}
+              onMasolva={(nev) => letoltesJelzo.jelezLetoltes(nev, 'Másolva')}
+            />
           ) : (
-            <Button size="1" variant="soft" color="gray" disabled>
-              Letöltés
-            </Button>
+            <>
+              <Button
+                size="1"
+                variant="soft"
+                color="gray"
+                disabled={pdfState.hianyzik}
+                onClick={() => void megnyitasKulon()}
+              >
+                Megnyitás külön
+              </Button>
+              {pdfState.url ? (
+                <Button asChild size="1" variant="soft" color="gray">
+                  <a
+                    href={pdfState.url}
+                    download={letoltesFajlnev}
+                    onClick={() => letoltesJelzo.jelezLetoltes(letoltesFajlnev)}
+                  >
+                    Letöltés
+                  </a>
+                </Button>
+              ) : (
+                <Button size="1" variant="soft" color="gray" disabled>
+                  Letöltés
+                </Button>
+              )}
+            </>
           )}
           <Button
             size="1"
@@ -478,7 +491,7 @@ export default function TervReszleteiPage() {
         </Flex>
       </Flex>
 
-      <LetoltesJelzo fajlnev={letoltesJelzo.fajlnev} />
+      <LetoltesJelzo fajlnev={letoltesJelzo.fajlnev} felirat={letoltesJelzo.felirat} />
 
       {akciok.hiba && <VerzioAkcioUzenet hiba={akciok.hiba} />}
 

@@ -15,7 +15,7 @@ import { DemoDraftStorage } from './DemoDraftStorage';
 import { DemoTemplateDraftCache } from './DemoTemplateDraftCache';
 import { DemoStorage } from './DemoStorage';
 import { ElectronStorage } from './ElectronStorage';
-import { storageHibaBolHiba } from './taroloIpc';
+import { storageHibaBolHiba, type PdfForras } from './taroloIpc';
 import type { DemoNode } from './demoFileTree';
 import type { DraftStorage } from './DraftStorage';
 import type { PlanStorage } from './PlanStorage';
@@ -54,6 +54,18 @@ export interface StorageContextValue {
    * demóban nincs gyökérmappa, ott `null`.
    */
   megmutat: ((relUtvonal: string) => Promise<void>) | null;
+  /**
+   * A telepített app PDF-műveletei („Megnyitás”, „Másolás máshová”); a demóban `null`, ott a
+   * böngésző letöltése marad (migrációs terv §5.3).
+   */
+  pdfMuveletek: PdfMuveletek | null;
+}
+
+export interface PdfMuveletek {
+  /** A mentett verzió PDF-je a rendszer PDF-olvasójában; hiányos verzióra hiba. */
+  megnyit: (ref: PlanRef) => Promise<void>;
+  /** Natív mentés-dialógussal; a választott fájl neve, vagy `null`, ha a doki bezárta. */
+  masol: (forras: PdfForras, javasoltNev: string) => Promise<string | null>;
 }
 
 const StorageContext = createContext<StorageContextValue | null>(null);
@@ -80,6 +92,17 @@ export function StorageProvider({ children }: { children: ReactNode }) {
           const eredmeny = await hid.megmutat(relUtvonal);
           if (!eredmeny.ok) throw storageHibaBolHiba(eredmeny.hiba);
         },
+        pdfMuveletek: {
+          megnyit: async (ref) => {
+            const eredmeny = await hid.pdfMegnyit(ref);
+            if (!eredmeny.ok) throw storageHibaBolHiba(eredmeny.hiba);
+          },
+          masol: async (forras, javasoltNev) => {
+            const eredmeny = await hid.pdfMasol(forras, javasoltNev);
+            if (!eredmeny.ok) throw storageHibaBolHiba(eredmeny.hiba);
+            return eredmeny.ertek;
+          },
+        },
       };
     }
     const demo = new DemoStorage();
@@ -95,6 +118,7 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       drafts,
       templateDraftCache: new DemoTemplateDraftCache(),
       megmutat: null,
+      pdfMuveletek: null,
     };
   }, []);
 

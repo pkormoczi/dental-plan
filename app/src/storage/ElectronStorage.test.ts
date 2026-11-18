@@ -23,6 +23,8 @@ function hidAmi(valasz: Awaited<ReturnType<TaroloHid['hiv']>>, hivasok: unknown[
       return valasz;
     },
     megmutat: async () => ({ ok: true, ertek: undefined }),
+    pdfMegnyit: async () => ({ ok: true, ertek: undefined }),
+    pdfMasol: async () => ({ ok: true, ertek: null }),
   };
 }
 
@@ -66,6 +68,18 @@ describe('ElectronStorage', () => {
 
   it.each(esetek)('a(z) %o oda-vissza alakítva változatlan: a main a hibaosztályból ugyanezt az eredményt képzi', (hiba) => {
     expect(hibaBolStorageHiba(storageHibaBolHiba(hiba))).toEqual(hiba);
+  });
+
+  it('az IPC-n érkező újabb sémájú fájl hibája kimondja, hogy valószínűleg a másik gépen újabb az alkalmazás', async () => {
+    const storage = new ElectronStorage(hidAmi({ ok: false, hiba: { kod: 'SEMA_VERZIO', fajl: 'arlista.json', talalt: 2, ismert: 1 } }));
+
+    const hiba = await storage.loadPriceList().catch((e: unknown) => e);
+
+    expect((hiba as Error).message).toMatch(/újabb verziójával készült.*Valószínűleg a másik gépen újabb az alkalmazás\.$/);
+  });
+
+  it('a helyben keletkező sémahiba (demó) a mai szöveget adja, a másik gép említése nélkül', () => {
+    expect(new SchemaVersionError('arlista.json', 2).message).not.toMatch(/másik gépen/);
   });
 
   it('a sikeres eredmény értékét adja vissza, és a metódust a paramétereivel hívja', async () => {

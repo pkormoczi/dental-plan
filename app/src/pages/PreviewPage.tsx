@@ -47,7 +47,9 @@ import { VeglegesitesChecklist } from './previewPage/VeglegesitesChecklist';
 import { useAppState } from '../state/AppState';
 import { nincsMentettPdfHiba } from '../components/PlanVersionActionDialog';
 import { openPlanPdfInNewTab } from '../storage/openPlanPdfInNewTab';
-import { buildDownloadFileName, parseVersionDirName } from '../storage/paths';
+import { buildDownloadFileName, parseVersionDirName, VersionConflictError } from '../storage/paths';
+import VerzioUtkozesDialog from '../components/VerzioUtkozesDialog';
+import TelepitettPdfGombok from '../components/TelepitettPdfGombok';
 import { usePlanPdfObjectUrl } from '../storage/usePlanPdfObjectUrl';
 import { useStorage } from '../storage/StorageContext';
 
@@ -63,7 +65,7 @@ export default function PreviewPage() {
     piszkozatFoglaltTervId,
     jelezFoglaltTervId,
   } = useAppState();
-  const { storage, isSeedVersion } = useStorage();
+  const { storage, isSeedVersion, pdfMuveletek } = useStorage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -177,6 +179,15 @@ export default function PreviewPage() {
   // tervId-je állna, a mentett terv.json-ban meg a storage kiosztotta valódi.
   // `undefined` = még tart, `null` = nem oldható fel (ekkor nem adunk ki papírt).
   const [foglalas, setFoglalas] = useState<FoglaltAzonosito | null | undefined>(undefined);
+  // Sorszám-ütközés a mentéskor: a meglévő verzió adatai és a már lefoglalt következő sorszám.
+  const [verzioUtkozes, setVerzioUtkozes] = useState<{ hiba: VersionConflictError; uj: FoglaltAzonosito } | null>(
+    null,
+  );
+  // „Mentés v<n>-ként” után a mentés csak az ÚJ sorszámú PDF elkészülte után indulhat: a frissítés
+  // egy renderrel később jelzi magát, addig a régi blob látszik -- ezért a régi blob azonossága a
+  // mérce, nem a `loading`.
+  const ujSorszamraRef = useRef<{ verzio: number; regiBlob: Blob | null } | null>(null);
+  const [ujSorszamraVar, setUjSorszamraVar] = useState(false);
   // Vadonatúj lánc frissen generált tervId-je a PISZKOZAT ÉLETTARTAMÁN belül
   // stabil -- egy újrafutó feloldás nem cserélheti ki a papíron már látott
   // azonosítót, és a szerkesztő <-> Előnézet kör vagy egy böngésző-újratöltés
@@ -222,6 +233,8 @@ export default function PreviewPage() {
   // véglegesítés utáni sikerképernyőre, ahol már az archivált verzió a tárgy.
   const elonezetJelzo = useLetoltesJelzo();
   const sikerJelzo = useLetoltesJelzo();
+  // A piszkozat-PDF kimásolásának hibája -- nem mentési hiba, ezért nem a `saveError` helyén.
+  const [elonezetPdfHiba, setElonezetPdfHiba] = useState<string | null>(null);
 
   async function megnyitasKulon(ref: PlanRef) {
     setMentettPdfHiba(null);
@@ -524,6 +537,13 @@ export default function PreviewPage() {
       setMentettPdfHiba(null);
       navigate('/elonezet?mentve=1');
     } catch (err) {
+      if (err instanceof VersionConflictError && foglalas) {
+        const uj = await feloldKovetkezoAzonosito(storage, piszkozatPatientDir, plan.paciensId, foglalas.tervId);
+        if (uj) {
+          setVerzioUtkozes({ hiba: err, uj });
+          return;
+        }
+      }
       // korábban nem volt catch itt -- egy kvótahiba vagy a
       // localStorage szinkron dobása némán elveszett, a doki egy inaktív
       // gombot látott, a terv pedig nem mentődött (az append-only elvet sértő, csonka
@@ -538,6 +558,32 @@ export default function PreviewPage() {
       setSaving(false);
     }
   }
+
+  function mentesUjSorszammal() {
+    if (!verzioUtkozes) return;
+    ujSorszamraRef.current = { verzio: verzioUtkozes.uj.verzio, regiBlob: pdfInstance.blob };
+    setFoglalas(verzioUtkozes.uj);
+    setVerzioUtkozes(null);
+    setUjSorszamraVar(true);
+  }
+
+  useEffect(() => {
+    const cel = ujSorszamraRef.current;
+    if (!ujSorszamraVar || !cel) return;
+    if (pdfInstance.error) {
+      ujSorszamraRef.current = null;
+      setUjSorszamraVar(false);
+      return;
+    }
+    if (foglalas?.verzio !== cel.verzio || pdfInstance.loading || !pdfInstance.blob || pdfInstance.blob === cel.regiBlob) {
+      return;
+    }
+    ujSorszamraRef.current = null;
+    setUjSorszamraVar(false);
+    void doFinalize();
+    // A `doFinalize` minden renderben új closure; a friss blob és foglalás a trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ujSorszamraVar, foglalas, pdfInstance.loading, pdfInstance.blob, pdfInstance.error]);
 
   function attemptFinalize() {
     // A szekvenciális megerősítő-lánc megszűnt -- a hard blokkok a
@@ -635,32 +681,43 @@ export default function PreviewPage() {
           </Callout.Root>
         )}
         <Flex gap="3" justify="center" wrap="wrap" mb="3">
-          <Button
-            variant="soft"
-            color="gray"
-            disabled={mentettPdf.hianyzik}
-            onClick={() => void megnyitasKulon(savedRef)}
-          >
-            Megnyitás külön
-          </Button>
-          {mentettPdf.url ? (
-            <Button asChild variant="soft" color="gray">
-              <a
-                href={mentettPdf.url}
-                download={mentettFajlnev}
-                onClick={() => sikerJelzo.jelezLetoltes(mentettFajlnev)}
-              >
-                Letöltés
-              </a>
-            </Button>
+          {pdfMuveletek ? (
+            <TelepitettPdfGombok
+              forras={{ ref: savedRef }}
+              javasoltNev={mentettFajlnev}
+              onHiba={setMentettPdfHiba}
+              onMasolva={(nev) => sikerJelzo.jelezLetoltes(nev, 'Másolva')}
+            />
           ) : (
-            <Button variant="soft" color="gray" disabled>
-              Letöltés
-            </Button>
+            <>
+              <Button
+                variant="soft"
+                color="gray"
+                disabled={mentettPdf.hianyzik}
+                onClick={() => void megnyitasKulon(savedRef)}
+              >
+                Megnyitás külön
+              </Button>
+              {mentettPdf.url ? (
+                <Button asChild variant="soft" color="gray">
+                  <a
+                    href={mentettPdf.url}
+                    download={mentettFajlnev}
+                    onClick={() => sikerJelzo.jelezLetoltes(mentettFajlnev)}
+                  >
+                    Letöltés
+                  </a>
+                </Button>
+              ) : (
+                <Button variant="soft" color="gray" disabled>
+                  Letöltés
+                </Button>
+              )}
+            </>
           )}
         </Flex>
         <Box mb="3">
-          <LetoltesJelzo fajlnev={sikerJelzo.fajlnev} />
+          <LetoltesJelzo fajlnev={sikerJelzo.fajlnev} felirat={sikerJelzo.felirat} />
         </Box>
         <Flex gap="3" justify="center" wrap="wrap">
           <Button onClick={startNewPlan}>Új terv indítása</Button>
@@ -700,7 +757,7 @@ export default function PreviewPage() {
   // Az ELSŐ előállítás (még sosem volt `url`) -- külön a `pdfStale`-től, ami
   // egy MÁR látott PDF újrarenderelése; ott van mit "frissíteni", itt nincs.
   const elsoPdfKeszul = !pdfInstance.url && !pdfError;
-  const busy = saving || pdfStale || foglalas === undefined;
+  const busy = saving || pdfStale || foglalas === undefined || ujSorszamraVar;
   // A piszkozatban a VEGLEGES státusz KIZÁRÓLAG a `markPlanSaved` után álló,
   // frissen mentett tartalom lehet (minden más betöltési út PISZKOZAT-ra
   // állítja vissza) -- újra-mentése duplikált verziómappát hozna létre.
@@ -714,6 +771,12 @@ export default function PreviewPage() {
 
   return (
     <Box style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <VerzioUtkozesDialog
+        utkozes={verzioUtkozes?.hiba ?? null}
+        kovetkezoVerzio={verzioUtkozes?.uj.verzio ?? 0}
+        onMentes={mentesUjSorszammal}
+        onMegsem={() => setVerzioUtkozes(null)}
+      />
       {templateError && (
         <Callout.Root color="red" mb="3">
           <Callout.Text>A sablonok betöltése meghiúsult: {templateError}</Callout.Text>
@@ -814,6 +877,19 @@ export default function PreviewPage() {
                 <Button variant="soft" color="gray" disabled>
                   PDF frissítése…
                 </Button>
+              ) : pdfMuveletek ? (
+                <TelepitettPdfGombok
+                  forras={{
+                    bajtok: async () => {
+                      if (!pdfInstance.blob) throw new Error('A PDF még nem készült el.');
+                      return new Uint8Array(await pdfInstance.blob.arrayBuffer());
+                    },
+                  }}
+                  javasoltNev={elonezetFajlnev(foglalas.tervId)}
+                  disabled={busy}
+                  onHiba={setElonezetPdfHiba}
+                  onMasolva={(nev) => elonezetJelzo.jelezLetoltes(nev, 'Másolva')}
+                />
               ) : (
                 <Button asChild variant="soft" color="gray">
                   <a
@@ -837,7 +913,12 @@ export default function PreviewPage() {
                 {saving ? 'Mentés…' : 'Véglegesítés és mentés'}
               </Button>
             </Flex>
-            <LetoltesJelzo fajlnev={elonezetJelzo.fajlnev} />
+            <LetoltesJelzo fajlnev={elonezetJelzo.fajlnev} felirat={elonezetJelzo.felirat} />
+            {elonezetPdfHiba && (
+              <Callout.Root color="red" size="1" mt="2">
+                <Callout.Text>{elonezetPdfHiba}</Callout.Text>
+              </Callout.Root>
+            )}
             {/* Állandó, mindig látható sor, nem megerősítő dialógus -- a
                 szekvenciális modal-lánc szándékosan megszűnt, és ez a mondat a
                 GOMB tulajdonságáról szól, nem a terv adathiányairól, ezért nem

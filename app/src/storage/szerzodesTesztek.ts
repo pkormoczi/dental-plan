@@ -6,6 +6,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Plan } from '../domain/types';
 import type { PlanStorage } from './PlanStorage';
+import { VersionConflictError } from './paths';
 import { sha256Hex } from './sha256';
 
 export interface SzerzodesKornyezet {
@@ -431,7 +432,7 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
     expect(versions.map((v) => v.verzio).sort()).toEqual([1, 2, 3]);
   });
 
-  it('savePlan a lánc következő számától eltérő, nem nulla verzio-ra dob, és semmit nem ír ki', async () => {
+  it('savePlan a már foglalt sorszámra VersionConflictError-t dob a foglaló verzió adataival, és semmit nem ír ki', async () => {
     const plan = makeBlankPlan();
     const ref1 = await storage.savePlan(plan, new Uint8Array([1]));
     const v1 = await storage.loadPlan(ref1);
@@ -439,9 +440,15 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
     // A hívó (az előnézet) v1-et foglalt, de a lánc következő szabad száma
     // már v2 -- ez az a szétcsúszás, amikor a papíron más verzió áll, mint
     // ami mentődne. Néma felülírás helyett dob.
-    await expect(
-      storage.savePlan({ ...v1, verzio: 1, keltezes: '2026-08-19' }, new Uint8Array([2])),
-    ).rejects.toThrow(/v1.*v2/);
+    const hiba = await storage
+      .savePlan({ ...v1, verzio: 1, keltezes: '2026-08-19' }, new Uint8Array([2]))
+      .catch((e: unknown) => e);
+
+    expect(hiba).toBeInstanceOf(VersionConflictError);
+    expect(hiba).toMatchObject({
+      dirName: ref1.versionDir,
+      letezo: { datum: v1.keltezes, orvos: v1.orvos, vegosszeg: v1.osszesitok.fizetendo, penznem: v1.penznem },
+    });
 
     const versions = await storage.listVersions(ref1.patientDir, ref1.planDir);
     expect(versions.map((v) => v.verzio)).toEqual([1]);

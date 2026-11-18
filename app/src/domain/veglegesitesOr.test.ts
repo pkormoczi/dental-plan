@@ -850,6 +850,21 @@ describe('veglegesitesDiagnozis', () => {
       expect(tetel(diag, 'nev-utkozes')).toBeUndefined();
     });
 
+    it('nem olvasható pácienslistánál puha, nem blokkoló tételt ad, hogy az ellenőrzés nem futott le', () => {
+      const kotes: PaciensKotes = { patientDir: 'Teszt-Elek_x', kotott: null, utkozok: [], listaNemOlvashato: true };
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, kotes, NINCS_FOGLALAS);
+      const t = tetel(diag, 'paciens-lista-nem-olvashato');
+      expect(t?.sulyossag).toBe('soft');
+      expect(t?.cim).toMatch(/névütközés-ellenőrzés nem futott le/);
+      expect(vanKemenyBlokk(diag)).toBe(false);
+    });
+
+    it('olvasható pácienslistánál nincs ilyen tétel', () => {
+      const kotes: PaciensKotes = { patientDir: 'Teszt-Elek_x', kotott: folder('Teszt Elek'), utkozok: [] };
+      const diag = veglegesitesDiagnozis(makePlan([[sor()]]), priceList, true, NO_MASTER, AKTIV_ORVOSOK, NO_SABLON, kotes, NINCS_FOGLALAS);
+      expect(tetel(diag, 'paciens-lista-nem-olvashato')).toBeUndefined();
+    });
+
     it('ütköző páciens esetén hard tételt ad, ami blokkol', () => {
       const kotes: PaciensKotes = {
         patientDir: 'Kovacs-Janos_x',

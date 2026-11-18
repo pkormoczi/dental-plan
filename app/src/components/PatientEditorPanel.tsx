@@ -28,7 +28,7 @@
 // puszta megnyitás sosem indít piszkozatot. A `kezdoMod` prop a
 // quick-create utáni azonnali szerkesztés-módú nyitáshoz (`PatientDetailPage.tsx`).
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertDialog, Box, Button, Callout, Checkbox, Flex, Grid, Text, TextField } from '@radix-ui/themes';
 import { CrossCircledIcon } from '@radix-ui/react-icons';
 import { Field, ReadOnlyField } from './Field';
@@ -99,15 +99,28 @@ export default function PatientEditorPanel({
   }
 
   const [patients, setPatients] = useState<PatientFolder[]>([]);
+  // A duplikáció-ellenőrzés best-effort -- egy sikertelen listázás nem akadályozza a mentést,
+  // csak a védelmet lazítja; ezt a doki halkan látja, nem hiszi, hogy nincs hasonló páciens.
+  const [listaNemOlvashato, setListaNemOlvashato] = useState(false);
+  const pacienslistaBetolt = useCallback(async () => {
+    try {
+      setPatients(await storage.listPatients());
+      setListaNemOlvashato(false);
+    } catch {
+      setListaNemOlvashato(true);
+    }
+  }, [storage]);
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const list = await storage.listPatients();
-        if (!cancelled) setPatients(list);
+        if (!cancelled) {
+          setPatients(list);
+          setListaNemOlvashato(false);
+        }
       } catch {
-        // A duplikáció-ellenőrzés best-effort -- egy sikertelen listázás
-        // nem akadályozza a mentést, csak a védelmet lazítja.
+        if (!cancelled) setListaNemOlvashato(true);
       }
     })();
     return () => {
@@ -155,6 +168,7 @@ export default function PatientEditorPanel({
   async function handleSave() {
     setMegprobaltMenteni(true);
     if (emailHiba(draft.email) || szuletesiIdoHiba(draft.szuletesiIdo, todayIso())) return;
+    if (listaNemOlvashato) await pacienslistaBetolt();
 
     setEllenorzesFolyamatban(true);
     try {
@@ -375,7 +389,12 @@ export default function PatientEditorPanel({
         </Callout.Root>
       )}
 
-      <Flex justify="end" gap="2" mt="4">
+      <Flex justify="end" align="center" gap="2" mt="4" wrap="wrap">
+        {listaNemOlvashato && (
+          <Text size="1" color="gray">
+            A hasonló nevű páciensek ellenőrzése most nem futott le.
+          </Text>
+        )}
         <Button type="button" size="1" variant="soft" color="gray" disabled={saving} onClick={handleCancel}>
           Mégse
         </Button>

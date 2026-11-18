@@ -39,7 +39,7 @@ export function PaciensKotesProvider({ children }: { children: ReactNode }) {
   const { storage } = useStorage();
 
   const [patientDir, setPatientDir] = useState<string | null>(null);
-  const [patients, setPatients] = useState<PatientFolder[]>([]);
+  const [patients, setPatients] = useState<PatientFolder[] | null>([]);
   const [kotottSzuletesiIdo, setKotottSzuletesiIdo] = useState<string | null>(null);
   const [betolt, setBetolt] = useState(true);
 
@@ -50,12 +50,13 @@ export function PaciensKotesProvider({ children }: { children: ReactNode }) {
       // Sosem dob: egy sikertelen listázás/feloldás a védelmet
       // némán kikapcsolja, nem akasztja meg a workflow-t.
       const dir = await feloldPatientDir(storage, piszkozatPatientDir, plan.paciensId);
-      let lista: PatientFolder[] = [];
+      // `null` = a lista nem olvasható: a véglegesítés-őr ezt jelzi, nem „nincs ütközés”-ként kezeli.
+      let lista: PatientFolder[] | null = null;
       let szuletesiIdo: string | null = null;
       try {
         lista = await storage.listPatients();
       } catch {
-        lista = [];
+        lista = null;
       }
       // Külön try: egy sérült paciens-adatok.json csak a dátumot veszíti el,
       // a névrokon-védelmet (pácienslista) nem kapcsolhatja ki.

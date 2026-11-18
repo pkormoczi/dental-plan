@@ -1,11 +1,11 @@
-import { app, BrowserWindow, ipcMain, Menu, protocol, session, shell } from 'electron';
-import { readFile } from 'node:fs/promises';
+import { app, BrowserWindow, dialog, ipcMain, Menu, protocol, session, shell } from 'electron';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { AKTIV_CSATORNA } from '../src/storage/taroloIpc';
 import { buildFajlUtvonal, mimeTipus } from './buildKiszolgalas.js';
-import { FileSystemStorage } from './fileSystemStorage.js';
+import { FileSystemStorage, PDF_FAJLNEV } from './fileSystemStorage.js';
 import { FsPrimitivek } from './fsPrimitivek.js';
-import { kuldoEllenor, megmutatKezelo, taroloKezelok } from './ipcKezelok.js';
+import { kuldoEllenor, megmutatKezelo, pdfKezelok, taroloKezelok } from './ipcKezelok.js';
 import { menuSablon } from './menu.js';
 import { foablakNavigacioEngedett, pdfAblakNavigacioEngedett, sajatOrigin, ujAblakEngedett } from './navigacio.js';
 import { APP_ID, APP_ORIGIN, APP_PROTOKOLL, USER_DATA_MAPPA } from './protocol.js';
@@ -57,6 +57,22 @@ function inditas(): void {
   if (tarolo) taroloKezelok(ipcMain, tarolo, kuldoEngedett);
   // Csak kijelölés a fájlkezelőben: megnyitás vagy futtatás (`openPath`, `openExternal`) nincs.
   if (prim) megmutatKezelo(ipcMain, prim, kuldoEngedett, (abs) => shell.showItemInFolder(abs));
+  if (tarolo && prim) {
+    pdfKezelok(ipcMain, tarolo, prim, PDF_FAJLNEV, kuldoEngedett, {
+      megnyit: (abs) => shell.openPath(abs),
+      // A Letöltések OneDrive-ra szinkronizálhat, a gyökérmappa a Drive-é: az alapmappa a
+      // Dokumentumok (PRODUCT.md § Adat- és deployment-korlátok).
+      helyetValaszt: async (nev) => {
+        const opciok = {
+          defaultPath: path.join(app.getPath('documents'), nev),
+          filters: [{ name: 'PDF', extensions: ['pdf'] }],
+        };
+        const valasz = foablak ? await dialog.showSaveDialog(foablak, opciok) : await dialog.showSaveDialog(opciok);
+        return valasz.canceled || !valasz.filePath ? null : valasz.filePath;
+      },
+      ir: (ut, bajtok) => writeFile(ut, bajtok),
+    });
+  }
 
   app.on('second-instance', () => {
     if (!foablak) return;

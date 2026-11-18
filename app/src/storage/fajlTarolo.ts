@@ -525,6 +525,10 @@ export class FajlTarolo implements PlanStorage {
     // szétcsúszást állítaná vissza, hogy a papíron más verzió áll, mint a
     // mentett terv.json-ban. A 0 a piszkozat "nincs foglalás" értéke.
     if (plan.verzio !== 0 && plan.verzio !== verzio) {
+      // A foglalt sorszámot közben egy másik mentés (jellemzően a másik gépé) elvitte: a doki
+      // ugyanazt a helyzetet látja, mint az átnevezéskori ütközésnél.
+      const foglalo = existingDirNames.find((d) => parseVersionDirName(d)?.verzio === plan.verzio);
+      if (foglalo) throw new VersionConflictError(foglalo, await this.letezoVerzio(lancMappa, foglalo));
       throw new Error(
         `A nyomtatványra v${plan.verzio} került, de a lánc következő szabad verziója v${verzio} — ` +
           'a terv nem mentődött. Lépj vissza az Előnézetre, hogy friss verziószámmal készüljön el a PDF.',

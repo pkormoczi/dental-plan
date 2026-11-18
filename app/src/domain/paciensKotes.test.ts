@@ -12,6 +12,7 @@ describe('paciensKotes', () => {
   it('kötés nélkül (patientDir null) üres ütközés-listát ad, patients-t sem nézi', () => {
     const kovacs = patient('Kovács János', 'kovacs-dir');
     const kotes = paciensKotes([kovacs], null, 'Kovács János');
+    expect(kotes.listaNemOlvashato).toBeUndefined();
     expect(kotes).toEqual({ patientDir: null, kotott: null, utkozok: [] });
   });
 
@@ -69,5 +70,14 @@ describe('paciensKotes', () => {
     const kotes = paciensKotes([nagy], 'ismeretlen-dir', 'Nagy Éva');
     expect(kotes.kotott).toBeNull();
     expect(kotes.utkozok).toEqual([nagy]);
+  });
+
+  it('nem olvasható lista (null) esetén nincs kötött páciens és ütköző, és ezt jelzi', () => {
+    expect(paciensKotes(null, 'kovacs-dir', 'Kovács János', 'p1')).toEqual({
+      patientDir: 'kovacs-dir',
+      kotott: null,
+      utkozok: [],
+      listaNemOlvashato: true,
+    });
   });
 });

@@ -9,6 +9,31 @@ export function ioErrno(kod: unknown): IoErrno {
   return (IO_ERRNO as readonly unknown[]).includes(kod) ? (kod as IoErrno) : 'EGYEB';
 }
 
+/**
+ * A doki nyelvén, errno szerint (migrációs terv §5). Egy helyen él, hogy minden hibahely --
+ * mentési sáv, betöltési képernyő -- ugyanazt mondja.
+ */
+function ioUzenet(errno: IoErrno, utvonal: string): string {
+  switch (errno) {
+    case 'ENOENT':
+      return `A beállított adatmappa nem érhető el. Lehet, hogy a Google Drive még nem szinkronizált. (${utvonal})`;
+    case 'EACCES':
+    case 'EPERM':
+    case 'EBUSY':
+      return `Nincs jogosultság ehhez a fájlhoz, vagy más program használja. (${utvonal})`;
+    case 'ENOSPC':
+      return 'Nincs elég szabad hely a lemezen.';
+    case 'EROFS':
+      return `Az adatmappa írásvédett. (${utvonal})`;
+    case 'EISDIR':
+    case 'ENOTDIR':
+      return `A(z) ${utvonal} váratlan tartalmú, a mappa sérülhetett.`;
+    case 'EMFILE':
+    case 'EGYEB':
+      return `Váratlan fájlrendszer-hiba, indítsd újra az alkalmazást. (${utvonal})`;
+  }
+}
+
 /** Fájlrendszeri hiba; az `utvonal` teljes, csak a felületen mutatható. */
 export class IoError extends Error {
   readonly kod = 'IO';
@@ -16,7 +41,7 @@ export class IoError extends Error {
   readonly utvonal: string;
 
   constructor(errno: IoErrno, utvonal: string) {
-    super(`Fájlrendszer-hiba (${errno}): ${utvonal}`);
+    super(ioUzenet(errno, utvonal));
     this.name = 'IoError';
     this.errno = errno;
     this.utvonal = utvonal;

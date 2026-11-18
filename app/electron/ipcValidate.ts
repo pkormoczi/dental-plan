@@ -10,7 +10,7 @@ import {
 } from '../src/domain/validate';
 import { parsePatientDirName, parsePlanDirName, parseVersionDirName } from '../src/storage/paths';
 import { ErvenytelenParameterError } from '../src/storage/taroloHibak';
-import type { TaroloMetodus } from '../src/storage/taroloIpc';
+import type { PdfForras, TaroloMetodus } from '../src/storage/taroloIpc';
 
 export const PDF_MAX_BAJT = 20 * 1024 * 1024;
 const SZOVEG_MAX = 1_000_000;
@@ -52,7 +52,7 @@ const sablonNev = (x: unknown) => {
   return s;
 };
 
-function planRef(x: unknown) {
+export function planRef(x: unknown) {
   if (!x || typeof x !== 'object') throw hiba('PlanRef');
   const r = x as Record<string, unknown>;
   return { patientDir: patientDir(r.patientDir), planDir: planDir(r.planDir), versionDir: versionDir(r.versionDir) };
@@ -67,7 +67,7 @@ function alak(ellenor: (data: unknown) => void, x: unknown, mit: string): unknow
   return x;
 }
 
-function pdf(x: unknown): Uint8Array {
+export function pdf(x: unknown): Uint8Array {
   if (!(x instanceof Uint8Array)) throw hiba('PDF');
   if (x.byteLength > PDF_MAX_BAJT) throw hiba('PDF mérete');
   return x;
@@ -89,6 +89,22 @@ function felulirasOpciok(x: unknown) {
   const felulir = (x as Record<string, unknown>).felulir;
   if (felulir !== undefined && typeof felulir !== 'boolean') throw hiba('felülírás-opció');
   return felulir === undefined ? {} : { felulir };
+}
+
+/** A „Másolás máshová” javasolt fájlneve: egyetlen `.pdf` végű név, útvonal nélkül. */
+export function pdfFajlnev(x: unknown): string {
+  const s = egyElem(x, 'fájlnév');
+  if (s.length > 200 || !/\.pdf$/i.test(s)) throw hiba('fájlnév');
+  return s;
+}
+
+/** A másolás forrása: verzió-hivatkozás vagy korlátos méretű bájtsor. */
+export function pdfForras(x: unknown): PdfForras {
+  if (!x || typeof x !== 'object') throw hiba('PDF-forrás');
+  const r = x as Record<string, unknown>;
+  if ('ref' in r) return { ref: planRef(r.ref) };
+  if ('bajtok' in r) return { bajtok: pdf(r.bajtok) };
+  throw hiba('PDF-forrás');
 }
 
 /** Gyökérhez relatív útvonal: `/`-sel tagolt, elemenként `egyElem`-szabályú, abszolút út és `..` nélkül. */

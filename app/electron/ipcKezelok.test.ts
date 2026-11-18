@@ -4,10 +4,17 @@ import path from 'node:path';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { uresTorzsadat } from '../src/domain/paciensAdatok';
 import { makeBlankPlan } from '../src/storage/szerzodesTesztek';
-import { MEGMUTAT_CSATORNA, TAROLO_METODUSOK, type IpcEredmeny } from '../src/storage/taroloIpc';
+import {
+  MEGMUTAT_CSATORNA,
+  PDF_MASOL_CSATORNA,
+  PDF_MEGNYIT_CSATORNA,
+  TAROLO_METODUSOK,
+  type IpcEredmeny,
+} from '../src/storage/taroloIpc';
+import { PDF_FAJLNEV } from './fileSystemStorage';
 import { FileSystemStorage } from './fileSystemStorage';
 import { FsPrimitivek } from './fsPrimitivek';
-import { kuldoEllenor, megmutatKezelo, taroloHivas, taroloKezelok, type KuldoEsemeny } from './ipcKezelok';
+import { kuldoEllenor, megmutatKezelo, pdfKezelok, taroloHivas, taroloKezelok, type KuldoEsemeny } from './ipcKezelok';
 import { PDF_MAX_BAJT } from './ipcValidate';
 
 const ORIGIN = 'app://mandoki-dental';
@@ -179,5 +186,98 @@ describe('megmutatKezelo („Mappa megnyitása”)', () => {
 
     expect(kod(await hiv('arlista.json', { senderFrame: { url: `${ORIGIN}/index.html` } }))).toBe('TILTOTT_KULDO');
     expect(mutatott).toEqual([]);
+  });
+});
+
+describe('pdfKezelok („Megnyitás”, „Másolás máshová”)', () => {
+  async function csatornak(valasztott: string | null = null) {
+    const gyoker = await ujMappa();
+    const prim = new FsPrimitivek(gyoker, { kesleltet: async () => {} });
+    const tarolo = new FileSystemStorage(prim);
+    await tarolo.init();
+    const ref = await tarolo.savePlan(makeBlankPlan(), new Uint8Array([37, 80, 68, 70]));
+    const megnyitott: string[] = [];
+    const javasolt: string[] = [];
+    const irt: Array<{ ut: string; bajtok: Uint8Array }> = [];
+    const kezelok = new Map<string, (e: KuldoEsemeny, ...args: unknown[]) => Promise<unknown>>();
+    pdfKezelok({ handle: (nev, k) => void kezelok.set(nev, k) }, tarolo, prim, PDF_FAJLNEV, kuldoEngedett, {
+      megnyit: async (abs) => {
+        megnyitott.push(abs);
+        return '';
+      },
+      helyetValaszt: async (nev) => {
+        javasolt.push(nev);
+        return valasztott;
+      },
+      ir: async (ut, bajtok) => void irt.push({ ut, bajtok }),
+    });
+    const megnyit = (x: unknown, e: KuldoEsemeny = sajat) =>
+      kezelok.get(PDF_MEGNYIT_CSATORNA)!(e, x) as Promise<IpcEredmeny<void>>;
+    const masol = (forras: unknown, nev: unknown, e: KuldoEsemeny = sajat) =>
+      kezelok.get(PDF_MASOL_CSATORNA)!(e, forras, nev) as Promise<IpcEredmeny<string | null>>;
+    return { gyoker, ref, megnyitott, javasolt, irt, megnyit, masol };
+  }
+  const kod = (r: IpcEredmeny<unknown>) => (r.ok ? 'OK' : r.hiba.kod);
+  const refBol = (ref: { patientDir: string; planDir: string; versionDir: string }) => ({
+    patientDir: ref.patientDir,
+    planDir: ref.planDir,
+    versionDir: ref.versionDir,
+  });
+
+  it('a teljes verzió PDF-jét a gyökérmappán belüli útjával adja a rendszer olvasójának', async () => {
+    const { gyoker, ref, megnyitott, megnyit } = await csatornak();
+
+    expect(kod(await megnyit(refBol(ref)))).toBe('OK');
+    expect(megnyitott).toEqual([path.join(gyoker, 'paciensek', ref.patientDir, ref.planDir, ref.versionDir, PDF_FAJLNEV)]);
+  });
+
+  it('hiányos verziót nem nyit meg', async () => {
+    const { gyoker, ref, megnyitott, megnyit } = await csatornak();
+    await fsp.rm(path.join(gyoker, 'paciensek', ref.patientDir, ref.planDir, ref.versionDir, 'manifest.json'));
+
+    expect(kod(await megnyit(refBol(ref)))).toBe('HIANYOS_VERZIO');
+    expect(megnyitott).toEqual([]);
+  });
+
+  it('idegen küldőt és hibás hivatkozást elutasít', async () => {
+    const { ref, megnyitott, megnyit, masol, javasolt } = await csatornak('C:/x.pdf');
+    const idegen = { senderFrame: { url: `${ORIGIN}/index.html` } };
+
+    expect(kod(await megnyit(refBol(ref), idegen))).toBe('TILTOTT_KULDO');
+    expect(kod(await megnyit({ ...refBol(ref), patientDir: '../kint' }))).toBe('ERVENYTELEN_PARAMETER');
+    expect(kod(await masol({ ref: refBol(ref) }, 'a.pdf', idegen))).toBe('TILTOTT_KULDO');
+    expect(megnyitott).toEqual([]);
+    expect(javasolt).toEqual([]);
+  });
+
+  it('a mentett verziót a doki által választott helyre másolja, és a választott fájl nevét adja vissza', async () => {
+    const cel = path.join(tmpdir(), 'valasztott', 'terv.pdf');
+    const { ref, javasolt, irt, masol } = await csatornak(cel);
+
+    const r = await masol({ ref: refBol(ref) }, 'kezelesi-terv-Teszt-Elek.pdf');
+
+    expect(r).toEqual({ ok: true, ertek: 'terv.pdf' });
+    expect(javasolt).toEqual(['kezelesi-terv-Teszt-Elek.pdf']);
+    expect(irt).toEqual([{ ut: cel, bajtok: new Uint8Array([37, 80, 68, 70]) }]);
+  });
+
+  it('a piszkozat bájtjait másolja; ha a doki bezárja a dialógust, nem ír semmit', async () => {
+    const { irt, masol } = await csatornak(null);
+
+    expect(await masol({ bajtok: new Uint8Array([1, 2]) }, 'PISZKOZAT-kezelesi-terv.pdf')).toEqual({ ok: true, ertek: null });
+    expect(irt).toEqual([]);
+  });
+
+  it.each([
+    ['útvonalas javasolt név', { bajtok: new Uint8Array([1]) }, '../kint.pdf'],
+    ['nem PDF javasolt név', { bajtok: new Uint8Array([1]) }, 'terv.exe'],
+    ['túl nagy bájtsor', { bajtok: new Uint8Array(PDF_MAX_BAJT + 1) }, 'terv.pdf'],
+    ['ismeretlen forrás', { ut: 'C:/Windows/x.pdf' }, 'terv.pdf'],
+  ])('%s: elutasítja, a dialógus meg sem nyílik', async (_mi, forras, nev) => {
+    const { javasolt, irt, masol } = await csatornak('C:/x.pdf');
+
+    expect(kod(await masol(forras, nev))).toBe('ERVENYTELEN_PARAMETER');
+    expect(javasolt).toEqual([]);
+    expect(irt).toEqual([]);
   });
 });

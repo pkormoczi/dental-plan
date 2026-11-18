@@ -23,7 +23,7 @@ import { resetListStateMemoryForTests } from '../components/useListStateMemory';
 import { AppStateProvider, useAppState } from '../state/AppState';
 import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
-import { FelulirasUtkozesError } from '../storage/taroloHibak';
+import { FelulirasUtkozesError, TorlesAkadalyError } from '../storage/taroloHibak';
 import { seedPatients, seedPlans } from '../storage/seed/plans';
 import { formatMoney } from '../domain/money';
 import type { Plan } from '../domain/types';
@@ -700,6 +700,19 @@ describe('PatientDetailPage', () => {
     await waitFor(() => expect(trigger).toHaveFocus());
   });
 
+  it('ha a páciens a törlés előtt a másik gépről tervet kapott, a lap piros jelzésben mondja ki, hogy nem törölhető', async () => {
+    vi.spyOn(DemoStorage.prototype, 'deletePatient').mockRejectedValue(new TorlesAkadalyError('veglegesitett-terv'));
+    const user = userEvent.setup();
+    renderDetail(kelemenDir);
+
+    await user.click(await screen.findByRole('button', { name: /páciens műveletek$/ }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Páciens törlése' }));
+    await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Törlés' }));
+
+    const uzenet = await screen.findByText('A páciens időközben kapott tervet, nem törölhető.');
+    expect(uzenet.closest('.rt-CalloutRoot')).toHaveAttribute('data-accent-color', 'red');
+  });
+
   describe('hiányos (még szinkronizálódó) verzió a Kezelési tervek tabon', () => {
     const nagyLancok = new Map<string, typeof seedPlans>();
     for (const e of seedPlans.filter((e) => e.patientDir === nagyDir)) {
@@ -884,5 +897,28 @@ describe('PatientDetailPage', () => {
       expect(JSON.parse(localStorage.getItem(adatKulcs())!).telefon).toBe('+36 1 999 9999');
       expect(spy).toHaveBeenCalledOnce();
     });
+  });
+
+  it('nem olvasható pácienslistánál a szerkesztő halkan jelzi, hogy a hasonló nevek ellenőrzése nem futott le; a következő sikeres listázás után eltűnik', async () => {
+    const eredeti = DemoStorage.prototype.listPatients;
+    let hivas = 0;
+    let olvashato = false;
+    // Az első hívás a lap saját betöltése; a szerkesztőé már a hibás.
+    vi.spyOn(DemoStorage.prototype, 'listPatients').mockImplementation(async function (this: DemoStorage) {
+      if (hivas++ > 0 && !olvashato) throw new Error('EACCES');
+      return eredeti.call(this);
+    });
+    const user = userEvent.setup();
+    renderDetail(nagyDir, { tab: 'adatai' });
+
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+    expect(await screen.findByText('A hasonló nevű páciensek ellenőrzése most nem futott le.')).toBeInTheDocument();
+
+    olvashato = true;
+    fireEvent.change(screen.getByLabelText('Telefon'), { target: { value: '+36 30 555 0000' } });
+    await user.click(screen.getByRole('button', { name: 'Mentés' }));
+    await user.click(await screen.findByRole('button', { name: 'Szerkesztés' }));
+
+    expect(screen.queryByText('A hasonló nevű páciensek ellenőrzése most nem futott le.')).toBeNull();
   });
 });

@@ -5,6 +5,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 import {
   AKTIV_CSATORNA,
   MEGMUTAT_CSATORNA,
+  PDF_MASOL_CSATORNA,
+  PDF_MEGNYIT_CSATORNA,
   TAROLO_METODUSOK,
   taroloCsatorna,
   type TaroloHid,
@@ -20,6 +22,8 @@ const hid: TaroloHid = {
       ? ipcRenderer.invoke(taroloCsatorna(metodus), ...args)
       : Promise.reject(new Error(`Ismeretlen tároló-metódus: ${String(metodus)}`)),
   megmutat: (relUtvonal) => ipcRenderer.invoke(MEGMUTAT_CSATORNA, relUtvonal),
+  pdfMegnyit: (ref) => ipcRenderer.invoke(PDF_MEGNYIT_CSATORNA, ref),
+  pdfMasol: (forras, javasoltNev) => ipcRenderer.invoke(PDF_MASOL_CSATORNA, forras, javasoltNev),
 };
 
 contextBridge.exposeInMainWorld('mandokiTarolo', hid);

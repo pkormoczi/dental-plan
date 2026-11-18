@@ -15,20 +15,31 @@ import { useCallback, useState } from 'react';
 import { Text, VisuallyHidden } from '@radix-ui/themes';
 import { t } from '../design/tokens';
 
+/** A telepített appban a fájl nem letöltődik, hanem a doki által választott helyre másolódik. */
+export type LetoltesFelirat = 'Letöltve' | 'Másolva';
+
 export interface LetoltesJelzoAllapot {
   /** A legutóbb letöltött fájl neve, vagy `null`, ha még nem volt letöltés. */
   fajlnev: string | null;
-  jelezLetoltes: (fajlnev: string) => void;
+  felirat: LetoltesFelirat;
+  jelezLetoltes: (fajlnev: string, felirat?: LetoltesFelirat) => void;
   urit: () => void;
 }
 
 export function useLetoltesJelzo(): LetoltesJelzoAllapot {
-  const [fajlnev, setFajlnev] = useState<string | null>(null);
+  const [allapot, setAllapot] = useState<{ fajlnev: string | null; felirat: LetoltesFelirat }>({
+    fajlnev: null,
+    felirat: 'Letöltve',
+  });
   // `urit` stabil hivatkozás: a Terv részletei lapon egy effekt függősége,
   // ami minden renderben újraképzett függvénnyel azonnal eltüntetné a
   // frissen kiírt fájlnevet.
-  const urit = useCallback(() => setFajlnev(null), []);
-  return { fajlnev, jelezLetoltes: setFajlnev, urit };
+  const urit = useCallback(() => setAllapot((a) => ({ ...a, fajlnev: null })), []);
+  const jelezLetoltes = useCallback(
+    (fajlnev: string, felirat: LetoltesFelirat = 'Letöltve') => setAllapot({ fajlnev, felirat }),
+    [],
+  );
+  return { ...allapot, jelezLetoltes, urit };
 }
 
 /**
@@ -36,11 +47,17 @@ export function useLetoltesJelzo(): LetoltesJelzoAllapot {
  * fájlnév `t.mono` szedéssel, mert a doki karakterről karakterre veti össze
  * a Letöltések mappa tartalmával.
  */
-export function LetoltesFajlnevSor({ fajlnev }: { fajlnev: string | null }) {
+export function LetoltesFajlnevSor({
+  fajlnev,
+  felirat = 'Letöltve',
+}: {
+  fajlnev: string | null;
+  felirat?: LetoltesFelirat;
+}) {
   if (!fajlnev) return null;
   return (
     <Text as="div" size="1" color="gray" mt="1">
-      Letöltve:{' '}
+      {felirat}:{' '}
       <Text style={{ fontFamily: t.mono }} size="1">
         {fajlnev}
       </Text>
@@ -54,20 +71,26 @@ export function LetoltesFajlnevSor({ fajlnev }: { fajlnev: string | null }) {
  * (`PriceListAdminPage.tsx`, `NumberField.tsx`). Ahol több letöltési sor
  * van egy lapon, ebből EGY, lap-szintű példány áll, nem soronkénti.
  */
-export function LetoltesEloRegio({ fajlnev }: { fajlnev: string | null }) {
+export function LetoltesEloRegio({
+  fajlnev,
+  felirat = 'Letöltve',
+}: {
+  fajlnev: string | null;
+  felirat?: LetoltesFelirat;
+}) {
   // Egész mondat, nem a látható sor „Letöltve: …” címke-alakja -- a
   // képernyőolvasó így nem kettőspont-töredéket mond be.
   return (
-    <VisuallyHidden aria-live="polite">{fajlnev ? `${fajlnev} letöltve.` : ''}</VisuallyHidden>
+    <VisuallyHidden aria-live="polite">{fajlnev ? `${fajlnev} ${felirat.toLowerCase()}.` : ''}</VisuallyHidden>
   );
 }
 
 /** A látható sor és a bemondás együtt -- egyetlen letöltési pontot kiszolgáló hívóknak. */
-export function LetoltesJelzo({ fajlnev }: { fajlnev: string | null }) {
+export function LetoltesJelzo({ fajlnev, felirat }: { fajlnev: string | null; felirat?: LetoltesFelirat }) {
   return (
     <>
-      <LetoltesEloRegio fajlnev={fajlnev} />
-      <LetoltesFajlnevSor fajlnev={fajlnev} />
+      <LetoltesEloRegio fajlnev={fajlnev} felirat={felirat} />
+      <LetoltesFajlnevSor fajlnev={fajlnev} felirat={felirat} />
     </>
   );
 }

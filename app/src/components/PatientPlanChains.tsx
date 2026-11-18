@@ -60,7 +60,7 @@ import {
 import { workflowLepesFelirat } from '../domain/workflowLepesek';
 import type { PatientFolder, Plan, PlanFolder, PlanVersion } from '../domain/types';
 import { useAppState } from '../state/AppState';
-import { LetoltesEloRegio, LetoltesFajlnevSor } from './LetoltesJelzo';
+import { LetoltesEloRegio, LetoltesFajlnevSor, type LetoltesFelirat } from './LetoltesJelzo';
 import type { AktivDraft } from './useAktivDraft';
 import PlanVersionActionDialog, {
   nincsMentettPdfHiba,
@@ -184,7 +184,7 @@ export default function PatientPlanChains({
   nyitottLancok,
   onLancValtas,
 }: PatientPlanChainsProps) {
-  const { storage, isSeedVersion } = useStorage();
+  const { storage, isSeedVersion, pdfMuveletek } = useStorage();
   const { priceList } = useAppState();
   const navigate = useNavigate();
   const akciok = usePlanVersionActions({ patientDir: patient.dirName });
@@ -268,7 +268,35 @@ export default function PatientPlanChains({
   // BEMONDÁS egy lap-szintű élő régió (lent) -- a soronkénti `aria-live` a
   // `PriceListAdminPage.tsx` kimondott ellenpéldája. Nem az `akciok.jelezHiba`
   // csatornán: az hiba-csatorna, nem sikerjelzés.
-  const [letoltott, setLetoltott] = useState<(VersionRef & { fajlnev: string }) | null>(null);
+  const [letoltott, setLetoltott] = useState<(VersionRef & { fajlnev: string; felirat: LetoltesFelirat }) | null>(
+    null,
+  );
+
+  // A verzió saját, MÁR betöltött terv.json-ja adja a nevet/statuszt --
+  // olvashatatlan verziónál (nincs a plansByVersion-ben, csak a PDF
+  // tölthető be külön) a páciens-szintű névre és `isDraft: false`-ra
+  // esünk vissza, hogy a letöltés emiatt ne váljon szigorúbbá, mint ma.
+  function verzioFajlnev(ref: VersionRef, tervId: string): string {
+    const versionPlan = plansByVersion[versionDataKey(ref.planDir, ref.versionDir)];
+    return buildDownloadFileName(versionPlan?.paciens.nev || patient.nev, {
+      tervId,
+      isDraft: versionPlan ? versionPlan.statusz !== 'VEGLEGES' : false,
+      suffix: ref.versionDir,
+    });
+  }
+
+  async function pdfMuvelet(ref: VersionRef, hibaElotag: string, muvelet: () => Promise<void>) {
+    akciok.jelezHiba(null);
+    setLetoltott(null);
+    try {
+      await muvelet();
+    } catch (err) {
+      akciok.jelezHiba({
+        ...ref,
+        message: `${hibaElotag}: ${err instanceof Error ? err.message : 'váratlan hiba.'}`,
+      });
+    }
+  }
 
   async function downloadVersion(ref: VersionRef, tervId: string) {
     akciok.jelezHiba(null);
@@ -285,23 +313,14 @@ export default function PatientPlanChains({
         );
         return;
       }
-      // A verzió saját, MÁR betöltött terv.json-ja adja a nevet/statuszt --
-      // olvashatatlan verziónál (nincs a plansByVersion-ben, csak a PDF
-      // tölthető be külön) a páciens-szintű névre és `isDraft: false`-ra
-      // esünk vissza, hogy a letöltés emiatt ne váljon szigorúbbá, mint ma.
-      const versionPlan = plansByVersion[versionDataKey(ref.planDir, ref.versionDir)];
       const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = buildDownloadFileName(versionPlan?.paciens.nev || patient.nev, {
-        tervId,
-        isDraft: versionPlan ? versionPlan.statusz !== 'VEGLEGES' : false,
-        suffix: ref.versionDir,
-      });
+      a.download = verzioFajlnev(ref, tervId);
       a.click();
       URL.revokeObjectURL(url);
-      setLetoltott({ ...ref, fajlnev: a.download });
+      setLetoltott({ ...ref, fajlnev: a.download, felirat: 'Letöltve' });
     } catch (err) {
       akciok.jelezHiba({
         ...ref,
@@ -774,9 +793,36 @@ export default function PatientPlanChains({
                                       Megnézés
                                     </DropdownMenu.Item>
                                   )}
-                                  <DropdownMenu.Item onSelect={() => downloadVersion(ref, plan.tervId)}>
-                                    Letöltés
-                                  </DropdownMenu.Item>
+                                  {pdfMuveletek ? (
+                                    <>
+                                      <DropdownMenu.Item
+                                        onSelect={() =>
+                                          void pdfMuvelet(ref, 'A megnyitás nem sikerült', () =>
+                                            pdfMuveletek.megnyit({ patientDir: patient.dirName, ...ref }),
+                                          )
+                                        }
+                                      >
+                                        Megnyitás
+                                      </DropdownMenu.Item>
+                                      <DropdownMenu.Item
+                                        onSelect={() =>
+                                          void pdfMuvelet(ref, 'A másolás nem sikerült', async () => {
+                                            const nev = await pdfMuveletek.masol(
+                                              { ref: { patientDir: patient.dirName, ...ref } },
+                                              verzioFajlnev(ref, plan.tervId),
+                                            );
+                                            if (nev) setLetoltott({ ...ref, fajlnev: nev, felirat: 'Másolva' });
+                                          })
+                                        }
+                                      >
+                                        Másolás máshová
+                                      </DropdownMenu.Item>
+                                    </>
+                                  ) : (
+                                    <DropdownMenu.Item onSelect={() => downloadVersion(ref, plan.tervId)}>
+                                      Letöltés
+                                    </DropdownMenu.Item>
+                                  )}
                                   <DropdownMenu.Separator />
                                   <DropdownMenu.Item
                                     onSelect={() =>
@@ -862,7 +908,7 @@ export default function PatientPlanChains({
                           <VerzioAkcioUzenet hiba={akciok.hiba} />
                         )}
                         {letoltott?.planDir === plan.dirName && letoltott.versionDir === v.dirName && (
-                          <LetoltesFajlnevSor fajlnev={letoltott.fajlnev} />
+                          <LetoltesFajlnevSor fajlnev={letoltott.fajlnev} felirat={letoltott.felirat} />
                         )}
                       </Box>
                     );
@@ -874,7 +920,7 @@ export default function PatientPlanChains({
         );
       })}
 
-      <LetoltesEloRegio fajlnev={letoltott?.fajlnev ?? null} />
+      <LetoltesEloRegio fajlnev={letoltott?.fajlnev ?? null} felirat={letoltott?.felirat} />
 
       {/* NEM a `PlanVersionActionDialog`: az piszkozat-felülírás elleni
           megerősítő őr, itt viszont szöveges bevitelt kérünk. A `⋯` menü
