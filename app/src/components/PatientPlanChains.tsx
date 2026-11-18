@@ -80,6 +80,15 @@ import { useStorage } from '../storage/StorageContext';
 export const UJ_VERZIO_VAGY_UJ_TERV =
   'Az „Új verzió” ugyanahhoz a tervhez készül; az „Új terv” és a „Másolás új tervbe” önálló, új tervet indít.';
 
+/** A még szinkronizálódó verzió jelvénye -- a verziósoron és a csukott lánc fejlécén ugyanaz, hogy a doki egy néven lássa. */
+function HianyosJelveny() {
+  return (
+    <Badge color="amber" variant="soft" size="1">
+      Szinkron folyamatban vagy hiányos
+    </Badge>
+  );
+}
+
 /** A két érvénytelenítés-dialógus közös célpontja -- a `megnevezes` a doki
  * nyelvén nevezi meg a verziót („<terv címe> — v<n>"), nem mappanévvel. */
 interface ErvDialogAllapot extends VersionRef {
@@ -571,7 +580,10 @@ export default function PatientPlanChains({
                   </>
                 )}
               </Flex>
-              {!isEditing && !lancNyitva && (
+              {/* Hiányos legfrissebbnél nincs összeg, amit mutatni lehetne: a „—” helyén a
+                  sor jelvénye magyarázza, miért nincs, és miért nincs „Új verzió”. */}
+              {!isEditing && !lancNyitva && legfrissebb?.allapot === 'hianyos' && <HianyosJelveny />}
+              {!isEditing && !lancNyitva && legfrissebb?.allapot !== 'hianyos' && (
                 <Text
                   size="2"
                   weight="medium"
@@ -661,11 +673,7 @@ export default function PatientPlanChains({
                                 Érvénytelen
                               </Badge>
                             )}
-                            {hianyos && (
-                              <Badge color="amber" variant="soft" size="1">
-                                Szinkron folyamatban vagy hiányos
-                              </Badge>
-                            )}
+                            {hianyos && <HianyosJelveny />}
                           </Flex>
                           <Flex align="center" gap="4">
                             {/* A verzió végösszege (osszesitok.fizetendo) a saját

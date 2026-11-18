@@ -25,6 +25,7 @@ import { StorageProvider } from '../storage/StorageContext';
 import { DemoStorage } from '../storage/DemoStorage';
 import { FelulirasUtkozesError } from '../storage/taroloHibak';
 import { seedPatients, seedPlans } from '../storage/seed/plans';
+import { formatMoney } from '../domain/money';
 import type { Plan } from '../domain/types';
 
 function DraftProbe() {
@@ -736,6 +737,50 @@ describe('PatientDetailPage', () => {
       if (toggle.getAttribute('aria-expanded') === 'false') await user.click(toggle);
       return document.querySelector<HTMLElement>(`[data-plan="${lanc}"]`)!;
     }
+
+    async function lancCsukva(user: ReturnType<typeof userEvent.setup>): Promise<HTMLElement> {
+      const lancDoboz = await lancNyitva(user);
+      await user.click(document.getElementById(`lanc-toggle-${lanc}`)!);
+      await waitFor(() =>
+        expect(document.getElementById(`lanc-toggle-${lanc}`)).toHaveAttribute('aria-expanded', 'false'),
+      );
+      return lancDoboz;
+    }
+
+    it('csukott láncon a hiányos legfrissebb verziót a fejléc jelvénye jelzi, „—” összeg nélkül', async () => {
+      legfrissebbHianyos();
+      const user = userEvent.setup();
+      renderDetail(nagyDir);
+
+      const lancDoboz = await lancCsukva(user);
+
+      expect(within(lancDoboz).getByText('Szinkron folyamatban vagy hiányos')).toBeInTheDocument();
+      expect(within(lancDoboz).queryByText('—')).toBeNull();
+    });
+
+    it('kinyitva a fejléc jelvénye eltűnik, csak a hiányos sor jelvénye marad', async () => {
+      legfrissebbHianyos();
+      const user = userEvent.setup();
+      renderDetail(nagyDir);
+      await lancCsukva(user);
+
+      const lancDoboz = await lancNyitva(user);
+
+      expect(within(lancDoboz).getAllByText('Szinkron folyamatban vagy hiányos')).toHaveLength(1);
+      expect(within(lancDoboz).getByRole('button', { name: 'Újraellenőrzés' })).toBeInTheDocument();
+    });
+
+    it('teljes legfrissebb verziónál a csukott fejléc a végösszeget mutatja, jelvény nélkül', async () => {
+      const user = userEvent.setup();
+      renderDetail(nagyDir);
+
+      const lancDoboz = await lancCsukva(user);
+
+      expect(within(lancDoboz).queryByText('Szinkron folyamatban vagy hiányos')).toBeNull();
+      // A pénz nem törő szóközzel tagolt, a kereső normalizált szövegen dolgozik: regex kell.
+      const osszeg = formatMoney(legfrissebb.plan.osszesitok.fizetendo, legfrissebb.plan.penznem, legfrissebb.plan.nyelv);
+      expect(within(lancDoboz).getByText(new RegExp(`^${osszeg.replace(/\s/g, String.raw`\s`)}$`))).toBeInTheDocument();
+    });
 
     it('a hiányos sor jelvényt, a hiányzó fájlt és Újraellenőrzést mutat, ⋯ menü nélkül, és a láncon nincs Új verzió', async () => {
       legfrissebbHianyos();
