@@ -1,5 +1,0 @@
-# release-dokumentumok
-Type: feature
-Source: fejlesztő felvetés 2026-11-19
-
-A GitHub Release ma a két telepítőt (Windows `.exe`, Mac `.dmg`) és egyedül a `docs/TELEPITES.md`-t csatolja (`.github/workflows/release.yml`, publish job). A felvetés: a kiadás tartalmazzon egy `docs` mappát egy letölthető csomagban, benne a `CHANGELOG.md`, a `FEATURES.md`, a `PRODUCT.md` és a `TELEPITES.md` — így a doki egy kiadás letöltésekor egy helyen kapja meg a telepítési útmutatót, a funkciók összefoglalóját, az adott verzió változásnaplóját és a termék céljait és korlátait, az app megnyitása nélkül is. Az alkalmazás Súgó menüpontja a Funkciókat és a Változásnaplót ma is beépítve mutatja; a csomag ennek az appon kívüli, a kiadáshoz kötött példánya. Tervezéskor eldöntendő: egy zip-csomag vagy külön csatolt fájlok; Markdown marad-e (Windowson nincs alapértelmezett megnyitója) vagy könnyen olvasható formátum (például PDF vagy HTML); és hogy a fejlesztői részleteket is tartalmazó `PRODUCT.md` a dokinak szóló csomagba való-e. Nem tartozik ide a dokumentumok beágyazása magába a telepítőbe.
