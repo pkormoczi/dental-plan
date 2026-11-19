@@ -1,4 +1,4 @@
-// A DEMO oldal Funkciók füle: rövid, képernyőnkénti áttekintés egy új
+// A Súgó oldal Funkciók füle: rövid, képernyőnkénti áttekintés egy új
 // felhasználónak, mielőtt belevágna. A docs/FEATURES.md nyers tartalma
 // épül be build-időben (Vite `?raw` import, a ChangelogCard mintájára) -- a
 // listát a `/update-features` skill tartja karban, szakaszonként a mögöttük

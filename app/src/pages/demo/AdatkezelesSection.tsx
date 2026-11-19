@@ -1,8 +1,7 @@
-// Demó-only adatkezelés (a Kezdőlapról átköltöztetve): a mockup
+// Demó-only adatkezelés, a Beállítások Adatkezelés füle: a mockup
 // localStorage-alapú tárolójának visszaseedelése/kiürítése -- a végleges
 // FileSystemStorage-nak (2. fázis) nincs megfelelője egyiknek sem, ezért
-// ez a szekció maga is demó-only, mint a Filerendszer/Funkciók/Változásnapló
-// fülek.
+// ez a szekció demó-only, mint a Filerendszer fül.
 
 import { useEffect, useRef, useState } from 'react';
 import { AlertDialog, Box, Button, Callout, Card, Flex, Text } from '@radix-ui/themes';

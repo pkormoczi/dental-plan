@@ -254,7 +254,7 @@ describe('adatmappa-kapu a telepített appban', () => {
     expect(screen.queryByRole('button', { name: 'Van egy exportált fájlom a demóból' })).toBeNull();
   });
 
-  it('a miénk adatmappával az app betölt; a DEMÓ-sáv helyén próbaüzem áll, a DEMO lapon nincs Filerendszer és Adatkezelés', async () => {
+  it('a miénk adatmappával az app betölt; a DEMÓ-sáv helyén próbaüzem áll, a régi /demo/filerendszer cím a Beállítások alapfülére visz, Filerendszer és Adatkezelés fül nélkül', async () => {
     hamisAdattarolas(vizsgalat('rendben'));
     render(<App />);
 
@@ -267,9 +267,9 @@ describe('adatmappa-kapu a telepített appban', () => {
       window.location.hash = '#/demo/filerendszer';
     });
 
-    expect(await screen.findByRole('tab', { name: /Funkciók/ })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: /Összes terv/ })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /Változásnapló/ })).toBeInTheDocument();
+    expect(await screen.findByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
+    expect(window.location.hash).toBe('#/beallitasok?tab=filerendszer');
+    expect(screen.getByRole('tab', { name: /Adattárolás/ })).toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: /Filerendszer/ })).toBeNull();
     expect(screen.queryByRole('tab', { name: /Adatkezelés/ })).toBeNull();
   });

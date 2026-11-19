@@ -1,4 +1,4 @@
-// Filerendszer szekció a DEMO oldalon.
+// A Beállítások Filerendszer füle, csak a böngészős demóban.
 // Demó-only, read-only vizualizáció: megmutatja, mit írna a
 // végleges (FileSystemStorage, 2. fázis) alkalmazás a doki gépére, a mockup
 // `dp:` localStorage-kulcsaiból fává építve (storage/demoFileTree.ts).

@@ -1,5 +1,5 @@
 // Beállítások. Három
-// tab (Rendelő adatai / Nyomtatványok / Egyéb), mindegyik saját explicit
+// szerkesztő tab (Rendelő adatai / Nyomtatványok / Egyéb), mindegyik saját explicit
 // Mentés/Mégse + dirty guarddal -- a korábbi leütésenkénti autosave
 // ezen a lapon megszűnt (az Árlista admin Kategóriák paneljének
 // attribútum-szerkesztése azóta ugyanezt a mintát követi, a tétel-
@@ -21,13 +21,19 @@ import RendeloTab from './settings/RendeloTab';
 import NyomtatvanyokTab from './settings/NyomtatvanyokTab';
 import EgyebTab from './settings/EgyebTab';
 import AdattarolasTab from './settings/AdattarolasTab';
+import AdatkezelesSection from './demo/AdatkezelesSection';
+import FileTreeSection from './demo/FileTreeSection';
 
-type SettingsTab = 'rendelo' | 'nyomtatvanyok' | 'egyeb' | 'adattarolas';
+type SettingsTab = 'rendelo' | 'nyomtatvanyok' | 'egyeb' | 'adattarolas' | 'filerendszer' | 'adatkezeles';
 
+// A tároló kezelése két külön pár: telepítve az Adattárolás (valódi adatmappa), a böngészős
+// demóban a Filerendszer és az Adatkezelés (a localStorage-fa és a demó-adat) -- egyszerre csak
+// az egyik pár létezik, a másik címe az alapfülre esik.
 function toSettingsTab(value: string, vanAdattarolas: boolean): SettingsTab {
   if (value === 'nyomtatvanyok') return 'nyomtatvanyok';
   if (value === 'egyeb') return 'egyeb';
   if (value === 'adattarolas' && vanAdattarolas) return 'adattarolas';
+  if ((value === 'filerendszer' || value === 'adatkezeles') && !vanAdattarolas) return value;
   return 'rendelo';
 }
 
@@ -81,6 +87,8 @@ export default function SettingsPage() {
           <Tabs.Trigger value="nyomtatvanyok">Nyomtatványok</Tabs.Trigger>
           <Tabs.Trigger value="egyeb">Egyéb</Tabs.Trigger>
           {adattarolas && <Tabs.Trigger value="adattarolas">Adattárolás</Tabs.Trigger>}
+          {!adattarolas && <Tabs.Trigger value="filerendszer">Filerendszer</Tabs.Trigger>}
+          {!adattarolas && <Tabs.Trigger value="adatkezeles">Adatkezelés</Tabs.Trigger>}
         </Tabs.List>
 
         <Tabs.Content value="rendelo">
@@ -98,6 +106,18 @@ export default function SettingsPage() {
         {adattarolas && (
           <Tabs.Content value="adattarolas">
             <AdattarolasTab adattarolas={adattarolas} />
+          </Tabs.Content>
+        )}
+
+        {!adattarolas && (
+          <Tabs.Content value="filerendszer">
+            <FileTreeSection />
+          </Tabs.Content>
+        )}
+
+        {!adattarolas && (
+          <Tabs.Content value="adatkezeles">
+            <AdatkezelesSection />
           </Tabs.Content>
         )}
       </Tabs.Root>

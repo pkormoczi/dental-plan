@@ -723,8 +723,8 @@ export default function PreviewPage() {
           <Button onClick={startNewPlan}>Új terv indítása</Button>
           {/* a MOST mentett páciens részletoldalára visz
               (Kezelési tervek tab), nem a globális listára -- a globális,
-              több-pácienses áttekintő a DEMO oldal "Összes terv" fülén él
-             , másodlagos a napi munkához képest. */}
+              több-pácienses áttekintő az "Összes terv" oldalon él,
+              másodlagos a napi munkához képest. */}
           <Button
             variant="soft"
             color="gray"

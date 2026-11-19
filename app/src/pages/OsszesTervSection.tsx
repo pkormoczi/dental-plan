@@ -1,6 +1,6 @@
-// Összes terv -- a DEMO oldal füle. A teljes, több-pácienses áttekintő --
+// Összes terv -- saját menüpont a `/tervek` címen. A teljes, több-pácienses áttekintő --
 // napi munkára a páciens-részletoldal `Kezelési tervek` tabja való,
-// ez a fa csak a doki-validáció közbeni teljes-listás betekintésre.
+// ez a fa a teljes állomány áttekintésére.
 //
 // Ez a legerősebb indoka a fájlrendszer-hozzáférésnek: egy visszatérő
 // pácienshez ne kelljen újragépelni a tételeket. Háromszintű fa (páciens →
@@ -13,14 +13,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Callout, Flex, Heading, Separator, Skeleton, Text, TextField } from '@radix-ui/themes';
 import { CrossCircledIcon, InfoCircledIcon } from '@radix-ui/react-icons';
-import PatientPlanChains, { UJ_VERZIO_VAGY_UJ_TERV } from '../../components/PatientPlanChains';
-import { sajatDraft, useAktivDraft } from '../../components/useAktivDraft';
-import { useListStateMemory } from '../../components/useListStateMemory';
-import { t } from '../../design/tokens';
-import { ervenytelenitessel, type PlanChainData, loadPlanChainData } from '../../domain/planChainData';
-import { norm } from '../../domain/search';
-import type { PatientFolder } from '../../domain/types';
-import { useStorage } from '../../storage/StorageContext';
+import PatientPlanChains, { UJ_VERZIO_VAGY_UJ_TERV } from '../components/PatientPlanChains';
+import { sajatDraft, useAktivDraft } from '../components/useAktivDraft';
+import { useListStateMemory } from '../components/useListStateMemory';
+import { t } from '../design/tokens';
+import { ervenytelenitessel, type PlanChainData, loadPlanChainData } from '../domain/planChainData';
+import { norm } from '../domain/search';
+import type { PatientFolder } from '../domain/types';
+import { useStorage } from '../storage/StorageContext';
 
 // A lánc-nyitottság memória-kulcsa -- a `versionDataKey()`
 // mintáján, az `OsszesTervSection` egy lapon SOK páciens fáját rendereli,

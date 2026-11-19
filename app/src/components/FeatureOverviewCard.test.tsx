@@ -12,7 +12,7 @@ describe('FeatureOverviewCard', () => {
 
     // Csak a szakaszcímek megléte és sorrendje számít -- a pontok szövege a
     // /update-features skill dolga, futásonként szabadon változhat.
-    const headings = ['Páciensek', 'Kezelések és árak', 'Beállítások', 'DEMO'];
+    const headings = ['Páciensek', 'Összes terv', 'Kezelések és árak', 'Beállítások', 'Súgó'];
     const text = container.textContent ?? '';
     const indices = headings.map((cim) => text.indexOf(cim));
 

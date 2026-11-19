@@ -5,8 +5,8 @@ Minden snippet ténylegesen lefutott és bizonyítottan működik (2026-08-10-i 
 mind a 7 route-on). A protokoll a `SKILL.md`-ben; a szabályok forrása az `app/src/CLAUDE.md`
 („Két felület, két szabály”, „Akadálymentesség”). Becsült idő: ~10 perc.
 
-Route-onként egy hívás, mind a 7 route-on (`#/`, `#/paciens`, `#/terv`, `#/elonezet`,
-`#/demo/tervek`, `#/arlista`, `#/beallitasok`), plusz egy nyitott
+Route-onként egy hívás, mind a 8 route-on (`#/`, `#/paciens`, `#/terv`, `#/elonezet`,
+`#/tervek`, `#/arlista`, `#/beallitasok`, `#/sugo`), plusz egy nyitott
 `AlertDialog`/popover mellett is.
 
 **Fontos:** a naiv „első nem-átlátszó `backgroundColor`” háttérkeresés hamis pozitívot

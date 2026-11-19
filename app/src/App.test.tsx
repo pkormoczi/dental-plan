@@ -110,12 +110,12 @@ describe('Végpontok közötti folyamat', () => {
     expect(screen.getByText(/^v2 ·/)).toBeInTheDocument();
     expect(screen.getByText(/^v1 ·/)).toBeInTheDocument(); // v1 megmarad -- append-only
 
-    // DEMO -> Filerendszer fül -- ugyanennek a mentésnek látszania kell a
+    // Beállítások -> Filerendszer fül -- ugyanennek a mentésnek látszania kell a
     // fa-nézetben is: az első verzió mappája (v1) az append-only szabály miatt
     // érintetlen maradt.
-    await user.click(screen.getByRole('link', { name: 'DEMO' }));
+    await user.click(screen.getByRole('link', { name: 'Beállítások' }));
     // A Radix Tabs.Trigger két span-ban duplázza a feliratot (CSS-alapú
-    // szélesség-tartalék, lásd DemoPage.test.tsx fejlécét) -- jsdom alatt,
+    // szélesség-tartalék, app/src/CLAUDE.md jsdom-vakfoltok) -- jsdom alatt,
     // CSS nélkül az accessible name emiatt "FilerendszerFilerendszer".
     await user.click(screen.getByRole('tab', { name: /Filerendszer/ }));
     await user.click(screen.getByRole('button', { name: `paciensek/${savedPatientDir}` }));
@@ -233,13 +233,12 @@ describe('Végpontok közötti folyamat', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // A "Korábbi tervek" gomb lekerült a Kezdőlapról -- a `/tervek`
-    // route URL-ről marad elérhető, itt közvetlen hash-navigációval. A
-    // `/tervek` ma a DEMO "Összes terv" fülére (`/demo/tervek`)
-    // redirectel -- ezt igazolja a hash-ellenőrzés lent.
+    // A "Korábbi tervek" gomb lekerült a Kezdőlapról -- a terv-lista az
+    // Összes terv menüpont (`/tervek`), itt közvetlen hash-navigációval; a
+    // cím átirányítás nélkül maradt -- ezt igazolja a hash-ellenőrzés lent.
     window.location.hash = '#/tervek';
     const nagyEva = await screen.findByText('Nagy Éva');
-    expect(window.location.hash).toBe('#/demo/tervek');
+    expect(window.location.hash).toBe('#/tervek');
     const card = nagyEva.closest('[data-patient]') as HTMLElement;
     // A "Tömések" lánc (v1 2026-06-10, v2 2026-07-22) NEM a legfrissebb
     // véglegesített dátumú lánc a "Fogkőeltávolítás" (2026-08-01) mellett

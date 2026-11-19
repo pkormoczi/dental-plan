@@ -57,7 +57,7 @@ export default defineConfig(({ mode }) => ({
   build: mode === 'electron' ? { outDir: 'dist-electron/renderer', emptyOutDir: true } : undefined,
   plugins: [react(), cspPlugin()],
   server: {
-    // A Kezdőlap két kártyája a repo docs/ mappájában lévő CHANGELOG.md-t és
+    // A Súgó két füle a repo docs/ mappájában lévő CHANGELOG.md-t és
     // FEATURES.md-t olvassa be `?raw` importtal (components/ChangelogCard.tsx,
     // components/FeatureOverviewCard.tsx) -- ezek az `app/` mappán kívül
     // vannak, enélkül a dev szerver/vitest elutasítaná.

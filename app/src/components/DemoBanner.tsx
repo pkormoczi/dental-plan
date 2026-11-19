@@ -26,8 +26,8 @@ export default function DemoBanner() {
   return (
     <div style={SAV_STILUS}>
       <strong>DEMÓ</strong> — az adatok csak ebben a böngészőben, titkosítatlanul
-      tárolódnak. Ne írj be valódi páciensadatot; ha véletlenül mégis, a DEMO
-      oldal Adatkezelés fülén a „Minden adat törlése” gombbal tudod kiüríteni
+      tárolódnak. Ne írj be valódi páciensadatot; ha véletlenül mégis, a Beállítások
+      Adatkezelés fülén a „Minden adat törlése” gombbal tudod kiüríteni
       a tárolót.
     </div>
   );

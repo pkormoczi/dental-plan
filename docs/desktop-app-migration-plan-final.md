@@ -413,13 +413,15 @@ A Pages-deploy csak azután kapcsolható le, hogy a doki megerősítette a siker
 
 ## 8. A demó lebontása
 
-| Fül | Sors |
-|---|---|
-| Összes terv | Valódi funkció, `/tervek` route-ra költözik |
-| Funkciók | Marad, súgó jelleggel, saját route |
-| Változásnapló | Marad; kézi frissítés mellett ez mondja el, mi változott |
-| Filerendszer | Törlődik; helyette „Mappa megnyitása” |
-| Adatkezelés | Törlődik (export után) |
+A DEMO menüpont már megszűnt; a fülek mai helye és sorsa a lebontáskor:
+
+| Fül | Ma | Sors |
+|---|---|---|
+| Összes terv | Saját menüpont, `/tervek` | Marad |
+| Funkciók | A Súgó menüpont füle | Marad |
+| Változásnapló | A Súgó menüpont füle | Marad; kézi frissítés mellett ez mondja el, mi változott |
+| Filerendszer | A Beállítások füle, csak a Pages-demóban | Törlődik; helyette „Mappa megnyitása” |
+| Adatkezelés | A Beállítások füle, csak a Pages-demóban | Törlődik (export után) |
 
 Vele együtt: `DemoBanner`, `demoFileTree.ts`, a `StorageContext` demó-only mezői
 (`listFileTree`, `readRawFile`, `resetDemoData`, `clearAll`, `isSeedVersion`). A `seed/plans.ts`

@@ -96,7 +96,7 @@ Drive-ot, majd **Újrapróba**. Az adatmappához az alkalmazás eltávolítása 
 A demóban beállított árlista, rendelőadatok és nyomtatvány-szövegek átvihetők a telepített
 programba. Páciensadat nem kerül át: a demó páciensei kitaláltak.
 
-1. A böngészős demóban a **DEMO** oldal **Adatkezelés** fülén exportáld az adatokat. A fájl
+1. A böngészős demóban a **Beállítások** oldal **Adatkezelés** fülén exportáld az adatokat. A fájl
    (`kezelesi-terv-export-<dátum>.json`) a Letöltések mappába kerül.
 2. A telepített programban első indításkor válassz egy üres mappát, és kattints a **Van egy
    exportált fájlom a demóból** gombra; vagy egy már használt adatmappánál a Beállítások →

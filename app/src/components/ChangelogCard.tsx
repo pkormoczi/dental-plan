@@ -1,4 +1,4 @@
-// A DEMO oldal Változásnapló füle: a docs/CHANGELOG.md nyers tartalma
+// A Súgó oldal Változásnapló füle: a docs/CHANGELOG.md nyers tartalma
 // épül be build-időben (Vite `?raw` import), hogy ne kelljen kézzel
 // duplikálni a szöveget -- a napló mindig azzal szinkronban marad, amit a
 // repo docs/ mappájában szerkesztünk.

@@ -48,15 +48,17 @@ anywhere — work this out fresh each run.
 
 Read, in this order:
 
-1. `app/src/components/NavBar.tsx` — the `LINKS` array gives the canonical section names
-   and order.
-2. The six page components and their sub-components:
+1. `app/src/components/NavBar.tsx` — the `FO_LINKS` array, then the right-aligned
+   `SUGO_LINK`, gives the canonical section names and order.
+2. The page components and their sub-components:
    - `app/src/pages/PatientPage.tsx`
    - `app/src/pages/PlanEditorPage.tsx` + `app/src/pages/planEditor/*`
    - `app/src/pages/PreviewPage.tsx`
-   - `app/src/pages/demo/OsszesTervSection.tsx`
+   - `app/src/pages/OsszesTervSection.tsx`
+   - `app/src/pages/SugoPage.tsx`
    - `app/src/pages/PriceListAdminPage.tsx` + `app/src/pages/priceListAdmin/*`
-   - `app/src/pages/SettingsPage.tsx`
+   - `app/src/pages/SettingsPage.tsx` + `app/src/pages/settings/*`, and on the browser demo its
+     `app/src/pages/demo/*` tabs
    - Shared UI components they render (`app/src/components/*`) where relevant to what's
      visibly on screen.
 
@@ -111,8 +113,9 @@ know about the third line shape below). It understands three line shapes:
 Anything else (sub-bullets, bold, links, nested lists) renders as raw text on the card — do
 not use it.
 
-**Section titles and order must exactly match `NavBar.tsx`'s `FO_LINKS` labels**, excluding
-"Kezdőlap": `Páciensek`, `Kezelések és árak`, `Beállítások`, `DEMO`. No section outside this
+**Section titles and order must exactly match `NavBar.tsx`'s `FO_LINKS` labels followed by
+`SUGO_LINK`**, excluding "Kezdőlap": `Páciensek`, `Összes terv`, `Kezelések és árak`,
+`Beállítások`, `Súgó`. No section outside this
 list — a capability that spans multiple screens goes under the section where the doctor
 actually meets it (e.g. language/currency choice goes under `Páciensek`, since that's where
 it's set — the plan-editing/preview screens have no nav link of their own, they're reached

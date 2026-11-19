@@ -15,7 +15,7 @@ export function parseJson<T>(raw: string, fileKind: string): T {
     throw new SerultJsonError(
       fileKind,
       `A(z) ${fileKind} fájl nem érvényes JSON, valószínűleg sérült. Próbáld a ` +
-        `"Demó adat visszaállítása" gombot a DEMO oldal Adatkezelés fülén.`,
+        `"Demó adat visszaállítása" gombot a Beállítások Adatkezelés fülén.`,
     );
   }
 }

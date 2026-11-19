@@ -5,7 +5,7 @@ import { useNavGuardState } from './NavGuardContext';
 import { t } from '../design/tokens';
 import logoUrl from '../assets/logo.png';
 
-// Végleges öt tételes fő navigáció -- ez a forrásigazság az IA-ra. A
+// A fő navigáció -- ez a forrásigazság az IA-ra. A
 // korábban itt élt négy átmeneti workflow-link (Páciens/Terv
 // szerkesztő/Előnézet/Korábbi tervek) a terv-workflow héj
 // elkészültével megszűnt --
@@ -13,10 +13,13 @@ import logoUrl from '../assets/logo.png';
 const FO_LINKS: Array<{ to: string; label: string }> = [
   { to: '/', label: 'Kezdőlap' },
   { to: '/paciensek', label: 'Páciensek' },
+  { to: '/tervek', label: 'Összes terv' },
   { to: '/arlista', label: 'Kezelések és árak' },
   { to: '/beallitasok', label: 'Beállítások' },
-  { to: '/demo', label: 'DEMO' },
 ];
+
+// Tájékoztatás, nem munkafolyamat: a jobb szélre zárva válik el a fenti menüponttól.
+const SUGO_LINK = { to: '/sugo', label: 'Súgó' };
 
 function navLinkStyle(isActive: boolean) {
   return {
@@ -95,6 +98,13 @@ export default function NavBar() {
           {link.label}
         </NavLink>
       ))}
+      <NavLink
+        to={SUGO_LINK.to}
+        style={({ isActive }) => ({ ...navLinkStyle(isActive), marginLeft: 'auto' })}
+        onClick={(e) => handleLinkClick(e, SUGO_LINK.to, dirty, navigate, guard.request, visszaFokuszRef)}
+      >
+        {SUGO_LINK.label}
+      </NavLink>
 
       <DiscardChangesDialog
         open={guard.pending}

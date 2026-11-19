@@ -82,6 +82,28 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
   });
 
+  it('a demóban az Egyéb után Filerendszer és Adatkezelés fül áll, Adattárolás nincs', async () => {
+    renderSettings();
+    await screen.findByText('Beállítások');
+    const fulek = screen.getAllByRole('tab');
+    const vart = ['Rendelő adatai', 'Nyomtatványok', 'Egyéb', 'Filerendszer', 'Adatkezelés'];
+    expect(fulek).toHaveLength(vart.length);
+    vart.forEach((felirat, i) => expect(fulek[i]).toHaveTextContent(felirat));
+  });
+
+  it('?tab=filerendszer a demóban a Filerendszer fület nyitja, benne a fájlfával', async () => {
+    renderSettingsOnTemplatesTab('/beallitasok?tab=filerendszer');
+    expect(await screen.findByRole('tab', { name: /Filerendszer/ })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByText(/Ez a nézet azt mutatja meg/)).toBeInTheDocument();
+  });
+
+  it('?tab=adatkezeles a demóban az Adatkezelés fület nyitja, a demó-adatkezelő gombokkal', async () => {
+    renderSettingsOnTemplatesTab('/beallitasok?tab=adatkezeles');
+    expect(await screen.findByRole('tab', { name: /Adatkezelés/ })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('button', { name: 'Demó adat visszaállítása' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Minden adat törlése' })).toBeInTheDocument();
+  });
+
   it('?tab=nyomtatvanyok belépési ponton a Nyomtatványok tab aktív', async () => {
     renderSettingsOnTemplatesTab();
     await screen.findByText('Beállítások');

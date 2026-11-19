@@ -170,9 +170,9 @@ describe('Home -- piszkozat-perzisztencia', () => {
   });
 
   // A demó-only "Demó adat visszaállítása"/"Minden adat törlése" a
-  // DEMO oldal Adatkezelés fülére költözött, a "Korábbi tervek" gomb pedig
-  // lekerült (a `/tervek` route URL-ről marad elérhető) -- lásd
-  // DemoPage.test.tsx / AdatkezelesSection.test.tsx.
+  // Beállítások Adatkezelés fülére költözött, a "Korábbi tervek" gomb pedig
+  // lekerült (a terv-lista az Összes terv menüpont, `/tervek`) -- lásd
+  // SettingsPage.test.tsx / AdatkezelesSection.test.tsx.
   it('nincs "Korábbi tervek" gomb és nincs demó-only adatkezelő gomb sem', async () => {
     renderHome();
     await screen.findByRole('button', { name: '+ Új kezelési terv' });

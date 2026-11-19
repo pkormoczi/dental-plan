@@ -189,7 +189,7 @@ function ImportSzekcio({ adattarolas }: { adattarolas: Adattarolas }) {
   return (
     <Section title="Átvitel a demóból">
       <Text as="p" size="2" mb="3">
-        A demó DEMO oldalán, az Adatkezelés fülön exportált fájlból az árlista, a rendelő adatai és a
+        A demó Beállítások oldalán, az Adatkezelés fülön exportált fájlból az árlista, a rendelő adatai és a
         nyomtatvány-szövegek átvehetők. A mostani árlista és beállítások helyükre kerülnek; a páciensek
         és a tervek nem változnak.
       </Text>

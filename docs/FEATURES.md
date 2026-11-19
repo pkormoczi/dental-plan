@@ -56,6 +56,10 @@ Az alkalmazás böngészőben, demóként, és telepíthető programként is fut
 - A véglegesítés után egy visszaigazoló képernyő megmutatja, hova (melyik páciens- és tervmappába, melyik verzióként) került a terv, és felsorolja azokat a figyelmeztetéseket, amelyek a véglegesítés pillanatában fennálltak — így utólag is látszik, mit fogadott el a doki. Innen az imént mentett nyomtatvány külön lapon megnyitható és le is tölthető, és egyetlen kattintással indítható új terv, vagy megnyitható a páciens korábbi terveinek listája. Ha ez a képernyő elveszne (például frissítés miatt), a Kezdőlapon egy „Az imént véglegesített terv” kártya kínálja ugyanezt a két nyomtatvány-műveletet.
 - A nyomtatványon minden összeg levezethető a rajta kinyomtatott sorokból: a „Kezelések összege” referenciasor a kilistázott sorok összegét mutatja, és csak akkor jelenik meg, ha a fizetendő ennél kevesebb. A kedvezmény összege továbbra sem kerül a nyomtatványra.
 
+## Összes terv
+
+- Minden páciens minden kezelési tervét egy helyen mutatja, kereshetően — a napi munkára a páciens saját részletoldalának „Kezelési tervek” füle való, ez az oldal a teljes állomány áttekintésére szolgál.
+
 ## Kezelések és árak
 
 - A kínált kezelések, áraik (forint és euró) és kategóriáik karbantartása. A keresés a magyar és a német megnevezésre, valamint a kategória nevére is talál, mellette öt szűrő (Mind, Nincs EUR ár, Sávos ár, Inaktív, Gyakori), a lap alján pedig folyamatosan látszik, hány tétel látszik az összesből és hánynál hiányzik az euró ár.
@@ -68,17 +72,15 @@ Az alkalmazás böngészőben, demóként, és telepíthető programként is fut
 
 ## Beállítások
 
-- Három fülre osztva: Rendelő adatai, Nyomtatványok és Egyéb (a telepíthető programban negyedikként Adattárolás) — mindegyiken önálló Mentés/Mégse gombpár védi a még nem mentett módosítást, és a program figyelmeztet, ha mentés nélkül váltana lapot vagy navigálna el.
+- Rendelő adatai, Nyomtatványok és Egyéb fül (a telepíthető programban negyedikként Adattárolás, a böngészős demóban helyette Filerendszer és Adatkezelés) — az első hármon önálló Mentés/Mégse gombpár védi a még nem mentett módosítást, és a program figyelmeztet, ha mentés nélkül váltana lapot vagy navigálna el.
 - Rendelő adatai: a rendelő adatai a nyomtatvány fejlécéhez/lábléchez (a cím két mezőben: irányítószám és város, illetve utca és házszám — a fejlécben külön sorban állnak), és az orvosok listája — soronként aktiválható/inaktiválható, nyilakkal sorrendezhető, törölhető, és kijelölhető köztük egy alapértelmezett, aki minden új tervre automatikusan rákerül. Ha az alapértelmezett orvos inaktívvá válik vagy törlődik, a program azonnal megkéri a dokit, hogy válasszon másikat; ha egyetlen aktív orvos sem marad, figyelmeztet, hogy az új tervek véglegesítése emiatt blokkolva lesz.
 - Nyomtatványok: a nyilatkozat, a fizetési feltételek és a garancia szövegének szerkesztése, nyelvenként külön (magyar és német) — a szöveg félkövérrel is kiemelhető, pontokba szedett vagy számozott lista is írható benne, a nyilatkozatban pedig egy helyőrzővel beilleszthető a kezelőorvos neve, amit a program a nyomtatvány készítésekor cserél be. Mentéskor a program felülírja a jelenlegi szöveget; egy már véglegesített terv a saját, akkor mentett szövegével marad, függetlenül attól, mi változik utólag itt.
 - Adattárolás (csak a telepíthető programban): az adatmappa helye, „Mappa megnyitása” a gép fájlkezelőjében, „Biztonsági mentés ZIP-be” (az egész adatmappa egyetlen fájlba, csak titkosított külső lemezre; az adatmappába nem menthető) az utolsó mentés napjával és azzal, hogy ezen vagy a másik gépen készült, „Mappa váltása” (ha van félkész terv, a program előbb rákérdez, mert a váltással elvész), „Átvitel a demóból”: a demóból exportált fájl árlistája, rendelőadatai és nyomtatvány-szövegei az összegzés és egy figyelmeztetés után a mostaniak helyére kerülnek (a páciensek és a tervek nem változnak; a felülírás előtt biztonsági mentést javasol), a két gép közti váltás szabálya lépésenként, a hiányzó nyomtatvány-szövegek pótlása a beépített alapszöveggel (a meglévőkhöz nem nyúl), és a program hibanaplójának megnyitása — a napló páciensnevet nem tartalmaz, és csak az adott gépen van.
 - Egyéb: az ajánlat érvényességi ideje, az alapértelmezett nyelv és pénznem új tervekhez, és annak áttekintése, mennyi tartalom (tételnevek, euró árak, nyilatkozat) áll már készen németül — a hiányzó euró árakhoz egy link egyenesen az árlista megfelelő szűrőjéhez visz.
-
-## DEMO
-
-- Fejlesztési/demonstrációs felület, elkülönítve az üzleti munkától, öt füllel: Funkciók, Összes terv, Filerendszer, Változásnapló, Adatkezelés. A telepíthető programban a Filerendszer és az Adatkezelés fül nincs: ott a valódi adatmappa a gép fájlkezelőjében nézhető meg.
-- A Funkciók fül ez az összefoglaló, a Változásnapló fül a program eddigi változásainak naplója.
-- Az Összes terv fül minden páciens minden kezelési tervét egy helyen mutatja, kereshetően — a napi munkára a páciens saját részletoldalának „Kezelési tervek” füle való, ez a fül a teljes állomány áttekintésére szolgál.
-- A Filerendszer fül böngészhető mappa- és fájlszerkezetet mutat: hová, milyen néven kerülnek majd a mentett kezelési tervek, az árlista és a nyomtatvány-szövegei a végleges programban. Egy fájlra kattintva megnézhető a tényleges tartalma is — egy már elmentett tervnél akár a ténylegesen elkészült nyomtatvány is megnyitható innen, új lapon. A beépített demó-adatból származó terveknél nincs mentett nyomtatvány; ezt a program külön kiírja ott is, ahol a letöltés vagy a megnyitás indulna.
-- Az Adatkezelés fülön a demó adat visszaállítható a kiindulási állapotra, vagy az összes tárolt adat véglegesen törölhető — a kettő nem ugyanaz, és a lap ezt el is magyarázza. A többi fül csak megtekintésre való — onnan semmi nem törölhető vagy módosítható.
+- Filerendszer (csak a böngészős demóban): böngészhető mappa- és fájlszerkezet — hová, milyen néven kerülnek majd a mentett kezelési tervek, az árlista és a nyomtatvány-szövegei a végleges programban. Egy fájlra kattintva megnézhető a tényleges tartalma is — egy már elmentett tervnél akár a ténylegesen elkészült nyomtatvány is megnyitható innen, új lapon. A beépített demó-adatból származó terveknél nincs mentett nyomtatvány; ezt a program külön kiírja ott is, ahol a letöltés vagy a megnyitás indulna.
+- Adatkezelés (csak a böngészős demóban): a demó adat visszaállítható a kiindulási állapotra, vagy az összes tárolt adat véglegesen törölhető — a kettő nem ugyanaz, és a lap ezt el is magyarázza.
 - Az Adatkezelés fülön az árlista, a beállítások és a nyomtatvány-szövegek egyetlen fájlba menthetők, hogy a telepíthető asztali program majd beolvashassa őket. Páciensek és tervek nem kerülnek a fájlba.
+
+## Súgó
+
+- A fő menü jobb szélén, két füllel: a Funkciók ez az összefoglaló, a Változásnapló a program eddigi változásainak naplója — a telepíthető programban ebből derül ki, mi változott egy frissítés után.

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { HashRouter, Route, Routes } from 'react-router-dom';
 import { Box, Flex, Skeleton, Theme } from '@radix-ui/themes';
 import AdatmappaKapu from './components/AdatmappaKapu';
 import DemoBanner from './components/DemoBanner';
@@ -9,15 +9,17 @@ import { NavGuardProvider } from './components/NavGuardContext';
 import TervWorkflowShell from './components/TervWorkflowShell';
 import ZaroKepernyo from './components/ZaroKepernyo';
 import { t } from './design/tokens';
-import DemoPage from './pages/DemoPage';
 import Home from './pages/Home';
 import NewPlanPage from './pages/NewPlanPage';
+import OsszesTervSection from './pages/OsszesTervSection';
 import PaciensekPage from './pages/PaciensekPage';
 import PatientDetailPage from './pages/PatientDetailPage';
 import PatientPage from './pages/PatientPage';
 import PlanEditorPage from './pages/PlanEditorPage';
 import PriceListAdminPage from './pages/PriceListAdminPage';
+import RegiDemoCim from './pages/RegiDemoCim';
 import SettingsPage from './pages/SettingsPage';
+import SugoPage from './pages/SugoPage';
 import TervReszleteiPage from './pages/TervReszleteiPage';
 import { AppStateProvider } from './state/AppState';
 import { StorageProvider } from './storage/StorageContext';
@@ -77,10 +79,7 @@ export default function App() {
                               }
                             />
                           </Route>
-                          {/* A globális, több-pácienses terv-lista a DEMO oldal
-                              "Összes terv" fülére költözött -- a régi, könyvjelzett
-                              `/tervek` URL ne haljon meg némán. */}
-                          <Route path="/tervek" element={<Navigate to="/demo/tervek" replace />} />
+                          <Route path="/tervek" element={<OsszesTervSection />} />
                           <Route path="/paciensek" element={<PaciensekPage />} />
                           <Route path="/paciensek/:patientDir" element={<PatientDetailPage />} />
                           {/* Egy véglegesített verzió read-only nézete -- lapos
@@ -93,8 +92,10 @@ export default function App() {
                           />
                           <Route path="/arlista" element={<PriceListAdminPage />} />
                           <Route path="/beallitasok" element={<SettingsPage />} />
-                          <Route path="/demo" element={<DemoPage />} />
-                          <Route path="/demo/:tab" element={<DemoPage />} />
+                          <Route path="/sugo" element={<SugoPage />} />
+                          <Route path="/sugo/:tab" element={<SugoPage />} />
+                          <Route path="/demo" element={<RegiDemoCim />} />
+                          <Route path="/demo/:tab" element={<RegiDemoCim />} />
                         </Routes>
                       </ErrorBoundary>
                     </main>

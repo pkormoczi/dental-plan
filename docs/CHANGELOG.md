@@ -20,6 +20,11 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   házszám”; a korábban egy mezőben megadott cím magától, az első vesszőnél kettéválik.
 - A német nyomtatvány fejlécében a cím szóhatáron törik két sorba („Behandlungsplan und” /
   „Kostenvoranschlag”), a szó közepén kötőjellel elvágva már nem.
+- A felső menüben megszűnt a DEMO menüpont. Minden páciens összes terve az új „Összes terv”
+  menüpont alatt látható, a Páciensek után. A Funkciók összefoglaló és a Változásnapló a menü jobb
+  szélén, a „Súgó” alatt található. A böngészős demóban a Filerendszer és az Adatkezelés (a demó
+  adat visszaállítása, törlése és exportja) a Beállítások két új fülére került; a demó felső
+  sávja is ide irányít. A régi könyvjelzők az új helyre visznek.
 
 ## 2026. november 18.
 

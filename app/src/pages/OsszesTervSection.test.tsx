@@ -3,18 +3,18 @@ import userEvent from '@testing-library/user-event';
 import { Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OsszesTervSection from './OsszesTervSection';
-import { UJ_VERZIO_VAGY_UJ_TERV } from '../../components/PatientPlanChains';
-import { resetListStateMemoryForTests } from '../../components/useListStateMemory';
-import { TestProviders } from '../../testUtils';
-import { patientCard, verzioMenupont } from '../../testQueries';
-import { DemoStorage } from '../../storage/DemoStorage';
-import { seedPlans } from '../../storage/seed/plans';
-import { formatShortDate } from '../../domain/date';
-import { formatMoney } from '../../domain/money';
-import { buildDownloadFileName } from '../../storage/paths';
-import { useAppState } from '../../state/AppState';
-import type { Plan } from '../../domain/types';
-import type { WorkflowRoute } from '../../storage/DraftStorage';
+import { UJ_VERZIO_VAGY_UJ_TERV } from '../components/PatientPlanChains';
+import { resetListStateMemoryForTests } from '../components/useListStateMemory';
+import { TestProviders } from '../testUtils';
+import { patientCard, verzioMenupont } from '../testQueries';
+import { DemoStorage } from '../storage/DemoStorage';
+import { seedPlans } from '../storage/seed/plans';
+import { formatShortDate } from '../domain/date';
+import { formatMoney } from '../domain/money';
+import { buildDownloadFileName } from '../storage/paths';
+import { useAppState } from '../state/AppState';
+import type { Plan } from '../domain/types';
+import type { WorkflowRoute } from '../storage/DraftStorage';
 
 // a kereszt-link az egyesített páciens-részletoldalra navigál
 // (`/paciensek/:patientDir`), a tab-ot `location.state.tab`-ban átadva --

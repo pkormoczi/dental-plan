@@ -144,6 +144,22 @@ beforeEach(() => {
 });
 
 describe('Beállítások → Adattárolás a telepített appban', () => {
+  it('a demó Filerendszer és Adatkezelés füle nincs, a ?tab=adatkezeles cím az alapfülre esik', async () => {
+    hamisAdattarolas(null);
+    await new DemoStorage().init();
+    window.location.hash = '#/beallitasok?tab=adatkezeles';
+    render(<App />);
+
+    expect(await screen.findByRole('tab', { name: /Rendelő adatai/ }, { timeout: 10000 })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.getByRole('tab', { name: /Adattárolás/ })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: /Filerendszer/ })).toBeNull();
+    expect(screen.queryByRole('tab', { name: /Adatkezelés/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Minden adat törlése' })).toBeNull();
+  });
+
   it('az aktuális mappát és a gépváltási szabályt mutatja; a megnyitás, a sablon-pótlás és a napló a telepített app műveletét hívja', async () => {
     const user = userEvent.setup();
     const a = hamisAdattarolas(null);

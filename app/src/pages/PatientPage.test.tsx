@@ -97,13 +97,11 @@ describe('PatientPage -- nyelv/pénznem kártya', () => {
     const user = userEvent.setup();
     render(<App />);
 
-    // A "Korábbi tervek" gomb lekerült a Kezdőlapról -- a `/tervek`
-    // route URL-ről marad elérhető, itt közvetlen hash-navigációval. A
-    // `/tervek` a DEMO "Összes terv" fülére (`/demo/tervek`)
-    // redirectel -- ezt igazolja a hash-ellenőrzés lent.
+    // A terv-lista az Összes terv menüpont (`/tervek`), itt közvetlen
+    // hash-navigációval; a cím átirányítás nélkül marad.
     window.location.hash = '#/tervek';
     const patientNameEl = await screen.findByText('Kovács János');
-    expect(window.location.hash).toBe('#/demo/tervek');
+    expect(window.location.hash).toBe('#/tervek');
     const card = patientNameEl.closest('[data-patient]') as HTMLElement;
     // A legfrissebb soron látható gomb, nem "⋯" menüpont.
     await user.click(within(card).getByRole('button', { name: 'Új verzió' }));

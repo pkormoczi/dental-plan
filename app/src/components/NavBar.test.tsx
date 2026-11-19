@@ -1,7 +1,4 @@
-// A NavBar eddig nem volt közvetlenül tesztelve, csak közvetve
-// (App.test.tsx a Filerendszer/DEMO linken keresztül). Ez a teszt a
-// végleges öt tételes fő navigáció pontos feliratát/sorrendjét fedi -- a
-// korábban itt élt négy
+// A fő navigáció pontos feliratát/sorrendjét fedi -- a korábban itt élt négy
 // átmeneti workflow-link a terv-workflow héjjal megszűnt.
 
 import { render, screen } from '@testing-library/react';
@@ -27,15 +24,17 @@ function renderNavBar() {
 }
 
 describe('NavBar', () => {
-  it('a végleges öt linket mutatja, a megadott sorrendben és felirattal', () => {
+  it('a hat linket mutatja, a megadott sorrendben és felirattal -- DEMO link nincs', () => {
     renderNavBar();
     const links = screen.getAllByRole('link').map((el) => el.textContent);
-    expect(links).toEqual(['Kezdőlap', 'Páciensek', 'Kezelések és árak', 'Beállítások', 'DEMO']);
+    expect(links).toEqual(['Kezdőlap', 'Páciensek', 'Összes terv', 'Kezelések és árak', 'Beállítások', 'Súgó']);
+    expect(screen.queryByRole('link', { name: 'DEMO' })).toBeNull();
   });
 
-  it('a "Kezelések és árak" a /arlista-ra, a "DEMO" a /demo-ra mutat', () => {
+  it('az "Összes terv" a /tervek-re, a "Kezelések és árak" a /arlista-ra, a "Súgó" a /sugo-ra mutat', () => {
     renderNavBar();
+    expect(screen.getByRole('link', { name: 'Összes terv' })).toHaveAttribute('href', '/tervek');
     expect(screen.getByRole('link', { name: 'Kezelések és árak' })).toHaveAttribute('href', '/arlista');
-    expect(screen.getByRole('link', { name: 'DEMO' })).toHaveAttribute('href', '/demo');
+    expect(screen.getByRole('link', { name: 'Súgó' })).toHaveAttribute('href', '/sugo');
   });
 });
