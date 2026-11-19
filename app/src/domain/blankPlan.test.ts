@@ -6,7 +6,8 @@ const settings: Settings = {
   schemaVersion: 1,
   rendelo: {
     nev: 'Teszt Rendelő',
-    cim: '',
+    iranyitoszamVaros: '',
+    utcaHazszam: '',
     telefon: '',
     email: '',
     adoszam: '',

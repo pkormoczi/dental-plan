@@ -13,6 +13,11 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   verziója, a rendelő neve, a nyomtatvány-szövegek száma), és a meglévő adatok felülírása előtt
   biztonsági mentést javasol. Ha a fájl nem a demó exportja vagy hibás, a program kiírja, mi a
   gond, és semmit nem ír.
+- A nyomtatvány fejlécében a rendelő adatai négy rendezett sorban állnak: irányítószám és város,
+  utca és házszám, telefon, e-mail. A láblécben három sorban: a rendelő neve, a címe, majd az
+  adószám és a cégjegyzékszám. A szavak és az e-mail-cím már nem törnek kötőjellel ketté. Ehhez a
+  Beállítások Rendelő adatai fülén a cím két mezőre vált, „Irányítószám, város” és „Utca,
+  házszám”; a korábban egy mezőben megadott cím magától, az első vesszőnél kettéválik.
 
 ## 2026. november 18.
 

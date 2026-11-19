@@ -192,6 +192,27 @@ describe('SettingsPage', () => {
       });
     });
 
+    it('a cím két külön mezőben szerkeszthető, Mentés után a két cím-mező íródik, cim kulcs nem', async () => {
+      renderSettings();
+      await screen.findByText('Beállítások');
+
+      expect(screen.getByLabelText('Irányítószám, város')).toHaveValue('1117 Budapest');
+      expect(screen.getByLabelText('Utca, házszám')).toHaveValue('Móricz Zsigmond körtér 15. 3/8');
+
+      fireEvent.change(screen.getByLabelText('Irányítószám, város'), { target: { value: '1114 Budapest' } });
+      fireEvent.change(screen.getByLabelText('Utca, házszám'), { target: { value: 'Bartók Béla út 1.' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Mentés' }));
+
+      await waitFor(() => {
+        const s = JSON.parse(localStorage.getItem('dp:beallitasok.json') as string) as {
+          rendelo: Record<string, unknown>;
+        };
+        expect(s.rendelo.iranyitoszamVaros).toBe('1114 Budapest');
+        expect(s.rendelo.utcaHazszam).toBe('Bartók Béla út 1.');
+        expect(s.rendelo).not.toHaveProperty('cim');
+      });
+    });
+
     it('a rendelő-mezőkbe gyors gépeléskor nem esik ki karakter', async () => {
       const user = userEvent.setup();
       renderSettings();

@@ -212,11 +212,18 @@ export default function RendeloTab({ onDirtyChange }: { onDirtyChange: (dirty: b
               onChange={(e) => patchRendelo({ nev: e.target.value })}
             />
           </Field>
-          <Field label="Cím">
+          <Field label="Irányítószám, város">
             <TextField.Root
-              id="rendelo-cim"
-              value={draft.rendelo.cim}
-              onChange={(e) => patchRendelo({ cim: e.target.value })}
+              id="rendelo-iranyitoszam-varos"
+              value={draft.rendelo.iranyitoszamVaros}
+              onChange={(e) => patchRendelo({ iranyitoszamVaros: e.target.value })}
+            />
+          </Field>
+          <Field label="Utca, házszám">
+            <TextField.Root
+              id="rendelo-utca-hazszam"
+              value={draft.rendelo.utcaHazszam}
+              onChange={(e) => patchRendelo({ utcaHazszam: e.target.value })}
             />
           </Field>
           <Field label="Telefon">

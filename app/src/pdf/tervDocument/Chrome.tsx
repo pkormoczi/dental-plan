@@ -1,11 +1,16 @@
 // A nyomtatvány fejléc-/lábléc-komponensei -- kiemelve a TervDocument.tsx-ből.
 
 import { Image, Text, View } from '@react-pdf/renderer';
+import { rendeloEgysorosCim } from '../../domain/beallitasok';
 import { formatShortDate } from '../../domain/date';
 import type { Plan, Settings } from '../../domain/types';
 import type { PdfLabels } from '../labels';
 import logoUrl from '../../assets/logo.png';
 import { s } from './styles';
+
+// A react-pdf alapból szótagol: a keskeny rendelő-blokkban így lett
+// „drmando-ki.hu” és „Zsig-mond”. A cím és az e-mail szóhatáron törjön.
+const nincsSzotagolas = (szo: string) => [szo];
 
 // Üres érték esetén a mező sora TELJESEN kimarad (nem `—`) -- a doki nem
 // néz üres sorokat egy szerződéses dokumentumon.
@@ -20,16 +25,18 @@ export function Kv({ k, v }: { k: string; v: string }) {
 }
 
 export function MainHeader({ plan, settings, L }: { plan: Plan; settings: Settings; L: PdfLabels }) {
+  const r = settings.rendelo;
   return (
     <View style={s.mainHeader}>
       <View style={s.mainHeaderLeft}>
         <Image src={logoUrl} style={s.logoMain} />
         <View style={s.headerDivider} />
         <View style={s.headerClinicBlock}>
-          <Text style={s.headerClinicText}>{settings.rendelo.cim}</Text>
-          <Text style={s.headerClinicText}>
-            {settings.rendelo.telefon} · {settings.rendelo.email}
-          </Text>
+          {[r.iranyitoszamVaros, r.utcaHazszam, r.telefon, r.email].filter(Boolean).map((sor, i) => (
+            <Text key={i} style={s.headerClinicText} hyphenationCallback={nincsSzotagolas}>
+              {sor}
+            </Text>
+          ))}
         </View>
       </View>
       <View style={s.headerTitleBlock}>
@@ -59,10 +66,13 @@ export function Footer({ plan, settings, L }: { plan: Plan; settings: Settings; 
     <View style={s.footer} fixed>
       <View style={s.footerRow}>
         <View style={s.footerLeft}>
-          <Text style={s.footerText}>
-            {settings.rendelo.nev} · {settings.rendelo.cim}
+          <Text style={s.footerText} hyphenationCallback={nincsSzotagolas}>
+            {settings.rendelo.nev}
           </Text>
-          <Text style={s.footerText}>
+          <Text style={s.footerText} hyphenationCallback={nincsSzotagolas}>
+            {rendeloEgysorosCim(settings.rendelo)}
+          </Text>
+          <Text style={s.footerText} hyphenationCallback={nincsSzotagolas}>
             {L.adoszam} {settings.rendelo.adoszam || '—'} · {L.cegjegyzekszam}{' '}
             {settings.rendelo.cegjegyzekszam || '—'}
           </Text>

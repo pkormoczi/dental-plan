@@ -368,7 +368,13 @@ export interface PatientMasterData extends Paciens {
 
 export interface Rendelo {
   nev: string;
-  cim: string;
+  /**
+   * A két cím-mező egy korábbi, egyetlen `cim` szövegből is jöhet:
+   * `domain/beallitasok.ts` `rendeloKetCimmezovel()` vágja ketté betöltéskor.
+   * `schemaVersion` nem emelkedett.
+   */
+  iranyitoszamVaros: string;
+  utcaHazszam: string;
   telefon: string;
   email: string;
   adoszam: string;

@@ -507,6 +507,23 @@ export function taroloSzerzodesTesztek(keszit: () => Promise<SzerzodesKornyezet>
     figyeloLe();
   });
 
+  it('a csak cim-et tartalmazó beallitasok.json két cím-mezővel töltődik be, a következő mentés nem ír cim kulcsot', async () => {
+    const regi = JSON.parse((await k.nyersOlvas('beallitasok.json'))!);
+    delete regi.rendelo.iranyitoszamVaros;
+    delete regi.rendelo.utcaHazszam;
+    regi.rendelo.cim = '1117 Budapest, Móricz Zsigmond körtér 15. 3/8';
+    await k.nyersIr('beallitasok.json', JSON.stringify(regi));
+
+    const betoltott = await storage.loadSettings();
+    expect(betoltott.rendelo.iranyitoszamVaros).toBe('1117 Budapest');
+    expect(betoltott.rendelo.utcaHazszam).toBe('Móricz Zsigmond körtér 15. 3/8');
+
+    await storage.saveSettings(betoltott);
+    const mentett = JSON.parse((await k.nyersOlvas('beallitasok.json'))!);
+    expect(mentett.rendelo).not.toHaveProperty('cim');
+    expect(mentett.rendelo.utcaHazszam).toBe('Móricz Zsigmond körtér 15. 3/8');
+  });
+
   it('surfaces a Hungarian, non-crashing error for corrupted (non-JSON) terv.json', async () => {
     const plan = makeBlankPlan();
     const ref = await storage.savePlan(plan, new Uint8Array());

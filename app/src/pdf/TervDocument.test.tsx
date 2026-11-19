@@ -61,8 +61,12 @@ vi.mock('@react-pdf/renderer', () => {
         {render ? render(pageState) : children}
       </div>
     ),
-    Text: (props: { children?: ReactNode; render?: RenderProp }) => (
-      <span>{props.render ? props.render(pageState) : props.children}</span>
+    // A `hyphenationCallback` egy próbaszón lefuttatva data-attribútumra
+    // kerül: így látszik, hogy egy szöveg szótagolhat-e.
+    Text: (props: { children?: ReactNode; render?: RenderProp; hyphenationCallback?: (szo: string) => string[] }) => (
+      <span data-szotagolas={props.hyphenationCallback?.('Zsigmond').join('-')}>
+        {props.render ? props.render(pageState) : props.children}
+      </span>
     ),
     Image: () => null,
     Font: { register: () => {} },
@@ -198,6 +202,56 @@ describe('TervDocument -- font-visszaesés őre', () => {
       .filter((szoveg) => szoveg.includes('\n'));
 
     expect(sortoroSzovegek).toEqual([]);
+  });
+});
+
+describe('TervDocument -- a fejléc és a lábléc rendelő-sorai', () => {
+  function sorai(elsoSor: string): string[] {
+    const blokk = screen.getAllByText(elsoSor)[0].parentElement!;
+    return [...blokk.children].map((el) => el.textContent ?? '');
+  }
+
+  it('a fejléc rendelő-blokkja négy külön sor: irányítószám és város, utca és házszám, telefon, e-mail', () => {
+    renderDoc(false);
+    expect(sorai('1117 Budapest')).toEqual([
+      '1117 Budapest',
+      'Móricz Zsigmond körtér 15. 3/8',
+      '+36 70 617 3172',
+      'istvan@drmandoki.hu',
+    ]);
+  });
+
+  it('üres rendelő-mező sora kimarad a fejlécből, nem marad helyén üres sor', () => {
+    render(
+      <TervDocument
+        plan={buildPlan(false)}
+        settings={{ ...seedSettings, rendelo: { ...seedSettings.rendelo, utcaHazszam: '', telefon: '' } }}
+        priceList={seedPriceList}
+        offerOnly
+        nyilatkozatMd=""
+        fizetesiFeltetelekMd=""
+        garanciaMd=""
+        tervCim=""
+        toothChartPng={null}
+      />,
+    );
+    expect(sorai('1117 Budapest')).toEqual(['1117 Budapest', 'istvan@drmandoki.hu']);
+  });
+
+  it('a lábléc bal blokkja három sor: a rendelő neve, egysoros címe, adószáma és cégjegyzékszáma', () => {
+    renderDoc(false);
+    expect(sorai(seedSettings.rendelo.nev)).toEqual([
+      'Dr. Mándoki István Fogászati és Szájsebészeti Rendelő',
+      '1117 Budapest, Móricz Zsigmond körtér 15. 3/8',
+      'Adószám: — · Cégjegyzékszám: —',
+    ]);
+  });
+
+  it('a fejléc és a lábléc rendelő-sorai nem szótagolnak: a szó egészben marad', () => {
+    renderDoc(false);
+    const sorok = [...sorai('1117 Budapest'), ...sorai(seedSettings.rendelo.nev)];
+    const szotagolas = sorok.map((sor) => screen.getAllByText(sor)[0].getAttribute('data-szotagolas'));
+    expect(szotagolas).toEqual(sorok.map(() => 'Zsigmond'));
   });
 });
 
@@ -758,7 +812,7 @@ describe('TervDocument -- kompakt fejléc és folytatólagos cím', () => {
     pageState.pageNumber = 1;
     const { container } = renderPlan();
     const aBlokk = container.querySelectorAll<HTMLElement>('[data-mock-tag="page"]')[0];
-    expect(within(aBlokk).getByText(seedSettings.rendelo.cim)).toBeInTheDocument();
+    expect(within(aBlokk).getByText(seedSettings.rendelo.utcaHazszam)).toBeInTheDocument();
     expect(within(aBlokk).queryByText('Kezelési terv · Teszt Páciens')).not.toBeInTheDocument();
   });
 

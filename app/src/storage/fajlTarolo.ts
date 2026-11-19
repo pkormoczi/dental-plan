@@ -2,6 +2,7 @@
 // tesztekben (memória) és a telepített appban (gyökérmappa) -- csak a fájlprimitívek
 // különböznek. DOM-mentes modul: a main process is importálja (migrációs terv §9.1).
 
+import { rendeloKetCimmezovel } from '../domain/beallitasok';
 import { megjelenitettTervCim } from '../domain/tervCim';
 import { paciensIndexNev, uresTorzsadat } from '../domain/paciensAdatok';
 import { ervenyesAktivitas, ujAktivitas } from '../domain/paciensAktivitas';
@@ -696,7 +697,7 @@ export class FajlTarolo implements PlanStorage {
     const settings = parseJson<Settings>(raw, BEALLITASOK_FAJL);
     assertKnownSchemaVersion(settings, BEALLITASOK_FAJL);
     assertSettingsShape(settings, BEALLITASOK_FAJL);
-    return settings;
+    return rendeloKetCimmezovel(settings);
   }
 
   async saveSettings(s: Settings, opciok?: FelulirasOpciok): Promise<void> {

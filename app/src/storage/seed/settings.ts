@@ -7,7 +7,8 @@ export const seedSettings: Settings = {
   schemaVersion: 1,
   rendelo: {
     nev: 'Dr. Mándoki István Fogászati és Szájsebészeti Rendelő',
-    cim: '1117 Budapest, Móricz Zsigmond körtér 15. 3/8',
+    iranyitoszamVaros: '1117 Budapest',
+    utcaHazszam: 'Móricz Zsigmond körtér 15. 3/8',
     telefon: '+36 70 617 3172',
     email: 'istvan@drmandoki.hu',
     adoszam: '',
