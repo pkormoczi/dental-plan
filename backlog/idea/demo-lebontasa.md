@@ -1,0 +1,5 @@
+# demo-lebontasa
+Type: feature
+Source: desktop-app-migration-plan-final.md §8, §10.3, §11
+
+Előfeltétel: az `electron-telepitesi-proba`-ban a doki megerősítette, hogy a demóból exportált fájl importja a telepített appban hiánytalan — addig a Pages-demó az egyetlen hely, ahol a mai árlistája és beállításai élnek. Utána az app csak telepítve fut: a Pages-deploy (`deploy.yml`) megszűnik, a `ci.yml` marad. A DEMO menüből az Összes terv valódi oldal lesz saját útvonalon, a Funkciók és a Változásnapló súgóként marad, a Filerendszer fül helyére a „Mappa megnyitása” kerül, az Adatkezelés fül és a demó-sáv törlődik. A termékkód nem hivatkozik a `DemoStorage`-ra: a tesztek memóriabeli tárolóra állnak át, a demó-only tároló-mezők és a demó fájlfa-nézet törlődnek; a seed árlista, beállítások és nyomtatvány-szövegek az üres adatmappa alapértékeiként maradnak. A `PRODUCT.md § Két fázis`, a root és a nested `CLAUDE.md`-k az egyfázisú állapotot írják le, a migrációs terv tartós részei ezekbe költöznek, maga a terv törlődik. Nem tartozik ide a régi dokumentáció karantén-mappája (`legacy-doksi-torlese`).
