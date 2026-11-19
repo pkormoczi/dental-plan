@@ -2,6 +2,18 @@
 
 Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb változás van felül.
 
+## 2026. november 19.
+
+- A telepíthető program át tudja venni a demóban beállított árlistát, rendelőadatokat és
+  nyomtatvány-szövegeket: a demó DEMO oldalán, az Adatkezelés fülön exportált fájlt első
+  indításkor, üres mappa választása után a „Van egy exportált fájlom a demóból” gombbal lehet
+  beolvasni, és az új adatmappa ebből épül fel. Ugyanez a gomb a Beállítások Adattárolás fülén is
+  megvan: ott a mostani árlista és beállítások helyére kerül az export, a páciensek és a tervek
+  nem változnak. Írás előtt a program összegzi, mi kerül át (az export napja, az árlista tételei és
+  verziója, a rendelő neve, a nyomtatvány-szövegek száma), és a meglévő adatok felülírása előtt
+  biztonsági mentést javasol. Ha a fájl nem a demó exportja vagy hibás, a program kiírja, mi a
+  gond, és semmit nem ír.
+
 ## 2026. november 18.
 
 - A telepíthető program mostantól egy kiválasztott adatmappába ír, amit a Google Drive visz át a

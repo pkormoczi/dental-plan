@@ -81,12 +81,32 @@ Első indításkor az alkalmazás ezt a mappát kéri.
 - Ne a Letöltések mappát válaszd: az a OneDrive-ra is szinkronizálhat.
 - **Az első gépen** hozz létre egy új, üres mappát (például `Mandoki Dental adatok`), és azt válaszd:
   az alkalmazás felépíti benne az adatmappát.
+- Ha a demóban már beállítottad az árlistát, a rendelő adatait és a nyomtatvány-szövegeket, az üres
+  mappa kiválasztása után a **Van egy exportált fájlom a demóból** gombbal az adatmappa a demó
+  exportjából épül fel (lásd lent: Átvitel a demóból).
 - **A második gépen** várd meg, hogy a Google Drive letöltse ezt a mappát, és ugyanezt válaszd ki. Ha a
   mappa még üresnek látszik, ne hozz létre benne új adatmappát: várd meg a letöltést.
 
 A kiválasztott mappa később a Beállítások → **Adattárolás** fülön látszik és cserélhető. Ha induláskor
 a mappa nem érhető el (például a Drive még nem indult el), az alkalmazás ezt kiírja: várd meg a
 Drive-ot, majd **Újrapróba**. Az adatmappához az alkalmazás eltávolítása nem nyúl.
+
+## Átvitel a demóból
+
+A demóban beállított árlista, rendelőadatok és nyomtatvány-szövegek átvihetők a telepített
+programba. Páciensadat nem kerül át: a demó páciensei kitaláltak.
+
+1. A böngészős demóban a **DEMO** oldal **Adatkezelés** fülén exportáld az adatokat. A fájl
+   (`kezelesi-terv-export-<dátum>.json`) a Letöltések mappába kerül.
+2. A telepített programban első indításkor válassz egy üres mappát, és kattints a **Van egy
+   exportált fájlom a demóból** gombra; vagy egy már használt adatmappánál a Beállítások →
+   **Adattárolás** fülön, az **Átvitel a demóból** résznél ugyanerre a gombra.
+3. Válaszd ki az exportált fájlt. A program írás előtt összegzi, mi kerül át, és csak a
+   megerősítés után ír.
+
+Egy már használt adatmappánál az átvitel a mostani árlistát és beállításokat lecseréli, az exportban
+szereplő nyomtatvány-szövegeket felülírja; a páciensek és a tervek nem változnak. Ha a mostani
+árlistára még szükséged lehet, előbb készíts biztonsági mentést.
 
 ## Gépváltás
 

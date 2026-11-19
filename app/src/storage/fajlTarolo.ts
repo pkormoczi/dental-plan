@@ -26,6 +26,7 @@ import type {
   PriceList,
   Settings,
 } from '../domain/types';
+import { exportLegfrissebbSablonjai, type AdatExport } from './adatExport';
 import { MarLetezikError, utvonal, type FajlPrimitivek } from './fajlPrimitivek';
 import { parseJson } from './json';
 import type { FelulirasOpciok, MentettVerzio, PlanStorage, UtkozesTetel } from './PlanStorage';
@@ -121,6 +122,14 @@ const sablonUt = (fileName: string) => utvonal(SABLONOK_MAPPA, fileName);
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * A beépített alapsablonok közül azok, amelyeknek az alapneve nincs a megadottak között -- a
+ * demó-export ezeket nem hozza, egy friss mappában a beépített szöveg pótolja őket.
+ */
+export function hianyzoAlapsablonok(meglevoAlapnevek: ReadonlySet<string>): Array<[string, string]> {
+  return DEFAULT_TEMPLATES.filter(([name]) => !meglevoAlapnevek.has(name.replace(/-v\d+\.md$/, '')));
 }
 
 /** Az árlista, a beállítások és az alapsablonok egy friss gyökérbe, páciens nélkül. */
@@ -744,16 +753,45 @@ export class FajlTarolo implements PlanStorage {
    * verziókhoz nem nyúl. A beírt fájlok nevét adja.
    */
   async alapsablonokatPotol(): Promise<string[]> {
+    return this.enqueue(() => this.alapsablonokatIr());
+  }
+
+  /**
+   * A demó-export átvétele a használt mappába: az árlista és a beállítások lecserélődnek, az
+   * export alapneveinek legfrissebb szövege a mappa ugyanazon alapnevének legfrissebb fájljára
+   * kerül, a többi szöveghez nem nyúl, a hiányzó alapsablonok a beépítettből jönnek. Ütközésőr
+   * és `_utkozesek/` nélkül: a doki a teljes cserét választotta, és egy félretett régi árlista
+   * induláskor ütközésként jelenne meg -- a vissza út a biztonsági mentés.
+   */
+  async exportotAtvesz(adat: AdatExport): Promise<void> {
     return this.enqueue(async () => {
-      const irt: string[] = [];
-      for (const [name, body] of DEFAULT_TEMPLATES) {
-        if (await this.latestTemplateFile(name.replace(/-v\d+\.md$/, ''))) continue;
-        await this.prim.irSzoveg(sablonUt(name), body);
-        await this.megjegyez(sablonUt(name), body);
-        irt.push(name);
+      for (const [ut, tartalom] of [
+        [ARLISTA_FAJL, JSON.stringify(adat.arlista)],
+        [BEALLITASOK_FAJL, JSON.stringify(adat.beallitasok)],
+      ] as const) {
+        await this.prim.irSzoveg(ut, tartalom);
+        // A main tárolója túléli a renderer újratöltését: a következő mentés az újat ismerje.
+        await this.megjegyez(ut, tartalom);
       }
-      return irt;
+      for (const [base, exportFajl] of exportLegfrissebbSablonjai(adat.sablonok)) {
+        const cel = sablonUt((await this.latestTemplateFile(base)) ?? exportFajl);
+        await this.prim.irSzoveg(cel, adat.sablonok[exportFajl]);
+        await this.megjegyez(cel, adat.sablonok[exportFajl]);
+      }
+      await this.alapsablonokatIr();
     });
+  }
+
+  /** Lánc nélkül: az `enqueue`-n belülről hívva egy újabb `enqueue` sosem indulna el. */
+  private async alapsablonokatIr(): Promise<string[]> {
+    const irt: string[] = [];
+    for (const [name, body] of DEFAULT_TEMPLATES) {
+      if (await this.latestTemplateFile(name.replace(/-v\d+\.md$/, ''))) continue;
+      await this.prim.irSzoveg(sablonUt(name), body);
+      await this.megjegyez(sablonUt(name), body);
+      irt.push(name);
+    }
+    return irt;
   }
 
   private async latestTemplateFile(base: string): Promise<string | null> {

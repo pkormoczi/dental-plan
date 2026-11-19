@@ -5,6 +5,7 @@ import path from 'node:path';
 import { ADATMAPPA_ALLAPOT_CSATORNA, ZARAS_CSATORNA } from '../src/storage/taroloIpc';
 import { Adatmappa } from './adatmappa.js';
 import { mentesKezelok } from './biztonsagiMentes.js';
+import { demoImportKezelok } from './demoImport.js';
 import { buildFajlUtvonal, mimeTipus } from './buildKiszolgalas.js';
 import { PDF_FAJLNEV } from './fileSystemStorage.js';
 import {
@@ -44,6 +45,7 @@ const TESZT_USER_DATA = process.env.DENTAL_PLAN_TESZT_USER_DATA;
 const TESZT_DEMO = TESZT_USER_DATA != null && process.env.DENTAL_PLAN_TESZT_DEMO === '1';
 const TESZT_MAPPAVALASZTAS = TESZT_USER_DATA != null ? process.env.DENTAL_PLAN_TESZT_MAPPAVALASZTAS : undefined;
 const TESZT_MENTES_CEL = TESZT_USER_DATA != null ? process.env.DENTAL_PLAN_TESZT_MENTES_CEL : undefined;
+const TESZT_IMPORT_FAJL = TESZT_USER_DATA != null ? process.env.DENTAL_PLAN_TESZT_IMPORT_FAJL : undefined;
 
 app.setPath(
   'userData',
@@ -141,6 +143,27 @@ function inditas(): void {
       kuldoEngedett,
       {
         helyetValaszt: async (nev) => TESZT_MENTES_CEL ?? helyetValaszt(nev, { name: 'ZIP', extensions: ['zip'] }),
+      },
+      irasTortent,
+      naplozo,
+    );
+    demoImportKezelok(
+      ipcMain,
+      adatmappa,
+      kuldoEngedett,
+      {
+        // A demó exportja a böngésző letöltéseként érkezik, ezért a választó a Letöltésekben nyílik.
+        fajltValaszt: async () => {
+          if (TESZT_IMPORT_FAJL) return TESZT_IMPORT_FAJL;
+          const opciok: Electron.OpenDialogOptions = {
+            title: 'A demóból exportált fájl kiválasztása',
+            defaultPath: app.getPath('downloads'),
+            properties: ['openFile'],
+            filters: [{ name: 'Demó-export', extensions: ['json'] }],
+          };
+          const valasz = foablak ? await dialog.showOpenDialog(foablak, opciok) : await dialog.showOpenDialog(opciok);
+          return valasz.canceled ? null : (valasz.filePaths[0] ?? null);
+        },
       },
       irasTortent,
       naplozo,

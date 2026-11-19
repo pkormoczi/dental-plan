@@ -6,9 +6,11 @@ import {
   BEALLITASOK_FAJL,
   DEFAULT_TEMPLATES,
   FajlTarolo,
+  hianyzoAlapsablonok,
   PACIENSEK_MAPPA,
   SABLONOK_MAPPA,
 } from '../src/storage/fajlTarolo';
+import { exportLegfrissebbSablonjai, type AdatExport } from '../src/storage/adatExport';
 import { utvonal } from '../src/storage/fajlPrimitivek';
 import { seedPriceList } from '../src/storage/seed/priceList';
 import { seedSettings } from '../src/storage/seed/settings';
@@ -82,6 +84,27 @@ export class FileSystemStorage extends FajlTarolo {
     const { allapot } = await this.osztalyoz();
     if (allapot !== 'ures') throw new IdegenMappaError();
     await this.hianyzotIr();
+  }
+
+  /**
+   * Üres gyökérbe a demó-export: az árlista, a beállítások és az export minden sablonfájlja a
+   * saját nevén; a beépített sablonokból csak az az alapnév, amelyiket az export nem hozza.
+   * Nem üres mappába nem ír. Az árlista íródik utoljára, hogy egy félbemaradt írás után a
+   * mappa hiányosnak, ne a miénknek látsszon.
+   */
+  async exportbolLetrehoz(adat: AdatExport): Promise<void> {
+    const { allapot } = await this.osztalyoz();
+    if (allapot !== 'ures') throw new IdegenMappaError();
+    const exportAlapnevek = new Set(exportLegfrissebbSablonjai(adat.sablonok).keys());
+    for (const [nev, tartalom] of Object.entries(adat.sablonok)) {
+      await this.prim.irSzoveg(utvonal(SABLONOK_MAPPA, nev), tartalom);
+    }
+    for (const [nev, tartalom] of hianyzoAlapsablonok(exportAlapnevek)) {
+      await this.prim.irSzoveg(utvonal(SABLONOK_MAPPA, nev), tartalom);
+    }
+    await this.prim.mappaLetrehoz(PACIENSEK_MAPPA);
+    await this.prim.irSzoveg(BEALLITASOK_FAJL, JSON.stringify(adat.beallitasok));
+    await this.prim.irSzoveg(ARLISTA_FAJL, JSON.stringify(adat.arlista));
   }
 
   /**

@@ -43,6 +43,8 @@ function hamisAdattarolas(valasztott: MappaVizsgalat | null) {
     hasznal: vi.fn(async (letrehoz: boolean) => vizsgalat(letrehoz || valasztott?.allapot === 'rendben' ? 'rendben' : 'ures')),
     megnyit: vi.fn(async () => {}),
     alapsablonokatPotol: vi.fn(async () => [] as string[]),
+    importElonezet: vi.fn(async () => null),
+    importIr: vi.fn(),
     ujratolt: vi.fn(),
   };
   kepesseg.adattarolas = a;

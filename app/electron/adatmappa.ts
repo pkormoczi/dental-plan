@@ -5,6 +5,7 @@
 import { randomUUID } from 'node:crypto';
 import { promises as fsp } from 'node:fs';
 import path from 'node:path';
+import { AdatImportError, type AdatExport } from '../src/storage/adatExport';
 import { parseJson } from '../src/storage/json';
 import { ErvenytelenParameterError, IoError, ioErrno } from '../src/storage/taroloHibak';
 import type { AdatmappaAllapot, MappaVizsgalat } from '../src/storage/taroloIpc';
@@ -121,6 +122,24 @@ export class Adatmappa {
       await this.vizsgalo(ut).adatmappatLetrehoz();
       v = await this.vizsgal(ut);
     }
+    return this.valtasRendbenre(ut, v);
+  }
+
+  /**
+   * A vizsgált üres mappába a demó-export, utána az lesz az adatmappa, mint a `hasznal`-nál. A
+   * választás óta a Drive is lehozhatott bele valamit: nem üres mappába nem ír, és nem is vált rá
+   * csendben -- a doki importot kért, nem egy meglévő mappát.
+   */
+  async importal(adat: AdatExport): Promise<MappaVizsgalat> {
+    const ut = this.jeloltKell();
+    if ((await this.vizsgal(ut)).allapot !== 'ures') {
+      throw new AdatImportError('A kiválasztott mappa közben megváltozott, már nem üres: az import nem írt bele. Válaszd ki újra a mappát.');
+    }
+    await this.vizsgalo(ut).exportbolLetrehoz(adat);
+    return this.valtasRendbenre(ut, await this.vizsgal(ut));
+  }
+
+  private async valtasRendbenre(ut: string, v: MappaVizsgalat): Promise<MappaVizsgalat> {
     if (v.allapot !== 'rendben') return v;
     await this.configIr({ schemaVersion: CONFIG_SEMA, gyokerMappa: ut, gepId: this.gepId_ });
     this.aktival(ut);

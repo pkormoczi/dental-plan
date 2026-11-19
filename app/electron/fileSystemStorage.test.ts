@@ -6,9 +6,11 @@ import { buildPatientDirName, generateId, VersionConflictError } from '../src/st
 import { sha256Hex } from '../src/storage/sha256';
 import { FelulirasUtkozesError, HianyosMappaError, HianyosVerzioError, IdegenMappaError, IoError } from '../src/storage/taroloHibak';
 import { uresTorzsadat } from '../src/domain/paciensAdatok';
+import { seedPriceList } from '../src/storage/seed/priceList';
 import { makeBlankPlan, taroloSzerzodesTesztek, type SzerzodesKornyezet } from '../src/storage/szerzodesTesztek';
 import { FileSystemStorage } from './fileSystemStorage';
 import { FsPrimitivek, type FsMuveletek } from './fsPrimitivek';
+import { tesztExport } from './tesztExport';
 
 vi.mock('../src/storage/paths', async (eredeti) => {
   const m = await eredeti<typeof import('../src/storage/paths')>();
@@ -724,5 +726,79 @@ describe('FileSystemStorage induláskori ütközés-vizsgálat', () => {
 
     expect((await storage.listPatients()).map((x) => x.dirName)).toEqual([p.dirName]);
     expect(await storage.listPlans(p.dirName)).toEqual([]);
+  });
+});
+
+describe('FileSystemStorage demó-export átvétele', () => {
+  it('üres mappába az exportból épít adatmappát: az export árlistája, beállításai és sablonfájljai, a hiányzó alapnév a beépítettből', async () => {
+    const gyoker = await ujGyoker();
+    const storage = new FileSystemStorage(new FsPrimitivek(gyoker, { kesleltet: azonnal }));
+    const adat = tesztExport();
+
+    await storage.exportbolLetrehoz(adat);
+    await storage.init();
+
+    expect((await storage.osztalyoz()).allapot).toBe('mienk');
+    expect(await storage.loadPriceList()).toEqual(adat.arlista);
+    expect((await storage.loadSettings()).rendelo.nev).toBe('Export Rendelő');
+    expect((await fsp.readdir(path.join(gyoker, 'sablonok'))).sort()).toEqual([
+      'fizetesi-feltetelek-de-v1.md',
+      'fizetesi-feltetelek-hu-v1.md',
+      'garancia-de-v1.md',
+      'garancia-hu-v1.md',
+      'nyilatkozat-de-v1.md',
+      'nyilatkozat-hu-v1.md',
+      'nyilatkozat-hu-v2.md',
+    ]);
+    expect(await storage.loadTemplate('garancia-hu-v1.md')).toBe('# Garancia\n\nA demóban átírt garancia.\n');
+    expect((await storage.loadLatestTemplateByBase('nyilatkozat-hu')).body).toBe('# Nyilatkozat\n\nÚj nyilatkozat.\n');
+    expect(await storage.listPatients()).toEqual([]);
+  });
+
+  it('nem üres mappába az export sem ír', async () => {
+    const gyoker = await ujGyoker();
+    await nyersIr(gyoker, 'Dokumentum.docx', 'x');
+    const storage = new FileSystemStorage(new FsPrimitivek(gyoker));
+
+    await expect(storage.exportbolLetrehoz(tesztExport())).rejects.toBeInstanceOf(IdegenMappaError);
+
+    expect(await fsp.readdir(gyoker)).toEqual(['Dokumentum.docx']);
+  });
+
+  it('használt mappában lecseréli az árlistát és a beállításokat, az exportált alapnév legfrissebb helyi fájlja az export szövegét kapja, a többi szöveghez és a páciensekhez nem nyúl', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    await nyersIr(gyoker, 'sablonok/garancia-hu-v3.md', 'helyi harmadik garancia');
+    await nyersIr(gyoker, 'sablonok/sajat-szoveg-v1.md', 'saját szöveg');
+    await fsp.rm(path.join(gyoker, 'sablonok', 'garancia-de-v1.md'));
+    const beepitettGaranciaV1 = await fsp.readFile(path.join(gyoker, 'sablonok', 'garancia-hu-v1.md'), 'utf8');
+    const paciens = await storage.createPatient('Kis Béla');
+    const adat = tesztExport();
+
+    await storage.exportotAtvesz(adat);
+
+    expect(await storage.loadPriceList()).toEqual(adat.arlista);
+    expect((await storage.loadSettings()).rendelo.nev).toBe('Export Rendelő');
+    expect(await storage.loadLatestTemplateByBase('garancia-hu')).toEqual({
+      name: 'garancia-hu-v3.md',
+      body: '# Garancia\n\nA demóban átírt garancia.\n',
+    });
+    expect(await fsp.readFile(path.join(gyoker, 'sablonok', 'garancia-hu-v1.md'), 'utf8')).toBe(beepitettGaranciaV1);
+    expect((await storage.loadLatestTemplateByBase('nyilatkozat-hu')).body).toBe('# Nyilatkozat\n\nÚj nyilatkozat.\n');
+    expect(await fsp.readFile(path.join(gyoker, 'sablonok', 'sajat-szoveg-v1.md'), 'utf8')).toBe('saját szöveg');
+    expect((await storage.loadLatestTemplateByBase('garancia-de')).name).toBe('garancia-de-v1.md');
+    expect((await storage.listPatients()).map((x) => x.dirName)).toEqual([paciens.dirName]);
+  });
+
+  it('használt mappában a betöltés óta máshonnan módosított árlistát is felülírja, _utkozesek/ nélkül, és utána a mentés nem ütközik', async () => {
+    const { gyoker, storage } = await ujTarolo();
+    await storage.loadPriceList();
+    await nyersIr(gyoker, 'arlista.json', JSON.stringify({ ...seedPriceList, arlistaVerzio: 'masik-gep' }));
+    const adat = tesztExport();
+
+    await storage.exportotAtvesz(adat);
+
+    expect(await fsp.readdir(gyoker)).not.toContain('_utkozesek');
+    expect(JSON.parse(await fsp.readFile(path.join(gyoker, 'arlista.json'), 'utf8')).arlistaVerzio).toBe('2026-11-10');
+    await expect(storage.savePriceList({ ...adat.arlista, arlistaVerzio: 'utana' })).resolves.toBeUndefined();
   });
 });

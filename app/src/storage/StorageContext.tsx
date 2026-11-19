@@ -20,6 +20,8 @@ import {
   type AdatmappaAllapot,
   type IpcEredmeny,
   type MappaVizsgalat,
+  type ImportMod,
+  type ImportOsszegzes,
   type MentesAllapot,
   type PdfForras,
   type TaroloHid,
@@ -102,6 +104,13 @@ export interface Adattarolas {
   megnyit: () => Promise<void>;
   /** A beírt alapsablonok neve. */
   alapsablonokatPotol: () => Promise<string[]>;
+  /**
+   * A demóból exportált fájl kiválasztása és ellenőrzése, írás nélkül (migrációs terv §7.2);
+   * `null`, ha a doki bezárta a választót.
+   */
+  importElonezet: (mod: ImportMod) => Promise<ImportOsszegzes | null>;
+  /** Az utoljára ellenőrzött export írása; `uj`-nál utána a vizsgált mappa lesz az adatmappa. */
+  importIr: () => Promise<MappaVizsgalat>;
   /** Váltás után: a memóriabeli állapot a régi mappáé, ezért teljes újratöltés a Kezdőlapra. */
   ujratolt: () => void;
 }
@@ -128,6 +137,8 @@ function telepitettKepessegek(hid: TaroloHid, allapot: AdatmappaAllapot): Pick<S
       hasznal: (letrehoz) => kibont(hid.adatmappaHasznal(letrehoz)),
       megnyit: () => kibont(hid.adatmappaMegnyit()),
       alapsablonokatPotol: () => kibont(hid.alapsablonokPotol()),
+      importElonezet: (mod) => kibont(hid.importElonezet(mod)),
+      importIr: () => kibont(hid.importIr()),
       ujratolt: () => {
         window.location.hash = '#/';
         window.location.reload();

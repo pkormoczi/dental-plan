@@ -5,9 +5,11 @@
 import { useMemo, useState } from 'react';
 import { Box, Button, Callout, Code, Flex, Text } from '@radix-ui/themes';
 import { GEPVALTAS_BEVEZETO, GEPVALTASI_SZABALY } from '../../components/adatmappaSzovegek';
+import DemoImportDialog, { DEMO_IMPORT_GOMB } from '../../components/DemoImportDialog';
 import { LetoltesJelzo } from '../../components/LetoltesJelzo';
 import Section from '../../components/Section';
 import { useBiztonsagiMentes } from '../../components/useBiztonsagiMentes';
+import { useDemoImport } from '../../components/useDemoImport';
 import { useMappaValtas } from '../../components/useMappaValtas';
 import { formatLongDate, localIsoDate } from '../../domain/date';
 import { useAppState } from '../../state/AppState';
@@ -94,6 +96,8 @@ export default function AdattarolasTab({ adattarolas }: { adattarolas: Adattarol
 
       {biztonsagiMentes && <MentesSzekcio mentes={biztonsagiMentes} />}
 
+      <ImportSzekcio adattarolas={adattarolas} />
+
       <Section title="Gépváltás">
         <Text as="p" size="2" mb="2">
           {GEPVALTAS_BEVEZETO} Gépváltáskor:
@@ -175,6 +179,29 @@ function MentesSzekcio({ mentes }: { mentes: BiztonsagiMentes }) {
           <Callout.Text>{hiba}</Callout.Text>
         </Callout.Root>
       )}
+    </Section>
+  );
+}
+
+/** Felülírja a használt mappát, de félkész-terv kérdés nélkül: a mappa nem változik, a piszkozat sorai pillanatképek. */
+function ImportSzekcio({ adattarolas }: { adattarolas: Adattarolas }) {
+  const imp = useDemoImport(adattarolas, 'csere');
+  return (
+    <Section title="Átvitel a demóból">
+      <Text as="p" size="2" mb="3">
+        A demó DEMO oldalán, az Adatkezelés fülön exportált fájlból az árlista, a rendelő adatai és a
+        nyomtatvány-szövegek átvehetők. A mostani árlista és beállítások helyükre kerülnek; a páciensek
+        és a tervek nem változnak.
+      </Text>
+      <Button variant="soft" disabled={imp.folyamatban} onClick={() => void imp.indit()}>
+        {DEMO_IMPORT_GOMB}
+      </Button>
+      {imp.hiba && !imp.osszegzes && (
+        <Callout.Root color="red" mt="3" role="alert">
+          <Callout.Text>{imp.hiba}</Callout.Text>
+        </Callout.Root>
+      )}
+      <DemoImportDialog imp={imp} />
     </Section>
   );
 }

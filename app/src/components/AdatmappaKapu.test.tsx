@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import type { Adattarolas, Zaras } from '../storage/StorageContext';
-import type { AdatmappaAllapot, MappaAllapot, MappaVizsgalat } from '../storage/taroloIpc';
+import type { AdatmappaAllapot, ImportMod, ImportOsszegzes, MappaAllapot, MappaVizsgalat } from '../storage/taroloIpc';
 import { DRIVE_EMLEKEZTETO } from './adatmappaSzovegek';
 import { ZARO_KEPERNYO_MS } from './ZaroKepernyo';
 
@@ -39,6 +39,20 @@ function vizsgalat(allapot: MappaAllapot, extra: Partial<MappaVizsgalat> = {}): 
   return { ut: UT, allapot, hianyzik: [], hosszuUtvonal: false, ...extra };
 }
 
+function osszegzes(extra: Partial<ImportOsszegzes> = {}): ImportOsszegzes {
+  return {
+    mod: 'uj',
+    keszult: '2026-11-16T10:00:00.000Z',
+    tetelSzam: 142,
+    arlistaVerzio: '2026-11-10',
+    jelenlegiArlistaVerzio: null,
+    rendeloNev: 'Export Rendelő',
+    sablonSzam: 3,
+    potoltSablonSzam: 4,
+    ...extra,
+  };
+}
+
 function hamisAdattarolas(allapot: AdatmappaAllapot, valasztott: MappaVizsgalat | null = null) {
   const a = {
     allapot,
@@ -50,6 +64,8 @@ function hamisAdattarolas(allapot: AdatmappaAllapot, valasztott: MappaVizsgalat 
     ),
     megnyit: vi.fn(async () => {}),
     alapsablonokatPotol: vi.fn(async () => [] as string[]),
+    importElonezet: vi.fn(async (_mod: ImportMod): Promise<ImportOsszegzes | null> => null),
+    importIr: vi.fn(async () => vizsgalat('rendben')),
     ujratolt: vi.fn(),
   };
   kepesseg.adattarolas = a;
@@ -92,6 +108,74 @@ describe('adatmappa-kapu a telepített appban', () => {
 
     await waitFor(() => expect(a.ujratolt).toHaveBeenCalledOnce());
     expect(a.hasznal).toHaveBeenCalledWith(true);
+  });
+
+  it('üres mappánál a demó-exportból is építhet: az összegzés a számokat mutatja, és csak a megerősítésre ír', async () => {
+    const user = userEvent.setup();
+    const a = hamisAdattarolas({ allapot: 'nincs' }, vizsgalat('ures'));
+    a.importElonezet.mockResolvedValue(osszegzes());
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Adatmappa kiválasztása…' }));
+    await user.click(await screen.findByRole('button', { name: 'Van egy exportált fájlom a demóból' }));
+
+    const ablak = await screen.findByRole('alertdialog', { name: 'Átvitel a demóból' });
+    expect(a.importElonezet).toHaveBeenCalledWith('uj');
+    expect(within(ablak).getByText('Az export készült: 2026. november 16.')).toBeInTheDocument();
+    expect(within(ablak).getByText('Árlista: 142 tétel, árlista-verzió: 2026-11-10')).toBeInTheDocument();
+    expect(within(ablak).getByText('Rendelő: Export Rendelő')).toBeInTheDocument();
+    expect(within(ablak).getByText('Nyomtatvány-szövegek: 3 az exportból, 4 a beépítettből')).toBeInTheDocument();
+    expect(within(ablak).queryByText(/elvesznek/)).toBeNull();
+    expect(a.importIr).not.toHaveBeenCalled();
+
+    await user.click(within(ablak).getByRole('button', { name: 'Adatmappa létrehozása az exportból' }));
+
+    await waitFor(() => expect(a.ujratolt).toHaveBeenCalledOnce());
+    expect(a.importIr).toHaveBeenCalledOnce();
+    expect(a.hasznal).not.toHaveBeenCalled();
+  });
+
+  it('a demó-export összegzésénél a Mégse semmit nem ír, és a varázsló marad', async () => {
+    const user = userEvent.setup();
+    const a = hamisAdattarolas({ allapot: 'nincs' }, vizsgalat('ures'));
+    a.importElonezet.mockResolvedValue(osszegzes());
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Adatmappa kiválasztása…' }));
+    await user.click(await screen.findByRole('button', { name: 'Van egy exportált fájlom a demóból' }));
+    await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Mégse' }));
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    expect(a.importIr).not.toHaveBeenCalled();
+    expect(a.ujratolt).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'Új adatmappa létrehozása' })).toBeInTheDocument();
+  });
+
+  it('hibás exportfájlnál a bukás oka a varázslóban látszik, összegzés és írás nélkül', async () => {
+    const user = userEvent.setup();
+    const a = hamisAdattarolas({ allapot: 'nincs' }, vizsgalat('ures'));
+    a.importElonezet.mockRejectedValue(new Error('A fájl nem a demóból exportált adatfájl (kezelesi-terv-export-….json).'));
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Adatmappa kiválasztása…' }));
+    await user.click(await screen.findByRole('button', { name: 'Van egy exportált fájlom a demóból' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('A fájl nem a demóból exportált adatfájl');
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(a.importIr).not.toHaveBeenCalled();
+  });
+
+  it('ha a fájlválasztót bezárja, nincs összegzés és nincs hiba', async () => {
+    const user = userEvent.setup();
+    const a = hamisAdattarolas({ allapot: 'nincs' }, vizsgalat('ures'));
+    render(<App />);
+
+    await user.click(await screen.findByRole('button', { name: 'Adatmappa kiválasztása…' }));
+    await user.click(await screen.findByRole('button', { name: 'Van egy exportált fájlom a demóból' }));
+
+    await waitFor(() => expect(a.importElonezet).toHaveBeenCalledOnce());
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('idegen mappát elutasít, és nem vált rá', async () => {
@@ -167,6 +251,7 @@ describe('adatmappa-kapu a telepített appban', () => {
     expect(screen.getByRole('button', { name: 'Újrapróba' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Másik mappa kiválasztása' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Új adatmappa létrehozása' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Van egy exportált fájlom a demóból' })).toBeNull();
   });
 
   it('a miénk adatmappával az app betölt; a DEMÓ-sáv helyén próbaüzem áll, a DEMO lapon nincs Filerendszer és Adatkezelés', async () => {

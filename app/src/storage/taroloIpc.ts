@@ -60,6 +60,10 @@ export const ALAPSABLONOK_POTOL_CSATORNA = 'adatmappa:alapsablonok';
 /** Biztonsági mentés ZIP-be natív mentés-dialógussal (migrációs terv §6.5). */
 export const MENTES_KESZIT_CSATORNA = 'mentes:keszit';
 export const MENTES_ALLAPOT_CSATORNA = 'mentes:allapot';
+/** A demó-export beolvasása natív fájlválasztóval és ellenőrzése, írás nélkül (migrációs terv §7.2). */
+export const IMPORT_ELONEZET_CSATORNA = 'import:elonezet';
+/** A main által megtartott, már ellenőrzött export írása -- a renderer tartalmat nem küld. */
+export const IMPORT_IR_CSATORNA = 'import:ir';
 /** Main → renderer: a bezárás előtt a záró képernyő (migrációs terv §6.4). */
 export const ZARAS_CSATORNA = 'app:zaras';
 export const KILEPES_CSATORNA = 'app:kilepes';
@@ -94,6 +98,25 @@ export interface MentesAllapot {
   /** ISO időbélyeg, vagy `null`, ha még nem készült (vagy az index olvashatatlan). */
   utolso: string | null;
   ezenAGepen: boolean;
+}
+
+/** `uj`: a varázslóban választott üres mappába; `csere`: a használt adatmappa felülírása. */
+export type ImportMod = 'uj' | 'csere';
+
+/** Amit a doki az írás előtt az exportról lát; a tartalom a mainben marad. */
+export interface ImportOsszegzes {
+  mod: ImportMod;
+  /** Az export készítésének ISO időbélyege, vagy `null`, ha a fájlban nem érvényes. */
+  keszult: string | null;
+  tetelSzam: number;
+  arlistaVerzio: string;
+  /** `csere`-nél a most használt árlista verziója; olvashatatlan árlistánál és `uj`-nál `null`. */
+  jelenlegiArlistaVerzio: string | null;
+  rendeloNev: string;
+  /** Az exportban lévő nyomtatvány-szöveg fájlok száma. */
+  sablonSzam: number;
+  /** Hány alapsablon jön a beépítettből, mert sem az export, sem a mappa nem hozza. */
+  potoltSablonSzam: number;
 }
 
 /** A telepített app adatmappája; `nincs` = még nem választott (első indítás). */
@@ -151,6 +174,10 @@ export interface TaroloHid {
   mentesAllapot(): Promise<IpcEredmeny<MentesAllapot>>;
   /** A célt a main kérdezi meg a dokitól; a mentett fájl neve, vagy `null`, ha bezárta. */
   mentesKeszit(): Promise<IpcEredmeny<string | null>>;
+  /** Natív fájlválasztó, beolvasás és ellenőrzés; `null`, ha a doki bezárta a dialógust. */
+  importElonezet(mod: ImportMod): Promise<IpcEredmeny<ImportOsszegzes | null>>;
+  /** Az utoljára ellenőrzött export írása; utána a vizsgált (`uj`) vagy a használt mappa állapota. */
+  importIr(): Promise<IpcEredmeny<MappaVizsgalat>>;
   /** A main a bezárás előtt a záró képernyőt kéri; a visszaadott függvény leiratkozik. */
   zarasra(fn: () => void): () => void;
   kilepes(): Promise<IpcEredmeny<void>>;

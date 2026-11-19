@@ -74,10 +74,11 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
   });
 
-  it('a demóban nincs Adattárolás fül, és a ?tab=adattarolas sem nyit meg ilyet', async () => {
+  it('a demóban nincs Adattárolás fül, és a ?tab=adattarolas sem nyit meg ilyet; a demó-export importja sem kínálkozik', async () => {
     renderSettingsOnTemplatesTab('/beallitasok?tab=adattarolas');
     await screen.findByText('Beállítások');
     expect(screen.queryByRole('tab', { name: /Adattárolás/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Van egy exportált fájlom a demóból' })).toBeNull();
     expect(screen.getByRole('tab', { name: /Rendelő adatai/ })).toHaveAttribute('aria-selected', 'true');
   });
 

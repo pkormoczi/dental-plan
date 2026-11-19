@@ -7,6 +7,7 @@ import { ErvenytelenParameterError } from '../src/storage/taroloHibak';
 import { Adatmappa, CONFIG_FAJL, type AdatmappaOpciok } from './adatmappa';
 import { FileSystemStorage } from './fileSystemStorage';
 import { FsPrimitivek } from './fsPrimitivek';
+import { tesztExport } from './tesztExport';
 
 const mappak: string[] = [];
 afterAll(async () => {
@@ -163,6 +164,40 @@ describe('Adatmappa választás', () => {
     expect(await config()).toEqual({ schemaVersion: 1, gyokerMappa: uj, gepId: 'gep-1' });
     expect(adatmappa.tarolo?.gyoker).toBe(uj);
     expect(adatmappa.allapot).toMatchObject({ allapot: 'rendben', ut: uj });
+  });
+
+  it('üres mappába a demó-exportból épít; utána a config, a tároló és az árlista az exporté', async () => {
+    const uj = await ujMappa();
+    const { adatmappa, config, aktivalt } = await kornyezet({ valasztasok: [uj] });
+    await adatmappa.indul();
+    await adatmappa.valaszt();
+
+    expect(await adatmappa.importal(tesztExport())).toMatchObject({ allapot: 'rendben', ut: uj });
+
+    expect(await config()).toEqual({ schemaVersion: 1, gyokerMappa: uj, gepId: 'gep-1' });
+    expect(aktivalt).toEqual([uj]);
+    expect(adatmappa.allapot).toMatchObject({ allapot: 'rendben', ut: uj });
+    expect((await adatmappa.tarolo!.loadPriceList()).arlistaVerzio).toBe('2026-11-10');
+    expect((await adatmappa.tarolo!.loadSettings()).rendelo.nev).toBe('Export Rendelő');
+  });
+
+  it('a demó-export nem üres mappába nem ír és nem is vált rá, a config nem íródik', async () => {
+    const idegen = await ujMappa();
+    await fsp.writeFile(path.join(idegen, 'Dokumentum.docx'), 'x');
+    const meglevo = await sajatAdatmappa();
+    const { adatmappa, config } = await kornyezet({ valasztasok: [idegen, meglevo] });
+    await adatmappa.indul();
+
+    await adatmappa.valaszt();
+    await expect(adatmappa.importal(tesztExport())).rejects.toThrow(/már nem üres: az import nem írt bele/);
+    expect(await fsp.readdir(idegen)).toEqual(['Dokumentum.docx']);
+
+    await adatmappa.valaszt();
+    const arlistaElotte = await fsp.readFile(path.join(meglevo, 'arlista.json'), 'utf8');
+    await expect(adatmappa.importal(tesztExport())).rejects.toThrow(/már nem üres/);
+    expect(await fsp.readFile(path.join(meglevo, 'arlista.json'), 'utf8')).toBe(arlistaElotte);
+    expect(await config()).toBeNull();
+    expect(adatmappa.tarolo).toBeNull();
   });
 
   it('idegen mappát elutasít: nem ír bele, és a config nem íródik', async () => {

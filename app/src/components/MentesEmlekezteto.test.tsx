@@ -45,6 +45,8 @@ function telepitett(allapot: MentesAllapot, keszit: () => Promise<string | null>
     hasznal: vi.fn(),
     megnyit: vi.fn(async () => {}),
     alapsablonokatPotol: vi.fn(async () => []),
+    importElonezet: vi.fn(async () => null),
+    importIr: vi.fn(),
     ujratolt: vi.fn(),
   };
   let aktualis = allapot;

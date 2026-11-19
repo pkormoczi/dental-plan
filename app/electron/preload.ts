@@ -10,6 +10,8 @@ import {
   ADATMAPPA_UJRA_CSATORNA,
   ADATMAPPA_VALASZT_CSATORNA,
   ALAPSABLONOK_POTOL_CSATORNA,
+  IMPORT_ELONEZET_CSATORNA,
+  IMPORT_IR_CSATORNA,
   KILEPES_CSATORNA,
   MEGMUTAT_CSATORNA,
   MENTES_ALLAPOT_CSATORNA,
@@ -44,6 +46,8 @@ const hid: TaroloHid = {
   alapsablonokPotol: () => ipcRenderer.invoke(ALAPSABLONOK_POTOL_CSATORNA),
   mentesAllapot: () => ipcRenderer.invoke(MENTES_ALLAPOT_CSATORNA),
   mentesKeszit: () => ipcRenderer.invoke(MENTES_KESZIT_CSATORNA),
+  importElonezet: (mod) => ipcRenderer.invoke(IMPORT_ELONEZET_CSATORNA, mod),
+  importIr: () => ipcRenderer.invoke(IMPORT_IR_CSATORNA),
   zarasra: (fn) => {
     // Az eseményobjektum nem jut át a rendererbe: a `sender` a teljes webContents volna.
     const figyelo = () => fn();

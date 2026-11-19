@@ -7,6 +7,7 @@ import { AlertDialog, Box, Button, Callout, Code, Flex, Heading, Text } from '@r
 import { t } from '../design/tokens';
 import { IoError } from '../storage/taroloHibak';
 import { hianyzoElemNeve } from './adatmappaSzovegek';
+import DemoImportDialog, { DEMO_IMPORT_GOMB } from './DemoImportDialog';
 import type { AdatmappaValasztas } from './useAdatmappaValasztas';
 
 const HOSSZU_UTVONAL_SZOVEG =
@@ -28,7 +29,7 @@ export default function AdatmappaPanel({
   /** A Beállításokból indított váltásnál: vissza a jelenlegi mappához. */
   onMegse?: () => void;
 }) {
-  const { mutatott, folyamatban, hiba } = valasztas;
+  const { mutatott, folyamatban, hiba, demoImport: imp } = valasztas;
   const [potlasKerdes, setPotlasKerdes] = useState(false);
   const v = mutatott?.v ?? null;
   const beallitott = mutatott?.forras === 'beallitott';
@@ -100,6 +101,10 @@ export default function AdatmappaPanel({
           Ez a mappa üres: új adatmappát hozok létre benne, alapértelmezett árlistával,
           beállításokkal és nyomtatvány-szövegekkel.
         </Text>
+        <Text as="p" size="2" mb="3">
+          Ha a demóban már beállítottad az árlistát, a rendelő adatait és a nyomtatvány-szövegeket,
+          a demóból exportált fájlból is felépítheted. Páciensadat nincs az exportban.
+        </Text>
         <Callout.Root color="amber" mb="3">
           <Callout.Text>
             Ha a másik gépeden már van adatmappa, ne ezt válaszd: várd meg, míg a Drive letölti, és
@@ -112,7 +117,10 @@ export default function AdatmappaPanel({
       <>
         {megse}
         {masikMappa}
-        <Button disabled={folyamatban} onClick={() => void valasztas.letrehoz()}>
+        <Button variant="soft" disabled={folyamatban || imp.folyamatban} onClick={() => void imp.indit()}>
+          {DEMO_IMPORT_GOMB}
+        </Button>
+        <Button disabled={folyamatban || imp.folyamatban} onClick={() => void valasztas.letrehoz()}>
           Új adatmappa létrehozása
         </Button>
       </>
@@ -222,9 +230,16 @@ export default function AdatmappaPanel({
           <Callout.Text>{hiba}</Callout.Text>
         </Callout.Root>
       )}
+      {imp.hiba && !imp.osszegzes && (
+        <Callout.Root color="red" mb="3" role="alert">
+          <Callout.Text>{imp.hiba}</Callout.Text>
+        </Callout.Root>
+      )}
       <Flex gap="3" justify="end" wrap="wrap">
         {gombok}
       </Flex>
+
+      <DemoImportDialog imp={imp} />
 
       <AlertDialog.Root open={potlasKerdes} onOpenChange={setPotlasKerdes}>
         <AlertDialog.Content maxWidth="480px">

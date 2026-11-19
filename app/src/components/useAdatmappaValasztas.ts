@@ -1,11 +1,12 @@
 // Az adatmappa kiválasztásának lépései egy helyen: az első indítás varázslója, az induláskori
 // blokkoló képernyő és a Beállítások „Mappa váltása” ugyanezt futtatja (migrációs terv §6.2–§6.4).
-// A miénknek talált mappára azonnal átvált; üresbe csak megerősítés után épít, hiányosba csak
-// a doki explicit pótlása után ír.
+// A miénknek talált mappára azonnal átvált; üresbe csak megerősítés után épít (alapkészlettel
+// vagy a demó-exportból), hiányosba csak a doki explicit pótlása után ír.
 
 import { useCallback, useState } from 'react';
 import type { Adattarolas } from '../storage/StorageContext';
 import type { AdatmappaAllapot } from '../storage/taroloIpc';
+import { useDemoImport, type DemoImport } from './useDemoImport';
 
 /** Honnan a mutatott vizsgálat: a már beállított mappáé (induláskor), vagy egy frissen választotté. */
 export type VizsgalatForras = 'beallitott' | 'valasztott';
@@ -23,6 +24,8 @@ export interface AdatmappaValasztas {
   ujra: () => Promise<void>;
   potol: () => Promise<void>;
   letrehoz: () => Promise<void>;
+  /** A frissen választott üres mappába a demó-exportból. */
+  demoImport: DemoImport;
   alaphelyzet: () => void;
 }
 
@@ -71,6 +74,8 @@ export function useAdatmappaValasztas(
     [atvalt],
   );
 
+  const demoImport = useDemoImport(adattarolas, 'uj', valtasElott);
+
   const forras = mutatott?.forras ?? 'valasztott';
   return {
     mutatott,
@@ -84,6 +89,7 @@ export function useAdatmappaValasztas(
     ujra: () => fut(async () => eredmeny(await adattarolas.ujraellenoriz(), forras)),
     potol: () => fut(async () => eredmeny(await adattarolas.potol(), forras)),
     letrehoz: () => fut(() => atvalt(true, forras)),
+    demoImport,
     alaphelyzet: () => {
       setMutatott(null);
       setHiba(null);

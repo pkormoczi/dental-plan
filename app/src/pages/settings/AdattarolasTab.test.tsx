@@ -11,7 +11,7 @@ import { GEPVALTASI_SZABALY } from '../../components/adatmappaSzovegek';
 import type { Plan } from '../../domain/types';
 import { DemoStorage } from '../../storage/DemoStorage';
 import type { Adattarolas, BiztonsagiMentes } from '../../storage/StorageContext';
-import type { AdatmappaAllapot, MappaAllapot, MappaVizsgalat } from '../../storage/taroloIpc';
+import type { AdatmappaAllapot, ImportMod, ImportOsszegzes, MappaAllapot, MappaVizsgalat } from '../../storage/taroloIpc';
 
 const kepesseg = vi.hoisted(() => ({
   adattarolas: null as Adattarolas | null,
@@ -47,6 +47,19 @@ function vizsgalat(allapot: MappaAllapot, ut = MASIK): MappaVizsgalat {
   return { ut, allapot, hianyzik: [], hosszuUtvonal: false };
 }
 
+function osszegzes(mod: ImportMod): ImportOsszegzes {
+  return {
+    mod,
+    keszult: '2026-11-16T10:00:00.000Z',
+    tetelSzam: 142,
+    arlistaVerzio: '2026-11-10',
+    jelenlegiArlistaVerzio: mod === 'csere' ? '2026-09-01' : null,
+    rendeloNev: 'Export Rendelő',
+    sablonSzam: 6,
+    potoltSablonSzam: 0,
+  };
+}
+
 function hamisAdattarolas(valasztott: MappaVizsgalat | null) {
   const a = {
     allapot: vizsgalat('rendben', JELENLEGI) as AdatmappaAllapot,
@@ -56,6 +69,8 @@ function hamisAdattarolas(valasztott: MappaVizsgalat | null) {
     hasznal: vi.fn(async (letrehoz: boolean) => vizsgalat(letrehoz || valasztott?.allapot === 'rendben' ? 'rendben' : 'ures')),
     megnyit: vi.fn(async () => {}),
     alapsablonokatPotol: vi.fn(async () => ['garancia-hu-v1.md']),
+    importElonezet: vi.fn(async (mod: ImportMod): Promise<ImportOsszegzes | null> => osszegzes(mod)),
+    importIr: vi.fn(async () => vizsgalat('rendben')),
     ujratolt: vi.fn(),
   };
   kepesseg.adattarolas = a;
@@ -223,5 +238,81 @@ describe('Beállítások → Adattárolás a telepített appban', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(a.hasznal).not.toHaveBeenCalled();
     expect(a.ujratolt).not.toHaveBeenCalled();
+  });
+
+  it('az Átvitel a demóból ablaka kimondja, hogy a mostani árlista és beállítások elvesznek, mutatja a mostani verziót, és előbb mentést javasol; a Mégse nem ír', async () => {
+    const user = userEvent.setup();
+    const a = hamisAdattarolas(null);
+    await adattarolasFul();
+
+    await user.click(screen.getByRole('button', { name: 'Van egy exportált fájlom a demóból' }));
+
+    const ablak = await screen.findByRole('alertdialog', { name: 'Átvitel a demóból' });
+    expect(a.importElonezet).toHaveBeenCalledWith('csere');
+    expect(within(ablak).getByText('Árlista: 142 tétel, árlista-verzió: 2026-11-10 (a mostani: 2026-09-01)')).toBeInTheDocument();
+    expect(within(ablak).getByText(/a mostaniak elvesznek/)).toBeInTheDocument();
+    expect(within(ablak).getByText(/A páciensek és a tervek nem változnak/)).toBeInTheDocument();
+    expect(within(ablak).getByText(/előbb készíts biztonsági mentést/)).toBeInTheDocument();
+
+    await user.click(within(ablak).getByRole('button', { name: 'Mégse' }));
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    expect(a.importIr).not.toHaveBeenCalled();
+    expect(a.ujratolt).not.toHaveBeenCalled();
+  });
+
+  it('a felülírás után az ablak „Az import kész.”-t mutatja, a félkész terv megmarad, és a Rendben újratölt', async () => {
+    const user = userEvent.setup();
+    const a = hamisAdattarolas(null);
+    await adattarolasFul(true);
+
+    await user.click(screen.getByRole('button', { name: 'Van egy exportált fájlom a demóból' }));
+    await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Felülírás az exportból' }));
+
+    const kesz = await screen.findByRole('alertdialog', { name: 'Az import kész.' });
+    expect(a.importIr).toHaveBeenCalledOnce();
+    expect(a.ujratolt).not.toHaveBeenCalled();
+    expect(screen.queryByText('Félkész terv')).toBeNull();
+    expect(localStorage.getItem('dp:piszkozat')).not.toBeNull();
+
+    await user.click(within(kesz).getByRole('button', { name: 'Rendben' }));
+
+    expect(a.ujratolt).toHaveBeenCalledOnce();
+  });
+
+  it('a felülírás hibája az ablakban látszik, és nem tölt újra', async () => {
+    const user = userEvent.setup();
+    const a = hamisAdattarolas(null);
+    a.importIr.mockRejectedValue(new Error('Az adatmappa nem írható.'));
+    await adattarolasFul();
+
+    await user.click(screen.getByRole('button', { name: 'Van egy exportált fájlom a demóból' }));
+    const ablak = await screen.findByRole('alertdialog');
+    await user.click(within(ablak).getByRole('button', { name: 'Felülírás az exportból' }));
+
+    expect(await within(ablak).findByRole('alert')).toHaveTextContent('Az adatmappa nem írható.');
+    expect(a.ujratolt).not.toHaveBeenCalled();
+  });
+
+  it('mappaváltáskor üres mappába a demó-exportból is építhet, félkész tervnél a váltás megerősítése után', async () => {
+    const user = userEvent.setup();
+    const a = hamisAdattarolas(vizsgalat('ures'));
+    await adattarolasFul(true);
+
+    await user.click(screen.getByRole('button', { name: 'Mappa váltása…' }));
+    const dialogus = await screen.findByRole('dialog');
+    await user.click(within(dialogus).getByRole('button', { name: 'Van egy exportált fájlom a demóból' }));
+    const ablak = await screen.findByRole('alertdialog', { name: 'Átvitel a demóból' });
+    expect(a.importElonezet).toHaveBeenCalledWith('uj');
+    await user.click(within(ablak).getByRole('button', { name: 'Adatmappa létrehozása az exportból' }));
+
+    const kerdes = await screen.findByRole('alertdialog', { name: 'Félkész terv' });
+    expect(a.importIr).not.toHaveBeenCalled();
+    await user.click(within(kerdes).getByRole('button', { name: 'Váltás, a félkész terv elvetésével' }));
+
+    await waitFor(() => expect(a.ujratolt).toHaveBeenCalledOnce());
+    expect(a.importIr).toHaveBeenCalledOnce();
+    expect(a.hasznal).not.toHaveBeenCalled();
+    expect(localStorage.getItem('dp:piszkozat')).toBeNull();
   });
 });
