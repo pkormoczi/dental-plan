@@ -6,7 +6,7 @@ Az alkalmazás telepítőit a GitHub-kiadás (Release) oldala tartalmazza:
 - Mac (Apple Silicon és Intel): `Mandoki-Dental-<verzió>-universal.dmg`
 
 Frissítés nincs automatikusan: új változatnál ugyanezeket a lépéseket kell megismételni. Hogy mi
-változott, azt az alkalmazás Kezdőlapján a Változásnapló mutatja.
+változott, azt az alkalmazásban a Súgó menüpont Változásnapló füle mutatja.
 
 > **Próbaüzem.** Az alkalmazás már a kiválasztott adatmappába ír, de az éles indulásig csak
 > kitalált páciensekkel dolgozz, valódi páciensadatot ne írj bele.
