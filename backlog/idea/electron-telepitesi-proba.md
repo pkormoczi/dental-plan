@@ -1,11 +1,5 @@
 # electron-telepitesi-proba
 Type: doki
-Source: desktop-app-migration-plan-final.md §10.1 (Kész)
+Source: desktop-app-migration-plan-final.md §10.1, §10.2a (Kész)
 
-A doki mindkét gépén — Windows és macOS — a teszt-release-ből, a README lépései szerint telepíti és
-elindítja az appot; ahol a SmartScreen vagy a Gatekeeper másként viselkedik, mint a README írja, az
-eltérést jelzi, és az a README-be visszakerül. Egy fiktív páciensen tervet visz végig az előnézetig és
-a véglegesítésig: a PDF-előnézet működik, a letöltött PDF-en az ékezetes betűk (ő, ű) és a logó
-látszanak. Kizárólag fiktív adattal: a héj még a demó `localStorage`-tárolóján fut, valódi
-páciensadat csak az éles indulás kapuja után kerülhet az appba. Függ az `electron-release-workflow`
-első futásától.
+A doki mindkét gépén — Windows és macOS — a `v0.1.0-teszt.2` teszt-kiadásból, a csatolt TELEPITES.md lépései szerint telepíti és elindítja az appot; ahol a SmartScreen vagy a Gatekeeper másként viselkedik, mint az útmutató írja, jelzi, és az eltérés visszakerül az útmutatóba. Adatmappának egy új, üres, helyi (nem Drive-os) mappát választ, és a demó DEMO → Adatkezelés fülén exportált fájlból építi fel („Van egy exportált fájlom a demóból”): az árlista, a rendelő adatai és a nyomtatvány-szövegek a demóbeliek. Egy kitalált páciensen tervet visz végig az előnézetig és a véglegesítésig: a PDF-előnézet működik, a letöltött PDF-en az ékezetes betűk (ő, ű) és a logó látszanak, a „Megnyitás” a gép PDF-olvasójában nyitja meg. Utána Beállítások → Adattárolás → „Biztonsági mentés ZIP-be”, a ZIP-et egy új, üres mappába bontja, és „Mappa váltása” erre a mappára: a páciens és a véglegesített terv megvan. Kizárólag kitalált adattal: valódi páciensadat csak az éles indulás kapuja után kerülhet az appba. A sikeres export-import megerősítése a Pages-demó lekapcsolásának feltétele.
