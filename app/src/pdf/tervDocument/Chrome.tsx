@@ -9,7 +9,8 @@ import logoUrl from '../../assets/logo.png';
 import { s } from './styles';
 
 // A react-pdf alapból szótagol: a keskeny rendelő-blokkban így lett
-// „drmando-ki.hu” és „Zsig-mond”. A cím és az e-mail szóhatáron törjön.
+// „drmando-ki.hu” és „Zsig-mond”, a német címben „Kostenvoran-schlag”.
+// A cím, a rendelő-blokk és a lábléc bal blokkja szóhatáron törjön.
 const nincsSzotagolas = (szo: string) => [szo];
 
 // Üres érték esetén a mező sora TELJESEN kimarad (nem `—`) -- a doki nem
@@ -40,7 +41,9 @@ export function MainHeader({ plan, settings, L }: { plan: Plan; settings: Settin
         </View>
       </View>
       <View style={s.headerTitleBlock}>
-        <Text style={s.headerTitle}>{L.docTitle}</Text>
+        <Text style={s.headerTitle} hyphenationCallback={nincsSzotagolas}>
+          {L.docTitle}
+        </Text>
         <Text style={s.headerMeta}>
           {plan.tervId} · v{plan.verzio} · {formatShortDate(plan.keltezes, plan.nyelv)}
         </Text>

@@ -253,6 +253,14 @@ describe('TervDocument -- a fejléc és a lábléc rendelő-sorai', () => {
     const szotagolas = sorok.map((sor) => screen.getAllByText(sor)[0].getAttribute('data-szotagolas'));
     expect(szotagolas).toEqual(sorok.map(() => 'Zsigmond'));
   });
+
+  it.each([
+    ['hu', 'Kezelési terv és árajánlat'],
+    ['de', 'Behandlungsplan und Kostenvoranschlag'],
+  ] as const)('a fejléc címe (%s) nem szótagol: a szó egészben marad', (nyelv, cim) => {
+    renderDoc(false, nyelv);
+    expect(screen.getByText(cim)).toHaveAttribute('data-szotagolas', 'Zsigmond');
+  });
 });
 
 describe('TervDocument -- kézzel bekapcsolt "becsült ár" csillag a nyomtatványon', () => {

@@ -18,6 +18,8 @@ Ez a napló összefoglalja, mi változott a programban — mindig a legfrissebb 
   adószám és a cégjegyzékszám. A szavak és az e-mail-cím már nem törnek kötőjellel ketté. Ehhez a
   Beállítások Rendelő adatai fülén a cím két mezőre vált, „Irányítószám, város” és „Utca,
   házszám”; a korábban egy mezőben megadott cím magától, az első vesszőnél kettéválik.
+- A német nyomtatvány fejlécében a cím szóhatáron törik két sorba („Behandlungsplan und” /
+  „Kostenvoranschlag”), a szó közepén kötőjellel elvágva már nem.
 
 ## 2026. november 18.
 
