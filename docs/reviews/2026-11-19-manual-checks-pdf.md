@@ -49,6 +49,7 @@ fejléc jobb oldalán „Behandlungsplan und Kostenvoran-” / „schlag”. A 2
 tördelése szándékos, de a react-pdf alapértelmezett szótagolása a szó közepén vág. A tételhez nem
 tartozik (a terv a fejlécből csak a rendelő-blokkot vette fel); a páciens által aláírt
 dokumentumon látszik.
+- Döntés: backlog pdf-nemet-cim-szotagolas (2026-11-19)
 
 ## Apró
 
